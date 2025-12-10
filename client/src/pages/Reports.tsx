@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import DojoFlowLayout from '@/components/DojoFlowLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Download, TrendingUp, Users, DollarSign, Calendar, FileText } from 'lucide-react';
 
@@ -11,7 +11,7 @@ export default function Reports({ onLogout, theme, toggleTheme }) {
   });
 
   return (
-    <DojoFlowLayout>
+    <BottomNavLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -181,7 +181,7 @@ export default function Reports({ onLogout, theme, toggleTheme }) {
           </div>
         </div>
       </div>
-    </DojoFlowLayout>
+    </BottomNavLayout>
   );
 }
 

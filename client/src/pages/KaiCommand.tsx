@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
-import DojoFlowLayout from '@/components/DojoFlowLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
+import { useTheme } from '@/contexts/ThemeContext';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -275,9 +276,12 @@ export default function KaiCommand() {
   const todayConversations = conversations.filter(c => c.date === 'today');
   const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <DojoFlowLayout>
-      <div ref={containerRef} className="flex h-[calc(100vh-80px)] bg-white overflow-hidden">
+    <BottomNavLayout hideHeader>
+      <div ref={containerRef} className={`flex h-[calc(100vh-64px)] overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'}`}>
         {/* Command Center - Left Panel */}
         <div 
           style={{ width: `${commandCenterWidth}px` }}
@@ -552,7 +556,7 @@ export default function KaiCommand() {
           </div>
         </div>
       </div>
-    </DojoFlowLayout>
+    </BottomNavLayout>
   );
 }
 

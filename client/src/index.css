@@ -43,93 +43,107 @@
 }
 
 :root {
-  --radius: 1.25rem;
+  --radius: 1rem;
   
-  /* Clean white background for light mode */
-  --background: oklch(1 0 0); /* Pure white */
-  --foreground: oklch(0.20 0 0); /* Dark text */
+  /* DojoFlow Light Mode - Apple-style design system */
+  /* Background: #F7F8FA */
+  --background: oklch(0.975 0.002 250); /* #F7F8FA */
+  --foreground: oklch(0.18 0 0); /* #262626 */
   
-  /* White cards */
+  /* Panels: #FFFFFF */
   --card: oklch(1 0 0); /* Pure white */
-  --card-foreground: oklch(0.20 0 0);
+  --card-foreground: oklch(0.18 0 0); /* #262626 */
   
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0 0);
+  --popover-foreground: oklch(0.18 0 0);
   
-  /* DojoFlow logo red for light mode */
-  --primary: oklch(0.58 0.22 25); /* Logo red #ED393D */
+  /* Accent Red: #E53935 */
+  --primary: oklch(0.55 0.20 25); /* #E53935 */
   --primary-foreground: oklch(1 0 0);
   
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.20 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.18 0 0);
   
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.45 0 0); /* #6F6F73 */
   
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.20 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.18 0 0);
   
-  --destructive: oklch(0.58 0.20 25);
+  --destructive: oklch(0.55 0.20 25); /* #E53935 */
   --destructive-foreground: oklch(1 0 0);
   
-  /* Light borders */
-  --border: oklch(0.90 0 0);
-  --input: oklch(0.90 0 0);
-  --ring: oklch(0.58 0.22 25); /* Logo red */
+  /* Borders: #E2E3E6 */
+  --border: oklch(0.91 0.002 250); /* #E2E3E6 */
+  --input: oklch(0.91 0.002 250);
+  --ring: oklch(0.55 0.20 25); /* #E53935 */
   
-  --chart-1: oklch(0.58 0.22 25); /* Logo red */
+  --chart-1: oklch(0.55 0.20 25); /* Accent red */
   --chart-2: oklch(0.45 0.15 250);
   --chart-3: oklch(0.60 0.15 150);
   --chart-4: oklch(0.70 0.15 80);
   --chart-5: oklch(0.55 0.15 320);
   
-  /* Light sidebar */
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.20 0 0);
-  --sidebar-primary: oklch(0.58 0.22 25); /* Logo red */
+  /* Light sidebar (not used with bottom nav, but kept for compatibility) */
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.18 0 0);
+  --sidebar-primary: oklch(0.55 0.20 25);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.20 0 0);
-  --sidebar-border: oklch(0.90 0 0);
-  --sidebar-ring: oklch(0.58 0.22 25); /* Logo red */
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.18 0 0);
+  --sidebar-border: oklch(0.91 0.002 250);
+  --sidebar-ring: oklch(0.55 0.20 25);
 }
 
 .dark {
-  /* Pure black background for maximum contrast */
-  --background: oklch(0 0 0); /* Pure black */
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.08 0 0); /* Near black for cards */
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.08 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  /* Primary color - DojoFlow logo red #ED393D */
-  --primary: oklch(0.58 0.22 25); /* Logo red */
+  /* DojoFlow Dark Mode - Apple-style design system */
+  /* Background: #0F0F11 */
+  --background: oklch(0.08 0.005 270); /* #0F0F11 */
+  --foreground: oklch(1 0 0); /* #FFFFFF */
+  
+  /* Panels: #1A1B1F */
+  --card: oklch(0.13 0.005 270); /* #1A1B1F */
+  --card-foreground: oklch(1 0 0);
+  
+  --popover: oklch(0.13 0.005 270); /* #1A1B1F */
+  --popover-foreground: oklch(1 0 0);
+  
+  /* Accent Red: #FF4F4F */
+  --primary: oklch(0.65 0.22 25); /* #FF4F4F */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.12 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.12 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.12 0.01 25);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.58 0.22 25);
+  
+  --secondary: oklch(0.13 0.005 270);
+  --secondary-foreground: oklch(1 0 0);
+  
+  --muted: oklch(0.13 0.005 270);
+  --muted-foreground: oklch(0.65 0.01 250); /* #9CA0AE */
+  
+  --accent: oklch(0.13 0.01 25);
+  --accent-foreground: oklch(1 0 0);
+  
+  --destructive: oklch(0.65 0.22 25); /* #FF4F4F */
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.15 0 0);
-  --input: oklch(0.15 0 0);
-  --ring: oklch(0.58 0.22 25);
-  --chart-1: oklch(0.58 0.22 25);
+  
+  /* Borders: #2A2B2F */
+  --border: oklch(0.20 0.005 270); /* #2A2B2F */
+  --input: oklch(0.20 0.005 270);
+  --ring: oklch(0.65 0.22 25); /* #FF4F4F */
+  
+  --chart-1: oklch(0.65 0.22 25); /* Accent red */
   --chart-2: oklch(0.55 0.18 250);
   --chart-3: oklch(0.65 0.18 150);
   --chart-4: oklch(0.75 0.18 80);
   --chart-5: oklch(0.60 0.18 320);
-  /* Pure black sidebar */
-  --sidebar: oklch(0 0 0); /* Pure black */
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.58 0.22 25); /* Logo red */
+  
+  /* Dark sidebar (not used with bottom nav, but kept for compatibility) */
+  --sidebar: oklch(0.13 0.005 270); /* #1A1B1F */
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.65 0.22 25); /* #FF4F4F */
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.12 0 0);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.15 0 0);
-  --sidebar-ring: oklch(0.58 0.22 25);
+  --sidebar-accent: oklch(0.20 0.005 270);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.20 0.005 270);
+  --sidebar-ring: oklch(0.65 0.22 25);
 }
 
 @layer base {

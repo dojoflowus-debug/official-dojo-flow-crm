@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-import DojoFlowLayout from "@/components/DojoFlowLayout";
+import BottomNavLayout from "@/components/BottomNavLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -212,7 +212,7 @@ export default function StudentsPage() {
   };
 
   return (
-    <DojoFlowLayout>
+    <BottomNavLayout>
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
@@ -635,6 +635,6 @@ export default function StudentsPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </DojoFlowLayout>
+    </BottomNavLayout>
   );
 }

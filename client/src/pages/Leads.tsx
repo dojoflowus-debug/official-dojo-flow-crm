@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import DojoFlowLayout from '@/components/DojoFlowLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
 import HorizontalPipeline from '../components/HorizontalPipeline'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -293,7 +293,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   const stageCounts = getStageCounts()
 
   return (
-    <DojoFlowLayout>
+    <BottomNavLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-red-950/20">
         {/* Header */}
         <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
@@ -477,6 +477,6 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           </div>
         )}
       </div>
-    </DojoFlowLayout>
+    </BottomNavLayout>
   )
 }

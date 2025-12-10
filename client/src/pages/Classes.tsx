@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import DojoFlowLayout from '@/components/DojoFlowLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -418,7 +418,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // ClassForm now defined outside component
 
   return (
-    <DojoFlowLayout>
+    <BottomNavLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -659,7 +659,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
           />
         )}
       </div>
-    </DojoFlowLayout>
+    </BottomNavLayout>
   );
 }
 

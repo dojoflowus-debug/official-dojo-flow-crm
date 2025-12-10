@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import DojoFlowLayout from '@/components/DojoFlowLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
 import StudentMap from '../components/StudentMap'
 import KaiRecommendationsPanel from '../components/KaiRecommendationsPanel'
 import MarketingScoreCard from '../components/MarketingScoreCard'
@@ -181,7 +181,7 @@ export default function Marketing({ onLogout, theme, toggleTheme }) {
   }
 
   return (
-    <DojoFlowLayout>
+    <BottomNavLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="px-2 md:px-0">
@@ -1048,6 +1048,6 @@ export default function Marketing({ onLogout, theme, toggleTheme }) {
           </TabsContent>
         </Tabs>
       </div>
-    </DojoFlowLayout>
+    </BottomNavLayout>
   )
 }

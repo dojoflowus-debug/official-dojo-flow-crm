@@ -1078,3 +1078,45 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Updated default route "/" to load Kai Command
 - [x] Kai Command is now the primary landing page after login
 - [x] Tested navigation - Kiosk removed, Kai Command is the focus
+
+
+## ✅ COMPLETED: Apple-Style Bottom Navigation Redesign
+
+### Phase 1: Remove Left Sidebar
+- [x] Created BottomNavLayout component to replace DojoFlowLayout
+- [x] All pages now use full horizontal width
+- [x] Content centers naturally in new layout
+
+### Phase 2: Create Apple-Style Bottom Navigation Bar
+- [x] Fixed bottom nav bar (64px height)
+- [x] Items: Dashboard, Students, Leads, Kai (center/highlighted), Classes, Staff, Billing, Reports, Settings
+- [x] Light Mode: White with backdrop blur & subtle shadow
+- [x] Dark Mode: #1A1B1F with blur & soft glow
+- [x] Active icon color: #E53935 (light) / #FF4F4F (dark)
+- [x] Inactive icons: #6F6F73 (light) / #9CA0AE (dark)
+- [x] Selected item gets glowing underline pill
+- [x] Center Kai icon larger with glow effect
+
+### Phase 3: Replace Black Top Header
+- [x] Light Mode: White (#FFFFFF), border #E2E3E6, shadow rgba(0,0,0,0.04)
+- [x] Dark Mode: #1A1B1F, border #2A2B2F, shadow rgba(0,0,0,0.4)
+- [x] Keep: Brand logo, page name, Ask Kai button, Credits, User avatar
+- [x] Apple-style spacing (16-24px padding)
+
+### Phase 4: Apply Dual-Mode Design System
+- [x] Light: Background #F7F8FA, Panels #FFFFFF, Borders #E2E3E6, Text #262626, Accent #E53935
+- [x] Dark: Background #0F0F11, Panels #1A1B1F, Borders #2A2B2F, Text #FFFFFF, Accent #FF4F4F
+- [x] Updated index.css with new OKLCH color values
+
+### Phase 5: Keep Kai Command Content Intact
+- [x] Kai intro screen unchanged
+- [x] Starter cards unchanged
+- [x] Messages list unchanged
+- [x] Input bar unchanged
+- [x] Content displays in full-width layout
+
+### Phase 6: Mobile Responsiveness
+- [x] Bottom navigation as primary on all screens
+- [x] No sidebar at any breakpoint
+- [x] Touch-friendly bottom nav
+- [ ] Touch-friendly bottom nav on tablets
