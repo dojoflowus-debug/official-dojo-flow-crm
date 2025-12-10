@@ -102,9 +102,9 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
+    <div className="min-h-screen bg-black flex flex-col">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm">
+      <header className="border-b border-slate-900 bg-black">
         <div className="container mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -134,13 +134,13 @@ export default function Admin() {
       <main className="flex-1 container mx-auto px-6 py-8">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+          <Card className="border-slate-800 bg-black p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Check-Ins</p>
                 <p className="text-3xl font-bold text-white">{stats.todayCheckIns}</p>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-br from-red-600 to-red-700">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-[#ED393D] to-[#D9292D]">
                 <UserCheck className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function Admin() {
             </div>
           </Card>
 
-          <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+          <Card className="border-slate-800 bg-black p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">New Visitors</p>
@@ -168,7 +168,7 @@ export default function Admin() {
             </div>
           </Card>
 
-          <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+          <Card className="border-slate-800 bg-black p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Waivers</p>
@@ -183,7 +183,7 @@ export default function Admin() {
             </div>
           </Card>
 
-          <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+          <Card className="border-slate-800 bg-black p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Payments</p>
@@ -199,7 +199,7 @@ export default function Admin() {
             </div>
           </Card>
 
-          <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+          <Card className="border-slate-800 bg-black p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Revenue</p>
@@ -234,7 +234,7 @@ export default function Admin() {
 
           {/* Check-Ins Tab */}
           <TabsContent value="checkins" className="mt-6">
-            <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="border-slate-800 bg-black">
               <div className="p-6 border-b border-slate-800">
                 <h3 className="text-xl font-bold text-white">Recent Check-Ins</h3>
                 <p className="text-sm text-slate-400">Students who checked in today</p>
@@ -276,7 +276,7 @@ export default function Admin() {
 
           {/* New Visitors Tab */}
           <TabsContent value="visitors" className="mt-6">
-            <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="border-slate-800 bg-black">
               <div className="p-6 border-b border-slate-800">
                 <h3 className="text-xl font-bold text-white">New Visitor Sign-Ups</h3>
                 <p className="text-sm text-slate-400">Trial classes scheduled via kiosk</p>
@@ -316,7 +316,7 @@ export default function Admin() {
 
           {/* Waivers Tab */}
           <TabsContent value="waivers" className="mt-6">
-            <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="border-slate-800 bg-black">
               <div className="p-6 border-b border-slate-800">
                 <h3 className="text-xl font-bold text-white">Digital Waivers</h3>
                 <p className="text-sm text-slate-400">Signed and pending waivers</p>
@@ -362,7 +362,7 @@ export default function Admin() {
 
           {/* Payments Tab */}
           <TabsContent value="payments" className="mt-6">
-            <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="border-slate-800 bg-black">
               <div className="p-6 border-b border-slate-800">
                 <h3 className="text-xl font-bold text-white">Payment Transactions</h3>
                 <p className="text-sm text-slate-400">Processed payments via kiosk</p>

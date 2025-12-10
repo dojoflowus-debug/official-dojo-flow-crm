@@ -1054,3 +1054,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Changed input bar background from #F5F7FB to pure white
 - [x] Updated all hover states to use darker slate-900
 - [x] All backgrounds now crisp white or pure black for maximum contrast
+
+
+## ✅ COMPLETED: Apply Consistent Colors Across All Pages
+- [x] Updated index.css global theme - pure black background, logo red (#ED393D) primary
+- [x] Updated DojoFlowLayout.tsx - pure black sidebar, logo red active states
+- [x] Updated Home.tsx (Kiosk) - pure black background, logo red buttons
+- [x] Updated Admin.tsx - pure black background, logo red accents
+- [x] All pages using DojoFlowLayout now inherit consistent colors

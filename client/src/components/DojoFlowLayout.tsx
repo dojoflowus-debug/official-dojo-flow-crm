@@ -149,7 +149,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full bg-card border-r border-border z-40 transition-all duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full bg-black border-r border-slate-900 z-40 transition-all duration-300 ease-in-out ${
           showSidebar ? 'w-64' : 'w-0'
         } ${!sidebarVisible && !hoverRevealed ? 'overflow-hidden' : ''}`}
         onMouseEnter={handleMouseEnter}
@@ -157,12 +157,12 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
       >
         <div className="flex flex-col h-full">
           {/* Logo and Eye Toggle */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
+          <div className="flex items-center justify-between p-4 border-b border-slate-800">
             <Link to="/crm-dashboard" className="flex items-center gap-2">
               {APP_LOGO ? (
                 <img src={APP_LOGO} alt="DojoFlow" className="h-8 w-auto" />
               ) : (
-                <span className="text-xl font-bold text-primary">DojoFlow</span>
+                <span className="text-xl font-bold text-white">DojoFlow</span>
               )}
             </Link>
             <Button
@@ -192,11 +192,11 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
                   to={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     active
-                      ? 'bg-[#EEF2FF] text-primary font-medium'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      ? 'bg-[#ED393D] text-white font-medium'
+                      : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 flex-shrink-0 ${active ? 'text-primary' : ''}`} />
+                  <Icon className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : ''}`} />
                   <span className="truncate">{item.name}</span>
                 </Link>
               )
@@ -204,22 +204,22 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
           </nav>
 
           {/* User Section at Bottom */}
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-slate-800">
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                <AvatarFallback className="bg-slate-800 text-white text-sm">
                   {user?.name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email || ''}</p>
+                <p className="text-sm font-medium truncate text-white">{user?.name || 'User'}</p>
+                <p className="text-xs text-slate-400 truncate">{user?.email || ''}</p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={logout}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-900"
                 title="Logout"
               >
                 <LogOut className="h-4 w-4" />
@@ -245,7 +245,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
       >
         {/* Top Bar */}
         <header
-          className={`sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border transition-all duration-300 ${
+          className={`sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-slate-800 transition-all duration-300 ${
             topBarVisible ? 'h-16' : 'h-0 overflow-hidden border-b-0'
           }`}
         >
@@ -307,7 +307,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      <AvatarFallback className="bg-slate-800 text-white text-sm">
                         {user?.name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
@@ -360,8 +360,8 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
               onClick={() => setMobileMenuOpen(false)}
             />
             <div className="absolute left-0 top-0 h-full w-64 bg-card shadow-xl">
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <span className="text-xl font-bold text-primary">DojoFlow</span>
+              <div className="flex items-center justify-between p-4 border-b border-slate-800">
+                <span className="text-xl font-bold text-white">DojoFlow</span>
                 <Button
                   variant="ghost"
                   size="icon"
