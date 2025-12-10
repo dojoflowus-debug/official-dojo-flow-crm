@@ -33,6 +33,7 @@ import {
   Megaphone,
   Settings,
   ChevronDown,
+  ChevronUp,
   LogOut,
   Eye,
   Bell,
@@ -85,6 +86,7 @@ export default function KaiCommand() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
+  const [expandedInput, setExpandedInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // tRPC mutation for Kai chat
@@ -274,10 +276,10 @@ export default function KaiCommand() {
   const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
 
   return (
-    <div className="flex h-screen bg-[#1E293B] overflow-hidden">
+    <div className="flex h-screen bg-[#0F172A] overflow-hidden">
       {/* Left Sidebar - Dark Navigation */}
       {sidebarVisible && (
-        <div className="w-56 bg-[#1E293B] border-r border-slate-700/50 flex flex-col">
+        <div className="w-56 bg-[#0F172A] border-r border-slate-800/50 flex flex-col">
           {/* Logo */}
           <div className="p-4 flex items-center gap-2">
             <DojoFlowLogo className="w-9 h-9" />
@@ -348,35 +350,38 @@ export default function KaiCommand() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="h-14 bg-[#1E293B] border-b border-slate-700/50 flex items-center justify-between px-4">
+        <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            <h1 className="text-white font-semibold text-lg">Dashboard</h1>
+            <h1 className="text-slate-900 font-semibold text-lg">Dashboard</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarVisible(!sidebarVisible)}
-              className={`text-sm ${sidebarVisible ? 'bg-[#E85A6B] text-white hover:bg-[#D94A5B]' : 'text-slate-400 hover:text-white'}`}
-            >
-              Sidebar
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTopMenuVisible(!topMenuVisible)}
-              className={`text-sm ${topMenuVisible ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
-            >
-              Top Menu
-            </Button>
-            <div className="text-emerald-400 text-sm font-medium px-2">Credits: 0</div>
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+            {/* Toggle-style Sidebar/Top Menu buttons */}
+            <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarVisible(!sidebarVisible)}
+                className={`text-sm rounded-md px-3 py-1 ${sidebarVisible ? 'bg-[#E85A6B] text-white hover:bg-[#D94A5B]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+              >
+                Sidebar
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTopMenuVisible(!topMenuVisible)}
+                className={`text-sm rounded-md px-3 py-1 ${topMenuVisible ? 'bg-[#E85A6B] text-white hover:bg-[#D94A5B]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+              >
+                Top Menu
+              </Button>
+            </div>
+            <div className="text-emerald-500 text-sm font-medium px-2">Credits: 0</div>
+            <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-700">
               <Menu className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+            <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-700">
               <Eye className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+            <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-700">
               <Bell className="w-5 h-5" />
             </Button>
           </div>
@@ -400,8 +405,9 @@ export default function KaiCommand() {
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Plus className="w-4 h-4 text-slate-500" />
                   </Button>
-                  <Button size="sm" className="bg-[#E85A6B] hover:bg-[#D94A5B] text-white h-8 px-3">
-                    New Chat
+                  <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white h-8 px-4 rounded-lg">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Chat
                   </Button>
                 </div>
               </div>
@@ -487,6 +493,11 @@ export default function KaiCommand() {
                 )}
               </ScrollArea>
             </div>
+          </div>
+
+          {/* Swivel/Drag Bar */}
+          <div className="w-1.5 bg-slate-200 hover:bg-[#E85A6B] cursor-col-resize flex items-center justify-center group transition-colors">
+            <div className="w-1 h-8 bg-slate-400 group-hover:bg-white rounded-full" />
           </div>
 
           {/* Main Conversation Panel - White */}
@@ -597,8 +608,18 @@ export default function KaiCommand() {
             </ScrollArea>
 
             {/* Input Bar */}
-            <div className="p-4 border-t border-slate-200">
-              <div className="max-w-3xl mx-auto">
+            <div className={`p-4 border-t border-slate-200 transition-all ${expandedInput ? 'pb-8' : ''}`}>
+              <div className="max-w-3xl mx-auto relative">
+                {/* Expand/Collapse Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setExpandedInput(!expandedInput)}
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 bg-slate-200 hover:bg-slate-300 rounded-full z-10"
+                >
+                  {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                </Button>
+                
                 <div className="flex items-center gap-2 bg-[#F5F7FB] rounded-2xl border-2 border-[#E85A6B]/30 p-2 focus-within:border-[#E85A6B]/50">
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
                     <Paperclip className="w-5 h-5" />
@@ -608,8 +629,8 @@ export default function KaiCommand() {
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="flex-1 min-h-[40px] max-h-32 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    rows={1}
+                    className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'}`}
+                    rows={expandedInput ? 5 : 1}
                   />
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
                     <Mic className="w-5 h-5" />
