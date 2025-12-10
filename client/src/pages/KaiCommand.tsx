@@ -208,10 +208,12 @@ export default function KaiCommand() {
       
       const containerRect = containerRef.current.getBoundingClientRect();
       const sidebarWidth = sidebarVisible ? 224 : 0; // w-56 = 224px
+      const availableWidth = containerRect.width - sidebarWidth;
       const newWidth = e.clientX - containerRect.left - sidebarWidth;
       
-      // Constrain width between 240px and 480px
-      const constrainedWidth = Math.min(Math.max(newWidth, 240), 480);
+      // Constrain width between 200px min and 75% of available width max
+      const maxWidth = availableWidth * 0.75;
+      const constrainedWidth = Math.min(Math.max(newWidth, 200), maxWidth);
       setCommandCenterWidth(constrainedWidth);
     };
 

@@ -1029,3 +1029,7 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Add visual feedback during drag (cursor changes, bar turns coral)
 - [x] Set min/max width constraints (240px - 480px)
 - [x] Test resize functionality
+
+
+## ✅ COMPLETED: Increase Swivel Bar Max Width
+- [x] Allow dragging past halfway across the page (now up to 75% of available width)
