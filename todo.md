@@ -1020,3 +1020,12 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Change New Chat button to black rectangular with rounded edges (+ Chat)
 - [x] Add option to expand the chat bar (chevron button above input)
 - [x] Change Sidebar/Top Menu to toggle-style button (red when selected, grey when not)
+
+
+## ✅ COMPLETED: Swivel Bar Drag-to-Resize Functionality
+- [x] Add state for Command Center panel width (commandCenterWidth, isResizing)
+- [x] Add mouse event handlers for drag start, drag, and drag end
+- [x] Apply dynamic width to Command Center panel via inline style
+- [x] Add visual feedback during drag (cursor changes, bar turns coral)
+- [x] Set min/max width constraints (240px - 480px)
+- [x] Test resize functionality

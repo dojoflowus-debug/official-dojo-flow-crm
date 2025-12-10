@@ -87,7 +87,10 @@ export default function KaiCommand() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [expandedInput, setExpandedInput] = useState(false);
+  const [commandCenterWidth, setCommandCenterWidth] = useState(320); // Default 320px (w-80)
+  const [isResizing, setIsResizing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // tRPC mutation for Kai chat
   const kaiChatMutation = trpc.kai.chat.useMutation();
@@ -193,6 +196,44 @@ export default function KaiCommand() {
     scrollToBottom();
   }, [messages]);
 
+  // Resize handlers for swivel bar
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !containerRef.current) return;
+      
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const sidebarWidth = sidebarVisible ? 224 : 0; // w-56 = 224px
+      const newWidth = e.clientX - containerRect.left - sidebarWidth;
+      
+      // Constrain width between 240px and 480px
+      const constrainedWidth = Math.min(Math.max(newWidth, 240), 480);
+      setCommandCenterWidth(constrainedWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, sidebarVisible]);
+
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
 
@@ -276,7 +317,7 @@ export default function KaiCommand() {
   const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
 
   return (
-    <div className="flex h-screen bg-[#0F172A] overflow-hidden">
+    <div ref={containerRef} className="flex h-screen bg-[#0F172A] overflow-hidden">
       {/* Left Sidebar - Dark Navigation */}
       {sidebarVisible && (
         <div className="w-56 bg-[#0F172A] border-r border-slate-800/50 flex flex-col">
@@ -390,7 +431,10 @@ export default function KaiCommand() {
         {/* Content Area with Command Center and Main Panel */}
         <div className="flex-1 flex overflow-hidden">
           {/* Command Center - Light Gray */}
-          <div className="w-80 bg-[#F5F7FB] border-r border-slate-200 flex flex-col">
+          <div 
+            style={{ width: `${commandCenterWidth}px` }}
+            className="bg-[#F5F7FB] border-r border-slate-200 flex flex-col flex-shrink-0"
+          >
             {/* Header */}
             <div className="p-4 border-b border-slate-200">
               <div className="flex items-center justify-between mb-3">
@@ -496,8 +540,15 @@ export default function KaiCommand() {
           </div>
 
           {/* Swivel/Drag Bar */}
-          <div className="w-1.5 bg-slate-200 hover:bg-[#E85A6B] cursor-col-resize flex items-center justify-center group transition-colors">
-            <div className="w-1 h-8 bg-slate-400 group-hover:bg-white rounded-full" />
+          <div 
+            onMouseDown={handleMouseDown}
+            className={`w-2 cursor-col-resize flex items-center justify-center group transition-colors select-none ${
+              isResizing ? 'bg-[#E85A6B]' : 'bg-slate-200 hover:bg-[#E85A6B]'
+            }`}
+          >
+            <div className={`w-1 h-12 rounded-full transition-colors ${
+              isResizing ? 'bg-white' : 'bg-slate-400 group-hover:bg-white'
+            }`} />
           </div>
 
           {/* Main Conversation Panel - White */}
