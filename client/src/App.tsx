@@ -29,7 +29,7 @@ import TestData from "./pages/TestData";
 import SimpleDashboard from "./pages/SimpleDashboard";
 import DataDashboard from "./pages/DataDashboard";
 import MinimalDashboard from "./pages/MinimalDashboard";
-import Kiosk from "./pages/Kiosk";
+// Kiosk removed - Kai Command is the central focus
 import Classes from "./pages/Classes";
 import Staff from "./pages/Staff";
 import Billing from "./pages/Billing";
@@ -57,7 +57,7 @@ import AutomationCreate from "./pages/AutomationCreate";
 import AutomationBuilder from "./pages/AutomationBuilder";
 import Conversations from "./pages/Conversations";
 import AISetup from "./pages/AISetup";
-import KioskSetup from "./pages/KioskSetup";
+// KioskSetup removed
 import Security from "./pages/Security";
 import TestSimple from "./pages/TestSimple";
 import PublicChat from "./pages/PublicChat";
@@ -74,7 +74,7 @@ function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<KaiCommand />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
       <Route path="/new-visitor" element={<NewVisitor />} />
@@ -101,7 +101,7 @@ function Router() {
       <Route path="/students" element={<StudentsNew />} />
       <Route path="/leads" element={<Leads />} />
       <Route path="/test-data" element={<TestData />} />
-      <Route path="/kiosk" element={<Kiosk />} />
+      {/* Kiosk removed - Kai Command is the central focus */}
       <Route path="/classes" element={<Classes />} />
       <Route path="/staff" element={<Staff />} />
       <Route path="/billing" element={<Billing />} />
@@ -130,7 +130,7 @@ function Router() {
       <Route path="/setup-wizard" element={<ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>} />
       <Route path="/setup" element={<ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>} />
       <Route path="/ai-setup" element={<AISetup />} />
-      <Route path="/kiosk-setup" element={<KioskSetup />} />
+      {/* KioskSetup removed */}
       <Route path="/security" element={<Security />} />
       <Route path="/test-simple" element={<TestSimple />} />
       <Route path="/receptionist" element={<VirtualReceptionist />} />
@@ -148,7 +148,7 @@ function Router() {
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
-  console.log('DojoFlow Kiosk - App component rendering');
+  console.log('DojoFlow - App component rendering');
   return (
     <ErrorBoundary>
       <ThemeProvider

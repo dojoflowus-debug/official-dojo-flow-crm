@@ -1069,3 +1069,12 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Wrapped KaiCommand with DojoFlowLayout (now uses shared sidebar)
 - [x] Added visible scrollbar to chat history section (scrollbar-visible class in index.css)
 - [x] Tested integration - Kai Command now part of unified CRM with consistent navigation
+
+
+## ✅ COMPLETED: Delete DojoFlow Kiosk - Make Kai Command Central
+- [x] Removed Kiosk.tsx, KioskCheckIn.tsx, KioskManagement.tsx, KioskSetup.tsx, KioskSettings.jsx
+- [x] Removed Kiosk-related routes from App.tsx
+- [x] Removed Kiosk from sidebar navigation in DojoFlowLayout
+- [x] Updated default route "/" to load Kai Command
+- [x] Kai Command is now the primary landing page after login
+- [x] Tested navigation - Kiosk removed, Kai Command is the focus
