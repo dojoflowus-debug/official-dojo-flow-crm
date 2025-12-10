@@ -319,10 +319,10 @@ export default function KaiCommand() {
   const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
 
   return (
-    <div ref={containerRef} className="flex h-screen bg-[#0F172A] overflow-hidden">
+    <div ref={containerRef} className="flex h-screen bg-black overflow-hidden">
       {/* Left Sidebar - Dark Navigation */}
       {sidebarVisible && (
-        <div className="w-56 bg-[#0F172A] border-r border-slate-800/50 flex flex-col">
+        <div className="w-56 bg-black border-r border-slate-900 flex flex-col">
           {/* Logo */}
           <div className="p-4 flex items-center gap-2">
             <DojoFlowLogo className="w-9 h-9" />
@@ -338,7 +338,7 @@ export default function KaiCommand() {
                 className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-colors group ${
                   item.active 
                     ? 'bg-[#ED393D] text-white' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
                 }`}
               >
                 {/* Drag Handle */}
@@ -351,7 +351,7 @@ export default function KaiCommand() {
             {/* Settings with expand */}
             <button
               onClick={() => setSettingsExpanded(!settingsExpanded)}
-              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors group"
+              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-900 transition-colors group"
             >
               <GripVertical className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
               <Settings className="w-4 h-4" />
@@ -364,10 +364,10 @@ export default function KaiCommand() {
           <div className="p-3 border-t border-slate-800">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors">
+                <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-900 transition-colors">
                   <Avatar className="w-9 h-9">
                     <AvatarImage src="/avatar.jpg" />
-                    <AvatarFallback className="bg-slate-700 text-white text-sm">VH</AvatarFallback>
+                    <AvatarFallback className="bg-slate-800 text-white text-sm">VH</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
                     <div className="text-sm font-medium text-white">{user?.name || 'Vincent Holmes'}</div>
@@ -435,7 +435,7 @@ export default function KaiCommand() {
           {/* Command Center - Light Gray */}
           <div 
             style={{ width: `${commandCenterWidth}px` }}
-            className="bg-[#F5F7FB] border-r border-slate-200 flex flex-col flex-shrink-0"
+            className="bg-white border-r border-slate-200 flex flex-col flex-shrink-0"
           >
             {/* Header */}
             <div className="p-4 border-b border-slate-200">
@@ -471,7 +471,7 @@ export default function KaiCommand() {
 
               {/* Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-3">
-                <TabsList className="w-full bg-[#E8ECF1] h-9">
+                <TabsList className="w-full bg-slate-100 h-9">
                   <TabsTrigger value="active" className="flex-1 text-xs data-[state=active]:bg-white">Active</TabsTrigger>
                   <TabsTrigger value="archived" className="flex-1 text-xs data-[state=active]:bg-white">Archived</TabsTrigger>
                   <TabsTrigger value="all" className="flex-1 text-xs data-[state=active]:bg-white">All</TabsTrigger>
@@ -558,7 +558,7 @@ export default function KaiCommand() {
           {/* Main Conversation Panel - White */}
           <div className="flex-1 flex flex-col bg-white">
             {/* Top Banner */}
-            <div className="px-6 py-3 bg-[#F8FAFC] border-b border-slate-200 flex items-center justify-between">
+            <div className="px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
               <p className="text-xs text-slate-500 uppercase tracking-wide font-medium">
                 Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
               </p>
@@ -675,7 +675,7 @@ export default function KaiCommand() {
                   {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
                 </Button>
                 
-                <div className="flex items-center gap-2 bg-[#F5F7FB] rounded-2xl border-2 border-[#ED393D]/30 p-2 focus-within:border-[#ED393D]/50">
+                <div className="flex items-center gap-2 bg-white rounded-2xl border-2 border-[#ED393D]/30 p-2 focus-within:border-[#ED393D]/50">
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
                     <Paperclip className="w-5 h-5" />
                   </Button>
