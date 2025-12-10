@@ -1,17 +1,11 @@
-import { eq, desc, asc, and, like, sql, count } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { 
-  InsertUser, users, 
-  students, InsertStudent, Student,
-  leads, InsertLead, Lead,
-  conversations, InsertConversation,
-  messages, InsertMessage,
-  locations
-} from "../drizzle/schema";
+import { InsertUser, users, staffPins, InsertStaffPin } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
+// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -23,8 +17,6 @@ export async function getDb() {
   }
   return _db;
 }
-
-// ============ USER OPERATIONS ============
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
@@ -97,229 +89,210 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// ============ STUDENT OPERATIONS ============
-
-export async function getAllStudents() {
+/**
+ * Get all active staff PINs
+ */
+export async function getActiveStaffPins() {
   const db = await getDb();
-  if (!db) return [];
-  return db.select().from(students).orderBy(asc(students.lastName), asc(students.firstName));
+  if (!db) {
+    console.warn("[Database] Cannot get staff PINs: database not available");
+    return [];
+  }
+
+  const result = await db.select().from(staffPins).where(eq(staffPins.isActive, 1));
+  return result;
 }
 
-export async function getStudentById(id: number) {
+/**
+ * Get staff PIN by ID
+ */
+export async function getStaffPinById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(students).where(eq(students.id, id)).limit(1);
-  return result[0];
+  if (!db) {
+    console.warn("[Database] Cannot get staff PIN: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(staffPins).where(eq(staffPins.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }
 
-export async function createStudent(student: InsertStudent) {
+/**
+ * Update last used timestamp for a staff PIN
+ */
+export async function updateStaffPinLastUsed(id: number) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(students).values(student);
-  return { id: result[0].insertId };
+  if (!db) {
+    console.warn("[Database] Cannot update staff PIN: database not available");
+    return;
+  }
+
+  await db.update(staffPins)
+    .set({ lastUsed: new Date() })
+    .where(eq(staffPins.id, id));
 }
 
-export async function updateStudent(id: number, data: Partial<InsertStudent>) {
+/**
+ * Create a new staff PIN
+ */
+export async function createStaffPin(pin: InsertStaffPin) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(students).set(data).where(eq(students.id, id));
+  if (!db) {
+    console.warn("[Database] Cannot create staff PIN: database not available");
+    return;
+  }
+
+  await db.insert(staffPins).values(pin);
 }
 
-export async function deleteStudent(id: number) {
+/**
+ * Get all staff PINs (active and inactive)
+ */
+export async function getAllStaffPins() {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(students).where(eq(students.id, id));
+  if (!db) {
+    console.warn("[Database] Cannot get staff PINs: database not available");
+    return [];
+  }
+
+  const result = await db.select().from(staffPins);
+  return result;
 }
 
-export async function getStudentStats() {
+/**
+ * Update a staff PIN
+ */
+export async function updateStaffPin(id: number, updates: Partial<InsertStaffPin>) {
   const db = await getDb();
-  if (!db) return { total: 0, active: 0, trial: 0, inactive: 0, frozen: 0, latePayers: 0, categoryA: 0, categoryB: 0, categoryC: 0 };
-  
-  const allStudents = await db.select().from(students);
-  
-  return {
-    total: allStudents.length,
-    active: allStudents.filter(s => s.status === 'active').length,
-    trial: allStudents.filter(s => s.status === 'trial').length,
-    inactive: allStudents.filter(s => s.status === 'inactive').length,
-    frozen: allStudents.filter(s => s.status === 'frozen').length,
-    latePayers: allStudents.filter(s => s.paymentStatus === 'late' || s.paymentStatus === 'overdue').length,
-    categoryA: allStudents.filter(s => s.category === 'A').length,
-    categoryB: allStudents.filter(s => s.category === 'B').length,
-    categoryC: allStudents.filter(s => s.category === 'C').length,
-  };
+  if (!db) {
+    console.warn("[Database] Cannot update staff PIN: database not available");
+    return;
+  }
+
+  await db.update(staffPins)
+    .set(updates)
+    .where(eq(staffPins.id, id));
 }
 
-export async function getBeltDistribution() {
+/**
+ * Toggle staff PIN active status
+ */
+export async function toggleStaffPinActive(id: number, isActive: number) {
   const db = await getDb();
-  if (!db) return [];
-  
-  const allStudents = await db.select().from(students);
-  const beltCounts: Record<string, number> = {};
-  
-  allStudents.forEach(s => {
-    beltCounts[s.beltRank] = (beltCounts[s.beltRank] || 0) + 1;
-  });
-  
-  return Object.entries(beltCounts).map(([belt, count]) => ({ belt, count }));
+  if (!db) {
+    console.warn("[Database] Cannot toggle staff PIN: database not available");
+    return;
+  }
+
+  await db.update(staffPins)
+    .set({ isActive })
+    .where(eq(staffPins.id, id));
 }
 
-// ============ LEAD OPERATIONS ============
-
-export async function getAllLeads() {
+/**
+ * Delete a staff PIN
+ */
+export async function deleteStaffPin(id: number) {
   const db = await getDb();
-  if (!db) return [];
-  return db.select().from(leads).orderBy(desc(leads.createdAt));
+  if (!db) {
+    console.warn("[Database] Cannot delete staff PIN: database not available");
+    return;
+  }
+
+  await db.delete(staffPins).where(eq(staffPins.id, id));
 }
 
-export async function getLeadById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(leads).where(eq(leads.id, id)).limit(1);
-  return result[0];
-}
 
-export async function createLead(lead: InsertLead) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(leads).values(lead);
-  return { id: result[0].insertId };
-}
+/**
+ * CRM Dashboard Helper Functions
+ */
 
-export async function updateLead(id: number, data: Partial<InsertLead>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(leads).set(data).where(eq(leads.id, id));
-}
-
-export async function deleteLead(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(leads).where(eq(leads.id, id));
-}
-
-export async function getLeadsByStage() {
-  const db = await getDb();
-  if (!db) return {};
-  
-  const allLeads = await db.select().from(leads);
-  const byStage: Record<string, Lead[]> = {};
-  
-  allLeads.forEach(lead => {
-    if (!byStage[lead.stage]) byStage[lead.stage] = [];
-    byStage[lead.stage].push(lead);
-  });
-  
-  return byStage;
-}
-
-// ============ CONVERSATION OPERATIONS ============
-
-export async function getConversationsByUser(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(conversations).where(eq(conversations.userId, userId)).orderBy(desc(conversations.updatedAt));
-}
-
-export async function createConversation(conv: InsertConversation) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(conversations).values(conv);
-  return { id: result[0].insertId };
-}
-
-export async function updateConversation(id: number, data: Partial<InsertConversation>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(conversations).set({ ...data, updatedAt: new Date() }).where(eq(conversations.id, id));
-}
-
-export async function deleteConversation(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(messages).where(eq(messages.conversationId, id));
-  await db.delete(conversations).where(eq(conversations.id, id));
-}
-
-// ============ MESSAGE OPERATIONS ============
-
-export async function getMessagesByConversation(conversationId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(messages).where(eq(messages.conversationId, conversationId)).orderBy(asc(messages.createdAt));
-}
-
-export async function createMessage(msg: InsertMessage) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(messages).values(msg);
-  
-  // Update conversation timestamp
-  await db.update(conversations).set({ updatedAt: new Date() }).where(eq(conversations.id, msg.conversationId));
-  
-  return { id: result[0].insertId };
-}
-
-// ============ LOCATION OPERATIONS ============
-
-export async function getAllLocations() {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(locations).orderBy(asc(locations.name));
-}
-
-// ============ KAI COMMAND DATA ACCESS ============
-
-export async function getKaiDataSummary() {
+// Get dashboard statistics
+export async function getDashboardStats() {
   const db = await getDb();
   if (!db) return null;
   
-  const allStudents = await db.select().from(students);
-  const allLeads = await db.select().from(leads);
+  const { students, leads, classes } = await import("../drizzle/schema");
+  const { eq, count } = await import("drizzle-orm");
   
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const totalStudents = await db.select({ count: count() }).from(students).where(eq(students.status, 'Active'));
+  const totalLeads = await db.select({ count: count() }).from(leads);
+  const todaysClasses = await db.select().from(classes).where(eq(classes.isActive, 1)).limit(10);
   
   return {
-    students: {
-      total: allStudents.length,
-      active: allStudents.filter(s => s.status === 'active').length,
-      trial: allStudents.filter(s => s.status === 'trial').length,
-      inactive: allStudents.filter(s => s.status === 'inactive').length,
-      frozen: allStudents.filter(s => s.status === 'frozen').length,
-    },
-    billing: {
-      latePayers: allStudents.filter(s => s.paymentStatus === 'late').length,
-      overdue: allStudents.filter(s => s.paymentStatus === 'overdue').length,
-      current: allStudents.filter(s => s.paymentStatus === 'current').length,
-      totalMonthlyRevenue: allStudents.filter(s => s.status === 'active').reduce((sum, s) => sum + (s.monthlyRate || 0), 0),
-    },
-    categories: {
-      A: allStudents.filter(s => s.category === 'A').length,
-      B: allStudents.filter(s => s.category === 'B').length,
-      C: allStudents.filter(s => s.category === 'C').length,
-    },
-    belts: {
-      white: allStudents.filter(s => s.beltRank === 'white').length,
-      yellow: allStudents.filter(s => s.beltRank === 'yellow').length,
-      orange: allStudents.filter(s => s.beltRank === 'orange').length,
-      green: allStudents.filter(s => s.beltRank === 'green').length,
-      blue: allStudents.filter(s => s.beltRank === 'blue').length,
-      purple: allStudents.filter(s => s.beltRank === 'purple').length,
-      brown: allStudents.filter(s => s.beltRank === 'brown').length,
-      red: allStudents.filter(s => s.beltRank === 'red').length,
-      black: allStudents.filter(s => s.beltRank === 'black').length,
-    },
-    leads: {
-      total: allLeads.length,
-      new: allLeads.filter(l => l.stage === 'new').length,
-      contacted: allLeads.filter(l => l.stage === 'contacted').length,
-      trialScheduled: allLeads.filter(l => l.stage === 'trial_scheduled').length,
-      won: allLeads.filter(l => l.stage === 'won').length,
-      lost: allLeads.filter(l => l.stage === 'lost').length,
-    },
-    latePayerDetails: allStudents
-      .filter(s => s.paymentStatus === 'late' || s.paymentStatus === 'overdue')
-      .map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}`, status: s.paymentStatus, monthlyRate: s.monthlyRate })),
+    total_students: totalStudents[0]?.count || 0,
+    monthly_revenue: 12500, // TODO: Calculate from billing data
+    total_leads: totalLeads[0]?.count || 0,
+    todays_classes: todaysClasses.map(c => ({
+      name: c.name,
+      time: c.time,
+      enrolled: c.enrolled
+    }))
   };
+}
+
+// Get kiosk check-ins
+export async function getKioskCheckIns() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { kioskCheckIns } = await import("../drizzle/schema");
+  const { gte } = await import("drizzle-orm");
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const checkIns = await db.select().from(kioskCheckIns).where(gte(kioskCheckIns.timestamp, today));
+  return checkIns;
+}
+
+// Get kiosk visitors
+export async function getKioskVisitors() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { kioskVisitors } = await import("../drizzle/schema");
+  const { gte } = await import("drizzle-orm");
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const visitors = await db.select().from(kioskVisitors).where(gte(kioskVisitors.timestamp, today));
+  return visitors;
+}
+
+// Get kiosk waivers
+export async function getKioskWaivers() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { kioskWaivers } = await import("../drizzle/schema");
+  const { gte } = await import("drizzle-orm");
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const waivers = await db.select().from(kioskWaivers).where(gte(kioskWaivers.timestamp, today));
+  return waivers;
+}
+
+// Search students by name, phone, or email
+export async function searchStudents(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { students } = await import("../drizzle/schema");
+  const { or, like } = await import("drizzle-orm");
+  
+  const searchPattern = `%${query}%`;
+  const results = await db.select().from(students).where(
+    or(
+      like(students.firstName, searchPattern),
+      like(students.lastName, searchPattern),
+      like(students.email, searchPattern),
+      like(students.phone, searchPattern)
+    )
+  ).limit(10);
+  
+  return results;
 }

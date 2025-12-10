@@ -1,15 +1,32 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
+ * Extend this file with additional tables as your product grows.
+ * Columns use camelCase to match both database fields and generated types.
  */
 export const users = mysqlTable("users", {
+  /**
+   * Surrogate primary key. Auto-incremented numeric value managed by the database.
+   * Use this for relations between tables.
+   */
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
+  openId: varchar("openId", { length: 64 }).unique(),
+  /** OAuth provider name (google, facebook, apple) */
+  provider: varchar("provider", { length: 64 }),
+  /** Provider-specific user ID (unique per provider) */
+  providerId: varchar("providerId", { length: 255 }),
   name: text("name"),
   email: varchar("email", { length: 320 }),
+  /** Password hash for local authentication (bcrypt) */
+  password: varchar("password", { length: 255 }),
+  /** Password reset token */
+  resetToken: varchar("resetToken", { length: 255 }),
+  /** Password reset token expiry */
+  resetTokenExpiry: timestamp("resetTokenExpiry"),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "owner", "staff"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -19,54 +36,41 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
- * Students table for martial arts school management
+ * Staff PINs table for kiosk access control
+ * Stores hashed PINs for staff members to access the CRM dashboard
+ */
+export const staffPins = mysqlTable("staff_pins", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Staff member name for identification */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Hashed PIN (bcrypt) - never store plain text */
+  pinHash: varchar("pinHash", { length: 255 }).notNull(),
+  /** Whether this PIN is currently active */
+  isActive: int("isActive").default(1).notNull(),
+  /** Optional role for future role-based access */
+  role: varchar("role", { length: 50 }).default("staff"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  lastUsed: timestamp("lastUsed"),
+});
+
+export type StaffPin = typeof staffPins.$inferSelect;
+export type InsertStaffPin = typeof staffPins.$inferInsert;
+
+/**
+ * Students table - Core student information
  */
 export const students = mysqlTable("students", {
   id: int("id").autoincrement().primaryKey(),
-  firstName: varchar("firstName", { length: 100 }).notNull(),
-  lastName: varchar("lastName", { length: 100 }).notNull(),
+  firstName: varchar("firstName", { length: 255 }).notNull(),
+  lastName: varchar("lastName", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }),
   dateOfBirth: timestamp("dateOfBirth"),
-  
-  // Address fields for map visualization
-  address: text("address"),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zipCode", { length: 20 }),
-  latitude: varchar("latitude", { length: 20 }),
-  longitude: varchar("longitude", { length: 20 }),
-  
-  // Martial arts specific
-  beltRank: mysqlEnum("beltRank", ["white", "yellow", "orange", "green", "blue", "purple", "brown", "red", "black"]).default("white").notNull(),
-  stripes: int("stripes").default(0).notNull(),
-  program: varchar("program", { length: 100 }),
-  
-  // ABC categorization
-  category: mysqlEnum("category", ["A", "B", "C"]).default("B").notNull(),
-  
-  // Status and billing
-  status: mysqlEnum("status", ["active", "inactive", "trial", "frozen"]).default("active").notNull(),
-  membershipType: varchar("membershipType", { length: 100 }),
-  monthlyRate: int("monthlyRate").default(0),
-  credits: int("credits").default(0),
-  lastPaymentDate: timestamp("lastPaymentDate"),
-  paymentStatus: mysqlEnum("paymentStatus", ["current", "late", "overdue"]).default("current"),
-  
-  // Guardian info (for minors)
-  guardianName: varchar("guardianName", { length: 200 }),
-  guardianPhone: varchar("guardianPhone", { length: 20 }),
-  guardianEmail: varchar("guardianEmail", { length: 320 }),
-  guardianRelation: varchar("guardianRelation", { length: 50 }),
-  
-  // Profile
-  photoUrl: text("photoUrl"),
-  notes: text("notes"),
-  
-  // Multi-location support
-  locationId: int("locationId"),
-  
-  joinDate: timestamp("joinDate").defaultNow().notNull(),
+  age: int("age"), // Deprecated - kept for backward compatibility, use dateOfBirth instead
+  beltRank: varchar("beltRank", { length: 100 }),
+  status: mysqlEnum("status", ["Active", "Inactive", "On Hold"]).default("Active").notNull(),
+  membershipStatus: varchar("membershipStatus", { length: 100 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -75,43 +79,92 @@ export type Student = typeof students.$inferSelect;
 export type InsertStudent = typeof students.$inferInsert;
 
 /**
- * Leads table for prospect management
+ * Classes table - Martial arts classes schedule
+ */
+export const classes = mysqlTable("classes", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  time: varchar("time", { length: 50 }).notNull(),
+  enrolled: int("enrolled").default(0).notNull(),
+  capacity: int("capacity").default(20).notNull(),
+  instructor: varchar("instructor", { length: 255 }),
+  dayOfWeek: varchar("dayOfWeek", { length: 20 }),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Class = typeof classes.$inferSelect;
+export type InsertClass = typeof classes.$inferInsert;
+
+/**
+ * Kiosk check-ins table - Track student attendance
+ */
+export const kioskCheckIns = mysqlTable("kiosk_check_ins", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId"),
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type KioskCheckIn = typeof kioskCheckIns.$inferSelect;
+export type InsertKioskCheckIn = typeof kioskCheckIns.$inferInsert;
+
+/**
+ * Kiosk visitors table - Track new visitors
+ */
+export const kioskVisitors = mysqlTable("kiosk_visitors", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type KioskVisitor = typeof kioskVisitors.$inferSelect;
+export type InsertKioskVisitor = typeof kioskVisitors.$inferInsert;
+
+/**
+ * Kiosk waivers table - Track waiver sign-ups
+ */
+export const kioskWaivers = mysqlTable("kiosk_waivers", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  signed: int("signed").default(1).notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type KioskWaiver = typeof kioskWaivers.$inferSelect;
+export type InsertKioskWaiver = typeof kioskWaivers.$inferInsert;
+
+/**
+ * Leads table - Track potential students
  */
 export const leads = mysqlTable("leads", {
   id: int("id").autoincrement().primaryKey(),
-  firstName: varchar("firstName", { length: 100 }).notNull(),
-  lastName: varchar("lastName", { length: 100 }).notNull(),
+  firstName: varchar("firstName", { length: 255 }).notNull(),
+  lastName: varchar("lastName", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }),
-  
-  // Lead pipeline stage
-  stage: mysqlEnum("stage", [
-    "new",
-    "contacted",
-    "appointment_set",
-    "trial_scheduled",
-    "trial_completed",
-    "proposal_sent",
-    "negotiation",
-    "won",
-    "lost"
-  ]).default("new").notNull(),
-  
-  // Lead source and interest
+  status: mysqlEnum("status", [
+    "New Lead",
+    "Attempting Contact",
+    "Contact Made",
+    "Intro Scheduled",
+    "Offer Presented",
+    "Enrolled",
+    "Nurture",
+    "Lost/Winback"
+  ]).default("New Lead").notNull(),
   source: varchar("source", { length: 100 }),
-  interestedProgram: varchar("interestedProgram", { length: 100 }),
   notes: text("notes"),
-  
-  // Assignment
-  assignedTo: int("assignedTo"),
-  
-  // Contact tracking
-  lastContactDate: timestamp("lastContactDate"),
-  nextFollowUpDate: timestamp("nextFollowUpDate"),
-  
-  // Multi-location support
-  locationId: int("locationId"),
-  
+  message: text("message"),
+  // UTM tracking parameters
+  utmSource: varchar("utmSource", { length: 255 }),
+  utmMedium: varchar("utmMedium", { length: 255 }),
+  utmCampaign: varchar("utmCampaign", { length: 255 }),
+  utmContent: varchar("utmContent", { length: 255 }),
+  utmTerm: varchar("utmTerm", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -120,17 +173,644 @@ export type Lead = typeof leads.$inferSelect;
 export type InsertLead = typeof leads.$inferInsert;
 
 /**
- * Kai Command conversations
+ * Lead Sources table - Track enabled/disabled lead capture sources
+ */
+export const leadSources = mysqlTable("lead_sources", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Unique identifier for the source (e.g., 'website_form', 'chat_widget') */
+  sourceKey: varchar("sourceKey", { length: 100 }).notNull().unique(),
+  /** Display name for the source */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Icon name from lucide-react (e.g., 'Globe', 'MessageSquare') */
+  icon: varchar("icon", { length: 100 }).notNull(),
+  /** Whether this source is currently enabled */
+  enabled: int("enabled").default(1).notNull(),
+  /** Display order in settings UI */
+  displayOrder: int("displayOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeadSource = typeof leadSources.$inferSelect;
+export type InsertLeadSource = typeof leadSources.$inferInsert;
+
+/**
+ * Dojo Settings table - Store school/dojo configuration
+ * Single-row table (id=1) for global settings
+ */
+export const dojoSettings = mysqlTable("dojo_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Step 1: Industry & Template
+  industry: mysqlEnum("industry", ["martial_arts", "fitness", "yoga", "pilates", "other"]),
+  businessModel: mysqlEnum("businessModel", ["inside_gym", "standalone", "mobile", "online_hybrid"]),
+  usePreset: int("usePreset").default(1),
+  
+  // Step 2: Business Basics & Brand Identity
+  businessName: varchar("businessName", { length: 255 }),
+  dbaName: varchar("dbaName", { length: 255 }),
+  operatorName: varchar("operatorName", { length: 255 }),
+  preferredName: varchar("preferredName", { length: 255 }),
+  pronounsTone: mysqlEnum("pronounsTone", ["formal", "casual", "energetic", "calm"]),
+  timezone: varchar("timezone", { length: 100 }).default("America/New_York"),
+  primaryColor: varchar("primaryColor", { length: 20 }),
+  secondaryColor: varchar("secondaryColor", { length: 20 }),
+  logoSquare: varchar("logoSquare", { length: 500 }),
+  logoHorizontal: varchar("logoHorizontal", { length: 500 }),
+  
+  // Step 5: Money, Targets & Constraints
+  monthlyRent: int("monthlyRent"),
+  monthlyUtilities: int("monthlyUtilities"),
+  monthlyPayroll: int("monthlyPayroll"),
+  monthlyMarketing: int("monthlyMarketing"),
+  currentMembers: int("currentMembers"),
+  revenueGoal: int("revenueGoal"),
+  maxClassSize: int("maxClassSize").default(20),
+  nonNegotiables: text("nonNegotiables"),
+  focusSlider: int("focusSlider").default(50), // 0=stability, 100=aggressive growth
+  riskComfort: int("riskComfort").default(50), // 0=strict, 100=flexible
+  
+  // Legacy fields (kept for backward compatibility)
+  schoolName: varchar("schoolName", { length: 255 }),
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  contactPhone: varchar("contactPhone", { length: 20 }),
+  website: varchar("website", { length: 500 }),
+  instructorTitle: varchar("instructorTitle", { length: 50 }),
+  instructorFirstName: varchar("instructorFirstName", { length: 255 }),
+  instructorLastName: varchar("instructorLastName", { length: 255 }),
+  martialArtsStyle: varchar("martialArtsStyle", { length: 100 }),
+  addressLine1: varchar("addressLine1", { length: 255 }),
+  addressLine2: varchar("addressLine2", { length: 255 }),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  zipCode: varchar("zipCode", { length: 20 }),
+  country: varchar("country", { length: 100 }).default("United States"),
+  weatherApiKey: varchar("weatherApiKey", { length: 255 }),
+  enableWeatherAlerts: int("enableWeatherAlerts").default(1),
+  hasOutdoorClasses: int("hasOutdoorClasses").default(0),
+  heatIndexThreshold: int("heatIndexThreshold").default(95),
+  airQualityThreshold: int("airQualityThreshold").default(150),
+  paymentProvider: varchar("paymentProvider", { length: 50 }),
+  stripeApiKey: varchar("stripeApiKey", { length: 255 }),
+  stripePublishableKey: varchar("stripePublishableKey", { length: 255 }),
+  stripeWebhookSecret: varchar("stripeWebhookSecret", { length: 255 }),
+  squareAccessToken: varchar("squareAccessToken", { length: 255 }),
+  squareLocationId: varchar("squareLocationId", { length: 255 }),
+  
+  // Step 9: Payment Processor Setup
+  paymentProcessor: mysqlEnum("paymentProcessor", ["stripe", "square", "clover", "pc_bancard", "none"]).default("stripe"),
+  paymentApiKey: varchar("paymentApiKey", { length: 500 }),
+  paymentMerchantId: varchar("paymentMerchantId", { length: 500 }),
+  paymentSetupLater: int("paymentSetupLater").default(0),
+  
+  // Communication Settings (Twilio SMS)
+  twilioAccountSid: varchar("twilioAccountSid", { length: 255 }),
+  twilioAuthToken: varchar("twilioAuthToken", { length: 255 }),
+  twilioPhoneNumber: varchar("twilioPhoneNumber", { length: 20 }),
+  enableSmsForLeads: int("enableSmsForLeads").default(0),
+  
+  // Communication Settings (Email)
+  emailProvider: mysqlEnum("emailProvider", ["sendgrid", "smtp"]).default("sendgrid"),
+  senderEmail: varchar("senderEmail", { length: 320 }),
+  sendgridApiKey: varchar("sendgridApiKey", { length: 500 }),
+  smtpHost: varchar("smtpHost", { length: 255 }),
+  smtpPort: int("smtpPort"),
+  smtpUser: varchar("smtpUser", { length: 255 }),
+  smtpPassword: varchar("smtpPassword", { length: 500 }),
+  enableEmailForLeads: int("enableEmailForLeads").default(0),
+  
+  // Staff Notification Settings
+  notifyStaffOnNewLead: int("notifyStaffOnNewLead").default(1),
+  staffNotificationMethod: mysqlEnum("staffNotificationMethod", ["sms", "email", "both"]).default("both"),
+  staffNotificationPhone: varchar("staffNotificationPhone", { length: 20 }),
+  staffNotificationEmail: varchar("staffNotificationEmail", { length: 320 }),
+  
+  // Lead Automation Settings
+  autoSendSmsToLead: int("autoSendSmsToLead").default(1),
+  autoSendEmailToLead: int("autoSendEmailToLead").default(1),
+  autoUpdatePipelineStage: int("autoUpdatePipelineStage").default(1),
+  bookingLink: varchar("bookingLink", { length: 500 }),
+  
+  // Setup Completion
+  setupCompleted: int("setupCompleted").default(0).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DojoSettings = typeof dojoSettings.$inferSelect;
+export type InsertDojoSettings = typeof dojoSettings.$inferInsert;
+
+/**
+ * Locations table - Step 3: Locations & Schedule
+ * Multiple locations with operating hours and time blocks
+ */
+export const locations = mysqlTable("locations", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  address: varchar("address", { length: 500 }),
+  insideFacility: int("insideFacility").default(0),
+  facilityName: varchar("facilityName", { length: 255 }),
+  operatingHours: text("operatingHours"), // JSON: {monday: {open: "09:00", close: "21:00"}, ...}
+  timeBlocks: text("timeBlocks"), // JSON: [{name: "Kids Classes", start: "16:00", end: "18:00"}, ...]
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Location = typeof locations.$inferSelect;
+export type InsertLocation = typeof locations.$inferInsert;
+
+/**
+ * Programs table - Step 4: Programs & Services
+ * Membership plans, class packs, drop-ins, private sessions
+ */
+export const programs = mysqlTable("programs", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["membership", "class_pack", "drop_in", "private"]).notNull(),
+  ageRange: varchar("ageRange", { length: 100 }),
+  billing: mysqlEnum("billing", ["monthly", "weekly", "per_session", "one_time"]),
+  price: int("price"), // In cents
+  contractLength: varchar("contractLength", { length: 50 }), // "month-to-month", "6 months", "12 months"
+  maxSize: int("maxSize").default(20),
+  isCoreProgram: int("isCoreProgram").default(0),
+  showOnKiosk: int("showOnKiosk").default(1),
+  allowAutopilot: int("allowAutopilot").default(0),
+  description: text("description"),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Program = typeof programs.$inferSelect;
+export type InsertProgram = typeof programs.$inferInsert;
+
+/**
+ * Team Members table - Step 6: Team & Roles
+ * Staff, instructors, coaches with permissions and focus areas
+ */
+export const teamMembers = mysqlTable("team_members", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  role: mysqlEnum("role", ["owner", "manager", "instructor", "front_desk", "coach", "trainer", "assistant"]).notNull(),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  locationIds: text("locationIds"), // JSON: [1, 2, 3]
+  addressAs: varchar("addressAs", { length: 255 }), // "Coach Sarah", "Professor João"
+  focusAreas: text("focusAreas"), // JSON: ["kids", "advanced", "beginners", "sales"]
+  canViewFinancials: int("canViewFinancials").default(0),
+  canEditSchedule: int("canEditSchedule").default(0),
+  canManageLeads: int("canManageLeads").default(0),
+  viewOnly: int("viewOnly").default(1),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = typeof teamMembers.$inferInsert;
+
+/**
+ * Member Journey Config table - Step 7: Member Journey & Automations
+ * Single-row table (id=1) for automation settings
+ */
+export const memberJourneyConfig = mysqlTable("member_journey_config", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Lead Handling
+  leadGreeting: text("leadGreeting"),
+  contactPreference: mysqlEnum("contactPreference", ["sms", "email", "both"]).default("both"),
+  responseSpeedMinutes: int("responseSpeedMinutes").default(15),
+  trialOffer: varchar("trialOffer", { length: 255 }),
+  
+  // Trial / Intro
+  trialType: mysqlEnum("trialType", ["free_class", "paid_intro", "free_week", "assessment"]),
+  trialFollowUp: text("trialFollowUp"),
+  
+  // New Member Onboarding
+  welcomeTone: mysqlEnum("welcomeTone", ["shorter", "detailed"]).default("detailed"),
+  miss1ClassAction: varchar("miss1ClassAction", { length: 255 }),
+  miss2WeeksAction: varchar("miss2WeeksAction", { length: 255 }),
+  
+  // Long-Term Retention
+  absenceAlertThreshold: int("absenceAlertThreshold").default(3), // Number of absences
+  renewalReminderWeeks: int("renewalReminderWeeks").default(2),
+  
+  // Industry-specific toggles
+  autoBookingPrompts: int("autoBookingPrompts").default(0),
+  encouragementMessages: int("encouragementMessages").default(1),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MemberJourneyConfig = typeof memberJourneyConfig.$inferSelect;
+export type InsertMemberJourneyConfig = typeof memberJourneyConfig.$inferInsert;
+
+/**
+ * Billing Applications table - PC Bancard and Stripe applications
+ * Stores merchant account applications with document tracking
+ */
+export const billingApplications = mysqlTable("billing_applications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Link to user who submitted
+  
+  // Payment provider
+  provider: mysqlEnum("provider", ["pcbancard", "stripe"]).notNull(),
+  
+  // Application status
+  status: mysqlEnum("status", ["draft", "submitted", "under_review", "approved", "rejected", "requires_info"]).default("draft").notNull(),
+  
+  // PC Bancard specific fields
+  businessName: varchar("businessName", { length: 255 }),
+  dbaName: varchar("dbaName", { length: 255 }),
+  businessAddress: text("businessAddress"),
+  businessPhone: varchar("businessPhone", { length: 20 }),
+  ownerName: varchar("ownerName", { length: 255 }),
+  ownerCell: varchar("ownerCell", { length: 20 }),
+  managerName: varchar("managerName", { length: 255 }),
+  managerCell: varchar("managerCell", { length: 20 }),
+  hoursOfOperation: varchar("hoursOfOperation", { length: 255 }),
+  daysOfOperation: varchar("daysOfOperation", { length: 255 }),
+  estimatedMonthlyVolume: int("estimatedMonthlyVolume"),
+  specialInstructions: text("specialInstructions"),
+  
+  // Contact info for PC Bancard
+  pcbancardRepName: varchar("pcbancardRepName", { length: 255 }).default("Randy Sinclair"),
+  pcbancardRepPhone: varchar("pcbancardRepPhone", { length: 20 }).default("682-218-1669"),
+  
+  // Stripe specific fields (for future use)
+  stripeAccountId: varchar("stripeAccountId", { length: 255 }),
+  stripeOnboardingComplete: int("stripeOnboardingComplete").default(0),
+  
+  // Processing info
+  submittedAt: timestamp("submittedAt"),
+  reviewedAt: timestamp("reviewedAt"),
+  approvedAt: timestamp("approvedAt"),
+  rejectedAt: timestamp("rejectedAt"),
+  rejectionReason: text("rejectionReason"),
+  adminNotes: text("adminNotes"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BillingApplication = typeof billingApplications.$inferSelect;
+export type InsertBillingApplication = typeof billingApplications.$inferInsert;
+
+/**
+ * Billing Documents table - Store S3 URLs for uploaded documents
+ * Links to billing applications with document type tracking
+ */
+export const billingDocuments = mysqlTable("billing_documents", {
+  id: int("id").autoincrement().primaryKey(),
+  applicationId: int("applicationId").notNull(), // Foreign key to billing_applications
+  
+  // Document type
+  documentType: mysqlEnum("documentType", [
+    "drivers_license",
+    "voided_check",
+    "state_ein",
+    "address_verification",
+    "bank_letter"
+  ]).notNull(),
+  
+  // S3 storage
+  s3Key: varchar("s3Key", { length: 500 }).notNull(),
+  s3Url: varchar("s3Url", { length: 1000 }).notNull(),
+  
+  // File metadata
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileSize: int("fileSize"), // In bytes
+  mimeType: varchar("mimeType", { length: 100 }),
+  
+  // Verification status
+  verified: int("verified").default(0).notNull(),
+  verifiedAt: timestamp("verifiedAt"),
+  verifiedBy: int("verifiedBy"), // Admin user ID
+  verificationNotes: text("verificationNotes"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BillingDocument = typeof billingDocuments.$inferSelect;
+export type InsertBillingDocument = typeof billingDocuments.$inferInsert;
+
+/**
+ * Payment Methods table - Store configured payment processors
+ * Tracks which payment methods are active for the dojo
+ */
+export const paymentMethods = mysqlTable("payment_methods", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Provider info
+  provider: mysqlEnum("provider", ["pcbancard", "stripe", "square", "other"]).notNull(),
+  providerName: varchar("providerName", { length: 255 }),
+  
+  // Account credentials (encrypted/hashed)
+  merchantId: varchar("merchantId", { length: 255 }),
+  apiKey: varchar("apiKey", { length: 500 }),
+  apiSecret: varchar("apiSecret", { length: 500 }),
+  webhookSecret: varchar("webhookSecret", { length: 500 }),
+  
+  // Status
+  isActive: int("isActive").default(0).notNull(),
+  isPrimary: int("isPrimary").default(0).notNull(),
+  
+  // Linked application
+  applicationId: int("applicationId"), // Link to billing_applications if applicable
+  
+  // Configuration
+  acceptedCardTypes: text("acceptedCardTypes"), // JSON: ["visa", "mastercard", "amex", "discover"]
+  transactionFeePercent: int("transactionFeePercent"), // In basis points (e.g., 275 = 2.75%)
+  transactionFeeFixed: int("transactionFeeFixed"), // In cents
+  
+  // Testing
+  isTestMode: int("isTestMode").default(0).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type InsertPaymentMethod = typeof paymentMethods.$inferInsert;
+
+/**
+ * Billing Transactions table - Track all payment transactions
+ * Records all payments processed through any payment method
+ */
+export const billingTransactions = mysqlTable("billing_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Transaction identification
+  transactionId: varchar("transactionId", { length: 255 }).notNull().unique(),
+  paymentMethodId: int("paymentMethodId").notNull(), // Foreign key to payment_methods
+  
+  // Customer info
+  studentId: int("studentId"), // Link to student if applicable
+  customerName: varchar("customerName", { length: 255 }),
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  
+  // Transaction details
+  amount: int("amount").notNull(), // In cents
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  status: mysqlEnum("status", ["pending", "completed", "failed", "refunded", "disputed"]).default("pending").notNull(),
+  
+  // Payment method details
+  cardLast4: varchar("cardLast4", { length: 4 }),
+  cardBrand: varchar("cardBrand", { length: 50 }),
+  
+  // Related records
+  programId: int("programId"), // Link to program if applicable
+  invoiceId: int("invoiceId"), // Link to invoice if applicable
+  
+  // Processing info
+  processorResponse: text("processorResponse"), // JSON response from payment processor
+  errorMessage: text("errorMessage"),
+  
+  // Timestamps
+  processedAt: timestamp("processedAt"),
+  refundedAt: timestamp("refundedAt"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BillingTransaction = typeof billingTransactions.$inferSelect;
+export type InsertBillingTransaction = typeof billingTransactions.$inferInsert;
+
+/**
+ * Webhook Keys table - API keys for webhook authentication
+ * Allows external systems to submit leads via webhook
+ */
+export const webhookKeys = mysqlTable("webhook_keys", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Human-readable name for the key (e.g., "Wix Website", "WordPress Form") */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** The actual API key (should be hashed or encrypted in production) */
+  apiKey: varchar("apiKey", { length: 255 }).notNull().unique(),
+  /** Whether this key is currently active */
+  isActive: int("isActive").default(1).notNull(),
+  /** Last time this key was used */
+  lastUsedAt: timestamp("lastUsedAt"),
+  /** Number of times this key has been used */
+  usageCount: int("usageCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WebhookKey = typeof webhookKeys.$inferSelect;
+export type InsertWebhookKey = typeof webhookKeys.$inferInsert;
+
+/**
+ * Campaigns table - SMS/Email marketing campaigns
+ * Stores campaign configuration and metadata
+ */
+export const campaigns = mysqlTable("campaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Campaign name for internal reference */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Campaign type: sms or email */
+  type: mysqlEnum("type", ["sms", "email"]).notNull(),
+  /** Campaign status */
+  status: mysqlEnum("status", ["draft", "scheduled", "sending", "sent", "cancelled"]).default("draft").notNull(),
+  /** Message subject (for email) */
+  subject: varchar("subject", { length: 500 }),
+  /** Message body/content */
+  message: text("message").notNull(),
+  /** Target audience filter (JSON) - e.g., {type: "leads", status: ["New Lead", "Contacted"]} */
+  audienceFilter: text("audienceFilter"),
+  /** Total recipients count */
+  recipientCount: int("recipientCount").default(0),
+  /** Successfully sent count */
+  sentCount: int("sentCount").default(0),
+  /** Delivered count */
+  deliveredCount: int("deliveredCount").default(0),
+  /** Failed count */
+  failedCount: int("failedCount").default(0),
+  /** Opened count (email only) */
+  openedCount: int("openedCount").default(0),
+  /** Clicked count (email only) */
+  clickedCount: int("clickedCount").default(0),
+  /** Scheduled send time (null = send immediately) */
+  scheduledAt: timestamp("scheduledAt"),
+  /** Actual send start time */
+  sentAt: timestamp("sentAt"),
+  /** Send completion time */
+  completedAt: timestamp("completedAt"),
+  /** Created by user ID */
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Campaign = typeof campaigns.$inferSelect;
+export type InsertCampaign = typeof campaigns.$inferInsert;
+
+/**
+ * Campaign Recipients table - Track individual message delivery
+ * Links campaigns to specific recipients with delivery status
+ */
+export const campaignRecipients = mysqlTable("campaign_recipients", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to campaigns */
+  campaignId: int("campaignId").notNull(),
+  /** Recipient type: lead or student */
+  recipientType: mysqlEnum("recipientType", ["lead", "student"]).notNull(),
+  /** Foreign key to leads or students table */
+  recipientId: int("recipientId").notNull(),
+  /** Recipient name */
+  recipientName: varchar("recipientName", { length: 255 }).notNull(),
+  /** Recipient contact (email or phone) */
+  recipientContact: varchar("recipientContact", { length: 320 }).notNull(),
+  /** Delivery status */
+  status: mysqlEnum("status", ["pending", "sent", "delivered", "failed", "bounced", "opened", "clicked"]).default("pending").notNull(),
+  /** External message ID from provider (Twilio/SendGrid) */
+  externalMessageId: varchar("externalMessageId", { length: 255 }),
+  /** Error message if failed */
+  errorMessage: text("errorMessage"),
+  /** Sent timestamp */
+  sentAt: timestamp("sentAt"),
+  /** Delivered timestamp */
+  deliveredAt: timestamp("deliveredAt"),
+  /** Opened timestamp (email only) */
+  openedAt: timestamp("openedAt"),
+  /** Clicked timestamp (email only) */
+  clickedAt: timestamp("clickedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CampaignRecipient = typeof campaignRecipients.$inferSelect;
+export type InsertCampaignRecipient = typeof campaignRecipients.$inferInsert;
+
+/**
+ * Automation Sequences table - Automated follow-up sequences
+ * Defines multi-step automation workflows with triggers
+ */
+export const automationSequences = mysqlTable("automation_sequences", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Sequence name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Sequence description */
+  description: text("description"),
+  /** Trigger type - what starts this sequence */
+  trigger: mysqlEnum("trigger", [
+    "new_lead",
+    "trial_scheduled",
+    "trial_completed",
+    "trial_no_show",
+    "enrollment",
+    "missed_class",
+    "inactive_student",
+    "renewal_due",
+    "custom"
+  ]).notNull(),
+  /** Trigger conditions (JSON) - additional filters for trigger */
+  triggerConditions: text("triggerConditions"),
+  /** Whether sequence is active */
+  isActive: int("isActive").default(1).notNull(),
+  /** Total enrollments (people who entered this sequence) */
+  enrollmentCount: int("enrollmentCount").default(0),
+  /** Completed count */
+  completedCount: int("completedCount").default(0),
+  /** Created by user ID */
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AutomationSequence = typeof automationSequences.$inferSelect;
+export type InsertAutomationSequence = typeof automationSequences.$inferInsert;
+
+/**
+ * Automation Steps table - Individual steps in automation sequences
+ * Defines the actions and timing for each step
+ */
+export const automationSteps = mysqlTable("automation_steps", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to automation_sequences */
+  sequenceId: int("sequenceId").notNull(),
+  /** Step order in sequence */
+  stepOrder: int("stepOrder").notNull(),
+  /** Step type */
+  stepType: mysqlEnum("stepType", ["wait", "send_sms", "send_email", "condition", "end"]).notNull(),
+  /** Wait duration in minutes (for wait steps) */
+  waitMinutes: int("waitMinutes"),
+  /** Message subject (for email steps) */
+  subject: varchar("subject", { length: 500 }),
+  /** Message content (for send steps) */
+  message: text("message"),
+  /** Condition logic (JSON) - for conditional branching */
+  condition: text("condition"),
+  /** Next step ID if condition is true */
+  nextStepIdTrue: int("nextStepIdTrue"),
+  /** Next step ID if condition is false */
+  nextStepIdFalse: int("nextStepIdFalse"),
+  /** Step name for identification */
+  name: varchar("name", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AutomationStep = typeof automationSteps.$inferSelect;
+export type InsertAutomationStep = typeof automationSteps.$inferInsert;
+
+/**
+ * Automation Enrollments table - Track who is in which sequence
+ * Links people to active automation sequences
+ */
+export const automationEnrollments = mysqlTable("automation_enrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to automation_sequences */
+  sequenceId: int("sequenceId").notNull(),
+  /** Enrolled person type: lead or student */
+  enrolledType: mysqlEnum("enrolledType", ["lead", "student"]).notNull(),
+  /** Foreign key to leads or students table */
+  enrolledId: int("enrolledId").notNull(),
+  /** Current step ID in sequence */
+  currentStepId: int("currentStepId"),
+  /** Enrollment status */
+  status: mysqlEnum("status", ["active", "paused", "completed", "cancelled"]).default("active").notNull(),
+  /** When to execute next step */
+  nextExecutionAt: timestamp("nextExecutionAt"),
+  /** Enrollment start time */
+  enrolledAt: timestamp("enrolledAt").defaultNow().notNull(),
+  /** Completion time */
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AutomationEnrollment = typeof automationEnrollments.$inferSelect;
+export type InsertAutomationEnrollment = typeof automationEnrollments.$inferInsert;
+
+/**
+ * Conversations table - Two-way SMS conversation threads
+ * Tracks ongoing conversations with leads and students
  */
 export const conversations = mysqlTable("conversations", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  title: varchar("title", { length: 255 }),
-  
-  // Smart collections
-  collection: varchar("collection", { length: 100 }),
-  isPinned: boolean("isPinned").default(false),
-  
+  /** Participant type: lead or student */
+  participantType: mysqlEnum("participantType", ["lead", "student"]).notNull(),
+  /** Foreign key to leads or students table */
+  participantId: int("participantId").notNull(),
+  /** Participant name */
+  participantName: varchar("participantName", { length: 255 }).notNull(),
+  /** Participant phone number */
+  participantPhone: varchar("participantPhone", { length: 20 }).notNull(),
+  /** Conversation status */
+  status: mysqlEnum("status", ["open", "closed", "archived"]).default("open").notNull(),
+  /** Assigned to team member ID */
+  assignedTo: int("assignedTo"),
+  /** Last message preview */
+  lastMessagePreview: text("lastMessagePreview"),
+  /** Last message timestamp */
+  lastMessageAt: timestamp("lastMessageAt"),
+  /** Unread message count */
+  unreadCount: int("unreadCount").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -139,40 +819,106 @@ export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
 
 /**
- * Kai Command messages
+ * Messages table - Individual messages in conversations
+ * Stores all SMS messages sent and received
  */
 export const messages = mysqlTable("messages", {
   id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to conversations */
   conversationId: int("conversationId").notNull(),
-  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  /** Message direction */
+  direction: mysqlEnum("direction", ["inbound", "outbound"]).notNull(),
+  /** Message content */
   content: text("content").notNull(),
-  
-  // For file/image processing
-  attachments: json("attachments"),
-  
+  /** Sender type (for outbound: system, staff, automation) */
+  senderType: mysqlEnum("senderType", ["system", "staff", "automation", "customer"]),
+  /** Sender ID (team member ID for staff messages) */
+  senderId: int("senderId"),
+  /** Delivery status */
+  status: mysqlEnum("status", ["pending", "sent", "delivered", "failed", "read"]).default("pending").notNull(),
+  /** External message ID from Twilio */
+  externalMessageId: varchar("externalMessageId", { length: 255 }),
+  /** Error message if failed */
+  errorMessage: text("errorMessage"),
+  /** Sent timestamp */
+  sentAt: timestamp("sentAt"),
+  /** Delivered timestamp */
+  deliveredAt: timestamp("deliveredAt"),
+  /** Read timestamp */
+  readAt: timestamp("readAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
 
 /**
- * Locations for multi-location support
+ * Message Templates table - Reusable message templates
+ * Quick replies and standard messages for conversations
  */
-export const locations = mysqlTable("locations", {
+export const messageTemplates = mysqlTable("message_templates", {
   id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 200 }).notNull(),
-  address: text("address"),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zipCode", { length: 20 }),
-  phone: varchar("phone", { length: 20 }),
-  latitude: varchar("latitude", { length: 20 }),
-  longitude: varchar("longitude", { length: 20 }),
-  isActive: boolean("isActive").default(true),
+  /** Template name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Template category */
+  category: mysqlEnum("category", ["greeting", "follow_up", "reminder", "confirmation", "general"]).notNull(),
+  /** Template type */
+  type: mysqlEnum("type", ["sms", "email"]).notNull(),
+  /** Message subject (for email) */
+  subject: varchar("subject", { length: 500 }),
+  /** Message content with placeholders (e.g., {{firstName}}, {{trialDate}}) */
+  content: text("content").notNull(),
+  /** Whether this is a system template (not editable) */
+  isSystem: int("isSystem").default(0).notNull(),
+  /** Usage count */
+  usageCount: int("usageCount").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
-export type Location = typeof locations.$inferSelect;
-export type InsertLocation = typeof locations.$inferInsert;
+export type MessageTemplate = typeof messageTemplates.$inferSelect;
+export type InsertMessageTemplate = typeof messageTemplates.$inferInsert;
+
+/**
+ * Automation Templates table - Pre-built automation sequence templates
+ * Library of ready-to-use automation workflows with variable placeholders
+ */
+export const automationTemplates = mysqlTable("automation_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Template name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Template description */
+  description: text("description").notNull(),
+  /** Template category */
+  category: mysqlEnum("category", ["welcome", "trial", "engagement", "celebration", "followup", "renewal"]).notNull(),
+  /** Trigger type */
+  trigger: mysqlEnum("trigger", [
+    "new_lead",
+    "trial_scheduled",
+    "trial_completed",
+    "trial_no_show",
+    "enrollment",
+    "missed_class",
+    "inactive_student",
+    "renewal_due",
+    "custom"
+  ]).notNull(),
+  /** Trigger conditions (JSON) */
+  triggerConditions: text("triggerConditions"),
+  /** Steps configuration (JSON array of steps) */
+  steps: text("steps").notNull(),
+  /** Whether this is a system template */
+  isSystem: int("isSystem").default(1).notNull(),
+  /** Installation count */
+  installCount: int("installCount").default(0),
+  /** Preview image URL */
+  previewImage: varchar("previewImage", { length: 500 }),
+  /** Tags for filtering (JSON array) */
+  tags: text("tags"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AutomationTemplate = typeof automationTemplates.$inferSelect;
+export type InsertAutomationTemplate = typeof automationTemplates.$inferInsert;

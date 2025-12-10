@@ -1,0 +1,49 @@
+{
+  "query": "SELECT * FROM automation_enrollments",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.root --database bGed8yr8ACVWMUwug5SgAL --execute SELECT * FROM automation_enrollments",
+  "rows": [
+    {
+      "id": "30001",
+      "sequenceId": "30003",
+      "enrolledType": "lead",
+      "enrolledId": "240001",
+      "currentStepId": "30005",
+      "status": "active",
+      "nextExecutionAt": "2025-11-23 22:24:06",
+      "enrolledAt": "2025-11-22 22:23:46",
+      "completedAt": "NULL",
+      "createdAt": "2025-11-22 22:23:46",
+      "updatedAt": "2025-11-22 22:24:06"
+    },
+    {
+      "id": "30002",
+      "sequenceId": "30004",
+      "enrolledType": "lead",
+      "enrolledId": "240001",
+      "currentStepId": "30009",
+      "status": "active",
+      "nextExecutionAt": "2025-11-23 22:23:48",
+      "enrolledAt": "2025-11-22 22:23:46",
+      "completedAt": "NULL",
+      "createdAt": "2025-11-22 22:23:46",
+      "updatedAt": "2025-11-22 22:23:47"
+    },
+    {
+      "id": "30003",
+      "sequenceId": "60001",
+      "enrolledType": "lead",
+      "enrolledId": "240001",
+      "currentStepId": "60005",
+      "status": "active",
+      "nextExecutionAt": "2025-11-23 22:23:48",
+      "enrolledAt": "2025-11-22 22:23:46",
+      "completedAt": "NULL",
+      "createdAt": "2025-11-22 22:23:46",
+      "updatedAt": "2025-11-22 22:23:47"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsequenceId\tenrolledType\tenrolledId\tcurrentStepId\tstatus\tnextExecutionAt\tenrolledAt\tcompletedAt\tcreatedAt\tupdatedAt\n30001\t30003\tlead\t240001\t30005\tactive\t2025-11-23 22:24:06\t2025-11-22 22:23:46\tNULL\t2025-11-22 22:23:46\t2025-11-22 22:24:06\n30002\t30004\tlead\t240001\t30009\tactive\t2025-11-23 22:23:48\t2025-11-22 22:23:46\tNULL\t2025-11-22 22:23:46\t2025-11-22 22:23:47\n30003\t60001\tlead\t240001\t60005\tactive\t2025-11-23 22:23:48\t2025-11-22 22:23:46\tNULL\t2025-11-22 22:23:46\t2025-11-22 22:23:47\n",
+  "stderr": "",
+  "execution_time_ms": 678
+}

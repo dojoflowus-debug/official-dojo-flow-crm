@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Center Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #1a0b2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .container {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid cyan;
+    }
+    
+    .outer-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 83%;
+      height: 83%;
+      border: 2px solid rgba(0, 255, 255, 0.3);
+      border-radius: 50%;
+    }
+    
+    .middle-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 67%;
+      height: 67%;
+      border: 2px solid rgba(0, 255, 255, 0.5);
+      border-radius: 50%;
+    }
+    
+    .glass-ball {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 45%;
+      height: 45%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(100, 200, 255, 0.2));
+      border: 2px solid rgba(0, 255, 255, 0.7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    .menu-item {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      background: cyan;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-weight: bold;
+      font-size: 12px;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="outer-ring"></div>
+    <div class="middle-ring"></div>
+    <div class="glass-ball">PLASMA</div>
+    
+    <!-- Menu items positioned around the circle -->
+    <div class="menu-item" style="left: 50%; top: 8.33%;">Students</div>
+    <div class="menu-item" style="left: 85.36%; top: 14.64%;">Leads</div>
+    <div class="menu-item" style="left: 91.67%; top: 50%;">Marketing</div>
+    <div class="menu-item" style="left: 85.36%; top: 85.36%;">Staff</div>
+    <div class="menu-item" style="left: 50%; top: 91.67%;">Receptionist</div>
+    <div class="menu-item" style="left: 14.64%; top: 85.36%;">Subscription</div>
+    <div class="menu-item" style="left: 8.33%; top: 50%;">Classes</div>
+    <div class="menu-item" style="left: 14.64%; top: 14.64%;">Kiosk</div>
+  </div>
+</body>
+</html>

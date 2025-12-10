@@ -1,0 +1,788 @@
+import { useState, useEffect, useRef } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { 
+  UserCheck,
+  UserPlus,
+  FileSignature,
+  CreditCard,
+  Search,
+  CheckCircle2,
+  ArrowLeft,
+  Sparkles,
+  Phone,
+  Mail,
+  Calendar,
+  Home,
+  User
+} from 'lucide-react'
+
+export default function KioskCheckIn() {
+  const [activeTab, setActiveTab] = useState('home')
+  const [students, setStudents] = useState([])
+  const [filteredStudents, setFilteredStudents] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState(null)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  
+  // New Student Form
+  const [newStudentForm, setNewStudentForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    date_of_birth: '',
+    emergency_contact: '',
+    emergency_phone: ''
+  })
+
+  // Waiver State
+  const [waiverForm, setWaiverForm] = useState({
+    student_name: '',
+    guardian_name: '',
+    date: new Date().toISOString().split('T')[0]
+  })
+  const [signature, setSignature] = useState('')
+  const canvasRef = useRef(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+
+  // Payment State
+  const [paymentForm, setPaymentForm] = useState({
+    student_id: '',
+    amount: '',
+    payment_method: 'card',
+    description: ''
+  })
+
+  useEffect(() => {
+    loadStudents()
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredStudents(students)
+    } else {
+      const query = searchQuery.toLowerCase()
+      setFilteredStudents(
+        students.filter(student => 
+          student.first_name.toLowerCase().includes(query) ||
+          student.last_name.toLowerCase().includes(query) ||
+          `${student.first_name} ${student.last_name}`.toLowerCase().includes(query)
+        )
+      )
+    }
+  }, [searchQuery, students])
+
+  const loadStudents = async () => {
+    try {
+      const response = await fetch('https://5000-is8una2ov9qox2fg0tlcd-a7881f62.manusvm.computer/api/students')
+      const data = await response.json()
+      setStudents(data.students || [])
+      setFilteredStudents(data.students || [])
+    } catch (error) {
+      console.error('Failed to load students:', error)
+    }
+  }
+
+  const handleCheckIn = async (student) => {
+    setLoading(true)
+    try {
+      const response = await fetch('https://5000-is8una2ov9qox2fg0tlcd-a7881f62.manusvm.computer/api/kiosk/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: student.id,
+          class_name: 'Open Mat'
+        })
+      })
+
+      if (response.ok) {
+        showSuccess(`Welcome, ${student.first_name}! You're checked in.`)
+        setSearchQuery('')
+      }
+    } catch (error) {
+      console.error('Check-in failed:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleNewStudentSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const response = await fetch('https://5000-is8una2ov9qox2fg0tlcd-a7881f62.manusvm.computer/api/kiosk/visitor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStudentForm)
+      })
+
+      if (response.ok) {
+        showSuccess(`Welcome, ${newStudentForm.first_name}! Your information has been recorded.`)
+        setNewStudentForm({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          date_of_birth: '',
+          emergency_contact: '',
+          emergency_phone: ''
+        })
+        setActiveTab('home')
+        loadStudents()
+      }
+    } catch (error) {
+      console.error('New student signup failed:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleWaiverSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const response = await fetch('https://5000-is8una2ov9qox2fg0tlcd-a7881f62.manusvm.computer/api/kiosk/waiver', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...waiverForm,
+          signature: signature,
+          waiver_text: 'Standard liability waiver for martial arts training'
+        })
+      })
+
+      if (response.ok) {
+        showSuccess('Waiver signed successfully!')
+        clearSignature()
+        setWaiverForm({
+          student_name: '',
+          guardian_name: '',
+          date: new Date().toISOString().split('T')[0]
+        })
+        setActiveTab('home')
+      }
+    } catch (error) {
+      console.error('Waiver submission failed:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const response = await fetch('https://5000-is8una2ov9qox2fg0tlcd-a7881f62.manusvm.computer/api/kiosk/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...paymentForm,
+          amount: parseFloat(paymentForm.amount),
+          status: 'completed'
+        })
+      })
+
+      if (response.ok) {
+        showSuccess(`Payment of $${paymentForm.amount} processed successfully!`)
+        setPaymentForm({
+          student_id: '',
+          amount: '',
+          payment_method: 'card',
+          description: ''
+        })
+        setActiveTab('home')
+      }
+    } catch (error) {
+      console.error('Payment failed:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const showSuccess = (message) => {
+    setSuccessMessage(message)
+    setTimeout(() => setSuccessMessage(null), 4000)
+  }
+
+  // Signature Canvas Functions
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (canvas && activeTab === 'waiver') {
+      const ctx = canvas.getContext('2d')
+      ctx.strokeStyle = '#000'
+      ctx.lineWidth = 2
+      ctx.lineCap = 'round'
+    }
+  }, [activeTab])
+
+  const startDrawing = (e) => {
+    setIsDrawing(true)
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    const ctx = canvas.getContext('2d')
+    ctx.beginPath()
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top)
+  }
+
+  const draw = (e) => {
+    if (!isDrawing) return
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    const ctx = canvas.getContext('2d')
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top)
+    ctx.stroke()
+  }
+
+  const stopDrawing = () => {
+    if (isDrawing) {
+      setIsDrawing(false)
+      const canvas = canvasRef.current
+      setSignature(canvas.toDataURL())
+    }
+  }
+
+  const clearSignature = () => {
+    const canvas = canvasRef.current
+    if (canvas) {
+      const ctx = canvas.getContext('2d')
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      setSignature('')
+    }
+  }
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    })
+  }
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-8">
+      {/* Header */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+              <Sparkles className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">MyDojo Kiosk</h1>
+              <p className="text-muted-foreground text-lg">Check in, sign up, or make a payment</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold">{formatTime(currentTime)}</div>
+            <div className="text-sm text-muted-foreground">{formatDate(currentTime)}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="max-w-6xl mx-auto mb-8">
+          <Card className="bg-green-500/10 border-green-500">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <CheckCircle2 className="h-12 w-12 text-green-500" />
+                <div>
+                  <h2 className="text-2xl font-bold text-green-500">{successMessage}</h2>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-5 h-16">
+            <TabsTrigger value="home" className="text-lg">
+              <Home className="h-5 w-5 mr-2" />
+              Home
+            </TabsTrigger>
+            <TabsTrigger value="checkin" className="text-lg">
+              <UserCheck className="h-5 w-5 mr-2" />
+              Check In
+            </TabsTrigger>
+            <TabsTrigger value="signup" className="text-lg">
+              <UserPlus className="h-5 w-5 mr-2" />
+              New Student
+            </TabsTrigger>
+            <TabsTrigger value="waiver" className="text-lg">
+              <FileSignature className="h-5 w-5 mr-2" />
+              Sign Waiver
+            </TabsTrigger>
+            <TabsTrigger value="payment" className="text-lg">
+              <CreditCard className="h-5 w-5 mr-2" />
+              Make Payment
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Home Tab */}
+          <TabsContent value="home" className="space-y-6 mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+                onClick={() => setActiveTab('checkin')}
+              >
+                <CardContent className="p-8 text-center">
+                  <UserCheck className="h-16 w-16 mx-auto mb-4 text-primary" />
+                  <h3 className="text-2xl font-bold mb-2">Check In</h3>
+                  <p className="text-muted-foreground">
+                    Existing students tap here to check in for class
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+                onClick={() => setActiveTab('signup')}
+              >
+                <CardContent className="p-8 text-center">
+                  <UserPlus className="h-16 w-16 mx-auto mb-4 text-green-500" />
+                  <h3 className="text-2xl font-bold mb-2">New Student</h3>
+                  <p className="text-muted-foreground">
+                    First time here? Sign up as a new student
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+                onClick={() => setActiveTab('waiver')}
+              >
+                <CardContent className="p-8 text-center">
+                  <FileSignature className="h-16 w-16 mx-auto mb-4 text-blue-500" />
+                  <h3 className="text-2xl font-bold mb-2">Sign Waiver</h3>
+                  <p className="text-muted-foreground">
+                    Sign your liability waiver digitally
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+                onClick={() => setActiveTab('payment')}
+              >
+                <CardContent className="p-8 text-center">
+                  <CreditCard className="h-16 w-16 mx-auto mb-4 text-purple-500" />
+                  <h3 className="text-2xl font-bold mb-2">Make Payment</h3>
+                  <p className="text-muted-foreground">
+                    Pay for classes, memberships, or gear
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Check-In Tab */}
+          <TabsContent value="checkin" className="space-y-6 mt-8">
+            <div className="relative mb-6">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search for your name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-14 h-16 text-xl"
+                autoFocus
+              />
+            </div>
+
+            {filteredStudents.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <UserCheck className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No students found</h3>
+                  <p className="text-muted-foreground">
+                    {searchQuery ? 'Try a different search term' : 'No students available'}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredStudents.map((student) => (
+                  <Card 
+                    key={student.id}
+                    className="hover:shadow-lg transition-all cursor-pointer hover:scale-105"
+                    onClick={() => handleCheckIn(student)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-2xl font-bold">
+                          {student.first_name[0]}{student.last_name[0]}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold">
+                            {student.first_name} {student.last_name}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {student.belt_rank || 'White Belt'}
+                            </Badge>
+                            {student.status === 'active' && (
+                              <Badge variant="default" className="text-xs bg-green-500">
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <UserCheck className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* New Student Signup Tab */}
+          <TabsContent value="signup" className="space-y-6 mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">New Student Registration</CardTitle>
+                <CardDescription>Please fill out your information to get started</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleNewStudentSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="first_name" className="text-lg">First Name *</Label>
+                      <Input
+                        id="first_name"
+                        value={newStudentForm.first_name}
+                        onChange={(e) => setNewStudentForm({...newStudentForm, first_name: e.target.value})}
+                        required
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="last_name" className="text-lg">Last Name *</Label>
+                      <Input
+                        id="last_name"
+                        value={newStudentForm.last_name}
+                        onChange={(e) => setNewStudentForm({...newStudentForm, last_name: e.target.value})}
+                        required
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-lg flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email *
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newStudentForm.email}
+                        onChange={(e) => setNewStudentForm({...newStudentForm, email: e.target.value})}
+                        required
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-lg flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Phone *
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={newStudentForm.phone}
+                        onChange={(e) => setNewStudentForm({...newStudentForm, phone: e.target.value})}
+                        required
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_of_birth" className="text-lg flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Date of Birth *
+                    </Label>
+                    <Input
+                      id="date_of_birth"
+                      type="date"
+                      value={newStudentForm.date_of_birth}
+                      onChange={(e) => setNewStudentForm({...newStudentForm, date_of_birth: e.target.value})}
+                      required
+                      className="h-12 text-lg"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="emergency_contact" className="text-lg">Emergency Contact Name *</Label>
+                      <Input
+                        id="emergency_contact"
+                        value={newStudentForm.emergency_contact}
+                        onChange={(e) => setNewStudentForm({...newStudentForm, emergency_contact: e.target.value})}
+                        required
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="emergency_phone" className="text-lg">Emergency Contact Phone *</Label>
+                      <Input
+                        id="emergency_phone"
+                        type="tel"
+                        value={newStudentForm.emergency_phone}
+                        onChange={(e) => setNewStudentForm({...newStudentForm, emergency_phone: e.target.value})}
+                        required
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => setActiveTab('home')}
+                      className="flex-1"
+                    >
+                      <ArrowLeft className="h-5 w-5 mr-2" />
+                      Back
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      size="lg"
+                      disabled={loading}
+                      className="flex-1"
+                    >
+                      {loading ? 'Submitting...' : 'Submit Registration'}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Waiver Tab */}
+          <TabsContent value="waiver" className="space-y-6 mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">Liability Waiver</CardTitle>
+                <CardDescription>Please read and sign the waiver below</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleWaiverSubmit} className="space-y-6">
+                  <div className="bg-muted p-6 rounded-lg max-h-64 overflow-y-auto">
+                    <h4 className="font-bold mb-4">ASSUMPTION OF RISK AND WAIVER OF LIABILITY</h4>
+                    <p className="text-sm leading-relaxed">
+                      I acknowledge that martial arts training involves inherent risks including but not limited to: 
+                      physical injury, muscle strains, sprains, fractures, and other bodily harm. I voluntarily assume 
+                      all risks associated with participation in martial arts classes and activities at MyDojo. 
+                      I hereby release, waive, and discharge MyDojo, its owners, instructors, and staff from any and 
+                      all liability for injuries or damages that may occur during my participation. I certify that I 
+                      am in good physical condition and have no medical conditions that would prevent safe participation.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="student_name" className="text-lg">Student Name *</Label>
+                      <Input
+                        id="student_name"
+                        value={waiverForm.student_name}
+                        onChange={(e) => setWaiverForm({...waiverForm, student_name: e.target.value})}
+                        required
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="guardian_name" className="text-lg">Parent/Guardian Name (if under 18)</Label>
+                      <Input
+                        id="guardian_name"
+                        value={waiverForm.guardian_name}
+                        onChange={(e) => setWaiverForm({...waiverForm, guardian_name: e.target.value})}
+                        className="h-12 text-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-lg">Signature *</Label>
+                    <div className="border-2 border-dashed border-muted-foreground rounded-lg p-4 bg-white">
+                      <canvas
+                        ref={canvasRef}
+                        width={800}
+                        height={200}
+                        className="w-full cursor-crosshair"
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={clearSignature}
+                      >
+                        Clear Signature
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => setActiveTab('home')}
+                      className="flex-1"
+                    >
+                      <ArrowLeft className="h-5 w-5 mr-2" />
+                      Back
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      size="lg"
+                      disabled={loading || !signature}
+                      className="flex-1"
+                    >
+                      {loading ? 'Submitting...' : 'Sign Waiver'}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Payment Tab */}
+          <TabsContent value="payment" className="space-y-6 mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">Make a Payment</CardTitle>
+                <CardDescription>Process payment for classes, memberships, or gear</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handlePaymentSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_student" className="text-lg flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Select Student *
+                    </Label>
+                    <select
+                      id="payment_student"
+                      value={paymentForm.student_id}
+                      onChange={(e) => setPaymentForm({...paymentForm, student_id: e.target.value})}
+                      required
+                      className="w-full h-12 text-lg px-3 rounded-md border border-input bg-background"
+                    >
+                      <option value="">Select a student...</option>
+                      {students.map(student => (
+                        <option key={student.id} value={student.id}>
+                          {student.first_name} {student.last_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="amount" className="text-lg">Amount *</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={paymentForm.amount}
+                      onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                      required
+                      className="h-12 text-lg"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_method" className="text-lg">Payment Method *</Label>
+                    <select
+                      id="payment_method"
+                      value={paymentForm.payment_method}
+                      onChange={(e) => setPaymentForm({...paymentForm, payment_method: e.target.value})}
+                      required
+                      className="w-full h-12 text-lg px-3 rounded-md border border-input bg-background"
+                    >
+                      <option value="card">Credit/Debit Card</option>
+                      <option value="cash">Cash</option>
+                      <option value="check">Check</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description" className="text-lg">Description *</Label>
+                    <Textarea
+                      id="description"
+                      value={paymentForm.description}
+                      onChange={(e) => setPaymentForm({...paymentForm, description: e.target.value})}
+                      required
+                      className="text-lg"
+                      placeholder="Monthly membership, class package, equipment, etc."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => setActiveTab('home')}
+                      className="flex-1"
+                    >
+                      <ArrowLeft className="h-5 w-5 mr-2" />
+                      Back
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      size="lg"
+                      disabled={loading}
+                      className="flex-1"
+                    >
+                      {loading ? 'Processing...' : `Process Payment`}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Footer */}
+      <div className="max-w-6xl mx-auto mt-12 text-center text-sm text-muted-foreground">
+        <p>Having trouble? Please see the front desk for assistance.</p>
+      </div>
+    </div>
+  )
+}
+

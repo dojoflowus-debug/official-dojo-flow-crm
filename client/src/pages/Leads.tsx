@@ -1,517 +1,482 @@
-import { useState, useMemo } from "react";
-import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { 
-  Search, Plus, Phone, Mail, Calendar, Edit2, Trash2, 
-  ChevronRight, Users, Target, TrendingUp, CheckCircle, XCircle
-} from "lucide-react";
-import { LEAD_STAGES, type LeadStage } from "@shared/types";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from 'react'
+import DojoFlowLayout from '@/components/DojoFlowLayout';
+import HorizontalPipeline from '../components/HorizontalPipeline'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import { trpc } from '@/lib/trpc'
+import {
+  Search,
+  Plus,
+  Phone,
+  Mail,
+  MessageSquare,
+  Calendar,
+  Star,
+  Clock,
+  User,
+  MapPin,
+  Trash2,
+  MoveRight,
+  Settings
+} from 'lucide-react'
+import LeadSourceSettings from '../components/LeadSourceSettings'
 
-// Lead card component
-function LeadCard({
-  lead,
-  onEdit,
-  onMoveStage
-}: {
-  lead: any;
-  onEdit: () => void;
-  onMoveStage: (stage: LeadStage) => void;
-}) {
-  const initials = `${lead.firstName?.[0] || ""}${lead.lastName?.[0] || ""}`.toUpperCase();
-  const currentStageIndex = LEAD_STAGES.findIndex(s => s.id === lead.stage);
-  const nextStage = LEAD_STAGES[currentStageIndex + 1];
-  const prevStage = LEAD_STAGES[currentStageIndex - 1];
+export default function Leads({ onLogout, theme, toggleTheme }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedStage, setSelectedStage] = useState('new_lead')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [columnMenuOpen, setColumnMenuOpen] = useState(null)
+  const [newLead, setNewLead] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    source: 'Website',
+    parent_of: '',
+    tags: '',
+    ai_summary: ''
+  })
 
-  return (
-    <Card className="mb-3 hover:shadow-md transition-shadow cursor-pointer" onClick={onEdit}>
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <Avatar className="h-10 w-10 bg-primary/10">
-            <AvatarFallback className="text-primary font-semibold text-sm">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+  // tRPC queries and mutations
+  const { data: leads, isLoading, refetch } = trpc.leads.getByStatus.useQuery()
+  const createLead = trpc.leads.create.useMutation({
+    onSuccess: () => {
+      refetch()
+      setShowAddModal(false)
+      setNewLead({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        source: 'Website',
+        parent_of: '',
+        tags: '',
+        ai_summary: ''
+      })
+    }
+  })
+  const updateStatus = trpc.leads.updateStatus.useMutation({
+    onSuccess: () => refetch()
+  })
+  const deleteLead = trpc.leads.delete.useMutation({
+    onSuccess: () => refetch()
+  })
+
+  // Pipeline stages
+  const stages = [
+    'new_lead',
+    'attempting_contact',
+    'contact_made',
+    'intro_scheduled',
+    'offer_presented',
+    'enrolled',
+    'nurture',
+    'lost_winback'
+  ]
+
+  // Close column menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (columnMenuOpen && !e.target.closest('.column-menu-container')) {
+        setColumnMenuOpen(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [columnMenuOpen])
+
+  // Handle Add Lead
+  const handleAddLead = () => {
+    createLead.mutate({
+      firstName: newLead.first_name,
+      lastName: newLead.last_name,
+      email: newLead.email,
+      phone: newLead.phone,
+      source: newLead.source,
+      notes: newLead.ai_summary,
+    })
+  }
+
+  // Handle Delete Lead
+  const handleDeleteLead = (leadId) => {
+    if (!confirm('Are you sure you want to delete this lead?')) return
+    deleteLead.mutate({ id: leadId })
+  }
+
+  // Handle move to stage
+  const handleMoveToStage = (lead, toStage) => {
+    updateStatus.mutate({ id: lead.id, status: toStage })
+    setColumnMenuOpen(null)
+  }
+
+  // Filter leads based on search query
+  const filterLeads = (leadsArray) => {
+    if (!searchQuery) return leadsArray
+    
+    return leadsArray.filter(lead => {
+      const fullName = `${lead.first_name} ${lead.last_name}`.toLowerCase()
+      const query = searchQuery.toLowerCase()
+      return (
+        fullName.includes(query) ||
+        lead.email?.toLowerCase().includes(query) ||
+        lead.phone?.includes(query)
+      )
+    })
+  }
+
+  // Get leads for selected stage
+  const getLeadsForStage = () => {
+    if (!leads) return []
+    const stageLeads = leads[selectedStage] || []
+    return filterLeads(stageLeads)
+  }
+
+  // Calculate stage counts
+  const getStageCounts = () => {
+    if (!leads) return {}
+    const counts = {}
+    stages.forEach(stage => {
+      counts[stage] = (leads[stage] || []).length
+    })
+    return counts
+  }
+
+  // Render lead card
+  const renderLeadCard = (lead) => {
+    const fullName = `${lead.first_name} ${lead.last_name}`
+    const tags = typeof lead.tags === 'string' ? lead.tags.split(',').filter(t => t) : (lead.tags || [])
+    
+    return (
+      <Card key={lead.id} className="relative group hover:shadow-xl transition-all">
+        <CardContent className="p-6">
+          {/* Delete button */}
+          <button
+            onClick={() => handleDeleteLead(lead.id)}
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-2 hover:bg-destructive/90"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+
+          <h4 className="font-semibold text-xl mb-2 pr-8">{fullName}</h4>
           
-          <div className="flex-1 min-w-0">
-            <h4 className="font-medium text-foreground truncate">
-              {lead.firstName} {lead.lastName}
-            </h4>
-            
-            <div className="mt-1 space-y-1 text-xs text-muted-foreground">
-              {lead.phone && (
-                <div className="flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
-                  {lead.phone}
-                </div>
-              )}
-              {lead.email && (
-                <div className="flex items-center gap-1 truncate">
-                  <Mail className="h-3 w-3" />
-                  {lead.email}
-                </div>
-              )}
-              {lead.interestedProgram && (
-                <Badge variant="outline" className="text-xs mt-1">
-                  {lead.interestedProgram}
-                </Badge>
-              )}
-            </div>
+          {lead.parent_of && (
+            <p className="text-sm text-muted-foreground mb-2">Parent of: {lead.parent_of}</p>
+          )}
 
-            {/* Quick stage navigation */}
-            <div className="flex gap-1 mt-3" onClick={(e) => e.stopPropagation()}>
-              {prevStage && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs px-2"
-                  onClick={() => onMoveStage(prevStage.id)}
-                >
-                  ← {prevStage.label}
-                </Button>
-              )}
-              {nextStage && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs px-2 ml-auto"
-                  onClick={() => onMoveStage(nextStage.id)}
-                >
-                  {nextStage.label} →
-                </Button>
-              )}
+          <div className="flex items-center gap-1 mb-3">
+            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+            <span className="text-sm font-semibold">{lead.lead_score || 50}</span>
+          </div>
+
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <Phone className="h-4 w-4" />
+              <span>{lead.phone || 'No phone'}</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <Mail className="h-4 w-4" />
+              <span className="truncate">{lead.email || 'No email'}</span>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
-// Kanban column
-function KanbanColumn({
-  stage,
-  leads,
-  onEditLead,
-  onMoveStage
-}: {
-  stage: typeof LEAD_STAGES[0];
-  leads: any[];
-  onEditLead: (lead: any) => void;
-  onMoveStage: (leadId: number, stage: LeadStage) => void;
-}) {
-  return (
-    <div className="flex-shrink-0 w-72">
-      <div className="bg-muted/50 rounded-lg p-3">
-        <div className="flex items-center gap-2 mb-3">
-          <div className={cn("w-3 h-3 rounded-full", stage.color)} />
-          <h3 className="font-medium text-sm">{stage.label}</h3>
-          <Badge variant="secondary" className="ml-auto text-xs">
-            {leads.length}
-          </Badge>
-        </div>
-        
-        <ScrollArea className="h-[calc(100vh-280px)]">
-          {leads.map((lead) => (
-            <LeadCard
-              key={lead.id}
-              lead={lead}
-              onEdit={() => onEditLead(lead)}
-              onMoveStage={(newStage) => onMoveStage(lead.id, newStage)}
-            />
-          ))}
-          {leads.length === 0 && (
-            <div className="text-center text-muted-foreground text-sm py-8">
-              No leads
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              <span>{lead.source || 'Unknown'}</span>
+            </div>
+            {lead.assigned_to && (
+              <div className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                <span>{lead.assigned_to}</span>
+              </div>
+            )}
+          </div>
+
+          {lead.updated_at && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+              <Clock className="h-3 w-3" />
+              <span>{new Date(lead.updated_at).toLocaleDateString()}</span>
             </div>
           )}
-        </ScrollArea>
-      </div>
-    </div>
-  );
-}
 
-// Add/Edit Lead Dialog
-function LeadDialog({
-  lead,
-  isOpen,
-  onClose,
-  onSuccess
-}: {
-  lead: any | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const [formData, setFormData] = useState({
-    firstName: lead?.firstName || "",
-    lastName: lead?.lastName || "",
-    email: lead?.email || "",
-    phone: lead?.phone || "",
-    stage: (lead?.stage || "new") as LeadStage,
-    source: lead?.source || "",
-    interestedProgram: lead?.interestedProgram || "",
-    notes: lead?.notes || "",
-  });
-
-  const createMutation = trpc.lead.create.useMutation({
-    onSuccess: () => {
-      toast.success("Lead added successfully!");
-      onSuccess();
-      onClose();
-    },
-    onError: (error) => {
-      toast.error("Failed to add lead: " + error.message);
-    },
-  });
-
-  const updateMutation = trpc.lead.update.useMutation({
-    onSuccess: () => {
-      toast.success("Lead updated successfully!");
-      onSuccess();
-      onClose();
-    },
-    onError: (error) => {
-      toast.error("Failed to update lead: " + error.message);
-    },
-  });
-
-  const deleteMutation = trpc.lead.delete.useMutation({
-    onSuccess: () => {
-      toast.success("Lead deleted");
-      onSuccess();
-      onClose();
-    },
-    onError: (error) => {
-      toast.error("Failed to delete lead: " + error.message);
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.firstName || !formData.lastName) {
-      toast.error("First name and last name are required");
-      return;
-    }
-    
-    if (lead) {
-      updateMutation.mutate({
-        id: lead.id,
-        data: formData,
-      });
-    } else {
-      createMutation.mutate(formData);
-    }
-  };
-
-  const handleDelete = () => {
-    if (lead && confirm("Are you sure you want to delete this lead?")) {
-      deleteMutation.mutate({ id: lead.id });
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{lead ? "Edit Lead" : "Add New Lead"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>First Name *</Label>
-              <Input
-                value={formData.firstName}
-                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                required
-              />
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {tags.map((tag, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
+                >
+                  {tag.trim()}
+                </span>
+              ))}
             </div>
-            <div>
-              <Label>Last Name *</Label>
-              <Input
-                value={formData.lastName}
-                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                required
-              />
-            </div>
+          )}
+
+          {lead.ai_summary && (
+            <p className="text-sm text-muted-foreground italic mb-3">
+              {lead.ai_summary}
+            </p>
+          )}
+
+          <div className="flex gap-2 mb-3">
+            <Button size="sm" variant="outline" className="flex-1">
+              <Phone className="h-4 w-4 mr-1" />
+              Call
+            </Button>
+            <Button size="sm" variant="outline" className="flex-1">
+              <MessageSquare className="h-4 w-4 mr-1" />
+              Text
+            </Button>
+            <Button size="sm" variant="outline" className="flex-1">
+              <Calendar className="h-4 w-4 mr-1" />
+              Schedule
+            </Button>
           </div>
-          <div>
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label>Phone</Label>
-            <Input
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Stage</Label>
-              <Select value={formData.stage} onValueChange={(v) => setFormData({...formData, stage: v as LeadStage})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEAD_STAGES.map((stage) => (
-                    <SelectItem key={stage.id} value={stage.id}>{stage.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Source</Label>
-              <Input
-                value={formData.source}
-                onChange={(e) => setFormData({...formData, source: e.target.value})}
-                placeholder="e.g., Website, Referral"
-              />
-            </div>
-          </div>
-          <div>
-            <Label>Interested Program</Label>
-            <Input
-              value={formData.interestedProgram}
-              onChange={(e) => setFormData({...formData, interestedProgram: e.target.value})}
-              placeholder="e.g., Kids Karate, Adult BJJ"
-            />
-          </div>
-          <div>
-            <Label>Notes</Label>
-            <Textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
-              rows={3}
-            />
-          </div>
-          <DialogFooter className="flex justify-between">
-            {lead && (
-              <Button 
-                type="button" 
-                variant="destructive" 
-                onClick={handleDelete}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
+
+          {/* Move to Stage button */}
+          <div className="relative column-menu-container">
+            <Button
+              onClick={() => setColumnMenuOpen(columnMenuOpen === lead.id ? null : lead.id)}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <MoveRight className="h-4 w-4" />
+              Move to Stage
+            </Button>
+
+            {/* Stage selection dropdown */}
+            {columnMenuOpen === lead.id && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-card border-2 border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                {stages.map((stage) => {
+                  const isCurrentStage = stage === selectedStage
+                  const stageLabels = {
+                    new_lead: 'New Lead',
+                    attempting_contact: 'Attempting Contact',
+                    contact_made: 'Contact Made',
+                    intro_scheduled: 'Intro Scheduled',
+                    offer_presented: 'Offer Presented',
+                    enrolled: 'Enrolled',
+                    nurture: 'Nurture',
+                    lost_winback: 'Lost / Winback'
+                  }
+                  
+                  return (
+                    <button
+                      key={stage}
+                      onClick={() => !isCurrentStage && handleMoveToStage(lead, stage)}
+                      disabled={isCurrentStage}
+                      className={`
+                        w-full px-4 py-3 text-left transition-colors
+                        ${isCurrentStage 
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                          : 'hover:bg-accent hover:text-accent-foreground cursor-pointer'
+                        }
+                      `}
+                    >
+                      {stageLabels[stage]}
+                      {isCurrentStage && ' (Current)'}
+                    </button>
+                  )
+                })}
+              </div>
             )}
-            <div className="flex gap-2 ml-auto">
-              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {lead ? "Update" : "Add"} Lead
-              </Button>
-            </div>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
-// Main Leads Page
-export default function Leads() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLead, setSelectedLead] = useState<any>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { data: leads, isLoading, refetch } = trpc.lead.list.useQuery();
-  
-  const updateMutation = trpc.lead.update.useMutation({
-    onSuccess: () => {
-      refetch();
-      toast.success("Lead moved successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to move lead: " + error.message);
-    },
-  });
-
-  // Group leads by stage
-  const leadsByStage = useMemo(() => {
-    if (!leads) return {};
-    
-    const filtered = leads.filter((lead) => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      const fullName = `${lead.firstName} ${lead.lastName}`.toLowerCase();
-      return fullName.includes(query) || lead.email?.toLowerCase().includes(query);
-    });
-    
-    const grouped: Record<string, any[]> = {};
-    LEAD_STAGES.forEach((stage) => {
-      grouped[stage.id] = filtered.filter((lead) => lead.stage === stage.id);
-    });
-    
-    return grouped;
-  }, [leads, searchQuery]);
-
-  // Stats
-  const stats = useMemo(() => {
-    if (!leads) return { total: 0, new: 0, won: 0, lost: 0, conversionRate: 0 };
-    
-    const total = leads.length;
-    const newLeads = leads.filter(l => l.stage === "new").length;
-    const won = leads.filter(l => l.stage === "won").length;
-    const lost = leads.filter(l => l.stage === "lost").length;
-    const conversionRate = total > 0 ? Math.round((won / total) * 100) : 0;
-    
-    return { total, new: newLeads, won, lost, conversionRate };
-  }, [leads]);
-
-  const handleMoveStage = (leadId: number, newStage: LeadStage) => {
-    updateMutation.mutate({
-      id: leadId,
-      data: { stage: newStage },
-    });
-  };
-
-  const handleEditLead = (lead: any) => {
-    setSelectedLead(lead);
-    setIsDialogOpen(true);
-  };
-
-  const handleAddLead = () => {
-    setSelectedLead(null);
-    setIsDialogOpen(true);
-  };
+  const stageLeads = getLeadsForStage()
+  const stageCounts = getStageCounts()
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container py-6 space-y-6">
+    <DojoFlowLayout>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-red-950/20">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Leads Pipeline</h1>
-            <p className="text-muted-foreground">Track and manage your prospective students</p>
+        <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-6">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Lead Pipeline</h1>
+              <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
+                <Button onClick={() => setShowSettings(true)} size="sm" className="md:size-lg" variant="outline" className="flex-1 sm:flex-none text-xs md:text-sm">
+                  <Settings className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Lead Sources</span>
+                  <span className="sm:hidden">Sources</span>
+                </Button>
+                <Button onClick={() => setShowAddModal(true)} size="sm" className="md:size-lg flex-1 sm:flex-none text-xs md:text-sm">
+                  <Plus className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+                  Add Lead
+                </Button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search leads..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 md:pl-12 h-10 md:h-12 text-sm md:text-base"
+              />
+            </div>
           </div>
-          <Button onClick={handleAddLead}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Lead
-          </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
-                  <Users className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-xs text-muted-foreground">Total Leads</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
-                  <Target className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.new}</p>
-                  <p className="text-xs text-muted-foreground">New Leads</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-100 text-green-600">
-                  <CheckCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.won}</p>
-                  <p className="text-xs text-muted-foreground">Won</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-100 text-amber-600">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.conversionRate}%</p>
-                  <p className="text-xs text-muted-foreground">Conversion Rate</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search leads..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Kanban Board */}
+        {/* Horizontal Pipeline */}
         {isLoading ? (
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-72">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <Skeleton className="h-6 w-24 mb-3" />
-                  <Skeleton className="h-32 w-full mb-3" />
-                  <Skeleton className="h-32 w-full" />
-                </div>
-              </div>
-            ))}
+          <div className="py-12">
+            <Skeleton className="h-40 max-w-7xl mx-auto" />
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {LEAD_STAGES.map((stage) => (
-              <KanbanColumn
-                key={stage.id}
-                stage={stage}
-                leads={leadsByStage[stage.id] || []}
-                onEditLead={handleEditLead}
-                onMoveStage={handleMoveStage}
-              />
-            ))}
+          <HorizontalPipeline
+            selectedStage={selectedStage}
+            onStageSelect={setSelectedStage}
+            stageCounts={stageCounts}
+          />
+        )}
+
+        {/* Lead Cards for Selected Stage */}
+        <div className="max-w-7xl mx-auto px-6 pb-12">
+          <h2 className="text-2xl font-bold mb-6">
+            {selectedStage.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+            <span className="text-muted-foreground ml-2">({stageLeads.length})</span>
+          </h2>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-64" />
+              ))}
+            </div>
+          ) : stageLeads.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <p className="text-muted-foreground">No leads in this stage</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {stageLeads.map(lead => renderLeadCard(lead))}
+            </div>
+          )}
+        </div>
+
+        {/* Lead Source Settings Modal */}
+        <LeadSourceSettings 
+          isOpen={showSettings} 
+          onClose={() => setShowSettings(false)} 
+        />
+
+        {/* Add Lead Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <CardHeader>
+                <CardTitle className="text-2xl">Add New Lead</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">First Name</label>
+                    <Input
+                      value={newLead.first_name}
+                      onChange={(e) => setNewLead({ ...newLead, first_name: e.target.value })}
+                      placeholder="John"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Last Name</label>
+                    <Input
+                      value={newLead.last_name}
+                      onChange={(e) => setNewLead({ ...newLead, last_name: e.target.value })}
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <Input
+                    type="email"
+                    value={newLead.email}
+                    onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                    placeholder="john@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Phone</label>
+                  <Input
+                    type="tel"
+                    value={newLead.phone}
+                    onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Source</label>
+                  <Input
+                    value={newLead.source}
+                    onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
+                    placeholder="Website, Referral, etc."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Parent Of (Optional)</label>
+                  <Input
+                    value={newLead.parent_of}
+                    onChange={(e) => setNewLead({ ...newLead, parent_of: e.target.value })}
+                    placeholder="Child's name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Tags (comma-separated)</label>
+                  <Input
+                    value={newLead.tags}
+                    onChange={(e) => setNewLead({ ...newLead, tags: e.target.value })}
+                    placeholder="hot, referral, interested"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Notes</label>
+                  <textarea
+                    value={newLead.ai_summary}
+                    onChange={(e) => setNewLead({ ...newLead, ai_summary: e.target.value })}
+                    placeholder="Additional notes about this lead..."
+                    className="w-full min-h-[100px] px-3 py-2 border border-input rounded-md bg-background"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={handleAddLead}
+                    disabled={!newLead.first_name || !newLead.last_name}
+                    className="flex-1"
+                  >
+                    Add Lead
+                  </Button>
+                  <Button
+                    onClick={() => setShowAddModal(false)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
-
-      {/* Lead Dialog */}
-      <LeadDialog
-        lead={selectedLead}
-        isOpen={isDialogOpen}
-        onClose={() => {
-          setIsDialogOpen(false);
-          setSelectedLead(null);
-        }}
-        onSuccess={refetch}
-      />
-    </div>
-  );
+    </DojoFlowLayout>
+  )
 }
