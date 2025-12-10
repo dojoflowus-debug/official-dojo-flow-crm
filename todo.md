@@ -1062,3 +1062,10 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Updated Home.tsx (Kiosk) - pure black background, logo red buttons
 - [x] Updated Admin.tsx - pure black background, logo red accents
 - [x] All pages using DojoFlowLayout now inherit consistent colors
+
+
+## ✅ COMPLETED: Kai Command Integration & Scrollbar
+- [x] Removed standalone sidebar from KaiCommand.tsx
+- [x] Wrapped KaiCommand with DojoFlowLayout (now uses shared sidebar)
+- [x] Added visible scrollbar to chat history section (scrollbar-visible class in index.css)
+- [x] Tested integration - Kai Command now part of unified CRM with consistent navigation

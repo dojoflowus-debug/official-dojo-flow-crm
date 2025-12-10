@@ -397,7 +397,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
         )}
 
         {/* Page Content */}
-        <main className="flex-1 p-6">
+        <main className={`flex-1 ${location.pathname === '/kai-command' ? 'p-0' : 'p-6'}`}>
           {children}
         </main>
       </div>
