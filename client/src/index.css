@@ -146,6 +146,86 @@
   --sidebar-ring: oklch(0.65 0.22 25);
 }
 
+/* Cinematic Glass Mode - Glassmorphism Dashboard Aesthetic */
+.cinematic, .cinematic-mode {
+  /* Background: dark ambient gradient */
+  --background: oklch(0.06 0.005 270); /* #0C0C0D to #1A1A1C gradient base */
+  --foreground: oklch(1 0 0); /* #FFFFFF */
+  
+  /* Glass Panels: translucent with blur */
+  --card: oklch(0.15 0.005 270 / 0.06); /* rgba(255,255,255,0.06) */
+  --card-foreground: oklch(1 0 0);
+  
+  --popover: oklch(0.15 0.005 270 / 0.08);
+  --popover-foreground: oklch(1 0 0);
+  
+  /* Kai Accent: Vibrant cinematic red-orange #FF5A3D */
+  --primary: oklch(0.65 0.25 30); /* #FF5A3D */
+  --primary-foreground: oklch(1 0 0);
+  
+  --secondary: oklch(0.12 0.005 270 / 0.1);
+  --secondary-foreground: oklch(1 0 0);
+  
+  --muted: oklch(0.12 0.005 270 / 0.15);
+  --muted-foreground: oklch(0.80 0.005 270); /* #C1C1C3 */
+  
+  --accent: oklch(0.12 0.01 30 / 0.15);
+  --accent-foreground: oklch(1 0 0);
+  
+  --destructive: oklch(0.65 0.25 30); /* #FF5A3D */
+  --destructive-foreground: oklch(1 0 0);
+  
+  /* Glass Borders: rgba(255,255,255,0.12) */
+  --border: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.12);
+  --ring: oklch(0.65 0.25 30); /* #FF5A3D */
+  
+  --chart-1: oklch(0.65 0.25 30); /* Accent red-orange */
+  --chart-2: oklch(0.55 0.18 250);
+  --chart-3: oklch(0.65 0.18 150);
+  --chart-4: oklch(0.75 0.18 80);
+  --chart-5: oklch(0.60 0.18 320);
+  
+  /* Glass sidebar */
+  --sidebar: oklch(0.08 0.005 270 / 0.45); /* rgba(20,20,22,0.45) */
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.65 0.25 30); /* #FF5A3D */
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.15 0.005 270 / 0.2);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.12);
+  --sidebar-ring: oklch(0.65 0.25 30);
+}
+
+/* Cinematic mode global styles */
+.cinematic-mode body,
+.cinematic body,
+html.cinematic,
+html.cinematic-mode {
+  background: linear-gradient(180deg, #0C0C0D 0%, #1A1A1C 100%);
+  background-attachment: fixed;
+}
+
+/* Theme transition animations */
+* {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Cinematic mode specific transitions */
+.cinematic-mode *,
+.cinematic * {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    backdrop-filter 0.35s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

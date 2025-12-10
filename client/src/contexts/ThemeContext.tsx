@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "cinematic";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  toggleTheme?: () => void;
+  cycleTheme: () => void;
   switchable: boolean;
 }
 
@@ -17,40 +17,56 @@ interface ThemeProviderProps {
   switchable?: boolean;
 }
 
+const STORAGE_KEY = "dojoFlowTheme";
+
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
-  switchable = false,
+  defaultTheme = "dark",
+  switchable = true,
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
     if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "light" || stored === "dark" || stored === "cinematic") {
+        return stored;
+      }
     }
     return defaultTheme;
   });
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
+    
+    // Remove all theme classes
+    root.classList.remove("light", "dark", "cinematic");
+    root.classList.remove("light-mode", "dark-mode", "cinematic-mode");
+    
+    // Add the current theme class
+    root.classList.add(theme);
+    root.classList.add(`${theme}-mode`);
+    
+    // Also set data attribute for CSS selectors
+    root.setAttribute("data-theme", theme);
 
     if (switchable) {
-      localStorage.setItem("theme", theme);
+      localStorage.setItem(STORAGE_KEY, theme);
     }
   }, [theme, switchable]);
 
-  const toggleTheme = switchable
-    ? () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
-      }
-    : undefined;
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+  };
+
+  const cycleTheme = () => {
+    setThemeState(prev => {
+      if (prev === "light") return "dark";
+      if (prev === "dark") return "cinematic";
+      return "light";
+    });
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={{ theme, setTheme, cycleTheme, switchable }}>
       {children}
     </ThemeContext.Provider>
   );

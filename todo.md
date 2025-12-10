@@ -1128,3 +1128,63 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Show bottom nav when scrolling up
 - [x] Add smooth transition animation (300ms ease-in-out)
 - [x] Content padding already set to pb-20 for nav space
+
+
+## 🔧 IN PROGRESS: 3-Mode Theme Toggle (Light, Dark, Cinematic Glass)
+
+### Phase 1: Theme Controller
+- [ ] Modify ThemeContext to support 3 modes: light, dark, cinematic
+- [ ] Add .light-mode, .dark-mode, .cinematic-mode CSS classes
+- [ ] Persist preference in localStorage under "dojoFlowTheme"
+- [ ] Load theme on refresh
+
+### Phase 2: Cinematic Glass Mode CSS
+- [ ] Background: linear-gradient(180deg, #0C0C0D 0%, #1A1A1C 100%)
+- [ ] Glass panels: rgba(255,255,255,0.06), blur(22px), border rgba(255,255,255,0.12)
+- [ ] Kai Accent: #FF5A3D (vibrant cinematic red-orange)
+- [ ] Text: #FFFFFF primary, #C1C1C3 secondary
+- [ ] Shadows: 0 8px 32px rgba(0,0,0,0.65)
+- [ ] Bottom nav glass dock styling
+
+### Phase 3: Theme Toggle Component
+- [ ] Pill-shaped segmented toggle with 3 options
+- [ ] Labels: Light, Dark, Cinematic
+- [ ] Active segment uses accent color highlight
+- [ ] Smooth animation when switching
+
+### Phase 4: Apply Theme Globally
+- [ ] Header, Bottom nav, Cards, Input bar, Buttons, Icons
+- [ ] Add transitions: background-color 0.25s, color 0.25s, backdrop-filter 0.35s
+- [ ] Cinematic mode fade-in with blur effect over 300ms
+
+
+## ✅ COMPLETED: 3-Mode Theme Toggle (Light, Dark, Cinematic Glass)
+
+### Theme Context Updates
+- [x] Modified ThemeContext.tsx to support 3 modes: light, dark, cinematic
+- [x] Added localStorage persistence for theme preference
+- [x] Added smooth 200ms transitions between themes
+
+### CSS Theme Variables
+- [x] Light mode: #F7F8FA background, #FFFFFF panels, #E2E3E6 borders, #262626 text, #E53935 accent
+- [x] Dark mode: #0F0F11 background, #1A1B1F panels, #2A2B2F borders, #FFFFFF text, #FF4F4F accent
+- [x] Cinematic Glass: Gradient background, frosted glass panels with backdrop-blur, #FF5A3D accent
+
+### ThemeToggle Component
+- [x] Created pill-shaped segmented toggle with Sun/Moon/Sparkles icons
+- [x] Active state shows filled icon with theme-appropriate background
+- [x] Smooth transitions between modes
+
+### BottomNavLayout Updates
+- [x] Added ThemeToggle to header (visible on md+ screens)
+- [x] Updated header styling for all 3 modes (background, borders, shadows)
+- [x] Updated bottom nav styling for all 3 modes
+- [x] Updated nav item colors (active/inactive) for all 3 modes
+- [x] Cinematic mode has rounded corners on bottom nav with enhanced glow effects
+
+### Testing
+- [x] Tested Light mode - white backgrounds, red accents
+- [x] Tested Dark mode - dark backgrounds, coral accents
+- [x] Tested Cinematic mode - gradient background, glass effects
+- [x] Theme persists across page navigation
+- [x] Theme persists across browser refresh

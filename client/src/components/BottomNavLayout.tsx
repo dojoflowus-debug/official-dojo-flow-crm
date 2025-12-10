@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import ThemeToggle from '@/components/ThemeToggle'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -71,6 +72,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
   const { theme } = useTheme()
   
   const isDark = theme === 'dark'
+  const isCinematic = theme === 'cinematic'
   
   // Scroll detection for collapsible bottom nav
   const [isNavVisible, setIsNavVisible] = useState(true)
@@ -122,23 +124,41 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
     return user.name.substring(0, 2).toUpperCase()
   }
 
+  // Get background class based on theme
+  const getBgClass = () => {
+    if (isCinematic) return 'bg-gradient-to-b from-[#0C0C0D] to-[#1A1A1C]'
+    if (isDark) return 'bg-[#0F0F11]'
+    return 'bg-[#F7F8FA]'
+  }
+
+  // Get header styles based on theme
+  const getHeaderStyles = () => {
+    if (isCinematic) return {
+      bg: 'bg-white/5 backdrop-blur-xl border-b border-white/10',
+      shadow: '0px 2px 16px rgba(0,0,0,0.5)'
+    }
+    if (isDark) return {
+      bg: 'bg-[#1A1B1F] border-b border-[#2A2B2F]',
+      shadow: '0px 2px 12px rgba(0,0,0,0.4)'
+    }
+    return {
+      bg: 'bg-white border-b border-[#E2E3E6]',
+      shadow: '0px 2px 8px rgba(0,0,0,0.04)'
+    }
+  }
+
+  const headerStyles = getHeaderStyles()
+
   return (
-    <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'}`}>
+    <div className={`min-h-screen flex flex-col ${getBgClass()}`}>
       {/* Top Header */}
       {!hideHeader && (
         <header 
           className={`
             fixed top-0 left-0 right-0 z-50 h-16
-            ${isDark 
-              ? 'bg-[#1A1B1F] border-b border-[#2A2B2F]' 
-              : 'bg-white border-b border-[#E2E3E6]'
-            }
+            ${headerStyles.bg}
           `}
-          style={{
-            boxShadow: isDark 
-              ? '0px 2px 12px rgba(0,0,0,0.4)' 
-              : '0px 2px 8px rgba(0,0,0,0.04)'
-          }}
+          style={{ boxShadow: headerStyles.shadow }}
         >
           <div className="h-full px-4 md:px-6 flex items-center justify-between">
             {/* Left: Logo */}
@@ -180,11 +200,16 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
               </Button>
 
               {/* Credits */}
-              <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isDark ? 'bg-[#2A2B2F]' : 'bg-gray-100'}`}>
-                <CreditCard className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-[#262626]'}`}>
+              <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isDark || isCinematic ? 'bg-[#2A2B2F]' : 'bg-gray-100'}`}>
+                <CreditCard className={`h-4 w-4 ${isDark || isCinematic ? 'text-gray-400' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${isDark || isCinematic ? 'text-white' : 'text-[#262626]'}`}>
                   Credits: 0
                 </span>
+              </div>
+
+              {/* Theme Toggle */}
+              <div className="hidden md:block">
+                <ThemeToggle />
               </div>
 
               {/* Notifications */}
@@ -248,16 +273,21 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
           fixed left-0 right-0 z-50 h-16
           transition-transform duration-300 ease-in-out
           ${isNavVisible ? 'translate-y-0 bottom-0' : 'translate-y-full bottom-0'}
-          ${isDark 
-            ? 'bg-[#1A1B1F]/95 border-t border-[#2A2B2F]' 
-            : 'bg-white/95 border-t border-[#E2E3E6]'
+          ${isCinematic 
+            ? 'bg-[rgba(20,20,22,0.45)] border-t border-white/10' 
+            : isDark 
+              ? 'bg-[#1A1B1F]/95 border-t border-[#2A2B2F]' 
+              : 'bg-white/95 border-t border-[#E2E3E6]'
           }
           backdrop-blur-xl
+          ${isCinematic ? 'rounded-t-2xl mx-4 mb-0' : ''}
         `}
         style={{
-          boxShadow: isDark 
-            ? '0px -2px 12px rgba(0,0,0,0.4)' 
-            : '0px -2px 8px rgba(0,0,0,0.04)'
+          boxShadow: isCinematic 
+            ? '0px -4px 18px rgba(0,0,0,0.75)' 
+            : isDark 
+              ? '0px -2px 12px rgba(0,0,0,0.4)' 
+              : '0px -2px 8px rgba(0,0,0,0.04)'
         }}
       >
         <div className="h-full max-w-screen-xl mx-auto px-2 flex items-center justify-around">
@@ -283,9 +313,11 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                     ${item.isCenter ? 'h-10 w-10' : 'h-8 w-8'}
                     rounded-full transition-all duration-200
                     ${active && item.isCenter 
-                      ? isDark 
-                        ? 'bg-[#FF4F4F]/20' 
-                        : 'bg-[#E53935]/10'
+                      ? isCinematic 
+                        ? 'bg-[#FF5A3D]/20' 
+                        : isDark 
+                          ? 'bg-[#FF4F4F]/20' 
+                          : 'bg-[#E53935]/10'
                       : ''
                     }
                   `}
@@ -295,8 +327,8 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                       transition-all duration-200
                       ${item.isCenter ? 'h-6 w-6' : 'h-5 w-5'}
                       ${active 
-                        ? isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
-                        : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
+                        ? isCinematic ? 'text-[#FF5A3D]' : isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
+                        : isCinematic ? 'text-[#C1C1C3]' : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
                       }
                     `}
                   />
@@ -306,7 +338,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                     <div 
                       className={`
                         absolute inset-0 rounded-full blur-md opacity-50
-                        ${isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}
+                        ${isCinematic ? 'bg-[#FF5A3D]' : isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}
                       `}
                       style={{ zIndex: -1 }}
                     />
@@ -318,8 +350,8 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                   className={`
                     text-[10px] font-medium transition-colors duration-200
                     ${active 
-                      ? isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
-                      : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
+                      ? isCinematic ? 'text-[#FF5A3D]' : isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
+                      : isCinematic ? 'text-[#C1C1C3]' : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
                     }
                   `}
                 >
@@ -332,12 +364,14 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                     className={`
                       absolute -bottom-1 h-1 rounded-full
                       ${item.isCenter ? 'w-8' : 'w-6'}
-                      ${isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}
+                      ${isCinematic ? 'bg-[#FF5A3D]' : isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}
                     `}
                     style={{
-                      boxShadow: isDark 
-                        ? '0 0 8px rgba(255, 79, 79, 0.6)' 
-                        : '0 0 8px rgba(229, 57, 53, 0.4)'
+                      boxShadow: isCinematic 
+                        ? '0 0 12px rgba(255, 90, 61, 0.7)' 
+                        : isDark 
+                          ? '0 0 8px rgba(255, 79, 79, 0.6)' 
+                          : '0 0 8px rgba(229, 57, 53, 0.4)'
                     }}
                   />
                 )}
