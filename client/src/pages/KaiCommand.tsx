@@ -282,10 +282,10 @@ export default function KaiCommand() {
   return (
     <BottomNavLayout>
       <div ref={containerRef} className={`flex h-[calc(100vh-80px-64px)] overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'}`}>
-        {/* Command Center - Left Panel */}
+        {/* Command Center - Left Panel - Floating Module Style */}
         <div 
           style={{ width: `${commandCenterWidth}px` }}
-          className="bg-white border-r border-slate-200 flex flex-col flex-shrink-0"
+          className="bg-white border border-[#E5E6E8] rounded-[20px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
         >
           {/* Header */}
           <div className="p-4 border-b border-slate-200">
@@ -330,9 +330,9 @@ export default function KaiCommand() {
           </div>
 
           {/* Smart Collections */}
-          <div className="p-4 border-b border-slate-200">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Smart Collections</h3>
-            <div className="space-y-1">
+          <div className="px-4 py-4 border-b border-slate-100">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Smart Collections</h3>
+            <div className="space-y-2">
               {smartCollections.map((collection) => (
                 <button
                   key={collection.id}
@@ -352,7 +352,7 @@ export default function KaiCommand() {
 
           {/* Recent Conversations with visible scrollbar */}
           <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="p-4 pb-2 flex items-center justify-between">
+            <div className="px-4 pt-4 pb-2 flex items-center justify-between">
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Recent Conversations</h3>
               <span className="text-xs text-slate-400">{conversations.length}</span>
             </div>
@@ -432,29 +432,29 @@ export default function KaiCommand() {
           </div>
 
           {/* Messages Area with visible scrollbar - Centered content */}
-          <div className="flex-1 overflow-y-auto p-6 pt-12 scrollbar-visible">
-            <div className="max-w-4xl mx-auto">
+          <div className="flex-1 overflow-y-auto p-6 pt-6 scrollbar-visible">
+            <div className="max-w-[1320px] mx-auto px-4">
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting */
-                <div className="flex flex-col items-center justify-center py-12">
-                  <KaiLogo className="w-24 h-24 mb-6" />
-                  <h2 className="text-3xl font-semibold text-slate-900 mb-3">Hi, I'm Kai.</h2>
+                <div className="flex flex-col items-center justify-center py-8">
+                  <KaiLogo className="w-[100px] h-[100px] mb-4" />
+                  <h2 className="text-3xl font-semibold text-slate-900 mb-2">Hi, I'm Kai.</h2>
                   <p className="text-slate-600 text-center max-w-md mb-8">
                     Tell me about your dojo and what you want to improve—growth, retention, or operations—and I'll show you the numbers.
                   </p>
                   
-                  {/* Suggested Prompts */}
-                  <div className="grid grid-cols-3 gap-4 w-full max-w-2xl">
+                  {/* Suggested Prompts - Larger cards with shadow */}
+                  <div className="grid grid-cols-3 gap-5 w-full max-w-3xl">
                     {suggestedPrompts.map((prompt, index) => (
                       <button
                         key={index}
                         onClick={() => handlePromptClick(prompt.text)}
-                        className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-[#ED393D]/30 transition-all group"
+                        className="bg-white border border-slate-100 rounded-[18px] p-5 text-left shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 transition-all duration-200 group"
                       >
-                        <div className="text-xs font-semibold text-[#ED393D] uppercase tracking-wide mb-2">
+                        <div className="text-xs font-semibold text-[#E53935] uppercase tracking-wide mb-2">
                           {prompt.header}
                         </div>
-                        <p className="text-sm text-slate-600 group-hover:text-slate-800">
+                        <p className="text-sm text-slate-600 group-hover:text-slate-800 leading-relaxed">
                           {prompt.text}
                         </p>
                       </button>
@@ -512,21 +512,21 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* Input Bar */}
-          <div className={`p-4 border-t border-slate-200 transition-all ${expandedInput ? 'pb-8' : ''}`}>
+          {/* Input Bar - Apple-style floating bar */}
+          <div className={`p-4 border-t border-slate-100 bg-white/80 backdrop-blur-sm transition-all ${expandedInput ? 'pb-8' : ''}`}>
             <div className="max-w-3xl mx-auto relative">
               {/* Expand/Collapse Button */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setExpandedInput(!expandedInput)}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 bg-slate-200 hover:bg-slate-300 rounded-full z-10"
+                className="absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 bg-slate-100 hover:bg-slate-200 rounded-full z-10 shadow-sm"
               >
                 {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </Button>
               
-              <div className="flex items-center gap-2 bg-white rounded-2xl border-2 border-[#ED393D]/30 p-2 focus-within:border-[#ED393D]/50">
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
+              <div className="flex items-center gap-2 bg-white rounded-[22px] border border-slate-200 p-2 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all duration-200">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full">
                   <Paperclip className="w-5 h-5" />
                 </Button>
                 <Textarea
@@ -534,15 +534,15 @@ export default function KaiCommand() {
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'}`}
+                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-slate-800 placeholder:text-slate-400 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'}`}
                   rows={expandedInput ? 5 : 1}
                 />
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full">
                   <Mic className="w-5 h-5" />
                 </Button>
                 <Button 
                   size="icon" 
-                  className="h-9 w-9 bg-[#ED393D] hover:bg-[#D9292D] text-white rounded-full"
+                  className="h-9 w-9 bg-[#E53935] hover:bg-[#D32F2F] text-white rounded-full shadow-sm"
                   onClick={handleSendMessage}
                   disabled={!messageInput.trim() || isLoading}
                 >

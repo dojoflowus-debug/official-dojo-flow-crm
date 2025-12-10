@@ -150,7 +150,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
     }
     return {
       bg: 'bg-white border-b border-[#E2E3E6]',
-      shadow: '0 2px 8px rgba(0,0,0,0.04)',
+      shadow: '0 2px 6px rgba(0,0,0,0.04)',
       textColor: 'text-[#262626]',
       mutedColor: 'text-gray-500'
     }
@@ -164,7 +164,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
       {!hideHeader && (
         <header 
           className={`
-            fixed top-0 left-0 right-0 h-16
+            fixed top-0 left-0 right-0 h-[72px]
             ${headerStyles.bg}
           `}
           style={{ 
@@ -179,7 +179,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                 <img 
                   src={isDark || isCinematic ? '/logo-dark.png' : '/logo-light.png'} 
                   alt="DojoFlow" 
-                  className="h-8 object-contain"
+                  className="h-9 object-contain opacity-95"
                 />
               </Link>
               
@@ -271,22 +271,22 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
         </header>
       )}
 
-      {/* Main Content - 80px top padding for fixed header */}
-      <main className={`flex-1 ${!hideHeader ? 'pt-20' : ''} pb-20`}>
+      {/* Main Content - 88px top padding for fixed 72px header, 80px bottom for 68px nav */}
+      <main className={`flex-1 ${!hideHeader ? 'pt-[88px]' : ''} pb-[80px]`}>
         {children}
       </main>
 
-      {/* Bottom Navigation Bar */}
+      {/* Bottom Navigation Bar - Apple-style dock */}
       <nav 
         className={`
-          fixed left-0 right-0 z-50 h-16
+          fixed left-0 right-0 z-50 h-[68px]
           transition-transform duration-300 ease-in-out
           ${isNavVisible ? 'translate-y-0 bottom-0' : 'translate-y-full bottom-0'}
           ${isCinematic 
             ? 'bg-[rgba(20,20,22,0.45)] border-t border-white/10' 
             : isDark 
               ? 'bg-[#1A1B1F]/95 border-t border-[#2A2B2F]' 
-              : 'bg-white/95 border-t border-[#E2E3E6]'
+              : 'bg-white/98 border-t border-slate-100'
           }
           backdrop-blur-xl
           ${isCinematic ? 'rounded-t-2xl mx-4 mb-0' : ''}
@@ -296,7 +296,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
             ? '0px -4px 18px rgba(0,0,0,0.75)' 
             : isDark 
               ? '0px -2px 12px rgba(0,0,0,0.4)' 
-              : '0px -2px 8px rgba(0,0,0,0.04)'
+              : '0px -1px 12px rgba(0,0,0,0.03), 0px -4px 24px rgba(0,0,0,0.02)'
         }}
       >
         <div className="h-full max-w-screen-xl mx-auto px-2 flex items-center justify-around">

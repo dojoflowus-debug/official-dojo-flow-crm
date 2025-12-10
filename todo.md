@@ -1274,3 +1274,96 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 ### 6. Keep Existing Functionality
 - [x] Routes and navigation logic unchanged
 - [x] Kai command behavior unchanged
+
+
+## 🔧 IN PROGRESS: Apple-Style Light Mode Polish
+
+### 1. Header Vertical Balance
+- [ ] Increase header height to 64-72px
+- [ ] Add subtle bottom shadow: 0 2px 6px rgba(0,0,0,0.04)
+- [ ] Vertically center: Logo, Page name, Ask Kai button, Mode toggle, Profile icon
+- [ ] Ensure visual separation from body
+
+### 2. Logo Contrast Boost
+- [ ] Increase logo width by +10-15%
+- [ ] Add slight opacity bump (0.92-1)
+- [ ] Ensure max contrast with background
+- [ ] Add 8-12px spacing between logo and page title
+
+### 3. Command Center Floating Module Style
+- [ ] Add soft border: 1px solid #E5E6E8
+- [ ] Add corner radius: 18-20px
+- [ ] Add shadow: 0 4px 12px rgba(0,0,0,0.04)
+- [ ] Tighten horizontal padding
+- [ ] Add 12-16px spacing between categories
+
+### 4. Hero Section Positioning
+- [ ] Reduce margin-top so hero begins higher
+- [ ] Bring logo + headline closer together
+- [ ] Increase hero Kai logo size by 5-8%
+
+### 5. Starter Cards Polish
+- [ ] Increase card size by ~15%
+- [ ] Add stronger radius (18-20px)
+- [ ] Add shadow: 0 4px 14px rgba(0,0,0,0.05)
+- [ ] Add light gradient behind white panel
+- [ ] Use #E53935 for card titles
+
+### 6. Input Bar Modernization
+- [ ] Remove full red border
+- [ ] Use thin accent glow only on focus
+- [ ] Increase radius to 20-22px
+- [ ] Add subtle inner shadow
+- [ ] Make mic & send icons slightly darker
+
+### 7. Bottom Navigation Polish
+- [ ] Increase top padding (4-6px)
+- [ ] Increase icon size by ~8%
+- [ ] Add faint top shadow
+- [ ] Move labels up 1-2px
+- [ ] Make active icon text slightly darker
+
+### 8. Global Spacing & Max-Width
+- [ ] Set max-width to 1280-1400px
+- [ ] Add margin: 0 auto
+- [ ] Add equal side padding
+
+
+## ✅ COMPLETED: Apple-Style Light Mode Polish
+
+### Header Polish
+- [x] Reduce header height to 64px (was 72px)
+- [x] Add subtle shadow for Light mode: 0 1px 2px rgba(0,0,0,0.04)
+- [x] Ensure vertical centering of all header elements
+- [x] Improve logo contrast against white background
+
+### Command Center Panel Polish
+- [x] Add subtle border: border-slate-100
+- [x] Increase border radius to 20px for floating module look
+- [x] Add soft shadow: 0 4px 12px rgba(0,0,0,0.04)
+- [x] Improve internal spacing and padding
+
+### Hero Section Polish
+- [x] Reduce top margin for Kai greeting
+- [x] Increase Kai logo size to 100px
+- [x] Widen max-width to 1320px for starter cards
+
+### Starter Cards Polish
+- [x] Increase card size and padding
+- [x] Add subtle shadow: 0 4px 14px rgba(0,0,0,0.05)
+- [x] Increase border radius to 18px
+- [x] Soften border color to slate-100
+- [x] Add hover shadow effect
+
+### Input Bar Polish
+- [x] Increase border radius to 22px
+- [x] Add subtle shadow: 0 2px 12px rgba(0,0,0,0.06)
+- [x] Add focus state shadow enhancement
+- [x] Use backdrop blur for floating effect
+
+### Bottom Navigation Polish
+- [x] Increase height to 68px
+- [x] Soften shadow for Light mode
+- [x] Use softer border color: slate-100
+- [x] Update main content padding to match
+
