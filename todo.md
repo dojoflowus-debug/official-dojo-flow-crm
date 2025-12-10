@@ -949,3 +949,65 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Light border and subtle inner shadow
 - [x] Muted gray icons with rose color on hover
 - [x] Floating feel with margins
+
+
+## Recreate Original Kai Chat Page (Identical to dojomanage-dbet6f4d.manus.space/kai-chat)
+
+### Phase 1: Examine Original Design
+- [ ] Navigate to original Kai Chat page
+- [ ] Document exact layout, colors, fonts, spacing
+- [ ] Capture key UI elements and interactions
+
+### Phase 2: Recreate UI
+- [ ] Match exact layout structure
+- [ ] Match exact color scheme
+- [ ] Match exact typography and spacing
+- [ ] Match sidebar design
+- [ ] Match conversation panel design
+- [ ] Match input bar design
+
+### Phase 3: Test and Verify
+- [ ] Compare side-by-side with original
+- [ ] Verify all interactions work
+- [ ] Save checkpoint
+
+
+## Kai Chat Design Fixes (Pixel-Perfect Match to Original)
+
+### Sidebar Design
+- [ ] Add DojoFlow swirl logo (coral/salmon color)
+- [ ] Add drag handles (⋮⋮) before each nav item
+- [ ] Match exact coral color (#E85A6B)
+- [ ] User profile with avatar at bottom
+
+### Main Conversation Panel
+- [ ] Add large Kai swirl logo in center
+- [ ] Add "Hi, I'm Kai." heading with description
+- [ ] Add 3 suggested prompt cards with headers:
+  - START WITH YOUR GOALS
+  - CHECK HEALTH OF YOUR DOJO
+  - FIX BILLING & RENEWALS
+
+### Command Center Panel
+- [ ] Add hamburger menu icon before "Command Center"
+- [ ] Match conversation card styling exactly
+- [ ] Tag colors: kai=blue, growth=green, billing=purple
+- [ ] "In Progress" status with clock icon
+
+### Top Bar
+- [ ] Match button styling for Sidebar/Top Menu toggles
+- [ ] Credits in green color
+- [ ] Action icons on right side
+
+
+## ✅ COMPLETED: Match Kai Command Colors Exactly to Original Design
+- [x] Extract exact color values from original design (https://dojomanage-dbet6f4d.manus.space/kai-chat)
+- [x] Update sidebar background to #1E293B
+- [x] Update Command Center background to #F5F7FB
+- [x] Update tabs background to #E8ECF1
+- [x] Update Smart Collections icons: Urgent=#E85A6B, Insights=#A855F7, Pending=#14B8A6
+- [x] Update tag colors: kai=#DBEAFE/#3B82F6, growth=#D1FAE5/#10B981, billing=#EDE9FE/#8B5CF6
+- [x] Update top banner background to #F8FAFC
+- [x] Update input bar background to #F5F7FB with coral border accent
+- [x] Side-by-side comparison verified all colors match original
+- [x] Save checkpoint

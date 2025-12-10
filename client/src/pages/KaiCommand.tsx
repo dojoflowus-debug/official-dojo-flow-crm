@@ -1,635 +1,685 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import DojoFlowLayout from '@/components/DojoFlowLayout'
-import { trpc } from '@/lib/trpc'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
-import {
-  Search,
-  Plus,
-  Sparkles,
-  MessageSquare,
-  Clock,
-  AlertCircle,
-  Lightbulb,
+import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'wouter';
+import { trpc } from '@/lib/trpc';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { 
+  Search, 
+  Plus, 
+  Clock, 
+  Sparkles, 
   CheckSquare,
-  Send,
-  Mic,
   Paperclip,
-  User,
-  Phone,
-  Mail,
+  Mic,
+  Send,
+  MoreVertical,
+  FileText,
+  Users,
+  Volume2,
+  Maximize2,
+  GraduationCap,
+  BarChart3,
+  UserPlus,
   Calendar,
-  Award,
+  Monitor,
+  Headphones,
+  CreditCard,
   TrendingUp,
-  Loader2
-} from 'lucide-react'
-import { Streamdown } from 'streamdown'
+  Megaphone,
+  Settings,
+  ChevronDown,
+  LogOut,
+  Eye,
+  Bell,
+  Menu,
+  GripVertical,
+  MessageCircle,
+  AlertCircle
+} from 'lucide-react';
+import { useAuth } from '@/_core/hooks/useAuth';
 
-// Types
+// DojoFlow Logo Component - uses actual logo image
+const DojoFlowLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
+  <img src="/dojoflow-logo-icon.png" alt="DojoFlow" className={className} />
+);
+
+// Kai Logo for center panel - uses actual logo image
+const KaiLogo = ({ className = "w-20 h-20" }: { className?: string }) => (
+  <img src="/dojoflow-logo-icon.png" alt="Kai" className={className} />
+);
+
+// Conversation type
 interface Conversation {
-  id: string
-  title: string
-  timestamp: Date
-  status: 'in_progress' | 'completed'
-  messages: Message[]
+  id: string;
+  title: string;
+  preview: string;
+  timestamp: string;
+  tags: string[];
+  status: 'neutral' | 'attention' | 'urgent';
+  category: 'kai' | 'growth' | 'billing';
+  date: 'today' | 'yesterday' | 'older';
 }
 
+// Message type
 interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-  studentCard?: StudentCard
-  leadData?: LeadData[]
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
 }
-
-interface StudentCard {
-  id: number
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  program: string
-  beltRank: string
-  status: string
-  lastAttendance?: string
-  category: string
-  progressToNextBelt: number
-  notes?: string
-  parentName?: string
-  parentPhone?: string
-}
-
-interface LeadData {
-  name: string
-  phone: string
-  email: string
-  program: string
-  source: string
-  notes: string
-  stage: string
-}
-
-// Smart Collections
-const SMART_COLLECTIONS = [
-  { id: 'urgent', name: 'Urgent', icon: AlertCircle, count: 3 },
-  { id: 'insights', name: 'Kai Insights', icon: Lightbulb, count: 5 },
-  { id: 'pending', name: 'Pending Tasks', icon: CheckSquare, count: 8 },
-]
-
-// Suggested Prompts
-const SUGGESTED_PROMPTS = [
-  "Help me grow my kids program to 150 students.",
-  "Show me attendance and missed classes this week.",
-  "Who is late on payments and how can we fix it?",
-  "Pull students who haven't attended in 10 days.",
-  "Show me the lead pipeline stats.",
-]
 
 export default function KaiCommand() {
-  const navigate = useNavigate()
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
-  const [inputText, setInputText] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('active')
-  const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [, navigate] = useLocation();
+  const { user, logout } = useAuth();
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [topMenuVisible, setTopMenuVisible] = useState(true);
+  const [activeTab, setActiveTab] = useState('active');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [messageInput, setMessageInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch real data
-  const studentsQuery = trpc.students.getAll.useQuery()
-  const leadsQuery = trpc.leads.getAll.useQuery()
+  // tRPC mutation for Kai chat
+  const kaiChatMutation = trpc.kai.chat.useMutation();
+  const statsQuery = trpc.dashboard.stats.useQuery();
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [activeConversation?.messages])
-
-  // Create new conversation
-  const createNewConversation = () => {
-    const newConv: Conversation = {
-      id: Date.now().toString(),
+  // Sample conversations data matching original
+  const [conversations] = useState<Conversation[]>([
+    {
+      id: '0',
       title: 'New Conversation',
-      timestamp: new Date(),
-      status: 'in_progress',
-      messages: []
+      preview: '',
+      timestamp: '02:40 AM',
+      tags: ['kai', 'neutral'],
+      status: 'neutral',
+      category: 'kai',
+      date: 'today'
+    },
+    {
+      id: '1',
+      title: 'Help me grow my kids program t...',
+      preview: 'Hello! I\'m Kai, and that is an excellent, ambitious goal. Growing your Kids Program from 20 students to 150 is a significant undertaking...',
+      timestamp: '02:32 AM',
+      tags: ['growth', 'neutral'],
+      status: 'neutral',
+      category: 'growth',
+      date: 'today'
+    },
+    {
+      id: '2',
+      title: 'Hello how are you?...',
+      preview: 'I understand your focus on **Vincent Holmes**. He must be a high-priority student for your dojo...',
+      timestamp: '09:57 PM',
+      tags: ['growth', 'neutral'],
+      status: 'neutral',
+      category: 'growth',
+      date: 'yesterday'
+    },
+    {
+      id: '3',
+      title: 'Who is late on payments and ho...',
+      preview: "That's a great question! As your DojoFlow AI assistant, Kai, I handle the aggregate data...",
+      timestamp: '07:51 PM',
+      tags: ['billing', 'attention'],
+      status: 'attention',
+      category: 'billing',
+      date: 'yesterday'
+    },
+    {
+      id: '4',
+      title: 'How many students do i have...',
+      preview: 'I understand you are looking for information on a specific student, Vincent Holmes...',
+      timestamp: '07:17 PM',
+      tags: ['billing', 'neutral'],
+      status: 'neutral',
+      category: 'billing',
+      date: 'yesterday'
     }
-    setConversations(prev => [newConv, ...prev])
-    setActiveConversation(newConv)
-  }
+  ]);
 
-  // Process message
-  const processMessage = async (query: string) => {
-    if (!activeConversation) {
-      createNewConversation()
+  // Smart collections counts - matching original
+  const smartCollections = [
+    { id: 'urgent', label: 'Urgent', count: 1, icon: AlertCircle, color: 'text-[#E85A6B]' },
+    { id: 'insights', label: 'Kai Insights', count: 6, icon: Sparkles, color: 'text-[#A855F7]' },
+    { id: 'pending', label: 'Pending Tasks', count: 15, icon: CheckSquare, color: 'text-[#14B8A6]' }
+  ];
+
+  // Navigation items with drag handles
+  const navItems = [
+    { id: 'kai-command', label: 'Kai Command', icon: MessageCircle, path: '/kai-command', active: true },
+    { id: 'students', label: 'Students', icon: GraduationCap, path: '/students' },
+    { id: 'statistics', label: 'Statistics', icon: BarChart3, path: '/dashboard' },
+    { id: 'leads', label: 'Leads', icon: UserPlus, path: '/leads' },
+    { id: 'classes', label: 'Classes', icon: Calendar, path: '/classes' },
+    { id: 'kiosk', label: 'Kiosk', icon: Monitor, path: '/kiosk' },
+    { id: 'receptionist', label: 'Receptionist', icon: Headphones, path: '/receptionist' },
+    { id: 'staff', label: 'Staff', icon: Users, path: '/staff' },
+    { id: 'billing', label: 'Billing', icon: CreditCard, path: '/billing' },
+    { id: 'reports', label: 'Reports', icon: TrendingUp, path: '/reports' },
+    { id: 'marketing', label: 'Marketing', icon: Megaphone, path: '/marketing' }
+  ];
+
+  // Suggested prompts matching original
+  const suggestedPrompts = [
+    {
+      header: 'START WITH YOUR GOALS',
+      text: '"Help me grow my kids program to 150 students."'
+    },
+    {
+      header: 'CHECK HEALTH OF YOUR DOJO',
+      text: '"Show me attendance and missed classes this week."'
+    },
+    {
+      header: 'FIX BILLING & RENEWALS',
+      text: '"Who is late on payments and how can we fix it?"'
     }
-    
-    setIsLoading(true)
-    
-    // Add user message
+  ];
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim()) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: query,
+      content: messageInput,
       timestamp: new Date()
-    }
-    
-    const updatedConv = activeConversation || {
-      id: Date.now().toString(),
-      title: query.slice(0, 50),
-      timestamp: new Date(),
-      status: 'in_progress' as const,
-      messages: []
-    }
-    
-    updatedConv.messages = [...updatedConv.messages, userMessage]
-    updatedConv.title = query.slice(0, 50)
-    
-    setActiveConversation({ ...updatedConv })
-    setConversations(prev => {
-      const exists = prev.find(c => c.id === updatedConv.id)
-      if (exists) {
-        return prev.map(c => c.id === updatedConv.id ? { ...updatedConv } : c)
-      }
-      return [{ ...updatedConv }, ...prev]
-    })
-    
-    setInputText('')
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Generate response based on query
-    const response = generateResponse(query)
-    
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: response.content,
-      timestamp: new Date(),
-      studentCard: response.studentCard
-    }
-    
-    updatedConv.messages = [...updatedConv.messages, assistantMessage]
-    
-    setActiveConversation({ ...updatedConv })
-    setConversations(prev => prev.map(c => c.id === updatedConv.id ? { ...updatedConv } : c))
-    setIsLoading(false)
-  }
+    };
 
-  // Generate response based on query
-  const generateResponse = (query: string): { content: string; studentCard?: StudentCard } => {
-    const lowerQuery = query.toLowerCase()
-    const students = studentsQuery.data || []
-    const leads = leadsQuery.data || []
-    
-    // Check for student lookup
-    const studentNameMatch = lowerQuery.match(/(?:show|pull|open|find|get)\s+(?:me\s+)?(?:student\s+)?([a-z]+(?:\s+[a-z]+)?)/i)
-    if (studentNameMatch || lowerQuery.includes('student card')) {
-      const searchName = studentNameMatch?.[1] || ''
-      const foundStudent = students.find(s => 
-        `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchName.toLowerCase()) ||
-        s.firstName.toLowerCase().includes(searchName.toLowerCase()) ||
-        s.lastName.toLowerCase().includes(searchName.toLowerCase())
-      )
-      
-      if (foundStudent) {
-        const studentCard: StudentCard = {
-          id: foundStudent.id,
-          firstName: foundStudent.firstName,
-          lastName: foundStudent.lastName,
-          email: foundStudent.email || '',
-          phone: foundStudent.phone || '',
-          program: 'Martial Arts',
-          beltRank: foundStudent.beltRank || 'White',
-          status: foundStudent.status || 'Active',
-          category: 'A-Student',
-          progressToNextBelt: 75,
-          notes: 'Strong kicks, highly focused.',
-        }
-        
-        return {
-          content: `Here's ${foundStudent.firstName} ${foundStudent.lastName}'s student card:`,
-          studentCard
-        }
-      } else if (searchName) {
-        return {
-          content: `I don't see "${searchName}" in the system yet. Want me to help you add them as a new student?`
-        }
-      }
-    }
-    
-    // Check for student count
-    if (lowerQuery.includes('how many students') || lowerQuery.includes('student count') || lowerQuery.includes('total students')) {
-      const activeStudents = students.filter(s => s.status === 'active' || s.status === 'Active').length
-      const totalStudents = students.length
-      
-      return {
-        content: `Let me check the student database...\n\n📊 **Student Overview:**\n\n| Metric | Count |\n|--------|-------|\n| Active Students | ${activeStudents} |\n| Total Students | ${totalStudents} |\n\nWould you like me to break this down by belt rank or program?`
-      }
-    }
-    
-    // Check for attendance
-    if (lowerQuery.includes('attendance') || lowerQuery.includes('missed class')) {
-      return {
-        content: `Let me think...\n\n📅 **Attendance Summary (This Week):**\n\n| Day | Check-ins | Missed |\n|-----|-----------|--------|\n| Monday | 24 | 3 |\n| Tuesday | 18 | 5 |\n| Wednesday | 22 | 2 |\n| Thursday | 20 | 4 |\n| Friday | 26 | 1 |\n\n**Students who missed 2+ classes:**\n- Sarah Johnson (missed 3)\n- Mike Chen (missed 2)\n\n⚠️ **Action Needed:** These students may be at risk of dropping. Want me to draft a re-engagement message?`
-      }
-    }
-    
-    // Check for late payments
-    if (lowerQuery.includes('late') && (lowerQuery.includes('payment') || lowerQuery.includes('pay'))) {
-      return {
-        content: `Let me think...\n\n💰 **Late Payment Report:**\n\n| Student | Amount Due | Days Late | Last Contact |\n|---------|------------|-----------|-------------|\n| James Thompson | $150 | 15 days | Dec 1 |\n| Lisa Park | $200 | 8 days | Dec 5 |\n| David Wilson | $75 | 5 days | Never |\n\n**Total Outstanding:** $425\n\n📋 **Recommended Actions:**\n1. Send automated reminder to David Wilson (no prior contact)\n2. Follow up call to James Thompson (15+ days)\n3. Offer payment plan to Lisa Park\n\nWould you like me to initiate any of these actions?`
-      }
-    }
-    
-    // Check for leads
-    if (lowerQuery.includes('lead') && (lowerQuery.includes('pipeline') || lowerQuery.includes('stats') || lowerQuery.includes('show'))) {
-      const leadsByStage = {
-        'New Lead': leads.filter(l => l.stage === 'new_lead' || l.stage === 'New Lead').length,
-        'Contacted': leads.filter(l => l.stage === 'contacted' || l.stage === 'Contacted').length,
-        'Intro Scheduled': leads.filter(l => l.stage === 'intro_scheduled').length,
-        'Enrolled': leads.filter(l => l.stage === 'enrolled' || l.stage === 'Enrolled').length,
-      }
-      
-      return {
-        content: `Let me think...\n\n🎯 **Lead Pipeline Stats:**\n\n| Stage | Count |\n|-------|-------|\n| New Lead | ${leadsByStage['New Lead']} |\n| Contacted | ${leadsByStage['Contacted']} |\n| Intro Scheduled | ${leadsByStage['Intro Scheduled']} |\n| Enrolled | ${leadsByStage['Enrolled']} |\n\n**Total Leads:** ${leads.length}\n\n💡 **Insight:** You have ${leadsByStage['New Lead']} new leads that haven't been contacted yet. Want me to help you prioritize follow-ups?`
-      }
-    }
-    
-    // Check for growing program
-    if (lowerQuery.includes('grow') && lowerQuery.includes('program')) {
-      return {
-        content: `Let me think about your growth strategy...\n\n🚀 **Growth Plan for Kids Program:**\n\nBased on your current data, here's a 3-month action plan:\n\n**Month 1: Foundation**\n- Launch referral program (offer 1 free month for referrals)\n- Partner with 3 local schools for demo classes\n- Optimize your Google Business listing\n\n**Month 2: Acceleration**\n- Run "Bring a Friend" week\n- Start birthday party packages\n- Create social media content featuring student achievements\n\n**Month 3: Retention Focus**\n- Implement attendance tracking alerts\n- Launch parent communication app\n- Create belt testing celebration events\n\n📊 **Projected Growth:** 15-20 new students per month\n\nWant me to help you implement any of these strategies?`
-      }
-    }
-    
-    // Default response
-    return {
-      content: `I understand you're asking about "${query}". Let me help you with that.\n\nI can assist you with:\n- **Student Management:** Pull student cards, check attendance, track belt progress\n- **Lead Pipeline:** View lead stats, process new leads, track conversions\n- **Financial Data:** Late payments, revenue reports, billing status\n- **Retention:** At-risk students, re-engagement strategies\n\nTry asking me something specific like:\n- "Show me John Smith's student card"\n- "Who is late on payments?"\n- "What's our attendance this week?"`
-    }
-  }
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = messageInput;
+    setMessageInput('');
+    setIsLoading(true);
 
-  // Handle send
-  const handleSend = () => {
-    if (inputText.trim() && !isLoading) {
-      processMessage(inputText)
-    }
-  }
+    try {
+      const stats = statsQuery.data;
+      const response = await kaiChatMutation.mutateAsync({
+        message: currentInput,
+        context: stats ? {
+          totalStudents: stats.totalStudents,
+          activeStudents: stats.activeStudents,
+          totalLeads: stats.totalLeads,
+          totalClasses: stats.totalClasses
+        } : undefined
+      });
 
-  // Handle key press
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response.response,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `I can help you with "${currentInput}". Let me analyze your dojo's performance metrics and identify key areas for growth.`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+      e.preventDefault();
+      handleSendMessage();
     }
-  }
+  };
 
-  // Render student card - Apple style
-  const renderStudentCard = (card: StudentCard) => (
-    <Card className="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl">
-      <CardContent className="p-5">
-        <div className="flex items-start gap-4">
-          <Avatar className="h-16 w-16 ring-2 ring-gray-100">
-            <AvatarFallback className="bg-gradient-to-br from-rose-400 to-rose-500 text-white text-xl font-medium">
-              {card.firstName[0]}{card.lastName[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">{card.firstName} {card.lastName}</h3>
-              <Badge className={`${card.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'} border-0`}>
-                {card.status}
-              </Badge>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
-              <div className="flex items-center gap-2 text-gray-500">
-                <Award className="h-4 w-4" />
-                <span>Belt: <strong className="text-slate-700">{card.beltRank}</strong></span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-500">
-                <User className="h-4 w-4" />
-                <span>Program: <strong className="text-slate-700">{card.program}</strong></span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-500">
-                <Mail className="h-4 w-4" />
-                <span className="truncate">{card.email || 'No email'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-500">
-                <Phone className="h-4 w-4" />
-                <span>{card.phone || 'No phone'}</span>
-              </div>
-            </div>
-            
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-sm mb-1.5">
-                <span className="text-gray-500">Progress to next belt</span>
-                <span className="font-medium text-slate-700">{card.progressToNextBelt}%</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-rose-400 to-rose-500 rounded-full transition-all"
-                  style={{ width: `${card.progressToNextBelt}%` }}
-                />
-              </div>
-            </div>
-            
-            {card.notes && (
-              <p className="mt-3 text-sm text-gray-500 italic">"{card.notes}"</p>
-            )}
-            
-            <div className="flex gap-2 mt-4">
-              <Button size="sm" variant="outline" className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50">
-                <Calendar className="h-4 w-4 mr-1" />
-                Attendance
-              </Button>
-              <Button size="sm" variant="outline" className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50">
-                <MessageSquare className="h-4 w-4 mr-1" />
-                Message
-              </Button>
-              <Button size="sm" variant="outline" className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                Progress
-              </Button>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-
-  // Filter conversations
-  const filteredConversations = conversations.filter(conv => {
-    if (searchQuery) {
-      return conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const handlePromptClick = (text: string) => {
+    // Extract the quoted text
+    const match = text.match(/"([^"]+)"/);
+    if (match) {
+      setMessageInput(match[1]);
     }
-    if (activeTab === 'active') return conv.status === 'in_progress'
-    if (activeTab === 'archived') return conv.status === 'completed'
-    return true
-  })
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'kai': return 'bg-[#DBEAFE] text-[#3B82F6]';
+      case 'growth': return 'bg-[#D1FAE5] text-[#10B981]';
+      case 'billing': return 'bg-[#EDE9FE] text-[#8B5CF6]';
+      default: return 'bg-slate-100 text-slate-600';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'attention': return 'bg-amber-100 text-amber-700';
+      case 'urgent': return 'bg-red-100 text-red-700';
+      default: return 'bg-slate-100 text-slate-600';
+    }
+  };
+
+  const todayConversations = conversations.filter(c => c.date === 'today');
+  const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
 
   return (
-    <DojoFlowLayout>
-      {/* Apple-style light background */}
-      <div className="flex h-[calc(100vh-8rem)] gap-4 bg-[#F5F7FB] -m-6 p-6">
-        
-        {/* Left Sidebar - Command Center - Apple Light Style */}
-        <div className="w-80 flex-shrink-0 bg-[#F8FAFC] rounded-2xl border border-gray-200/60 flex flex-col shadow-sm">
-          
-          {/* Search */}
-          <div className="p-4 border-b border-gray-200/60">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search history, tags, @mentions..."
-                className="pl-9 bg-white border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-slate-700 placeholder:text-gray-400"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+    <div className="flex h-screen bg-[#1E293B] overflow-hidden">
+      {/* Left Sidebar - Dark Navigation */}
+      {sidebarVisible && (
+        <div className="w-56 bg-[#1E293B] border-r border-slate-700/50 flex flex-col">
+          {/* Logo */}
+          <div className="p-4 flex items-center gap-2">
+            <DojoFlowLogo className="w-9 h-9" />
+            <span className="text-white font-bold text-lg">DojoFlow</span>
           </div>
-          
-          {/* Tabs */}
-          <div className="px-4 py-3 border-b border-gray-200/60">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full bg-gray-100/80 p-1 rounded-xl">
-                <TabsTrigger value="active" className="flex-1 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-gray-600 data-[state=active]:text-slate-900">Active</TabsTrigger>
-                <TabsTrigger value="archived" className="flex-1 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-gray-600 data-[state=active]:text-slate-900">Archived</TabsTrigger>
-                <TabsTrigger value="all" className="flex-1 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-gray-600 data-[state=active]:text-slate-900">All</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          
-          {/* Smart Collections */}
-          <div className="p-4 border-b border-gray-200/60">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Smart Collections</h3>
-            <div className="space-y-1">
-              {SMART_COLLECTIONS.map(collection => (
-                <button
-                  key={collection.id}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm transition-all text-sm group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <collection.icon className="h-4 w-4 text-gray-400 group-hover:text-rose-500 transition-colors" />
-                    <span className="text-gray-600 group-hover:text-slate-900">{collection.name}</span>
-                  </div>
-                  <Badge className="bg-gray-100 text-gray-500 border-0 text-xs font-medium">{collection.count}</Badge>
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Conversations List */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="px-4 py-3 flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Recent Conversations</h3>
-              <Button size="sm" variant="ghost" onClick={createNewConversation} className="h-7 w-7 p-0 text-gray-400 hover:text-rose-500 hover:bg-rose-50">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <ScrollArea className="flex-1 px-3">
-              {filteredConversations.length === 0 ? (
-                <div className="p-4 text-center text-sm text-gray-400">
-                  No conversations yet
-                </div>
-              ) : (
-                <div className="space-y-2 pb-4">
-                  {filteredConversations.map(conv => (
-                    <button
-                      key={conv.id}
-                      onClick={() => setActiveConversation(conv)}
-                      className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                        activeConversation?.id === conv.id
-                          ? 'bg-white shadow-sm border border-rose-200'
-                          : 'hover:bg-white hover:shadow-sm border border-transparent'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-medium text-sm truncate ${activeConversation?.id === conv.id ? 'text-slate-900' : 'text-gray-700'}`}>{conv.title}</p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {conv.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                        <Badge 
-                          className={`text-xs flex-shrink-0 border-0 ${
-                            conv.status === 'in_progress' 
-                              ? 'bg-emerald-100 text-emerald-600' 
-                              : 'bg-gray-100 text-gray-500'
-                          }`}
-                        >
-                          {conv.status === 'in_progress' ? 'Active' : 'Done'}
-                        </Badge>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-          
-          {/* New Chat Button */}
-          <div className="p-4 border-t border-gray-200/60">
-            <Button 
-              className="w-full bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-xl shadow-sm hover:shadow-md transition-all" 
-              onClick={createNewConversation}
+
+          {/* Navigation */}
+          <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-colors group ${
+                  item.active 
+                    ? 'bg-[#E85A6B] text-white' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                {/* Drag Handle */}
+                <GripVertical className={`w-4 h-4 ${item.active ? 'text-white/60' : 'text-slate-600 group-hover:text-slate-400'}`} />
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+            
+            {/* Settings with expand */}
+            <button
+              onClick={() => setSettingsExpanded(!settingsExpanded)}
+              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors group"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              New Chat
+              <GripVertical className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
+              <Settings className="w-4 h-4" />
+              <span className="flex-1 text-left">Settings</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${settingsExpanded ? 'rotate-180' : ''}`} />
+            </button>
+          </nav>
+
+          {/* User Profile */}
+          <div className="p-3 border-t border-slate-800">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors">
+                  <Avatar className="w-9 h-9">
+                    <AvatarImage src="/avatar.jpg" />
+                    <AvatarFallback className="bg-slate-700 text-white text-sm">VH</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 text-left">
+                    <div className="text-sm font-medium text-white">{user?.name || 'Vincent Holmes'}</div>
+                    <div className="text-xs text-slate-400 truncate">{user?.email || 'sensei30002003@gmail.com'}</div>
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => logout()}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <div className="h-14 bg-[#1E293B] border-b border-slate-700/50 flex items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-white font-semibold text-lg">Dashboard</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarVisible(!sidebarVisible)}
+              className={`text-sm ${sidebarVisible ? 'bg-[#E85A6B] text-white hover:bg-[#D94A5B]' : 'text-slate-400 hover:text-white'}`}
+            >
+              Sidebar
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTopMenuVisible(!topMenuVisible)}
+              className={`text-sm ${topMenuVisible ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              Top Menu
+            </Button>
+            <div className="text-emerald-400 text-sm font-medium px-2">Credits: 0</div>
+            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+              <Menu className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+              <Eye className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+              <Bell className="w-5 h-5" />
             </Button>
           </div>
         </div>
-        
-        {/* Main Conversation Panel - Apple Light Style */}
-        <div className="flex-1 bg-white rounded-2xl border border-gray-200/60 flex flex-col shadow-sm overflow-hidden">
-          
-          {/* Top Banner */}
-          <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50">
-            <p className="text-sm text-gray-500">
-              <Sparkles className="h-4 w-4 inline mr-2 text-rose-500" />
-              Kai Command uses a structured, professional conversation format.
-            </p>
-          </div>
-          
-          {/* Messages Area */}
-          <ScrollArea className="flex-1 p-6 bg-[#F5F7FB]">
-            {!activeConversation || activeConversation.messages.length === 0 ? (
-              // Welcome Screen - Apple Style
-              <div className="h-full flex flex-col items-center justify-center text-center">
-                {/* Central White Card */}
-                <div className="bg-white rounded-3xl shadow-[0_18px_40px_rgba(15,23,42,0.08)] p-12 max-w-xl w-full">
-                  {/* Kai Logo */}
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-rose-400 to-rose-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-rose-200/50">
-                    <Sparkles className="h-10 w-10 text-white" />
-                  </div>
-                  
-                  <h2 className="text-3xl font-semibold text-slate-900 mb-3">Hi, I'm Kai.</h2>
-                  <p className="text-gray-500 max-w-md mx-auto mb-10 leading-relaxed">
-                    Your AI assistant for managing students, tracking leads, analyzing attendance, 
-                    and growing your martial arts school.
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-gray-400 mb-4">Try asking:</h3>
-                    {SUGGESTED_PROMPTS.map((prompt, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setInputText(prompt)
-                          inputRef.current?.focus()
-                        }}
-                        className="w-full text-left px-5 py-3.5 rounded-full bg-white border border-gray-200 hover:border-rose-300 hover:shadow-sm transition-all text-sm text-gray-700 hover:text-slate-900"
-                      >
-                        "{prompt}"
-                      </button>
-                    ))}
-                  </div>
+
+        {/* Content Area with Command Center and Main Panel */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Command Center - Light Gray */}
+          <div className="w-80 bg-[#F5F7FB] border-r border-slate-200 flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Menu className="w-5 h-5 text-slate-500" />
+                  <h2 className="font-semibold text-slate-800">Command Center</h2>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <CheckSquare className="w-4 h-4 text-slate-500" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Plus className="w-4 h-4 text-slate-500" />
+                  </Button>
+                  <Button size="sm" className="bg-[#E85A6B] hover:bg-[#D94A5B] text-white h-8 px-3">
+                    New Chat
+                  </Button>
                 </div>
               </div>
-            ) : (
-              // Conversation Messages
-              <div className="space-y-6 max-w-3xl mx-auto">
-                {activeConversation.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Search history, tags, @mentions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-white border-slate-200 h-9"
+                />
+              </div>
+
+              {/* Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-3">
+                <TabsList className="w-full bg-[#E8ECF1] h-9">
+                  <TabsTrigger value="active" className="flex-1 text-xs data-[state=active]:bg-white">Active</TabsTrigger>
+                  <TabsTrigger value="archived" className="flex-1 text-xs data-[state=active]:bg-white">Archived</TabsTrigger>
+                  <TabsTrigger value="all" className="flex-1 text-xs data-[state=active]:bg-white">All</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Smart Collections */}
+            <div className="p-4 border-b border-slate-200">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Smart Collections</h3>
+              <div className="space-y-1">
+                {smartCollections.map((collection) => (
+                  <button
+                    key={collection.id}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white transition-colors"
                   >
-                    {msg.role === 'assistant' && (
-                      <Avatar className="h-9 w-9 flex-shrink-0 ring-2 ring-gray-100">
-                        <AvatarFallback className="bg-gradient-to-br from-rose-400 to-rose-500 text-white">
-                          <Sparkles className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-first' : ''}`}>
-                      <div
-                        className={`rounded-2xl px-5 py-3.5 ${
-                          msg.role === 'user'
-                            ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-sm'
-                            : 'bg-white border border-gray-200 shadow-sm text-slate-700'
-                        }`}
-                      >
-                        {msg.role === 'assistant' ? (
-                          <div className="prose prose-sm prose-slate max-w-none">
-                            <Streamdown>{msg.content}</Streamdown>
-                          </div>
-                        ) : (
-                          <p>{msg.content}</p>
-                        )}
-                      </div>
-                      {msg.studentCard && renderStudentCard(msg.studentCard)}
-                      <p className="text-xs text-gray-400 mt-1.5 px-2">
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <collection.icon className={`w-4 h-4 ${collection.color}`} />
+                      <span className="text-sm text-slate-700">{collection.label}</span>
                     </div>
-                    {msg.role === 'user' && (
-                      <Avatar className="h-9 w-9 flex-shrink-0 ring-2 ring-gray-100">
-                        <AvatarFallback className="bg-gray-100 text-gray-600">U</AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
+                    <span className="text-xs font-medium text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">
+                      {collection.count}
+                    </span>
+                  </button>
                 ))}
-                
-                {isLoading && (
-                  <div className="flex gap-3">
-                    <Avatar className="h-9 w-9 ring-2 ring-gray-100">
-                      <AvatarFallback className="bg-gradient-to-br from-rose-400 to-rose-500 text-white">
-                        <Sparkles className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="bg-white border border-gray-200 rounded-2xl px-5 py-3.5 shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin text-rose-500" />
-                        <span className="text-gray-500">Let me think...</span>
-                      </div>
-                    </div>
+              </div>
+            </div>
+
+            {/* Recent Conversations */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="p-4 pb-2 flex items-center justify-between">
+                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Recent Conversations</h3>
+                <span className="text-xs text-slate-400">{conversations.length}</span>
+              </div>
+              
+              <ScrollArea className="flex-1 px-4">
+                {/* Today */}
+                {todayConversations.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-xs font-medium text-slate-400 uppercase mb-2">Today</h4>
+                    {todayConversations.map((conv) => (
+                      <ConversationCard 
+                        key={conv.id} 
+                        conversation={conv} 
+                        getCategoryColor={getCategoryColor}
+                        getStatusColor={getStatusColor}
+                      />
+                    ))}
                   </div>
                 )}
-                
-                <div ref={messagesEndRef} />
+
+                {/* Yesterday */}
+                {yesterdayConversations.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-xs font-medium text-slate-400 uppercase mb-2">Yesterday</h4>
+                    {yesterdayConversations.map((conv) => (
+                      <ConversationCard 
+                        key={conv.id} 
+                        conversation={conv} 
+                        getCategoryColor={getCategoryColor}
+                        getStatusColor={getStatusColor}
+                      />
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </div>
+
+          {/* Main Conversation Panel - White */}
+          <div className="flex-1 flex flex-col bg-white">
+            {/* Top Banner */}
+            <div className="px-6 py-3 bg-[#F8FAFC] border-b border-slate-200 flex items-center justify-between">
+              <p className="text-xs text-slate-500 uppercase tracking-wide font-medium">
+                Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
+              </p>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Summarize & Extract">
+                  <FileText className="w-4 h-4 text-slate-500" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Invite Team Members">
+                  <Users className="w-4 h-4 text-slate-500" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Enable Voice Replies">
+                  <Volume2 className="w-4 h-4 text-slate-500" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Enter Focus Mode">
+                  <Maximize2 className="w-4 h-4 text-slate-500" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Full Screen">
+                  <Eye className="w-4 h-4 text-slate-500" />
+                </Button>
               </div>
-            )}
-          </ScrollArea>
-          
-          {/* Message Input Bar - Apple Style Floating */}
-          <div className="p-4 bg-white border-t border-gray-100">
-            <div className="flex items-center gap-3 bg-gray-50 rounded-full px-4 py-2.5 border border-gray-200 shadow-inner max-w-3xl mx-auto">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-full">
-                <Paperclip className="h-5 w-5" />
-              </Button>
-              <Input
-                ref={inputRef}
-                placeholder="Message Kai... (Type @ to mention)"
-                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-slate-700 placeholder:text-gray-400"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyPress}
-                disabled={isLoading}
-              />
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-full">
-                <Mic className="h-5 w-5" />
-              </Button>
-              <Button 
-                size="icon" 
-                className="h-9 w-9 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-full shadow-sm"
-                onClick={handleSend}
-                disabled={!inputText.trim() || isLoading}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+            </div>
+
+            {/* Messages Area */}
+            <ScrollArea className="flex-1 p-6">
+              <div className="max-w-3xl mx-auto">
+                {messages.length === 0 ? (
+                  /* Empty State - Kai Greeting */
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <KaiLogo className="w-24 h-24 mb-6" />
+                    <h2 className="text-3xl font-semibold text-slate-900 mb-3">Hi, I'm Kai.</h2>
+                    <p className="text-slate-600 text-center max-w-md mb-8">
+                      Tell me about your dojo and what you want to improve—growth, retention, or operations—and I'll show you the numbers.
+                    </p>
+                    
+                    {/* Suggested Prompts */}
+                    <div className="grid grid-cols-3 gap-4 w-full max-w-2xl">
+                      {suggestedPrompts.map((prompt, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handlePromptClick(prompt.text)}
+                          className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-[#E85A6B]/30 transition-all group"
+                        >
+                          <div className="text-xs font-semibold text-[#E85A6B] uppercase tracking-wide mb-2">
+                            {prompt.header}
+                          </div>
+                          <p className="text-sm text-slate-600 group-hover:text-slate-800">
+                            {prompt.text}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* Messages */
+                  <div className="space-y-6">
+                    {messages.map((message) => (
+                      <div key={message.id} className="flex gap-3">
+                        {message.role === 'user' ? (
+                          <>
+                            <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-medium shrink-0">
+                              You
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-slate-900 mb-1">You</div>
+                              <p className="text-slate-700">{message.content}</p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-8 h-8 rounded-full bg-[#E85A6B] flex items-center justify-center shrink-0">
+                              <Sparkles className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-slate-900 mb-1">Kai</div>
+                              <div className="text-slate-700 whitespace-pre-wrap prose prose-sm max-w-none">
+                                {message.content}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    {isLoading && (
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#E85A6B] flex items-center justify-center shrink-0">
+                          <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-slate-900 mb-1">Kai</div>
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            {/* Input Bar */}
+            <div className="p-4 border-t border-slate-200">
+              <div className="max-w-3xl mx-auto">
+                <div className="flex items-center gap-2 bg-[#F5F7FB] rounded-2xl border-2 border-[#E85A6B]/30 p-2 focus-within:border-[#E85A6B]/50">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
+                    <Paperclip className="w-5 h-5" />
+                  </Button>
+                  <Textarea
+                    placeholder="Message Kai... (Type @ to mention)"
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="flex-1 min-h-[40px] max-h-32 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    rows={1}
+                  />
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
+                    <Mic className="w-5 h-5" />
+                  </Button>
+                  <Button 
+                    size="icon" 
+                    className="h-9 w-9 bg-[#E85A6B] hover:bg-[#D94A5B] text-white rounded-full"
+                    onClick={handleSendMessage}
+                    disabled={!messageInput.trim() || isLoading}
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-400 text-center mt-2">
+                  Kai can make mistakes. Consider checking important information.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </DojoFlowLayout>
-  )
+    </div>
+  );
+}
+
+// Conversation Card Component
+function ConversationCard({ 
+  conversation, 
+  getCategoryColor,
+  getStatusColor
+}: { 
+  conversation: Conversation; 
+  getCategoryColor: (category: string) => string;
+  getStatusColor: (status: string) => string;
+}) {
+  return (
+    <div className="bg-white rounded-lg border border-slate-200 p-3 mb-2 hover:shadow-sm transition-shadow cursor-pointer">
+      <div className="flex items-start justify-between mb-1">
+        <h5 className="text-sm font-medium text-slate-900 truncate flex-1 pr-2">{conversation.title}</h5>
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-xs text-slate-400">{conversation.timestamp}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6">
+                <MoreVertical className="w-3 h-3 text-slate-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Archive</DropdownMenuItem>
+              <DropdownMenuItem>Delete</DropdownMenuItem>
+              <DropdownMenuItem>Rename</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      {conversation.preview && (
+        <p className="text-xs text-slate-500 line-clamp-2 mb-2">{conversation.preview}</p>
+      )}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={`text-xs px-2 py-0.5 rounded-full ${getCategoryColor(conversation.category)}`}>
+          {conversation.category}
+        </span>
+        <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(conversation.status)}`}>
+          {conversation.status}
+        </span>
+        <span className="text-xs text-slate-400 ml-auto flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          In Progress
+        </span>
+      </div>
+    </div>
+  );
 }
