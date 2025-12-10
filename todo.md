@@ -1236,3 +1236,41 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [ ] Add Vitest test runner step
 - [ ] Push workflow to GitHub
 - [ ] Verify workflow runs on commits
+
+
+## ✅ COMPLETED: Theme & UI Improvements
+
+### 1. Light Mode as Default
+- [x] Set Light mode as default theme on initial load
+- [x] Use localStorage key "dojoFlowTheme" for persistence
+- [x] Only apply stored preference if it exists
+
+### 2. Theme-Aware Logo Switching
+- [x] Use logo_light for Light mode header
+- [x] Use logo_dark for Dark & Cinematic mode header
+- [x] Use logo_icon for Kai menu item in bottom nav
+- [x] Auto-switch logos when theme changes
+
+### 3. Kai Menu Item in Bottom Nav
+- [x] Use logo_icon as Kai's icon (with glow effect when active)
+- [x] Keep Kai centered in nav (middle position)
+- [x] Show "Kai" label underneath
+- [x] Make Kai visually stand out (larger size, glow shadow)
+
+### 4. Apple Dock Bubble Hover Effect
+- [x] Hovered item scales to 1.2x
+- [x] Neighboring items scale to 1.08x (distance 1) and 1.03x (distance 2)
+- [x] Smooth 180ms ease-out transition
+- [x] Kai item scales up to 1.25x when hovered
+- [x] Effect works on mouse hover
+
+### 5. Center Kai Command Dashboard Content
+- [x] Wrap hero content in max-width: 4xl container
+- [x] Center with mx-auto
+- [x] Add padding-top: 48px (pt-12) below header
+- [x] Center starter cards in row under hero
+- [x] Command Center panel aligned, hero content centered
+
+### 6. Keep Existing Functionality
+- [x] Routes and navigation logic unchanged
+- [x] Kai command behavior unchanged

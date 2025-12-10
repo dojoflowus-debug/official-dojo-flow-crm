@@ -78,6 +78,9 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
   const [isNavVisible, setIsNavVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   
+  // Hover state for Apple dock bubble effect
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
@@ -170,17 +173,14 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
           }}
         >
           <div className="h-full px-6 flex items-center justify-between">
-            {/* Left: Logo */}
+            {/* Left: Logo - Theme-aware */}
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-2">
                 <img 
-                  src={APP_LOGO} 
+                  src={isDark || isCinematic ? '/logo-dark.png' : '/logo-light.png'} 
                   alt="DojoFlow" 
-                  className="h-8 w-8 object-contain"
+                  className="h-8 object-contain"
                 />
-                <span className={`text-base font-semibold ${headerStyles.textColor}`}>
-                  DojoFlow
-                </span>
               </Link>
               
               {/* Page Title - Hidden on mobile */}
@@ -300,47 +300,70 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
         }}
       >
         <div className="h-full max-w-screen-xl mx-auto px-2 flex items-center justify-around">
-          {NAVIGATION.map((item) => {
+          {NAVIGATION.map((item, index) => {
             const active = isActive(item.href)
             const Icon = item.icon
+            
+            // Calculate scale based on hover proximity (Apple dock effect)
+            const getScale = () => {
+              if (hoveredIndex === null) return item.isCenter ? 1.1 : 1
+              if (hoveredIndex === index) return item.isCenter ? 1.25 : 1.2
+              const distance = Math.abs(hoveredIndex - index)
+              if (distance === 1) return 1.08
+              if (distance === 2) return 1.03
+              return 1
+            }
             
             return (
               <Link
                 key={item.id}
                 to={item.href}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
                 className={`
                   relative flex flex-col items-center justify-center gap-0.5 px-2 py-1
-                  transition-all duration-200 ease-out
-                  ${item.isCenter ? 'scale-110' : ''}
-                  ${active ? 'transform scale-105' : ''}
+                  transition-all duration-[180ms] ease-out
+                  ${active ? 'transform' : ''}
                 `}
+                style={{ transform: `scale(${getScale()})` }}
               >
                 {/* Icon Container */}
                 <div 
                   className={`
                     relative flex items-center justify-center
-                    ${item.isCenter ? 'h-10 w-10' : 'h-8 w-8'}
+                    ${item.isCenter ? 'h-12 w-12' : 'h-8 w-8'}
                     rounded-full transition-all duration-200
                     ${active && item.isCenter 
                       ? isCinematic 
-                        ? 'bg-[#FF5A3D]/20' 
+                        ? 'bg-[#FF5A3D]/20 shadow-[0_0_20px_rgba(255,90,61,0.4)]' 
                         : isDark 
-                          ? 'bg-[#FF4F4F]/20' 
-                          : 'bg-[#E53935]/10'
+                          ? 'bg-[#FF4F4F]/20 shadow-[0_0_20px_rgba(255,79,79,0.4)]' 
+                          : 'bg-[#E53935]/10 shadow-[0_0_20px_rgba(229,57,53,0.3)]'
                       : ''
                     }
                   `}
                 >
-                  <Icon 
-                    className={`
-                      transition-all duration-200
-                      ${item.isCenter ? 'h-6 w-6' : 'h-5 w-5'}
-                      ${active 
-                        ? isCinematic ? 'text-[#FF5A3D]' : isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
-                        : isCinematic ? 'text-[#C1C1C3]' : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
-                      }
-                    `}
-                  />
+                  {item.isCenter ? (
+                    <img 
+                      src="/logo-icon.png" 
+                      alt="Kai" 
+                      className={`
+                        h-8 w-8 object-contain transition-all duration-200
+                        ${active ? 'scale-110' : 'opacity-80'}
+                      `}
+                    />
+                  ) : (
+                    <Icon 
+                      className={`
+                        transition-all duration-200
+                        h-5 w-5
+                        ${active 
+                          ? isCinematic ? 'text-[#FF5A3D]' : isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
+                          : isCinematic ? 'text-[#C1C1C3]' : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
+                        }
+                      `}
+                    />
+                  )}
                   
                   {/* Glow effect for center item when active */}
                   {active && item.isCenter && (

@@ -431,9 +431,9 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* Messages Area with visible scrollbar */}
-          <div className="flex-1 overflow-y-auto p-6 scrollbar-visible">
-            <div className="max-w-3xl mx-auto">
+          {/* Messages Area with visible scrollbar - Centered content */}
+          <div className="flex-1 overflow-y-auto p-6 pt-12 scrollbar-visible">
+            <div className="max-w-4xl mx-auto">
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting */
                 <div className="flex flex-col items-center justify-center py-12">
