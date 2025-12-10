@@ -1367,3 +1367,10 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Use softer border color: slate-100
 - [x] Update main content padding to match
 
+
+
+## ✅ COMPLETED: Light Mode Logo Update
+- [x] Copy Darkdojoflow.png to project as logo-light.png
+- [x] Verify logo displays correctly in Light mode header
+- [x] Save checkpoint
+
