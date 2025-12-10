@@ -1225,3 +1225,14 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Apply header to all pages using shared layout
 - [x] Kai Command page now shows the header
 - [x] Header appears on: Dashboard, Students, Leads, Classes, Staff, Billing, Reports, Settings
+
+
+## 🔧 IN PROGRESS: GitHub Actions CI/CD Workflow
+- [ ] Create .github/workflows directory
+- [ ] Create ci.yml workflow file
+- [ ] Configure Node.js setup with pnpm
+- [ ] Add dependency installation step
+- [ ] Add TypeScript type checking step
+- [ ] Add Vitest test runner step
+- [ ] Push workflow to GitHub
+- [ ] Verify workflow runs on commits
