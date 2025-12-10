@@ -1033,3 +1033,9 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 
 ## ✅ COMPLETED: Increase Swivel Bar Max Width
 - [x] Allow dragging past halfway across the page (now up to 75% of available width)
+
+
+## ✅ COMPLETED: Double-Click Swivel Bar to Reset Width
+- [x] Add onDoubleClick handler to swivel bar
+- [x] Reset commandCenterWidth to default (320px) on double-click
+- [x] Added tooltip hint for users

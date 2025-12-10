@@ -544,9 +544,11 @@ export default function KaiCommand() {
           {/* Swivel/Drag Bar */}
           <div 
             onMouseDown={handleMouseDown}
+            onDoubleClick={() => setCommandCenterWidth(320)}
             className={`w-2 cursor-col-resize flex items-center justify-center group transition-colors select-none ${
               isResizing ? 'bg-[#E85A6B]' : 'bg-slate-200 hover:bg-[#E85A6B]'
             }`}
+            title="Drag to resize, double-click to reset"
           >
             <div className={`w-1 h-12 rounded-full transition-colors ${
               isResizing ? 'bg-white' : 'bg-slate-400 group-hover:bg-white'
