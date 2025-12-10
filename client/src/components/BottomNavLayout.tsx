@@ -72,6 +72,32 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
   
   const isDark = theme === 'dark'
   
+  // Scroll detection for collapsible bottom nav
+  const [isNavVisible, setIsNavVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      const scrollDelta = currentScrollY - lastScrollY
+      
+      // Only trigger if scroll delta is significant (> 10px)
+      if (Math.abs(scrollDelta) > 10) {
+        if (scrollDelta > 0 && currentScrollY > 100) {
+          // Scrolling down - hide nav
+          setIsNavVisible(false)
+        } else {
+          // Scrolling up - show nav
+          setIsNavVisible(true)
+        }
+        setLastScrollY(currentScrollY)
+      }
+    }
+    
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
+  
   // Get current page title
   const currentPageTitle = PAGE_TITLES[location.pathname] || 'DojoFlow'
   
@@ -219,7 +245,9 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
       {/* Bottom Navigation Bar */}
       <nav 
         className={`
-          fixed bottom-0 left-0 right-0 z-50 h-16
+          fixed left-0 right-0 z-50 h-16
+          transition-transform duration-300 ease-in-out
+          ${isNavVisible ? 'translate-y-0 bottom-0' : 'translate-y-full bottom-0'}
           ${isDark 
             ? 'bg-[#1A1B1F]/95 border-t border-[#2A2B2F]' 
             : 'bg-white/95 border-t border-[#E2E3E6]'

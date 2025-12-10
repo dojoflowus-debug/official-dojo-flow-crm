@@ -1120,3 +1120,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] No sidebar at any breakpoint
 - [x] Touch-friendly bottom nav
 - [ ] Touch-friendly bottom nav on tablets
+
+
+## ✅ COMPLETED: Collapsible Bottom Navigation on Scroll
+- [x] Add scroll direction detection to BottomNavLayout (useState + useEffect)
+- [x] Hide bottom nav when scrolling down (after 100px threshold)
+- [x] Show bottom nav when scrolling up
+- [x] Add smooth transition animation (300ms ease-in-out)
+- [x] Content padding already set to pb-20 for nav space
