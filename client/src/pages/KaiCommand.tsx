@@ -152,7 +152,7 @@ export default function KaiCommand() {
 
   // Smart collections counts - matching original
   const smartCollections = [
-    { id: 'urgent', label: 'Urgent', count: 1, icon: AlertCircle, color: 'text-[#E85A6B]' },
+    { id: 'urgent', label: 'Urgent', count: 1, icon: AlertCircle, color: 'text-[#ED393D]' },
     { id: 'insights', label: 'Kai Insights', count: 6, icon: Sparkles, color: 'text-[#A855F7]' },
     { id: 'pending', label: 'Pending Tasks', count: 15, icon: CheckSquare, color: 'text-[#14B8A6]' }
   ];
@@ -337,7 +337,7 @@ export default function KaiCommand() {
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-colors group ${
                   item.active 
-                    ? 'bg-[#E85A6B] text-white' 
+                    ? 'bg-[#ED393D] text-white' 
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
@@ -404,7 +404,7 @@ export default function KaiCommand() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarVisible(!sidebarVisible)}
-                className={`text-sm rounded-md px-3 py-1 ${sidebarVisible ? 'bg-[#E85A6B] text-white hover:bg-[#D94A5B]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                className={`text-sm rounded-md px-3 py-1 ${sidebarVisible ? 'bg-[#ED393D] text-white hover:bg-[#D9292D]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
               >
                 Sidebar
               </Button>
@@ -412,7 +412,7 @@ export default function KaiCommand() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setTopMenuVisible(!topMenuVisible)}
-                className={`text-sm rounded-md px-3 py-1 ${topMenuVisible ? 'bg-[#E85A6B] text-white hover:bg-[#D94A5B]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                className={`text-sm rounded-md px-3 py-1 ${topMenuVisible ? 'bg-[#ED393D] text-white hover:bg-[#D9292D]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
               >
                 Top Menu
               </Button>
@@ -546,7 +546,7 @@ export default function KaiCommand() {
             onMouseDown={handleMouseDown}
             onDoubleClick={() => setCommandCenterWidth(320)}
             className={`w-2 cursor-col-resize flex items-center justify-center group transition-colors select-none ${
-              isResizing ? 'bg-[#E85A6B]' : 'bg-slate-200 hover:bg-[#E85A6B]'
+              isResizing ? 'bg-[#ED393D]' : 'bg-slate-200 hover:bg-[#ED393D]'
             }`}
             title="Drag to resize, double-click to reset"
           >
@@ -599,9 +599,9 @@ export default function KaiCommand() {
                         <button
                           key={index}
                           onClick={() => handlePromptClick(prompt.text)}
-                          className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-[#E85A6B]/30 transition-all group"
+                          className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-[#ED393D]/30 transition-all group"
                         >
-                          <div className="text-xs font-semibold text-[#E85A6B] uppercase tracking-wide mb-2">
+                          <div className="text-xs font-semibold text-[#ED393D] uppercase tracking-wide mb-2">
                             {prompt.header}
                           </div>
                           <p className="text-sm text-slate-600 group-hover:text-slate-800">
@@ -628,7 +628,7 @@ export default function KaiCommand() {
                           </>
                         ) : (
                           <>
-                            <div className="w-8 h-8 rounded-full bg-[#E85A6B] flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-[#ED393D] flex items-center justify-center shrink-0">
                               <Sparkles className="w-4 h-4 text-white" />
                             </div>
                             <div className="flex-1">
@@ -643,7 +643,7 @@ export default function KaiCommand() {
                     ))}
                     {isLoading && (
                       <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#E85A6B] flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#ED393D] flex items-center justify-center shrink-0">
                           <Sparkles className="w-4 h-4 text-white animate-pulse" />
                         </div>
                         <div className="flex-1">
@@ -675,7 +675,7 @@ export default function KaiCommand() {
                   {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
                 </Button>
                 
-                <div className="flex items-center gap-2 bg-[#F5F7FB] rounded-2xl border-2 border-[#E85A6B]/30 p-2 focus-within:border-[#E85A6B]/50">
+                <div className="flex items-center gap-2 bg-[#F5F7FB] rounded-2xl border-2 border-[#ED393D]/30 p-2 focus-within:border-[#ED393D]/50">
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600">
                     <Paperclip className="w-5 h-5" />
                   </Button>
@@ -692,7 +692,7 @@ export default function KaiCommand() {
                   </Button>
                   <Button 
                     size="icon" 
-                    className="h-9 w-9 bg-[#E85A6B] hover:bg-[#D94A5B] text-white rounded-full"
+                    className="h-9 w-9 bg-[#ED393D] hover:bg-[#D9292D] text-white rounded-full"
                     onClick={handleSendMessage}
                     disabled={!messageInput.trim() || isLoading}
                   >
