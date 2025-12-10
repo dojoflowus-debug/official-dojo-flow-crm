@@ -1188,3 +1188,40 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Tested Cinematic mode - gradient background, glass effects
 - [x] Theme persists across page navigation
 - [x] Theme persists across browser refresh
+
+
+## ✅ COMPLETED: Restore Apple-Style Top Header Bar
+
+### Header Layout Structure
+- [x] Fixed position at top of viewport, full width, z-index: 2000
+- [x] Left: App logo + page title ("Kai Command", "Students", etc.)
+- [x] Right: Ask Kai button, Credits, Notifications, Profile dropdown, Theme toggle
+- [x] Height: 64px with vertical centering
+
+### Light Mode Header Styling
+- [x] Background: #FFFFFF
+- [x] Border-bottom: 1px solid #E2E3E6
+- [x] Box-shadow: 0 2px 8px rgba(0,0,0,0.04)
+- [x] Text color: #262626
+
+### Dark Mode Header Styling
+- [x] Background: #1A1B1F
+- [x] Border-bottom: 1px solid #2A2B2F
+- [x] Box-shadow: 0 2px 12px rgba(0,0,0,0.45)
+- [x] Text color: #FFFFFF
+
+### Cinematic Mode Header Styling
+- [x] Background: rgba(255,255,255,0.08)
+- [x] Backdrop-filter: blur(20px)
+- [x] Border-bottom: 1px solid rgba(255,255,255,0.12)
+- [x] Box-shadow: 0 8px 24px rgba(0,0,0,0.55)
+- [x] Border-radius: 0 0 24px 24px
+
+### Content Spacing
+- [x] Add padding-top: 80px to main content container
+- [x] Ensure content doesn't sit under fixed header
+
+### Global Application
+- [x] Apply header to all pages using shared layout
+- [x] Kai Command page now shows the header
+- [x] Header appears on: Dashboard, Students, Leads, Classes, Staff, Billing, Reports, Settings

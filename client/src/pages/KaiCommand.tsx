@@ -280,8 +280,8 @@ export default function KaiCommand() {
   const isDark = theme === 'dark';
 
   return (
-    <BottomNavLayout hideHeader>
-      <div ref={containerRef} className={`flex h-[calc(100vh-64px)] overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'}`}>
+    <BottomNavLayout>
+      <div ref={containerRef} className={`flex h-[calc(100vh-80px-64px)] overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'}`}>
         {/* Command Center - Left Panel */}
         <div 
           style={{ width: `${commandCenterWidth}px` }}

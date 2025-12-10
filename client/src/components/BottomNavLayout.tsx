@@ -131,19 +131,25 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
     return 'bg-[#F7F8FA]'
   }
 
-  // Get header styles based on theme
+  // Get header styles based on theme - Apple-style design
   const getHeaderStyles = () => {
     if (isCinematic) return {
-      bg: 'bg-white/5 backdrop-blur-xl border-b border-white/10',
-      shadow: '0px 2px 16px rgba(0,0,0,0.5)'
+      bg: 'bg-white/[0.08] backdrop-blur-[20px] border-b border-white/[0.12] rounded-b-3xl',
+      shadow: '0 8px 24px rgba(0,0,0,0.55)',
+      textColor: 'text-white',
+      mutedColor: 'text-gray-300'
     }
     if (isDark) return {
       bg: 'bg-[#1A1B1F] border-b border-[#2A2B2F]',
-      shadow: '0px 2px 12px rgba(0,0,0,0.4)'
+      shadow: '0 2px 12px rgba(0,0,0,0.45)',
+      textColor: 'text-white',
+      mutedColor: 'text-gray-400'
     }
     return {
       bg: 'bg-white border-b border-[#E2E3E6]',
-      shadow: '0px 2px 8px rgba(0,0,0,0.04)'
+      shadow: '0 2px 8px rgba(0,0,0,0.04)',
+      textColor: 'text-[#262626]',
+      mutedColor: 'text-gray-500'
     }
   }
 
@@ -151,16 +157,19 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
 
   return (
     <div className={`min-h-screen flex flex-col ${getBgClass()}`}>
-      {/* Top Header */}
+      {/* Top Header - Apple-style */}
       {!hideHeader && (
         <header 
           className={`
-            fixed top-0 left-0 right-0 z-50 h-16
+            fixed top-0 left-0 right-0 h-16
             ${headerStyles.bg}
           `}
-          style={{ boxShadow: headerStyles.shadow }}
+          style={{ 
+            boxShadow: headerStyles.shadow,
+            zIndex: 2000
+          }}
         >
-          <div className="h-full px-4 md:px-6 flex items-center justify-between">
+          <div className="h-full px-6 flex items-center justify-between">
             {/* Left: Logo */}
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-2">
@@ -169,14 +178,14 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                   alt="DojoFlow" 
                   className="h-8 w-8 object-contain"
                 />
-                <span className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-[#262626]'}`}>
+                <span className={`text-base font-semibold ${headerStyles.textColor}`}>
                   DojoFlow
                 </span>
               </Link>
               
               {/* Page Title - Hidden on mobile */}
-              <div className={`hidden md:flex items-center gap-2 ml-4 pl-4 border-l ${isDark ? 'border-[#2A2B2F]' : 'border-[#E2E3E6]'}`}>
-                <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className={`hidden md:flex items-center gap-2 ml-4 pl-4 border-l ${isCinematic ? 'border-white/20' : isDark ? 'border-[#2A2B2F]' : 'border-[#E2E3E6]'}`}>
+                <span className={`text-base font-semibold ${headerStyles.textColor}`}>
                   {currentPageTitle}
                 </span>
               </div>
@@ -262,8 +271,8 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
         </header>
       )}
 
-      {/* Main Content */}
-      <main className={`flex-1 ${!hideHeader ? 'pt-16' : ''} pb-20`}>
+      {/* Main Content - 80px top padding for fixed header */}
+      <main className={`flex-1 ${!hideHeader ? 'pt-20' : ''} pb-20`}>
         {children}
       </main>
 
