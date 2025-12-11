@@ -2023,3 +2023,30 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Student list - NOT modified
 - [x] Student cards - NOT modified
 - [x] Stats row - NOT modified
+
+
+## ✅ COMPLETED: Stats Arrow Navigation
+
+### Remove Scrollbar
+- [x] Hide native browser scrollbar from stats row (CSS scrollbar-hide)
+- [x] Keep horizontal scrolling functionality in code
+
+### Arrow Controls
+- [x] Add left arrow button on left edge of stats strip
+- [x] Add right arrow button on right edge of stats strip
+- [x] Style: small circular buttons (32px), white bg, soft shadow, chevron icon
+- [x] Match Apple-like design of the app
+- [x] Arrows auto-hide when can't scroll further in that direction
+
+### Scroll Behavior
+- [x] Click right arrow: smooth scroll 80% of visible width to the right
+- [x] Click left arrow: smooth scroll 80% of visible width to the left
+- [x] Show 3-4 stat tiles at a time (depending on screen width)
+
+### Mobile Support
+- [x] Keep horizontal swipe/drag scrolling on mobile
+- [x] Hide native scrollbar on mobile
+- [x] Keep arrows visible on mobile
+
+### Do NOT Change
+- [x] Stat content, numbers, or labels - NOT modified

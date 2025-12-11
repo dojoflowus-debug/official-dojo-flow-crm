@@ -217,8 +217,12 @@ function StudentCard({
   )
 }
 
-// Stats Strip Component
+// Stats Strip Component with Apple-style Arrow Navigation
 function StatsStrip({ stats }: { stats: Stats }) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
+  
   const statItems = [
     { label: 'Active Students', value: stats.active_students, icon: Users, color: 'text-green-600 bg-green-50' },
     { label: 'Pending Cancel', value: 0, icon: Calendar, color: 'text-yellow-600 bg-yellow-50' },
@@ -229,23 +233,88 @@ function StatsStrip({ stats }: { stats: Stats }) {
     { label: 'Average Distance', value: '3.2 mi', icon: MapPin, color: 'text-orange-600 bg-orange-50' },
     { label: 'Belt Progress', value: '12', icon: Target, color: 'text-indigo-600 bg-indigo-50' },
   ]
+  
+  // Check scroll position to show/hide arrows
+  const checkScrollPosition = useCallback(() => {
+    const container = scrollContainerRef.current
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0)
+      setCanScrollRight(container.scrollLeft < container.scrollWidth - container.clientWidth - 5)
+    }
+  }, [])
+  
+  // Scroll by one page (width of visible tiles)
+  const scrollByPage = (direction: 'left' | 'right') => {
+    const container = scrollContainerRef.current
+    if (container) {
+      const pageWidth = container.clientWidth * 0.8 // Scroll 80% of visible width
+      const scrollAmount = direction === 'left' ? -pageWidth : pageWidth
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+  
+  // Update scroll position on mount and scroll
+  useEffect(() => {
+    checkScrollPosition()
+    const container = scrollContainerRef.current
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition)
+      return () => container.removeEventListener('scroll', checkScrollPosition)
+    }
+  }, [checkScrollPosition])
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-thin scrollbar-thumb-slate-300">
-      {statItems.map((item, index) => (
-        <div 
-          key={index}
-          className="flex-shrink-0 bg-white rounded-lg border border-slate-200 p-3 min-w-[140px] hover:shadow-sm transition-shadow"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <div className={`p-1.5 rounded-md ${item.color}`}>
-              <item.icon className="h-3.5 w-3.5" />
+    <div className="relative">
+      {/* Left Arrow */}
+      <button
+        onClick={() => scrollByPage('left')}
+        className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/95 border border-slate-200/80 shadow-sm flex items-center justify-center transition-all duration-200 hover:bg-slate-50 hover:shadow-md ${
+          canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        aria-label="Scroll left"
+      >
+        <ChevronDown className="h-4 w-4 text-slate-600 rotate-90" />
+      </button>
+      
+      {/* Stats Container - Hidden scrollbar */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex gap-3 overflow-x-auto px-10 py-1 scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {statItems.map((item, index) => (
+          <div 
+            key={index}
+            className="flex-shrink-0 bg-white rounded-lg border border-slate-200 p-3 min-w-[140px] hover:shadow-sm transition-shadow"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <div className={`p-1.5 rounded-md ${item.color}`}>
+                <item.icon className="h-3.5 w-3.5" />
+              </div>
             </div>
+            <p className="text-lg font-bold text-slate-900">{item.value}</p>
+            <p className="text-xs text-slate-500">{item.label}</p>
           </div>
-          <p className="text-lg font-bold text-slate-900">{item.value}</p>
-          <p className="text-xs text-slate-500">{item.label}</p>
-        </div>
-      ))}
+        ))}
+      </div>
+      
+      {/* Right Arrow */}
+      <button
+        onClick={() => scrollByPage('right')}
+        className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/95 border border-slate-200/80 shadow-sm flex items-center justify-center transition-all duration-200 hover:bg-slate-50 hover:shadow-md ${
+          canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        aria-label="Scroll right"
+      >
+        <ChevronDown className="h-4 w-4 text-slate-600 -rotate-90" />
+      </button>
+      
+      {/* CSS to hide scrollbar */}
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   )
 }
