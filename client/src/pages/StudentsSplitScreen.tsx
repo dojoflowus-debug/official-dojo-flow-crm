@@ -378,6 +378,8 @@ export default function StudentsSplitScreen() {
   const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false)
   const [notesStudent, setNotesStudent] = useState<Student | null>(null)
   const [selectedStatFilter, setSelectedStatFilter] = useState<StatFilter>(null)
+  const [isFullMapMode, setIsFullMapMode] = useState(false)
+  const [highlightedMapStudent, setHighlightedMapStudent] = useState<Student | null>(null)
   
   // Fetch school logo for brand consistency
   const { data: brandData } = trpc.setupWizard.getBrand.useQuery(undefined, {
@@ -734,7 +736,7 @@ export default function StudentsSplitScreen() {
 
   return (
     <BottomNavLayout hideHeader>
-    <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col relative">
       {/* Header - with scroll hide/show behavior */}
       <div 
         className={`bg-white/95 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 flex items-center justify-between transition-all duration-300 z-20 ${
@@ -1002,6 +1004,10 @@ export default function StudentsSplitScreen() {
         onClose={() => {
           setIsModalOpen(false)
           setSelectedStudent(null)
+          if (isFullMapMode) {
+            setIsFullMapMode(false)
+            setHighlightedMapStudent(null)
+          }
         }}
         onEditProfile={(student) => {
           console.log('Edit profile:', student.id)
@@ -1016,6 +1022,17 @@ export default function StudentsSplitScreen() {
           setNotesStudent(null)
         }}
         onStudentUpdated={handleStudentUpdated}
+        onViewOnMap={(student) => {
+          setHighlightedMapStudent(student)
+          setIsFullMapMode(true)
+          // Center map on student and highlight marker
+          const location = studentLocationsRef.current.get(student.id)
+          if (location && mapRef.current) {
+            mapRef.current.panTo(location)
+            mapRef.current.setZoom(15)
+          }
+        }}
+        isFullMapMode={isFullMapMode}
       />
 
       {/* Notes Drawer */}
@@ -1031,6 +1048,151 @@ export default function StudentsSplitScreen() {
           // TODO: Save note to database
         }}
       />
+
+      {/* Full Map Mode Overlay */}
+      {isFullMapMode && (
+        <div className="fixed inset-0 z-50 bg-slate-900/20 backdrop-blur-sm">
+          {/* Full Screen Map */}
+          <div className="absolute inset-0">
+            <MapView 
+              className="w-full h-full"
+              initialCenter={{ lat: 37.7749, lng: -122.4194 }}
+              initialZoom={12}
+              onMapReady={(map) => {
+                mapRef.current = map
+                
+                // Clear existing markers
+                markersRef.current.forEach(marker => marker.map = null)
+                markersRef.current = []
+                
+                // Create bounds to fit all students
+                const bounds = new google.maps.LatLngBounds()
+                let hasMarkers = false
+                
+                // Add markers for all students
+                students.forEach((student) => {
+                  const location = studentLocationsRef.current.get(student.id)
+                  if (location) {
+                    hasMarkers = true
+                    bounds.extend(location)
+                    
+                    const isHighlighted = highlightedMapStudent?.id === student.id
+                    
+                    // Create custom marker element
+                    const markerContent = document.createElement('div')
+                    markerContent.className = 'student-marker'
+                    markerContent.innerHTML = `
+                      <div class="relative ${isHighlighted ? 'animate-pulse' : ''}">
+                        <div class="${isHighlighted ? 'w-14 h-14' : 'w-10 h-10'} rounded-full bg-white shadow-lg flex items-center justify-center border-2 ${isHighlighted ? 'border-[#E73C3C] ring-4 ring-[#E73C3C]/30' : 'border-slate-200'} transition-all duration-300">
+                          ${student.photo_url 
+                            ? `<img src="${student.photo_url}" class="w-full h-full rounded-full object-cover" />`
+                            : `<span class="${isHighlighted ? 'text-base' : 'text-xs'} font-bold text-slate-600">${student.first_name[0]}${student.last_name[0]}</span>`
+                          }
+                        </div>
+                        ${isHighlighted ? `<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#E73C3C] rotate-45"></div>` : ''}
+                      </div>
+                    `
+                    
+                    const marker = new google.maps.marker.AdvancedMarkerElement({
+                      map,
+                      position: location,
+                      content: markerContent,
+                      zIndex: isHighlighted ? 1000 : 1,
+                    })
+                    
+                    // Add click listener to open student card
+                    marker.addListener('click', () => {
+                      setSelectedStudent(student)
+                      setHighlightedMapStudent(student)
+                      setIsModalOpen(true)
+                      // Center on clicked student
+                      map.panTo(location)
+                    })
+                    
+                    markersRef.current.push(marker)
+                  }
+                })
+                
+                // If we have a highlighted student, center on them
+                if (highlightedMapStudent) {
+                  const location = studentLocationsRef.current.get(highlightedMapStudent.id)
+                  if (location) {
+                    map.setCenter(location)
+                    map.setZoom(15)
+                  }
+                } else if (hasMarkers) {
+                  map.fitBounds(bounds, { padding: 50 })
+                }
+              }}
+            />
+          </div>
+          
+          {/* Exit Full Map Mode Button */}
+          <button
+            onClick={() => {
+              setIsFullMapMode(false)
+              setHighlightedMapStudent(null)
+            }}
+            className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-slate-200/60 flex items-center gap-2 hover:bg-white transition-all"
+          >
+            <Minimize2 className="h-4 w-4 text-slate-600" />
+            <span className="text-sm font-medium text-slate-700">Exit Full Map</span>
+          </button>
+          
+          {/* Vertical Filter Buttons in Full Map Mode */}
+          <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
+            {[
+              { label: 'Active', icon: Users, active: true },
+              { label: 'Missing', icon: X, active: false },
+              { label: 'Nearby', icon: MapPin, active: false },
+              { label: 'New', icon: Plus, active: false },
+            ].map((filter, idx) => (
+              <button
+                key={idx}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all shadow-sm ${
+                  filter.active 
+                    ? 'bg-[#E73C3C] text-white shadow-[0_2px_8px_rgba(231,60,60,0.3)]' 
+                    : 'bg-white/95 text-slate-600 hover:bg-white hover:shadow-md border border-slate-200/60'
+                }`}
+              >
+                <filter.icon className="h-3.5 w-3.5" />
+                {filter.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Docked Student Card on Right Side */}
+          {isModalOpen && selectedStudent && (
+            <div className="absolute right-4 top-16 bottom-4 w-[380px] z-10">
+              <div className="bg-white rounded-2xl shadow-2xl h-full overflow-hidden border border-slate-200/60">
+                <StudentModal
+                  student={selectedStudent}
+                  isOpen={true}
+                  onClose={() => {
+                    setIsModalOpen(false)
+                    setSelectedStudent(null)
+                    setIsFullMapMode(false)
+                    setHighlightedMapStudent(null)
+                  }}
+                  onEditProfile={(student) => {
+                    console.log('Edit profile:', student.id)
+                  }}
+                  onViewNotes={(student) => {
+                    setNotesStudent(student)
+                    setIsNotesDrawerOpen(true)
+                  }}
+                  onCloseNotesDrawer={() => {
+                    setIsNotesDrawerOpen(false)
+                    setNotesStudent(null)
+                  }}
+                  onStudentUpdated={handleStudentUpdated}
+                  isFullMapMode={true}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
     </BottomNavLayout>
   )

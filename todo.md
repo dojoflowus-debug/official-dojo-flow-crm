@@ -2149,3 +2149,15 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Test geocoding with real addresses (White House: 38.8975862, -77.0366871)
 - [x] Handle geocoding errors gracefully
 - [x] 10 vitest tests passing
+
+
+## ✅ COMPLETED: View on Map Button + Full Map Mode
+- [x] Add "View on Map" button to student card action row
+- [x] Implement Full Map Mode (edge-to-edge map)
+- [x] Dock student card on right side in full map mode
+- [x] Highlight selected student marker (larger, photo bubble, pulse animation)
+- [x] Keep other markers visible but less prominent
+- [x] Allow clicking other markers to switch student cards
+- [x] Add Exit Full Map Mode button at top-right
+- [x] Restore normal split view on exit
+- [x] Ensure map panning, zooming, and filters still work

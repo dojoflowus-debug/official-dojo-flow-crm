@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Loader2,
   Save,
+  MapPin,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 
@@ -56,6 +57,8 @@ interface StudentModalProps {
   onViewNotes?: (student: Student) => void
   onCloseNotesDrawer?: () => void
   onStudentUpdated?: () => void
+  onViewOnMap?: (student: Student) => void
+  isFullMapMode?: boolean
 }
 
 // Belt color helper
@@ -168,6 +171,8 @@ export default function StudentModal({
   onViewNotes,
   onCloseNotesDrawer,
   onStudentUpdated,
+  onViewOnMap,
+  isFullMapMode = false,
 }: StudentModalProps) {
   const [activeView, setActiveView] = useState<'profile' | 'details'>('profile')
   const [isFlipping, setIsFlipping] = useState(false)
@@ -544,21 +549,34 @@ export default function StudentModal({
                     </p>
                   </div>
                   
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => onViewNotes?.(student)}
-                      className="flex-1 h-12 rounded-full border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      View Notes
-                    </Button>
-                    <Button
-                      onClick={() => handleViewSwitch('details')}
-                      className="flex-1 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white font-medium"
-                    >
-                      Edit Profile
-                    </Button>
+                  <div className="flex flex-col gap-3 pt-2">
+                    {/* View on Map button - only show when not in full map mode */}
+                    {!isFullMapMode && onViewOnMap && (
+                      <Button
+                        variant="outline"
+                        onClick={() => onViewOnMap(student)}
+                        className="w-full h-12 rounded-full border-blue-300 text-blue-600 font-medium hover:bg-blue-50 hover:border-blue-400"
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        View on Map
+                      </Button>
+                    )}
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => onViewNotes?.(student)}
+                        className="flex-1 h-12 rounded-full border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        View Notes
+                      </Button>
+                      <Button
+                        onClick={() => handleViewSwitch('details')}
+                        className="flex-1 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white font-medium"
+                      >
+                        Edit Profile
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
