@@ -6,6 +6,7 @@
 import { getDb } from "../db";
 import { dojoSettings } from "../../drizzle/schema";
 import { triggerAutomation } from "./automationEngine";
+import { wrapInEmailTemplate, getSchoolLogo, getSchoolName } from "./emailTemplate";
 
 // Industry-specific templates
 const SMS_TEMPLATES = {
@@ -191,10 +192,19 @@ async function sendSMS(to: string, body: string, twilioConfig: { accountSid: str
 }
 
 /**
- * Send Email via SendGrid
+ * Send Email via SendGrid with branded HTML template
  */
-async function sendEmailSendGrid(to: string, subject: string, body: string, from: string, apiKey: string) {
+async function sendEmailSendGrid(to: string, subject: string, body: string, from: string, apiKey: string, useHtmlTemplate: boolean = true) {
   try {
+    // Wrap plain text in branded HTML template with school logo
+    let htmlContent = body;
+    if (useHtmlTemplate) {
+      htmlContent = await wrapInEmailTemplate(
+        body.replace(/\n/g, '<br>'),
+        { showLogo: true, showFooter: true }
+      );
+    }
+    
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
@@ -205,10 +215,13 @@ async function sendEmailSendGrid(to: string, subject: string, body: string, from
         personalizations: [{ to: [{ email: to }] }],
         from: { email: from },
         subject,
-        content: [{ type: 'text/plain', value: body }],
+        content: [
+          { type: 'text/plain', value: body },
+          { type: 'text/html', value: htmlContent }
+        ],
       }),
     });
-    
+
     if (!response.ok) {
       const error = await response.text();
       console.error('[SendGrid] Email send failed:', error);

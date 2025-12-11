@@ -3,6 +3,7 @@ import { automationSequences, automationSteps, automationEnrollments, leads, stu
 import { eq, and, lte } from "drizzle-orm";
 import { sendSMS } from "./twilio";
 import { sendEmail } from "./sendgrid";
+import { wrapInEmailTemplate } from "./emailTemplate";
 
 /**
  * Automation Engine Service
@@ -210,9 +211,15 @@ async function executeSendEmail(enrollment: any, step: any) {
   const subject = await replaceVariables(step.subject || "Message from DojoFlow", recipient);
   const message = await replaceVariables(step.message || "", recipient);
 
+  // Wrap message in branded HTML template with school logo
+  const htmlMessage = await wrapInEmailTemplate(
+    message.replace(/\n/g, '<br>'),
+    { showLogo: true, showFooter: true }
+  );
+
   // Send email
   try {
-    await sendEmail(recipient.email, subject, message);
+    await sendEmail(recipient.email, subject, htmlMessage, message);
     console.log(`Email sent to ${recipient.email} for enrollment ${enrollment.id}`);
   } catch (error) {
     console.error(`Failed to send email for enrollment ${enrollment.id}:`, error);

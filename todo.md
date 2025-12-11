@@ -1922,3 +1922,15 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Fetch logo from dojoSettings.logoSquare via tRPC setupWizard.getBrand
 - [x] Show fallback DojoFlow logo when no custom logo is set
 - [x] Ensure consistent branding across all screens
+
+
+## ✅ COMPLETED: Add School Logo to Reports and Emails
+
+- [x] Created emailTemplate.ts service with branded HTML email templates
+- [x] Created reportTemplate.ts service with branded HTML report templates
+- [x] Updated notifications.ts to use branded email templates with school logo
+- [x] Updated automationEngine.ts to use branded email templates
+- [x] All templates fetch logo from dojoSettings.logoSquare
+- [x] Show fallback DojoFlow logo when no custom logo is set
+- [x] Report templates include: Student Roster, Attendance, Revenue, Receipts
+- [x] Email templates include: Welcome, Notification, Reminder, Receipt
