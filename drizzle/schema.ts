@@ -71,6 +71,12 @@ export const students = mysqlTable("students", {
   beltRank: varchar("beltRank", { length: 100 }),
   status: mysqlEnum("status", ["Active", "Inactive", "On Hold"]).default("Active").notNull(),
   membershipStatus: varchar("membershipStatus", { length: 100 }),
+  photoUrl: varchar("photoUrl", { length: 500 }),
+  program: varchar("program", { length: 100 }),
+  streetAddress: varchar("streetAddress", { length: 255 }),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zipCode", { length: 20 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

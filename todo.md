@@ -1588,3 +1588,15 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Keep "Students" title and "Add Student" button
 - [x] Subtitle: "Manage your dojo's student roster"
 
+
+## ✅ COMPLETED: Add 20 Test Students with Photos
+- [x] Review students table schema
+- [x] Added photoUrl, program, streetAddress, city, state, zipCode columns
+- [x] Create seed script with 20 realistic students (scripts/seed-students.mjs)
+- [x] Use real placeholder photos (randomuser.me portraits)
+- [x] Include varied belt ranks (White to Black), statuses (Active, On Hold, Inactive), and programs (Kids Karate, Adult Jiu-Jitsu, etc.)
+- [x] Insert students into database
+- [x] Updated StudentsSplitScreen to use tRPC instead of REST API
+- [x] Test on Students page - all 20 students displaying with photos
+- [x] Save checkpoint
+

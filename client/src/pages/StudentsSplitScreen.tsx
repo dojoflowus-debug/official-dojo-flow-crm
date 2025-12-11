@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { trpc } from '../lib/trpc'
 import { MapView } from '../components/Map'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
@@ -286,38 +287,46 @@ export default function StudentsSplitScreen() {
     return () => window.removeEventListener('resize', checkBreakpoints)
   }, [])
 
-  // Fetch data
+  // Fetch students using tRPC
+  const { data: studentsData, isLoading: studentsLoading } = trpc.students.list.useQuery()
+  const { data: statsData } = trpc.students.stats.useQuery()
+
+  // Update local state when data changes
   useEffect(() => {
-    fetchStudents()
-    fetchStats()
-  }, [])
-
-  const fetchStudents = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/students')
-      if (response.ok) {
-        const data = await response.json()
-        setStudents(data)
-      }
-    } catch (error) {
-      console.error('Error fetching students:', error)
-    } finally {
-      setLoading(false)
+    if (studentsData) {
+      // Transform data to match expected format
+      const transformedStudents = studentsData.map((s: any) => ({
+        id: s.id,
+        first_name: s.firstName,
+        last_name: s.lastName,
+        email: s.email || '',
+        phone: s.phone || '',
+        date_of_birth: s.dateOfBirth,
+        belt_rank: s.beltRank || 'White Belt',
+        status: s.status || 'Active',
+        membership_status: s.membershipStatus || 'Standard',
+        street_address: s.streetAddress,
+        city: s.city,
+        state: s.state,
+        zip_code: s.zipCode,
+        photo_url: s.photoUrl,
+        program: s.program
+      }))
+      setStudents(transformedStudents)
     }
-  }
+    setLoading(studentsLoading)
+  }, [studentsData, studentsLoading])
 
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/students/stats')
-      if (response.ok) {
-        const data = await response.json()
-        setStats(data)
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error)
+  useEffect(() => {
+    if (statsData) {
+      setStats({
+        total_students: statsData.total || 0,
+        active_students: statsData.active || 0,
+        overdue_payments: statsData.overdue || 0,
+        new_this_month: statsData.newThisMonth || 0
+      })
     }
-  }
+  }, [statsData])
 
   // Filter students
   const filteredStudents = students.filter(student => {
