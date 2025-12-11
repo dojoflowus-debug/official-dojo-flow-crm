@@ -293,10 +293,30 @@ async function seed() {
     const leadFirstNames = ["Chris", "Sam", "Pat", "Drew", "Jesse", "Skyler", "Rowan", "Sage", "River", "Phoenix", "Dakota", "Reese", "Cameron", "Kendall", "Peyton"];
     const leadLastNames = ["Adams", "Baker", "Carter", "Dixon", "Evans", "Foster", "Gray", "Hunt", "Irwin", "James", "King", "Long", "Mills", "Nash", "Owen"];
     
+    // Real Tomball, TX area addresses for map testing
+    const tomballAddresses = [
+      { address: "14055 FM 2920 Rd", city: "Tomball", state: "TX", zipCode: "77377", lat: "30.0974", lng: "-95.6158" },
+      { address: "27326 Kuykendahl Rd", city: "Tomball", state: "TX", zipCode: "77375", lat: "30.1127", lng: "-95.5361" },
+      { address: "11920 Louetta Rd", city: "Houston", state: "TX", zipCode: "77070", lat: "29.9917", lng: "-95.5417" },
+      { address: "24903 Kuykendahl Rd", city: "Tomball", state: "TX", zipCode: "77375", lat: "30.0889", lng: "-95.5361" },
+      { address: "14340 Cherry Mound Rd", city: "Tomball", state: "TX", zipCode: "77377", lat: "30.0833", lng: "-95.6500" },
+      { address: "18310 Tomball Pkwy", city: "Houston", state: "TX", zipCode: "77070", lat: "29.9847", lng: "-95.5556" },
+      { address: "12802 Capricorn St", city: "Tomball", state: "TX", zipCode: "77377", lat: "30.0722", lng: "-95.6278" },
+      { address: "25823 Budde Rd", city: "Spring", state: "TX", zipCode: "77380", lat: "30.0917", lng: "-95.4833" },
+      { address: "15635 Spring Cypress Rd", city: "Cypress", state: "TX", zipCode: "77429", lat: "29.9750", lng: "-95.6167" },
+      { address: "22511 Tomball Pkwy", city: "Tomball", state: "TX", zipCode: "77375", lat: "30.0361", lng: "-95.5556" },
+      { address: "13350 Hargrave Rd", city: "Houston", state: "TX", zipCode: "77070", lat: "30.0028", lng: "-95.5833" },
+      { address: "28818 Binefield St", city: "Spring", state: "TX", zipCode: "77386", lat: "30.1333", lng: "-95.4500" },
+      { address: "17111 Red Oak Dr", city: "Houston", state: "TX", zipCode: "77090", lat: "29.9806", lng: "-95.4667" },
+      { address: "19903 Stuebner Airline Rd", city: "Spring", state: "TX", zipCode: "77379", lat: "30.0278", lng: "-95.5000" },
+      { address: "26714 Cypresswood Dr", city: "Spring", state: "TX", zipCode: "77373", lat: "30.0583", lng: "-95.4167" },
+    ];
+    
     for (let i = 0; i < 15; i++) {
       const firstName = leadFirstNames[i];
       const lastName = leadLastNames[i];
       const createdDate = randomPastDate(30);
+      const addressData = tomballAddresses[i];
       
       const status = leadStatuses[Math.floor(Math.random() * leadStatuses.length)] as "New Lead" | "Attempting Contact" | "Contact Made" | "Intro Scheduled" | "Offer Presented" | "Enrolled" | "Nurture" | "Lost/Winback";
       
@@ -308,6 +328,12 @@ async function seed() {
         source: ["Website", "Walk-in", "Referral", "Facebook", "Google"][Math.floor(Math.random() * 5)],
         status,
         notes: `Lead ${i + 1} - Interested in starting soon`,
+        address: addressData.address,
+        city: addressData.city,
+        state: addressData.state,
+        zipCode: addressData.zipCode,
+        lat: addressData.lat,
+        lng: addressData.lng,
         createdAt: createdDate,
       });
     }

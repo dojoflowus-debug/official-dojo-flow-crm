@@ -179,6 +179,13 @@ export const leads = mysqlTable("leads", {
   utmCampaign: varchar("utmCampaign", { length: 255 }),
   utmContent: varchar("utmContent", { length: 255 }),
   utmTerm: varchar("utmTerm", { length: 255 }),
+  // Address fields for map functionality
+  address: varchar("address", { length: 255 }),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zipCode", { length: 20 }),
+  lat: varchar("lat", { length: 50 }),
+  lng: varchar("lng", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

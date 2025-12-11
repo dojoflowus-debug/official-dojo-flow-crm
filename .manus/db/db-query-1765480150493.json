@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, firstName, lastName, status FROM leads LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, status FROM leads LIMIT 5",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "Chris",
+      "lastName": "Adams",
+      "status": "New Lead"
+    },
+    {
+      "id": "2",
+      "firstName": "Sam",
+      "lastName": "Baker",
+      "status": "New Lead"
+    },
+    {
+      "id": "3",
+      "firstName": "Pat",
+      "lastName": "Carter",
+      "status": "New Lead"
+    },
+    {
+      "id": "4",
+      "firstName": "Drew",
+      "lastName": "Dixon",
+      "status": "New Lead"
+    },
+    {
+      "id": "5",
+      "firstName": "Jesse",
+      "lastName": "Evans",
+      "status": "New Lead"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tstatus\n1\tChris\tAdams\tNew Lead\n2\tSam\tBaker\tNew Lead\n3\tPat\tCarter\tNew Lead\n4\tDrew\tDixon\tNew Lead\n5\tJesse\tEvans\tNew Lead\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

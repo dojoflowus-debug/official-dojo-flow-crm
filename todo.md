@@ -2181,3 +2181,18 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Keep map open when student card is closed
 - [x] Allow selecting other students on map while in full map mode
 - [x] Match reference image layout (clear map, floating card on right)
+
+
+## 🚀 IN PROGRESS: Add Tomball TX Addresses to Mock Leads
+- [ ] Find leads seed data or database
+- [ ] Update leads with real Tomball, TX residential addresses
+- [ ] Trigger geocoding for new addresses
+- [ ] Test map functionality with real addresses
+
+
+## ✅ COMPLETED: Add Tomball TX Addresses to Mock Leads
+- [x] Add address fields to leads schema (address, city, state, zipCode, lat, lng)
+- [x] Add status, message, and UTM columns to leads table
+- [x] Insert 15 leads with real Tomball, TX area addresses
+- [x] Pre-geocoded coordinates for all addresses
+- [x] Test leads page showing all 15 leads correctly

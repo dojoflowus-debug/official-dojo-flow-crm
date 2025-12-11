@@ -1,0 +1,160 @@
+{
+  "query": "SELECT id, firstName, lastName, address, city, state, lat, lng FROM leads ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, address, city, state, lat, lng FROM leads ORDER BY id",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "Chris",
+      "lastName": "Adams",
+      "address": "14055 FM 2920 Rd",
+      "city": "Tomball",
+      "state": "TX",
+      "lat": "30.0974",
+      "lng": "-95.6158"
+    },
+    {
+      "id": "2",
+      "firstName": "Sam",
+      "lastName": "Baker",
+      "address": "27326 Kuykendahl Rd",
+      "city": "Tomball",
+      "state": "TX",
+      "lat": "30.1127",
+      "lng": "-95.5361"
+    },
+    {
+      "id": "3",
+      "firstName": "Pat",
+      "lastName": "Carter",
+      "address": "11920 Louetta Rd",
+      "city": "Houston",
+      "state": "TX",
+      "lat": "29.9917",
+      "lng": "-95.5417"
+    },
+    {
+      "id": "4",
+      "firstName": "Drew",
+      "lastName": "Dixon",
+      "address": "24903 Kuykendahl Rd",
+      "city": "Tomball",
+      "state": "TX",
+      "lat": "30.0889",
+      "lng": "-95.5361"
+    },
+    {
+      "id": "5",
+      "firstName": "Jesse",
+      "lastName": "Evans",
+      "address": "14340 Cherry Mound Rd",
+      "city": "Tomball",
+      "state": "TX",
+      "lat": "30.0833",
+      "lng": "-95.6500"
+    },
+    {
+      "id": "6",
+      "firstName": "Skyler",
+      "lastName": "Foster",
+      "address": "18310 Tomball Pkwy",
+      "city": "Houston",
+      "state": "TX",
+      "lat": "29.9847",
+      "lng": "-95.5556"
+    },
+    {
+      "id": "7",
+      "firstName": "Rowan",
+      "lastName": "Gray",
+      "address": "12802 Capricorn St",
+      "city": "Tomball",
+      "state": "TX",
+      "lat": "30.0722",
+      "lng": "-95.6278"
+    },
+    {
+      "id": "8",
+      "firstName": "Sage",
+      "lastName": "Hunt",
+      "address": "25823 Budde Rd",
+      "city": "Spring",
+      "state": "TX",
+      "lat": "30.0917",
+      "lng": "-95.4833"
+    },
+    {
+      "id": "9",
+      "firstName": "River",
+      "lastName": "Irwin",
+      "address": "15635 Spring Cypress Rd",
+      "city": "Cypress",
+      "state": "TX",
+      "lat": "29.9750",
+      "lng": "-95.6167"
+    },
+    {
+      "id": "10",
+      "firstName": "Phoenix",
+      "lastName": "James",
+      "address": "22511 Tomball Pkwy",
+      "city": "Tomball",
+      "state": "TX",
+      "lat": "30.0361",
+      "lng": "-95.5556"
+    },
+    {
+      "id": "11",
+      "firstName": "Dakota",
+      "lastName": "King",
+      "address": "13350 Hargrave Rd",
+      "city": "Houston",
+      "state": "TX",
+      "lat": "30.0028",
+      "lng": "-95.5833"
+    },
+    {
+      "id": "12",
+      "firstName": "Reese",
+      "lastName": "Long",
+      "address": "28818 Binefield St",
+      "city": "Spring",
+      "state": "TX",
+      "lat": "30.1333",
+      "lng": "-95.4500"
+    },
+    {
+      "id": "13",
+      "firstName": "Cameron",
+      "lastName": "Mills",
+      "address": "17111 Red Oak Dr",
+      "city": "Houston",
+      "state": "TX",
+      "lat": "29.9806",
+      "lng": "-95.4667"
+    },
+    {
+      "id": "14",
+      "firstName": "Kendall",
+      "lastName": "Nash",
+      "address": "19903 Stuebner Airline Rd",
+      "city": "Spring",
+      "state": "TX",
+      "lat": "30.0278",
+      "lng": "-95.5000"
+    },
+    {
+      "id": "15",
+      "firstName": "Peyton",
+      "lastName": "Owen",
+      "address": "26714 Cypresswood Dr",
+      "city": "Spring",
+      "state": "TX",
+      "lat": "30.0583",
+      "lng": "-95.4167"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\taddress\tcity\tstate\tlat\tlng\n1\tChris\tAdams\t14055 FM 2920 Rd\tTomball\tTX\t30.0974\t-95.6158\n2\tSam\tBaker\t27326 Kuykendahl Rd\tTomball\tTX\t30.1127\t-95.5361\n3\tPat\tCarter\t11920 Louetta Rd\tHouston\tTX\t29.9917\t-95.5417\n4\tDrew\tDixon\t24903 Kuykendahl Rd\tTomball\tTX\t30.0889\t-95.5361\n5\tJesse\tEvans\t14340 Cherry Mound Rd\tTomball\tTX\t30.0833\t-95.6500\n6\tSkyler\tFoster\t18310 Tomball Pkwy\tHouston\tTX\t29.9847\t-95.5556\n7\tRowan\tGray\t12802 Capricorn St\tTomball\tTX\t30.0722\t-95.6278\n8\tSage\tHunt\t25823 Budde Rd\tSpring\tTX\t30.0917\t-95.4833\n9\tRiver\tIrwin\t15635 Spring Cypress Rd\tCypress\tTX\t29.9750\t-95.6167\n10\tPhoenix\tJames\t22511 Tomball Pkwy\tTomball\tTX\t30.0361\t-95.5556\n11\tDakota\tKing\t13350 Hargrave Rd\tHouston\tTX\t30.0028\t-95.5833\n12\tReese\tLong\t28818 Binefield St\tSpring\tTX\t30.1333\t-95.4500\n13\tCameron\tMills\t17111 Red Oak Dr\tHouston\tTX\t29.9806\t-95.4667\n14\tKendall\tNash\t19903 Stuebner Airline Rd\tSpring\tTX\t30.0278\t-95.5000\n15\tPeyton\tOwen\t26714 Cypresswood Dr\tSpring\tTX\t30.0583\t-95.4167\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
