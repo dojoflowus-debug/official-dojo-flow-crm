@@ -77,6 +77,14 @@ export const students = mysqlTable("students", {
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 50 }),
   zipCode: varchar("zipCode", { length: 20 }),
+  // Geocoded coordinates for map display
+  latitude: varchar("latitude", { length: 20 }),
+  longitude: varchar("longitude", { length: 20 }),
+  // Parent/Guardian information (for students under 18)
+  guardianName: varchar("guardianName", { length: 255 }),
+  guardianRelationship: varchar("guardianRelationship", { length: 50 }),
+  guardianPhone: varchar("guardianPhone", { length: 20 }),
+  guardianEmail: varchar("guardianEmail", { length: 320 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

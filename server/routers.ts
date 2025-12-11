@@ -653,13 +653,27 @@ export const appRouter = router({
         id: z.number(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
-        email: z.string().email().optional(),
-        phone: z.string().optional(),
-        dateOfBirth: z.date().optional(),
-        age: z.number().optional(),
-        beltRank: z.string().optional(),
+        email: z.string().email().optional().nullable(),
+        phone: z.string().optional().nullable(),
+        dateOfBirth: z.date().optional().nullable(),
+        age: z.number().optional().nullable(),
+        beltRank: z.string().optional().nullable(),
         status: z.string().optional(),
-        membershipStatus: z.string().optional(),
+        membershipStatus: z.string().optional().nullable(),
+        program: z.string().optional().nullable(),
+        // Address fields
+        streetAddress: z.string().optional().nullable(),
+        city: z.string().optional().nullable(),
+        state: z.string().optional().nullable(),
+        zipCode: z.string().optional().nullable(),
+        // Geocoded coordinates
+        latitude: z.string().optional().nullable(),
+        longitude: z.string().optional().nullable(),
+        // Parent/Guardian fields
+        guardianName: z.string().optional().nullable(),
+        guardianRelationship: z.string().optional().nullable(),
+        guardianPhone: z.string().optional().nullable(),
+        guardianEmail: z.string().email().optional().nullable(),
       }))
       .mutation(async ({ input }) => {
         const { getDb } = await import("./db");
@@ -670,7 +684,16 @@ export const appRouter = router({
         if (!db) throw new Error('Database not available');
         
         const { id, ...updateData } = input;
-        await db.update(students).set(updateData).where(eq(students.id, id));
+        
+        // Filter out undefined values to avoid overwriting with null
+        const cleanedData: Record<string, any> = {};
+        for (const [key, value] of Object.entries(updateData)) {
+          if (value !== undefined) {
+            cleanedData[key] = value;
+          }
+        }
+        
+        await db.update(students).set(cleanedData).where(eq(students.id, id));
         
         return { success: true };
       }),

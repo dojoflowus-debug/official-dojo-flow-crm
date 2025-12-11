@@ -80,6 +80,11 @@ interface Student {
   last_attendance?: string
   lat?: number
   lng?: number
+  program?: string
+  guardian_name?: string
+  guardian_relationship?: string
+  guardian_phone?: string
+  guardian_email?: string
 }
 
 interface Stats {
@@ -405,9 +410,18 @@ export default function StudentsSplitScreen() {
     return () => window.removeEventListener('resize', checkBreakpoints)
   }, [])
 
+  // tRPC utils for cache invalidation
+  const utils = trpc.useUtils()
+  
   // Fetch students using tRPC
   const { data: studentsData, isLoading: studentsLoading } = trpc.students.list.useQuery()
   const { data: statsData } = trpc.students.stats.useQuery()
+  
+  // Callback when student is updated - refresh data
+  const handleStudentUpdated = useCallback(() => {
+    utils.students.list.invalidate()
+    utils.students.stats.invalidate()
+  }, [utils])
 
   // Update local state when data changes
   useEffect(() => {
@@ -428,7 +442,13 @@ export default function StudentsSplitScreen() {
         state: s.state,
         zip_code: s.zipCode,
         photo_url: s.photoUrl,
-        program: s.program
+        program: s.program,
+        lat: s.latitude ? parseFloat(s.latitude) : undefined,
+        lng: s.longitude ? parseFloat(s.longitude) : undefined,
+        guardian_name: s.guardianName,
+        guardian_relationship: s.guardianRelationship,
+        guardian_phone: s.guardianPhone,
+        guardian_email: s.guardianEmail,
       }))
       setStudents(transformedStudents)
     }
@@ -978,6 +998,7 @@ export default function StudentsSplitScreen() {
           setIsNotesDrawerOpen(false)
           setNotesStudent(null)
         }}
+        onStudentUpdated={handleStudentUpdated}
       />
 
       {/* Notes Drawer */}

@@ -2081,3 +2081,60 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Work together with existing tab filters (Active/Pending/Cancelled)
 - [x] Apply tab filter first, then stat tile as subset
 - [x] Non-filterable tiles (Retention Rate, Attendance, Distance, Belt Progress) don't show click hint
+
+
+## 🚀 NEW: Full Editable Student Details
+
+### Student Contact Fields
+- [ ] Phone number input
+- [ ] Email input
+- [ ] Address: Street, City, State/Province, Postal Code
+- [ ] Date of Birth picker
+
+### Parent/Guardian Fields (if under 18)
+- [ ] Parent/Guardian Name
+- [ ] Relationship dropdown
+- [ ] Parent/Guardian Phone
+- [ ] Parent/Guardian Email
+
+### Program & Enrollment Fields
+- [ ] Program dropdown
+- [ ] Membership type dropdown (Standard, Premium, Trial, etc.)
+- [ ] Belt rank dropdown
+- [ ] Status dropdown (Active, Pending Cancel, Cancelled, On Hold)
+
+### Save Behavior
+- [ ] Editable fields (inputs, selects)
+- [ ] "Save Changes" button at bottom
+- [ ] Validate required fields (Name, Program, contact method)
+- [ ] Require Parent/Guardian if under 18 (based on DOB)
+- [ ] Persist to database
+- [ ] Update student list, Profile tab, and map marker
+
+### Map Sync on Address Change
+- [ ] Geocode new address on save
+- [ ] Update student's map marker location
+- [ ] Pan/zoom to updated address when selected
+
+### Do NOT Modify
+- [ ] Profile side design
+- [ ] Map layout
+- [ ] Stats layout
+- [ ] Notes drawer
+
+
+
+## ✅ COMPLETED: Student Details Tab - Full Student Info Editor
+- [x] Rebuilt Details tab in StudentModal with editable form fields
+- [x] Added Student Contact section (phone, email, date of birth)
+- [x] Added Address section (street, city, state, zip code)
+- [x] Added Parent/Guardian section (name, relationship, phone, email)
+- [x] Added Program & Enrollment section (program, membership, belt rank, status)
+- [x] Implemented Save Changes button with validation
+- [x] Added validation: require guardian info for students under 18
+- [x] Added validation: require at least one contact method
+- [x] Connected to tRPC students.update mutation
+- [x] Added onStudentUpdated callback to refresh student list after save
+- [x] Updated Student type interface with guardian fields
+- [x] Updated data transformation to include guardian and geocoding fields
+- [x] Added vitest tests for student update operations (5 tests passing)

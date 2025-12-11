@@ -301,7 +301,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-6">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Lead Pipeline</h1>
               <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
-                <Button onClick={() => setShowSettings(true)} size="sm" className="md:size-lg" variant="outline" className="flex-1 sm:flex-none text-xs md:text-sm">
+                <Button onClick={() => setShowSettings(true)} size="sm" variant="outline" className="flex-1 sm:flex-none text-xs md:text-sm">
                   <Settings className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
                   <span className="hidden sm:inline">Lead Sources</span>
                   <span className="sm:hidden">Sources</span>
