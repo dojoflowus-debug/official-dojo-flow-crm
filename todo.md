@@ -2060,3 +2060,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Added refetchOnMount: true to ensure fresh data when modal opens
 - [x] Added explicit refetchBrand() call after successful upload
 - [x] Logo is fetched from dojoSettings.logoSquare via tRPC setupWizard.getBrand
+
+
+## ✅ COMPLETED: Add School Logo to Student Cards
+
+- [x] Display school logo on small student cards in the list (24x24px, 60% opacity)
+- [x] Fetch logo from dojoSettings.logoSquare via tRPC setupWizard.getBrand
+- [x] Logo only shows when custom logo is uploaded (no fallback to keep cards clean)
+- [x] Consistent branding across cards and modal

@@ -138,11 +138,13 @@ function getMembershipColor(status: string): string {
 function StudentCard({ 
   student, 
   onClick,
-  isHighlighted 
+  isHighlighted,
+  schoolLogo
 }: { 
   student: Student
   onClick: () => void
   isHighlighted?: boolean
+  schoolLogo?: string | null
 }) {
   // Calculate last attendance (mock for now)
   const getLastAttendance = () => {
@@ -171,6 +173,15 @@ function StudentCard({
       style={{ borderRadius: '12px' }}
     >
       <div className="flex items-center gap-3">
+        {/* School Logo - Small badge */}
+        {schoolLogo && (
+          <img 
+            src={schoolLogo} 
+            alt="School Logo"
+            className="w-6 h-6 object-contain flex-shrink-0 opacity-60"
+          />
+        )}
+        
         {/* Circle Photo */}
         {student.photo_url ? (
           <img 
@@ -337,6 +348,12 @@ export default function StudentsSplitScreen() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false)
   const [notesStudent, setNotesStudent] = useState<Student | null>(null)
+  
+  // Fetch school logo for brand consistency
+  const { data: brandData } = trpc.setupWizard.getBrand.useQuery(undefined, {
+    staleTime: 0,
+  })
+  const schoolLogo = brandData?.logoSquare || null
   
   // Split pane state
   const [mapWidth, setMapWidth] = useState(40) // percentage
@@ -843,6 +860,7 @@ export default function StudentsSplitScreen() {
                     key={student.id}
                     student={student}
                     isHighlighted={highlightedStudentId === student.id}
+                    schoolLogo={schoolLogo}
                     onClick={() => {
                       setSelectedStudent(student)
                       setIsModalOpen(true)
