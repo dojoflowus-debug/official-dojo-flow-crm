@@ -1600,3 +1600,28 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Test on Students page - all 20 students displaying with photos
 - [x] Save checkpoint
 
+
+## ✅ COMPLETED: Students Split-Screen Layout Polish
+
+### Left Pane (Map)
+- [x] Remove blue/cyan background - use white (#FFFFFF)
+- [x] Wrap map + stats strip in a single card container with flex-1
+- [x] Card styling: padding 16px, border-radius 18px, border 1px solid #E3E5EB, shadow
+- [x] Map fills card with absolute positioning, stats strip below inside same card
+
+### Right Pane (List)
+- [x] Structure header area: search row, filters row, tabs row
+- [x] Add proper spacing between header elements (space-y-3)
+- [x] Create scrollable cards container with overflow-y-auto
+- [x] Padding: 16px on all sides with 8px left padding
+
+### Alignment & Scrolling
+- [x] Align top of map card with top of student list area (padding-top: 16px both sides)
+- [x] Set height: calc(100vh - 140px) for both panes
+- [x] Independent scrolling for map pane and cards scroll
+- [x] Keep existing drag/resize behavior unchanged
+
+### Preserve Existing
+- [x] Drag behavior and routes unchanged
+- [x] Student actions, filters, and data logic unchanged
+

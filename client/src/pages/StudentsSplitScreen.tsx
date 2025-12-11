@@ -436,10 +436,10 @@ export default function StudentsSplitScreen() {
         {/* Left Pane - Map + Stats */}
         {(!isMobile || !isMapHidden) && (
           <div 
-          className={`flex flex-col bg-slate-100 transition-all duration-300 ${
+          className={`flex flex-col bg-white transition-all duration-300 p-4 ${
             isMapExpanded ? 'w-full' : ''
           } ${
-            isMobile ? 'h-[300px] flex-shrink-0' : ''
+            isMobile ? 'h-[350px] flex-shrink-0' : 'h-[calc(100vh-140px)]'
           }`}
           style={isMobile ? {} : { 
             flexBasis: isMapExpanded ? '100%' : isTablet ? '35%' : `${mapWidth}%`,
@@ -447,6 +447,8 @@ export default function StudentsSplitScreen() {
             maxWidth: isMapExpanded ? '100%' : isTablet ? '35%' : '70%'
           }}
         >
+          {/* Map Card Container */}
+          <div className="flex flex-col bg-white border border-slate-200 rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden flex-1">
           {/* Map Header */}
           <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -485,25 +487,26 @@ export default function StudentsSplitScreen() {
           </div>
 
           {/* Map Container */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-h-[300px]">
             <MapView 
-              className="w-full h-full"
+              className="w-full h-full absolute inset-0"
               initialCenter={{ lat: 37.7749, lng: -122.4194 }}
               initialZoom={12}
               onMapReady={handleMapReady}
             />
           </div>
 
-          {/* Stats Strip */}
+          {/* Stats Strip - inside card */}
           <div className="bg-white border-t border-slate-200 p-4">
             <StatsStrip stats={stats} />
           </div>
+          </div>{/* End Map Card Container */}
           
           {/* Mobile Map Toggle */}
           {isMobile && (
             <button
               onClick={() => setIsMapHidden(true)}
-              className="bg-white border-t border-slate-200 py-2 text-center text-sm text-slate-600 hover:bg-slate-50"
+              className="bg-white border border-slate-200 rounded-lg mt-2 py-2 text-center text-sm text-slate-600 hover:bg-slate-50"
             >
               Hide Map
             </button>
@@ -536,12 +539,12 @@ export default function StudentsSplitScreen() {
         {!isMapExpanded && (
           <div 
             className={`flex flex-col bg-white ${
-              isMobile ? 'flex-1' : ''
+              isMobile ? 'flex-1' : 'h-[calc(100vh-140px)]'
             }`}
-            style={isMobile ? {} : { flex: 1 }}
+            style={isMobile ? {} : { flex: 1, paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '8px' }}
           >
-            {/* Search Header */}
-            <div className="p-4 border-b border-slate-200 space-y-4">
+            {/* Students List Header */}
+            <div className="space-y-3">
               {/* Search Bar */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -633,7 +636,7 @@ export default function StudentsSplitScreen() {
             </div>
 
             {/* Student Cards Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto mt-4 pr-1 space-y-3">
               {filteredStudents.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 mx-auto text-slate-300 mb-4" />
