@@ -77,32 +77,37 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   
   // Scroll detection for collapsible bottom nav
   const [isNavVisible, setIsNavVisible] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
+  const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(null)
   
   // Hover state for Apple dock bubble effect
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const scrollDelta = currentScrollY - lastScrollY
+      // Hide nav immediately when scrolling starts
+      setIsNavVisible(false)
       
-      // Only trigger if scroll delta is significant (> 10px)
-      if (Math.abs(scrollDelta) > 10) {
-        if (scrollDelta > 0 && currentScrollY > 100) {
-          // Scrolling down - hide nav
-          setIsNavVisible(false)
-        } else {
-          // Scrolling up - show nav
-          setIsNavVisible(true)
-        }
-        setLastScrollY(currentScrollY)
+      // Clear existing timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
       }
+      
+      // Set new timeout to show nav after scrolling stops
+      const timeout = setTimeout(() => {
+        setIsNavVisible(true)
+      }, 300) // Show nav 300ms after scrolling stops
+      
+      setScrollTimeout(timeout)
     }
     
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [lastScrollY])
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+    }
+  }, [scrollTimeout])
   
   // Get current page title
   const currentPageTitle = PAGE_TITLES[location.pathname] || 'DojoFlow'

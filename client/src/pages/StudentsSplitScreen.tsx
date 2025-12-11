@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { trpc } from '../lib/trpc'
+import BottomNavLayout from '@/components/BottomNavLayout'
 import { MapView } from '../components/Map'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
@@ -418,6 +419,7 @@ export default function StudentsSplitScreen() {
   }
 
   return (
+    <BottomNavLayout hideHeader>
     <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col">
       {/* Header - with scroll hide/show behavior */}
       <div 
@@ -713,5 +715,6 @@ export default function StudentsSplitScreen() {
         }}
       />
     </div>
+    </BottomNavLayout>
   )
 }

@@ -1842,3 +1842,15 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Connect to "View Notes" button in StudentModal
 - [x] Did NOT modify modal or student card code
 - [x] Save checkpoint
+
+
+## ✅ COMPLETED: Bottom Menu Bar Scroll Behavior
+
+### Requirements
+- [x] Bottom menu bar appears on all pages
+- [x] Menu bar disappears when user is scrolling
+- [x] Menu bar reappears when scrolling stops (300ms delay)
+- [x] Smooth transition animation for hide/show
+- [x] Works consistently across all pages
+- [x] Added BottomNavLayout to StudentsSplitScreen page
+- [x] Save checkpoint
