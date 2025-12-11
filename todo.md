@@ -1713,3 +1713,26 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Smooth animations and transitions
 - [x] Red accent color (#E73C3C) on buttons and active filters
 
+
+## ✅ COMPLETED: Restore Compact Horizontal Student Cards
+
+### Card Design
+- [x] Small, horizontal, concise cards
+- [x] Show: Student photo (circle 40px), Name, Program, Belt rank, Status dot (green/orange/red), Membership tag, Last attendance
+- [x] White background with subtle shadow (shadow-sm)
+- [x] Rounded corners (12px)
+- [x] Clean Apple-style soft padding (px-4 py-3)
+- [x] No extra icons or buttons inside card - click triggers modal
+
+### Layout
+- [x] Cards in scrollable vertical list
+- [x] Cards trigger student pop-out modal on click (onClick handler)
+- [x] Cards never overlap map or stats
+- [x] Responsive: card width shrinks but design stays intact
+
+### Preserve
+- [x] Map code unchanged
+- [x] Pop-out modal code unchanged
+- [x] Notes code unchanged
+- [x] Only replaced student card component
+

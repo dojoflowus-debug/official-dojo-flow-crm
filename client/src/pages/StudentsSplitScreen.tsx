@@ -134,83 +134,81 @@ function getMembershipColor(status: string): string {
 // Student Card Component
 function StudentCard({ 
   student, 
-  onEdit, 
-  onPayment, 
-  onDelete,
+  onClick,
   isHighlighted 
 }: { 
   student: Student
-  onEdit: () => void
-  onPayment: () => void
-  onDelete: () => void
+  onClick: () => void
   isHighlighted?: boolean
 }) {
+  // Calculate last attendance (mock for now)
+  const getLastAttendance = () => {
+    const days = Math.floor(Math.random() * 7)
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    return `${days} days ago`
+  }
+
+  // Status dot color
+  const getStatusDot = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active': return 'bg-green-500'
+      case 'on hold': return 'bg-yellow-500'
+      case 'inactive': return 'bg-red-500'
+      default: return 'bg-slate-400'
+    }
+  }
+
   return (
     <div 
-      className={`bg-white rounded-xl border p-4 transition-all hover:shadow-md ${
-        isHighlighted ? 'ring-2 ring-primary shadow-lg' : 'border-slate-200'
+      onClick={onClick}
+      className={`bg-white rounded-xl border px-4 py-3 transition-all cursor-pointer hover:shadow-md hover:border-slate-300 ${
+        isHighlighted ? 'ring-2 ring-primary shadow-lg border-primary' : 'border-slate-200 shadow-sm'
       }`}
+      style={{ borderRadius: '12px' }}
     >
-      <div className="flex items-start gap-3">
-        {/* Avatar */}
+      <div className="flex items-center gap-3">
+        {/* Circle Photo */}
         {student.photo_url ? (
           <img 
             src={student.photo_url} 
             alt={`${student.first_name} ${student.last_name}`}
-            className="w-12 h-12 rounded-full object-cover border border-slate-200 flex-shrink-0"
+            className="w-10 h-10 rounded-full object-cover border border-slate-200 flex-shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">
-            <User className="h-6 w-6 text-slate-400" />
+          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">
+            <User className="h-5 w-5 text-slate-400" />
           </div>
         )}
         
-        {/* Info */}
+        {/* Name & Program */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h4 className="font-semibold text-slate-900 truncate">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium text-sm text-slate-900 truncate">
               {student.first_name} {student.last_name}
             </h4>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getBeltColor(student.belt_rank)}`}>
-              {student.belt_rank}
-            </span>
+            {/* Status Dot */}
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(student.status)}`} />
           </div>
-          
-          <div className="mt-1 space-y-0.5">
-            <div className="flex items-center text-sm text-slate-500">
-              <Mail className="h-3 w-3 mr-1.5 flex-shrink-0" />
-              <span className="truncate">{student.email}</span>
-            </div>
-            <div className="flex items-center text-sm text-slate-500">
-              <Phone className="h-3 w-3 mr-1.5 flex-shrink-0" />
-              <span>{student.phone}</span>
-            </div>
-          </div>
-          
-          <div className="mt-2 flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(student.status)}`}>
-              {student.status}
-            </span>
-            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getMembershipColor(student.membership_status)}`}>
-              {student.membership_status}
-            </span>
-          </div>
+          <p className="text-xs text-slate-500 truncate">
+            {student.program || 'General'}
+          </p>
         </div>
-      </div>
-      
-      {/* Actions */}
-      <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
-        <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs" onClick={onEdit}>
-          <Edit className="h-3 w-3 mr-1" />
-          Edit
-        </Button>
-        <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs" onClick={onPayment}>
-          <CreditCard className="h-3 w-3 mr-1" />
-          Payment
-        </Button>
-        <Button variant="ghost" size="sm" className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50" onClick={onDelete}>
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        
+        {/* Belt Rank */}
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border flex-shrink-0 ${getBeltColor(student.belt_rank)}`}>
+          {student.belt_rank?.replace(' Belt', '') || 'White'}
+        </span>
+        
+        {/* Membership Tag */}
+        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${getMembershipColor(student.membership_status)}`}>
+          {student.membership_status || 'Standard'}
+        </span>
+        
+        {/* Last Attendance */}
+        <span className="text-xs text-slate-400 flex-shrink-0 hidden sm:block">
+          {getLastAttendance()}
+        </span>
       </div>
     </div>
   )
@@ -665,9 +663,7 @@ export default function StudentsSplitScreen() {
                     key={student.id}
                     student={student}
                     isHighlighted={highlightedStudentId === student.id}
-                    onEdit={() => console.log('Edit', student.id)}
-                    onPayment={() => console.log('Payment', student.id)}
-                    onDelete={() => console.log('Delete', student.id)}
+                    onClick={() => console.log('Open student modal', student.id)}
                   />
                 ))
               )}
