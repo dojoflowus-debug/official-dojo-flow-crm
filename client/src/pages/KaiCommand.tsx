@@ -285,42 +285,46 @@ export default function KaiCommand() {
         {/* Command Center - Left Panel - Floating Module Style */}
         <div 
           style={{ width: `${commandCenterWidth}px` }}
-          className="bg-white border border-[#E5E6E8] rounded-[20px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
+          className="bg-white border border-[#E5E6E8] rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
         >
-          {/* Header */}
+          {/* Header - Clean Layout */}
           <div className="p-4 border-b border-slate-200">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Menu className="w-5 h-5 text-slate-500" />
-                <h2 className="font-semibold text-slate-800">Command Center</h2>
+            {/* Search + Chat Button Row */}
+            <div className="flex items-center gap-3 mb-3">
+              {/* Search - Full Width */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Search history, tags, @mentions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-white border-slate-200 h-9 w-full"
+                />
               </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <CheckSquare className="w-4 h-4 text-slate-500" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Plus className="w-4 h-4 text-slate-500" />
-                </Button>
-                <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white h-8 px-4 rounded-lg">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Chat
-                </Button>
-              </div>
-            </div>
-
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="Search history, tags, @mentions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-white border-slate-200 h-9"
-              />
+              
+              {/* Apple-style Chat Button */}
+              <button
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[18px] border border-[#E3E5EB] text-[13px] font-medium text-[#25262B] transition-all duration-150 hover:translate-y-[-1px] hover:scale-[1.03] focus-visible:translate-y-[-1px] focus-visible:scale-[1.03]"
+                style={{
+                  background: 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(to bottom, #FFFFFF, #ECEEF3)';
+                  e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+                }}
+              >
+                <Plus className="w-4 h-4 text-[#555A60]" />
+                Chat
+              </button>
             </div>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-3">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="w-full bg-slate-100 h-9">
                 <TabsTrigger value="active" className="flex-1 text-xs data-[state=active]:bg-white">Active</TabsTrigger>
                 <TabsTrigger value="archived" className="flex-1 text-xs data-[state=active]:bg-white">Archived</TabsTrigger>

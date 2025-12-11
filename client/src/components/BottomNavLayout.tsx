@@ -302,7 +302,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
               : '0 -2px 8px rgba(0,0,0,0.35)'
         }}
       >
-        <div className="h-full max-w-screen-xl mx-auto px-2 flex items-center justify-around">
+        <div className="h-full w-full px-4 flex items-center justify-around">
           {NAVIGATION.map((item, index) => {
             const active = isActive(item.href)
             const Icon = item.icon
@@ -331,8 +331,9 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`
                   flex-1 flex flex-col items-center justify-center gap-1
-                  pt-1.5 pb-1
+                  pt-1.5 pb-1 text-center
                   transition-all duration-[180ms] ease-out
+                  min-w-0
                 `}
                 style={{ 
                   transform: getHoverTransform(),
