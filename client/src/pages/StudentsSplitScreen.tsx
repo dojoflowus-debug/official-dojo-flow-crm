@@ -271,6 +271,8 @@ export default function StudentsSplitScreen() {
   const [isMapHidden, setIsMapHidden] = useState(false) // For mobile toggle
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false)
+  const [lastScrollY, setLastScrollY] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([])
@@ -412,14 +414,18 @@ export default function StudentsSplitScreen() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col">
+      {/* Header - with scroll hide/show behavior */}
+      <div 
+        className={`bg-white/95 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 flex items-center justify-between transition-all duration-300 z-20 ${
+          isHeaderHidden ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+        }`}
+      >
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Students</h1>
           <p className="text-sm text-slate-500">Manage your dojo's student roster</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button className="bg-[#E73C3C] hover:bg-[#E73C3C]/90 rounded-xl shadow-[0_2px_8px_rgba(231,60,60,0.25)] hover:shadow-[0_4px_12px_rgba(231,60,60,0.35)] transition-all">
           <Plus className="h-4 w-4 mr-2" />
           Add Student
         </Button>
@@ -447,59 +453,68 @@ export default function StudentsSplitScreen() {
             maxWidth: isMapExpanded ? '100%' : isTablet ? '35%' : '70%'
           }}
         >
-          {/* Map Card Container */}
-          <div className="flex flex-col bg-white border border-slate-200 rounded-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden flex-1">
-          {/* Map Header */}
-          <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Select defaultValue="all">
-                <SelectTrigger className="w-[160px] h-8 text-sm">
-                  <SelectValue placeholder="Saved Views" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Students</SelectItem>
-                  <SelectItem value="active">Active Only</SelectItem>
-                  <SelectItem value="nearby">Nearby (5 mi)</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select defaultValue="main">
-                <SelectTrigger className="w-[140px] h-8 text-sm">
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="main">Main Dojo</SelectItem>
-                  <SelectItem value="branch">Branch Location</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Map Card Container - Apple-style minimal grey design */}
+          <div className="flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 border border-slate-200/80 rounded-[18px] shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex-1">
+            {/* Map Search Bar */}
+            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-4 py-3 flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input 
+                  placeholder="Search locations..."
+                  className="pl-9 h-9 bg-white/90 border-slate-200/80 rounded-xl text-sm focus:ring-2 focus:ring-[#E73C3C]/20 focus:border-[#E73C3C]/40"
+                />
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-9 w-9 p-0 rounded-xl hover:bg-slate-100"
+                onClick={() => setIsMapExpanded(!isMapExpanded)}
+              >
+                {isMapExpanded ? (
+                  <Minimize2 className="h-4 w-4 text-slate-600" />
+                ) : (
+                  <Maximize2 className="h-4 w-4 text-slate-600" />
+                )}
+              </Button>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8"
-              onClick={() => setIsMapExpanded(!isMapExpanded)}
-            >
-              {isMapExpanded ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Maximize2 className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
 
-          {/* Map Container */}
-          <div className="flex-1 relative min-h-[300px]">
-            <MapView 
-              className="w-full h-full absolute inset-0"
-              initialCenter={{ lat: 37.7749, lng: -122.4194 }}
-              initialZoom={12}
-              onMapReady={handleMapReady}
-            />
-          </div>
+            {/* Map Container with Vertical Filters */}
+            <div className="flex-1 relative min-h-[300px] flex">
+              {/* Vertical Filter Buttons */}
+              <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
+                {[
+                  { label: 'Active', icon: Users, active: true },
+                  { label: 'Missing', icon: X, active: false },
+                  { label: 'Nearby', icon: MapPin, active: false },
+                  { label: 'New', icon: Plus, active: false },
+                ].map((filter, idx) => (
+                  <button
+                    key={idx}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all shadow-sm ${
+                      filter.active 
+                        ? 'bg-[#E73C3C] text-white shadow-[0_2px_8px_rgba(231,60,60,0.3)]' 
+                        : 'bg-white/95 text-slate-600 hover:bg-white hover:shadow-md border border-slate-200/60'
+                    }`}
+                  >
+                    <filter.icon className="h-3.5 w-3.5" />
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
 
-          {/* Stats Strip - inside card */}
-          <div className="bg-white border-t border-slate-200 p-4">
-            <StatsStrip stats={stats} />
-          </div>
+              {/* Map View */}
+              <MapView 
+                className="w-full h-full absolute inset-0"
+                initialCenter={{ lat: 37.7749, lng: -122.4194 }}
+                initialZoom={12}
+                onMapReady={handleMapReady}
+              />
+            </div>
+
+            {/* Stats Strip - inside card with gradient */}
+            <div className="bg-gradient-to-r from-white to-slate-50 border-t border-slate-200/60 p-4">
+              <StatsStrip stats={stats} />
+            </div>
           </div>{/* End Map Card Container */}
           
           {/* Mobile Map Toggle */}
@@ -525,55 +540,58 @@ export default function StudentsSplitScreen() {
           </button>
         )}
 
-        {/* Draggable Divider - Desktop only */}
+        {/* Draggable Divider - Desktop only - Polished Apple-style */}
         {!isMapExpanded && !isMobile && !isTablet && (
           <div 
-            className="w-1.5 bg-transparent cursor-col-resize relative hover:bg-slate-300 transition-colors group"
+            className="w-3 cursor-col-resize relative group flex items-center justify-center"
             onMouseDown={handleMouseDown}
           >
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-0.5 h-16 bg-slate-300 rounded-full group-hover:bg-slate-400 transition-colors" />
+            {/* Divider Track */}
+            <div className="absolute inset-y-4 w-[3px] rounded-full bg-white/40 shadow-[0_0_8px_rgba(0,0,0,0.08)] group-hover:bg-white/60 group-hover:shadow-[0_0_12px_rgba(0,0,0,0.12)] transition-all duration-200" />
+            {/* Grab Handle */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-12 rounded-full bg-white/50 shadow-[0_2px_8px_rgba(0,0,0,0.1)] group-hover:bg-white/70 group-hover:h-16 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-200" />
           </div>
         )}
 
         {/* Right Pane - Search + Cards */}
         {!isMapExpanded && (
           <div 
-            className={`flex flex-col bg-white ${
+            className={`flex flex-col bg-gradient-to-b from-white to-slate-50/50 ${
               isMobile ? 'flex-1' : 'h-[calc(100vh-140px)]'
             }`}
-            style={isMobile ? {} : { flex: 1, paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '8px' }}
+            style={isMobile ? {} : { flex: 1, paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '16px' }}
           >
             {/* Students List Header */}
-            <div className="space-y-3">
-              {/* Search Bar */}
+            <div className="space-y-4">
+              {/* Search Bar - Apple-style */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Search by name, belt, email, or phone..."
+                  placeholder="Search by name, email, or phone..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11 rounded-full border-slate-200 bg-slate-50 focus:bg-white"
+                  className="pl-11 h-12 rounded-2xl border-slate-200/80 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:shadow-[0_4px_12px_rgba(0,0,0,0.08)] focus:border-[#E73C3C]/30 focus:ring-2 focus:ring-[#E73C3C]/10 transition-all"
                 />
               </div>
 
-              {/* Filters Row */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Filters Row - Clean DojoFlow style */}
+              <div className="flex items-center gap-3 flex-wrap">
                 <Select defaultValue="all">
-                  <SelectTrigger className="w-[120px] h-8 text-sm">
-                    <SelectValue placeholder="Program" />
+                  <SelectTrigger className="w-[130px] h-9 text-sm rounded-xl border-slate-200/80 bg-white shadow-sm hover:shadow-md transition-shadow">
+                    <SelectValue placeholder="Status" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Programs</SelectItem>
-                    <SelectItem value="kids">Kids BJJ</SelectItem>
-                    <SelectItem value="adult">Adult BJJ</SelectItem>
-                    <SelectItem value="mma">MMA</SelectItem>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Pending Cancel">Pending</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select defaultValue="all">
-                  <SelectTrigger className="w-[120px] h-8 text-sm">
+                  <SelectTrigger className="w-[130px] h-9 text-sm rounded-xl border-slate-200/80 bg-white shadow-sm hover:shadow-md transition-shadow">
                     <SelectValue placeholder="Belt Rank" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="all">All Belts</SelectItem>
                     <SelectItem value="white">White Belt</SelectItem>
                     <SelectItem value="blue">Blue Belt</SelectItem>
@@ -582,21 +600,20 @@ export default function StudentsSplitScreen() {
                     <SelectItem value="black">Black Belt</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[120px] h-8 text-sm">
-                    <SelectValue placeholder="Status" />
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-[140px] h-9 text-sm rounded-xl border-slate-200/80 bg-white shadow-sm hover:shadow-md transition-shadow">
+                    <SelectValue placeholder="Membership" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                    <SelectItem value="Pending Cancel">Pending Cancel</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="all">All Members</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="trial">Trial</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" className="h-8">
-                  <Filter className="h-3 w-3 mr-1" />
-                  More
+                <Button variant="outline" size="sm" className="h-9 rounded-xl border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+                  <Filter className="h-3.5 w-3.5 mr-1.5" />
+                  More Filters
                 </Button>
               </div>
 

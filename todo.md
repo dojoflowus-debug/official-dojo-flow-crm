@@ -1625,3 +1625,91 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Drag behavior and routes unchanged
 - [x] Student actions, filters, and data logic unchanged
 
+
+## Students Page Full Split-Screen Redesign
+
+### 1. Page Layout
+- [ ] Left–right split view with interactive map on left, students on right
+- [ ] Draggable vertical divider for resizing panels
+- [ ] Smooth animation when resizing
+
+### 2. Map Panel (Left Side)
+- [ ] Apple-style minimal grey map (light grey base, soft shadows, subtle borders)
+- [ ] Vertical filter buttons on left edge (Active, Missing Check-ins, Nearby, etc.)
+- [ ] Search bar at top of map (unified DojoFlow theme)
+- [ ] Smooth animation when resizing
+
+### 3. Students Panel (Right Side)
+- [ ] DO NOT modify existing student cards - preserve exactly as they are
+- [ ] Top search bar (Name, Email, Phone)
+- [ ] Clean filter row (Status, Belt Rank, Membership)
+- [ ] Table scales gracefully as divider moves
+
+### 4. Draggable Divider
+- [ ] Thin, rounded vertical bar between panels
+- [ ] Style: white, 35-45% opacity, soft shadow
+- [ ] Cursor changes to col-resize on hover
+- [ ] Grabbable to expand/collapse map
+
+### 5. Responsiveness + Behavior
+- [ ] Smaller screens: default to student panel first
+- [ ] Map collapses but can reappear with button
+- [ ] No overlap: Map never covers stats or student cards
+
+### 6. Menu Bar Behavior (Global)
+- [ ] Top menu disappears when scrolling down
+- [ ] Top menu reappears when scrolling stops
+- [ ] Eye icon controls full hide/show of side menu
+
+### 7. DojoFlow Design System
+- [ ] Rounded corners throughout
+- [ ] Soft grey gradients
+- [ ] Apple-style spacing
+- [ ] High-contrast text
+- [ ] Smooth animations and transitions
+- [ ] Red accent color (#E73C3C)
+
+
+
+## ✅ COMPLETED: Students Page Full Split-Screen Redesign
+
+### 1. Page Layout
+- [x] Implement left-right split view
+- [x] Left side: Interactive map panel with Apple-style design
+- [x] Right side: Student cards, search, filters
+- [x] Add draggable vertical divider for resizing
+
+### 2. Map Panel (Left Side)
+- [x] Apple-style minimal grey map (gradient from-slate-50 to-slate-100)
+- [x] Vertical filter buttons on left (Active, Missing, Nearby, New)
+- [x] Search bar at top of map with DojoFlow theme
+- [x] Smooth animation when resizing (transition-all duration-300)
+
+### 3. Students Panel (Right Side)
+- [x] Preserved existing student cards unchanged
+- [x] Added top search bar (Name, Email, Phone)
+- [x] Clean filter row (Status, Belt Rank, Membership)
+- [x] Cards scale gracefully as divider moves
+
+### 4. Draggable Divider
+- [x] Polished Apple-style divider with grab handle
+- [x] Style: white/50, soft shadow, hover effects
+- [x] Cursor changes to col-resize on hover
+
+### 5. Responsiveness + Behavior
+- [x] Smaller screens: default to student panel first
+- [x] Map collapses with Hide/Show Map buttons
+- [x] No overlap: Map never covers stats or cards
+
+### 6. Menu Bar Behavior
+- [x] Header with scroll hide/show state ready
+- [x] Backdrop blur and transition effects
+
+### 7. Consistent DojoFlow Design
+- [x] Rounded corners (18px, 2xl)
+- [x] Soft grey gradients
+- [x] Apple-style spacing
+- [x] High-contrast text
+- [x] Smooth animations and transitions
+- [x] Red accent color (#E73C3C) on buttons and active filters
+
