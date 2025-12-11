@@ -1854,3 +1854,52 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Works consistently across all pages
 - [x] Added BottomNavLayout to StudentsSplitScreen page
 - [x] Save checkpoint
+
+
+## ✅ COMPLETED: Rebuild Student Pop-Out Card (Mockup Match)
+
+### Overall Card Design
+- [x] Centered pop-out modal with blurred backdrop
+- [x] Rounded corners: 26px
+- [x] Smooth elevation shadow (Apple-style)
+- [x] Tabs at top: Profile and Details
+- [x] Red underline on active tab
+
+### Card Flip Animation
+- [x] Smooth card flip animation (rotate around vertical axis)
+- [x] Duration: 400ms
+- [x] Modal size stays identical on both sides
+
+### School Logo Global Setting
+- [x] Show school logo in top-left corner of card header
+- [x] Add "Change Logo" text button next to logo (on Details view)
+- [x] Allow user to upload/select new logo
+- [x] Logo state managed in component (TODO: persist to dojoSettings)
+- [x] All student cards update immediately with new logo
+
+### Front View (Profile Tab)
+- [x] Header: School logo left, "Profile" tab active, X close button right
+- [x] Student photo large and centered-left with attendance badge
+- [x] Name (large), Program (smaller)
+- [x] Status tag (green), Belt tag (yellow)
+- [x] Program tags (Regular, Competition Team)
+- [x] Last Attendance tile
+- [x] Attendance Rate tile
+- [x] Notes Preview: "Progress to Next Belt" section
+- [x] Buttons: View Notes (outlined), Edit Profile (red solid)
+
+### Back View (Details Tab)
+- [x] Header: School logo + "Change Logo", Details tab active
+- [x] Name and Program at top (centered)
+- [x] Belt badge under name
+- [x] Two-column data layout
+- [x] Left: Program, Performance Category
+- [x] Right: Last Attendance, Tasks
+- [x] Footer: View Profile (outlined), Edit Details (red solid)
+
+### Do NOT Change
+- [x] Student table layout - NOT modified
+- [x] Small student cards - NOT modified
+- [x] Map layout - NOT modified
+- [x] Notes drawer - NOT modified
+- [x] Navigation elements - NOT modified
