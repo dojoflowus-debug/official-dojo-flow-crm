@@ -57,7 +57,8 @@ import {
   Target,
   Maximize2,
   Minimize2,
-  ChevronDown
+  ChevronDown,
+  ArrowLeft
 } from 'lucide-react'
 
 // Types
@@ -1049,10 +1050,10 @@ export default function StudentsSplitScreen() {
         }}
       />
 
-      {/* Full Map Mode Overlay */}
+      {/* Full Map Mode Overlay - No blur, clean map view */}
       {isFullMapMode && (
-        <div className="fixed inset-0 z-50 bg-slate-900/20 backdrop-blur-sm">
-          {/* Full Screen Map */}
+        <div className="fixed inset-0 z-50">
+          {/* Full Screen Map - Edge to edge, no backdrop */}
           <div className="absolute inset-0">
             <MapView 
               className="w-full h-full"
@@ -1078,18 +1079,32 @@ export default function StudentsSplitScreen() {
                     
                     const isHighlighted = highlightedMapStudent?.id === student.id
                     
-                    // Create custom marker element
+                    // Create custom marker element with mini label for highlighted student
                     const markerContent = document.createElement('div')
-                    markerContent.className = 'student-marker'
+                    markerContent.className = 'student-marker cursor-pointer'
                     markerContent.innerHTML = `
-                      <div class="relative ${isHighlighted ? 'animate-pulse' : ''}">
-                        <div class="${isHighlighted ? 'w-14 h-14' : 'w-10 h-10'} rounded-full bg-white shadow-lg flex items-center justify-center border-2 ${isHighlighted ? 'border-[#E73C3C] ring-4 ring-[#E73C3C]/30' : 'border-slate-200'} transition-all duration-300">
+                      <div class="flex flex-col items-center">
+                        <div class="${isHighlighted ? 'w-16 h-16' : 'w-10 h-10'} rounded-full bg-white shadow-lg flex items-center justify-center border-2 ${isHighlighted ? 'border-[#E73C3C] ring-4 ring-[#E73C3C]/20' : 'border-slate-200 hover:border-slate-300'} transition-all duration-300 overflow-hidden">
                           ${student.photo_url 
-                            ? `<img src="${student.photo_url}" class="w-full h-full rounded-full object-cover" />`
-                            : `<span class="${isHighlighted ? 'text-base' : 'text-xs'} font-bold text-slate-600">${student.first_name[0]}${student.last_name[0]}</span>`
+                            ? `<img src="${student.photo_url}" class="w-full h-full object-cover" />`
+                            : `<span class="${isHighlighted ? 'text-lg' : 'text-xs'} font-bold text-slate-600">${student.first_name[0]}${student.last_name[0]}</span>`
                           }
                         </div>
-                        ${isHighlighted ? `<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#E73C3C] rotate-45"></div>` : ''}
+                        ${isHighlighted ? `
+                          <div class="mt-2 bg-white rounded-lg shadow-lg px-3 py-2 min-w-[140px] text-center border border-slate-100">
+                            <div class="flex items-center justify-center gap-2 mb-1">
+                              ${student.photo_url 
+                                ? `<img src="${student.photo_url}" class="w-6 h-6 rounded-full object-cover" />`
+                                : `<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center"><span class="text-[10px] font-bold text-slate-600">${student.first_name[0]}${student.last_name[0]}</span></div>`
+                              }
+                              <span class="font-semibold text-slate-800 text-sm">${student.first_name} ${student.last_name}</span>
+                            </div>
+                            <div class="flex items-center justify-center gap-2">
+                              <span class="text-xs text-slate-500">${student.belt_rank || 'White Belt'}</span>
+                              <span class="w-2 h-2 rounded-full ${student.status === 'Active' ? 'bg-green-500' : student.status === 'Inactive' ? 'bg-gray-400' : 'bg-yellow-500'}"></span>
+                            </div>
+                          </div>
+                        ` : ''}
                       </div>
                     `
                     
@@ -1127,52 +1142,31 @@ export default function StudentsSplitScreen() {
             />
           </div>
           
-          {/* Exit Full Map Mode Button */}
+          {/* Exit Full Map Mode Button - Upper Left with Arrow */}
           <button
             onClick={() => {
               setIsFullMapMode(false)
               setHighlightedMapStudent(null)
+              setIsModalOpen(false)
+              setSelectedStudent(null)
             }}
-            className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-slate-200/60 flex items-center gap-2 hover:bg-white transition-all"
+            className="absolute top-4 left-4 z-20 bg-white px-4 py-2.5 rounded-lg shadow-lg border border-slate-200 flex items-center gap-2 hover:bg-slate-50 transition-all"
           >
-            <Minimize2 className="h-4 w-4 text-slate-600" />
+            <ArrowLeft className="h-4 w-4 text-slate-700" />
             <span className="text-sm font-medium text-slate-700">Exit Full Map</span>
           </button>
           
-          {/* Vertical Filter Buttons in Full Map Mode */}
-          <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
-            {[
-              { label: 'Active', icon: Users, active: true },
-              { label: 'Missing', icon: X, active: false },
-              { label: 'Nearby', icon: MapPin, active: false },
-              { label: 'New', icon: Plus, active: false },
-            ].map((filter, idx) => (
-              <button
-                key={idx}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all shadow-sm ${
-                  filter.active 
-                    ? 'bg-[#E73C3C] text-white shadow-[0_2px_8px_rgba(231,60,60,0.3)]' 
-                    : 'bg-white/95 text-slate-600 hover:bg-white hover:shadow-md border border-slate-200/60'
-                }`}
-              >
-                <filter.icon className="h-3.5 w-3.5" />
-                {filter.label}
-              </button>
-            ))}
-          </div>
-          
-          {/* Docked Student Card on Right Side */}
+          {/* Docked Student Card on Right Side - Clean shadow, no blur */}
           {isModalOpen && selectedStudent && (
-            <div className="absolute right-4 top-16 bottom-4 w-[380px] z-10">
-              <div className="bg-white rounded-2xl shadow-2xl h-full overflow-hidden border border-slate-200/60">
+            <div className="absolute right-4 top-4 bottom-4 w-[380px] z-10">
+              <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] h-full overflow-hidden">
                 <StudentModal
                   student={selectedStudent}
                   isOpen={true}
                   onClose={() => {
+                    // Close card but stay in full map mode
                     setIsModalOpen(false)
-                    setSelectedStudent(null)
-                    setIsFullMapMode(false)
-                    setHighlightedMapStudent(null)
+                    // Keep highlighted student so mini label shows
                   }}
                   onEditProfile={(student) => {
                     console.log('Edit profile:', student.id)

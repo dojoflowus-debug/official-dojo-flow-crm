@@ -2161,3 +2161,15 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Add Exit Full Map Mode button at top-right
 - [x] Restore normal split view on exit
 - [x] Ensure map panning, zooming, and filters still work
+
+
+## ✅ COMPLETED: Enhanced Full Map Mode with Mini Labels
+- [x] Remove blur/fog backdrop from full map mode
+- [x] Add mini student label under highlighted marker (photo, name, belt rank, status indicator)
+- [x] Update card close behavior to keep full map mode active
+- [x] Clicking mini label reopens docked card
+- [x] Move Exit button to upper-left with arrow icon (← Exit Full Map)
+- [x] Ensure all students show smaller circular photo markers
+- [x] Clicking any marker highlights that student and updates docked card
+- [x] Map stays interactive (zoom, drag, filters)
+- [x] Proper z-index layering: map → mini labels → docked card
