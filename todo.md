@@ -2196,3 +2196,12 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Insert 15 leads with real Tomball, TX area addresses
 - [x] Pre-geocoded coordinates for all addresses
 - [x] Test leads page showing all 15 leads correctly
+
+
+## ✅ COMPLETED: Fix Student Card Logo Display
+- [x] Investigate StudentModal logo display logic
+- [x] Check if logo is fetched from dojo settings or VITE_APP_LOGO
+- [x] Fix logo to display uploaded image instead of ACME placeholder
+- [x] Updated to use VITE_APP_LOGO as fallback when no brand logo is set
+- [x] Updated business name to use brandData.businessName or VITE_APP_TITLE
+- [x] Test logo displays correctly in student card (now shows "DojoFlow")

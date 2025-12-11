@@ -446,10 +446,14 @@ export default function StudentModal({
               <div className="flex items-center gap-3">
                 {schoolLogo ? (
                   <img src={schoolLogo} alt="School Logo" className="w-10 h-10 object-contain" />
+                ) : import.meta.env.VITE_APP_LOGO ? (
+                  <img src={import.meta.env.VITE_APP_LOGO} alt="School Logo" className="w-10 h-10 object-contain" />
                 ) : (
                   <AcmeLogo />
                 )}
-                <span className="font-bold text-lg text-gray-900">ACME</span>
+                <span className="font-bold text-lg text-gray-900">
+                  {brandData?.businessName || brandData?.dbaName || import.meta.env.VITE_APP_TITLE || 'DojoFlow'}
+                </span>
               </div>
               
               <div className="flex items-center gap-4">
