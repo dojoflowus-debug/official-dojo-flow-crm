@@ -180,7 +180,7 @@ export default function StudentModal({
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [logoPreview, setLogoPreview] = useState<{ dataUrl: string; fileName: string } | null>(null)
+  const [logoPreview, setLogoPreview] = useState<{ dataUrl: string; fileName: string; fileSize: number } | null>(null)
   const [showLogoPreview, setShowLogoPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -314,6 +314,9 @@ export default function StudentModal({
     }, 200)
   }, [activeView, isFlipping])
 
+  // Maximum file size for logo (2MB)
+  const MAX_LOGO_SIZE = 2 * 1024 * 1024 // 2MB in bytes
+  
   // Handle logo file selection - show preview first
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -321,13 +324,23 @@ export default function StudentModal({
       const reader = new FileReader()
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string
-        setLogoPreview({ dataUrl, fileName: file.name })
+        setLogoPreview({ dataUrl, fileName: file.name, fileSize: file.size })
         setShowLogoPreview(true)
       }
       reader.readAsDataURL(file)
     }
     // Reset input so same file can be selected again
     if (e.target) e.target.value = ''
+  }
+  
+  // Check if file size exceeds limit
+  const isFileTooLarge = logoPreview ? logoPreview.fileSize > MAX_LOGO_SIZE : false
+  
+  // Format file size for display
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
   
   // Confirm logo upload after preview
@@ -924,10 +937,30 @@ export default function StudentModal({
               </div>
             </div>
             
-            {/* File name */}
-            <p className="text-sm text-gray-500 text-center mb-6 truncate">
-              {logoPreview.fileName}
-            </p>
+            {/* File name and size */}
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-500 truncate">
+                {logoPreview.fileName}
+              </p>
+              <p className={`text-xs mt-1 ${isFileTooLarge ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                {formatFileSize(logoPreview.fileSize)}
+              </p>
+            </div>
+            
+            {/* File size warning */}
+            {isFileTooLarge && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-red-800">File too large</p>
+                    <p className="text-xs text-red-600 mt-0.5">Please select an image under 2MB</p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Preview in context */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -954,9 +987,9 @@ export default function StudentModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                className={`flex-1 text-white ${isFileTooLarge ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'}`}
                 onClick={handleConfirmLogoUpload}
-                disabled={isUploading}
+                disabled={isUploading || isFileTooLarge}
               >
                 {isUploading ? (
                   <>

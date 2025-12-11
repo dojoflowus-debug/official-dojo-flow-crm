@@ -2224,3 +2224,12 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Only upload to S3 after user confirms
 - [x] Clear preview state after upload or cancel
 - [x] Test the complete preview-to-upload flow
+
+
+## ✅ COMPLETED: Logo File Size Validation (2MB Max)
+- [x] Add file size check in handleLogoSelect function
+- [x] Store file size in logoPreview state
+- [x] Display warning message in preview modal if file exceeds 2MB
+- [x] Disable Confirm Upload button when file is too large (grayed out)
+- [x] Show file size in preview modal (formatted as KB/MB)
+- [x] Test with files over and under 2MB
