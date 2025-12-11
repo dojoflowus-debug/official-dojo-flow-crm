@@ -1501,3 +1501,14 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Ensure animations feel polished and not jarring (ease-in-out timing)
 - [x] Save checkpoint
 
+
+## ✅ COMPLETED: Conversation Delete Functionality
+- [x] Add dropdown menu to three-dot button on conversation cards
+- [x] Add Delete option with red styling and Trash2 icon
+- [x] Add confirmation dialog (AlertDialog) before deletion
+- [x] Wire up delete to backend tRPC procedure (deleteConversation)
+- [x] Remove conversation from UI after successful delete (invalidate query)
+- [x] Show success/error toast notifications
+- [x] Archive and Rename options show "coming soon" toast
+- [x] Save checkpoint
+

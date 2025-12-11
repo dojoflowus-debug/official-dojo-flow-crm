@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 import { 
   Search, 
   Plus, 
@@ -28,7 +30,8 @@ import {
   Eye,
   EyeOff,
   Menu,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -58,6 +61,7 @@ interface Message {
 
 export default function KaiCommand() {
   const [, navigate] = useLocation();
+  
   const [activeTab, setActiveTab] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
@@ -88,7 +92,26 @@ export default function KaiCommand() {
   );
   const createConversationMutation = trpc.kai.createConversation.useMutation();
   const addMessageMutation = trpc.kai.addMessage.useMutation();
+  const deleteConversationMutation = trpc.kai.deleteConversation.useMutation();
   const utils = trpc.useUtils();
+
+  // Handle delete conversation
+  const handleDeleteConversation = async (conversationId: string) => {
+    try {
+      await deleteConversationMutation.mutateAsync({ conversationId: parseInt(conversationId) });
+      // Clear selection if deleted conversation was selected
+      if (selectedConversationId === conversationId) {
+        setSelectedConversationId(null);
+        setMessages([]);
+      }
+      // Refresh conversations list
+      utils.kai.getConversations.invalidate();
+      toast.success('Conversation deleted');
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      toast.error('Failed to delete conversation');
+    }
+  };
 
   // Handle starting a new chat
   const handleNewChat = async () => {
@@ -456,6 +479,7 @@ export default function KaiCommand() {
                         setSelectedConversationId(conv.id);
                         setMessages([]);
                       }}
+                      onDelete={handleDeleteConversation}
                     />
                   ))}
                 </div>
@@ -476,6 +500,7 @@ export default function KaiCommand() {
                         setSelectedConversationId(conv.id);
                         setMessages([]);
                       }}
+                      onDelete={handleDeleteConversation}
                     />
                   ))}
                 </div>
@@ -679,14 +704,18 @@ function ConversationCard({
   getCategoryColor,
   getStatusColor,
   isSelected,
-  onClick
+  onClick,
+  onDelete
 }: { 
   conversation: Conversation; 
   getCategoryColor: (category: string) => string;
   getStatusColor: (status: string) => string;
   isSelected?: boolean;
   onClick?: () => void;
+  onDelete?: (id: string) => void;
 }) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
   return (
     <div 
       onClick={onClick}
@@ -702,18 +731,57 @@ function ConversationCard({
           <span className="text-xs text-slate-400">{conversation.timestamp}</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <MoreVertical className="w-3 h-3 text-slate-400" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Archive</DropdownMenuItem>
-              <DropdownMenuItem>Delete</DropdownMenuItem>
-              <DropdownMenuItem>Rename</DropdownMenuItem>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={() => toast.info('Archive feature coming soon')}>
+                Archive
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info('Rename feature coming soon')}>
+                Rename
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{conversation.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                onDelete?.(conversation.id);
+                setShowDeleteConfirm(false);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {conversation.preview && (
         <p className="text-xs text-slate-500 line-clamp-2 mb-2">{conversation.preview}</p>
       )}
