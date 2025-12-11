@@ -1913,3 +1913,12 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Updated StudentModal to save logo to database on upload using useMutation
 - [x] Logo updates everywhere immediately via query invalidation
 - [x] Added loading state with spinner during upload
+
+
+## ✅ COMPLETED: Display School Logo Across App
+
+- [x] Add school logo to dashboard header (BottomNavLayout)
+- [x] Add school logo to kiosk screen (CheckIn.tsx)
+- [x] Fetch logo from dojoSettings.logoSquare via tRPC setupWizard.getBrand
+- [x] Show fallback DojoFlow logo when no custom logo is set
+- [x] Ensure consistent branding across all screens

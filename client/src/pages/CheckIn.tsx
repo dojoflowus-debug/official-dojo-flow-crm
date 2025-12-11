@@ -27,6 +27,10 @@ export default function CheckIn() {
   const [isScanning, setIsScanning] = useState(false);
   const qrScannerRef = useRef<Html5QrcodeScanner | null>(null);
   
+  // Fetch school logo from database
+  const { data: brandData } = trpc.setupWizard.getBrand.useQuery();
+  const schoolLogo = brandData?.logoSquare || null;
+  
   // trpc mutations
   const lookupByPhoneMutation = trpc.students.lookupByPhone.useMutation();
   const lookupByNameMutation = trpc.students.searchStudents.useMutation();
@@ -212,19 +216,31 @@ export default function CheckIn() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-6 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setLocation("/")}
-            className="text-slate-400 hover:text-white"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Student Check-In</h1>
-            <p className="text-sm text-slate-400">Scan, search, or enter phone number</p>
+        <div className="container mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLocation("/")}
+              className="text-slate-400 hover:text-white"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Student Check-In</h1>
+              <p className="text-sm text-slate-400">Scan, search, or enter phone number</p>
+            </div>
           </div>
+          {/* School Logo */}
+          {schoolLogo && (
+            <div className="flex items-center">
+              <img 
+                src={schoolLogo} 
+                alt="School Logo" 
+                className="h-12 w-12 object-contain rounded-lg"
+              />
+            </div>
+          )}
         </div>
       </header>
 

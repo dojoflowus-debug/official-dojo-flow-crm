@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +18,7 @@ import {
 import { APP_LOGO } from '@/const'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
+import { trpc } from '@/lib/trpc'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +72,10 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme } = useTheme()
+  
+  // Fetch school logo from database
+  const { data: brandData } = trpc.setupWizard.getBrand.useQuery()
+  const schoolLogo = brandData?.logoSquare || null
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
@@ -179,14 +184,22 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
           }}
         >
           <div className="h-full px-6 flex items-center justify-between">
-            {/* Left: Logo - Theme-aware */}
+            {/* Left: Logo - School logo or default */}
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-2">
-                <img 
-                  src={isDark || isCinematic ? '/logo-dark.png' : '/logo-light.png'} 
-                  alt="DojoFlow" 
-                  className="h-9 object-contain opacity-95"
-                />
+                {schoolLogo ? (
+                  <img 
+                    src={schoolLogo} 
+                    alt="School Logo" 
+                    className="h-9 w-9 object-contain rounded-lg"
+                  />
+                ) : (
+                  <img 
+                    src={isDark || isCinematic ? '/logo-dark.png' : '/logo-light.png'} 
+                    alt="DojoFlow" 
+                    className="h-9 object-contain opacity-95"
+                  />
+                )}
               </Link>
               
               {/* Page Title - Hidden on mobile */}
