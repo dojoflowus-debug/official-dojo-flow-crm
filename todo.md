@@ -1493,3 +1493,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Only affect Kai Command page
 - [x] Other pages not affected (hiddenInFocusMode prop)
 
+
+## ✅ COMPLETED: Focus Mode Transition Animations
+- [x] Add smooth fade/slide transitions for sidebar hide/show (opacity, translateX, width)
+- [x] Add smooth transition for bottom nav hide/show (translateY, opacity)
+- [x] Add transition for content centering (transition-all duration-300)
+- [x] Ensure animations feel polished and not jarring (ease-in-out timing)
+- [x] Save checkpoint
+

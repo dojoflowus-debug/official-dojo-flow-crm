@@ -354,12 +354,16 @@ export default function KaiCommand() {
 
   return (
     <BottomNavLayout hiddenInFocusMode={isFocusMode}>
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'} ${isFocusMode ? 'focus-mode' : ''}`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'} ${isFocusMode ? 'focus-mode' : ''} transition-all duration-300 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
-        {!isFocusMode && (
         <div 
-          style={{ width: `${commandCenterWidth}px` }}
-          className="conversation-panel bg-white border border-[#E5E6E8] rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
+          style={{ 
+            width: isFocusMode ? '0px' : `${commandCenterWidth}px`,
+            opacity: isFocusMode ? 0 : 1,
+            transform: isFocusMode ? 'translateX(-20px)' : 'translateX(0)',
+            pointerEvents: isFocusMode ? 'none' : 'auto'
+          }}
+          className={`conversation-panel bg-white border border-[#E5E6E8] rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'}`}
         >
           {/* Header - Clean Layout */}
           <div className="p-4 border-b border-slate-200">
@@ -479,14 +483,17 @@ export default function KaiCommand() {
             </div>
           </div>
         </div>
-        )}
 
         {/* Swivel/Drag Bar - Only show when not in Focus Mode */}
-        {!isFocusMode && (
         <div 
           onMouseDown={handleMouseDown}
           onDoubleClick={() => setCommandCenterWidth(320)}
-          className={`w-2 cursor-col-resize flex items-center justify-center group transition-colors select-none ${
+          style={{
+            opacity: isFocusMode ? 0 : 1,
+            width: isFocusMode ? '0px' : '8px',
+            pointerEvents: isFocusMode ? 'none' : 'auto'
+          }}
+          className={`cursor-col-resize flex items-center justify-center group transition-all duration-300 ease-in-out select-none ${
             isResizing ? 'bg-[#ED393D]' : 'bg-slate-200 hover:bg-[#ED393D]'
           }`}
           title="Drag to resize, double-click to reset"
@@ -495,7 +502,6 @@ export default function KaiCommand() {
             isResizing ? 'bg-white' : 'bg-slate-400 group-hover:bg-white'
           }`} />
         </div>
-        )}
 
         {/* Main Conversation Panel - Right Side */}
         <div className="flex-1 flex flex-col bg-white">

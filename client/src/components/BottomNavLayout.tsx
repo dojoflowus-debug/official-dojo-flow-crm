@@ -278,12 +278,12 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
       </main>
 
       {/* Bottom Navigation Bar - Always Dark Dock - Hidden in Focus Mode */}
-      {!hiddenInFocusMode && (
       <nav 
         className={`
           fixed left-0 right-0 z-[1500] h-16
-          transition-transform duration-300 ease-in-out
-          ${isNavVisible ? 'translate-y-0 bottom-0' : 'translate-y-full bottom-0'}
+          transition-all duration-300 ease-in-out
+          ${hiddenInFocusMode ? 'translate-y-full opacity-0 pointer-events-none' : (isNavVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}
+          bottom-0
           flex items-center justify-around
           ${isCinematic 
             ? 'border-t border-white/[0.06]' 
@@ -400,7 +400,6 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
           })}
         </div>
       </nav>
-      )}
     </div>
   )
 }
