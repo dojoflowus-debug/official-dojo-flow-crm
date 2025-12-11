@@ -4,6 +4,7 @@ import { MapView } from '../components/Map'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
 import StudentModal from '../components/StudentModal'
+import NotesDrawer from '../components/NotesDrawer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -264,6 +265,8 @@ export default function StudentsSplitScreen() {
   const [highlightedStudentId, setHighlightedStudentId] = useState<number | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false)
+  const [notesStudent, setNotesStudent] = useState<Student | null>(null)
   
   // Split pane state
   const [mapWidth, setMapWidth] = useState(40) // percentage
@@ -691,8 +694,22 @@ export default function StudentsSplitScreen() {
           // TODO: Open edit form
         }}
         onViewNotes={(student) => {
-          console.log('View notes:', student.id)
-          // TODO: Open notes drawer
+          setNotesStudent(student)
+          setIsNotesDrawerOpen(true)
+        }}
+      />
+
+      {/* Notes Drawer */}
+      <NotesDrawer
+        student={notesStudent}
+        isOpen={isNotesDrawerOpen}
+        onClose={() => {
+          setIsNotesDrawerOpen(false)
+          setNotesStudent(null)
+        }}
+        onAddNote={(studentId, content, category) => {
+          console.log('Add note:', studentId, content, category)
+          // TODO: Save note to database
         }}
       />
     </div>

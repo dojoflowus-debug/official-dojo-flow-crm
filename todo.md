@@ -1812,3 +1812,33 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Click student card opens modal
 - [x] Tab switching works correctly
 - [x] Save checkpoint
+
+
+## ✅ COMPLETED: Notes Sliding Drawer on Right Side
+
+### Drawer Requirements
+- [x] Right-side drawer that slides over the page (not pushing layout)
+- [x] Width around 420px
+- [x] White background with light shadow
+- [x] Smooth slide-in / slide-out animation
+- [x] Close button at top right
+
+### Header Section
+- [x] Top header: "Notes" with student name below
+- [x] Search bar at top
+
+### Note Input
+- [x] Rich text input for adding notes
+- [x] Category dropdown (General, Progress, Incident, Attendance, Behavior, Achievement, Parent Contact)
+
+### Notes List
+- [x] List of previous notes with:
+  - [x] Instructor name
+  - [x] Timestamp (relative time)
+  - [x] Category label (color-coded badges)
+  - [x] Note text
+
+### Integration
+- [x] Connect to "View Notes" button in StudentModal
+- [x] Did NOT modify modal or student card code
+- [x] Save checkpoint
