@@ -1402,3 +1402,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Header keeps full DojoFlow logo (theme-aware)
 - [x] Nav uses only icons + short labels (no wordmark)
 
+
+## ✅ COMPLETED: Nav Icon Hover Glow Effect
+- [x] Add subtle glowing effect to navigation icons on hover
+- [x] Icons get white glow (drop-shadow 8px rgba(255,255,255,0.35)) on hover
+- [x] Kai icon gets red glow (drop-shadow 12px rgba(229,57,53,0.5)) on hover
+- [x] Labels turn white on hover
+- [x] Save checkpoint
+

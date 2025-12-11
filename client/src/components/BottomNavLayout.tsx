@@ -339,7 +339,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                   color: active ? '#FFFFFF' : 'rgba(255,255,255,0.72)'
                 }}
               >
-                {/* Icon Container */}
+                {/* Icon Container with hover glow */}
                 <div 
                   className={`
                     relative flex items-center justify-center
@@ -349,7 +349,11 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                   style={{
                     filter: active && item.isCenter 
                       ? 'drop-shadow(0 0 10px rgba(229,57,53,0.6))' 
-                      : 'none'
+                      : hoveredIndex === index
+                        ? item.isCenter 
+                          ? 'drop-shadow(0 0 12px rgba(229,57,53,0.5))'
+                          : 'drop-shadow(0 0 8px rgba(255,255,255,0.35))'
+                        : 'none'
                   }}
                 >
                   {item.isCenter ? (
@@ -358,14 +362,18 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                       alt="Kai" 
                       className={`
                         h-7 w-7 object-contain transition-all duration-200
-                        ${active ? 'scale-110' : 'opacity-90'}
+                        ${active ? 'scale-110' : hoveredIndex === index ? 'opacity-100 scale-105' : 'opacity-90'}
                       `}
                     />
                   ) : (
                     <Icon 
                       className="transition-all duration-200 h-[18px] w-[18px]"
                       style={{
-                        color: active ? '#E53935' : 'rgba(255,255,255,0.72)'
+                        color: active 
+                          ? '#E53935' 
+                          : hoveredIndex === index 
+                            ? '#FFFFFF' 
+                            : 'rgba(255,255,255,0.72)'
                       }}
                     />
                   )}
@@ -375,7 +383,11 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                 <span 
                   className="text-[11px] font-medium transition-colors duration-200"
                   style={{
-                    color: active ? '#FFFFFF' : 'rgba(255,255,255,0.72)'
+                    color: active 
+                      ? '#FFFFFF' 
+                      : hoveredIndex === index 
+                        ? '#FFFFFF' 
+                        : 'rgba(255,255,255,0.72)'
                   }}
                 >
                   {item.name}
