@@ -5,7 +5,6 @@ import {
   FileText,
   Clock,
   TrendingUp,
-  Upload,
   Loader2,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
@@ -129,20 +128,15 @@ export default function StudentModal({
   const [isUploading, setIsUploading] = useState(false)
   const [isAnimatingIn, setIsAnimatingIn] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const cardRef = useRef<HTMLDivElement>(null)
   
-  // Swipe/drag state
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStartX, setDragStartX] = useState(0)
-  const [dragCurrentX, setDragCurrentX] = useState(0)
-  
-  // Fetch school logo from database
+  // Fetch school logo from database - this is the GLOBAL shared setting
   const { data: brandData } = trpc.setupWizard.getBrand.useQuery()
   const schoolLogo = brandData?.logoSquare || null
   
-  // Upload logo mutation
+  // Upload logo mutation - updates the GLOBAL schoolLogoUrl
   const uploadLogoMutation = trpc.setupWizard.uploadLogo.useMutation({
     onSuccess: () => {
+      // Invalidate to refresh logo everywhere
       utils.setupWizard.getBrand.invalidate()
       setIsUploading(false)
     },
@@ -167,7 +161,6 @@ export default function StudentModal({
   useEffect(() => {
     if (isOpen) {
       setIsAnimatingIn(true)
-      // Small delay to trigger animation
       const timer = setTimeout(() => {
         setIsAnimatingIn(false)
       }, 50)
@@ -208,82 +201,21 @@ export default function StudentModal({
     }
   }, [isOpen])
   
-  // Handle view switch with flip animation
+  // Handle view switch with flip animation - ONLY triggered by tab clicks
   const handleViewSwitch = useCallback((view: 'profile' | 'details') => {
     if (view === activeView || isFlipping) return
     setIsFlipping(true)
+    // First half of flip - rotate to 90deg
     setTimeout(() => {
       setActiveView(view)
+      // Second half of flip - rotate from -90deg to 0
       setTimeout(() => {
         setIsFlipping(false)
       }, 50)
-    }, 175)
+    }, 200) // 0.4s total animation / 2 = 0.2s for each half
   }, [activeView, isFlipping])
-  
-  // Swipe/drag handlers for desktop
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isFlipping) return
-    setIsDragging(true)
-    setDragStartX(e.clientX)
-    setDragCurrentX(e.clientX)
-  }
-  
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return
-    setDragCurrentX(e.clientX)
-  }, [isDragging])
-  
-  const handleMouseUp = useCallback(() => {
-    if (!isDragging) return
-    
-    const dragDistance = dragCurrentX - dragStartX
-    const threshold = 50 // Minimum swipe distance to trigger flip
-    
-    if (Math.abs(dragDistance) > threshold) {
-      if (dragDistance < 0 && activeView === 'profile') {
-        // Swipe left → go to Details
-        handleViewSwitch('details')
-      } else if (dragDistance > 0 && activeView === 'details') {
-        // Swipe right → go to Profile
-        handleViewSwitch('profile')
-      }
-    }
-    
-    setIsDragging(false)
-    setDragStartX(0)
-    setDragCurrentX(0)
-  }, [isDragging, dragCurrentX, dragStartX, activeView, handleViewSwitch])
-  
-  // Touch handlers for mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (isFlipping) return
-    setIsDragging(true)
-    setDragStartX(e.touches[0].clientX)
-    setDragCurrentX(e.touches[0].clientX)
-  }
-  
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return
-    setDragCurrentX(e.touches[0].clientX)
-  }
-  
-  const handleTouchEnd = () => {
-    handleMouseUp()
-  }
-  
-  // Add global mouse event listeners for drag
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove)
-        window.removeEventListener('mouseup', handleMouseUp)
-      }
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp])
 
-  // Handle logo upload
+  // Handle logo upload - updates GLOBAL setting
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -308,40 +240,33 @@ export default function StudentModal({
 
   return (
     <>
-      {/* Backdrop - click to close */}
+      {/* Backdrop - click to close - z-index: 9990 (lowest) */}
       <div 
         className={`
-          fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]
+          fixed inset-0 bg-black/40 backdrop-blur-sm z-[9990]
           transition-opacity duration-300
           ${isAnimatingIn ? 'opacity-0' : 'opacity-100'}
         `}
         onClick={handleClose}
       />
       
-      {/* Modal Container */}
+      {/* Modal Container - z-index: 9995 (middle) */}
       <div 
-        className="fixed inset-0 flex items-center justify-center z-[9999] p-4"
-        onClick={handleClose}
+        className="fixed inset-0 flex items-center justify-center z-[9995] p-4 pointer-events-none"
       >
         {/* Card with open animation and flip animation */}
         <div 
-          ref={cardRef}
           className={`
-            relative w-full max-w-[420px]
+            relative w-full max-w-[420px] pointer-events-auto
             transition-all duration-[280ms] ease-out
             ${isAnimatingIn ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
             ${isFlipping ? 'scale-95 opacity-90' : ''}
-            ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
           `}
           style={{
             perspective: '1200px',
             transformStyle: 'preserve-3d',
           }}
           onClick={(e) => e.stopPropagation()}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
           <div
             className={`
@@ -354,7 +279,7 @@ export default function StudentModal({
               transformStyle: 'preserve-3d',
             }}
           >
-            {/* Header */}
+            {/* Header with Tabs */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               {/* Logo + School Name */}
               <div className="flex items-center gap-3">
@@ -366,46 +291,38 @@ export default function StudentModal({
                 <span className="font-bold text-lg text-gray-900">ACME</span>
               </div>
               
-              {/* Tabs / Actions */}
+              {/* Tab Buttons + Actions */}
               <div className="flex items-center gap-4">
-                {activeView === 'profile' ? (
-                  <button
-                    onClick={() => handleViewSwitch('details')}
-                    className="relative text-gray-900 font-medium text-base pb-1"
-                  >
-                    Profile
+                {/* Profile Tab */}
+                <button
+                  onClick={() => handleViewSwitch('profile')}
+                  className={`relative text-base font-medium pb-1 transition-colors ${
+                    activeView === 'profile' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Profile
+                  {activeView === 'profile' && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
-                    >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        'Change Logo'
-                      )}
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="hidden"
-                    />
-                  </>
-                )}
+                  )}
+                </button>
+                
+                {/* Details Tab */}
+                <button
+                  onClick={() => handleViewSwitch('details')}
+                  className={`relative text-base font-medium pb-1 transition-colors ${
+                    activeView === 'details' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Details
+                  {activeView === 'details' && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />
+                  )}
+                </button>
                 
                 {/* Close button */}
                 <button
                   onClick={handleClose}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 ml-2"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -413,7 +330,7 @@ export default function StudentModal({
             </div>
 
             {/* Content */}
-            <div className="p-6 select-none">
+            <div className="p-6">
               {activeView === 'profile' ? (
                 /* ========== PROFILE VIEW (FRONT) ========== */
                 <div className="space-y-5">
@@ -522,6 +439,31 @@ export default function StudentModal({
               ) : (
                 /* ========== DETAILS VIEW (BACK) ========== */
                 <div className="space-y-6">
+                  {/* Change Logo Button */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        'Change Logo'
+                      )}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  
                   {/* Centered Name & Program */}
                   <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-900">{fullName}</h2>

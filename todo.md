@@ -1965,3 +1965,36 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 ### Do NOT Change
 - [x] Layout, colors, typography unchanged
 - [x] Map, student table, notes data unchanged
+
+
+## ✅ COMPLETED: Fix Card Flip, Logo Binding, Notes Z-Index
+
+### Remove Gestures
+- [x] Remove all swipe/drag/gesture handlers from student card
+- [x] Keep flip animation intact (400ms)
+- [x] Only removed gesture listeners
+
+### Tab-Based Flip
+- [x] Flip triggers ONLY on tab click (Profile/Details)
+- [x] No gesture involvement
+- [x] Use existing flip animation (400ms, vertical axis)
+- [x] Tab click triggers flip every time (no dead clicks)
+- [x] Both tabs visible in header with red underline on active
+
+### Fix Global Logo Updates
+- [x] Logo bound to single shared global setting via setupWizard.getBrand
+- [x] Change Logo updates global value via setupWizard.uploadLogo
+- [x] All cards/modals re-render with new logo via query invalidation
+- [x] No student-specific logo storage
+
+### Fix Notes Drawer Z-Index
+- [x] Notes drawer appears ABOVE blur layer (z-[10000])
+- [x] Z-index order: Notes (10000) > Card (9995) > Backdrop (9990)
+- [x] Notes drawer: position fixed, right 0, top 0, height 100vh
+- [x] No parent container clipping
+- [x] Drawer fully interactive
+
+### Keep Working
+- [x] Close button behavior unchanged
+- [x] Click blur background closes modal
+- [x] No leftover invisible layers after close
