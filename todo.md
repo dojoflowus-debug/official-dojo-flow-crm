@@ -1443,3 +1443,18 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] New conversation appears at top of Today section with current timestamp
 - [x] Save checkpoint
 
+
+## ✅ COMPLETED: Kai Conversation Persistence
+- [x] Create kai_conversations table in database schema
+- [x] Create kai_messages table in database schema
+- [x] Run database migration (pnpm db:push)
+- [x] Add tRPC procedures: createConversation, getConversations, getMessages, addMessage, updateConversation, deleteConversation
+- [x] Update KaiCommand frontend to load conversations from backend
+- [x] Update handleNewChat to create conversation in database
+- [x] Update handleSendMessage to save messages to database
+- [x] Auto-update conversation title from first user message
+- [x] Update conversation preview with latest message
+- [x] Write vitest tests for database operations
+- [x] Test persistence across page refreshes
+- [x] Save checkpoint
+

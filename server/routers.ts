@@ -8,7 +8,7 @@ import { campaignsRouter } from "./campaignsRouter";
 import { automationRouter } from "./automationRouter";
 import { conversationsRouter } from "./conversationsRouter";
 import { authRouter } from "./authRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
 import { getActiveStaffPins, updateStaffPinLastUsed, createStaffPin, getAllStaffPins, updateStaffPin, toggleStaffPinActive, deleteStaffPin } from "./db";
@@ -694,6 +694,179 @@ export const appRouter = router({
   }),
 
   kai: router({
+    // Get all conversations for the current user
+    getConversations: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        const conversations = await db.select()
+          .from(kaiConversations)
+          .where(eq(kaiConversations.userId, ctx.user.id))
+          .orderBy(desc(kaiConversations.lastMessageAt));
+        
+        return conversations;
+      }),
+
+    // Get messages for a specific conversation
+    getMessages: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id)
+          ))
+          .limit(1);
+        
+        if (!conversation) throw new Error("Conversation not found");
+        
+        const messages = await db.select()
+          .from(kaiMessages)
+          .where(eq(kaiMessages.conversationId, input.conversationId))
+          .orderBy(kaiMessages.createdAt);
+        
+        return messages;
+      }),
+
+    // Create a new conversation
+    createConversation: protectedProcedure
+      .input(z.object({
+        title: z.string().optional(),
+      }).optional())
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        const [result] = await db.insert(kaiConversations).values({
+          userId: ctx.user.id,
+          title: input?.title || "New Conversation",
+        });
+        
+        return { id: result.insertId };
+      }),
+
+    // Add a message to a conversation
+    addMessage: protectedProcedure
+      .input(z.object({
+        conversationId: z.number(),
+        role: z.enum(["user", "assistant", "system"]),
+        content: z.string(),
+        metadata: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id)
+          ))
+          .limit(1);
+        
+        if (!conversation) throw new Error("Conversation not found");
+        
+        // Insert the message
+        const [result] = await db.insert(kaiMessages).values({
+          conversationId: input.conversationId,
+          role: input.role,
+          content: input.content,
+          metadata: input.metadata,
+        });
+        
+        // Update conversation with preview and timestamp
+        const preview = input.content.substring(0, 200);
+        await db.update(kaiConversations)
+          .set({
+            preview,
+            lastMessageAt: new Date(),
+            // Auto-update title from first user message if still "New Conversation"
+            ...(conversation.title === "New Conversation" && input.role === "user" 
+              ? { title: input.content.substring(0, 50) + (input.content.length > 50 ? "..." : "") }
+              : {}),
+          })
+          .where(eq(kaiConversations.id, input.conversationId));
+        
+        return { id: result.insertId };
+      }),
+
+    // Update conversation (title, status, category, priority)
+    updateConversation: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        status: z.enum(["active", "archived"]).optional(),
+        category: z.enum(["kai", "growth", "billing", "operations", "general"]).optional(),
+        priority: z.enum(["neutral", "attention", "urgent"]).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        const { id, ...updates } = input;
+        
+        await db.update(kaiConversations)
+          .set(updates)
+          .where(and(
+            eq(kaiConversations.id, id),
+            eq(kaiConversations.userId, ctx.user.id)
+          ));
+        
+        return { success: true };
+      }),
+
+    // Delete a conversation
+    deleteConversation: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Delete messages first
+        await db.delete(kaiMessages)
+          .where(eq(kaiMessages.conversationId, input.id));
+        
+        // Delete conversation
+        await db.delete(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id)
+          ));
+        
+        return { success: true };
+      }),
+
     chat: publicProcedure
       .input(z.object({
         message: z.string(),

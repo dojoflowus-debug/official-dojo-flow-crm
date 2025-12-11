@@ -69,95 +69,79 @@ export default function KaiCommand() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // tRPC mutation for Kai chat
+  // tRPC queries and mutations for Kai
   const kaiChatMutation = trpc.kai.chat.useMutation();
   const statsQuery = trpc.dashboard.stats.useQuery();
+  const conversationsQuery = trpc.kai.getConversations.useQuery();
+  const messagesQuery = trpc.kai.getMessages.useQuery(
+    { conversationId: selectedConversationId ? parseInt(selectedConversationId) : 0 },
+    { enabled: !!selectedConversationId && !selectedConversationId.startsWith('new-') }
+  );
+  const createConversationMutation = trpc.kai.createConversation.useMutation();
+  const addMessageMutation = trpc.kai.addMessage.useMutation();
+  const utils = trpc.useUtils();
 
   // Handle starting a new chat
-  const handleNewChat = () => {
-    // Generate a unique ID for the new conversation
-    const newId = `new-${Date.now()}`;
-    const now = new Date();
-    const timestamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    
-    // Create a new conversation object
-    const newConversation: Conversation = {
-      id: newId,
-      title: 'New Conversation',
-      preview: '',
-      timestamp,
-      tags: ['kai', 'neutral'],
-      status: 'neutral',
-      category: 'kai',
-      date: 'today'
-    };
-    
-    // Add to conversations list at the beginning
-    setConversations(prev => [newConversation, ...prev]);
-    
-    // Select the new conversation
-    setSelectedConversationId(newId);
-    
-    // Clear messages for fresh start
-    setMessages([]);
-    
-    // Clear any input
-    setMessageInput('');
+  const handleNewChat = async () => {
+    try {
+      const result = await createConversationMutation.mutateAsync({});
+      // Refresh conversations list
+      utils.kai.getConversations.invalidate();
+      // Select the new conversation
+      setSelectedConversationId(result.id.toString());
+      // Clear messages for fresh start
+      setMessages([]);
+      // Clear any input
+      setMessageInput('');
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
+      // Fallback to local-only conversation
+      const newId = `new-${Date.now()}`;
+      setSelectedConversationId(newId);
+      setMessages([]);
+      setMessageInput('');
+    }
   };
 
-  // Sample conversations data matching original
-  const [conversations, setConversations] = useState<Conversation[]>([
-    {
-      id: '0',
-      title: 'New Conversation',
-      preview: '',
-      timestamp: '02:40 AM',
-      tags: ['kai', 'neutral'],
-      status: 'neutral',
-      category: 'kai',
-      date: 'today'
-    },
-    {
-      id: '1',
-      title: 'Help me grow my kids program t...',
-      preview: 'Hello! I\'m Kai, and that is an excellent, ambitious goal. Growing your Kids Program from 20 students to 150 is a significant undertaking...',
-      timestamp: '02:32 AM',
-      tags: ['growth', 'neutral'],
-      status: 'neutral',
-      category: 'growth',
-      date: 'today'
-    },
-    {
-      id: '2',
-      title: 'Hello how are you?...',
-      preview: 'I understand your focus on **Vincent Holmes**. He must be a high-priority student for your dojo...',
-      timestamp: '09:57 PM',
-      tags: ['growth', 'neutral'],
-      status: 'neutral',
-      category: 'growth',
-      date: 'yesterday'
-    },
-    {
-      id: '3',
-      title: 'Who is late on payments and ho...',
-      preview: "That's a great question! As your DojoFlow AI assistant, Kai, I handle the aggregate data...",
-      timestamp: '07:51 PM',
-      tags: ['billing', 'attention'],
-      status: 'attention',
-      category: 'billing',
-      date: 'yesterday'
-    },
-    {
-      id: '4',
-      title: 'How many students do i have...',
-      preview: 'I understand you are looking for information on a specific student, Vincent Holmes...',
-      timestamp: '07:17 PM',
-      tags: ['billing', 'neutral'],
-      status: 'neutral',
-      category: 'billing',
-      date: 'yesterday'
+  // Convert backend conversations to frontend format
+  const backendConversations = conversationsQuery.data || [];
+  const convertedConversations: Conversation[] = backendConversations.map(c => {
+    const date = new Date(c.lastMessageAt);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    let dateCategory: 'today' | 'yesterday' | 'older' = 'older';
+    if (date.toDateString() === today.toDateString()) dateCategory = 'today';
+    else if (date.toDateString() === yesterday.toDateString()) dateCategory = 'yesterday';
+    
+    return {
+      id: c.id.toString(),
+      title: c.title,
+      preview: c.preview || '',
+      timestamp: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      tags: [c.category, c.priority],
+      status: c.priority as 'neutral' | 'attention' | 'urgent',
+      category: c.category as 'kai' | 'growth' | 'billing',
+      date: dateCategory
+    };
+  });
+
+  // Use backend conversations, or show empty state if not logged in
+  const conversations = convertedConversations;
+
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (messagesQuery.data) {
+      const loadedMessages: Message[] = messagesQuery.data.map(m => ({
+        id: m.id.toString(),
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+        timestamp: new Date(m.createdAt)
+      }));
+      setMessages(loadedMessages);
     }
-  ]);
+  }, [messagesQuery.data]);
 
   // Smart collections counts - matching original
   const smartCollections = [
@@ -243,6 +227,23 @@ export default function KaiCommand() {
     setMessageInput('');
     setIsLoading(true);
 
+    // Save user message to database if we have a valid conversation
+    const conversationId = selectedConversationId && !selectedConversationId.startsWith('new-') 
+      ? parseInt(selectedConversationId) 
+      : null;
+    
+    if (conversationId) {
+      try {
+        await addMessageMutation.mutateAsync({
+          conversationId,
+          role: 'user',
+          content: currentInput
+        });
+      } catch (error) {
+        console.error('Failed to save user message:', error);
+      }
+    }
+
     try {
       const stats = statsQuery.data;
       const response = await kaiChatMutation.mutateAsync({
@@ -262,6 +263,21 @@ export default function KaiCommand() {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMessage]);
+
+      // Save AI response to database
+      if (conversationId) {
+        try {
+          await addMessageMutation.mutateAsync({
+            conversationId,
+            role: 'assistant',
+            content: response.response
+          });
+          // Refresh conversations to update preview
+          utils.kai.getConversations.invalidate();
+        } catch (error) {
+          console.error('Failed to save AI message:', error);
+        }
+      }
     } catch (error) {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),

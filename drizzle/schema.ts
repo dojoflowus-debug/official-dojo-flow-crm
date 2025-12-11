@@ -922,3 +922,51 @@ export const automationTemplates = mysqlTable("automation_templates", {
 
 export type AutomationTemplate = typeof automationTemplates.$inferSelect;
 export type InsertAutomationTemplate = typeof automationTemplates.$inferInsert;
+
+
+/**
+ * Kai Conversations table - AI chat conversations with Kai
+ * Stores conversation metadata for the Kai Command interface
+ */
+export const kaiConversations = mysqlTable("kai_conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  /** User who owns this conversation */
+  userId: int("userId").notNull(),
+  /** Conversation title (auto-generated from first message or user-set) */
+  title: varchar("title", { length: 500 }).default("New Conversation").notNull(),
+  /** Preview of last message */
+  preview: text("preview"),
+  /** Conversation status */
+  status: mysqlEnum("status", ["active", "archived"]).default("active").notNull(),
+  /** Category tag for organization */
+  category: mysqlEnum("category", ["kai", "growth", "billing", "operations", "general"]).default("kai").notNull(),
+  /** Priority/attention status */
+  priority: mysqlEnum("priority", ["neutral", "attention", "urgent"]).default("neutral").notNull(),
+  /** Last message timestamp */
+  lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type KaiConversation = typeof kaiConversations.$inferSelect;
+export type InsertKaiConversation = typeof kaiConversations.$inferInsert;
+
+/**
+ * Kai Messages table - Messages within Kai conversations
+ * Stores individual messages between user and Kai AI
+ */
+export const kaiMessages = mysqlTable("kai_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to kai_conversations */
+  conversationId: int("conversationId").notNull(),
+  /** Message role (user or assistant) */
+  role: mysqlEnum("role", ["user", "assistant", "system"]).notNull(),
+  /** Message content */
+  content: text("content").notNull(),
+  /** Metadata (function calls, context, etc.) stored as JSON */
+  metadata: text("metadata"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type KaiMessage = typeof kaiMessages.$inferSelect;
+export type InsertKaiMessage = typeof kaiMessages.$inferInsert;
