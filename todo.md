@@ -1934,3 +1934,34 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Show fallback DojoFlow logo when no custom logo is set
 - [x] Report templates include: Student Roster, Attendance, Revenue, Receipts
 - [x] Email templates include: Welcome, Notification, Reminder, Receipt
+
+
+## ✅ COMPLETED: Enhance Student Pop-Out Card Interaction
+
+### Open Animation
+- [x] Scale from 0.95 to 1.0 on open (280ms ease-out)
+- [x] Opacity from 0 to 1 on open
+- [x] Duration: 280ms with ease-out easing
+
+### Click Background to Close
+- [x] Click blurred backdrop to close modal
+- [x] Remove blur and restore page scroll (body overflow restored)
+- [x] Reset to Profile tab for next open
+- [x] Stop propagation on card clicks (don't close)
+
+### ESC Key to Close
+- [x] Global key handler for Escape key
+- [x] Close student card on ESC
+- [x] Close notes drawer if open (via onCloseNotesDrawer callback)
+- [x] Clear focus from inputs inside modal
+
+### Swipe/Gesture to Flip Card
+- [x] Desktop: left/right drag gesture to flip (50px threshold)
+- [x] Mobile: horizontal swipe gesture (touch events)
+- [x] Swipe left → Details view
+- [x] Swipe right → Profile view
+- [x] Use same flip animation as tabs (400ms)
+
+### Do NOT Change
+- [x] Layout, colors, typography unchanged
+- [x] Map, student table, notes data unchanged

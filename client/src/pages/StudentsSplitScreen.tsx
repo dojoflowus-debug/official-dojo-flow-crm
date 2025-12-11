@@ -699,6 +699,10 @@ export default function StudentsSplitScreen() {
           setNotesStudent(student)
           setIsNotesDrawerOpen(true)
         }}
+        onCloseNotesDrawer={() => {
+          setIsNotesDrawerOpen(false)
+          setNotesStudent(null)
+        }}
       />
 
       {/* Notes Drawer */}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   X,
@@ -42,11 +42,11 @@ interface StudentModalProps {
   onClose: () => void
   onEditProfile?: (student: Student) => void
   onViewNotes?: (student: Student) => void
+  onCloseNotesDrawer?: () => void
 }
 
 // Belt color helper - returns yellow background for belt badge
 function getBeltBadgeStyle(belt: string): string {
-  // All belts use yellow background as shown in mockup
   return 'bg-yellow-200 text-yellow-800 border-0'
 }
 
@@ -122,11 +122,19 @@ export default function StudentModal({
   onClose,
   onEditProfile,
   onViewNotes,
+  onCloseNotesDrawer,
 }: StudentModalProps) {
   const [activeView, setActiveView] = useState<'profile' | 'details'>('profile')
   const [isFlipping, setIsFlipping] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  
+  // Swipe/drag state
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStartX, setDragStartX] = useState(0)
+  const [dragCurrentX, setDragCurrentX] = useState(0)
   
   // Fetch school logo from database
   const { data: brandData } = trpc.setupWizard.getBrand.useQuery()
@@ -135,7 +143,6 @@ export default function StudentModal({
   // Upload logo mutation
   const uploadLogoMutation = trpc.setupWizard.uploadLogo.useMutation({
     onSuccess: () => {
-      // Invalidate the brand query to refetch the new logo
       utils.setupWizard.getBrand.invalidate()
       setIsUploading(false)
     },
@@ -150,22 +157,131 @@ export default function StudentModal({
   // Get attendance category (memoized per student)
   const attendanceInfo = getAttendanceCategory()
   
-  if (!isOpen || !student) return null
-
-  const fullName = `${student.first_name} ${student.last_name}`
-  const beltDisplay = student.belt_rank || 'White Belt'
+  // Handle close with reset
+  const handleClose = useCallback(() => {
+    setActiveView('profile') // Reset to profile tab for next open
+    onClose()
+  }, [onClose])
+  
+  // Open animation effect
+  useEffect(() => {
+    if (isOpen) {
+      setIsAnimatingIn(true)
+      // Small delay to trigger animation
+      const timer = setTimeout(() => {
+        setIsAnimatingIn(false)
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen])
+  
+  // ESC key handler
+  useEffect(() => {
+    if (!isOpen) return
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        // Clear focus from any inputs
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+        // Close notes drawer if callback provided
+        onCloseNotesDrawer?.()
+        // Close modal
+        handleClose()
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, handleClose, onCloseNotesDrawer])
+  
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
   
   // Handle view switch with flip animation
-  const handleViewSwitch = (view: 'profile' | 'details') => {
-    if (view === activeView) return
+  const handleViewSwitch = useCallback((view: 'profile' | 'details') => {
+    if (view === activeView || isFlipping) return
     setIsFlipping(true)
     setTimeout(() => {
       setActiveView(view)
       setTimeout(() => {
         setIsFlipping(false)
       }, 50)
-    }, 175) // Half of the animation duration
+    }, 175)
+  }, [activeView, isFlipping])
+  
+  // Swipe/drag handlers for desktop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isFlipping) return
+    setIsDragging(true)
+    setDragStartX(e.clientX)
+    setDragCurrentX(e.clientX)
   }
+  
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return
+    setDragCurrentX(e.clientX)
+  }, [isDragging])
+  
+  const handleMouseUp = useCallback(() => {
+    if (!isDragging) return
+    
+    const dragDistance = dragCurrentX - dragStartX
+    const threshold = 50 // Minimum swipe distance to trigger flip
+    
+    if (Math.abs(dragDistance) > threshold) {
+      if (dragDistance < 0 && activeView === 'profile') {
+        // Swipe left → go to Details
+        handleViewSwitch('details')
+      } else if (dragDistance > 0 && activeView === 'details') {
+        // Swipe right → go to Profile
+        handleViewSwitch('profile')
+      }
+    }
+    
+    setIsDragging(false)
+    setDragStartX(0)
+    setDragCurrentX(0)
+  }, [isDragging, dragCurrentX, dragStartX, activeView, handleViewSwitch])
+  
+  // Touch handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isFlipping) return
+    setIsDragging(true)
+    setDragStartX(e.touches[0].clientX)
+    setDragCurrentX(e.touches[0].clientX)
+  }
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return
+    setDragCurrentX(e.touches[0].clientX)
+  }
+  
+  const handleTouchEnd = () => {
+    handleMouseUp()
+  }
+  
+  // Add global mouse event listeners for drag
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
   // Handle logo upload
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,7 +291,6 @@ export default function StudentModal({
       const reader = new FileReader()
       reader.onload = (event) => {
         const fileData = event.target?.result as string
-        // Upload to S3 and save to database via tRPC
         uploadLogoMutation.mutate({
           mode: 'light',
           fileData: fileData,
@@ -186,27 +301,47 @@ export default function StudentModal({
     }
   }
 
+  if (!isOpen || !student) return null
+
+  const fullName = `${student.first_name} ${student.last_name}`
+  const beltDisplay = student.belt_rank || 'White Belt'
+
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - click to close */}
       <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998] transition-opacity duration-300"
-        onClick={onClose}
+        className={`
+          fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]
+          transition-opacity duration-300
+          ${isAnimatingIn ? 'opacity-0' : 'opacity-100'}
+        `}
+        onClick={handleClose}
       />
       
       {/* Modal Container */}
-      <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-        {/* Card with flip animation */}
+      <div 
+        className="fixed inset-0 flex items-center justify-center z-[9999] p-4"
+        onClick={handleClose}
+      >
+        {/* Card with open animation and flip animation */}
         <div 
+          ref={cardRef}
           className={`
             relative w-full max-w-[420px]
-            transition-transform duration-[400ms] ease-in-out
-            ${isFlipping ? 'scale-95 opacity-90' : 'scale-100 opacity-100'}
+            transition-all duration-[280ms] ease-out
+            ${isAnimatingIn ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
+            ${isFlipping ? 'scale-95 opacity-90' : ''}
+            ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
           `}
           style={{
             perspective: '1200px',
             transformStyle: 'preserve-3d',
           }}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <div
             className={`
@@ -269,7 +404,7 @@ export default function StudentModal({
                 
                 {/* Close button */}
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                 >
                   <X className="w-5 h-5" />
@@ -278,7 +413,7 @@ export default function StudentModal({
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-6 select-none">
               {activeView === 'profile' ? (
                 /* ========== PROFILE VIEW (FRONT) ========== */
                 <div className="space-y-5">
