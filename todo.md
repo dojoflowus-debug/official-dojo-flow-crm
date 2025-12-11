@@ -2214,3 +2214,13 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Verified uploadLogo mutation uploads to S3 and saves URL to database
 - [x] Change Logo button visible in Details tab of student modal
 - [x] Logo persists across page refreshes via getBrand query
+
+
+## ✅ COMPLETED: Logo Preview Before Upload
+- [x] Add preview state to store selected image data (logoPreview, showLogoPreview)
+- [x] Create preview modal/overlay showing the selected logo (128x128 preview)
+- [x] Add Confirm and Cancel buttons to preview
+- [x] Show "How it will appear" context preview with business name
+- [x] Only upload to S3 after user confirms
+- [x] Clear preview state after upload or cancel
+- [x] Test the complete preview-to-upload flow

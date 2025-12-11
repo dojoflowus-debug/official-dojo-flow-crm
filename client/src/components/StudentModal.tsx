@@ -180,6 +180,8 @@ export default function StudentModal({
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [logoPreview, setLogoPreview] = useState<{ dataUrl: string; fileName: string } | null>(null)
+  const [showLogoPreview, setShowLogoPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Form state for editable fields
@@ -312,22 +314,39 @@ export default function StudentModal({
     }, 200)
   }, [activeView, isFlipping])
 
-  // Handle logo upload
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle logo file selection - show preview first
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setIsUploading(true)
       const reader = new FileReader()
       reader.onload = (event) => {
-        const fileData = event.target?.result as string
-        uploadLogoMutation.mutate({
-          mode: 'light',
-          fileData: fileData,
-          fileName: file.name,
-        })
+        const dataUrl = event.target?.result as string
+        setLogoPreview({ dataUrl, fileName: file.name })
+        setShowLogoPreview(true)
       }
       reader.readAsDataURL(file)
     }
+    // Reset input so same file can be selected again
+    if (e.target) e.target.value = ''
+  }
+  
+  // Confirm logo upload after preview
+  const handleConfirmLogoUpload = () => {
+    if (!logoPreview) return
+    setIsUploading(true)
+    setShowLogoPreview(false)
+    uploadLogoMutation.mutate({
+      mode: 'light',
+      fileData: logoPreview.dataUrl,
+      fileName: logoPreview.fileName,
+    })
+    setLogoPreview(null)
+  }
+  
+  // Cancel logo preview
+  const handleCancelLogoPreview = () => {
+    setShowLogoPreview(false)
+    setLogoPreview(null)
   }
   
   // Handle form field changes
@@ -617,7 +636,7 @@ export default function StudentModal({
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
-                      onChange={handleLogoUpload}
+                      onChange={handleLogoSelect}
                       className="hidden"
                     />
                   </div>
@@ -880,6 +899,78 @@ export default function StudentModal({
           </div>
         </div>
       </div>
+      
+      {/* Logo Preview Modal */}
+      {showLogoPreview && logoPreview && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60"
+            onClick={handleCancelLogoPreview}
+          />
+          
+          {/* Preview Card */}
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Preview Logo</h3>
+            
+            {/* Logo Preview */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <img 
+                  src={logoPreview.dataUrl} 
+                  alt="Logo preview" 
+                  className="w-32 h-32 object-contain rounded-lg border-2 border-gray-200 bg-gray-50"
+                />
+              </div>
+            </div>
+            
+            {/* File name */}
+            <p className="text-sm text-gray-500 text-center mb-6 truncate">
+              {logoPreview.fileName}
+            </p>
+            
+            {/* Preview in context */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <p className="text-xs text-gray-500 mb-2 text-center">How it will appear:</p>
+              <div className="flex items-center gap-2 justify-center">
+                <img 
+                  src={logoPreview.dataUrl} 
+                  alt="Logo preview small" 
+                  className="w-10 h-10 object-contain rounded"
+                />
+                <span className="font-semibold text-gray-900">
+                  {brandData?.businessName || import.meta.env.VITE_APP_TITLE || 'Your Dojo'}
+                </span>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleCancelLogoPreview}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                onClick={handleConfirmLogoUpload}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  'Confirm Upload'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* CSS for flip animation */}
       <style>{`
