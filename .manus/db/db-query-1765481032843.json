@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO dojo_settings (businessName, setupCompleted) \nSELECT 'DojoFlow', 0 \nWHERE NOT EXISTS (SELECT 1 FROM dojo_settings LIMIT 1)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO dojo_settings (businessName, setupCompleted) \nSELECT 'DojoFlow', 0 \nWHERE NOT EXISTS (SELECT 1 FROM dojo_settings LIMIT 1)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 72
+}

@@ -2205,3 +2205,12 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Updated to use VITE_APP_LOGO as fallback when no brand logo is set
 - [x] Updated business name to use brandData.businessName or VITE_APP_TITLE
 - [x] Test logo displays correctly in student card (now shows "DojoFlow")
+
+
+## ✅ COMPLETED: Connect Change Logo Button to Dojo Settings
+- [x] Review existing logo upload mutation in StudentModal
+- [x] Ensure uploadLogo mutation saves to dojo_settings table
+- [x] Created dojo_settings table with logoSquare and logoHorizontal columns
+- [x] Verified uploadLogo mutation uploads to S3 and saves URL to database
+- [x] Change Logo button visible in Details tab of student modal
+- [x] Logo persists across page refreshes via getBrand query
