@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   X,
@@ -6,6 +6,7 @@ import {
   Clock,
   TrendingUp,
   Upload,
+  Loader2,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 
@@ -124,8 +125,27 @@ export default function StudentModal({
 }: StudentModalProps) {
   const [activeView, setActiveView] = useState<'profile' | 'details'>('profile')
   const [isFlipping, setIsFlipping] = useState(false)
-  const [schoolLogo, setSchoolLogo] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Fetch school logo from database
+  const { data: brandData } = trpc.setupWizard.getBrand.useQuery()
+  const schoolLogo = brandData?.logoSquare || null
+  
+  // Upload logo mutation
+  const uploadLogoMutation = trpc.setupWizard.uploadLogo.useMutation({
+    onSuccess: () => {
+      // Invalidate the brand query to refetch the new logo
+      utils.setupWizard.getBrand.invalidate()
+      setIsUploading(false)
+    },
+    onError: (error) => {
+      console.error('Failed to upload logo:', error)
+      setIsUploading(false)
+    },
+  })
+  
+  const utils = trpc.useUtils()
   
   // Get attendance category (memoized per student)
   const attendanceInfo = getAttendanceCategory()
@@ -151,10 +171,16 @@ export default function StudentModal({
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setIsUploading(true)
       const reader = new FileReader()
       reader.onload = (event) => {
-        setSchoolLogo(event.target?.result as string)
-        // TODO: Save to dojoSettings.logoSquare via tRPC
+        const fileData = event.target?.result as string
+        // Upload to S3 and save to database via tRPC
+        uploadLogoMutation.mutate({
+          mode: 'light',
+          fileData: fileData,
+          fileName: file.name,
+        })
       }
       reader.readAsDataURL(file)
     }
@@ -219,9 +245,17 @@ export default function StudentModal({
                   <>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+                      disabled={isUploading}
+                      className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
                     >
-                      Change Logo
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        'Change Logo'
+                      )}
                     </button>
                     <input
                       ref={fileInputRef}

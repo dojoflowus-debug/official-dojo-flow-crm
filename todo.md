@@ -1903,3 +1903,13 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Map layout - NOT modified
 - [x] Notes drawer - NOT modified
 - [x] Navigation elements - NOT modified
+
+
+## ✅ COMPLETED: Connect Change Logo to Database
+
+- [x] Reused existing tRPC procedure `setupWizard.getBrand` to get school logo from dojoSettings.logoSquare
+- [x] Reused existing tRPC procedure `setupWizard.uploadLogo` to upload to S3 and save URL
+- [x] Updated StudentModal to fetch logo from database using useQuery
+- [x] Updated StudentModal to save logo to database on upload using useMutation
+- [x] Logo updates everywhere immediately via query invalidation
+- [x] Added loading state with spinner during upload
