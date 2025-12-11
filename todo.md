@@ -1374,3 +1374,31 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Verify logo displays correctly in Light mode header
 - [x] Save checkpoint
 
+
+
+## ✅ COMPLETED: Dark Bottom Navigation - Always Dark Across All Themes
+
+### Nav Position
+- [x] Ensure nav is only rendered at bottom (fixed position)
+- [x] Add proper bottom padding to main content (80px)
+
+### Dark Nav Style Per Theme
+- [x] Light Mode: solid near-black (#050608), shadow 0 -2px 8px rgba(0,0,0,0.35)
+- [x] Dark Mode: deep charcoal (#111217), shadow 0 -2px 10px rgba(0,0,0,0.6)
+- [x] Cinematic Mode: rgba(5,5,8,0.75) with blur(20px), border-top, dual shadow
+
+### Nav Items Styling
+- [x] Each item: flex column, centered, 11px font, rgba(255,255,255,0.72) color
+- [x] Active state: white text, #E53935 red icon
+- [x] Hover: translateY(-2px) scale(1.06), white text
+
+### Kai Tab Special
+- [x] Centered in nav bar
+- [x] Glow effect: drop-shadow(0 0 10px rgba(229,57,53,0.6))
+
+### Preserve Existing
+- [x] Keep all route paths unchanged
+- [x] Keep theme toggle and Light as default
+- [x] Header keeps full DojoFlow logo (theme-aware)
+- [x] Nav uses only icons + short labels (no wordmark)
+

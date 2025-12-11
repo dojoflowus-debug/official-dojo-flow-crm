@@ -276,27 +276,30 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
         {children}
       </main>
 
-      {/* Bottom Navigation Bar - Apple-style dock */}
+      {/* Bottom Navigation Bar - Always Dark Dock */}
       <nav 
         className={`
-          fixed left-0 right-0 z-50 h-[68px]
+          fixed left-0 right-0 z-[1500] h-16
           transition-transform duration-300 ease-in-out
           ${isNavVisible ? 'translate-y-0 bottom-0' : 'translate-y-full bottom-0'}
+          flex items-center justify-around
           ${isCinematic 
-            ? 'bg-[rgba(20,20,22,0.45)] border-t border-white/10' 
-            : isDark 
-              ? 'bg-[#1A1B1F]/95 border-t border-[#2A2B2F]' 
-              : 'bg-white/98 border-t border-slate-100'
+            ? 'border-t border-white/[0.06]' 
+            : ''
           }
-          backdrop-blur-xl
-          ${isCinematic ? 'rounded-t-2xl mx-4 mb-0' : ''}
+          ${isCinematic ? 'backdrop-blur-[20px]' : ''}
         `}
         style={{
-          boxShadow: isCinematic 
-            ? '0px -4px 18px rgba(0,0,0,0.75)' 
+          background: isCinematic 
+            ? 'rgba(5,5,8,0.75)' 
             : isDark 
-              ? '0px -2px 12px rgba(0,0,0,0.4)' 
-              : '0px -1px 12px rgba(0,0,0,0.03), 0px -4px 24px rgba(0,0,0,0.02)'
+              ? '#111217' 
+              : '#050608',
+          boxShadow: isCinematic 
+            ? '0 -6px 22px rgba(0,0,0,0.85), 0 0 14px rgba(255,90,60,0.18)' 
+            : isDark 
+              ? '0 -2px 10px rgba(0,0,0,0.6)' 
+              : '0 -2px 8px rgba(0,0,0,0.35)'
         }}
       >
         <div className="h-full max-w-screen-xl mx-auto px-2 flex items-center justify-around">
@@ -314,6 +317,12 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
               return 1
             }
             
+            // Hover transform for nav items
+            const getHoverTransform = () => {
+              if (hoveredIndex === index) return 'translateY(-2px) scale(1.06)'
+              return 'translateY(0) scale(1)'
+            }
+            
             return (
               <Link
                 key={item.id}
@@ -321,92 +330,56 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`
-                  relative flex flex-col items-center justify-center gap-0.5 px-2 py-1
+                  flex-1 flex flex-col items-center justify-center gap-1
+                  pt-1.5 pb-1
                   transition-all duration-[180ms] ease-out
-                  ${active ? 'transform' : ''}
                 `}
-                style={{ transform: `scale(${getScale()})` }}
+                style={{ 
+                  transform: getHoverTransform(),
+                  color: active ? '#FFFFFF' : 'rgba(255,255,255,0.72)'
+                }}
               >
                 {/* Icon Container */}
                 <div 
                   className={`
                     relative flex items-center justify-center
-                    ${item.isCenter ? 'h-12 w-12' : 'h-8 w-8'}
-                    rounded-full transition-all duration-200
-                    ${active && item.isCenter 
-                      ? isCinematic 
-                        ? 'bg-[#FF5A3D]/20 shadow-[0_0_20px_rgba(255,90,61,0.4)]' 
-                        : isDark 
-                          ? 'bg-[#FF4F4F]/20 shadow-[0_0_20px_rgba(255,79,79,0.4)]' 
-                          : 'bg-[#E53935]/10 shadow-[0_0_20px_rgba(229,57,53,0.3)]'
-                      : ''
-                    }
+                    ${item.isCenter ? 'h-10 w-10' : 'h-6 w-6'}
+                    transition-all duration-200
                   `}
+                  style={{
+                    filter: active && item.isCenter 
+                      ? 'drop-shadow(0 0 10px rgba(229,57,53,0.6))' 
+                      : 'none'
+                  }}
                 >
                   {item.isCenter ? (
                     <img 
                       src="/logo-icon.png" 
                       alt="Kai" 
                       className={`
-                        h-8 w-8 object-contain transition-all duration-200
-                        ${active ? 'scale-110' : 'opacity-80'}
+                        h-7 w-7 object-contain transition-all duration-200
+                        ${active ? 'scale-110' : 'opacity-90'}
                       `}
                     />
                   ) : (
                     <Icon 
-                      className={`
-                        transition-all duration-200
-                        h-5 w-5
-                        ${active 
-                          ? isCinematic ? 'text-[#FF5A3D]' : isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
-                          : isCinematic ? 'text-[#C1C1C3]' : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
-                        }
-                      `}
-                    />
-                  )}
-                  
-                  {/* Glow effect for center item when active */}
-                  {active && item.isCenter && (
-                    <div 
-                      className={`
-                        absolute inset-0 rounded-full blur-md opacity-50
-                        ${isCinematic ? 'bg-[#FF5A3D]' : isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}
-                      `}
-                      style={{ zIndex: -1 }}
+                      className="transition-all duration-200 h-[18px] w-[18px]"
+                      style={{
+                        color: active ? '#E53935' : 'rgba(255,255,255,0.72)'
+                      }}
                     />
                   )}
                 </div>
 
                 {/* Label */}
                 <span 
-                  className={`
-                    text-[10px] font-medium transition-colors duration-200
-                    ${active 
-                      ? isCinematic ? 'text-[#FF5A3D]' : isDark ? 'text-[#FF4F4F]' : 'text-[#E53935]'
-                      : isCinematic ? 'text-[#C1C1C3]' : isDark ? 'text-[#9CA0AE]' : 'text-[#6F6F73]'
-                    }
-                  `}
+                  className="text-[11px] font-medium transition-colors duration-200"
+                  style={{
+                    color: active ? '#FFFFFF' : 'rgba(255,255,255,0.72)'
+                  }}
                 >
                   {item.name}
                 </span>
-
-                {/* Active indicator pill */}
-                {active && (
-                  <div 
-                    className={`
-                      absolute -bottom-1 h-1 rounded-full
-                      ${item.isCenter ? 'w-8' : 'w-6'}
-                      ${isCinematic ? 'bg-[#FF5A3D]' : isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}
-                    `}
-                    style={{
-                      boxShadow: isCinematic 
-                        ? '0 0 12px rgba(255, 90, 61, 0.7)' 
-                        : isDark 
-                          ? '0 0 8px rgba(255, 79, 79, 0.6)' 
-                          : '0 0 8px rgba(229, 57, 53, 0.4)'
-                    }}
-                  />
-                )}
               </Link>
             )
           })}
