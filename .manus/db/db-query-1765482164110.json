@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS monthlyRent INT,\nADD COLUMN IF NOT EXISTS monthlyUtilities INT,\nADD COLUMN IF NOT EXISTS monthlyPayroll INT,\nADD COLUMN IF NOT EXISTS monthlyMarketing INT,\nADD COLUMN IF NOT EXISTS currentMembers INT,\nADD COLUMN IF NOT EXISTS revenueGoal INT,\nADD COLUMN IF NOT EXISTS maxClassSize INT DEFAULT 20,\nADD COLUMN IF NOT EXISTS nonNegotiables TEXT,\nADD COLUMN IF NOT EXISTS focusSlider INT DEFAULT 50,\nADD COLUMN IF NOT EXISTS riskComfort INT DEFAULT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS monthlyRent INT,\nADD COLUMN IF NOT EXISTS monthlyUtilities INT,\nADD COLUMN IF NOT EXISTS monthlyPayroll INT,\nADD COLUMN IF NOT EXISTS monthlyMarketing INT,\nADD COLUMN IF NOT EXISTS currentMembers INT,\nADD COLUMN IF NOT EXISTS revenueGoal INT,\nADD COLUMN IF NOT EXISTS maxClassSize INT DEFAULT 20,\nADD COLUMN IF NOT EXISTS nonNegotiables TEXT,\nADD COLUMN IF NOT EXISTS focusSlider INT DEFAULT 50,\nADD COLUMN IF NOT EXISTS riskComfort INT DEFAULT 50;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3313
+}

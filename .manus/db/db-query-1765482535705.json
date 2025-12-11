@@ -1,0 +1,618 @@
+{
+  "query": "DESCRIBE dojo_settings",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute DESCRIBE dojo_settings",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "businessName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dbaName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "operatorName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "preferredName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pronounsTone",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "timezone",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "America/New_York",
+      "Extra": ""
+    },
+    {
+      "Field": "primaryColor",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "#3b82f6",
+      "Extra": ""
+    },
+    {
+      "Field": "secondaryColor",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "#8b5cf6",
+      "Extra": ""
+    },
+    {
+      "Field": "logoSquare",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "logoHorizontal",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "setupCompleted",
+      "Type": "tinyint(4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "datetime",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "datetime",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "industry",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "businessModel",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "usePreset",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "monthlyRent",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "monthlyUtilities",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "monthlyPayroll",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "monthlyMarketing",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "currentMembers",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "revenueGoal",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "maxClassSize",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "nonNegotiables",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "focusSlider",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "riskComfort",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "schoolName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contactEmail",
+      "Type": "varchar(320)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contactPhone",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "website",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "instructorTitle",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "instructorFirstName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "instructorLastName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "martialArtsStyle",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "addressLine1",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "addressLine2",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "city",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "state",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "zipCode",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "country",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "United States",
+      "Extra": ""
+    },
+    {
+      "Field": "weatherApiKey",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "enableWeatherAlerts",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "hasOutdoorClasses",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "heatIndexThreshold",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "95",
+      "Extra": ""
+    },
+    {
+      "Field": "airQualityThreshold",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "150",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentProvider",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripeApiKey",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripePublishableKey",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripeWebhookSecret",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "squareAccessToken",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "squareLocationId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentProcessor",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "stripe",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentApiKey",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentMerchantId",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentSetupLater",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "twilioAccountSid",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "twilioAuthToken",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "twilioPhoneNumber",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "enableSmsForLeads",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "emailProvider",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "sendgrid",
+      "Extra": ""
+    },
+    {
+      "Field": "senderEmail",
+      "Type": "varchar(320)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "sendgridApiKey",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "smtpHost",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "smtpPort",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "smtpUser",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "smtpPassword",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "enableEmailForLeads",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "notifyStaffOnNewLead",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "staffNotificationMethod",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "email",
+      "Extra": ""
+    },
+    {
+      "Field": "staffNotificationPhone",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "staffNotificationEmail",
+      "Type": "varchar(320)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "autoSendSmsToLead",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "autoSendEmailToLead",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "autoUpdatePipelineStage",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "bookingLink",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nbusinessName\tvarchar(255)\tYES\t\tNULL\t\ndbaName\tvarchar(255)\tYES\t\tNULL\t\noperatorName\tvarchar(255)\tYES\t\tNULL\t\npreferredName\tvarchar(255)\tYES\t\tNULL\t\npronounsTone\tvarchar(50)\tYES\t\tNULL\t\ntimezone\tvarchar(100)\tYES\t\tAmerica/New_York\t\nprimaryColor\tvarchar(20)\tYES\t\t#3b82f6\t\nsecondaryColor\tvarchar(20)\tYES\t\t#8b5cf6\t\nlogoSquare\ttext\tYES\t\tNULL\t\nlogoHorizontal\ttext\tYES\t\tNULL\t\nsetupCompleted\ttinyint(4)\tYES\t\t0\t\ncreatedAt\tdatetime\tYES\t\tCURRENT_TIMESTAMP\t\nupdatedAt\tdatetime\tYES\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nindustry\tvarchar(50)\tYES\t\tNULL\t\nbusinessModel\tvarchar(50)\tYES\t\tNULL\t\nusePreset\tint(11)\tYES\t\t1\t\nmonthlyRent\tint(11)\tYES\t\tNULL\t\nmonthlyUtilities\tint(11)\tYES\t\tNULL\t\nmonthlyPayroll\tint(11)\tYES\t\tNULL\t\nmonthlyMarketing\tint(11)\tYES\t\tNULL\t\ncurrentMembers\tint(11)\tYES\t\tNULL\t\nrevenueGoal\tint(11)\tYES\t\tNULL\t\nmaxClassSize\tint(11)\tYES\t\t20\t\nnonNegotiables\ttext\tYES\t\tNULL\t\nfocusSlider\tint(11)\tYES\t\t50\t\nriskComfort\tint(11)\tYES\t\t50\t\nschoolName\tvarchar(255)\tYES\t\tNULL\t\ncontactEmail\tvarchar(320)\tYES\t\tNULL\t\ncontactPhone\tvarchar(20)\tYES\t\tNULL\t\nwebsite\tvarchar(500)\tYES\t\tNULL\t\ninstructorTitle\tvarchar(50)\tYES\t\tNULL\t\ninstructorFirstName\tvarchar(255)\tYES\t\tNULL\t\ninstructorLastName\tvarchar(255)\tYES\t\tNULL\t\nmartialArtsStyle\tvarchar(100)\tYES\t\tNULL\t\naddressLine1\tvarchar(255)\tYES\t\tNULL\t\naddressLine2\tvarchar(255)\tYES\t\tNULL\t\ncity\tvarchar(100)\tYES\t\tNULL\t\nstate\tvarchar(100)\tYES\t\tNULL\t\nzipCode\tvarchar(20)\tYES\t\tNULL\t\ncountry\tvarchar(100)\tYES\t\tUnited States\t\nweatherApiKey\tvarchar(255)\tYES\t\tNULL\t\nenableWeatherAlerts\tint(11)\tYES\t\t1\t\nhasOutdoorClasses\tint(11)\tYES\t\t0\t\nheatIndexThreshold\tint(11)\tYES\t\t95\t\nairQualityThreshold\tint(11)\tYES\t\t150\t\npaymentProvider\tvarchar(50)\tYES\t\tNULL\t\nstripeApiKey\tvarchar(255)\tYES\t\tNULL\t\nstripePublishableKey\tvarchar(255)\tYES\t\tNULL\t\nstripeWebhookSecret\tvarchar(255)\tYES\t\tNULL\t\nsquareAccessToken\tvarchar(255)\tYES\t\tNULL\t\nsquareLocationId\tvarchar(255)\tYES\t\tNULL\t\npaymentProcessor\tvarchar(50)\tYES\t\tstripe\t\npaymentApiKey\tvarchar(500)\tYES\t\tNULL\t\npaymentMerchantId\tvarchar(500)\tYES\t\tNULL\t\npaymentSetupLater\tint(11)\tYES\t\t0\t\ntwilioAccountSid\tvarchar(255)\tYES\t\tNULL\t\ntwilioAuthToken\tvarchar(255)\tYES\t\tNULL\t\ntwilioPhoneNumber\tvarchar(20)\tYES\t\tNULL\t\nenableSmsForLeads\tint(11)\tYES\t\t0\t\nemailProvider\tvarchar(50)\tYES\t\tsendgrid\t\nsenderEmail\tvarchar(320)\tYES\t\tNULL\t\nsendgridApiKey\tvarchar(500)\tYES\t\tNULL\t\nsmtpHost\tvarchar(255)\tYES\t\tNULL\t\nsmtpPort\tint(11)\tYES\t\tNULL\t\nsmtpUser\tvarchar(255)\tYES\t\tNULL\t\nsmtpPassword\tvarchar(500)\tYES\t\tNULL\t\nenableEmailForLeads\tint(11)\tYES\t\t0\t\nnotifyStaffOnNewLead\tint(11)\tYES\t\t1\t\nstaffNotificationMethod\tvarchar(50)\tYES\t\temail\t\nstaffNotificationPhone\tvarchar(20)\tYES\t\tNULL\t\nstaffNotificationEmail\tvarchar(320)\tYES\t\tNULL\t\nautoSendSmsToLead\tint(11)\tYES\t\t0\t\nautoSendEmailToLead\tint(11)\tYES\t\t1\t\nautoUpdatePipelineStage\tint(11)\tYES\t\t1\t\nbookingLink\tvarchar(500)\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

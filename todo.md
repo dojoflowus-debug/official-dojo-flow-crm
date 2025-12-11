@@ -2233,3 +2233,23 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Disable Confirm Upload button when file is too large (grayed out)
 - [x] Show file size in preview modal (formatted as KB/MB)
 - [x] Test with files over and under 2MB
+
+
+## 🐛 BUG FIX: Logo Upload Not Working
+- [ ] Investigate why logo upload doesn't change the displayed logo
+- [ ] Check if uploadLogo mutation is being called
+- [ ] Check if dojo_settings table is being updated
+- [ ] Check if getBrand query is returning the new logo
+- [ ] Fix the issue and verify logo updates correctly
+
+
+## 🐛 BUG FIX: Logo Upload Not Working (Investigation Complete)
+- [x] Investigate why logo upload doesn't work
+- [x] Check if file input is properly connected (fileInputRef exists)
+- [x] Verify uploadLogo mutation is being called (mutation defined correctly)
+- [x] Check if S3 upload is successful (vitest tests pass - 3/3)
+- [x] Verify dojo_settings is being updated (schema has logoSquare/logoHorizontal)
+- [x] Fixed duplicate React import causing build error
+- [x] Backend mutation works correctly (tested via vitest)
+- [x] schoolLogo variable correctly reads from brandData.logoSquare
+- [ ] Test logo displays after upload in browser (requires manual file selection)

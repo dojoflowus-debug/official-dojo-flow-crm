@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS schoolName VARCHAR(255),\nADD COLUMN IF NOT EXISTS contactEmail VARCHAR(320),\nADD COLUMN IF NOT EXISTS contactPhone VARCHAR(20),\nADD COLUMN IF NOT EXISTS website VARCHAR(500),\nADD COLUMN IF NOT EXISTS instructorTitle VARCHAR(50),\nADD COLUMN IF NOT EXISTS instructorFirstName VARCHAR(255),\nADD COLUMN IF NOT EXISTS instructorLastName VARCHAR(255),\nADD COLUMN IF NOT EXISTS martialArtsStyle VARCHAR(100),\nADD COLUMN IF NOT EXISTS addressLine1 VARCHAR(255),\nADD COLUMN IF NOT EXISTS addressLine2 VARCHAR(255);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS schoolName VARCHAR(255),\nADD COLUMN IF NOT EXISTS contactEmail VARCHAR(320),\nADD COLUMN IF NOT EXISTS contactPhone VARCHAR(20),\nADD COLUMN IF NOT EXISTS website VARCHAR(500),\nADD COLUMN IF NOT EXISTS instructorTitle VARCHAR(50),\nADD COLUMN IF NOT EXISTS instructorFirstName VARCHAR(255),\nADD COLUMN IF NOT EXISTS instructorLastName VARCHAR(255),\nADD COLUMN IF NOT EXISTS martialArtsStyle VARCHAR(100),\nADD COLUMN IF NOT EXISTS addressLine1 VARCHAR(255),\nADD COLUMN IF NOT EXISTS addressLine2 VARCHAR(255);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3088
+}

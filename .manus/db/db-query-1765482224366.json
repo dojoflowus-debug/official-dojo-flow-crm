@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS twilioAccountSid VARCHAR(255),\nADD COLUMN IF NOT EXISTS twilioAuthToken VARCHAR(255),\nADD COLUMN IF NOT EXISTS twilioPhoneNumber VARCHAR(20),\nADD COLUMN IF NOT EXISTS enableSmsForLeads INT DEFAULT 0,\nADD COLUMN IF NOT EXISTS emailProvider VARCHAR(50) DEFAULT 'sendgrid',\nADD COLUMN IF NOT EXISTS senderEmail VARCHAR(320),\nADD COLUMN IF NOT EXISTS sendgridApiKey VARCHAR(500),\nADD COLUMN IF NOT EXISTS smtpHost VARCHAR(255),\nADD COLUMN IF NOT EXISTS smtpPort INT,\nADD COLUMN IF NOT EXISTS smtpUser VARCHAR(255),\nADD COLUMN IF NOT EXISTS smtpPassword VARCHAR(500),\nADD COLUMN IF NOT EXISTS enableEmailForLeads INT DEFAULT 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS twilioAccountSid VARCHAR(255),\nADD COLUMN IF NOT EXISTS twilioAuthToken VARCHAR(255),\nADD COLUMN IF NOT EXISTS twilioPhoneNumber VARCHAR(20),\nADD COLUMN IF NOT EXISTS enableSmsForLeads INT DEFAULT 0,\nADD COLUMN IF NOT EXISTS emailProvider VARCHAR(50) DEFAULT 'sendgrid',\nADD COLUMN IF NOT EXISTS senderEmail VARCHAR(320),\nADD COLUMN IF NOT EXISTS sendgridApiKey VARCHAR(500),\nADD COLUMN IF NOT EXISTS smtpHost VARCHAR(255),\nADD COLUMN IF NOT EXISTS smtpPort INT,\nADD COLUMN IF NOT EXISTS smtpUser VARCHAR(255),\nADD COLUMN IF NOT EXISTS smtpPassword VARCHAR(500),\nADD COLUMN IF NOT EXISTS enableEmailForLeads INT DEFAULT 0;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3497
+}
