@@ -532,32 +532,49 @@ export default function StudentsSplitScreen() {
     }
   }, [isDragging, handleMouseMove, handleMouseUp])
 
-  // Sample student locations (in production, these would come from student.lat/lng)
+  // Student locations from database or fallback to sample locations
   const studentLocationsRef = useRef<Map<number, { lat: number; lng: number }>>(new Map())
   
-  // Generate sample locations for students (spread around San Francisco)
+  // Update locations when students change - use actual lat/lng from database if available
   useEffect(() => {
-    if (students.length > 0 && studentLocationsRef.current.size === 0) {
-      const baseLocations = [
-        { lat: 37.7749, lng: -122.4194 },
-        { lat: 37.7849, lng: -122.4094 },
-        { lat: 37.7649, lng: -122.4294 },
-        { lat: 37.7799, lng: -122.4144 },
-        { lat: 37.7699, lng: -122.4244 },
-        { lat: 37.7899, lng: -122.3994 },
-        { lat: 37.7549, lng: -122.4394 },
-        { lat: 37.7949, lng: -122.4044 },
-        { lat: 37.7599, lng: -122.4344 },
-        { lat: 37.7849, lng: -122.4244 },
-      ]
-      students.forEach((student, index) => {
+    // Base locations for students without geocoded addresses (spread around San Francisco)
+    const baseLocations = [
+      { lat: 37.7749, lng: -122.4194 },
+      { lat: 37.7849, lng: -122.4094 },
+      { lat: 37.7649, lng: -122.4294 },
+      { lat: 37.7799, lng: -122.4144 },
+      { lat: 37.7699, lng: -122.4244 },
+      { lat: 37.7899, lng: -122.3994 },
+      { lat: 37.7549, lng: -122.4394 },
+      { lat: 37.7949, lng: -122.4044 },
+      { lat: 37.7599, lng: -122.4344 },
+      { lat: 37.7849, lng: -122.4244 },
+    ]
+    
+    // Clear and rebuild locations map
+    studentLocationsRef.current.clear()
+    
+    students.forEach((student, index) => {
+      // Use actual lat/lng from database if available
+      if (student.lat && student.lng && !isNaN(student.lat) && !isNaN(student.lng)) {
+        studentLocationsRef.current.set(student.id, {
+          lat: student.lat,
+          lng: student.lng,
+        })
+      } else {
+        // Fallback to sample location
         const baseIdx = index % baseLocations.length
         const offset = Math.floor(index / baseLocations.length) * 0.005
         studentLocationsRef.current.set(student.id, {
           lat: baseLocations[baseIdx].lat + offset + (Math.random() - 0.5) * 0.01,
           lng: baseLocations[baseIdx].lng + offset + (Math.random() - 0.5) * 0.01,
         })
-      })
+      }
+    })
+    
+    // If map is ready, refresh markers
+    if (mapRef.current && students.length > 0) {
+      handleMapReady(mapRef.current)
     }
   }, [students])
 

@@ -1,0 +1,21 @@
+{
+  "query": "SELECT id, firstName, lastName, streetAddress, city, state, zipCode, latitude, longitude FROM students WHERE firstName = 'John' AND lastName = 'Smith' LIMIT 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, streetAddress, city, state, zipCode, latitude, longitude FROM students WHERE firstName = 'John' AND lastName = 'Smith' LIMIT 1",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "streetAddress": "1600 Pennsylvania Avenue NW",
+      "city": "Washington",
+      "state": "DC",
+      "zipCode": "20500",
+      "latitude": "38.8975862",
+      "longitude": "-77.0366871"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tstreetAddress\tcity\tstate\tzipCode\tlatitude\tlongitude\n1\tJohn\tSmith\t1600 Pennsylvania Avenue NW\tWashington\tDC\t20500\t38.8975862\t-77.0366871\n",
+  "stderr": "",
+  "execution_time_ms": 200
+}

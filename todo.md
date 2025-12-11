@@ -2138,3 +2138,14 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Updated Student type interface with guardian fields
 - [x] Updated data transformation to include guardian and geocoding fields
 - [x] Added vitest tests for student update operations (5 tests passing)
+
+
+## ✅ COMPLETED: Address Geocoding for Student Map Markers
+- [x] Create geocoding service using Google Maps Geocoding API
+- [x] Integrate geocoding into student update mutation
+- [x] Trigger geocoding when address fields change
+- [x] Save lat/lng coordinates to database
+- [x] Update map markers to reflect new coordinates
+- [x] Test geocoding with real addresses (White House: 38.8975862, -77.0366871)
+- [x] Handle geocoding errors gracefully
+- [x] 10 vitest tests passing

@@ -679,6 +679,7 @@ export const appRouter = router({
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
+        const { geocodeAddress } = await import("./geocoding");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
@@ -693,9 +694,42 @@ export const appRouter = router({
           }
         }
         
+        // Check if address fields are being updated and geocode if needed
+        const hasAddressUpdate = 
+          updateData.streetAddress !== undefined ||
+          updateData.city !== undefined ||
+          updateData.state !== undefined ||
+          updateData.zipCode !== undefined;
+        
+        if (hasAddressUpdate) {
+          // Get current student data to merge with new address
+          const [currentStudent] = await db.select().from(students).where(eq(students.id, id));
+          
+          if (currentStudent) {
+            const addressToGeocode = {
+              streetAddress: updateData.streetAddress ?? currentStudent.streetAddress ?? undefined,
+              city: updateData.city ?? currentStudent.city ?? undefined,
+              state: updateData.state ?? currentStudent.state ?? undefined,
+              zipCode: updateData.zipCode ?? currentStudent.zipCode ?? undefined,
+            };
+            
+            // Only geocode if we have enough address info
+            if (addressToGeocode.city || addressToGeocode.zipCode) {
+              console.log('[Student Update] Geocoding address:', addressToGeocode);
+              const geocodeResult = await geocodeAddress(addressToGeocode);
+              
+              if (geocodeResult) {
+                cleanedData.latitude = geocodeResult.latitude;
+                cleanedData.longitude = geocodeResult.longitude;
+                console.log('[Student Update] Geocoded to:', geocodeResult.latitude, geocodeResult.longitude);
+              }
+            }
+          }
+        }
+        
         await db.update(students).set(cleanedData).where(eq(students.id, id));
         
-        return { success: true };
+        return { success: true, geocoded: hasAddressUpdate };
       }),
     
     delete: publicProcedure
