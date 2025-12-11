@@ -2050,3 +2050,13 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 
 ### Do NOT Change
 - [x] Stat content, numbers, or labels - NOT modified
+
+
+## ✅ COMPLETED: Fix School Logo on Student Cards
+
+- [x] Fixed utils declaration order (moved before mutation that uses it)
+- [x] Logo now updates immediately when changed via "Change Logo" button
+- [x] Added staleTime: 0 to always fetch fresh logo data
+- [x] Added refetchOnMount: true to ensure fresh data when modal opens
+- [x] Added explicit refetchBrand() call after successful upload
+- [x] Logo is fetched from dojoSettings.logoSquare via tRPC setupWizard.getBrand

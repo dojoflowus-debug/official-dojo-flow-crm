@@ -129,15 +129,23 @@ export default function StudentModal({
   const [isAnimatingIn, setIsAnimatingIn] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
+  // tRPC utils for cache invalidation
+  const utils = trpc.useUtils()
+  
   // Fetch school logo from database - this is the GLOBAL shared setting
-  const { data: brandData } = trpc.setupWizard.getBrand.useQuery()
+  // Using refetchOnMount to ensure fresh data when modal opens
+  const { data: brandData, refetch: refetchBrand } = trpc.setupWizard.getBrand.useQuery(undefined, {
+    refetchOnMount: true,
+    staleTime: 0, // Always consider data stale to ensure fresh logo
+  })
   const schoolLogo = brandData?.logoSquare || null
   
   // Upload logo mutation - updates the GLOBAL schoolLogoUrl
   const uploadLogoMutation = trpc.setupWizard.uploadLogo.useMutation({
     onSuccess: () => {
-      // Invalidate to refresh logo everywhere
+      // Invalidate and refetch to refresh logo everywhere
       utils.setupWizard.getBrand.invalidate()
+      refetchBrand()
       setIsUploading(false)
     },
     onError: (error) => {
@@ -145,8 +153,6 @@ export default function StudentModal({
       setIsUploading(false)
     },
   })
-  
-  const utils = trpc.useUtils()
   
   // Get attendance category (memoized per student)
   const attendanceInfo = getAttendanceCategory()
