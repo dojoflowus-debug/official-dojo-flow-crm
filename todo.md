@@ -2173,3 +2173,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Clicking any marker highlights that student and updates docked card
 - [x] Map stays interactive (zoom, drag, filters)
 - [x] Proper z-index layering: map → mini labels → docked card
+
+
+## ✅ COMPLETED: Fix Full Map Mode Fog Issue
+- [x] Remove any fog/blur effect from full map mode
+- [x] Ensure map is fully visible and interactive with card open
+- [x] Keep map open when student card is closed
+- [x] Allow selecting other students on map while in full map mode
+- [x] Match reference image layout (clear map, floating card on right)

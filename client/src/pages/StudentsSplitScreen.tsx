@@ -1158,31 +1158,29 @@ export default function StudentsSplitScreen() {
           
           {/* Docked Student Card on Right Side - Clean shadow, no blur */}
           {isModalOpen && selectedStudent && (
-            <div className="absolute right-4 top-4 bottom-4 w-[380px] z-10">
-              <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] h-full overflow-hidden">
-                <StudentModal
-                  student={selectedStudent}
-                  isOpen={true}
-                  onClose={() => {
-                    // Close card but stay in full map mode
-                    setIsModalOpen(false)
-                    // Keep highlighted student so mini label shows
-                  }}
-                  onEditProfile={(student) => {
-                    console.log('Edit profile:', student.id)
-                  }}
-                  onViewNotes={(student) => {
-                    setNotesStudent(student)
-                    setIsNotesDrawerOpen(true)
-                  }}
-                  onCloseNotesDrawer={() => {
-                    setIsNotesDrawerOpen(false)
-                    setNotesStudent(null)
-                  }}
-                  onStudentUpdated={handleStudentUpdated}
-                  isFullMapMode={true}
-                />
-              </div>
+            <div className="absolute right-4 top-4 bottom-4 w-[400px] z-10 pointer-events-auto">
+              <StudentModal
+                student={selectedStudent}
+                isOpen={true}
+                onClose={() => {
+                  // Close card but stay in full map mode
+                  setIsModalOpen(false)
+                  // Keep highlighted student so mini label shows
+                }}
+                onEditProfile={(student) => {
+                  console.log('Edit profile:', student.id)
+                }}
+                onViewNotes={(student) => {
+                  setNotesStudent(student)
+                  setIsNotesDrawerOpen(true)
+                }}
+                onCloseNotesDrawer={() => {
+                  setIsNotesDrawerOpen(false)
+                  setNotesStudent(null)
+                }}
+                onStudentUpdated={handleStudentUpdated}
+                isFullMapMode={true}
+              />
             </div>
           )}
         </div>

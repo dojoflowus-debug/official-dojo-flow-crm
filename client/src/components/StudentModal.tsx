@@ -393,23 +393,33 @@ export default function StudentModal({
 
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className={`
-          fixed inset-0 bg-black/40 backdrop-blur-sm z-[9990]
-          transition-opacity duration-300
-          ${isAnimatingIn ? 'opacity-0' : 'opacity-100'}
-        `}
-        onClick={handleClose}
-      />
-      
-      {/* Modal Container */}
-      <div className="fixed inset-0 flex items-center justify-center z-[9995] p-4 pointer-events-none">
+      {/* Backdrop - Hidden in full map mode */}
+      {!isFullMapMode && (
         <div 
           className={`
-            relative w-full max-w-[480px] pointer-events-auto
+            fixed inset-0 bg-black/40 backdrop-blur-sm z-[9990]
+            transition-opacity duration-300
+            ${isAnimatingIn ? 'opacity-0' : 'opacity-100'}
+          `}
+          onClick={handleClose}
+        />
+      )}
+      
+      {/* Modal Container - Different positioning for full map mode */}
+      <div className={`
+        ${isFullMapMode 
+          ? 'relative w-full h-full' 
+          : 'fixed inset-0 flex items-center justify-center z-[9995] p-4 pointer-events-none'
+        }
+      `}>
+        <div 
+          className={`
+            ${isFullMapMode 
+              ? 'w-full h-full pointer-events-auto' 
+              : 'relative w-full max-w-[480px] pointer-events-auto'
+            }
             transition-all duration-[280ms] ease-out
-            ${isAnimatingIn ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
+            ${isAnimatingIn && !isFullMapMode ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
             ${isFlipping ? 'scale-95 opacity-90' : ''}
           `}
           style={{
@@ -423,11 +433,12 @@ export default function StudentModal({
               bg-white rounded-[26px] shadow-2xl overflow-hidden
               transition-transform duration-[400ms] ease-in-out
               ${isFlipping ? (activeView === 'profile' ? 'rotate-y-90' : '-rotate-y-90') : 'rotate-y-0'}
+              ${isFullMapMode ? 'h-full' : ''}
             `}
             style={{
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 12px 24px -8px rgba(0, 0, 0, 0.15)',
               transformStyle: 'preserve-3d',
-              maxHeight: '90vh',
+              maxHeight: isFullMapMode ? '100%' : '90vh',
             }}
           >
             {/* Header with Tabs */}
