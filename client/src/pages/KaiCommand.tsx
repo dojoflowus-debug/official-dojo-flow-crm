@@ -65,6 +65,7 @@ export default function KaiCommand() {
   const [expandedInput, setExpandedInput] = useState(false);
   const [commandCenterWidth, setCommandCenterWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -72,8 +73,40 @@ export default function KaiCommand() {
   const kaiChatMutation = trpc.kai.chat.useMutation();
   const statsQuery = trpc.dashboard.stats.useQuery();
 
+  // Handle starting a new chat
+  const handleNewChat = () => {
+    // Generate a unique ID for the new conversation
+    const newId = `new-${Date.now()}`;
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    // Create a new conversation object
+    const newConversation: Conversation = {
+      id: newId,
+      title: 'New Conversation',
+      preview: '',
+      timestamp,
+      tags: ['kai', 'neutral'],
+      status: 'neutral',
+      category: 'kai',
+      date: 'today'
+    };
+    
+    // Add to conversations list at the beginning
+    setConversations(prev => [newConversation, ...prev]);
+    
+    // Select the new conversation
+    setSelectedConversationId(newId);
+    
+    // Clear messages for fresh start
+    setMessages([]);
+    
+    // Clear any input
+    setMessageInput('');
+  };
+
   // Sample conversations data matching original
-  const [conversations] = useState<Conversation[]>([
+  const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: '0',
       title: 'New Conversation',
@@ -304,6 +337,7 @@ export default function KaiCommand() {
               
               {/* Apple-style Chat Button */}
               <button
+                onClick={handleNewChat}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[18px] border border-[#E3E5EB] text-[13px] font-medium text-[#25262B] transition-all duration-150 hover:translate-y-[-1px] hover:scale-[1.03] focus-visible:translate-y-[-1px] focus-visible:scale-[1.03]"
                 style={{
                   background: 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)',
@@ -372,6 +406,11 @@ export default function KaiCommand() {
                       conversation={conv} 
                       getCategoryColor={getCategoryColor}
                       getStatusColor={getStatusColor}
+                      isSelected={selectedConversationId === conv.id}
+                      onClick={() => {
+                        setSelectedConversationId(conv.id);
+                        setMessages([]);
+                      }}
                     />
                   ))}
                 </div>
@@ -387,6 +426,11 @@ export default function KaiCommand() {
                       conversation={conv} 
                       getCategoryColor={getCategoryColor}
                       getStatusColor={getStatusColor}
+                      isSelected={selectedConversationId === conv.id}
+                      onClick={() => {
+                        setSelectedConversationId(conv.id);
+                        setMessages([]);
+                      }}
                     />
                   ))}
                 </div>
@@ -568,14 +612,25 @@ export default function KaiCommand() {
 function ConversationCard({ 
   conversation, 
   getCategoryColor,
-  getStatusColor
+  getStatusColor,
+  isSelected,
+  onClick
 }: { 
   conversation: Conversation; 
   getCategoryColor: (category: string) => string;
   getStatusColor: (status: string) => string;
+  isSelected?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-3 mb-2 hover:shadow-sm transition-shadow cursor-pointer">
+    <div 
+      onClick={onClick}
+      className={`rounded-lg border p-3 mb-2 hover:shadow-sm transition-all cursor-pointer ${
+        isSelected 
+          ? 'bg-slate-100 border-slate-300 shadow-sm' 
+          : 'bg-white border-slate-200'
+      }`}
+    >
       <div className="flex items-start justify-between mb-1">
         <h5 className="text-sm font-medium text-slate-900 truncate flex-1 pr-2">{conversation.title}</h5>
         <div className="flex items-center gap-1 shrink-0">

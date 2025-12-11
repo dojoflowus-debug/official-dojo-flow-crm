@@ -1435,3 +1435,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Add consistent padding (16-20px)
 - [x] Make sidebar feel like floating card with rounded corners (18px)
 
+
+## ✅ COMPLETED: Chat Button - New Conversation
+- [x] Connect Chat button to create new conversation (frontend state)
+- [x] Clear current messages when starting new conversation
+- [x] Select the new conversation in the sidebar (highlighted with teal background)
+- [x] New conversation appears at top of Today section with current timestamp
+- [x] Save checkpoint
+
