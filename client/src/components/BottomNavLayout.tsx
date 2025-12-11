@@ -63,9 +63,10 @@ const PAGE_TITLES: Record<string, string> = {
 interface BottomNavLayoutProps {
   children: React.ReactNode
   hideHeader?: boolean
+  hiddenInFocusMode?: boolean
 }
 
-export default function BottomNavLayout({ children, hideHeader = false }: BottomNavLayoutProps) {
+export default function BottomNavLayout({ children, hideHeader = false, hiddenInFocusMode = false }: BottomNavLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
@@ -272,11 +273,12 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
       )}
 
       {/* Main Content - 88px top padding for fixed 72px header, 80px bottom for 68px nav */}
-      <main className={`flex-1 ${!hideHeader ? 'pt-[88px]' : ''} pb-[80px]`}>
+      <main className={`flex-1 ${!hideHeader ? 'pt-[88px]' : ''} ${hiddenInFocusMode ? '' : 'pb-[80px]'}`}>
         {children}
       </main>
 
-      {/* Bottom Navigation Bar - Always Dark Dock */}
+      {/* Bottom Navigation Bar - Always Dark Dock - Hidden in Focus Mode */}
+      {!hiddenInFocusMode && (
       <nav 
         className={`
           fixed left-0 right-0 z-[1500] h-16
@@ -398,6 +400,7 @@ export default function BottomNavLayout({ children, hideHeader = false }: Bottom
           })}
         </div>
       </nav>
+      )}
     </div>
   )
 }

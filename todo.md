@@ -1458,3 +1458,38 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Test persistence across page refreshes
 - [x] Save checkpoint
 
+
+## ✅ COMPLETED: Focus Mode - Kai Command Page
+
+### State & Toggle
+- [x] Add isFocusMode boolean state
+- [x] Wire eye icon to toggle Focus Mode
+- [x] Show eye-open when OFF, eye-closed/slashed when ON (EyeOff icon)
+- [x] Add tooltip: "Turn on/off Focus Mode"
+
+### Layout Rules (CSS)
+- [x] Hide conversation panel (left sidebar) in Focus Mode
+- [x] Hide bottom navigation in Focus Mode
+- [x] Content centered when Focus Mode active
+- [x] Full height layout without bottom nav padding
+
+### Message Input Enhancement
+- [x] Input has border-radius: 22px and soft shadow
+- [x] Input centered in Focus Mode
+
+### Header Behavior
+- [x] Keep header visible with logo, title, controls
+- [x] Eye icon shows active state (red background, EyeOff icon) when Focus Mode ON
+
+### Keyboard Shortcut
+- [x] Add Ctrl/Cmd + K shortcut
+- [x] Focus Kai message input when triggered
+
+### Persistence
+- [x] Save Focus Mode preference to localStorage
+- [x] Load preference on mount
+
+### Scope
+- [x] Only affect Kai Command page
+- [x] Other pages not affected (hiddenInFocusMode prop)
+

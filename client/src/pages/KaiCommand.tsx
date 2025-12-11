@@ -26,6 +26,7 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
+  EyeOff,
   Menu,
   AlertCircle
 } from 'lucide-react';
@@ -66,8 +67,16 @@ export default function KaiCommand() {
   const [commandCenterWidth, setCommandCenterWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [isFocusMode, setIsFocusMode] = useState(() => {
+    // Load from localStorage on mount
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dojoFlowFocusMode') === 'on';
+    }
+    return false;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
 
   // tRPC queries and mutations for Kai
   const kaiChatMutation = trpc.kai.chat.useMutation();
@@ -173,6 +182,21 @@ export default function KaiCommand() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Keyboard shortcut: Ctrl/Cmd + K to focus Kai input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      if ((isMac && e.metaKey && e.key === 'k') || (!isMac && e.ctrlKey && e.key === 'k')) {
+        e.preventDefault();
+        // Focus the Kai message input
+        messageInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Resize handlers for swivel bar
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -329,12 +353,13 @@ export default function KaiCommand() {
   const isDark = theme === 'dark';
 
   return (
-    <BottomNavLayout>
-      <div ref={containerRef} className={`flex h-[calc(100vh-80px-64px)] overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'}`}>
+    <BottomNavLayout hiddenInFocusMode={isFocusMode}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'} ${isFocusMode ? 'focus-mode' : ''}`}>
         {/* Command Center - Left Panel - Floating Module Style */}
+        {!isFocusMode && (
         <div 
           style={{ width: `${commandCenterWidth}px` }}
-          className="bg-white border border-[#E5E6E8] rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
+          className="conversation-panel bg-white border border-[#E5E6E8] rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
         >
           {/* Header - Clean Layout */}
           <div className="p-4 border-b border-slate-200">
@@ -454,8 +479,10 @@ export default function KaiCommand() {
             </div>
           </div>
         </div>
+        )}
 
-        {/* Swivel/Drag Bar */}
+        {/* Swivel/Drag Bar - Only show when not in Focus Mode */}
+        {!isFocusMode && (
         <div 
           onMouseDown={handleMouseDown}
           onDoubleClick={() => setCommandCenterWidth(320)}
@@ -468,6 +495,7 @@ export default function KaiCommand() {
             isResizing ? 'bg-white' : 'bg-slate-400 group-hover:bg-white'
           }`} />
         </div>
+        )}
 
         {/* Main Conversation Panel - Right Side */}
         <div className="flex-1 flex flex-col bg-white">
@@ -486,11 +514,25 @@ export default function KaiCommand() {
               <Button variant="ghost" size="icon" className="h-8 w-8" title="Enable Voice Replies">
                 <Volume2 className="w-4 h-4 text-slate-500" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="Enter Focus Mode">
+              <Button variant="ghost" size="icon" className="h-8 w-8" title="Full Screen">
                 <Maximize2 className="w-4 h-4 text-slate-500" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="Full Screen">
-                <Eye className="w-4 h-4 text-slate-500" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isFocusMode ? 'bg-[#E53935]/10' : ''}`}
+                title={isFocusMode ? 'Turn off Focus Mode' : 'Turn on Focus Mode'}
+                onClick={() => {
+                  const newValue = !isFocusMode;
+                  setIsFocusMode(newValue);
+                  localStorage.setItem('dojoFlowFocusMode', newValue ? 'on' : 'off');
+                }}
+              >
+                {isFocusMode ? (
+                  <EyeOff className="w-4 h-4 text-[#E53935]" />
+                ) : (
+                  <Eye className="w-4 h-4 text-slate-500" />
+                )}
               </Button>
             </div>
           </div>
@@ -594,6 +636,7 @@ export default function KaiCommand() {
                   <Paperclip className="w-5 h-5" />
                 </Button>
                 <Textarea
+                  ref={messageInputRef}
                   placeholder="Message Kai... (Type @ to mention)"
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
