@@ -1512,3 +1512,79 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Archive and Rename options show "coming soon" toast
 - [x] Save checkpoint
 
+
+## Students Page Split-Screen Redesign
+
+### Layout Structure
+- [ ] Create split-screen container with two panes
+- [ ] Left pane: Map + stats (40% default width)
+- [ ] Right pane: Search, filters, student cards (60% default width)
+- [ ] Add draggable vertical divider between panes
+
+### Draggable Divider
+- [ ] Create vertical drag handle (6px width)
+- [ ] Implement mouse drag to resize panes
+- [ ] Constrain widths: min 25%, max 70% for map
+- [ ] Visual indicator (2px rounded line in center)
+
+### Left Pane (Map + Stats)
+- [ ] Map container (full width of pane)
+- [ ] Stats strip below map with horizontal scroll
+- [ ] Stats: Active, Pending Cancel, Cancelled, Retention Rate, New Enrollments, Attendance Rate, Average Distance, Belt Progress
+
+### Right Pane (Search + Cards)
+- [ ] Header with "Students" title
+- [ ] Full-width search bar (rounded pill style)
+- [ ] Filters row: Program, Belt Rank, Status, Tag
+- [ ] Status tabs: Active | Pending Cancel | Cancelled
+- [ ] Scrollable student cards list
+
+### Scroll Behavior
+- [ ] Map pane scrolls internally
+- [ ] Student cards scroll independently
+- [ ] Both panes maintain full height
+
+### Responsive Behavior
+- [ ] Desktop: Full split with draggable divider
+- [ ] Tablet (<1100px): Fixed 35% map, disable drag, add "Expand Map" button
+- [ ] Mobile: Stack vertically, "Hide/Show Map" toggle
+
+
+
+## ✅ COMPLETED: Students Page Split-Screen Redesign
+
+### Layout Structure
+- [x] Create split-screen container with flexbox
+- [x] Left pane: Map + stats (default 40% width)
+- [x] Right pane: Search + filters + student cards (default 60% width)
+- [x] Add draggable vertical divider between panes
+
+### Left Pane - Map + Stats
+- [x] Map container with Google Maps integration (MapView component)
+- [x] Map header with "Saved Views" dropdown and "Location" dropdown
+- [x] Expand/collapse button for map (Maximize2/Minimize2 icons)
+- [x] Stats strip below map with horizontal scroll
+- [x] Stats: Active Students, Pending Cancel, Cancelled, Retention Rate, New Enrollments, Attendance Rate, Average Distance, Belt Progress
+
+### Right Pane - Search + Cards
+- [x] Full-width search bar with rounded pill style
+- [x] Filter dropdowns: All Programs, All Belts, All Status, More
+- [x] Status tabs: Active, Pending Cancel, Cancelled
+- [x] Student cards grid with responsive columns
+- [x] Empty state when no students found
+
+### Draggable Divider
+- [x] Implement mouse drag to resize panes
+- [x] Min width 25%, max width 70% for left pane
+- [x] Visual indicator on hover (bg-slate-300 to bg-slate-400)
+- [x] Cursor change to col-resize
+
+### Responsive Behavior
+- [x] Mobile (<768px): Stack vertically, map collapsible with Hide/Show buttons
+- [x] Tablet (768-1100px): Fixed 35% map width, no dragging
+- [x] Desktop (>1100px): Full draggable split-screen
+
+### Header
+- [x] Keep "Students" title and "Add Student" button
+- [x] Subtitle: "Manage your dojo's student roster"
+

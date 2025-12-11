@@ -24,6 +24,7 @@ import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
 import CRMDashboard from "./pages/CRMDashboard";
 import StudentsNew from "./pages/StudentsNew";
+import StudentsSplitScreen from "./pages/StudentsSplitScreen";
 import Leads from "./pages/Leads";
 import TestData from "./pages/TestData";
 import SimpleDashboard from "./pages/SimpleDashboard";
@@ -98,7 +99,8 @@ function Router() {
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
       <Route path="/dashboard" element={<ProtectedRoute><MinimalDashboard /></ProtectedRoute>} />
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
-      <Route path="/students" element={<StudentsNew />} />
+      <Route path="/students" element={<StudentsSplitScreen />} />
+      <Route path="/students-old" element={<StudentsNew />} />
       <Route path="/leads" element={<Leads />} />
       <Route path="/test-data" element={<TestData />} />
       {/* Kiosk removed - Kai Command is the central focus */}
