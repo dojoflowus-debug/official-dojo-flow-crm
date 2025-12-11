@@ -1998,3 +1998,28 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Close button behavior unchanged
 - [x] Click blur background closes modal
 - [x] No leftover invisible layers after close
+
+
+## ✅ COMPLETED: Student-Driven Map Behavior
+
+### Remove Search Bar
+- [x] Remove "Search locations..." input above the map
+- [x] No generic Google Maps place search on this page
+- [x] Only expand/collapse button remains in map header
+
+### Student-Based Map Behavior
+- [x] On page load: center and zoom map so all student markers fit in view (fitBounds)
+- [x] On student click (list or card): pan/zoom to that student's home location marker
+- [x] Briefly highlight the selected student's marker (scale + glow animation for 1.5s)
+- [x] Custom circular markers with student initials and status colors (green=active, red=inactive)
+- [x] Clicking map markers also opens student modal
+
+### Keep Intact
+- [x] Map filters (Active, Missing, Nearby, etc.)
+- [x] Map legend
+- [x] No new UI elements over the map
+
+### Do NOT Change
+- [x] Student list - NOT modified
+- [x] Student cards - NOT modified
+- [x] Stats row - NOT modified

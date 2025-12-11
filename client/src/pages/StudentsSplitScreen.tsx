@@ -379,31 +379,141 @@ export default function StudentsSplitScreen() {
     }
   }, [isDragging, handleMouseMove, handleMouseUp])
 
-  // Map ready handler
+  // Sample student locations (in production, these would come from student.lat/lng)
+  const studentLocationsRef = useRef<Map<number, { lat: number; lng: number }>>(new Map())
+  
+  // Generate sample locations for students (spread around San Francisco)
+  useEffect(() => {
+    if (students.length > 0 && studentLocationsRef.current.size === 0) {
+      const baseLocations = [
+        { lat: 37.7749, lng: -122.4194 },
+        { lat: 37.7849, lng: -122.4094 },
+        { lat: 37.7649, lng: -122.4294 },
+        { lat: 37.7799, lng: -122.4144 },
+        { lat: 37.7699, lng: -122.4244 },
+        { lat: 37.7899, lng: -122.3994 },
+        { lat: 37.7549, lng: -122.4394 },
+        { lat: 37.7949, lng: -122.4044 },
+        { lat: 37.7599, lng: -122.4344 },
+        { lat: 37.7849, lng: -122.4244 },
+      ]
+      students.forEach((student, index) => {
+        const baseIdx = index % baseLocations.length
+        const offset = Math.floor(index / baseLocations.length) * 0.005
+        studentLocationsRef.current.set(student.id, {
+          lat: baseLocations[baseIdx].lat + offset + (Math.random() - 0.5) * 0.01,
+          lng: baseLocations[baseIdx].lng + offset + (Math.random() - 0.5) * 0.01,
+        })
+      })
+    }
+  }, [students])
+
+  // Map ready handler - centers on all students
   const handleMapReady = useCallback((map: google.maps.Map) => {
     mapRef.current = map
     
-    // Add markers for students with coordinates
-    // For demo, we'll add some sample markers around San Francisco
-    const sampleLocations = [
-      { lat: 37.7749, lng: -122.4194 },
-      { lat: 37.7849, lng: -122.4094 },
-      { lat: 37.7649, lng: -122.4294 },
-      { lat: 37.7799, lng: -122.4144 },
-      { lat: 37.7699, lng: -122.4244 },
-    ]
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.map = null)
+    markersRef.current = []
     
-    students.slice(0, 5).forEach((student, index) => {
-      if (sampleLocations[index]) {
+    // Create bounds to fit all students
+    const bounds = new google.maps.LatLngBounds()
+    let hasMarkers = false
+    
+    // Add markers for all students
+    students.forEach((student) => {
+      const location = studentLocationsRef.current.get(student.id)
+      if (location) {
+        hasMarkers = true
+        bounds.extend(location)
+        
+        // Create custom marker element
+        const markerContent = document.createElement('div')
+        markerContent.className = 'student-marker'
+        markerContent.innerHTML = `
+          <div style="
+            width: 32px;
+            height: 32px;
+            background: ${student.status === 'Active' ? '#22c55e' : '#ef4444'};
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+          " data-student-id="${student.id}">
+            ${student.first_name[0]}${student.last_name[0]}
+          </div>
+        `
+        
         const marker = new google.maps.marker.AdvancedMarkerElement({
           map,
-          position: sampleLocations[index],
+          position: location,
           title: `${student.first_name} ${student.last_name}`,
+          content: markerContent,
         })
+        
+        // Click handler to open student modal
+        marker.addListener('click', () => {
+          setSelectedStudent(student)
+          setIsModalOpen(true)
+        })
+        
         markersRef.current.push(marker)
       }
     })
+    
+    // Fit map to show all student markers
+    if (hasMarkers) {
+      map.fitBounds(bounds, { padding: 50 })
+      // Set a max zoom level so we don't zoom in too close
+      const listener = google.maps.event.addListener(map, 'idle', () => {
+        const currentZoom = map.getZoom()
+        if (currentZoom && currentZoom > 15) {
+          map.setZoom(15)
+        }
+        google.maps.event.removeListener(listener)
+      })
+    }
   }, [students])
+  
+  // Pan to selected student when modal opens
+  useEffect(() => {
+    if (selectedStudent && mapRef.current) {
+      const location = studentLocationsRef.current.get(selectedStudent.id)
+      if (location) {
+        // Pan to the student's location
+        mapRef.current.panTo(location)
+        mapRef.current.setZoom(15)
+        
+        // Highlight the marker briefly
+        const markerIndex = students.findIndex(s => s.id === selectedStudent.id)
+        if (markerIndex >= 0 && markersRef.current[markerIndex]) {
+          const marker = markersRef.current[markerIndex]
+          const content = marker.content as HTMLElement
+          if (content) {
+            const innerDiv = content.querySelector('div') as HTMLElement
+            if (innerDiv) {
+              // Add highlight animation
+              innerDiv.style.transform = 'scale(1.3)'
+              innerDiv.style.boxShadow = '0 0 0 4px rgba(231, 60, 60, 0.4), 0 4px 12px rgba(0,0,0,0.4)'
+              
+              // Remove highlight after 1.5 seconds
+              setTimeout(() => {
+                innerDiv.style.transform = 'scale(1)'
+                innerDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'
+              }, 1500)
+            }
+          }
+        }
+      }
+    }
+  }, [selectedStudent, students])
 
   // Status counts
   const activeCount = students.filter(s => s.status === 'Active').length
@@ -461,15 +571,8 @@ export default function StudentsSplitScreen() {
         >
           {/* Map Card Container - Apple-style minimal grey design */}
           <div className="flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 border border-slate-200/80 rounded-[18px] shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex-1">
-            {/* Map Search Bar */}
-            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-4 py-3 flex items-center gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input 
-                  placeholder="Search locations..."
-                  className="pl-9 h-9 bg-white/90 border-slate-200/80 rounded-xl text-sm focus:ring-2 focus:ring-[#E73C3C]/20 focus:border-[#E73C3C]/40"
-                />
-              </div>
+            {/* Map Header - Expand/Collapse only */}
+            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-4 py-2 flex items-center justify-end">
               <Button 
                 variant="ghost" 
                 size="sm" 
