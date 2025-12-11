@@ -1736,3 +1736,79 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Notes code unchanged
 - [x] Only replaced student card component
 
+
+
+## Student Pop-Out Modal (Front + Back Views)
+
+### General Modal Requirements
+- [ ] Centered floating card with blurred backdrop
+- [ ] Rounded corners (20-28px)
+- [ ] Smooth open/close fade animation
+- [ ] Two view states: Front View and Details View (Back)
+- [ ] Tab or toggle button to switch between views
+
+### Front View
+- [ ] Large profile photo
+- [ ] Name
+- [ ] Program
+- [ ] Belt rank
+- [ ] Status
+- [ ] Last attendance
+- [ ] Attendance category (A/B/C)
+- [ ] Tags
+- [ ] Short note section
+- [ ] "View Notes" button
+- [ ] "Edit Profile" button
+
+### Details View (Back)
+- [ ] Student contact info (email, phone)
+- [ ] Address
+- [ ] Birthdate
+- [ ] Parent/guardian contact
+- [ ] Edit button
+- [ ] Two-column layout
+- [ ] Clean typography and spacing
+
+### Preserve
+- [ ] Do NOT modify student cards
+- [ ] Do NOT modify notes drawer
+- [ ] Do NOT modify map section
+
+
+## ✅ COMPLETED: Student Pop-Out Modal (Front + Back Views)
+
+### General Modal Requirements
+- [x] Centered floating card with blurred backdrop
+- [x] Rounded corners (24px)
+- [x] Smooth open/close animation
+- [x] Two view states: Front View and Details View (Back)
+- [x] Tab toggle to switch between views
+
+### Front View
+- [x] Large profile photo
+- [x] Name
+- [x] Program
+- [x] Belt rank badge
+- [x] Status badge
+- [x] Last attendance
+- [x] Attendance category (A/B/C) badge
+- [x] Tags (Regular, Competition Team)
+- [x] Short note section
+- [x] "View Notes" button
+- [x] "Edit Profile" button
+
+### Details View
+- [x] Student contact info (Email, Phone)
+- [x] Address
+- [x] Birthdate
+- [x] Parent/guardian contact (Name, Phone, Email)
+- [x] Membership status
+- [x] Edit button
+- [x] Two-column layout
+- [x] Clean typography and spacing
+
+### Integration
+- [x] Integrated with StudentsSplitScreen page
+- [x] Click student card opens modal
+- [x] Tab switching works correctly
+- [x] Save checkpoint

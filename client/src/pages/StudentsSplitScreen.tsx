@@ -3,6 +3,7 @@ import { trpc } from '../lib/trpc'
 import { MapView } from '../components/Map'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
+import StudentModal from '../components/StudentModal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -261,6 +262,8 @@ export default function StudentsSplitScreen() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [showFilterMenu, setShowFilterMenu] = useState(false)
   const [highlightedStudentId, setHighlightedStudentId] = useState<number | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   
   // Split pane state
   const [mapWidth, setMapWidth] = useState(40) // percentage
@@ -663,7 +666,10 @@ export default function StudentsSplitScreen() {
                     key={student.id}
                     student={student}
                     isHighlighted={highlightedStudentId === student.id}
-                    onClick={() => console.log('Open student modal', student.id)}
+                    onClick={() => {
+                      setSelectedStudent(student)
+                      setIsModalOpen(true)
+                    }}
                   />
                 ))
               )}
@@ -671,6 +677,24 @@ export default function StudentsSplitScreen() {
           </div>
         )}
       </div>
+
+      {/* Student Modal */}
+      <StudentModal
+        student={selectedStudent}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedStudent(null)
+        }}
+        onEditProfile={(student) => {
+          console.log('Edit profile:', student.id)
+          // TODO: Open edit form
+        }}
+        onViewNotes={(student) => {
+          console.log('View notes:', student.id)
+          // TODO: Open notes drawer
+        }}
+      />
     </div>
   )
 }
