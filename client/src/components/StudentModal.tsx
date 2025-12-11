@@ -182,6 +182,7 @@ export default function StudentModal({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [logoPreview, setLogoPreview] = useState<{ dataUrl: string; fileName: string; fileSize: number } | null>(null)
   const [showLogoPreview, setShowLogoPreview] = useState(false)
+  const [logoUploadSuccess, setLogoUploadSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Form state for editable fields
@@ -218,8 +219,13 @@ export default function StudentModal({
   const uploadLogoMutation = trpc.setupWizard.uploadLogo.useMutation({
     onSuccess: () => {
       setIsUploading(false)
+      setLogoUploadSuccess(true)
       utils.setupWizard.getBrand.invalidate()
       refetchBrand()
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setLogoUploadSuccess(false)
+      }, 3000)
     },
     onError: () => {
       setIsUploading(false)
@@ -486,6 +492,15 @@ export default function StudentModal({
                 <span className="font-bold text-lg text-gray-900">
                   {brandData?.businessName || brandData?.dbaName || import.meta.env.VITE_APP_TITLE || 'DojoFlow'}
                 </span>
+                {/* Logo Upload Success Message */}
+                {logoUploadSuccess && (
+                  <div className="flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium animate-fade-in">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Logo updated!
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center gap-4">
