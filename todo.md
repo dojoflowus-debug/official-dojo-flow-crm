@@ -2068,3 +2068,16 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Fetch logo from dojoSettings.logoSquare via tRPC setupWizard.getBrand
 - [x] Logo only shows when custom logo is uploaded (no fallback to keep cards clean)
 - [x] Consistent branding across cards and modal
+
+
+## ✅ COMPLETED: Stat Tiles Filter Map & Student List
+
+- [x] Make stat tiles clickable/selectable filters (Active, Pending, Cancelled, New)
+- [x] Add selected state styling (primary border, ring, shadow, background tint)
+- [x] Filter student list when stat tile is clicked
+- [x] Filter map markers when stat tile is clicked (show/hide markers)
+- [x] Only one stat filter active at a time
+- [x] Click same tile again to toggle OFF ("Click to clear" hint)
+- [x] Work together with existing tab filters (Active/Pending/Cancelled)
+- [x] Apply tab filter first, then stat tile as subset
+- [x] Non-filterable tiles (Retention Rate, Attendance, Distance, Belt Progress) don't show click hint

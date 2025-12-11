@@ -228,21 +228,32 @@ function StudentCard({
   )
 }
 
+// Stat filter type
+type StatFilter = 'active' | 'pending' | 'cancelled' | 'new' | null
+
 // Stats Strip Component with Apple-style Arrow Navigation
-function StatsStrip({ stats }: { stats: Stats }) {
+function StatsStrip({ 
+  stats, 
+  selectedStat, 
+  onStatSelect 
+}: { 
+  stats: Stats
+  selectedStat: StatFilter
+  onStatSelect: (stat: StatFilter) => void
+}) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
   
-  const statItems = [
-    { label: 'Active Students', value: stats.active_students, icon: Users, color: 'text-green-600 bg-green-50' },
-    { label: 'Pending Cancel', value: 0, icon: Calendar, color: 'text-yellow-600 bg-yellow-50' },
-    { label: 'Cancelled', value: 0, icon: X, color: 'text-red-600 bg-red-50' },
-    { label: 'Retention Rate', value: '94%', icon: TrendingUp, color: 'text-blue-600 bg-blue-50' },
-    { label: 'New Enrollments', value: stats.new_this_month, icon: Plus, color: 'text-purple-600 bg-purple-50' },
-    { label: 'Attendance Rate', value: '87%', icon: Activity, color: 'text-teal-600 bg-teal-50' },
-    { label: 'Average Distance', value: '3.2 mi', icon: MapPin, color: 'text-orange-600 bg-orange-50' },
-    { label: 'Belt Progress', value: '12', icon: Target, color: 'text-indigo-600 bg-indigo-50' },
+  const statItems: { label: string; value: number | string; icon: any; color: string; filterKey: StatFilter }[] = [
+    { label: 'Active Students', value: stats.active_students, icon: Users, color: 'text-green-600 bg-green-50', filterKey: 'active' },
+    { label: 'Pending Cancel', value: 0, icon: Calendar, color: 'text-yellow-600 bg-yellow-50', filterKey: 'pending' },
+    { label: 'Cancelled', value: 0, icon: X, color: 'text-red-600 bg-red-50', filterKey: 'cancelled' },
+    { label: 'Retention Rate', value: '94%', icon: TrendingUp, color: 'text-blue-600 bg-blue-50', filterKey: null },
+    { label: 'New Enrollments', value: stats.new_this_month, icon: Plus, color: 'text-purple-600 bg-purple-50', filterKey: 'new' },
+    { label: 'Attendance Rate', value: '87%', icon: Activity, color: 'text-teal-600 bg-teal-50', filterKey: null },
+    { label: 'Average Distance', value: '3.2 mi', icon: MapPin, color: 'text-orange-600 bg-orange-50', filterKey: null },
+    { label: 'Belt Progress', value: '12', icon: Target, color: 'text-indigo-600 bg-indigo-50', filterKey: null },
   ]
   
   // Check scroll position to show/hide arrows
@@ -293,10 +304,18 @@ function StatsStrip({ stats }: { stats: Stats }) {
         className="flex gap-3 overflow-x-auto px-10 py-1 scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {statItems.map((item, index) => (
+        {statItems.map((item, index) => {
+          const isSelected = item.filterKey && selectedStat === item.filterKey
+          const isClickable = item.filterKey !== null
+          return (
           <div 
             key={index}
-            className="flex-shrink-0 bg-white rounded-lg border border-slate-200 p-3 min-w-[140px] hover:shadow-sm transition-shadow"
+            onClick={() => isClickable && onStatSelect(selectedStat === item.filterKey ? null : item.filterKey)}
+            className={`flex-shrink-0 bg-white rounded-lg border p-3 min-w-[140px] transition-all ${
+              isSelected 
+                ? 'border-primary ring-2 ring-primary/20 shadow-md bg-primary/5' 
+                : 'border-slate-200 hover:shadow-sm'
+            } ${isClickable ? 'cursor-pointer' : ''}`}
           >
             <div className="flex items-center gap-2 mb-1">
               <div className={`p-1.5 rounded-md ${item.color}`}>
@@ -305,8 +324,13 @@ function StatsStrip({ stats }: { stats: Stats }) {
             </div>
             <p className="text-lg font-bold text-slate-900">{item.value}</p>
             <p className="text-xs text-slate-500">{item.label}</p>
+            {isClickable && (
+              <div className={`mt-1 text-[10px] font-medium ${isSelected ? 'text-primary' : 'text-slate-400'}`}>
+                {isSelected ? 'Click to clear' : 'Click to filter'}
+              </div>
+            )}
           </div>
-        ))}
+        )})}
       </div>
       
       {/* Right Arrow */}
@@ -348,6 +372,7 @@ export default function StudentsSplitScreen() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false)
   const [notesStudent, setNotesStudent] = useState<Student | null>(null)
+  const [selectedStatFilter, setSelectedStatFilter] = useState<StatFilter>(null)
   
   // Fetch school logo for brand consistency
   const { data: brandData } = trpc.setupWizard.getBrand.useQuery(undefined, {
@@ -430,7 +455,29 @@ export default function StudentsSplitScreen() {
     
     const matchesStatus = statusFilter === 'all' || student.status === statusFilter
     
-    return matchesSearch && matchesStatus
+    // Apply stat filter as a subset
+    let matchesStatFilter = true
+    if (selectedStatFilter) {
+      switch (selectedStatFilter) {
+        case 'active':
+          matchesStatFilter = student.status?.toLowerCase() === 'active'
+          break
+        case 'pending':
+          matchesStatFilter = student.membership_status?.toLowerCase() === 'pending cancel' || 
+                             student.status?.toLowerCase() === 'on hold'
+          break
+        case 'cancelled':
+          matchesStatFilter = student.status?.toLowerCase() === 'inactive' || 
+                             student.membership_status?.toLowerCase() === 'expired'
+          break
+        case 'new':
+          // For demo, consider students with Trial membership as new
+          matchesStatFilter = student.membership_status?.toLowerCase() === 'trial'
+          break
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesStatFilter
   })
 
   // Draggable divider handlers
@@ -600,6 +647,40 @@ export default function StudentsSplitScreen() {
       }
     }
   }, [selectedStudent, students])
+  
+  // Update map markers visibility based on stat filter
+  useEffect(() => {
+    if (!mapRef.current) return
+    
+    markersRef.current.forEach((marker, index) => {
+      const student = students[index]
+      if (!student) return
+      
+      // Check if student matches the stat filter
+      let shouldShow = true
+      if (selectedStatFilter) {
+        switch (selectedStatFilter) {
+          case 'active':
+            shouldShow = student.status?.toLowerCase() === 'active'
+            break
+          case 'pending':
+            shouldShow = student.membership_status?.toLowerCase() === 'pending cancel' || 
+                        student.status?.toLowerCase() === 'on hold'
+            break
+          case 'cancelled':
+            shouldShow = student.status?.toLowerCase() === 'inactive' || 
+                        student.membership_status?.toLowerCase() === 'expired'
+            break
+          case 'new':
+            shouldShow = student.membership_status?.toLowerCase() === 'trial'
+            break
+        }
+      }
+      
+      // Show/hide marker
+      marker.map = shouldShow ? mapRef.current : null
+    })
+  }, [selectedStatFilter, students])
 
   // Status counts
   const activeCount = students.filter(s => s.status === 'Active').length
@@ -708,7 +789,11 @@ export default function StudentsSplitScreen() {
 
             {/* Stats Strip - inside card with gradient */}
             <div className="bg-gradient-to-r from-white to-slate-50 border-t border-slate-200/60 p-4">
-              <StatsStrip stats={stats} />
+              <StatsStrip 
+                stats={stats} 
+                selectedStat={selectedStatFilter}
+                onStatSelect={setSelectedStatFilter}
+              />
             </div>
           </div>{/* End Map Card Container */}
           
