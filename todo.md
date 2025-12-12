@@ -2357,3 +2357,9 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Copy Darkdojoflow.png to project public folder (as logo-light.png)
 - [x] BottomNavLayout already configured to use /logo-light.png in light mode
 - [x] Logo displays correctly with dark text on light background
+
+
+## ✅ COMPLETED: Add DojoFlow Logo with White Text for Dark Mode
+- [x] Find previously uploaded logo with white text (Lightdojoflow.png)
+- [x] Copy to project as logo-dark.png
+- [x] Verify dark mode displays the white text logo correctly
