@@ -2538,3 +2538,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add soft gradient overlay (20-30% dark) on top of background
 - [x] Wrap input bar in glass-style container with increased contrast
 - [x] Keep environment backgrounds fully visible and cinematic
+
+## FIX: Stronger Frosted Glass Layer for UI Readability
+- [x] Add full-width frosted glass panel behind ALL Kai UI (logo, tagline, cards, input)
+- [x] Panel opacity: rgba(0,0,0,0.35) to rgba(0,0,0,0.45) - NOT lower than 35%
+- [x] Backdrop blur: 5-12px
+- [x] Add text shadow to ALL text: 0 2px 4px rgba(0,0,0,0.75)
+- [x] Input bar: rgba(0,0,0,0.50) minimum, white placeholder, white icons
+- [x] Add dark gradient overlay: linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.35))
+- [x] DO NOT dim entire background - only darken under UI
+- [x] Acceptance: Text readable over white/bright backgrounds, all UI legible
