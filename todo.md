@@ -2674,3 +2674,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add bottom padding to message list for composer height + spacing (pb-40 for cinematic, pb-32 for others)
 - [x] Ensure only message list scrolls, no double scrollbar (flex-shrink-0 on composer)
 - [x] Test vertical balance on different screen sizes
+
+## Fix Sidebar Overlap in Cinematic Mode
+- [x] Investigate current layout structure and identify overlap causes
+- [x] Enforce real 2-column layout (sidebar fixed width, main content flex-grow)
+- [x] Ensure sidebar has proper z-index (z-index: 20, lower than modals)
+- [x] Main content uses flex: 1 and min-width: 0 (min-w-0 class added)
+- [x] Fix task/input bar to be contained inside main content column
+- [x] Constrain cinematic environment container to main content column only
+- [x] Remove full-page vignette overlay, moved inside main content area
+- [x] Test no horizontal scrolling appears

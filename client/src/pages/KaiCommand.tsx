@@ -543,27 +543,20 @@ export default function KaiCommand() {
 
   return (
     <BottomNavLayout hiddenInFocusMode={isFocusMode}>
-      {/* Cinematic Mode Vignette Overlay */}
-      {isCinematic && (
-        <div 
-          className="fixed inset-0 pointer-events-none z-10 transition-opacity duration-700"
-          style={{
-            background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
-            animation: 'cinematicFadeIn 0.8s ease-out'
-          }}
-        />
-      )}
+      {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
       <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
+        {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
           style={{ 
             width: isFocusMode ? '0px' : `${commandCenterWidth}px`,
             opacity: isFocusMode ? 0 : 1,
             transform: isFocusMode ? 'translateX(-20px)' : 'translateX(0)',
-            pointerEvents: isFocusMode ? 'none' : 'auto'
+            pointerEvents: isFocusMode ? 'none' : 'auto',
+            zIndex: 20
           }}
-          className={`conversation-panel ${isDark ? 'bg-[#121214] border-[rgba(255,255,255,0.05)]' : 'bg-white border-[#E5E6E8]'} border rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 ${isDark ? 'shadow-[0_4px_24px_rgba(0,0,0,0.55)]' : 'shadow-[0_4px_12px_rgba(0,0,0,0.04)]'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'}`}
+          className={`conversation-panel ${isDark ? 'bg-[#121214] border-[rgba(255,255,255,0.05)]' : 'bg-white border-[#E5E6E8]'} border rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 ${isDark ? 'shadow-[0_4px_24px_rgba(0,0,0,0.55)]' : 'shadow-[0_4px_12px_rgba(0,0,0,0.04)]'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
         >
           {/* Header - Clean Layout */}
           <div className={`p-4 border-b ${isDark ? 'border-[rgba(255,255,255,0.05)]' : 'border-slate-200'}`}>
@@ -708,15 +701,26 @@ export default function KaiCommand() {
         </div>
 
         {/* Main Conversation Panel - Right Side */}
+        {/* Main content: flex-1 with min-w-0 to prevent overflow, z-index lower than sidebar */}
         <div 
-          className={`flex-1 flex flex-col relative ${isFocusMode ? 'overflow-hidden' : 'overflow-hidden'} ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'} ${isFocusMode ? 'h-full' : ''}`}
+          className={`flex-1 flex flex-col relative min-w-0 ${isFocusMode ? 'overflow-hidden' : 'overflow-hidden'} ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'} ${isFocusMode ? 'h-full' : ''}`}
+          style={{ zIndex: 10 }}
         >
           {/* ENVIRONMENT LAYER - All background elements with z-index: 0 */}
+          {/* Constrained to main content column only, not full page */}
           {isCinematic && (
             <div 
-              className="environment-layer absolute inset-0 pointer-events-none"
+              className="environment-layer absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 0 }}
             >
+              {/* Vignette Overlay - now inside main content area */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
+                  animation: 'cinematicFadeIn 0.8s ease-out'
+                }}
+              />
               {/* Background Image Layer with Parallax */}
               <div 
                 className="absolute inset-0 will-change-transform"
