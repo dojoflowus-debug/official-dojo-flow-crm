@@ -2363,3 +2363,10 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Find previously uploaded logo with white text (Lightdojoflow.png)
 - [x] Copy to project as logo-dark.png
 - [x] Verify dark mode displays the white text logo correctly
+
+
+## ✅ COMPLETED: Replace Browser Tab Icon with DojoFlow Logo
+- [x] Find or create DojoFlow icon for favicon (DojoFLowLogo2Icon.png)
+- [x] Convert to proper favicon format (ICO with multiple sizes + PNG versions)
+- [x] Update index.html to use new favicon (favicon.ico, favicon-32.png, favicon-192.png)
+- [x] Verify favicon displays in browser tab
