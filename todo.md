@@ -2562,3 +2562,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Hide scrollbar unless content truly overflows
 - [x] Keep background + UI synced when toggling Focus Mode
 - [x] No double scroll areas - single scroll context
+
+## Floating Focus Mode Toggle
+- [x] Add floating button in corner to toggle Focus Mode
+- [x] Button visible in both normal and Focus Mode
+- [x] Smooth animation on toggle
+- [x] Clear visual indicator of current state

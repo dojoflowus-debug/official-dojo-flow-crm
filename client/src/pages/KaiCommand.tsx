@@ -36,7 +36,9 @@ import {
   Menu,
   AlertCircle,
   Trash2,
-  Star
+  Star,
+  Minimize2,
+  Focus
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -1074,6 +1076,47 @@ export default function KaiCommand() {
           </div>
         </div>
       </div>
+      
+      {/* Floating Focus Mode Toggle Button */}
+      <button
+        onClick={toggleFocusMode}
+        className={`fixed z-[60] transition-all duration-300 ease-out group ${
+          isFocusMode 
+            ? 'bottom-6 right-6' 
+            : 'bottom-24 right-6'
+        }`}
+        title={isFocusMode ? 'Exit Focus Mode (Esc)' : 'Enter Focus Mode'}
+      >
+        <div className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-300 ${
+          isFocusMode
+            ? 'bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30'
+            : isDark
+              ? 'bg-[#1F1F22] border border-[rgba(255,255,255,0.10)] hover:bg-[#2A2A2E] hover:border-[rgba(255,255,255,0.15)]'
+              : 'bg-white border border-slate-200 hover:bg-slate-50 hover:shadow-xl'
+        }`}>
+          {isFocusMode ? (
+            <Minimize2 className="w-5 h-5 text-white transition-transform group-hover:scale-110" />
+          ) : (
+            <Maximize2 className={`w-5 h-5 transition-transform group-hover:scale-110 ${isDark ? 'text-white' : 'text-slate-700'}`} />
+          )}
+          
+          {/* Pulse animation when not in focus mode */}
+          {!isFocusMode && (
+            <span className="absolute inset-0 rounded-full animate-ping opacity-20 bg-[#FF4C4C]" style={{ animationDuration: '2s' }} />
+          )}
+        </div>
+        
+        {/* Tooltip */}
+        <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none ${
+          isFocusMode
+            ? 'bg-black/60 text-white backdrop-blur-sm'
+            : isDark
+              ? 'bg-[#1F1F22] text-white border border-[rgba(255,255,255,0.10)]'
+              : 'bg-slate-900 text-white'
+        }`}>
+          {isFocusMode ? 'Exit Focus Mode' : 'Focus Mode'}
+        </div>
+      </button>
     </BottomNavLayout>
   );
 }
