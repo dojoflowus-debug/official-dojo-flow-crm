@@ -88,6 +88,12 @@ interface EnvironmentContextType {
   isModalOpen: boolean;
   openModal: () => void;
   closeModal: () => void;
+  // Presentation mode
+  isPresentationMode: boolean;
+  presentationInterval: number;
+  presentationProgress: number;
+  togglePresentationMode: () => void;
+  setPresentationInterval: (seconds: number) => void;
 }
 
 const EnvironmentContext = createContext<EnvironmentContextType | undefined>(undefined);
@@ -99,6 +105,11 @@ export function EnvironmentProvider({ children }: { children: ReactNode }) {
   const [defaultEnvironment, setDefaultEnvironmentState] = useState<EnvironmentType | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Presentation mode state
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [presentationInterval, setPresentationIntervalState] = useState(10); // seconds
+  const [presentationProgress, setPresentationProgress] = useState(0);
 
   // Load default environment from localStorage on mount
   useEffect(() => {
@@ -132,6 +143,43 @@ export function EnvironmentProvider({ children }: { children: ReactNode }) {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  // Presentation mode: auto-cycle through environments
+  useEffect(() => {
+    if (!isPresentationMode) {
+      setPresentationProgress(0);
+      return;
+    }
+
+    // Progress timer (updates every 100ms for smooth progress bar)
+    const progressInterval = setInterval(() => {
+      setPresentationProgress(prev => {
+        const newProgress = prev + (100 / (presentationInterval * 10));
+        return newProgress >= 100 ? 0 : newProgress;
+      });
+    }, 100);
+
+    // Environment change timer
+    const cycleInterval = setInterval(() => {
+      const currentIndex = environments.findIndex(e => e.id === currentEnvironmentId);
+      const nextIndex = (currentIndex + 1) % environments.length;
+      setEnvironment(environments[nextIndex].id);
+      setPresentationProgress(0);
+    }, presentationInterval * 1000);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(cycleInterval);
+    };
+  }, [isPresentationMode, presentationInterval, currentEnvironmentId]);
+
+  const togglePresentationMode = () => {
+    setIsPresentationMode(prev => !prev);
+  };
+
+  const setPresentationInterval = (seconds: number) => {
+    setPresentationIntervalState(Math.max(5, Math.min(60, seconds))); // 5-60 seconds
+  };
+
   return (
     <EnvironmentContext.Provider value={{
       currentEnvironment,
@@ -141,7 +189,12 @@ export function EnvironmentProvider({ children }: { children: ReactNode }) {
       isTransitioning,
       isModalOpen,
       openModal,
-      closeModal
+      closeModal,
+      isPresentationMode,
+      presentationInterval,
+      presentationProgress,
+      togglePresentationMode,
+      setPresentationInterval
     }}>
       {children}
     </EnvironmentContext.Provider>

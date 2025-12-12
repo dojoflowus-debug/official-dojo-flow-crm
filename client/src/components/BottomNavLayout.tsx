@@ -79,7 +79,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   const { user, logout } = useAuth()
   const { theme } = useTheme()
   const { isFocusMode, isAnimating, showOverlay, toggleFocusMode } = useFocusMode()
-  const { currentEnvironment, isTransitioning, openModal } = useEnvironment()
+  const { currentEnvironment, isTransitioning, openModal, isPresentationMode, presentationProgress } = useEnvironment()
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
@@ -221,14 +221,30 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
       {/* Focus Mode Active Indicator Strip */}
       {isFocusMode && !showOverlay && (
         <div 
-          className="fixed top-0 left-0 right-0 z-[2001] flex items-center justify-center py-1.5 bg-gradient-to-r from-transparent via-[#E53935]/20 to-transparent"
+          className={`fixed top-0 left-0 right-0 z-[2001] flex items-center justify-center py-1.5 bg-gradient-to-r from-transparent ${isPresentationMode ? 'via-green-500/30' : 'via-[#E53935]/20'} to-transparent`}
           style={{
             animation: 'fadeIn 300ms ease-out forwards'
           }}
         >
-          <span className="text-xs text-white/60 font-medium tracking-wide">
-            Focus Mode Active — Press <kbd className="px-1.5 py-0.5 mx-1 rounded bg-white/10 text-white/80 font-mono text-[10px]">Esc</kbd> to exit • <kbd className="px-1.5 py-0.5 mx-1 rounded bg-white/10 text-white/80 font-mono text-[10px]">F</kbd> for full screen
-          </span>
+          {isPresentationMode ? (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-white/80 font-medium tracking-wide flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                Presentation Mode — {currentEnvironment.name}
+              </span>
+              {/* Progress bar */}
+              <div className="w-24 h-1 bg-white/20 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-green-400 transition-all duration-100 ease-linear"
+                  style={{ width: `${presentationProgress}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <span className="text-xs text-white/60 font-medium tracking-wide">
+              Focus Mode Active — Press <kbd className="px-1.5 py-0.5 mx-1 rounded bg-white/10 text-white/80 font-mono text-[10px]">Esc</kbd> to exit • <kbd className="px-1.5 py-0.5 mx-1 rounded bg-white/10 text-white/80 font-mono text-[10px]">F</kbd> for full screen
+            </span>
+          )}
         </div>
       )}
 

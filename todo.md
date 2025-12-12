@@ -2607,3 +2607,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Handle fullscreen exit gracefully
 - [ ] Add confirmation before entering full focus
 - [x] Keyboard shortcut: Esc to exit, F to toggle
+
+## Presentation Mode
+- [x] Add isPresentationMode state to EnvironmentContext
+- [x] Add timer interval setting (default 10 seconds)
+- [x] Auto-cycle through environments when enabled
+- [x] Add presentation mode toggle button in Focus Mode
+- [x] Show progress indicator for current environment duration
+- [ ] Pause on user interaction, resume after idle

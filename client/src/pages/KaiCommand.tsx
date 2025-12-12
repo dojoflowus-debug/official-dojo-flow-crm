@@ -38,7 +38,10 @@ import {
   Trash2,
   Star,
   Minimize2,
-  Focus
+  Focus,
+  Play,
+  Pause,
+  Presentation
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -81,7 +84,7 @@ export default function KaiCommand() {
   // Use global Focus Mode context
   const { isFocusMode, isFullscreen, toggleFocusMode, toggleFullscreen, enterFullscreen } = useFocusMode();
   // Use global Environment context
-  const { currentEnvironment, isTransitioning } = useEnvironment();
+  const { currentEnvironment, isTransitioning, isPresentationMode, presentationProgress, togglePresentationMode } = useEnvironment();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -1124,6 +1127,55 @@ export default function KaiCommand() {
           ? 'bottom-6 right-6' 
           : 'bottom-24 right-6'
       }`}>
+        {/* Presentation Mode Button (only shown in Focus Mode with Cinematic) */}
+        {isFocusMode && isCinematic && (
+          <button
+            onClick={togglePresentationMode}
+            className="group"
+            title={isPresentationMode ? 'Stop Presentation' : 'Start Presentation'}
+          >
+            <div className={`relative flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 backdrop-blur-md border border-white/30 hover:scale-105 ${
+              isPresentationMode 
+                ? 'bg-green-500/80 hover:bg-green-500' 
+                : 'bg-purple-500/80 hover:bg-purple-500'
+            }`}>
+              {isPresentationMode ? (
+                <Pause className="w-4 h-4 text-white transition-transform group-hover:scale-110" />
+              ) : (
+                <Presentation className="w-4 h-4 text-white transition-transform group-hover:scale-110" />
+              )}
+              {/* Progress ring when presentation is active */}
+              {isPresentationMode && (
+                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 40 40">
+                  <circle
+                    cx="20"
+                    cy="20"
+                    r="18"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="2"
+                  />
+                  <circle
+                    cx="20"
+                    cy="20"
+                    r="18"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray={`${presentationProgress * 1.13} 113`}
+                    className="transition-all duration-100"
+                  />
+                </svg>
+              )}
+            </div>
+            {/* Tooltip */}
+            <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-black/60 text-white backdrop-blur-sm">
+              {isPresentationMode ? 'Stop Presentation' : 'Presentation Mode'}
+            </div>
+          </button>
+        )}
+        
         {/* Full Focus Button (only shown in Focus Mode) */}
         {isFocusMode && !isFullscreen && (
           <button
