@@ -208,6 +208,19 @@ html.cinematic-mode {
   background-attachment: fixed;
 }
 
+/* Focus Mode - Lock to viewport and hide scrollbars */
+.focus-mode {
+  overflow: hidden !important;
+}
+
+body:has(.focus-mode) {
+  overflow: hidden !important;
+}
+
+html:has(.focus-mode) {
+  overflow: hidden !important;
+}
+
 /* Theme transition animations */
 * {
   transition:

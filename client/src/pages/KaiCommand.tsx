@@ -537,7 +537,7 @@ export default function KaiCommand() {
         />
       )}
       
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         <div 
           style={{ 
@@ -692,7 +692,7 @@ export default function KaiCommand() {
 
         {/* Main Conversation Panel - Right Side */}
         <div 
-          className={`flex-1 flex flex-col relative overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
+          className={`flex-1 flex flex-col relative ${isFocusMode ? 'overflow-hidden' : 'overflow-hidden'} ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'} ${isFocusMode ? 'h-full' : ''}`}
         >
           {/* Cinematic Background Image */}
           {isCinematic && (
@@ -752,7 +752,8 @@ export default function KaiCommand() {
               />
             </>
           )}
-          {/* Top Banner */}
+          {/* Top Banner - Hidden in Focus Mode for full-screen experience */}
+          {!isFocusMode && (
           <div 
             className={`relative z-10 px-6 py-3 border-b flex items-center justify-between ${
               isCinematic 
@@ -802,16 +803,17 @@ export default function KaiCommand() {
               </Button>
             </div>
           </div>
+          )}
 
           {/* Messages Area with visible scrollbar - Centered content */}
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto p-6 pt-6 scrollbar-visible"
+            className={`flex-1 p-6 pt-6 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'}`}
           >
-            <div className="max-w-[1320px] mx-auto px-4">
+            <div className={`${isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting */
-                <div className={`flex flex-col items-center justify-center ${isCinematic ? 'py-16' : 'py-8'} transition-all duration-500`}>
+                <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? '' : 'py-8'} transition-all duration-500`}>
                   {/* Frosted Glass Panel for Cinematic Mode - 40% opacity for readability */}
                   <div className={`flex flex-col items-center ${isCinematic ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/15' : ''}`}
                     style={isCinematic ? {
@@ -997,7 +999,7 @@ export default function KaiCommand() {
 
           {/* Input Bar - Apple-style floating bar */}
           <div 
-            className={`p-4 border-t transition-all duration-500 ${expandedInput ? 'pb-8' : ''} ${isCinematic ? 'pb-6 pt-5 border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm`}
+            className={`p-4 border-t transition-all duration-500 ${expandedInput ? 'pb-8' : ''} ${isFocusMode ? 'pb-8 pt-6' : ''} ${isCinematic ? 'pb-6 pt-5 border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm relative z-20`}
             style={isCinematic ? { animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both' } : {}}
           >
             {/* Frosted Glass Container for Input in Cinematic Mode - 45% opacity */}

@@ -2554,3 +2554,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add upward slide animation to text elements (heading, tagline)
 - [x] Add staggered animation to quick command cards
 - [x] Smooth transition when entering Cinematic mode
+
+## Focus Mode Scroll & Alignment Fix
+- [x] Lock Focus Mode height to viewport (100vh)
+- [x] Center cinematic panel vertically
+- [x] Input bar at bottom with consistent spacing
+- [x] Hide scrollbar unless content truly overflows
+- [x] Keep background + UI synced when toggling Focus Mode
+- [x] No double scroll areas - single scroll context
