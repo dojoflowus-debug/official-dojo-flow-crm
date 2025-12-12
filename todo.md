@@ -2684,3 +2684,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Constrain cinematic environment container to main content column only
 - [x] Remove full-page vignette overlay, moved inside main content area
 - [x] Test no horizontal scrolling appears
+
+## Fix Focus Mode Cinematic Layout
+- [x] Investigate current Focus Mode layout structure
+- [x] Implement true 3-zone layout (hint bar, messages, composer)
+- [x] Add safe top spacing (pt-16 = 64px) so messages start lower
+- [x] Anchor composer to bottom with pb-6 (24px) spacing
+- [x] Add bottom padding to message list (pb-44 = 176px for composer + spacing)
+- [x] Remove redundant wrapper containers around composer (single container with backdrop blur)
+- [x] Constrain conversation width to match composer (max-w-4xl, centered)
+- [x] Ensure only messages area scrolls (flex-shrink-0 on composer)
+- [x] Test ChatGPT-style scroll behavior
