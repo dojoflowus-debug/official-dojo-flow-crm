@@ -998,8 +998,8 @@ export default function KaiCommand() {
                         </>
                       ) : (
                         <>
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF4C4C] to-[#E63E3E] flex items-center justify-center shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
-                            <img src="/dojoflow-logo-icon.png" alt="Kai" className="w-6 h-6 object-contain" />
+                          <div className="w-8 h-8 rounded-full shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
+                            <img src="/kai-avatar.png" alt="Kai" className="w-full h-full object-cover" />
                           </div>
                           <div className="flex-1">
                             <div 
@@ -1023,8 +1023,8 @@ export default function KaiCommand() {
                   ))}
                   {isLoading && (
                     <div className="flex gap-3 relative" style={{ zIndex: 30 }}>
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF4C4C] to-[#E63E3E] flex items-center justify-center shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
-                        <img src="/dojoflow-logo-icon.png" alt="Kai" className="w-6 h-6 object-contain animate-pulse" />
+                      <div className="w-8 h-8 rounded-full shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
+                        <img src="/kai-avatar.png" alt="Kai" className="w-full h-full object-cover animate-pulse" />
                       </div>
                       <div className="flex-1">
                         <div 

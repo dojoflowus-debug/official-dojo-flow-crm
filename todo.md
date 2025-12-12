@@ -2633,3 +2633,7 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show user's profile photo for user messages in Kai Command chat
 - [x] Show DojoFlow icon for Kai's messages
 - [x] Style avatars consistently with the chat UI
+
+## Kai Avatar Update
+- [x] Use new DojoFlow logo icon for Kai's avatar in chat
+- [x] Update all Kai avatar instances in KaiCommand.tsx
