@@ -6,6 +6,7 @@ import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
 import StudentModal from '../components/StudentModal'
 import NotesDrawer from '../components/NotesDrawer'
+import Breadcrumb, { BreadcrumbItem } from '../components/Breadcrumb'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -738,6 +739,17 @@ export default function StudentsSplitScreen() {
   return (
     <BottomNavLayout>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col relative pt-[72px]">
+      {/* Breadcrumb Navigation */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/40 px-6 py-2">
+        <Breadcrumb
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Students', href: '/students' },
+            ...(selectedStudent ? [{ label: selectedStudent.name }] : [])
+          ] as BreadcrumbItem[]}
+        />
+      </div>
+
       {/* Page Sub-Header - with scroll hide/show behavior */}
       <div 
         className={`bg-white/95 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 flex items-center justify-between transition-all duration-300 z-10 ${

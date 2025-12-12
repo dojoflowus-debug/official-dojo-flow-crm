@@ -2281,3 +2281,23 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Maintain scroll hide/show behavior for page sub-header
 - [x] Test all navigation links work correctly (Dashboard, Students, Leads, Kai, Classes, Staff, Billing, Reports, Settings)
 - [x] Bottom navigation dock visible with all main menu items
+
+
+## 🚀 IN PROGRESS: Breadcrumb Navigation Trail
+- [ ] Create reusable Breadcrumb component
+- [ ] Add breadcrumb below top menu bar on Students page
+- [ ] Show "Students" as base breadcrumb
+- [ ] Add student name to breadcrumb when viewing details (e.g., "Students > John Smith")
+- [ ] Make breadcrumb items clickable to navigate back
+- [ ] Update breadcrumb dynamically when student selection changes
+- [ ] Test breadcrumb in normal and Full Map modes
+
+
+## ✅ COMPLETED: Breadcrumb Navigation Trail
+- [x] Create reusable Breadcrumb component with Home icon
+- [x] Add breadcrumb below top menu bar on Students page
+- [x] Show "Dashboard > Students" as base breadcrumb
+- [x] Add student name to breadcrumb when viewing details (e.g., "Dashboard > Students > John Smith")
+- [x] Make breadcrumb items clickable to navigate back (Dashboard links to /dashboard, Students links to /students)
+- [x] Update breadcrumb dynamically when student selection changes
+- [x] Test breadcrumb in normal and Full Map modes
