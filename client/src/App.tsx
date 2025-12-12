@@ -4,6 +4,7 @@ import NotFound from "./pages/NotFound";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { FocusModeProvider } from "./contexts/FocusModeContext";
 import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
 import NewVisitor from "./pages/NewVisitor";
@@ -157,12 +158,14 @@ function App() {
         defaultTheme="dark"
         switchable
       >
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <Router />
-          </BrowserRouter>
-        </TooltipProvider>
+        <FocusModeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <Router />
+            </BrowserRouter>
+          </TooltipProvider>
+        </FocusModeProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

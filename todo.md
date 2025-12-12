@@ -2427,3 +2427,27 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Update conversation cards for dark mode with active state
 - [x] Update messages area for dark mode
 - [x] All text colors follow mockup spec (white, rgba(255,255,255,0.65), rgba(255,255,255,0.45))
+
+## ✅ COMPLETED: Animated Focus Mode System
+- [x] Add Focus Mode trigger via focus/eye icon on mini menu bar
+- [x] Hide top menu bar and side menu bar when Focus Mode activates
+- [x] Keep mini focus menu bar visible at all times
+- [x] Add smooth slide-back + fade + blur animation (400ms slide, 200ms fade)
+- [x] Add "FOCUS MODE - Noise off. Clarity on." intro overlay (fade in, hold 2s, fade out)
+- [x] Add glowing pulse animation around focus icon while active
+- [x] Add minimal top indicator strip "Focus Mode Active — Tap the icon to exit."
+- [x] Add exit animation (slide back in, fade in, remove blur)
+- [x] Ensure Focus Mode works on all pages via FocusModeContext
+- [x] Save checkpoint
+
+## ✅ COMPLETED: Animated Focus Mode System
+- [x] Add Focus Mode trigger via focus/eye icon on mini menu bar
+- [x] Hide top menu bar and side menu bar when Focus Mode activates
+- [x] Keep mini focus menu bar visible at all times
+- [x] Add smooth slide-back + fade + blur animation (400ms slide, 200ms fade)
+- [x] Add "FOCUS MODE - Noise off. Clarity on." intro overlay (fade in, hold 2s, fade out)
+- [x] Add glowing pulse animation around focus icon while active
+- [x] Add minimal top indicator strip "Focus Mode Active — Tap the icon to exit."
+- [x] Add exit animation (slide back in, fade in, remove blur)
+- [x] Ensure Focus Mode works on all pages via FocusModeContext
+- [x] Save checkpoint

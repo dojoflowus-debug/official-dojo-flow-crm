@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useFocusMode } from '@/contexts/FocusModeContext';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,13 +75,8 @@ export default function KaiCommand() {
   const [commandCenterWidth, setCommandCenterWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [isFocusMode, setIsFocusMode] = useState(() => {
-    // Load from localStorage on mount
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('dojoFlowFocusMode') === 'on';
-    }
-    return false;
-  });
+  // Use global Focus Mode context
+  const { isFocusMode, toggleFocusMode } = useFocusMode();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -656,11 +652,7 @@ export default function KaiCommand() {
                 size="icon" 
                 className={`h-8 w-8 ${isFocusMode ? 'bg-[#E53935]/10' : ''}`}
                 title={isFocusMode ? 'Turn off Focus Mode' : 'Turn on Focus Mode'}
-                onClick={() => {
-                  const newValue = !isFocusMode;
-                  setIsFocusMode(newValue);
-                  localStorage.setItem('dojoFlowFocusMode', newValue ? 'on' : 'off');
-                }}
+                onClick={toggleFocusMode}
               >
                 {isFocusMode ? (
                   <EyeOff className="w-4 h-4 text-[#E53935]" />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,11 +13,14 @@ import {
   Settings,
   Bell,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useFocusMode } from '@/contexts/FocusModeContext'
 import { trpc } from '@/lib/trpc'
 import {
   DropdownMenu,
@@ -72,6 +75,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme } = useTheme()
+  const { isFocusMode, isAnimating, showOverlay, toggleFocusMode } = useFocusMode()
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
@@ -165,8 +169,62 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
 
   const headerStyles = getHeaderStyles()
 
+  // Focus Mode animation styles
+  const getFocusModeHeaderStyle = () => {
+    if (isFocusMode) {
+      return {
+        transform: 'translateY(-100%) scale(0.95)',
+        opacity: 0,
+        filter: 'blur(8px)',
+        transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease-out 150ms, filter 200ms ease-out 150ms'
+      }
+    }
+    return {
+      transform: 'translateY(0) scale(1)',
+      opacity: 1,
+      filter: 'blur(0px)',
+      transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease-in, filter 200ms ease-in'
+    }
+  }
+
   return (
     <div className={`min-h-screen flex flex-col ${getBgClass()}`}>
+      {/* Focus Mode Overlay */}
+      {showOverlay && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none"
+          style={{
+            animation: 'focusModeOverlay 2.5s ease-in-out forwards'
+          }}
+        >
+          <div className="text-center">
+            <h1 
+              className="text-4xl md:text-5xl font-bold text-white mb-3"
+              style={{ textShadow: '0 0 40px rgba(229,57,53,0.5)' }}
+            >
+              FOCUS MODE
+            </h1>
+            <p className="text-lg text-white/70 font-light tracking-wide">
+              Noise off. Clarity on.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Focus Mode Active Indicator Strip */}
+      {isFocusMode && !showOverlay && (
+        <div 
+          className="fixed top-0 left-0 right-0 z-[2001] flex items-center justify-center py-1.5 bg-gradient-to-r from-transparent via-[#E53935]/20 to-transparent"
+          style={{
+            animation: 'fadeIn 300ms ease-out forwards'
+          }}
+        >
+          <span className="text-xs text-white/60 font-medium tracking-wide">
+            Focus Mode Active — Tap the icon to exit.
+          </span>
+        </div>
+      )}
+
       {/* Top Header - Apple-style */}
       {!hideHeader && (
         <header 
@@ -176,7 +234,8 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
           `}
           style={{ 
             boxShadow: headerStyles.shadow,
-            zIndex: 2000
+            zIndex: 2000,
+            ...getFocusModeHeaderStyle()
           }}
         >
           <div className="h-full px-6 flex items-center justify-between">
@@ -279,7 +338,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
       )}
 
       {/* Main Content - 72px top padding for fixed 72px header, 80px bottom for 68px nav */}
-      <main className={`flex-1 ${!hideHeader ? 'pt-[72px]' : ''} ${hiddenInFocusMode ? '' : 'pb-[80px]'}`}>
+      <main className={`flex-1 ${!hideHeader && !isFocusMode ? 'pt-[72px]' : isFocusMode ? 'pt-6' : ''} ${hiddenInFocusMode ? '' : 'pb-[80px]'}`}>
         {children}
       </main>
 
@@ -405,6 +464,34 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
             )
           })}
         </div>
+
+        {/* Focus Mode Toggle Button - Always visible */}
+        <button
+          onClick={toggleFocusMode}
+          className={`
+            absolute right-4 top-1/2 -translate-y-1/2
+            flex items-center justify-center
+            w-10 h-10 rounded-full
+            transition-all duration-300
+            ${isFocusMode 
+              ? 'bg-[#E53935]/20 text-[#E53935]' 
+              : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+            }
+          `}
+          style={{
+            boxShadow: isFocusMode 
+              ? '0 0 20px rgba(229,57,53,0.4), 0 0 40px rgba(229,57,53,0.2)' 
+              : 'none',
+            animation: isFocusMode ? 'focusPulse 2s ease-in-out infinite' : 'none'
+          }}
+          title={isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+        >
+          {isFocusMode ? (
+            <EyeOff className="w-5 h-5" />
+          ) : (
+            <Eye className="w-5 h-5" />
+          )}
+        </button>
       </nav>
     </div>
   )
