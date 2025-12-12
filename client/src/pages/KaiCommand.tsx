@@ -27,11 +27,14 @@ import {
   Maximize2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   EyeOff,
   Menu,
   AlertCircle,
-  Trash2
+  Trash2,
+  Star
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -182,21 +185,119 @@ export default function KaiCommand() {
     { id: 'pending', label: 'Pending Tasks', count: 15, icon: CheckSquare, color: 'text-[#14B8A6]' }
   ];
 
-  // Suggested prompts matching original
-  const suggestedPrompts = [
+  // Quick command prompts - 10 tiles for the carousel
+  const quickCommands = [
     {
+      id: 'goals',
       header: 'START WITH YOUR GOALS',
       text: '"Help me grow my kids program to 150 students."'
     },
     {
-      header: 'CHECK HEALTH OF YOUR DOJO',
+      id: 'health',
+      header: 'CHECK HEALTH OF YOUR DOJŌ',
       text: '"Show me attendance and missed classes this week."'
     },
     {
+      id: 'billing',
       header: 'FIX BILLING & RENEWALS',
       text: '"Who is late on payments and how can we fix it?"'
+    },
+    {
+      id: 'retention',
+      header: 'INCREASE RETENTION',
+      text: '"Tell me which students are at high risk of quitting."'
+    },
+    {
+      id: 'enrollments',
+      header: 'BOOST NEW ENROLLMENTS',
+      text: '"Show me all leads that need follow-up today."'
+    },
+    {
+      id: 'at-risk',
+      header: 'SAVE AT-RISK MEMBERS',
+      text: '"Who hasn\'t attended in 14+ days?"'
+    },
+    {
+      id: 'class-quality',
+      header: 'IMPROVE CLASS QUALITY',
+      text: '"Which classes are over capacity or under capacity?"'
+    },
+    {
+      id: 'parent-comms',
+      header: 'PARENT COMMUNICATIONS',
+      text: '"Draft a message to parents about upcoming events."'
+    },
+    {
+      id: 'staff-perf',
+      header: 'STAFF PERFORMANCE',
+      text: '"Which instructors have the highest retention this month?"'
+    },
+    {
+      id: 'financial',
+      header: 'FINANCIAL SNAPSHOT',
+      text: '"Give me revenue, expenses, and projections for this month."'
     }
   ];
+
+  // Favorites state - stored in localStorage for now
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dojoFlowQuickCommandFavorites');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    }
+    return new Set();
+  });
+
+  // Save favorites to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('dojoFlowQuickCommandFavorites', JSON.stringify([...favorites]));
+  }, [favorites]);
+
+  // Toggle favorite status
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the command
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(id)) {
+        newFavorites.delete(id);
+      } else {
+        newFavorites.add(id);
+      }
+      return newFavorites;
+    });
+  };
+
+  // Sort commands: favorites first, then non-favorites
+  const sortedQuickCommands = [...quickCommands].sort((a, b) => {
+    const aFav = favorites.has(a.id) ? 0 : 1;
+    const bFav = favorites.has(b.id) ? 0 : 1;
+    return aFav - bFav;
+  });
+
+  // Carousel scroll state
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // Update scroll buttons visibility
+  const updateScrollButtons = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  // Scroll carousel
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 300; // Scroll by ~1.5 cards
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -580,22 +681,66 @@ export default function KaiCommand() {
                     Tell me about your dojo and what you want to improve—growth, retention, or operations—and I'll show you the numbers.
                   </p>
                   
-                  {/* Suggested Prompts - Larger cards with shadow */}
-                  <div className="grid grid-cols-3 gap-5 w-full max-w-3xl">
-                    {suggestedPrompts.map((prompt, index) => (
+                  {/* Quick Commands Carousel */}
+                  <div className="relative w-full max-w-4xl">
+                    {/* Left Arrow */}
+                    {canScrollLeft && (
                       <button
-                        key={index}
-                        onClick={() => handlePromptClick(prompt.text)}
-                        className="bg-white border border-slate-100 rounded-[18px] p-5 text-left shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 transition-all duration-200 group"
+                        onClick={() => scrollCarousel('left')}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
                       >
-                        <div className="text-xs font-semibold text-[#E53935] uppercase tracking-wide mb-2">
-                          {prompt.header}
-                        </div>
-                        <p className="text-sm text-slate-600 group-hover:text-slate-800 leading-relaxed">
-                          {prompt.text}
-                        </p>
+                        <ChevronLeft className="w-5 h-5 text-slate-600" />
                       </button>
-                    ))}
+                    )}
+                    
+                    {/* Right Arrow */}
+                    {canScrollRight && (
+                      <button
+                        onClick={() => scrollCarousel('right')}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5 text-slate-600" />
+                      </button>
+                    )}
+                    
+                    {/* Scrollable Container */}
+                    <div
+                      ref={carouselRef}
+                      onScroll={updateScrollButtons}
+                      className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-1"
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                      {sortedQuickCommands.map((command) => (
+                        <button
+                          key={command.id}
+                          onClick={() => handlePromptClick(command.text)}
+                          className={`relative flex-shrink-0 w-[200px] bg-white border rounded-[18px] p-5 text-left shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 transition-all duration-200 group snap-start ${
+                            favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : 'border-slate-100'
+                          }`}
+                        >
+                          {/* Favorite Star */}
+                          <div
+                            onClick={(e) => toggleFavorite(command.id, e)}
+                            className="absolute top-3 right-3 p-1 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                          >
+                            <Star
+                              className={`w-4 h-4 transition-colors ${
+                                favorites.has(command.id)
+                                  ? 'fill-[#E53935] text-[#E53935]'
+                                  : 'text-slate-300 hover:text-slate-400'
+                              }`}
+                            />
+                          </div>
+                          
+                          <div className="text-xs font-semibold text-[#E53935] uppercase tracking-wide mb-2 pr-6">
+                            {command.header}
+                          </div>
+                          <p className="text-sm text-slate-600 group-hover:text-slate-800 leading-relaxed">
+                            {command.text}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ) : (

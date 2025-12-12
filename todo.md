@@ -2379,3 +2379,28 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Add theme-color meta tag for mobile browsers (#E53935 red)
 - [x] Add Apple mobile web app meta tags for iOS support
 - [x] Add app description and title meta tags
+
+
+## ✅ VERIFIED: DojoFlow Logo in Top Navigation
+- [x] Investigated current logo implementation in BottomNavLayout (line 187)
+- [x] Confirmed logo-light.png and logo-dark.png are the correct new logos
+- [x] No old/duplicate logo references found - using single source of truth
+- [x] Verified logo displays correctly on Kai Command, Students, and all pages
+- [x] Confirmed theme-based logo switching works (light vs dark mode)
+
+Note: The logo was already correctly implemented. The navigation uses:
+- /logo-dark.png (white text) for dark/cinematic modes
+- /logo-light.png (dark text) for light mode
+
+
+## ✅ COMPLETED: Kai Quick Commands Carousel with Favorites
+- [x] Convert 3-tile static layout to horizontal scrollable carousel
+- [x] Add left/right arrow controls (show only when more items available)
+- [x] Add smooth horizontal scroll animation
+- [x] Add 10 quick command tiles with titles and descriptions
+- [x] Clicking tile fills chat input with predefined prompt
+- [x] Add star icon to each tile for favorites
+- [x] Persist favorites in localStorage (per browser)
+- [x] Show favorited tiles first in carousel
+- [x] Star click toggles favorite (doesn't trigger command)
+- [x] Responsive: snap scroll on desktop, swipe on mobile
