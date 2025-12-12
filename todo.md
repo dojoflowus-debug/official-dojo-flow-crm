@@ -2730,3 +2730,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Remove redundant wrapper/tray behind composer (already done in previous fix)
 - [x] Content area uses pb-4 instead of pb-48, composer reserves its own space
 - [x] Test no visible overlap on any viewport height
+
+## API Integrations Setup
+- [x] Add Stripe payment integration (webdev_add_feature)
+- [x] Create Twilio SMS/Voice helper functions (server/_core/twilio.ts)
+- [x] Create SendGrid email helper functions (server/_core/sendgrid.ts)
+- [x] Create ElevenLabs voice synthesis helper (server/_core/elevenlabs.ts)
+- [x] Write tests for each integration (14 tests passing)
+- [x] Verify all integrations work correctly
