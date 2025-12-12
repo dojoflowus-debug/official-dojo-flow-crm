@@ -99,16 +99,16 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   // Overall map background - deep charcoal
   {
     elementType: "geometry",
-    stylers: [{ color: "#0F1115" }]
+    stylers: [{ color: "#0f1115" }]
   },
   // Labels - soft light gray, never pure white
   {
     elementType: "labels.text.fill",
-    stylers: [{ color: "#8a9099" }]
+    stylers: [{ color: "#9ca3af" }]
   },
   {
     elementType: "labels.text.stroke",
-    stylers: [{ color: "#0F1115" }, { weight: 2 }]
+    stylers: [{ color: "#0f1115" }]
   },
   // Administrative areas
   {
@@ -126,12 +126,12 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
     elementType: "labels.text.fill",
     stylers: [{ color: "#9ca3af" }]
   },
-  {
-    featureType: "administrative.province",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#6b7280" }]
-  },
   // Points of interest
+  {
+    featureType: "poi",
+    elementType: "geometry",
+    stylers: [{ color: "#15181d" }]
+  },
   {
     featureType: "poi",
     elementType: "labels.text.fill",
@@ -142,21 +142,16 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
     elementType: "geometry",
     stylers: [{ color: "#151a1f" }]
   },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#4b5563" }]
-  },
   // Roads - muted graphite gray, low contrast
   {
     featureType: "road",
     elementType: "geometry",
-    stylers: [{ color: "#1f2329" }]
+    stylers: [{ color: "#1f2933" }]
   },
   {
     featureType: "road",
     elementType: "geometry.stroke",
-    stylers: [{ color: "#15181d" }]
+    stylers: [{ color: "#0f1115" }]
   },
   {
     featureType: "road",
@@ -172,11 +167,6 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
     featureType: "road.highway",
     elementType: "geometry.stroke",
     stylers: [{ color: "#1a1d23" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#9ca3af" }]
   },
   {
     featureType: "road.arterial",
@@ -203,7 +193,7 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   {
     featureType: "water",
     elementType: "geometry",
-    stylers: [{ color: "#0a1014" }]
+    stylers: [{ color: "#0b1c26" }]
   },
   {
     featureType: "water",
@@ -228,21 +218,52 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   }
 ];
 
-function loadMapScript() {
-  return new Promise(resolve => {
+let scriptLoaded = false;
+let scriptLoading: Promise<void> | null = null;
+
+function loadMapScript(): Promise<void> {
+  if (scriptLoaded && window.google?.maps) {
+    return Promise.resolve();
+  }
+  
+  if (scriptLoading) {
+    return scriptLoading;
+  }
+  
+  scriptLoading = new Promise((resolve) => {
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="maps/api/js"]');
+    if (existingScript) {
+      if (window.google?.maps) {
+        scriptLoaded = true;
+        resolve();
+        return;
+      }
+      // Wait for existing script to load
+      existingScript.addEventListener('load', () => {
+        scriptLoaded = true;
+        resolve();
+      });
+      return;
+    }
+    
     const script = document.createElement("script");
     script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
     script.async = true;
     script.crossOrigin = "anonymous";
     script.onload = () => {
-      resolve(null);
-      script.remove(); // Clean up immediately
+      scriptLoaded = true;
+      resolve();
     };
     script.onerror = () => {
       console.error("Failed to load Google Maps script");
+      scriptLoading = null;
+      resolve();
     };
     document.head.appendChild(script);
   });
+  
+  return scriptLoading;
 }
 
 interface MapViewProps {
@@ -263,24 +284,37 @@ export function MapView({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
   const currentDarkMode = useRef<boolean>(darkMode);
+  const initialized = useRef<boolean>(false);
 
   const init = usePersistFn(async () => {
+    if (initialized.current) return;
+    
     await loadMapScript();
-    if (!mapContainer.current) {
-      console.error("Map container not found");
+    if (!mapContainer.current || !window.google?.maps) {
+      console.error("Map container or Google Maps not available");
       return;
     }
-    map.current = new window.google.maps.Map(mapContainer.current, {
+    
+    initialized.current = true;
+    
+    // IMPORTANT: When using custom styles, do NOT use mapId
+    // mapId is for cloud-based styling which conflicts with inline styles
+    const mapOptions: google.maps.MapOptions = {
       zoom: initialZoom,
       center: initialCenter,
       mapTypeControl: true,
       fullscreenControl: true,
       zoomControl: true,
       streetViewControl: true,
-      mapId: "DEMO_MAP_ID",
+      // Apply dark styles on initialization if darkMode is true
       styles: darkMode ? DARK_MAP_STYLES : undefined,
-    });
+    };
+    
+    map.current = new window.google.maps.Map(mapContainer.current, mapOptions);
     currentDarkMode.current = darkMode;
+    
+    console.log('[Map] Initialized with darkMode:', darkMode);
+    
     if (onMapReady) {
       onMapReady(map.current);
     }
@@ -293,8 +327,9 @@ export function MapView({
   // Update map styles when darkMode prop changes
   useEffect(() => {
     if (map.current && currentDarkMode.current !== darkMode) {
+      console.log('[Map] Updating styles, darkMode:', darkMode);
       map.current.setOptions({
-        styles: darkMode ? DARK_MAP_STYLES : null,
+        styles: darkMode ? DARK_MAP_STYLES : [],
       });
       currentDarkMode.current = darkMode;
     }

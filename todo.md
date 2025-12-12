@@ -2622,3 +2622,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Revert to light map style when Light Mode is enabled
 - [ ] Preserve student markers and map controls visibility
 - [ ] No layout changes - visual style only
+
+## Fix Google Maps Dark Mode Styling
+- [x] Debug why dark map style is not applying
+- [x] Ensure isDarkMode state is correctly passed to MapView
+- [x] Apply dark style on map initialization AND on theme change
+- [x] Verify map turns black when Dark Mode is enabled

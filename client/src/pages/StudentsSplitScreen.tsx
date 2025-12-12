@@ -365,7 +365,8 @@ function StatsStrip({
 export default function StudentsSplitScreen() {
   // Theme
   const { theme } = useTheme()
-  const isDarkMode = theme === 'dark'
+  // Both 'dark' and 'cinematic' themes should use dark map styling
+  const isDarkMode = theme === 'dark' || theme === 'cinematic'
   
   // State
   const [students, setStudents] = useState<Student[]>([])
