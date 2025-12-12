@@ -2478,3 +2478,27 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Enhance input bar with glow, increased width, and elevated position
 - [x] Add cinematic entrance animations (fade, scale, slide)
 - [x] All animations are smooth and premium (Apple-style)
+
+## 🚀 IN PROGRESS: Environment Selector with Cinematic Backgrounds
+- [ ] Create environment backgrounds context for state management
+- [ ] Add 5 environment options (Luxury Dojo Lounge, Zen Bamboo Garden, Samurai Red Dojo, Ultra-Modern White Dojo, Futuristic Neon Dojo)
+- [ ] Build frosted glass Environment Selection Modal with preview cards
+- [ ] Cards glow and enlarge on hover
+- [ ] Add confirmation modal ("Set as Default" vs "Preview Only")
+- [ ] Persist default environment to user settings
+- [ ] Add environment selector button to top navigation
+- [ ] Add smooth fade transition between environments (200-300ms)
+- [ ] Keep foreground UI on frosted glass layers for readability
+- [ ] Save checkpoint
+
+## ✅ COMPLETED: Environment Selector with Cinematic Backgrounds
+- [x] Create environment backgrounds context for state management
+- [x] Add 5 environment options (Luxury Dojo Lounge, Zen Bamboo Garden, Samurai Red Dojo, Ultra-Modern White Dojo, Futuristic Neon Dojo)
+- [x] Build frosted glass Environment Selection Modal with preview cards
+- [x] Cards glow and enlarge on hover
+- [x] Add confirmation modal ("Set as Default" vs "Preview Only")
+- [x] Persist default environment to localStorage
+- [x] Add environment selector button (Palette icon) to top navigation in Cinematic mode
+- [x] Add smooth fade transition between environments (300ms)
+- [x] Keep foreground UI on frosted glass layers for readability
+- [x] Apply environment gradients to main panel in Cinematic mode

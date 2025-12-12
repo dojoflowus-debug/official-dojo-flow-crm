@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFocusMode } from '@/contexts/FocusModeContext';
+import { useEnvironment } from '@/contexts/EnvironmentContext';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +78,8 @@ export default function KaiCommand() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   // Use global Focus Mode context
   const { isFocusMode, toggleFocusMode } = useFocusMode();
+  // Use global Environment context
+  const { currentEnvironment, isTransitioning } = useEnvironment();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -666,9 +669,32 @@ export default function KaiCommand() {
         </div>
 
         {/* Main Conversation Panel - Right Side */}
-        <div className={`flex-1 flex flex-col ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}>
+        <div 
+          className={`flex-1 flex flex-col relative overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
+          style={isCinematic ? {
+            background: currentEnvironment.gradient,
+            transition: isTransitioning ? 'opacity 0.3s ease-out' : 'none',
+            opacity: isTransitioning ? 0.7 : 1
+          } : undefined}
+        >
+          {/* Environment Overlay for readability in Cinematic mode */}
+          {isCinematic && (
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse at 50% 30%, transparent 0%, ${currentEnvironment.overlayColor} 70%)`,
+                transition: 'background 0.5s ease-out'
+              }}
+            />
+          )}
           {/* Top Banner */}
-          <div className={`px-6 py-3 border-b flex items-center justify-between ${isDark ? 'bg-[#0C0C0D] border-[rgba(255,255,255,0.05)]' : 'bg-white border-slate-200'}`}>
+          <div className={`relative z-10 px-6 py-3 border-b flex items-center justify-between ${
+            isCinematic 
+              ? 'bg-white/5 backdrop-blur-md border-white/10' 
+              : isDark 
+                ? 'bg-[#0C0C0D] border-[rgba(255,255,255,0.05)]' 
+                : 'bg-white border-slate-200'
+          }`}>
             <p className={`text-xs uppercase tracking-wide font-medium ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>
               Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
             </p>

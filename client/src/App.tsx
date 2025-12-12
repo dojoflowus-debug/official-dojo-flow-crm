@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
+import { EnvironmentProvider } from "./contexts/EnvironmentContext";
 import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
 import NewVisitor from "./pages/NewVisitor";
@@ -158,14 +159,16 @@ function App() {
         defaultTheme="dark"
         switchable
       >
-        <FocusModeProvider>
-          <TooltipProvider>
+        <EnvironmentProvider>
+          <FocusModeProvider>
+            <TooltipProvider>
             <Toaster />
             <BrowserRouter>
               <Router />
             </BrowserRouter>
           </TooltipProvider>
-        </FocusModeProvider>
+          </FocusModeProvider>
+        </EnvironmentProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

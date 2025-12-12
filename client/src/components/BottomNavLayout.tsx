@@ -15,12 +15,15 @@ import {
   LogOut,
   ChevronDown,
   Eye,
-  EyeOff
+  EyeOff,
+  Palette
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useFocusMode } from '@/contexts/FocusModeContext'
+import { useEnvironment } from '@/contexts/EnvironmentContext'
+import { EnvironmentSelectorModal } from '@/components/EnvironmentSelectorModal'
 import { trpc } from '@/lib/trpc'
 import {
   DropdownMenu,
@@ -76,6 +79,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   const { user, logout } = useAuth()
   const { theme } = useTheme()
   const { isFocusMode, isAnimating, showOverlay, toggleFocusMode } = useFocusMode()
+  const { currentEnvironment, isTransitioning, openModal } = useEnvironment()
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
@@ -189,6 +193,9 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
 
   return (
     <div className={`min-h-screen flex flex-col ${getBgClass()}`}>
+      {/* Environment Selector Modal */}
+      <EnvironmentSelectorModal />
+
       {/* Focus Mode Overlay */}
       {showOverlay && (
         <div 
@@ -286,6 +293,19 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
               <div className="hidden md:block">
                 <ThemeToggle />
               </div>
+
+              {/* Environment Selector (only in Cinematic mode) */}
+              {isCinematic && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={openModal}
+                  className="relative hidden md:flex h-9 w-9 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+                  title="Choose Environment"
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+              )}
 
               {/* Notifications */}
               <Button
