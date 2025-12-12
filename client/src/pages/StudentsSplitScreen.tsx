@@ -1064,7 +1064,7 @@ export default function StudentsSplitScreen() {
 
       {/* Full Map Mode Overlay - No blur, clean map view */}
       {isFullMapMode && (
-        <div className="fixed inset-0 z-40 pt-[88px]">
+        <div className="fixed inset-0 z-40 pt-[72px]">
           {/* Full Screen Map - Edge to edge, no backdrop */}
           <div className="absolute inset-0 top-0">
             <MapView 

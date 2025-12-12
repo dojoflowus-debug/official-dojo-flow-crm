@@ -278,8 +278,8 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
         </header>
       )}
 
-      {/* Main Content - 88px top padding for fixed 72px header, 80px bottom for 68px nav */}
-      <main className={`flex-1 ${!hideHeader ? 'pt-[88px]' : ''} ${hiddenInFocusMode ? '' : 'pb-[80px]'}`}>
+      {/* Main Content - 72px top padding for fixed 72px header, 80px bottom for 68px nav */}
+      <main className={`flex-1 ${!hideHeader ? 'pt-[72px]' : ''} ${hiddenInFocusMode ? '' : 'pb-[80px]'}`}>
         {children}
       </main>
 
