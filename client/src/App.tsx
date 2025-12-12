@@ -27,6 +27,7 @@ import KaiCommand from "./pages/KaiCommand";
 import CRMDashboard from "./pages/CRMDashboard";
 import StudentsNew from "./pages/StudentsNew";
 import StudentsSplitScreen from "./pages/StudentsSplitScreen";
+import StudentPortal from "./pages/StudentPortal";
 import Leads from "./pages/Leads";
 import TestData from "./pages/TestData";
 import SimpleDashboard from "./pages/SimpleDashboard";
@@ -103,6 +104,7 @@ function Router() {
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
       <Route path="/students" element={<StudentsSplitScreen />} />
       <Route path="/students-old" element={<StudentsNew />} />
+      <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />
       <Route path="/leads" element={<Leads />} />
       <Route path="/test-data" element={<TestData />} />
       {/* Kiosk removed - Kai Command is the central focus */}

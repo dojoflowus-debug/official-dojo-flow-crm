@@ -226,6 +226,53 @@ export const smsReminderRouter = router({
     }),
 
   /**
+   * Unenroll a student from a class
+   */
+  unenrollFromClass: protectedProcedure
+    .input(z.object({
+      studentId: z.number(),
+      classId: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const { classEnrollments } = await import("../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      await db
+        .update(classEnrollments)
+        .set({ status: 'cancelled' })
+        .where(and(
+          eq(classEnrollments.studentId, input.studentId),
+          eq(classEnrollments.classId, input.classId)
+        ));
+      
+      return { success: true };
+    }),
+
+  /**
+   * Get all available classes for enrollment
+   */
+  getAvailableClasses: publicProcedure
+    .query(async () => {
+      const { getDb } = await import("./db");
+      const { classes } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const availableClasses = await db
+        .select()
+        .from(classes)
+        .where(eq(classes.isActive, 1));
+      
+      return availableClasses;
+    }),
+
+  /**
    * Get reminder stats (admin dashboard)
    */
   getStats: protectedProcedure

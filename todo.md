@@ -2746,3 +2746,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Create background job to check and send reminders every hour (server/services/scheduler.ts)
 - [x] Test SMS sending with Twilio (8 tests passing)
 - [ ] Add UI toggle for students to opt-in/out of SMS reminders (future enhancement)
+
+## Student Portal - Class Enrollment
+- [x] Add tRPC procedures for listing available classes (getAvailableClasses)
+- [x] Add tRPC procedures for student enrollment (enrollInClass, unenrollFromClass)
+- [x] Create StudentPortal page component
+- [x] Display available classes with schedule and instructor info
+- [x] Add enrollment buttons with confirmation
+- [x] Show enrolled classes with SMS reminder toggle
+- [x] Add SMS preferences section (opt-in/out, reminder timing)
+- [x] Register route in App.tsx (/student-portal)
+- [x] Test enrollment flow end-to-end
