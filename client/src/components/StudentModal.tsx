@@ -482,8 +482,20 @@ export default function StudentModal({
             {/* Header with Tabs */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                {schoolLogo && (
+                {schoolLogo ? (
                   <img src={schoolLogo} alt="School Logo" className="w-10 h-10 object-contain" />
+                ) : (
+                  /* Placeholder icon - martial arts dojo symbol */
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      {/* Torii gate / dojo symbol */}
+                      <path d="M4 6h16" />
+                      <path d="M6 6v12" />
+                      <path d="M18 6v12" />
+                      <path d="M2 4h20" />
+                      <path d="M8 10h8" />
+                    </svg>
+                  </div>
                 )}
                 {/* Logo Upload Success Message */}
                 {logoUploadSuccess && (

@@ -2307,3 +2307,9 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Remove "DojoFlow" text from student card header
 - [x] Fix broken logo display - only show logo image when properly uploaded
 - [x] Show only the logo (no text) in student card header
+
+
+## ✅ COMPLETED: Student Card Placeholder Icon
+- [x] Add a placeholder icon for student card header when no school logo is uploaded
+- [x] Use a subtle martial arts or dojo-themed icon (torii gate design)
+- [x] Ensure placeholder looks clean and professional (red gradient with white icon)
