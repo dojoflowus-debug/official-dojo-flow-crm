@@ -2344,3 +2344,10 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Reduced main content padding from pt-[88px] to pt-[72px] (exact header height)
 - [x] Breadcrumb now sits directly below top nav with no extra gap
 - [x] Updated full map mode overlay to use pt-[72px] for consistency
+
+
+## ✅ COMPLETED: Add Breadcrumb Navigation to Leads and Classes
+- [x] Add breadcrumb to Leads page (Dashboard > Leads)
+- [x] Add breadcrumb to Classes page (Dashboard > Classes)
+- [x] Match styling with Students page breadcrumb (backdrop-blur, border-b)
+- [x] Ensure consistent spacing and layout (px-6 py-2)

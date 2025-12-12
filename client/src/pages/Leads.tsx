@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import BottomNavLayout from '@/components/BottomNavLayout';
+import Breadcrumb from '@/components/Breadcrumb';
 import HorizontalPipeline from '../components/HorizontalPipeline'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -295,6 +296,16 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   return (
     <BottomNavLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-red-950/20">
+        {/* Breadcrumb Navigation */}
+        <div className="bg-card/30 backdrop-blur-sm border-b border-border/30 px-6 py-2">
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Leads', href: '/leads' },
+            ]}
+          />
+        </div>
+
         {/* Header */}
         <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6">

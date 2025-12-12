@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import BottomNavLayout from '@/components/BottomNavLayout';
+import Breadcrumb from '@/components/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -419,6 +420,16 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
   return (
     <BottomNavLayout>
+      {/* Breadcrumb Navigation */}
+      <div className="bg-background/80 backdrop-blur-sm border-b border-border/40 px-6 py-2">
+        <Breadcrumb
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Classes', href: '/classes' },
+          ]}
+        />
+      </div>
+
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
