@@ -2351,3 +2351,9 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Add breadcrumb to Classes page (Dashboard > Classes)
 - [x] Match styling with Students page breadcrumb (backdrop-blur, border-b)
 - [x] Ensure consistent spacing and layout (px-6 py-2)
+
+
+## ✅ COMPLETED: Add DojoFlow Logo for Light Mode
+- [x] Copy Darkdojoflow.png to project public folder (as logo-light.png)
+- [x] BottomNavLayout already configured to use /logo-light.png in light mode
+- [x] Logo displays correctly with dark text on light background
