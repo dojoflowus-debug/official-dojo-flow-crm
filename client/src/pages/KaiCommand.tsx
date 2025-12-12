@@ -925,10 +925,10 @@ export default function KaiCommand() {
           {/* CONTENT LAYER - Messages Area with visible scrollbar - Centered content */}
           {/* 3-Zone Layout: This is the middle zone (scrollable messages) */}
           {/* Focus Mode: pt-16 (64px) for top safe area, pb-44 (176px) for composer height + spacing */}
-          {/* Cinematic: pt-6 pb-40 for standard spacing */}
+          {/* Cinematic non-fullscreen: pb-48 (192px) to prevent composer overlap with prompt cards */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-44 px-6' : isCinematic ? 'pt-6 pb-40 px-6' : 'p-6 pt-6 pb-32'}`}
+            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-44 px-6' : isCinematic ? 'pt-6 pb-48 px-6' : 'p-6 pt-6 pb-32'}`}
             style={{ zIndex: 10 }}
           >
             {/* Shared content column wrapper - max-w-4xl to match composer width */}
@@ -1151,26 +1151,13 @@ export default function KaiCommand() {
 
           {/* Input Bar - Single Composer Dock */}
           {/* 3-Zone Layout: Bottom zone - anchored to bottom with 24px spacing */}
-          {/* Focus Mode: Single container, no nested wrappers, max-w-4xl to match messages */}
+          {/* Cinematic non-fullscreen: Single glass pill, no extra wrapper, anchored lower */}
           <div 
-            className={`transition-all duration-500 flex-shrink-0 relative z-20 ${isFocusMode ? 'px-6 pb-6' : 'p-4 border-t'} ${expandedInput && !isFocusMode ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} ${!isFocusMode ? 'backdrop-blur-sm' : ''}`}
+            className={`transition-all duration-500 flex-shrink-0 relative z-20 ${isFocusMode ? 'px-6 pb-6' : isCinematic ? 'px-6 pb-6' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-sm' : ''}`}
             style={(isCinematic && !isFocusMode) ? { 
-              animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both',
-              marginBottom: '20px'
+              animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both'
             } : {}}>
-            {/* Background blur layer - only for Cinematic non-Focus mode */}
-            {(isCinematic && !isFocusMode) && (
-              <div 
-                className="absolute inset-x-4 bottom-4 top-4 rounded-[32px] border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)]"
-                style={{ 
-                  zIndex: 0,
-                  background: 'rgba(0, 0, 0, 0.85)',
-                  backdropFilter: 'blur(10px)',
-                  animation: 'cinematicGlassFadeIn 0.5s ease-out 0.7s both',
-                  WebkitBackdropFilter: 'blur(10px)'
-                }}
-              />
-            )}
+            {/* No extra background blur layer - removed to eliminate double box */}
             {/* Shared content width wrapper - max-w-4xl to match messages area */}
             <div className={`max-w-4xl mx-auto relative transition-all duration-500`}>
               {/* Expand/Collapse Button - Hidden in Focus Mode for cleaner look */}
@@ -1185,12 +1172,12 @@ export default function KaiCommand() {
                 </Button>
               )}
               
-              {/* Input container - Single clean container for Focus Mode */}
+              {/* Input container - Single clean glass pill for Cinematic/Focus Mode */}
               <div className={`flex items-center gap-2 transition-all duration-300 ${
                 isFocusMode 
                   ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
                   : isCinematic
-                    ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_4px_24px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
+                    ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)] focus-within:border-[rgba(255,76,76,0.6)]'
                     : isDark 
                       ? 'rounded-[22px] p-2 bg-[#18181A] border border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' 
                       : 'rounded-[22px] p-2 bg-white border border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
@@ -1198,8 +1185,8 @@ export default function KaiCommand() {
               style={(isCinematic || isFocusMode) ? { 
                 animation: isCinematic && !isFocusMode ? 'cinematicInputGlow 3s ease-in-out infinite' : 'none',
                 background: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: isFocusMode ? 'blur(20px)' : 'none',
-                WebkitBackdropFilter: isFocusMode ? 'blur(20px)' : 'none'
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)'
               } : {}}
               >
                 <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>

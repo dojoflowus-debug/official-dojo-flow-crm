@@ -2705,3 +2705,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Implement reading mode behavior (hide while scrolling, show 500ms after stop)
 - [x] Ensure no flicker or jank (smooth transitions)
 - [x] Test across all environment backgrounds
+
+## Fix Cinematic Mode Composer Overlap
+- [x] Investigate current composer structure and identify extra container
+- [x] Remove redundant wrapper/tray behind composer (keep only glass pill)
+- [x] Add bottom padding to content area (pb-48 = 192px for Cinematic)
+- [x] Anchor composer lower in non-fullscreen Cinematic (px-6 pb-6)
+- [x] Ensure Kai prompt panel stays centered and never collides
+- [x] Test fullscreen Cinematic mode remains unchanged
