@@ -2695,3 +2695,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Constrain conversation width to match composer (max-w-4xl, centered)
 - [x] Ensure only messages area scrolls (flex-shrink-0 on composer)
 - [x] Test ChatGPT-style scroll behavior
+
+## Focus Mode Auto-Hide UI
+- [x] Add auto-hide state and idle detection (2.5s timeout)
+- [x] Implement smooth fade transitions (300ms opacity, translateY -4px/+2px)
+- [x] Fade out: hint bar, floating buttons (presentation, full focus, exit)
+- [x] Keep visible: messages, avatars, composer, exit affordance (returns on interaction)
+- [x] Add interaction listeners (mouse, scroll, type, click, focus)
+- [x] Implement reading mode behavior (hide while scrolling, show 500ms after stop)
+- [x] Ensure no flicker or jank (smooth transitions)
+- [x] Test across all environment backgrounds

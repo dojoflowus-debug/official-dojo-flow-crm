@@ -71,9 +71,10 @@ interface BottomNavLayoutProps {
   children: React.ReactNode
   hideHeader?: boolean
   hiddenInFocusMode?: boolean
+  isUIHidden?: boolean // For Focus Mode auto-hide
 }
 
-export default function BottomNavLayout({ children, hideHeader = false, hiddenInFocusMode = false }: BottomNavLayoutProps) {
+export default function BottomNavLayout({ children, hideHeader = false, hiddenInFocusMode = false, isUIHidden = false }: BottomNavLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
@@ -218,12 +219,14 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
         </div>
       )}
 
-      {/* Focus Mode Active Indicator Strip */}
+      {/* Focus Mode Active Indicator Strip - Auto-hides when idle */}
       {isFocusMode && !showOverlay && (
         <div 
-          className={`fixed top-0 left-0 right-0 z-[2001] flex items-center justify-center py-1.5 bg-gradient-to-r from-transparent ${isPresentationMode ? 'via-green-500/30' : 'via-[#E53935]/20'} to-transparent`}
+          className={`fixed top-0 left-0 right-0 z-[2001] flex items-center justify-center py-1.5 bg-gradient-to-r from-transparent ${isPresentationMode ? 'via-green-500/30' : 'via-[#E53935]/20'} to-transparent transition-all duration-300 ease-out ${
+            isUIHidden ? 'opacity-0 -translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
+          }`}
           style={{
-            animation: 'fadeIn 300ms ease-out forwards'
+            animation: isUIHidden ? 'none' : 'fadeIn 300ms ease-out forwards'
           }}
         >
           {isPresentationMode ? (

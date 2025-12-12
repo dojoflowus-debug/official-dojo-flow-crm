@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -91,6 +91,14 @@ export default function KaiCommand() {
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
+  
+  // Auto-hide UI state for Focus Mode
+  const [isUIHidden, setIsUIHidden] = useState(false);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isScrollingRef = useRef(false);
+  const IDLE_TIMEOUT = 2500; // 2.5 seconds
+  const SCROLL_DEBOUNCE = 500; // 500ms after scroll stops
   
   // Theme detection (needed early for parallax)
   const { theme } = useTheme();
@@ -541,8 +549,96 @@ export default function KaiCommand() {
     return () => clearInterval(interval);
   }, [isCinematic, cinematicTaglines.length]);
 
+  // Auto-hide UI system for Focus Mode
+  const resetIdleTimer = useCallback(() => {
+    // Show UI immediately on interaction
+    setIsUIHidden(false);
+    
+    // Clear existing timer
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    
+    // Only start idle timer in Focus Mode
+    if (isFocusMode) {
+      idleTimerRef.current = setTimeout(() => {
+        // Don't hide if user is actively scrolling
+        if (!isScrollingRef.current) {
+          setIsUIHidden(true);
+        }
+      }, IDLE_TIMEOUT);
+    }
+  }, [isFocusMode]);
+
+  // Handle scroll events for reading mode
+  const handleScroll = useCallback(() => {
+    if (!isFocusMode) return;
+    
+    isScrollingRef.current = true;
+    setIsUIHidden(true); // Hide while scrolling
+    
+    // Clear existing scroll timer
+    if (scrollTimerRef.current) {
+      clearTimeout(scrollTimerRef.current);
+    }
+    
+    // Show UI after scrolling stops
+    scrollTimerRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+      setIsUIHidden(false);
+      // Restart idle timer
+      resetIdleTimer();
+    }, SCROLL_DEBOUNCE);
+  }, [isFocusMode, resetIdleTimer]);
+
+  // Set up auto-hide listeners
+  useEffect(() => {
+    if (!isFocusMode) {
+      setIsUIHidden(false);
+      return;
+    }
+
+    const container = containerRef.current;
+    const scrollContainer = scrollContainerRef.current;
+    
+    // Interaction events that show UI
+    const showUI = () => resetIdleTimer();
+    
+    // Add listeners
+    document.addEventListener('mousemove', showUI);
+    document.addEventListener('keydown', showUI);
+    document.addEventListener('click', showUI);
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+    }
+    
+    // Start initial idle timer
+    resetIdleTimer();
+    
+    return () => {
+      document.removeEventListener('mousemove', showUI);
+      document.removeEventListener('keydown', showUI);
+      document.removeEventListener('click', showUI);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+      if (scrollTimerRef.current) {
+        clearTimeout(scrollTimerRef.current);
+      }
+    };
+  }, [isFocusMode, resetIdleTimer, handleScroll]);
+
+  // CSS classes for auto-hide transitions
+  const autoHideClass = isFocusMode && isUIHidden 
+    ? 'opacity-0 translate-y-[-4px] pointer-events-none' 
+    : 'opacity-100 translate-y-0';
+  const autoHideTransition = 'transition-all duration-300 ease-out';
+
   return (
-    <BottomNavLayout hiddenInFocusMode={isFocusMode}>
+    <BottomNavLayout hiddenInFocusMode={isFocusMode} isUIHidden={isUIHidden}>
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
       <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
@@ -1151,11 +1247,13 @@ export default function KaiCommand() {
         </div>
       </div>
       
-      {/* Floating Focus Mode Toggle Button */}
-      <div className={`fixed z-[60] transition-all duration-300 ease-out flex flex-col gap-3 ${
+      {/* Floating Focus Mode Toggle Button - Auto-hides when idle */}
+      <div className={`fixed z-[60] flex flex-col gap-3 ${autoHideTransition} ${
         isFocusMode 
           ? 'bottom-6 right-6' 
           : 'bottom-24 right-6'
+      } ${
+        isFocusMode && isUIHidden ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
       }`}>
         {/* Presentation Mode Button (only shown in Focus Mode with Cinematic) */}
         {isFocusMode && isCinematic && (
