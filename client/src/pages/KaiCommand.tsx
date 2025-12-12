@@ -823,15 +823,17 @@ export default function KaiCommand() {
           )}
 
           {/* CONTENT LAYER - Messages Area with visible scrollbar - Centered content */}
+          {/* 3-Zone Layout: This is the middle zone (scrollable messages) */}
+          {/* Added proper top padding (pt-6) and bottom padding (pb-40) to prevent overlap with composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 p-6 pt-6 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'}`}
+            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isCinematic ? 'pt-6 pb-40 px-6' : 'p-6 pt-6 pb-32'}`}
             style={{ zIndex: 10 }}
           >
             <div className={`${isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
               {messages.length === 0 ? (
-                /* Empty State - Kai Greeting */
-                <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? '' : 'py-8'} transition-all duration-500`}>
+                /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
+                <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
                   <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
                     style={(isCinematic || isFocusMode) ? {
@@ -1046,10 +1048,14 @@ export default function KaiCommand() {
           </div>
 
           {/* Input Bar - Apple-style floating bar */}
+          {/* 3-Zone Layout: This is the bottom zone (fixed composer) */}
+          {/* Fixed to bottom with consistent 20px spacing, no translateY or negative margins */}
           <div 
-            className={`p-4 border-t transition-all duration-500 ${expandedInput ? 'pb-8' : ''} ${isFocusMode ? 'pb-8 pt-6' : ''} ${(isCinematic || isFocusMode) ? 'pb-6 pt-5 border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm relative z-20`}
-            style={(isCinematic || isFocusMode) ? { animation: isCinematic ? 'cinematicInputSlideUp 0.6s ease-out 0.7s both' : 'none' } : {}}
-          >
+            className={`p-4 border-t transition-all duration-500 ${expandedInput ? 'pb-8' : ''} ${isFocusMode ? 'pb-6 pt-5' : ''} ${(isCinematic || isFocusMode) ? 'pb-5 pt-4 border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm relative z-20 flex-shrink-0`}
+            style={(isCinematic || isFocusMode) ? { 
+              animation: isCinematic ? 'cinematicInputSlideUp 0.6s ease-out 0.7s both' : 'none',
+              marginBottom: '20px'
+            } : {}}>
             {/* Background blur layer - separate from text (z-index: 0) */}
             {(isCinematic || isFocusMode) && (
               <div 

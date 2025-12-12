@@ -2665,3 +2665,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test map loading with proper error handling
 - [x] Hide Google's native error dialog with CSS
 - [x] Add MutationObserver to detect and handle error dialogs
+
+## Fix Cinematic Mode Vertical Spacing
+- [x] Investigate current KaiCommand layout structure in Cinematic mode
+- [x] Lock page to proper 3-zone layout (header, messages, composer)
+- [x] Fix composer bar position - anchor to bottom with 20px margin
+- [x] Add top padding to messages area (pt-6)
+- [x] Add bottom padding to message list for composer height + spacing (pb-40 for cinematic, pb-32 for others)
+- [x] Ensure only message list scrolls, no double scrollbar (flex-shrink-0 on composer)
+- [x] Test vertical balance on different screen sizes
