@@ -79,7 +79,7 @@ export default function KaiCommand() {
   const [isResizing, setIsResizing] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   // Use global Focus Mode context
-  const { isFocusMode, toggleFocusMode } = useFocusMode();
+  const { isFocusMode, isFullscreen, toggleFocusMode, toggleFullscreen, enterFullscreen } = useFocusMode();
   // Use global Environment context
   const { currentEnvironment, isTransitioning } = useEnvironment();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1119,45 +1119,65 @@ export default function KaiCommand() {
       </div>
       
       {/* Floating Focus Mode Toggle Button */}
-      <button
-        onClick={toggleFocusMode}
-        className={`fixed z-[60] transition-all duration-300 ease-out group ${
-          isFocusMode 
-            ? 'bottom-6 right-6' 
-            : 'bottom-24 right-6'
-        }`}
-        title={isFocusMode ? 'Exit Focus Mode (Esc)' : 'Enter Focus Mode'}
-      >
-        <div className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-300 ${
-          isFocusMode
-            ? 'bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30'
-            : isDark
-              ? 'bg-[#1F1F22] border border-[rgba(255,255,255,0.10)] hover:bg-[#2A2A2E] hover:border-[rgba(255,255,255,0.15)]'
-              : 'bg-white border border-slate-200 hover:bg-slate-50 hover:shadow-xl'
-        }`}>
-          {isFocusMode ? (
-            <Minimize2 className="w-5 h-5 text-white transition-transform group-hover:scale-110" />
-          ) : (
-            <Maximize2 className={`w-5 h-5 transition-transform group-hover:scale-110 ${isDark ? 'text-white' : 'text-slate-700'}`} />
-          )}
-          
-          {/* Pulse animation when not in focus mode */}
-          {!isFocusMode && (
-            <span className="absolute inset-0 rounded-full animate-ping opacity-20 bg-[#FF4C4C]" style={{ animationDuration: '2s' }} />
-          )}
-        </div>
+      <div className={`fixed z-[60] transition-all duration-300 ease-out flex flex-col gap-3 ${
+        isFocusMode 
+          ? 'bottom-6 right-6' 
+          : 'bottom-24 right-6'
+      }`}>
+        {/* Full Focus Button (only shown in Focus Mode) */}
+        {isFocusMode && !isFullscreen && (
+          <button
+            onClick={enterFullscreen}
+            className="group"
+            title="Enter Full Focus (F)"
+          >
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 bg-[#E53935]/80 backdrop-blur-md border border-white/30 hover:bg-[#E53935] hover:scale-105">
+              <Focus className="w-4 h-4 text-white transition-transform group-hover:scale-110" />
+            </div>
+            {/* Tooltip */}
+            <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-black/60 text-white backdrop-blur-sm">
+              Full Focus (F)
+            </div>
+          </button>
+        )}
         
-        {/* Tooltip */}
-        <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none ${
-          isFocusMode
-            ? 'bg-black/60 text-white backdrop-blur-sm'
-            : isDark
-              ? 'bg-[#1F1F22] text-white border border-[rgba(255,255,255,0.10)]'
-              : 'bg-slate-900 text-white'
-        }`}>
-          {isFocusMode ? 'Exit Focus Mode' : 'Focus Mode'}
-        </div>
-      </button>
+        {/* Main Focus Mode Toggle */}
+        <button
+          onClick={toggleFocusMode}
+          className="group"
+          title={isFocusMode ? 'Exit Focus Mode (Esc)' : 'Enter Focus Mode'}
+        >
+          <div className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-300 ${
+            isFocusMode
+              ? 'bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30'
+              : isDark
+                ? 'bg-[#1F1F22] border border-[rgba(255,255,255,0.10)] hover:bg-[#2A2A2E] hover:border-[rgba(255,255,255,0.15)]'
+                : 'bg-white border border-slate-200 hover:bg-slate-50 hover:shadow-xl'
+          }`}>
+            {isFocusMode ? (
+              <Minimize2 className="w-5 h-5 text-white transition-transform group-hover:scale-110" />
+            ) : (
+              <Maximize2 className={`w-5 h-5 transition-transform group-hover:scale-110 ${isDark ? 'text-white' : 'text-slate-700'}`} />
+            )}
+            
+            {/* Pulse animation when not in focus mode */}
+            {!isFocusMode && (
+              <span className="absolute inset-0 rounded-full animate-ping opacity-20 bg-[#FF4C4C]" style={{ animationDuration: '2s' }} />
+            )}
+          </div>
+          
+          {/* Tooltip */}
+          <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none ${
+            isFocusMode
+              ? 'bg-black/60 text-white backdrop-blur-sm'
+              : isDark
+                ? 'bg-[#1F1F22] text-white border border-[rgba(255,255,255,0.10)]'
+                : 'bg-slate-900 text-white'
+          }`}>
+            {isFocusMode ? 'Exit Focus Mode (Esc)' : 'Focus Mode'}
+          </div>
+        </button>
+      </div>
     </BottomNavLayout>
   );
 }

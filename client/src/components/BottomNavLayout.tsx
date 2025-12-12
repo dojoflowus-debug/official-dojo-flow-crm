@@ -227,7 +227,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
           }}
         >
           <span className="text-xs text-white/60 font-medium tracking-wide">
-            Focus Mode Active — Tap the icon to exit.
+            Focus Mode Active — Press <kbd className="px-1.5 py-0.5 mx-1 rounded bg-white/10 text-white/80 font-mono text-[10px]">Esc</kbd> to exit • <kbd className="px-1.5 py-0.5 mx-1 rounded bg-white/10 text-white/80 font-mono text-[10px]">F</kbd> for full screen
           </span>
         </div>
       )}

@@ -2592,3 +2592,18 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Move all environment overlays into background layer
 - [x] Update chat text to text-white or rgba(255,255,255,0.92)
 - [x] Verify text stays visible after environment transition
+
+## Two-Level Focus Mode System
+### Level 1 - Focus Mode (Pseudo-Fullscreen)
+- [x] Hide all internal navigation (sidebar, bottom nav)
+- [x] Lock content to 100vh viewport height
+- [x] Disable body scrolling
+- [x] Create immersive app-like experience
+- [x] Show subtle "Press Esc to exit Focus Mode" hint
+
+### Level 2 - Full Focus Mode (Browser Fullscreen)
+- [x] Add "Enter Full Focus" button
+- [x] Trigger document.documentElement.requestFullscreen() on click
+- [x] Handle fullscreen exit gracefully
+- [ ] Add confirmation before entering full focus
+- [x] Keyboard shortcut: Esc to exit, F to toggle
