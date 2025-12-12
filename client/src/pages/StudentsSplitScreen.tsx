@@ -147,12 +147,14 @@ function StudentCard({
   student, 
   onClick,
   isHighlighted,
-  schoolLogo
+  schoolLogo,
+  isDarkMode
 }: { 
   student: Student
   onClick: () => void
   isHighlighted?: boolean
   schoolLogo?: string | null
+  isDarkMode?: boolean
 }) {
   // Calculate last attendance (mock for now)
   const getLastAttendance = () => {
@@ -175,8 +177,8 @@ function StudentCard({
   return (
     <div 
       onClick={onClick}
-      className={`bg-white rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:border-slate-300 hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] active:shadow-md ${
-        isHighlighted ? 'ring-2 ring-primary shadow-lg border-primary' : 'border-slate-200 shadow-sm'
+      className={`rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] active:shadow-md ${isDarkMode ? 'bg-[#18181A] hover:border-white/20' : 'bg-white hover:border-slate-300'} ${
+        isHighlighted ? 'ring-2 ring-primary shadow-lg border-primary' : isDarkMode ? 'border-white/10 shadow-sm' : 'border-slate-200 shadow-sm'
       }`}
       style={{ borderRadius: '12px' }}
     >
@@ -198,21 +200,21 @@ function StudentCard({
             className="w-10 h-10 rounded-full object-cover border border-slate-200 flex-shrink-0"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">
-            <User className="h-5 w-5 text-slate-400" />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center border flex-shrink-0 ${isDarkMode ? 'bg-white/10 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+            <User className={`h-5 w-5 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
           </div>
         )}
         
         {/* Name & Program */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="font-medium text-sm text-slate-900 truncate">
+            <h4 className={`font-medium text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {student.first_name} {student.last_name}
             </h4>
             {/* Status Dot */}
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(student.status)}`} />
           </div>
-          <p className="text-xs text-slate-500 truncate">
+          <p className={`text-xs truncate ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>
             {student.program || 'General'}
           </p>
         </div>
@@ -243,11 +245,13 @@ type StatFilter = 'active' | 'pending' | 'cancelled' | 'new' | null
 function StatsStrip({ 
   stats, 
   selectedStat, 
-  onStatSelect 
+  onStatSelect,
+  isDarkMode 
 }: { 
   stats: Stats
   selectedStat: StatFilter
   onStatSelect: (stat: StatFilter) => void
+  isDarkMode?: boolean
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -298,12 +302,12 @@ function StatsStrip({
       {/* Left Arrow */}
       <button
         onClick={() => scrollByPage('left')}
-        className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/95 border border-slate-200/80 shadow-sm flex items-center justify-center transition-all duration-200 hover:bg-slate-50 hover:shadow-md ${
+        className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full border shadow-sm flex items-center justify-center transition-all duration-200 hover:shadow-md ${isDarkMode ? 'bg-[#18181A]/95 border-white/10 hover:bg-[#202022]' : 'bg-white/95 border-slate-200/80 hover:bg-slate-50'} ${
           canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         aria-label="Scroll left"
       >
-        <ChevronDown className="h-4 w-4 text-slate-600 rotate-90" />
+        <ChevronDown className={`h-4 w-4 rotate-90 ${isDarkMode ? 'text-white/60' : 'text-slate-600'}`} />
       </button>
       
       {/* Stats Container - Hidden scrollbar */}
@@ -319,10 +323,10 @@ function StatsStrip({
           <div 
             key={index}
             onClick={() => isClickable && onStatSelect(selectedStat === item.filterKey ? null : item.filterKey)}
-            className={`flex-shrink-0 bg-white rounded-lg border p-3 min-w-[140px] transition-all ${
+            className={`flex-shrink-0 rounded-lg border p-3 min-w-[140px] transition-all ${isDarkMode ? 'bg-[#18181A]' : 'bg-white'} ${
               isSelected 
                 ? 'border-primary ring-2 ring-primary/20 shadow-md bg-primary/5' 
-                : 'border-slate-200 hover:shadow-sm'
+                : isDarkMode ? 'border-white/10 hover:shadow-sm' : 'border-slate-200 hover:shadow-sm'
             } ${isClickable ? 'cursor-pointer' : ''}`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -330,8 +334,8 @@ function StatsStrip({
                 <item.icon className="h-3.5 w-3.5" />
               </div>
             </div>
-            <p className="text-lg font-bold text-slate-900">{item.value}</p>
-            <p className="text-xs text-slate-500">{item.label}</p>
+            <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.value}</p>
+            <p className={`text-xs ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>{item.label}</p>
             {isClickable && (
               <div className={`mt-1 text-[10px] font-medium ${isSelected ? 'text-primary' : 'text-slate-400'}`}>
                 {isSelected ? 'Click to clear' : 'Click to filter'}
@@ -344,12 +348,12 @@ function StatsStrip({
       {/* Right Arrow */}
       <button
         onClick={() => scrollByPage('right')}
-        className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/95 border border-slate-200/80 shadow-sm flex items-center justify-center transition-all duration-200 hover:bg-slate-50 hover:shadow-md ${
+        className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full border shadow-sm flex items-center justify-center transition-all duration-200 hover:shadow-md ${isDarkMode ? 'bg-[#18181A]/95 border-white/10 hover:bg-[#202022]' : 'bg-white/95 border-slate-200/80 hover:bg-slate-50'} ${
           canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         aria-label="Scroll right"
       >
-        <ChevronDown className="h-4 w-4 text-slate-600 -rotate-90" />
+        <ChevronDown className={`h-4 w-4 -rotate-90 ${isDarkMode ? 'text-white/60' : 'text-slate-600'}`} />
       </button>
       
       {/* CSS to hide scrollbar */}
@@ -736,7 +740,7 @@ export default function StudentsSplitScreen() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
+      <div className={`flex items-center justify-center h-screen ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-slate-50'}`}>
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
@@ -744,9 +748,9 @@ export default function StudentsSplitScreen() {
 
   return (
     <BottomNavLayout>
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col relative">
+    <div className={`min-h-screen flex flex-col relative ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-br from-slate-50 to-slate-100/80'}`}>
       {/* Breadcrumb Navigation */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/40 px-6 py-2">
+      <div className={`backdrop-blur-sm border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A]/80 border-white/5' : 'bg-white/80 border-slate-200/40'}`}>
         <Breadcrumb
           items={[
             { label: 'Dashboard', href: '/dashboard' },
@@ -758,13 +762,13 @@ export default function StudentsSplitScreen() {
 
       {/* Page Sub-Header - with scroll hide/show behavior */}
       <div 
-        className={`bg-white/95 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 flex items-center justify-between transition-all duration-300 z-10 ${
+        className={`backdrop-blur-sm border-b px-6 py-4 flex items-center justify-between transition-all duration-300 z-10 ${isDarkMode ? 'bg-[#18181A]/95 border-white/5' : 'bg-white/95 border-slate-200/60'} ${
           isHeaderHidden ? '-translate-y-full opacity-0 h-0 py-0 overflow-hidden' : 'translate-y-0 opacity-100'
         }`}
       >
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Students</h1>
-          <p className="text-sm text-slate-500">Manage your dojo's student roster</p>
+          <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Students</h1>
+          <p className={`text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>Manage your dojo's student roster</p>
         </div>
         <Button className="bg-[#E73C3C] hover:bg-[#E73C3C]/90 rounded-xl shadow-[0_2px_8px_rgba(231,60,60,0.25)] hover:shadow-[0_4px_12px_rgba(231,60,60,0.35)] transition-all">
           <Plus className="h-4 w-4 mr-2" />
@@ -783,7 +787,7 @@ export default function StudentsSplitScreen() {
         {/* Left Pane - Map + Stats */}
         {(!isMobile || !isMapHidden) && (
           <div 
-          className={`flex flex-col bg-white transition-all duration-300 p-4 ${
+          className={`flex flex-col transition-all duration-300 p-4 ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-white'} ${
             isMapExpanded ? 'w-full' : ''
           } ${
             isMobile ? 'h-[350px] flex-shrink-0' : 'h-[calc(100vh-200px)]'
@@ -795,19 +799,19 @@ export default function StudentsSplitScreen() {
           }}
         >
           {/* Map Card Container - Apple-style minimal grey design */}
-          <div className="flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 border border-slate-200/80 rounded-[18px] shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex-1">
+          <div className={`flex flex-col border rounded-[18px] overflow-hidden flex-1 ${isDarkMode ? 'bg-gradient-to-b from-[#18181A] to-[#1A1A1C] border-white/5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]' : 'bg-gradient-to-b from-slate-50 to-slate-100 border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)]'}`}>
             {/* Map Header - Expand/Collapse only */}
-            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-4 py-2 flex items-center justify-end">
+            <div className={`backdrop-blur-sm border-b px-4 py-2 flex items-center justify-end ${isDarkMode ? 'bg-[#18181A]/80 border-white/5' : 'bg-white/80 border-slate-200/60'}`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-9 w-9 p-0 rounded-xl hover:bg-slate-100"
+                className={`h-9 w-9 p-0 rounded-xl ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
                 onClick={() => setIsMapExpanded(!isMapExpanded)}
               >
                 {isMapExpanded ? (
-                  <Minimize2 className="h-4 w-4 text-slate-600" />
+                  <Minimize2 className={`h-4 w-4 ${isDarkMode ? 'text-white/60' : 'text-slate-600'}`} />
                 ) : (
-                  <Maximize2 className="h-4 w-4 text-slate-600" />
+                  <Maximize2 className={`h-4 w-4 ${isDarkMode ? 'text-white/60' : 'text-slate-600'}`} />
                 )}
               </Button>
             </div>
@@ -827,7 +831,9 @@ export default function StudentsSplitScreen() {
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all shadow-sm ${
                       filter.active 
                         ? 'bg-[#E73C3C] text-white shadow-[0_2px_8px_rgba(231,60,60,0.3)]' 
-                        : 'bg-white/95 text-slate-600 hover:bg-white hover:shadow-md border border-slate-200/60'
+                        : isDarkMode 
+                          ? 'bg-[#18181A]/95 text-white/70 hover:bg-[#202022] hover:shadow-md border border-white/10'
+                          : 'bg-white/95 text-slate-600 hover:bg-white hover:shadow-md border border-slate-200/60'
                     }`}
                   >
                     <filter.icon className="h-3.5 w-3.5" />
@@ -852,6 +858,7 @@ export default function StudentsSplitScreen() {
                 stats={stats} 
                 selectedStat={selectedStatFilter}
                 onStatSelect={setSelectedStatFilter}
+                isDarkMode={isDarkMode}
               />
             </div>
           </div>{/* End Map Card Container */}
@@ -860,7 +867,7 @@ export default function StudentsSplitScreen() {
           {isMobile && (
             <button
               onClick={() => setIsMapHidden(true)}
-              className="bg-white border border-slate-200 rounded-lg mt-2 py-2 text-center text-sm text-slate-600 hover:bg-slate-50"
+              className={`border rounded-lg mt-2 py-2 text-center text-sm ${isDarkMode ? 'bg-[#18181A] border-white/10 text-white/60 hover:bg-[#202022]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
               Hide Map
             </button>
@@ -872,7 +879,7 @@ export default function StudentsSplitScreen() {
         {isMobile && isMapHidden && (
           <button
             onClick={() => setIsMapHidden(false)}
-            className="bg-white border-b border-slate-200 py-3 text-center text-sm text-primary font-medium hover:bg-slate-50"
+            className={`border-b py-3 text-center text-sm text-primary font-medium ${isDarkMode ? 'bg-[#18181A] border-white/10 hover:bg-[#202022]' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
           >
             <MapPin className="h-4 w-4 inline mr-2" />
             Show Map
@@ -895,7 +902,7 @@ export default function StudentsSplitScreen() {
         {/* Right Pane - Search + Cards */}
         {!isMapExpanded && (
           <div 
-            className={`flex flex-col bg-gradient-to-b from-white to-slate-50/50 ${
+            className={`flex flex-col ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-b from-white to-slate-50/50'} ${
               isMobile ? 'flex-1' : 'h-[calc(100vh-140px)]'
             }`}
             style={isMobile ? {} : { flex: 1, paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '16px' }}
@@ -904,19 +911,19 @@ export default function StudentsSplitScreen() {
             <div className="space-y-4">
               {/* Search Bar - Apple-style */}
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
                 <Input
                   placeholder="Search by name, email, or phone..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-11 h-12 rounded-2xl border-slate-200/80 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:shadow-[0_4px_12px_rgba(0,0,0,0.08)] focus:border-[#E73C3C]/30 focus:ring-2 focus:ring-[#E73C3C]/10 transition-all"
+                  className={`pl-11 h-12 rounded-2xl transition-all ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white placeholder:text-white/40 shadow-[0_2px_8px_rgba(0,0,0,0.2)] focus:shadow-[0_4px_12px_rgba(0,0,0,0.3)] focus:border-[#E73C3C]/30 focus:ring-2 focus:ring-[#E73C3C]/10' : 'border-slate-200/80 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:shadow-[0_4px_12px_rgba(0,0,0,0.08)] focus:border-[#E73C3C]/30 focus:ring-2 focus:ring-[#E73C3C]/10'}`}
                 />
               </div>
 
               {/* Filters Row - Clean DojoFlow style */}
               <div className="flex items-center gap-3 flex-wrap">
                 <Select defaultValue="all">
-                  <SelectTrigger className="w-[130px] h-9 text-sm rounded-xl border-slate-200/80 bg-white shadow-sm hover:shadow-md transition-shadow">
+                  <SelectTrigger className={`w-[130px] h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -927,7 +934,7 @@ export default function StudentsSplitScreen() {
                   </SelectContent>
                 </Select>
                 <Select defaultValue="all">
-                  <SelectTrigger className="w-[130px] h-9 text-sm rounded-xl border-slate-200/80 bg-white shadow-sm hover:shadow-md transition-shadow">
+                  <SelectTrigger className={`w-[130px] h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
                     <SelectValue placeholder="Belt Rank" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -940,7 +947,7 @@ export default function StudentsSplitScreen() {
                   </SelectContent>
                 </Select>
                 <Select defaultValue="all">
-                  <SelectTrigger className="w-[140px] h-9 text-sm rounded-xl border-slate-200/80 bg-white shadow-sm hover:shadow-md transition-shadow">
+                  <SelectTrigger className={`w-[140px] h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
                     <SelectValue placeholder="Membership" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -950,7 +957,7 @@ export default function StudentsSplitScreen() {
                     <SelectItem value="trial">Trial</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" className="h-9 rounded-xl border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+                <Button variant="outline" size="sm" className={`h-9 rounded-xl shadow-sm hover:shadow-md transition-all ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white hover:bg-[#202022]' : 'border-slate-200/80'}`}>
                   <Filter className="h-3.5 w-3.5 mr-1.5" />
                   More Filters
                 </Button>
@@ -996,7 +1003,7 @@ export default function StudentsSplitScreen() {
               {filteredStudents.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 mx-auto text-slate-300 mb-4" />
-                  <p className="text-slate-500">No students found</p>
+                  <p className={`${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>No students found</p>
                 </div>
               ) : (
                 filteredStudents.map((student) => (
@@ -1005,6 +1012,7 @@ export default function StudentsSplitScreen() {
                     student={student}
                     isHighlighted={highlightedStudentId === student.id}
                     schoolLogo={schoolLogo}
+                    isDarkMode={isDarkMode}
                     onClick={() => {
                       setSelectedStudent(student)
                       setIsModalOpen(true)

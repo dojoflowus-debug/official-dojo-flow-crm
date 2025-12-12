@@ -2637,3 +2637,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 ## Kai Avatar Update
 - [x] Use new DojoFlow logo icon for Kai's avatar in chat
 - [x] Update all Kai avatar instances in KaiCommand.tsx
+
+## Students Page Dark Mode
+- [ ] Update Students page background to match Kai Command dark mode (#0F0F11)
+- [ ] Update card backgrounds and borders for dark mode
+- [ ] Ensure text contrast and readability in dark mode
+- [ ] Match sidebar and header colors with Kai Command
