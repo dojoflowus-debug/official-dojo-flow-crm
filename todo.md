@@ -2568,3 +2568,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Button visible in both normal and Focus Mode
 - [x] Smooth animation on toggle
 - [x] Clear visual indicator of current state
+
+## Fix Text Visibility in Focus Mode with Environments
+- [x] Restore main Kai cinematic panel (logo, heading, tagline, cards) in Focus Mode
+- [x] Frosted glass panel: rgba(0,0,0,0.45) with blur(10px)
+- [x] Input bar contrast: rgba(0,0,0,0.55) minimum with blur(8px)
+- [x] All text pure white (#FFFFFF) with opacity: 1
+- [x] Add text-shadow: 0 1px 3px rgba(0,0,0,0.7) for extra contrast
+- [x] Icons in input bar light (#FFFFFF)
