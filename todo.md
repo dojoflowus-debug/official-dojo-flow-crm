@@ -2722,3 +2722,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add better error detection for Google auth failures
 - [ ] Root cause: Manus Maps proxy returning 401 - needs valid API key configuration
 - Note: The map proxy requires proper VITE_FRONTEND_FORGE_API_KEY which is injected by the platform
+
+## Fix Cinematic Mode Composer Overlap (Real Layout)
+- [x] Analyze current layout structure and identify overlap cause
+- [x] Convert to 3-row layout: header, content, composer (not overlay)
+- [x] Composer must consume height via flex-shrink-0, not overlay on content
+- [x] Remove redundant wrapper/tray behind composer (already done in previous fix)
+- [x] Content area uses pb-4 instead of pb-48, composer reserves its own space
+- [x] Test no visible overlap on any viewport height

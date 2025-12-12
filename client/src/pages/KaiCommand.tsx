@@ -798,8 +798,12 @@ export default function KaiCommand() {
 
         {/* Main Conversation Panel - Right Side */}
         {/* Main content: flex-1 with min-w-0 to prevent overflow, z-index lower than sidebar */}
+        {/* MAIN CONTENT PANEL - True 3-row flex layout */}
+        {/* Row 1: Top banner (auto height) */}
+        {/* Row 2: Scrollable content (flex-1) */}
+        {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
-          className={`flex-1 flex flex-col relative min-w-0 ${isFocusMode ? 'overflow-hidden' : 'overflow-hidden'} ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'} ${isFocusMode ? 'h-full' : ''}`}
+          className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
           style={{ zIndex: 10 }}
         >
           {/* ENVIRONMENT LAYER - All background elements with z-index: 0 */}
@@ -922,13 +926,13 @@ export default function KaiCommand() {
           </div>
           )}
 
-          {/* CONTENT LAYER - Messages Area with visible scrollbar - Centered content */}
-          {/* 3-Zone Layout: This is the middle zone (scrollable messages) */}
-          {/* Focus Mode: pt-16 (64px) for top safe area, pb-44 (176px) for composer height + spacing */}
-          {/* Cinematic non-fullscreen: pb-48 (192px) to prevent composer overlap with prompt cards */}
+          {/* CONTENT LAYER - Messages Area (Row 2 of 3-row layout) */}
+          {/* This is the scrollable middle zone - flex-1 takes remaining space */}
+          {/* Composer is now a separate flex item below, so we don't need excessive bottom padding */}
+          {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-44 px-6' : isCinematic ? 'pt-6 pb-48 px-6' : 'p-6 pt-6 pb-32'}`}
+            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-6 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
             style={{ zIndex: 10 }}
           >
             {/* Shared content column wrapper - max-w-4xl to match composer width */}
@@ -1149,11 +1153,11 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* Input Bar - Single Composer Dock */}
-          {/* 3-Zone Layout: Bottom zone - anchored to bottom with 24px spacing */}
-          {/* Cinematic non-fullscreen: Single glass pill, no extra wrapper, anchored lower */}
+          {/* COMPOSER DOCK (Row 3 of 3-row layout) */}
+          {/* flex-shrink-0 ensures this element reserves its height and doesn't get compressed */}
+          {/* This is NOT an overlay - it's a proper flex child that pushes content above it */}
           <div 
-            className={`transition-all duration-500 flex-shrink-0 relative z-20 ${isFocusMode ? 'px-6 pb-6' : isCinematic ? 'px-6 pb-6' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-sm' : ''}`}
+            className={`transition-all duration-500 flex-shrink-0 relative z-20 ${isFocusMode ? 'px-6 py-4' : isCinematic ? 'px-6 py-4' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-sm' : ''}`}
             style={(isCinematic && !isFocusMode) ? { 
               animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both'
             } : {}}>
