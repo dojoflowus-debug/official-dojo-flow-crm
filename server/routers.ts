@@ -8,6 +8,7 @@ import { campaignsRouter } from "./campaignsRouter";
 import { automationRouter } from "./automationRouter";
 import { conversationsRouter } from "./conversationsRouter";
 import { authRouter } from "./authRouter";
+import { smsReminderRouter } from "./smsReminderRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -142,6 +143,7 @@ export const appRouter = router({
   campaigns: campaignsRouter,
   automation: automationRouter,
   conversations: conversationsRouter,
+  smsReminders: smsReminderRouter,
   auth: router({
     // User profile endpoint
     getCurrentUser: authRouter.getCurrentUser,

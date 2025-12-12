@@ -2738,3 +2738,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Create ElevenLabs voice synthesis helper (server/_core/elevenlabs.ts)
 - [x] Write tests for each integration (14 tests passing)
 - [x] Verify all integrations work correctly
+
+## Twilio SMS Class Reminders
+- [x] Add database table for tracking sent reminders (class_reminders, class_enrollments, sms_preferences)
+- [x] Create class reminder service with 24-hour scheduling logic (server/classReminderService.ts)
+- [x] Add tRPC procedures for reminder management (server/smsReminderRouter.ts)
+- [x] Create background job to check and send reminders every hour (server/services/scheduler.ts)
+- [x] Test SMS sending with Twilio (8 tests passing)
+- [ ] Add UI toggle for students to opt-in/out of SMS reminders (future enhancement)

@@ -991,3 +991,74 @@ export const kaiMessages = mysqlTable("kai_messages", {
 
 export type KaiMessage = typeof kaiMessages.$inferSelect;
 export type InsertKaiMessage = typeof kaiMessages.$inferInsert;
+
+/**
+ * Class Enrollments table - Links students to classes they're enrolled in
+ */
+export const classEnrollments = mysqlTable("class_enrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to students table */
+  studentId: int("studentId").notNull(),
+  /** Foreign key to classes table */
+  classId: int("classId").notNull(),
+  /** Whether student wants SMS reminders for this class */
+  smsRemindersEnabled: int("smsRemindersEnabled").default(1).notNull(),
+  /** Enrollment status */
+  status: mysqlEnum("status", ["active", "paused", "cancelled"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClassEnrollment = typeof classEnrollments.$inferSelect;
+export type InsertClassEnrollment = typeof classEnrollments.$inferInsert;
+
+/**
+ * Class Reminders table - Track sent SMS reminders to prevent duplicates
+ */
+export const classReminders = mysqlTable("class_reminders", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to students table */
+  studentId: int("studentId").notNull(),
+  /** Foreign key to classes table */
+  classId: int("classId").notNull(),
+  /** The specific class date this reminder is for */
+  classDate: timestamp("classDate").notNull(),
+  /** Phone number the reminder was sent to */
+  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
+  /** Twilio message SID for tracking */
+  twilioMessageId: varchar("twilioMessageId", { length: 100 }),
+  /** Reminder status */
+  status: mysqlEnum("status", ["pending", "sent", "failed", "delivered"]).default("pending").notNull(),
+  /** Error message if failed */
+  errorMessage: text("errorMessage"),
+  /** When the reminder was sent */
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ClassReminder = typeof classReminders.$inferSelect;
+export type InsertClassReminder = typeof classReminders.$inferInsert;
+
+/**
+ * SMS Preferences table - Global SMS preferences for students
+ */
+export const smsPreferences = mysqlTable("sms_preferences", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to students table */
+  studentId: int("studentId").notNull().unique(),
+  /** Whether student has opted in to receive SMS */
+  optedIn: int("optedIn").default(1).notNull(),
+  /** Whether to receive class reminders */
+  classReminders: int("classReminders").default(1).notNull(),
+  /** Whether to receive billing reminders */
+  billingReminders: int("billingReminders").default(1).notNull(),
+  /** Whether to receive promotional messages */
+  promotionalMessages: int("promotionalMessages").default(0).notNull(),
+  /** Preferred reminder time (hours before class) */
+  reminderHoursBefore: int("reminderHoursBefore").default(24).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SmsPreference = typeof smsPreferences.$inferSelect;
+export type InsertSmsPreference = typeof smsPreferences.$inferInsert;
