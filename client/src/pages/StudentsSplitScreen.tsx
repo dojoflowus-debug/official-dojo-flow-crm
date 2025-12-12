@@ -736,12 +736,12 @@ export default function StudentsSplitScreen() {
   }
 
   return (
-    <BottomNavLayout hideHeader>
-    <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col relative">
-      {/* Header - with scroll hide/show behavior */}
+    <BottomNavLayout>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/80 flex flex-col relative pt-[72px]">
+      {/* Page Sub-Header - with scroll hide/show behavior */}
       <div 
-        className={`bg-white/95 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 flex items-center justify-between transition-all duration-300 z-20 ${
-          isHeaderHidden ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+        className={`bg-white/95 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 flex items-center justify-between transition-all duration-300 z-10 ${
+          isHeaderHidden ? '-translate-y-full opacity-0 h-0 py-0 overflow-hidden' : 'translate-y-0 opacity-100'
         }`}
       >
         <div>
@@ -768,7 +768,7 @@ export default function StudentsSplitScreen() {
           className={`flex flex-col bg-white transition-all duration-300 p-4 ${
             isMapExpanded ? 'w-full' : ''
           } ${
-            isMobile ? 'h-[350px] flex-shrink-0' : 'h-[calc(100vh-140px)]'
+            isMobile ? 'h-[350px] flex-shrink-0' : 'h-[calc(100vh-200px)]'
           }`}
           style={isMobile ? {} : { 
             flexBasis: isMapExpanded ? '100%' : isTablet ? '35%' : `${mapWidth}%`,
@@ -1052,9 +1052,9 @@ export default function StudentsSplitScreen() {
 
       {/* Full Map Mode Overlay - No blur, clean map view */}
       {isFullMapMode && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-40 pt-[72px]">
           {/* Full Screen Map - Edge to edge, no backdrop */}
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 top-0">
             <MapView 
               className="w-full h-full"
               initialCenter={{ lat: 37.7749, lng: -122.4194 }}

@@ -2261,3 +2261,23 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Auto-hide message after 3 seconds (setTimeout)
 - [x] Style message with green checkmark icon and pill badge
 - [x] Test success message displays correctly
+
+
+## 🚀 IN PROGRESS: Global Top Menu Bar on Students Page
+- [ ] Identify the global top menu component used on other pages (Kai Command, etc.)
+- [ ] Add top menu bar to Students page layout
+- [ ] Ensure visibility in normal split-screen mode
+- [ ] Ensure visibility in Full Map Mode
+- [ ] Keep auto-hide on scroll behavior consistent
+- [ ] Test top menu bar in all modes
+
+
+## ✅ COMPLETED: Global Top Menu Bar on Students Page
+- [x] Identify the global top menu component (BottomNavLayout)
+- [x] Add BottomNavLayout to Students page without hiding header
+- [x] Adjust page layout to account for 72px header height (pt-[72px])
+- [x] Ensure header visible in normal split-screen mode
+- [x] Ensure header visible in Full Map Mode (z-index 40, pt-[72px])
+- [x] Maintain scroll hide/show behavior for page sub-header
+- [x] Test all navigation links work correctly (Dashboard, Students, Leads, Kai, Classes, Staff, Billing, Reports, Settings)
+- [x] Bottom navigation dock visible with all main menu items
