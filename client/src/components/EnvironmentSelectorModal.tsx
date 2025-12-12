@@ -113,7 +113,11 @@ export function EnvironmentSelectorModal() {
                   {/* Preview Background */}
                   <div 
                     className="aspect-[16/10] w-full transition-transform duration-500 group-hover:scale-110"
-                    style={{ background: env.previewGradient }}
+                    style={{ 
+                      backgroundImage: `url(${env.backgroundImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
                   />
                   
                   {/* Overlay with info */}
@@ -154,7 +158,9 @@ export function EnvironmentSelectorModal() {
               <div 
                 className="w-64 h-40 rounded-[18px] mb-6 overflow-hidden border border-white/20"
                 style={{ 
-                  background: selectedEnvironment?.previewGradient,
+                  backgroundImage: `url(${selectedEnvironment?.backgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
                   boxShadow: `0 0 40px ${selectedEnvironment?.accentColor}30`
                 }}
               />

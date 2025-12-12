@@ -671,21 +671,49 @@ export default function KaiCommand() {
         {/* Main Conversation Panel - Right Side */}
         <div 
           className={`flex-1 flex flex-col relative overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
-          style={isCinematic ? {
-            background: currentEnvironment.gradient,
-            transition: isTransitioning ? 'opacity 0.3s ease-out' : 'none',
-            opacity: isTransitioning ? 0.7 : 1
-          } : undefined}
         >
-          {/* Environment Overlay for readability in Cinematic mode */}
+          {/* Cinematic Background Image */}
           {isCinematic && (
-            <div 
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `radial-gradient(ellipse at 50% 30%, transparent 0%, ${currentEnvironment.overlayColor} 70%)`,
-                transition: 'background 0.5s ease-out'
-              }}
-            />
+            <>
+              {/* Background Image Layer */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `url(${currentEnvironment.backgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  filter: 'blur(2px)',
+                  transform: 'scale(1.02)',
+                  transition: 'opacity 0.4s ease-out',
+                  opacity: isTransitioning ? 0 : 1
+                }}
+              />
+              {/* Dark Overlay for readability */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: currentEnvironment.overlayColor,
+                  transition: 'background 0.4s ease-out'
+                }}
+              />
+              {/* Vignette Effect */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(ellipse at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)',
+                  pointerEvents: 'none'
+                }}
+              />
+              {/* Spotlight behind Kai */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(ellipse at 50% 35%, rgba(255,76,76,0.15) 0%, transparent 40%)',
+                  pointerEvents: 'none'
+                }}
+              />
+            </>
           )}
           {/* Top Banner */}
           <div className={`relative z-10 px-6 py-3 border-b flex items-center justify-between ${

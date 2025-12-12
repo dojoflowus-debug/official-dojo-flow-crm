@@ -2502,3 +2502,25 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add smooth fade transition between environments (300ms)
 - [x] Keep foreground UI on frosted glass layers for readability
 - [x] Apply environment gradients to main panel in Cinematic mode
+
+## 🚀 IN PROGRESS: Generate Realistic Cinematic Backgrounds with NanoBanana
+- [ ] Generate Luxury Dojo Lounge background (warm hotel-style Japanese interior)
+- [ ] Generate Zen Bamboo Garden background (real bamboo forest with natural light)
+- [ ] Generate Samurai Red Dojo background (traditional dojo with red accents)
+- [ ] Generate Ultra-Modern White Dojo background (minimalist Apple-like room)
+- [ ] Generate Futuristic Neon Dojo background (sci-fi neon interior)
+- [ ] Copy generated images to project public folder
+- [ ] Update EnvironmentContext to use real background images
+- [ ] Add subtle blur and vignette overlay for UI readability
+- [ ] Ensure smooth fade transitions between backgrounds
+- [ ] Save checkpoint
+
+## ✅ COMPLETED: NanoBanana Realistic Cinematic Backgrounds
+- [x] Generate Luxury Dojo Lounge background (warm Japanese interior with lanterns)
+- [x] Generate Zen Bamboo Garden background (bamboo forest with morning light)
+- [x] Generate Samurai Red Dojo background (traditional dojo with red accents)
+- [x] Generate Ultra-Modern White Dojo background (minimalist Apple-like interior)
+- [x] Generate Futuristic Neon Dojo background (cyberpunk sci-fi interior)
+- [x] Integrate background images into EnvironmentContext
+- [x] Update KaiCommand to display backgrounds with blur, overlay, and vignette
+- [x] Update EnvironmentSelectorModal to show real image previews
