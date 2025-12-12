@@ -2628,3 +2628,8 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Ensure isDarkMode state is correctly passed to MapView
 - [x] Apply dark style on map initialization AND on theme change
 - [x] Verify map turns black when Dark Mode is enabled
+
+## Chat Avatar Updates
+- [x] Show user's profile photo for user messages in Kai Command chat
+- [x] Show DojoFlow icon for Kai's messages
+- [x] Style avatars consistently with the chat UI

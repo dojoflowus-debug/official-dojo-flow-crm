@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { useEnvironment } from '@/contexts/EnvironmentContext';
 import { trpc } from '@/lib/trpc';
@@ -93,8 +94,19 @@ export default function KaiCommand() {
   
   // Theme detection (needed early for parallax)
   const { theme } = useTheme();
+  const { user } = useAuth();
   const isDark = theme === 'dark' || theme === 'cinematic';
   const isCinematic = theme === 'cinematic';
+
+  // Get user initials for avatar fallback
+  const getUserInitials = () => {
+    if (!user?.name) return 'U';
+    const names = user.name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[1][0]}`.toUpperCase();
+    }
+    return user.name.substring(0, 2).toUpperCase();
+  };
 
   // tRPC queries and mutations for Kai
   const kaiChatMutation = trpc.kai.chat.useMutation();
@@ -966,14 +978,14 @@ export default function KaiCommand() {
                     <div key={message.id} className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       {message.role === 'user' ? (
                         <>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0 ${(isCinematic || isFocusMode) ? 'bg-black/70' : isDark ? 'bg-[#18181A]' : 'bg-slate-900'}`}>
-                            You
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${(isCinematic || isFocusMode) ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30' : isDark ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-blue-500 to-blue-600'}`}>
+                            {getUserInitials()}
                           </div>
                           <div className="flex-1">
                             <div 
                               className={`font-medium mb-1`}
                               style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
-                            >You</div>
+                            >{user?.name || 'You'}</div>
                             <p 
                               className="relative"
                               style={(isCinematic || isFocusMode) ? { 
@@ -986,8 +998,8 @@ export default function KaiCommand() {
                         </>
                       ) : (
                         <>
-                          <div className="w-8 h-8 rounded-full bg-[#FF4C4C] flex items-center justify-center shrink-0">
-                            <Sparkles className="w-4 h-4 text-white" />
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF4C4C] to-[#E63E3E] flex items-center justify-center shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
+                            <img src="/dojoflow-logo-icon.png" alt="Kai" className="w-6 h-6 object-contain" />
                           </div>
                           <div className="flex-1">
                             <div 
@@ -1011,8 +1023,8 @@ export default function KaiCommand() {
                   ))}
                   {isLoading && (
                     <div className="flex gap-3 relative" style={{ zIndex: 30 }}>
-                      <div className="w-8 h-8 rounded-full bg-[#FF4C4C] flex items-center justify-center shrink-0">
-                        <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF4C4C] to-[#E63E3E] flex items-center justify-center shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
+                        <img src="/dojoflow-logo-icon.png" alt="Kai" className="w-6 h-6 object-contain animate-pulse" />
                       </div>
                       <div className="flex-1">
                         <div 
