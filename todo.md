@@ -2530,3 +2530,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Background moves slower than foreground content on scroll
 - [x] Smooth, GPU-accelerated transforms for 60fps performance
 - [x] Works with all 5 environment backgrounds
+
+## Frosted-Glass UI Layer for Cinematic Mode
+- [x] Add frosted-glass foreground panel behind Kai UI content (logo, tagline, cards)
+- [x] Panel: 10-15% darkening, backdrop blur, rounded corners, soft shadow, 60-75% transparency
+- [x] Add text shadow (rgba(0,0,0,0.6)) for all cinematic mode text
+- [x] Add soft gradient overlay (20-30% dark) on top of background
+- [x] Wrap input bar in glass-style container with increased contrast
+- [x] Keep environment backgrounds fully visible and cinematic
