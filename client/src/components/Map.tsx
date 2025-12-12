@@ -9,6 +9,7 @@
  * <MapView
  *   initialCenter={{ lat: 40.7128, lng: -74.0060 }}
  *   initialZoom={15}
+ *   darkMode={true} // Enable dark charcoal map style
  *   onMapReady={(map) => {
  *     mapRef.current = map; // Store to control map from parent anytime, google map itself is in charge of the re-rendering, not react state.
  * </MapView>
@@ -69,9 +70,9 @@
  *
  * -------------------------------
  * ✅ SUMMARY
- * - “map-attached” → AdvancedMarkerElement, DirectionsRenderer, Layers.
- * - “standalone” → Geocoder, DirectionsService, DistanceMatrixService, ElevationService.
- * - “data-only” → Place, Geometry utilities.
+ * - "map-attached" → AdvancedMarkerElement, DirectionsRenderer, Layers.
+ * - "standalone" → Geocoder, DirectionsService, DistanceMatrixService, ElevationService.
+ * - "data-only" → Place, Geometry utilities.
  */
 
 /// <reference types="@types/google.maps" />
@@ -91,6 +92,141 @@ const FORGE_BASE_URL =
   import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
   "https://forge.butterfly-effect.dev";
 const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
+
+// Premium deep charcoal / near-black night style for dark mode
+// Apple-style dashboard aesthetic: calm, minimal, high contrast
+const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  // Overall map background - deep charcoal
+  {
+    elementType: "geometry",
+    stylers: [{ color: "#0F1115" }]
+  },
+  // Labels - soft light gray, never pure white
+  {
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#8a9099" }]
+  },
+  {
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#0F1115" }, { weight: 2 }]
+  },
+  // Administrative areas
+  {
+    featureType: "administrative",
+    elementType: "geometry",
+    stylers: [{ color: "#1a1d23" }]
+  },
+  {
+    featureType: "administrative.country",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b7280" }]
+  },
+  {
+    featureType: "administrative.locality",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#9ca3af" }]
+  },
+  {
+    featureType: "administrative.province",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b7280" }]
+  },
+  // Points of interest
+  {
+    featureType: "poi",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b7280" }]
+  },
+  {
+    featureType: "poi.park",
+    elementType: "geometry",
+    stylers: [{ color: "#151a1f" }]
+  },
+  {
+    featureType: "poi.park",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#4b5563" }]
+  },
+  // Roads - muted graphite gray, low contrast
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#1f2329" }]
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#15181d" }]
+  },
+  {
+    featureType: "road",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b7280" }]
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#2a2f38" }]
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#1a1d23" }]
+  },
+  {
+    featureType: "road.highway",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#9ca3af" }]
+  },
+  {
+    featureType: "road.arterial",
+    elementType: "geometry",
+    stylers: [{ color: "#252a32" }]
+  },
+  {
+    featureType: "road.local",
+    elementType: "geometry",
+    stylers: [{ color: "#1a1d23" }]
+  },
+  // Transit
+  {
+    featureType: "transit",
+    elementType: "geometry",
+    stylers: [{ color: "#1a1d23" }]
+  },
+  {
+    featureType: "transit.station",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b7280" }]
+  },
+  // Water - dark navy / teal-black
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#0a1014" }]
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#4b5563" }]
+  },
+  // Landscape
+  {
+    featureType: "landscape",
+    elementType: "geometry",
+    stylers: [{ color: "#12151a" }]
+  },
+  {
+    featureType: "landscape.man_made",
+    elementType: "geometry",
+    stylers: [{ color: "#15181d" }]
+  },
+  {
+    featureType: "landscape.natural",
+    elementType: "geometry",
+    stylers: [{ color: "#12151a" }]
+  }
+];
 
 function loadMapScript() {
   return new Promise(resolve => {
@@ -113,6 +249,7 @@ interface MapViewProps {
   className?: string;
   initialCenter?: google.maps.LatLngLiteral;
   initialZoom?: number;
+  darkMode?: boolean;
   onMapReady?: (map: google.maps.Map) => void;
 }
 
@@ -120,10 +257,12 @@ export function MapView({
   className,
   initialCenter = { lat: 37.7749, lng: -122.4194 },
   initialZoom = 12,
+  darkMode = false,
   onMapReady,
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
+  const currentDarkMode = useRef<boolean>(darkMode);
 
   const init = usePersistFn(async () => {
     await loadMapScript();
@@ -139,7 +278,9 @@ export function MapView({
       zoomControl: true,
       streetViewControl: true,
       mapId: "DEMO_MAP_ID",
+      styles: darkMode ? DARK_MAP_STYLES : undefined,
     });
+    currentDarkMode.current = darkMode;
     if (onMapReady) {
       onMapReady(map.current);
     }
@@ -149,7 +290,20 @@ export function MapView({
     init();
   }, [init]);
 
+  // Update map styles when darkMode prop changes
+  useEffect(() => {
+    if (map.current && currentDarkMode.current !== darkMode) {
+      map.current.setOptions({
+        styles: darkMode ? DARK_MAP_STYLES : null,
+      });
+      currentDarkMode.current = darkMode;
+    }
+  }, [darkMode]);
+
   return (
     <div ref={mapContainer} className={cn("w-full h-[500px]", className)} />
   );
 }
+
+// Export the dark map styles for use in other components
+export { DARK_MAP_STYLES };

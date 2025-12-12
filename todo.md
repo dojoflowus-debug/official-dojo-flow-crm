@@ -2615,3 +2615,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add presentation mode toggle button in Focus Mode
 - [x] Show progress indicator for current environment duration
 - [ ] Pause on user interaction, resume after idle
+
+## Students Page Dark Map Style
+- [ ] Create deep charcoal/near-black Google Map style JSON
+- [ ] Apply dark map style when Dark Mode is enabled
+- [ ] Revert to light map style when Light Mode is enabled
+- [ ] Preserve student markers and map controls visibility
+- [ ] No layout changes - visual style only

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { trpc } from '../lib/trpc'
+import { useTheme } from '@/contexts/ThemeContext'
 import BottomNavLayout from '@/components/BottomNavLayout'
 import { MapView } from '../components/Map'
 import AddressAutocomplete from '../components/AddressAutocomplete'
@@ -362,6 +363,10 @@ function StatsStrip({
 }
 
 export default function StudentsSplitScreen() {
+  // Theme
+  const { theme } = useTheme()
+  const isDarkMode = theme === 'dark'
+  
   // State
   const [students, setStudents] = useState<Student[]>([])
   const [stats, setStats] = useState<Stats>({
@@ -835,12 +840,13 @@ export default function StudentsSplitScreen() {
                 className="w-full h-full absolute inset-0"
                 initialCenter={{ lat: 37.7749, lng: -122.4194 }}
                 initialZoom={12}
+                darkMode={isDarkMode}
                 onMapReady={handleMapReady}
               />
             </div>
 
             {/* Stats Strip - inside card with gradient */}
-            <div className="bg-gradient-to-r from-white to-slate-50 border-t border-slate-200/60 p-4">
+            <div className={`border-t p-4 ${isDarkMode ? 'bg-gradient-to-r from-[#15181d] to-[#1a1d23] border-[#252a32]' : 'bg-gradient-to-r from-white to-slate-50 border-slate-200/60'}`}>
               <StatsStrip 
                 stats={stats} 
                 selectedStat={selectedStatFilter}
@@ -1071,6 +1077,7 @@ export default function StudentsSplitScreen() {
               className="w-full h-full"
               initialCenter={{ lat: 37.7749, lng: -122.4194 }}
               initialZoom={12}
+              darkMode={isDarkMode}
               onMapReady={(map) => {
                 mapRef.current = map
                 
