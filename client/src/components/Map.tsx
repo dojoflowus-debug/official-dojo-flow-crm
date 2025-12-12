@@ -245,15 +245,27 @@ if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('googlemaps-auth-error', { detail: lastError }));
   };
   
-  // Add CSS to hide Google's error dialog
+  // Add CSS to hide Google's error dialog more aggressively
   const style = document.createElement('style');
   style.textContent = `
     /* Hide Google Maps error dialogs */
     .dismissButton, 
     .gm-err-container,
     .gm-style-iw-a,
-    div[style*="z-index: 1000001"] {
+    .gm-err-title,
+    .gm-err-message,
+    .gm-err-autocomplete,
+    div[style*="z-index: 1000001"],
+    div[role="dialog"][aria-modal="true"],
+    div.modal-dialog,
+    div[class*="dismissButton"],
+    /* Target the specific Google error dialog */
+    div[style*="position: fixed"][style*="z-index"] > div[style*="background-color: white"],
+    div[style*="position: fixed"][style*="z-index"] > div[style*="background: white"] {
       display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
   `;
   document.head.appendChild(style);
@@ -316,10 +328,11 @@ function loadMapScript(): Promise<boolean> {
       return;
     }
     
+    // The Manus Maps proxy requires the API key as a query parameter
+    // The proxy handles authentication internally
     const script = document.createElement("script");
     script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
     script.async = true;
-    script.crossOrigin = "anonymous";
     
     script.onload = () => {
       // Small delay to ensure google.maps is fully initialized
@@ -459,17 +472,32 @@ export function MapView({
       console.log('[GoogleMaps] Creating map instance...');
       map.current = new window.google.maps.Map(mapContainer.current, mapOptions);
       
-      // Set up MutationObserver to detect Google's error dialogs
+      // Set up MutationObserver to detect and hide Google's error dialogs
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
             if (node instanceof HTMLElement) {
-              // Check for Google's error dialog
-              if (node.classList.contains('dismissButton') || 
-                  node.classList.contains('gm-err-container') ||
-                  node.textContent?.includes("can't load Google Maps correctly")) {
-                console.error('[GoogleMaps] Detected Google error dialog');
+              // Check for Google's error dialog - multiple detection methods
+              const isErrorDialog = 
+                node.classList.contains('dismissButton') || 
+                node.classList.contains('gm-err-container') ||
+                node.classList.contains('gm-err-title') ||
+                node.classList.contains('gm-err-message') ||
+                node.getAttribute('role') === 'dialog' ||
+                node.textContent?.includes("can't load Google Maps correctly") ||
+                node.textContent?.includes("This page can't load Google Maps") ||
+                node.textContent?.includes("Do you own this website");
+              
+              if (isErrorDialog) {
+                console.error('[GoogleMaps] Detected Google error dialog, hiding it');
                 node.style.display = 'none';
+                node.style.visibility = 'hidden';
+                node.style.opacity = '0';
+                node.style.pointerEvents = 'none';
+                // Also hide parent if it's a modal backdrop
+                if (node.parentElement && node.parentElement.style.position === 'fixed') {
+                  node.parentElement.style.display = 'none';
+                }
                 // Trigger our error state
                 if (!authError) {
                   authError = true;
@@ -485,6 +513,14 @@ export function MapView({
       });
       
       observer.observe(document.body, { childList: true, subtree: true });
+      
+      // Also check for existing error dialogs immediately
+      const existingDialogs = document.querySelectorAll('[role="dialog"], .gm-err-container, .dismissButton');
+      existingDialogs.forEach((dialog) => {
+        if (dialog instanceof HTMLElement) {
+          dialog.style.display = 'none';
+        }
+      });
       
       // Apply dark mode styles AFTER map is successfully created
       if (darkMode) {

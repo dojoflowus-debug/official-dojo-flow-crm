@@ -2713,3 +2713,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Anchor composer lower in non-fullscreen Cinematic (px-6 pb-6)
 - [x] Ensure Kai prompt panel stays centered and never collides
 - [x] Test fullscreen Cinematic mode remains unchanged
+
+## Fix Students Page Map Not Working
+- [x] Investigate current map implementation and error state
+- [x] Check if Google Maps API key is properly configured (uses Manus Forge proxy)
+- [x] Verify MapView component initialization
+- [x] Improve error dialog hiding (CSS + MutationObserver)
+- [x] Add better error detection for Google auth failures
+- [ ] Root cause: Manus Maps proxy returning 401 - needs valid API key configuration
+- Note: The map proxy requires proper VITE_FRONTEND_FORGE_API_KEY which is injected by the platform
