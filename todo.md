@@ -2313,3 +2313,12 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Add a placeholder icon for student card header when no school logo is uploaded
 - [x] Use a subtle martial arts or dojo-themed icon (torii gate design)
 - [x] Ensure placeholder looks clean and professional (red gradient with white icon)
+
+
+## ✅ COMPLETED: Fix School Logo Rendering on Student Card
+- [x] Use single global logo setting (schoolLogoUrl from getBrand query)
+- [x] Render logo as <img> element with proper src binding
+- [x] Constrain logo to 32px height with object-contain
+- [x] Live update across all cards when logo changes (via query invalidation)
+- [x] Add fallback to placeholder icon if logo fails to load (onError handler)
+- [x] Do not modify other card layout or behavior

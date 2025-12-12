@@ -183,6 +183,7 @@ export default function StudentModal({
   const [logoPreview, setLogoPreview] = useState<{ dataUrl: string; fileName: string; fileSize: number } | null>(null)
   const [showLogoPreview, setShowLogoPreview] = useState(false)
   const [logoUploadSuccess, setLogoUploadSuccess] = useState(false)
+  const [logoLoadError, setLogoLoadError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Form state for editable fields
@@ -220,6 +221,7 @@ export default function StudentModal({
     onSuccess: () => {
       setIsUploading(false)
       setLogoUploadSuccess(true)
+      setLogoLoadError(false) // Reset error state for new logo
       utils.setupWizard.getBrand.invalidate()
       refetchBrand()
       // Auto-hide success message after 3 seconds
@@ -482,12 +484,19 @@ export default function StudentModal({
             {/* Header with Tabs */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                {schoolLogo ? (
-                  <img src={schoolLogo} alt="School Logo" className="w-10 h-10 object-contain" />
+                {/* School Logo - renders as image or fallback placeholder */}
+                {schoolLogo && !logoLoadError ? (
+                  <img 
+                    src={schoolLogo} 
+                    alt="School Logo" 
+                    className="h-8 w-8 object-contain rounded"
+                    onError={() => setLogoLoadError(true)}
+                    onLoad={() => setLogoLoadError(false)}
+                  />
                 ) : (
                   /* Placeholder icon - martial arts dojo symbol */
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
-                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       {/* Torii gate / dojo symbol */}
                       <path d="M4 6h16" />
                       <path d="M6 6v12" />
