@@ -482,16 +482,9 @@ export default function StudentModal({
             {/* Header with Tabs */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                {schoolLogo ? (
+                {schoolLogo && (
                   <img src={schoolLogo} alt="School Logo" className="w-10 h-10 object-contain" />
-                ) : import.meta.env.VITE_APP_LOGO ? (
-                  <img src={import.meta.env.VITE_APP_LOGO} alt="School Logo" className="w-10 h-10 object-contain" />
-                ) : (
-                  <AcmeLogo />
                 )}
-                <span className="font-bold text-lg text-gray-900">
-                  {brandData?.businessName || brandData?.dbaName || import.meta.env.VITE_APP_TITLE || 'DojoFlow'}
-                </span>
                 {/* Logo Upload Success Message */}
                 {logoUploadSuccess && (
                   <div className="flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium animate-fade-in">
@@ -980,15 +973,12 @@ export default function StudentModal({
             {/* Preview in context */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <p className="text-xs text-gray-500 mb-2 text-center">How it will appear:</p>
-              <div className="flex items-center gap-2 justify-center">
+              <div className="flex items-center justify-center">
                 <img 
                   src={logoPreview.dataUrl} 
                   alt="Logo preview small" 
                   className="w-10 h-10 object-contain rounded"
                 />
-                <span className="font-semibold text-gray-900">
-                  {brandData?.businessName || import.meta.env.VITE_APP_TITLE || 'Your Dojo'}
-                </span>
               </div>
             </div>
             
