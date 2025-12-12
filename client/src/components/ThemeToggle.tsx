@@ -7,8 +7,17 @@ const themes: { id: Theme; label: string; icon: typeof Sun }[] = [
   { id: 'cinematic', label: 'Cinematic', icon: Sparkles },
 ]
 
-export default function ThemeToggle() {
+interface ThemeToggleProps {
+  showCinematic?: boolean
+}
+
+export default function ThemeToggle({ showCinematic = false }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme()
+  
+  // Filter themes based on showCinematic prop
+  const availableThemes = showCinematic 
+    ? themes 
+    : themes.filter(t => t.id !== 'cinematic')
   
   // Get accent color based on current theme
   const getAccentColor = () => {
@@ -48,7 +57,7 @@ export default function ThemeToggle() {
         transition-all duration-300 ease-in-out
       `}
     >
-      {themes.map((t) => {
+      {availableThemes.map((t) => {
         const isActive = theme === t.id
         const Icon = t.icon
         

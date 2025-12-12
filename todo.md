@@ -2643,3 +2643,7 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Update card backgrounds and borders for dark mode
 - [ ] Ensure text contrast and readability in dark mode
 - [ ] Match sidebar and header colors with Kai Command
+
+## Cinematic Mode Restriction
+- [x] Hide Cinematic mode option from theme switcher on non-Kai pages
+- [x] Only show Cinematic mode on Kai Command page
