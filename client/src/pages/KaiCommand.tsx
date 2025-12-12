@@ -83,6 +83,13 @@ export default function KaiCommand() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [parallaxOffset, setParallaxOffset] = useState(0);
+  
+  // Theme detection (needed early for parallax)
+  const { theme } = useTheme();
+  const isDark = theme === 'dark' || theme === 'cinematic';
+  const isCinematic = theme === 'cinematic';
 
   // tRPC queries and mutations for Kai
   const kaiChatMutation = trpc.kai.chat.useMutation();
@@ -306,6 +313,25 @@ export default function KaiCommand() {
     scrollToBottom();
   }, [messages]);
 
+  // Parallax scroll effect for cinematic backgrounds
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || !isCinematic) {
+      setParallaxOffset(0);
+      return;
+    }
+
+    const handleScroll = () => {
+      const scrollTop = scrollContainer.scrollTop;
+      // Subtle parallax: background moves at 30% of scroll speed
+      const offset = scrollTop * 0.3;
+      setParallaxOffset(offset);
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [isCinematic]);
+
   // Keyboard shortcut: Ctrl/Cmd + K to focus Kai input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -472,10 +498,6 @@ export default function KaiCommand() {
   const todayConversations = conversations.filter(c => c.date === 'today');
   const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
 
-  const { theme } = useTheme();
-  const isDark = theme === 'dark' || theme === 'cinematic';
-  const isCinematic = theme === 'cinematic';
-  
   // Cinematic mode taglines that rotate
   const cinematicTaglines = [
     "Growth begins with clarity.",
@@ -675,18 +697,25 @@ export default function KaiCommand() {
           {/* Cinematic Background Image */}
           {isCinematic && (
             <>
-              {/* Background Image Layer */}
+              {/* Background Image Layer with Parallax */}
               <div 
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none will-change-transform"
                 style={{
                   backgroundImage: `url(${currentEnvironment.backgroundImage})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   backgroundRepeat: 'no-repeat',
                   filter: 'blur(2px)',
-                  transform: 'scale(1.02)',
+                  transform: `scale(1.1) translateY(${-parallaxOffset}px)`,
                   transition: 'opacity 0.4s ease-out',
-                  opacity: isTransitioning ? 0 : 1
+                  opacity: isTransitioning ? 0 : 1,
+                  // Extend background to allow parallax movement
+                  top: '-5%',
+                  left: '-5%',
+                  right: '-5%',
+                  bottom: '-5%',
+                  width: '110%',
+                  height: '110%'
                 }}
               />
               {/* Dark Overlay for readability */}
@@ -756,7 +785,10 @@ export default function KaiCommand() {
           </div>
 
           {/* Messages Area with visible scrollbar - Centered content */}
-          <div className="flex-1 overflow-y-auto p-6 pt-6 scrollbar-visible">
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto p-6 pt-6 scrollbar-visible"
+          >
             <div className="max-w-[1320px] mx-auto px-4">
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting */

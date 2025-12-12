@@ -2524,3 +2524,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Integrate background images into EnvironmentContext
 - [x] Update KaiCommand to display backgrounds with blur, overlay, and vignette
 - [x] Update EnvironmentSelectorModal to show real image previews
+
+## Parallax Scrolling Effect
+- [x] Implement subtle parallax scrolling for cinematic backgrounds
+- [x] Background moves slower than foreground content on scroll
+- [x] Smooth, GPU-accelerated transforms for 60fps performance
+- [x] Works with all 5 environment backgrounds
