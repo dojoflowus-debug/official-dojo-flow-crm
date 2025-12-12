@@ -77,21 +77,32 @@
 
 /// <reference types="@types/google.maps" />
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePersistFn } from "@/hooks/usePersistFn";
 import { cn } from "@/lib/utils";
+import { MapPin, RefreshCw, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 declare global {
   interface Window {
     google?: typeof google;
+    gm_authFailure?: () => void;
   }
 }
 
+// Get API key from environment
 const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
 const FORGE_BASE_URL =
   import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
   "https://forge.butterfly-effect.dev";
 const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
+
+// Log API key status on module load (for diagnostics)
+if (!API_KEY) {
+  console.error('[GoogleMaps] CRITICAL: VITE_FRONTEND_FORGE_API_KEY is not configured');
+} else {
+  console.log('[GoogleMaps] API key configured:', API_KEY.substring(0, 8) + '...');
+}
 
 // Premium deep charcoal / near-black night style for dark mode
 // Apple-style dashboard aesthetic: calm, minimal, high contrast
@@ -218,31 +229,89 @@ const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
   }
 ];
 
+// Track script loading state globally
 let scriptLoaded = false;
-let scriptLoading: Promise<void> | null = null;
+let scriptLoading: Promise<boolean> | null = null;
+let authError = false;
+let lastError: string | null = null;
 
-function loadMapScript(): Promise<void> {
+// Global auth failure handler - Google Maps calls this on auth errors
+if (typeof window !== 'undefined') {
+  window.gm_authFailure = () => {
+    authError = true;
+    lastError = 'Google Maps authentication failed (API key/billing/referrer issue)';
+    console.error('[GoogleMaps] Auth failure:', lastError);
+    // Dispatch custom event so components can react
+    window.dispatchEvent(new CustomEvent('googlemaps-auth-error', { detail: lastError }));
+  };
+  
+  // Add CSS to hide Google's error dialog
+  const style = document.createElement('style');
+  style.textContent = `
+    /* Hide Google Maps error dialogs */
+    .dismissButton, 
+    .gm-err-container,
+    .gm-style-iw-a,
+    div[style*="z-index: 1000001"] {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function loadMapScript(): Promise<boolean> {
+  // Check if API key is missing
+  if (!API_KEY) {
+    console.error('[GoogleMaps] Cannot load script: API key is missing');
+    lastError = 'Google Maps API key is not configured';
+    return Promise.resolve(false);
+  }
+
+  // If auth error occurred, don't retry automatically
+  if (authError) {
+    console.warn('[GoogleMaps] Skipping load due to previous auth error');
+    return Promise.resolve(false);
+  }
+
+  // Already loaded successfully
   if (scriptLoaded && window.google?.maps) {
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
   
+  // Loading in progress
   if (scriptLoading) {
     return scriptLoading;
   }
+  
+  console.log('[GoogleMaps] Starting script load...');
   
   scriptLoading = new Promise((resolve) => {
     // Check if script already exists
     const existingScript = document.querySelector('script[src*="maps/api/js"]');
     if (existingScript) {
+      console.log('[GoogleMaps] Found existing script tag');
       if (window.google?.maps) {
         scriptLoaded = true;
-        resolve();
+        console.log('[GoogleMaps] Google Maps already available');
+        resolve(true);
         return;
       }
       // Wait for existing script to load
       existingScript.addEventListener('load', () => {
-        scriptLoaded = true;
-        resolve();
+        if (window.google?.maps) {
+          scriptLoaded = true;
+          console.log('[GoogleMaps] Existing script loaded successfully');
+          resolve(true);
+        } else {
+          console.error('[GoogleMaps] Script loaded but google.maps not available');
+          lastError = 'Google Maps script loaded but API not available';
+          resolve(false);
+        }
+      });
+      existingScript.addEventListener('error', () => {
+        console.error('[GoogleMaps] Existing script failed to load');
+        lastError = 'Failed to load Google Maps script';
+        resolve(false);
       });
       return;
     }
@@ -251,20 +320,55 @@ function loadMapScript(): Promise<void> {
     script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
     script.async = true;
     script.crossOrigin = "anonymous";
+    
     script.onload = () => {
-      scriptLoaded = true;
-      resolve();
+      // Small delay to ensure google.maps is fully initialized
+      setTimeout(() => {
+        if (window.google?.maps) {
+          scriptLoaded = true;
+          console.log('[GoogleMaps] Script loaded successfully');
+          resolve(true);
+        } else {
+          console.error('[GoogleMaps] Script loaded but google.maps not available');
+          lastError = 'Google Maps script loaded but API not available';
+          resolve(false);
+        }
+      }, 100);
     };
-    script.onerror = () => {
-      console.error("Failed to load Google Maps script");
+    
+    script.onerror = (event) => {
+      console.error('[GoogleMaps] Script load error:', event);
+      lastError = 'Failed to load Google Maps script (network error)';
       scriptLoading = null;
-      resolve();
+      resolve(false);
     };
+    
     document.head.appendChild(script);
   });
   
   return scriptLoading;
 }
+
+// Reset function to allow retry
+function resetMapScript() {
+  console.log('[GoogleMaps] Resetting script state for retry');
+  scriptLoaded = false;
+  scriptLoading = null;
+  authError = false;
+  lastError = null;
+  
+  // Remove existing script tags
+  const scripts = document.querySelectorAll('script[src*="maps/api/js"]');
+  scripts.forEach(script => script.remove());
+  
+  // Clear google object
+  if (window.google) {
+    delete (window as any).google;
+  }
+}
+
+// Map load status type
+type MapLoadStatus = 'loading' | 'success' | 'error';
 
 interface MapViewProps {
   className?: string;
@@ -272,6 +376,7 @@ interface MapViewProps {
   initialZoom?: number;
   darkMode?: boolean;
   onMapReady?: (map: google.maps.Map) => void;
+  onError?: (error: string) => void;
 }
 
 export function MapView({
@@ -280,63 +385,215 @@ export function MapView({
   initialZoom = 12,
   darkMode = false,
   onMapReady,
+  onError,
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
   const currentDarkMode = useRef<boolean>(darkMode);
   const initialized = useRef<boolean>(false);
+  
+  const [status, setStatus] = useState<MapLoadStatus>('loading');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Listen for auth errors
+  useEffect(() => {
+    const handleAuthError = (event: CustomEvent) => {
+      setStatus('error');
+      setErrorMessage(event.detail || 'Google Maps authentication failed');
+      onError?.(event.detail);
+    };
+    
+    window.addEventListener('googlemaps-auth-error', handleAuthError as EventListener);
+    return () => {
+      window.removeEventListener('googlemaps-auth-error', handleAuthError as EventListener);
+    };
+  }, [onError]);
 
   const init = usePersistFn(async () => {
     if (initialized.current) return;
     
-    await loadMapScript();
-    if (!mapContainer.current || !window.google?.maps) {
-      console.error("Map container or Google Maps not available");
+    // Check for API key first
+    if (!API_KEY) {
+      console.error('[GoogleMaps] Cannot initialize: API key missing');
+      setStatus('error');
+      setErrorMessage('Google Maps API key is not configured');
+      onError?.('Google Maps API key is not configured');
+      return;
+    }
+    
+    setStatus('loading');
+    
+    const loaded = await loadMapScript();
+    
+    if (!loaded || !window.google?.maps) {
+      console.error('[GoogleMaps] Failed to load Google Maps');
+      setStatus('error');
+      setErrorMessage(lastError || 'Failed to load Google Maps');
+      onError?.(lastError || 'Failed to load Google Maps');
+      return;
+    }
+    
+    if (!mapContainer.current) {
+      console.warn('[GoogleMaps] Map container not available yet, will retry');
+      // Don't set error - the container might just not be mounted yet
+      // The useEffect will retry
       return;
     }
     
     initialized.current = true;
     
-    // IMPORTANT: When using custom styles, do NOT use mapId
-    // mapId is for cloud-based styling which conflicts with inline styles
-    const mapOptions: google.maps.MapOptions = {
-      zoom: initialZoom,
-      center: initialCenter,
-      mapTypeControl: true,
-      fullscreenControl: true,
-      zoomControl: true,
-      streetViewControl: true,
-      // Apply dark styles on initialization if darkMode is true
-      styles: darkMode ? DARK_MAP_STYLES : undefined,
-    };
-    
-    map.current = new window.google.maps.Map(mapContainer.current, mapOptions);
-    currentDarkMode.current = darkMode;
-    
-    console.log('[Map] Initialized with darkMode:', darkMode);
-    
-    if (onMapReady) {
-      onMapReady(map.current);
+    try {
+      // IMPORTANT: When using custom styles, do NOT use mapId
+      // mapId is for cloud-based styling which conflicts with inline styles
+      // Apply styles ONLY after successful map creation
+      const mapOptions: google.maps.MapOptions = {
+        zoom: initialZoom,
+        center: initialCenter,
+        mapTypeControl: true,
+        fullscreenControl: true,
+        zoomControl: true,
+        streetViewControl: true,
+        // Start without styles - apply after map is created
+      };
+      
+      console.log('[GoogleMaps] Creating map instance...');
+      map.current = new window.google.maps.Map(mapContainer.current, mapOptions);
+      
+      // Set up MutationObserver to detect Google's error dialogs
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node instanceof HTMLElement) {
+              // Check for Google's error dialog
+              if (node.classList.contains('dismissButton') || 
+                  node.classList.contains('gm-err-container') ||
+                  node.textContent?.includes("can't load Google Maps correctly")) {
+                console.error('[GoogleMaps] Detected Google error dialog');
+                node.style.display = 'none';
+                // Trigger our error state
+                if (!authError) {
+                  authError = true;
+                  lastError = 'Google Maps failed to load (API key/billing/referrer issue)';
+                  setStatus('error');
+                  setErrorMessage(lastError);
+                  onError?.(lastError);
+                }
+              }
+            }
+          });
+        });
+      });
+      
+      observer.observe(document.body, { childList: true, subtree: true });
+      
+      // Apply dark mode styles AFTER map is successfully created
+      if (darkMode) {
+        console.log('[GoogleMaps] Applying dark mode styles...');
+        map.current.setOptions({ styles: DARK_MAP_STYLES });
+      }
+      
+      currentDarkMode.current = darkMode;
+      setStatus('success');
+      
+      console.log('[GoogleMaps] Map initialized successfully, darkMode:', darkMode);
+      
+      if (onMapReady) {
+        onMapReady(map.current);
+      }
+      
+      // Clean up observer after a delay (error dialogs appear quickly if there's an issue)
+      setTimeout(() => {
+        observer.disconnect();
+      }, 5000);
+    } catch (error) {
+      console.error('[GoogleMaps] Error creating map:', error);
+      setStatus('error');
+      setErrorMessage('Error creating map instance');
+      onError?.('Error creating map instance');
     }
   });
 
+  // Initialize map when component mounts
   useEffect(() => {
-    init();
+    // Small delay to ensure container ref is set after render
+    const timer = setTimeout(() => {
+      init();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [init]);
 
   // Update map styles when darkMode prop changes
   useEffect(() => {
-    if (map.current && currentDarkMode.current !== darkMode) {
-      console.log('[Map] Updating styles, darkMode:', darkMode);
-      map.current.setOptions({
-        styles: darkMode ? DARK_MAP_STYLES : [],
-      });
-      currentDarkMode.current = darkMode;
+    if (map.current && currentDarkMode.current !== darkMode && status === 'success') {
+      console.log('[GoogleMaps] Updating styles, darkMode:', darkMode);
+      try {
+        map.current.setOptions({
+          styles: darkMode ? DARK_MAP_STYLES : [],
+        });
+        currentDarkMode.current = darkMode;
+      } catch (error) {
+        console.error('[GoogleMaps] Error updating styles:', error);
+      }
     }
-  }, [darkMode]);
+  }, [darkMode, status]);
 
+  // Retry handler
+  const handleRetry = () => {
+    console.log('[GoogleMaps] User requested retry');
+    resetMapScript();
+    initialized.current = false;
+    setStatus('loading');
+    setErrorMessage(null);
+    // Small delay before retrying
+    setTimeout(() => {
+      init();
+    }, 500);
+  };
+
+  // Always render the container div so the ref is available
+  // Show overlay for loading/error states
   return (
-    <div ref={mapContainer} className={cn("w-full h-[500px]", className)} />
+    <div className={cn("w-full h-[500px] relative", className)}>
+      {/* Map container - always rendered for ref */}
+      <div 
+        ref={mapContainer} 
+        className={cn(
+          "w-full h-full absolute inset-0",
+          status !== 'success' && "invisible"
+        )} 
+      />
+      
+      {/* Error state overlay */}
+      {status === 'error' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+          <div className="text-center p-8 max-w-md">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Map unavailable</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {errorMessage || 'Google Maps failed to load (API key/billing/referrer).'}
+            </p>
+            <Button onClick={handleRetry} variant="outline" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading state overlay */}
+      {status === 'loading' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center animate-pulse">
+              <MapPin className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">Loading map...</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

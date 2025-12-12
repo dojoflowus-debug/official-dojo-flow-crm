@@ -2652,3 +2652,16 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Apply deep black dark mode to Dashboard page
 - [x] Apply deep black dark mode to Leads page
 - [x] Apply deep black dark mode to Classes page
+
+## Fix Google Maps API Key Error
+- [x] Investigate current Google Maps implementation and API key loading
+- [x] Ensure API key is correctly loaded from environment variables
+- [x] Add validation to not initialize map if API key is missing
+- [x] Add proper error handling for script load failures
+- [x] Implement clean fallback UI when map fails to load
+- [x] Add Retry button to reload the map script
+- [x] Apply dark map styling only after successful initialization
+- [x] Add console logging for diagnostic purposes
+- [x] Test map loading with proper error handling
+- [x] Hide Google's native error dialog with CSS
+- [x] Add MutationObserver to detect and handle error dialogs
