@@ -174,7 +174,7 @@ function StudentCard({
   return (
     <div 
       onClick={onClick}
-      className={`bg-white rounded-xl border px-4 py-3 transition-all cursor-pointer hover:shadow-md hover:border-slate-300 ${
+      className={`bg-white rounded-xl border px-4 py-3 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:border-slate-300 hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] active:shadow-md ${
         isHighlighted ? 'ring-2 ring-primary shadow-lg border-primary' : 'border-slate-200 shadow-sm'
       }`}
       style={{ borderRadius: '12px' }}

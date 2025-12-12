@@ -2322,3 +2322,9 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Live update across all cards when logo changes (via query invalidation)
 - [x] Add fallback to placeholder icon if logo fails to load (onError handler)
 - [x] Do not modify other card layout or behavior
+
+
+## ✅ COMPLETED: Student Card Hover Animations
+- [x] Add subtle hover animation to student cards (lift, scale, shadow)
+- [x] Include smooth transition effects (200ms ease-out, scale 1.01, translate-y -0.5)
+- [x] Ensure animations are performant and not distracting (GPU-accelerated transforms)

@@ -671,7 +671,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
                 </thead>
                 <tbody>
                   {filteredStudents.map((student) => (
-                    <tr key={student.id} className="border-b border-border hover:bg-accent/50 transition-colors">
+                    <tr key={student.id} className="border-b border-border hover:bg-accent/50 transition-all duration-150 hover:shadow-sm cursor-pointer">
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           {student.photo_url ? (
@@ -764,7 +764,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
             {/* Tablet/Mobile Card View */}
             <div className="xl:hidden space-y-4">
               {filteredStudents.map((student) => (
-                <div key={student.id} className="border border-border rounded-lg p-4 hover:bg-accent/50 transition-colors">
+                <div key={student.id} className="border border-border rounded-lg p-4 hover:bg-accent/50 transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] cursor-pointer">
                   <div className="flex gap-4 mb-3">
                     {/* Student Photo */}
                     <div className="flex-shrink-0">
