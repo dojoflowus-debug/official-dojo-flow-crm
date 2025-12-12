@@ -2328,3 +2328,11 @@ The OAuth flow is now working at the server level, but Google is returning a "re
 - [x] Add subtle hover animation to student cards (lift, scale, shadow)
 - [x] Include smooth transition effects (200ms ease-out, scale 1.01, translate-y -0.5)
 - [x] Ensure animations are performant and not distracting (GPU-accelerated transforms)
+
+
+## ✅ COMPLETED: Remove Gap Between Top Menu & Students Dashboard
+- [x] Locate Students page main container wrapper (StudentsSplitScreen.tsx)
+- [x] Remove extra pt-[72px] from main container (BottomNavLayout already adds pt-[88px])
+- [x] Ensure breadcrumb appears directly under top menu
+- [x] Match spacing with other pages like Kai Command and Leads
+- [x] Update full map mode overlay to use pt-[88px] for consistency
