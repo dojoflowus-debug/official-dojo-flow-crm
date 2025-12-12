@@ -2576,3 +2576,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] All text pure white (#FFFFFF) with opacity: 1
 - [x] Add text-shadow: 0 1px 3px rgba(0,0,0,0.7) for extra contrast
 - [x] Icons in input bar light (#FFFFFF)
+
+## Make Chat Text 100% Visible (Override Everything)
+- [x] Input bar outer container: rgba(0,0,0,0.85), no blur on text
+- [x] Input text/placeholder: #FFFFFF, opacity: 1, text-shadow: 0 1px 3px rgba(0,0,0,0.9)
+- [x] Icons: #FFFFFF, fill: #FFFFFF
+- [x] Kai panel container: rgba(0,0,0,0.7)
+- [x] All panel text: #FFFFFF, opacity: 1, text-shadow
+- [x] Remove any accidental fading (opacity < 0.5, blur on text)

@@ -221,6 +221,21 @@ html:has(.focus-mode) {
   overflow: hidden !important;
 }
 
+/* Cinematic/Focus Mode - Force white placeholder text */
+.cinematic-input::placeholder,
+.focus-input::placeholder {
+  color: #FFFFFF !important;
+  opacity: 1 !important;
+}
+
+/* Override any opacity on text in cinematic mode */
+.cinematic-text,
+.focus-text {
+  color: #FFFFFF !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
+}
+
 /* Theme transition animations */
 * {
   transition:

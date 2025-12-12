@@ -816,10 +816,10 @@ export default function KaiCommand() {
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting */
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? '' : 'py-8'} transition-all duration-500`}>
-                  {/* Frosted Glass Panel for Cinematic/Focus Mode - 45% opacity for readability */}
-                  <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.6)] border border-white/20' : ''}`}
+                  {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
+                  <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
                     style={(isCinematic || isFocusMode) ? {
-                      background: 'rgba(0, 0, 0, 0.45)',
+                      background: 'rgba(0, 0, 0, 0.70)',
                       backdropFilter: 'blur(10px)',
                       WebkitBackdropFilter: 'blur(10px)',
                       animation: 'cinematicGlassFadeIn 0.6s ease-out forwards'
@@ -842,23 +842,25 @@ export default function KaiCommand() {
                     </div>
                   </div>
                   <h2 
-                    className={`${(isCinematic || isFocusMode) ? 'text-4xl text-white' : 'text-3xl'} font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicBreathing_4s_ease-in-out_infinite]' : ''}`}
+                    className={`${(isCinematic || isFocusMode) ? 'text-4xl' : 'text-3xl'} font-semibold mb-2 transition-all duration-500 ${isCinematic ? 'animate-[cinematicBreathing_4s_ease-in-out_infinite]' : ''}`}
                     style={(isCinematic || isFocusMode) ? { 
                       animation: isCinematic ? 'cinematicTextSlideUp 0.5s ease-out 0.2s both, cinematicBreathing 4s ease-in-out 0.7s infinite' : 'none',
-                      textShadow: '0 1px 3px rgba(0,0,0,0.7)',
-                      color: '#FFFFFF'
-                    } : {}}
+                      textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                      color: '#FFFFFF',
+                      opacity: 1
+                    } : isDark ? { color: 'white' } : { color: '#0f172a' }}
                   >
                     Hi, I'm Kai.
                   </h2>
                   {/* Rotating taglines in cinematic mode, static text otherwise */}
                   {(isCinematic || isFocusMode) ? (
                     <p 
-                      className={`text-center max-w-md mb-10 text-lg transition-opacity duration-500 ${taglineVisible ? 'opacity-100' : 'opacity-0'}`}
+                      className={`text-center max-w-md mb-10 text-lg transition-opacity duration-500 ${taglineVisible ? '' : 'invisible'}`}
                       style={{ 
-                        textShadow: '0 1px 3px rgba(0,0,0,0.7)',
+                        textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                         animation: isCinematic ? 'cinematicTextSlideUp 0.5s ease-out 0.35s both' : 'none',
-                        color: '#FFFFFF'
+                        color: '#FFFFFF',
+                        opacity: 1
                       }}
                     >
                       {isCinematic ? cinematicTaglines[currentTaglineIndex] : 'Tell me about your dojo and what you want to improve—growth, retention, or operations—and I\'ll show you the numbers.'}
@@ -906,41 +908,44 @@ export default function KaiCommand() {
                           onClick={() => handlePromptClick(command.text)}
                           className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border ${(isCinematic || isFocusMode) ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
                             (isCinematic || isFocusMode)
-                              ? `border-[rgba(255,255,255,0.15)] hover:border-[rgba(255,76,76,0.4)] shadow-[0_8px_32px_rgba(0,0,0,0.5)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.2)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/40' : ''}`
+                              ? `border-white/30 hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
                               : isDark 
                                 ? `bg-[#18181A] border-[rgba(255,255,255,0.05)] hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.10)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/30' : ''}`
                                 : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 ${favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : 'border-slate-100'}`
                           }`}
                           style={(isCinematic || isFocusMode) ? { 
                             animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
-                            background: 'rgba(0, 0, 0, 0.45)',
-                            backdropFilter: 'blur(8px)',
-                            WebkitBackdropFilter: 'blur(8px)'
+                            background: 'rgba(0, 0, 0, 0.70)'
+                            /* NO blur on cards - text must be crisp */
                           } : {}}
                         >
                           {/* Favorite Star */}
                           <div
                             onClick={(e) => toggleFavorite(command.id, e)}
-                            className={`absolute top-3 right-3 p-1 rounded-full transition-colors cursor-pointer ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-100'}`}
+                            className={`absolute top-3 right-3 p-1 rounded-full transition-colors cursor-pointer ${(isCinematic || isFocusMode) ? 'hover:bg-white/20' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-100'}`}
                           >
                             <Star
                               className={`w-4 h-4 transition-colors ${
                                 favorites.has(command.id)
                                   ? 'fill-[#FF4C4C] text-[#FF4C4C]'
-                                  : isDark ? 'text-[rgba(255,255,255,0.35)] hover:text-[rgba(255,255,255,0.55)]' : 'text-slate-300 hover:text-slate-400'
+                                  : (isCinematic || isFocusMode) ? 'text-white/50 hover:text-white/80' : isDark ? 'text-[rgba(255,255,255,0.35)] hover:text-[rgba(255,255,255,0.55)]' : 'text-slate-300 hover:text-slate-400'
                               }`}
                             />
                           </div>
                           
                           <div 
                             className="text-xs font-semibold text-[#FF4C4C] uppercase tracking-wide mb-2 pr-6"
-                            style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 3px rgba(0,0,0,0.7)' } : {}}
+                            style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : {}}
                           >
                             {command.header}
                           </div>
                           <p 
-                            className={`text-sm leading-relaxed ${(isCinematic || isFocusMode) ? 'group-hover:text-white' : isDark ? 'text-[rgba(255,255,255,0.75)] group-hover:text-white' : 'text-slate-600 group-hover:text-slate-800'}`}
-                            style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 3px rgba(0,0,0,0.7)', color: '#FFFFFF' } : {}}
+                            className={`text-sm leading-relaxed`}
+                            style={(isCinematic || isFocusMode) ? { 
+                              textShadow: '0 1px 3px rgba(0,0,0,0.9)', 
+                              color: '#FFFFFF',
+                              opacity: 1
+                            } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#475569' }}
                           >
                             {command.text}
                           </p>
@@ -1006,16 +1011,16 @@ export default function KaiCommand() {
             className={`p-4 border-t transition-all duration-500 ${expandedInput ? 'pb-8' : ''} ${isFocusMode ? 'pb-8 pt-6' : ''} ${(isCinematic || isFocusMode) ? 'pb-6 pt-5 border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm relative z-20`}
             style={(isCinematic || isFocusMode) ? { animation: isCinematic ? 'cinematicInputSlideUp 0.6s ease-out 0.7s both' : 'none' } : {}}
           >
-            {/* Frosted Glass Container for Input in Cinematic/Focus Mode - 55% opacity */}
+            {/* Background blur layer - separate from text (z-index: 0) */}
             {(isCinematic || isFocusMode) && (
               <div 
-                className="absolute inset-x-4 bottom-4 top-4 rounded-[32px] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+                className="absolute inset-x-4 bottom-4 top-4 rounded-[32px] border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)]"
                 style={{ 
                   zIndex: 0,
-                  background: 'rgba(0, 0, 0, 0.55)',
-                  backdropFilter: 'blur(8px)',
+                  background: 'rgba(0, 0, 0, 0.85)',
+                  backdropFilter: 'blur(10px)',
                   animation: isCinematic ? 'cinematicGlassFadeIn 0.5s ease-out 0.7s both' : 'none',
-                  WebkitBackdropFilter: 'blur(8px)'
+                  WebkitBackdropFilter: 'blur(10px)'
                 }}
               />
             )}
@@ -1025,27 +1030,27 @@ export default function KaiCommand() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setExpandedInput(!expandedInput)}
-                className={`absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full z-10 shadow-sm ${isDark ? 'bg-[#202022] hover:bg-[#2A2A2D] text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+                className={`absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full z-10 shadow-sm ${(isCinematic || isFocusMode) ? 'bg-black/80 hover:bg-black/90 text-white' : isDark ? 'bg-[#202022] hover:bg-[#2A2A2D] text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
               >
                 {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </Button>
               
-              <div className={`flex items-center gap-2 ${(isCinematic || isFocusMode) ? 'rounded-[28px] p-3 relative z-10' : 'rounded-[22px] p-2'} border transition-all duration-300 ${
+              {/* Input container - NO blur here, solid background, text on top */}
+              <div className={`flex items-center gap-2 ${(isCinematic || isFocusMode) ? 'rounded-full p-3 relative z-10' : 'rounded-[22px] p-2'} border transition-all duration-300 ${
                 (isCinematic || isFocusMode) 
-                  ? 'border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.5)] focus-within:border-[rgba(255,76,76,0.5)]'
+                  ? 'border-white/30 shadow-[0_4px_24px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
                   : isDark 
                     ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' 
                     : 'bg-white border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
               }`}
               style={(isCinematic || isFocusMode) ? { 
                 animation: isCinematic ? 'cinematicInputGlow 3s ease-in-out infinite' : 'none',
-                background: 'rgba(0, 0, 0, 0.55)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)'
+                background: 'rgba(0, 0, 0, 0.85)'
+                /* NO blur on this element - text must be crisp */
               } : {}}
               >
-                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? 'text-white hover:text-white hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
-                  <Paperclip className="w-5 h-5" />
+                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
+                  <Paperclip className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
                 </Button>
                 <Textarea
                   ref={messageInputRef}
@@ -1053,12 +1058,17 @@ export default function KaiCommand() {
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${(isCinematic || isFocusMode) ? 'text-white placeholder:text-white' : isDark ? 'text-white placeholder:text-[rgba(255,255,255,0.45)]' : 'text-slate-800 placeholder:text-slate-400'} ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'}`}
-                  style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 3px rgba(0,0,0,0.7)' } : {}}
+                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'} ${(isCinematic || isFocusMode) ? 'cinematic-input placeholder:text-white placeholder:opacity-100' : ''}`}
+                  style={(isCinematic || isFocusMode) ? { 
+                    color: '#FFFFFF',
+                    opacity: 1,
+                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                    caretColor: '#FFFFFF'
+                  } : isDark ? { color: 'white' } : { color: '#1e293b' }}
                   rows={expandedInput ? 5 : 1}
                 />
-                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? 'text-white hover:text-white hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
-                  <Mic className="w-5 h-5" />
+                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
+                  <Mic className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
                 </Button>
                 <Button 
                   size="icon" 
@@ -1066,12 +1076,16 @@ export default function KaiCommand() {
                   onClick={handleSendMessage}
                   disabled={!messageInput.trim() || isLoading}
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
                 </Button>
               </div>
               <p 
-                className={`text-xs text-center mt-2 relative z-10 ${(isCinematic || isFocusMode) ? '' : isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}
-                style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 3px rgba(0,0,0,0.7)', color: '#FFFFFF' } : {}}
+                className={`text-xs text-center mt-2 relative z-10`}
+                style={(isCinematic || isFocusMode) ? { 
+                  textShadow: '0 1px 3px rgba(0,0,0,0.9)', 
+                  color: '#FFFFFF',
+                  opacity: 1
+                } : isDark ? { color: 'rgba(255,255,255,0.45)' } : { color: '#94a3b8' }}
               >
                 Kai can make mistakes. Consider checking important information.
               </p>
