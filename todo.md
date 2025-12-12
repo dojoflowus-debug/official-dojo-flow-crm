@@ -2584,3 +2584,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Kai panel container: rgba(0,0,0,0.7)
 - [x] All panel text: #FFFFFF, opacity: 1, text-shadow
 - [x] Remove any accidental fading (opacity < 0.5, blur on text)
+
+## Fix Environment Overlay Covering Chat Text (Z-Index / Layering)
+- [x] Create dedicated .environment-layer with z-index: 0
+- [x] Create .content-layer wrapper with z-index: 10+
+- [x] Ensure chat messages have position: relative and z-index: 30
+- [x] Move all environment overlays into background layer
+- [x] Update chat text to text-white or rgba(255,255,255,0.92)
+- [x] Verify text stays visible after environment transition

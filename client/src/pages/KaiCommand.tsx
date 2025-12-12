@@ -696,12 +696,15 @@ export default function KaiCommand() {
         <div 
           className={`flex-1 flex flex-col relative ${isFocusMode ? 'overflow-hidden' : 'overflow-hidden'} ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'} ${isFocusMode ? 'h-full' : ''}`}
         >
-          {/* Cinematic Background Image */}
+          {/* ENVIRONMENT LAYER - All background elements with z-index: 0 */}
           {isCinematic && (
-            <>
+            <div 
+              className="environment-layer absolute inset-0 pointer-events-none"
+              style={{ zIndex: 0 }}
+            >
               {/* Background Image Layer with Parallax */}
               <div 
-                className="absolute inset-0 pointer-events-none will-change-transform"
+                className="absolute inset-0 will-change-transform"
                 style={{
                   backgroundImage: `url(${currentEnvironment.backgroundImage})`,
                   backgroundSize: 'cover',
@@ -722,7 +725,7 @@ export default function KaiCommand() {
               />
               {/* Dark Overlay for readability */}
               <div 
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0"
                 style={{
                   background: currentEnvironment.overlayColor,
                   transition: 'background 0.4s ease-out'
@@ -730,34 +733,31 @@ export default function KaiCommand() {
               />
               {/* Soft Gradient Overlay for UI Contrast (20-30% darkening) */}
               <div 
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0"
                 style={{
-                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.20) 70%, rgba(0,0,0,0.35) 100%)',
-                  pointerEvents: 'none'
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.20) 70%, rgba(0,0,0,0.35) 100%)'
                 }}
               />
               {/* Vignette Effect */}
               <div 
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0"
                 style={{
-                  background: 'radial-gradient(ellipse at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)',
-                  pointerEvents: 'none'
+                  background: 'radial-gradient(ellipse at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)'
                 }}
               />
               {/* Spotlight behind Kai */}
               <div 
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0"
                 style={{
-                  background: 'radial-gradient(ellipse at 50% 35%, rgba(255,76,76,0.15) 0%, transparent 40%)',
-                  pointerEvents: 'none'
+                  background: 'radial-gradient(ellipse at 50% 35%, rgba(255,76,76,0.15) 0%, transparent 40%)'
                 }}
               />
-            </>
+            </div>
           )}
-          {/* Top Banner - Hidden in Focus Mode for full-screen experience */}
+          {/* CONTENT LAYER - Top Banner - Hidden in Focus Mode for full-screen experience */}
           {!isFocusMode && (
           <div 
-            className={`relative z-10 px-6 py-3 border-b flex items-center justify-between ${
+            className={`relative px-6 py-3 border-b flex items-center justify-between ${
               isCinematic 
                 ? 'border-white/15' 
                 : isDark 
@@ -807,10 +807,11 @@ export default function KaiCommand() {
           </div>
           )}
 
-          {/* Messages Area with visible scrollbar - Centered content */}
+          {/* CONTENT LAYER - Messages Area with visible scrollbar - Centered content */}
           <div 
             ref={scrollContainerRef}
-            className={`flex-1 p-6 pt-6 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'}`}
+            className={`content-layer flex-1 p-6 pt-6 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'}`}
+            style={{ zIndex: 10 }}
           >
             <div className={`${isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
               {messages.length === 0 ? (
@@ -956,18 +957,28 @@ export default function KaiCommand() {
                   </div>{/* End Frosted Glass Panel */}
                 </div>
               ) : (
-                /* Messages */
-                <div className="space-y-6">
+                /* Messages - z-index: 30 to ensure above environment */
+                <div className="space-y-6 relative" style={{ zIndex: 30 }}>
                   {messages.map((message) => (
-                    <div key={message.id} className="flex gap-3">
+                    <div key={message.id} className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       {message.role === 'user' ? (
                         <>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0 ${isDark ? 'bg-[#18181A]' : 'bg-slate-900'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0 ${(isCinematic || isFocusMode) ? 'bg-black/70' : isDark ? 'bg-[#18181A]' : 'bg-slate-900'}`}>
                             You
                           </div>
                           <div className="flex-1">
-                            <div className={`font-medium mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>You</div>
-                            <p className={isDark ? 'text-[rgba(255,255,255,0.75)]' : 'text-slate-700'}>{message.content}</p>
+                            <div 
+                              className={`font-medium mb-1`}
+                              style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                            >You</div>
+                            <p 
+                              className="relative"
+                              style={(isCinematic || isFocusMode) ? { 
+                                color: 'rgba(255,255,255,0.92)', 
+                                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                                zIndex: 30
+                              } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
+                            >{message.content}</p>
                           </div>
                         </>
                       ) : (
@@ -976,8 +987,18 @@ export default function KaiCommand() {
                             <Sparkles className="w-4 h-4 text-white" />
                           </div>
                           <div className="flex-1">
-                            <div className={`font-medium mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Kai</div>
-                            <div className={`whitespace-pre-wrap prose prose-sm max-w-none ${isDark ? 'text-[rgba(255,255,255,0.75)] prose-invert' : 'text-slate-700'}`}>
+                            <div 
+                              className={`font-medium mb-1`}
+                              style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                            >Kai</div>
+                            <div 
+                              className={`whitespace-pre-wrap prose prose-sm max-w-none relative ${(isCinematic || isFocusMode) ? '' : isDark ? 'prose-invert' : ''}`}
+                              style={(isCinematic || isFocusMode) ? { 
+                                color: 'rgba(255,255,255,0.92)', 
+                                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                                zIndex: 30
+                              } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
+                            >
                               {message.content}
                             </div>
                           </div>
@@ -986,16 +1007,19 @@ export default function KaiCommand() {
                     </div>
                   ))}
                   {isLoading && (
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       <div className="w-8 h-8 rounded-full bg-[#FF4C4C] flex items-center justify-center shrink-0">
                         <Sparkles className="w-4 h-4 text-white animate-pulse" />
                       </div>
                       <div className="flex-1">
-                        <div className={`font-medium mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Kai</div>
+                        <div 
+                          className={`font-medium mb-1`}
+                          style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                        >Kai</div>
                         <div className="flex gap-1">
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
                         </div>
                       </div>
                     </div>
