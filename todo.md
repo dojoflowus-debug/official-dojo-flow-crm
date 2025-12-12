@@ -2647,3 +2647,8 @@ Note: The logo was already correctly implemented. The navigation uses:
 ## Cinematic Mode Restriction
 - [x] Hide Cinematic mode option from theme switcher on non-Kai pages
 - [x] Only show Cinematic mode on Kai Command page
+
+## Consistent Dark Mode Styling
+- [x] Apply deep black dark mode to Dashboard page
+- [x] Apply deep black dark mode to Leads page
+- [x] Apply deep black dark mode to Classes page

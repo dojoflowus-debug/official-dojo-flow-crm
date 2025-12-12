@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import SimpleLayout from '../components/SimpleLayout'
 import PlasmaKai from '../components/PlasmaKai'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +23,8 @@ import {
 } from 'lucide-react'
 
 export default function Dashboard({ onLogout, theme, toggleTheme }) {
+  const { theme: currentTheme } = useTheme()
+  const isDarkMode = currentTheme === 'dark' || currentTheme === 'cinematic'
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [messages, setMessages] = useState([])  // Start with empty messages, greeting will be spoken only
@@ -424,7 +427,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
 
   return (
     <SimpleLayout>
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden">
+      <div className={`flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden ${isDarkMode ? 'bg-[#0F1115]' : ''}`}>
         {/* Main Kai Interface - Center */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Header */}
@@ -436,7 +439,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
           </div>
 
           {/* Kai Chat Interface */}
-          <Card className="flex-1 flex flex-col border-2 border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 overflow-hidden max-h-[500px] md:max-h-[600px] lg:max-h-none">
+          <Card className={`flex-1 flex flex-col border-2 overflow-hidden max-h-[500px] md:max-h-[600px] lg:max-h-none ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'border-primary/20 bg-gradient-to-br from-background via-background to-primary/5'}`}>
             <CardHeader className="border-b border-border/50 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -583,7 +586,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mt-4">
             {stats.map((stat, index) => (
-              <Card key={index} className="border-border/50 bg-gradient-to-br from-background to-muted/30">
+              <Card key={index} className={`${isDarkMode ? 'bg-[#18181A] border-white/10' : 'border-border/50 bg-gradient-to-br from-background to-muted/30'}`}>
                 <CardContent className="p-3 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -602,7 +605,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
           </div>
 
           {/* Kiosk Activity Today */}
-          <Card className="mt-4 border-orange-500/30 bg-gradient-to-br from-background via-orange-950/5 to-orange-900/10">
+          <Card className={`mt-4 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'border-orange-500/30 bg-gradient-to-br from-background via-orange-950/5 to-orange-900/10'}`}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -658,7 +661,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
         {/* Right Sidebar - History & Agenda */}
         <div className="w-80 flex flex-col gap-4">
           {/* History Chat */}
-          <Card className="flex-1 border-border/50">
+          <Card className={`flex-1 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'border-border/50'}`}>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-primary" />
@@ -669,7 +672,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
               {historyChats.map((chat, index) => (
                 <button
                   key={index}
-                  className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors border border-transparent hover:border-border/50"
+                  className={`w-full text-left p-3 rounded-lg transition-colors border border-transparent ${isDarkMode ? 'hover:bg-[#0F1115] hover:border-white/10' : 'hover:bg-muted hover:border-border/50'}`}
                 >
                   <p className="text-sm font-medium truncate">{chat.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">{chat.time}</p>
@@ -679,7 +682,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
           </Card>
 
           {/* Today's Agenda */}
-          <Card className="border-border/50">
+          <Card className={`${isDarkMode ? 'bg-[#18181A] border-white/10' : 'border-border/50'}`}>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" />
@@ -690,7 +693,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
               {todaysAgenda.map((item, index) => (
                 <div
                   key={index}
-                  className="p-3 rounded-lg bg-muted border border-border/50"
+                  className={`p-3 rounded-lg border ${isDarkMode ? 'bg-[#0F1115] border-white/10' : 'bg-muted border-border/50'}`}
                 >
                   <p className="text-sm font-medium">{item.title}</p>
                   <div className="flex items-center justify-between mt-2">

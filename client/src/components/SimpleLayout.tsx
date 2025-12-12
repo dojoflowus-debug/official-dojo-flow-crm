@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
   LayoutDashboard,
@@ -158,6 +159,8 @@ export default function SimpleLayout({ children }) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null)
   const location = useLocation()
+  const { theme } = useTheme()
+  const isDarkMode = theme === 'dark' || theme === 'cinematic'
 
   // Persist sidebar state
   useEffect(() => {
@@ -400,7 +403,7 @@ export default function SimpleLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className={`flex h-screen ${isDarkMode ? 'bg-[#0F1115]' : 'bg-background'}`}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
@@ -415,10 +418,10 @@ export default function SimpleLayout({ children }) {
           sidebarOpen ? 'w-64' : 'w-16'
         } transition-all duration-300 ease-in-out border-r border-border flex flex-col fixed lg:relative h-full z-50 bg-background ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        } ${isDarkMode ? 'bg-[#0F1115] border-white/10' : 'bg-background'}`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className={`flex items-center justify-between p-4 border-b ${isDarkMode ? 'border-white/10' : 'border-border'}`}>
           <div 
             className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -440,7 +443,7 @@ export default function SimpleLayout({ children }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header with Hamburger */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-background">
+        <div className={`lg:hidden flex items-center justify-between p-4 border-b ${isDarkMode ? 'border-white/10 bg-[#0F1115]' : 'border-border bg-background'}`}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-accent rounded-lg transition-colors"

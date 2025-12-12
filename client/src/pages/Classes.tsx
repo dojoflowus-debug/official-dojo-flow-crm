@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import BottomNavLayout from '@/components/BottomNavLayout';
+import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,6 +14,12 @@ import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
 
 const API_URL = '/api';  // Use relative path to work from any device
+
+// Dark mode hook wrapper
+const useDarkMode = () => {
+  const { theme } = useTheme()
+  return theme === 'dark' || theme === 'cinematic'
+}
 
 // ClassForm component - moved outside to prevent re-creation on every render
 const ClassForm = ({ formData, handleInputChange, handleSelectChange, instructors, onSubmit, submitText, onCancel }) => (
@@ -183,6 +190,7 @@ const ClassForm = ({ formData, handleInputChange, handleSelectChange, instructor
 );
 
 export default function Classes({ onLogout, theme, toggleTheme }) {
+  const isDarkMode = useDarkMode()
   const [classes, setClasses] = useState([]);
   const [stats, setStats] = useState({
     totalClasses: 0,
@@ -421,7 +429,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   return (
     <BottomNavLayout>
       {/* Breadcrumb Navigation */}
-      <div className="bg-background/80 backdrop-blur-sm border-b border-border/40 px-6 py-2">
+      <div className={`backdrop-blur-sm border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-background/80 border-border/40'}`}>
         <Breadcrumb
           items={[
             { label: 'Dashboard', href: '/dashboard' },
@@ -430,7 +438,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
         />
       </div>
 
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className={`p-6 max-w-7xl mx-auto ${isDarkMode ? 'bg-[#0F1115]' : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -467,7 +475,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-card p-6 rounded-lg border">
+          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm">Total Classes</p>
@@ -479,7 +487,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             </div>
           </div>
 
-          <div className="bg-card p-6 rounded-lg border">
+          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm">Total Students</p>
@@ -491,7 +499,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             </div>
           </div>
 
-          <div className="bg-card p-6 rounded-lg border">
+          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm">Avg Class Size</p>
@@ -503,7 +511,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             </div>
           </div>
 
-          <div className="bg-card p-6 rounded-lg border">
+          <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm">Active Instructors</p>
@@ -522,7 +530,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             <p className="text-muted-foreground">Loading classes...</p>
           </div>
         ) : classes.length === 0 ? (
-          <div className="text-center py-12 bg-card rounded-lg border">
+          <div className={`text-center py-12 rounded-lg border ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
             <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No Classes Yet</h3>
             <p className="text-muted-foreground mb-4">Get started by adding your first class</p>
@@ -534,7 +542,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {classes.map((classItem) => (
-              <div key={classItem.id} className="bg-card p-6 rounded-lg border hover:border-primary transition-colors">
+              <div key={classItem.id} className={`p-6 rounded-lg border hover:border-primary transition-colors ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold mb-1">{classItem.name}</h3>

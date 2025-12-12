@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import BottomNavLayout from '@/components/BottomNavLayout';
+import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
 import HorizontalPipeline from '../components/HorizontalPipeline'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,6 +26,8 @@ import {
 import LeadSourceSettings from '../components/LeadSourceSettings'
 
 export default function Leads({ onLogout, theme, toggleTheme }) {
+  const { theme: currentTheme } = useTheme()
+  const isDarkMode = currentTheme === 'dark' || currentTheme === 'cinematic'
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStage, setSelectedStage] = useState('new_lead')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -151,7 +154,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
     const tags = typeof lead.tags === 'string' ? lead.tags.split(',').filter(t => t) : (lead.tags || [])
     
     return (
-      <Card key={lead.id} className="relative group hover:shadow-xl transition-all">
+      <Card key={lead.id} className={`relative group hover:shadow-xl transition-all ${isDarkMode ? 'bg-[#18181A] border-white/10' : ''}`}>
         <CardContent className="p-6">
           {/* Delete button */}
           <button
@@ -250,7 +253,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
 
             {/* Stage selection dropdown */}
             {columnMenuOpen === lead.id && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-card border-2 border-border rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className={`absolute bottom-full left-0 right-0 mb-2 border-2 rounded-lg shadow-xl z-50 overflow-hidden ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card border-border'}`}>
                 {stages.map((stage) => {
                   const isCurrentStage = stage === selectedStage
                   const stageLabels = {
@@ -295,9 +298,9 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
 
   return (
     <BottomNavLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-red-950/20">
+      <div className={`min-h-screen ${isDarkMode ? 'bg-[#0F1115]' : 'bg-gradient-to-br from-gray-950 via-gray-900 to-red-950/20'}`}>
         {/* Breadcrumb Navigation */}
-        <div className="bg-card/30 backdrop-blur-sm border-b border-border/30 px-6 py-2">
+        <div className={`backdrop-blur-sm border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card/30 border-border/30'}`}>
           <Breadcrumb
             items={[
               { label: 'Dashboard', href: '/dashboard' },
@@ -307,7 +310,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
         </div>
 
         {/* Header */}
-        <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+        <div className={`border-b backdrop-blur-sm ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card/50 border-border/50'}`}>
           <div className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-6">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Lead Pipeline</h1>
@@ -365,7 +368,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
               ))}
             </div>
           ) : stageLeads.length === 0 ? (
-            <Card>
+            <Card className={isDarkMode ? 'bg-[#18181A] border-white/10' : ''}>
               <CardContent className="p-12 text-center">
                 <p className="text-muted-foreground">No leads in this stage</p>
               </CardContent>
@@ -386,7 +389,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
         {/* Add Lead Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <Card className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-[#18181A] border-white/10' : ''}`}>
               <CardHeader>
                 <CardTitle className="text-2xl">Add New Lead</CardTitle>
               </CardHeader>
