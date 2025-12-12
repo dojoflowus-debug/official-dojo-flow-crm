@@ -90,8 +90,8 @@ declare global {
   }
 }
 
-// Get API key from environment
-const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
+// Get API key from environment - prefer dedicated Maps key, fall back to Forge key
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
 const FORGE_BASE_URL =
   import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
   "https://forge.butterfly-effect.dev";
@@ -328,10 +328,11 @@ function loadMapScript(): Promise<boolean> {
       return;
     }
     
-    // The Manus Maps proxy requires the API key as a query parameter
-    // The proxy handles authentication internally
+    // The Manus Maps proxy - use direct Google Maps URL with proxy handling
+    // The proxy intercepts and authenticates the request
     const script = document.createElement("script");
-    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
+    // Try direct Google Maps API first, then fall back to proxy
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
     script.async = true;
     
     script.onload = () => {

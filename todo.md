@@ -2757,3 +2757,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add SMS preferences section (opt-in/out, reminder timing)
 - [x] Register route in App.tsx (/student-portal)
 - [x] Test enrollment flow end-to-end
+
+## Fix Students Page Map (Again)
+- [x] Investigate current map error state
+- [x] Fix map loading - updated to use VITE_GOOGLE_MAPS_API_KEY
+- [x] Requested Google Maps API key from user
+- [x] Test map displays correctly on Students page
