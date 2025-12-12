@@ -470,11 +470,49 @@ export default function KaiCommand() {
   const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
 
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = theme === 'dark' || theme === 'cinematic';
+  const isCinematic = theme === 'cinematic';
+  
+  // Cinematic mode taglines that rotate
+  const cinematicTaglines = [
+    "Growth begins with clarity.",
+    "What would you like to optimize today?",
+    "I'll show you the path forward.",
+    "Your dojo's potential, unlocked.",
+    "Let's build something great together."
+  ];
+  const [currentTaglineIndex, setCurrentTaglineIndex] = useState(0);
+  const [taglineVisible, setTaglineVisible] = useState(true);
+  
+  // Rotate taglines every 8 seconds in cinematic mode
+  useEffect(() => {
+    if (!isCinematic) return;
+    
+    const interval = setInterval(() => {
+      setTaglineVisible(false);
+      setTimeout(() => {
+        setCurrentTaglineIndex(prev => (prev + 1) % cinematicTaglines.length);
+        setTaglineVisible(true);
+      }, 500);
+    }, 8000);
+    
+    return () => clearInterval(interval);
+  }, [isCinematic, cinematicTaglines.length]);
 
   return (
     <BottomNavLayout hiddenInFocusMode={isFocusMode}>
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isFocusMode ? 'focus-mode' : ''} transition-all duration-300 ease-in-out`}>
+      {/* Cinematic Mode Vignette Overlay */}
+      {isCinematic && (
+        <div 
+          className="fixed inset-0 pointer-events-none z-10 transition-opacity duration-700"
+          style={{
+            background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
+            animation: 'cinematicFadeIn 0.8s ease-out'
+          }}
+        />
+      )}
+      
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         <div 
           style={{ 
@@ -668,18 +706,46 @@ export default function KaiCommand() {
             <div className="max-w-[1320px] mx-auto px-4">
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting */
-                <div className="flex flex-col items-center justify-center py-8">
-                  {/* Kai Logo with glow effect in dark mode */}
-                  <div className={`relative mb-4 ${isDark ? 'drop-shadow-[0_0_20px_rgba(255,76,76,0.18)]' : ''}`}>
-                    <KaiLogo className="w-[100px] h-[100px]" />
+                <div className={`flex flex-col items-center justify-center ${isCinematic ? 'py-16' : 'py-8'} transition-all duration-500`}>
+                  {/* Kai Logo with spotlight and animation in cinematic mode */}
+                  <div className={`relative mb-6 ${isCinematic ? 'mb-10' : 'mb-4'}`}>
+                    {/* Spotlight glow behind Kai in cinematic mode */}
+                    {isCinematic && (
+                      <div 
+                        className="absolute inset-0 -inset-x-16 -inset-y-16 rounded-full opacity-60"
+                        style={{
+                          background: 'radial-gradient(circle, rgba(255,76,76,0.25) 0%, rgba(255,76,76,0.1) 40%, transparent 70%)',
+                          animation: 'cinematicSpotlight 3s ease-in-out infinite'
+                        }}
+                      />
+                    )}
+                    <div className={`relative ${isDark ? 'drop-shadow-[0_0_20px_rgba(255,76,76,0.18)]' : ''} ${isCinematic ? 'drop-shadow-[0_0_40px_rgba(255,76,76,0.35)]' : ''}`}>
+                      <KaiLogo className={`${isCinematic ? 'w-[140px] h-[140px]' : 'w-[100px] h-[100px]'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicPulse_4s_ease-in-out_infinite]' : ''}`} />
+                    </div>
                   </div>
-                  <h2 className={`text-3xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Hi, I'm Kai.</h2>
-                  <p className={`text-center max-w-md mb-8 ${isDark ? 'text-[rgba(255,255,255,0.65)]' : 'text-slate-600'}`}>
-                    Tell me about your dojo and what you want to improve—growth, retention, or operations—and I'll show you the numbers.
-                  </p>
+                  <h2 
+                    className={`${isCinematic ? 'text-4xl' : 'text-3xl'} font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicBreathing_4s_ease-in-out_infinite]' : ''}`}
+                    style={isCinematic ? { animation: 'cinematicFadeIn 0.8s ease-out, cinematicBreathing 4s ease-in-out infinite' } : {}}
+                  >
+                    Hi, I'm Kai.
+                  </h2>
+                  {/* Rotating taglines in cinematic mode, static text otherwise */}
+                  {isCinematic ? (
+                    <p 
+                      className={`text-center max-w-md mb-10 text-[rgba(255,255,255,0.65)] text-lg transition-opacity duration-500 ${taglineVisible ? 'opacity-100' : 'opacity-0'}`}
+                    >
+                      {cinematicTaglines[currentTaglineIndex]}
+                    </p>
+                  ) : (
+                    <p className={`text-center max-w-md mb-8 ${isDark ? 'text-[rgba(255,255,255,0.65)]' : 'text-slate-600'}`}>
+                      Tell me about your dojo and what you want to improve—growth, retention, or operations—and I'll show you the numbers.
+                    </p>
+                  )}
                   
                   {/* Quick Commands Carousel */}
-                  <div className="relative w-full max-w-4xl">
+                  <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
+                    style={isCinematic ? { animation: 'cinematicSlideUp 0.8s ease-out 0.3s both' } : {}}
+                  >
                     {/* Left Arrow */}
                     {canScrollLeft && (
                       <button
@@ -707,15 +773,18 @@ export default function KaiCommand() {
                       className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-1"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {sortedQuickCommands.map((command) => (
+                      {sortedQuickCommands.map((command, index) => (
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 w-[200px] border rounded-[18px] p-5 text-left transition-all duration-200 group snap-start ${
-                            isDark 
-                              ? `bg-[#18181A] border-[rgba(255,255,255,0.05)] hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.10)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/30' : ''}`
-                              : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 ${favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : 'border-slate-100'}`
+                          className={`relative flex-shrink-0 ${isCinematic ? 'w-[160px]' : 'w-[200px]'} border ${isCinematic ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
+                            isCinematic
+                              ? `bg-[rgba(24,24,26,0.85)] backdrop-blur-sm border-[rgba(255,255,255,0.08)] hover:bg-[rgba(31,31,34,0.9)] hover:border-[rgba(255,76,76,0.3)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.15)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/40' : ''}`
+                              : isDark 
+                                ? `bg-[#18181A] border-[rgba(255,255,255,0.05)] hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.10)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/30' : ''}`
+                                : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 ${favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : 'border-slate-100'}`
                           }`}
+                          style={isCinematic ? { animation: `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` } : {}}
                         >
                           {/* Favorite Star */}
                           <div
@@ -794,8 +863,11 @@ export default function KaiCommand() {
           </div>
 
           {/* Input Bar - Apple-style floating bar */}
-          <div className={`p-4 border-t transition-all ${expandedInput ? 'pb-8' : ''} ${isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm`}>
-            <div className="max-w-3xl mx-auto relative">
+          <div 
+            className={`p-4 border-t transition-all duration-500 ${expandedInput ? 'pb-8' : ''} ${isCinematic ? 'pb-6 pt-5 border-transparent bg-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm`}
+            style={isCinematic ? { animation: 'cinematicSlideUp 0.8s ease-out 0.5s both' } : {}}
+          >
+            <div className={`${isCinematic ? 'max-w-4xl' : 'max-w-3xl'} mx-auto relative transition-all duration-500`}>
               {/* Expand/Collapse Button */}
               <Button
                 variant="ghost"
@@ -806,7 +878,15 @@ export default function KaiCommand() {
                 {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </Button>
               
-              <div className={`flex items-center gap-2 rounded-[22px] border p-2 transition-all duration-200 ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' : 'bg-white border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'}`}>
+              <div className={`flex items-center gap-2 ${isCinematic ? 'rounded-[28px] p-3' : 'rounded-[22px] p-2'} border transition-all duration-300 ${
+                isCinematic 
+                  ? 'bg-[rgba(24,24,26,0.9)] backdrop-blur-md border-[rgba(255,255,255,0.12)] focus-within:border-[rgba(255,76,76,0.4)]'
+                  : isDark 
+                    ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' 
+                    : 'bg-white border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
+              }`}
+              style={isCinematic ? { animation: 'cinematicInputGlow 3s ease-in-out infinite' } : {}}
+              >
                 <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
                   <Paperclip className="w-5 h-5" />
                 </Button>
