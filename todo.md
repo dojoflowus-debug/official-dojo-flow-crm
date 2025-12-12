@@ -2404,3 +2404,26 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show favorited tiles first in carousel
 - [x] Star click toggles favorite (doesn't trigger command)
 - [x] Responsive: snap scroll on desktop, swipe on mobile
+
+
+## 🚀 IN PROGRESS: Premium Dark Mode Theme for Kai Command
+- [ ] Set main app background to #0C0C0D (near-black)
+- [ ] Sidebar background: #121214, Card background: #18181A
+- [ ] Top nav with soft rounded pill buttons, white text, red active state
+- [ ] Sidebar cards with #18181A background, white/muted text
+- [ ] Hero section with glowing red Kai swirl icon
+- [ ] Quick command cards: #18181A bg, #FF4C4C title, 18px rounded corners
+- [ ] Chat input bar: #18181A bg, #202022 input field, #FF4C4C send button
+- [ ] Apply global text colors: primary white, secondary rgba(255,255,255,0.65)
+
+
+## ✅ COMPLETED: Premium Dark Mode Theme for Kai Command
+- [x] Update global CSS variables for dark mode (#0C0C0D, #121214, #18181A)
+- [x] Update sidebar styling (background, borders, shadows)
+- [x] Update search, tabs, and smart collections for dark mode
+- [x] Update hero section with Kai logo glow effect
+- [x] Update quick command cards with dark styling (#18181A, #FF4C4C accents)
+- [x] Update chat input bar for dark mode
+- [x] Update conversation cards for dark mode with active state
+- [x] Update messages area for dark mode
+- [x] All text colors follow mockup spec (white, rgba(255,255,255,0.65), rgba(255,255,255,0.45))

@@ -478,7 +478,7 @@ export default function KaiCommand() {
 
   return (
     <BottomNavLayout hiddenInFocusMode={isFocusMode}>
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0F0F11]' : 'bg-[#F7F8FA]'} ${isFocusMode ? 'focus-mode' : ''} transition-all duration-300 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isFocusMode ? 'focus-mode' : ''} transition-all duration-300 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         <div 
           style={{ 
@@ -487,69 +487,69 @@ export default function KaiCommand() {
             transform: isFocusMode ? 'translateX(-20px)' : 'translateX(0)',
             pointerEvents: isFocusMode ? 'none' : 'auto'
           }}
-          className={`conversation-panel bg-white border border-[#E5E6E8] rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'}`}
+          className={`conversation-panel ${isDark ? 'bg-[#121214] border-[rgba(255,255,255,0.05)]' : 'bg-white border-[#E5E6E8]'} border rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 ${isDark ? 'shadow-[0_4px_24px_rgba(0,0,0,0.55)]' : 'shadow-[0_4px_12px_rgba(0,0,0,0.04)]'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'}`}
         >
           {/* Header - Clean Layout */}
-          <div className="p-4 border-b border-slate-200">
+          <div className={`p-4 border-b ${isDark ? 'border-[rgba(255,255,255,0.05)]' : 'border-slate-200'}`}>
             {/* Search + Chat Button Row */}
             <div className="flex items-center gap-3 mb-3">
               {/* Search - Full Width */}
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`} />
                 <Input
-                  placeholder="Search history, tags, @mentions..."
+                  placeholder="Search history, tags, @r"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-white border-slate-200 h-9 w-full"
+                  className={`pl-9 h-9 w-full ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] text-white placeholder:text-[rgba(255,255,255,0.45)]' : 'bg-white border-slate-200'}`}
                 />
               </div>
               
               {/* Apple-style Chat Button */}
               <button
                 onClick={handleNewChat}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[18px] border border-[#E3E5EB] text-[13px] font-medium text-[#25262B] transition-all duration-150 hover:translate-y-[-1px] hover:scale-[1.03] focus-visible:translate-y-[-1px] focus-visible:scale-[1.03]"
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[18px] border text-[13px] font-medium transition-all duration-150 hover:translate-y-[-1px] hover:scale-[1.03] focus-visible:translate-y-[-1px] focus-visible:scale-[1.03] ${isDark ? 'border-[rgba(255,255,255,0.10)] text-white' : 'border-[#E3E5EB] text-[#25262B]'}`}
                 style={{
-                  background: 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+                  background: isDark ? '#18181A' : 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)',
+                  boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.08)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(to bottom, #FFFFFF, #ECEEF3)';
-                  e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.12)';
+                  e.currentTarget.style.background = isDark ? '#1F1F22' : 'linear-gradient(to bottom, #FFFFFF, #ECEEF3)';
+                  e.currentTarget.style.boxShadow = isDark ? '0 3px 12px rgba(0,0,0,0.4)' : '0 3px 10px rgba(0,0,0,0.12)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+                  e.currentTarget.style.background = isDark ? '#18181A' : 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)';
+                  e.currentTarget.style.boxShadow = isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.08)';
                 }}
               >
-                <Plus className="w-4 h-4 text-[#555A60]" />
+                <Plus className={`w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.65)]' : 'text-[#555A60]'}`} />
                 Chat
               </button>
             </div>
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full bg-slate-100 h-9">
-                <TabsTrigger value="active" className="flex-1 text-xs data-[state=active]:bg-white">Active</TabsTrigger>
-                <TabsTrigger value="archived" className="flex-1 text-xs data-[state=active]:bg-white">Archived</TabsTrigger>
-                <TabsTrigger value="all" className="flex-1 text-xs data-[state=active]:bg-white">All</TabsTrigger>
+              <TabsList className={`w-full h-9 ${isDark ? 'bg-[#18181A]' : 'bg-slate-100'}`}>
+                <TabsTrigger value="active" className={`flex-1 text-xs ${isDark ? 'data-[state=active]:bg-[rgba(255,255,255,0.08)] data-[state=active]:text-white text-[rgba(255,255,255,0.65)]' : 'data-[state=active]:bg-white'}`}>Active</TabsTrigger>
+                <TabsTrigger value="archived" className={`flex-1 text-xs ${isDark ? 'data-[state=active]:bg-[rgba(255,255,255,0.08)] data-[state=active]:text-white text-[rgba(255,255,255,0.65)]' : 'data-[state=active]:bg-white'}`}>Archived</TabsTrigger>
+                <TabsTrigger value="all" className={`flex-1 text-xs ${isDark ? 'data-[state=active]:bg-[rgba(255,255,255,0.08)] data-[state=active]:text-white text-[rgba(255,255,255,0.65)]' : 'data-[state=active]:bg-white'}`}>All</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
           {/* Smart Collections */}
-          <div className="px-4 py-4 border-b border-slate-100">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Smart Collections</h3>
+          <div className={`px-4 py-4 border-b ${isDark ? 'border-[rgba(255,255,255,0.05)]' : 'border-slate-100'}`}>
+            <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Smart Collections</h3>
             <div className="space-y-2">
               {smartCollections.map((collection) => (
                 <button
                   key={collection.id}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-50'}`}
                 >
                   <div className="flex items-center gap-2">
                     <collection.icon className={`w-4 h-4 ${collection.color}`} />
-                    <span className="text-sm text-slate-700">{collection.label}</span>
+                    <span className={`text-sm ${isDark ? 'text-white' : 'text-slate-700'}`}>{collection.label}</span>
                   </div>
-                  <span className="text-xs font-medium text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDark ? 'text-[rgba(255,255,255,0.65)] bg-[#18181A]' : 'text-slate-500 bg-slate-200'}`}>
                     {collection.count}
                   </span>
                 </button>
@@ -560,15 +560,15 @@ export default function KaiCommand() {
           {/* Recent Conversations with visible scrollbar */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Recent Conversations</h3>
-              <span className="text-xs text-slate-400">{conversations.length}</span>
+              <h3 className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Recent Conversations</h3>
+              <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>{conversations.length}</span>
             </div>
             
             <div className="flex-1 overflow-y-auto px-4 scrollbar-visible">
               {/* Today */}
               {todayConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-xs font-medium text-slate-400 uppercase mb-2">Today</h4>
+                  <h4 className={`text-xs font-medium uppercase mb-2 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>Today</h4>
                   {todayConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
@@ -581,6 +581,7 @@ export default function KaiCommand() {
                         setMessages([]);
                       }}
                       onDelete={handleDeleteConversation}
+                      isDark={isDark}
                     />
                   ))}
                 </div>
@@ -602,6 +603,7 @@ export default function KaiCommand() {
                         setMessages([]);
                       }}
                       onDelete={handleDeleteConversation}
+                      isDark={isDark}
                     />
                   ))}
                 </div>
@@ -630,24 +632,24 @@ export default function KaiCommand() {
         </div>
 
         {/* Main Conversation Panel - Right Side */}
-        <div className="flex-1 flex flex-col bg-white">
+        <div className={`flex-1 flex flex-col ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}>
           {/* Top Banner */}
-          <div className="px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
-            <p className="text-xs text-slate-500 uppercase tracking-wide font-medium">
+          <div className={`px-6 py-3 border-b flex items-center justify-between ${isDark ? 'bg-[#0C0C0D] border-[rgba(255,255,255,0.05)]' : 'bg-white border-slate-200'}`}>
+            <p className={`text-xs uppercase tracking-wide font-medium ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>
               Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="Summarize & Extract">
-                <FileText className="w-4 h-4 text-slate-500" />
+              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Summarize & Extract">
+                <FileText className={`w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="Invite Team Members">
-                <Users className="w-4 h-4 text-slate-500" />
+              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Invite Team Members">
+                <Users className={`w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="Enable Voice Replies">
-                <Volume2 className="w-4 h-4 text-slate-500" />
+              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Enable Voice Replies">
+                <Volume2 className={`w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="Full Screen">
-                <Maximize2 className="w-4 h-4 text-slate-500" />
+              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Full Screen">
+                <Maximize2 className={`w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
               <Button 
                 variant="ghost" 
@@ -675,9 +677,12 @@ export default function KaiCommand() {
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting */
                 <div className="flex flex-col items-center justify-center py-8">
-                  <KaiLogo className="w-[100px] h-[100px] mb-4" />
-                  <h2 className="text-3xl font-semibold text-slate-900 mb-2">Hi, I'm Kai.</h2>
-                  <p className="text-slate-600 text-center max-w-md mb-8">
+                  {/* Kai Logo with glow effect in dark mode */}
+                  <div className={`relative mb-4 ${isDark ? 'drop-shadow-[0_0_20px_rgba(255,76,76,0.18)]' : ''}`}>
+                    <KaiLogo className="w-[100px] h-[100px]" />
+                  </div>
+                  <h2 className={`text-3xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Hi, I'm Kai.</h2>
+                  <p className={`text-center max-w-md mb-8 ${isDark ? 'text-[rgba(255,255,255,0.65)]' : 'text-slate-600'}`}>
                     Tell me about your dojo and what you want to improve—growth, retention, or operations—and I'll show you the numbers.
                   </p>
                   
@@ -687,9 +692,9 @@ export default function KaiCommand() {
                     {canScrollLeft && (
                       <button
                         onClick={() => scrollCarousel('left')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:bg-[#1F1F22]' : 'bg-white shadow-lg border border-slate-200 hover:bg-slate-50'}`}
                       >
-                        <ChevronLeft className="w-5 h-5 text-slate-600" />
+                        <ChevronLeft className={`w-5 h-5 ${isDark ? 'text-white' : 'text-slate-600'}`} />
                       </button>
                     )}
                     
@@ -697,9 +702,9 @@ export default function KaiCommand() {
                     {canScrollRight && (
                       <button
                         onClick={() => scrollCarousel('right')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:bg-[#1F1F22]' : 'bg-white shadow-lg border border-slate-200 hover:bg-slate-50'}`}
                       >
-                        <ChevronRight className="w-5 h-5 text-slate-600" />
+                        <ChevronRight className={`w-5 h-5 ${isDark ? 'text-white' : 'text-slate-600'}`} />
                       </button>
                     )}
                     
@@ -714,28 +719,30 @@ export default function KaiCommand() {
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 w-[200px] bg-white border rounded-[18px] p-5 text-left shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 transition-all duration-200 group snap-start ${
-                            favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : 'border-slate-100'
+                          className={`relative flex-shrink-0 w-[200px] border rounded-[18px] p-5 text-left transition-all duration-200 group snap-start ${
+                            isDark 
+                              ? `bg-[#18181A] border-[rgba(255,255,255,0.05)] hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.10)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/30' : ''}`
+                              : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 ${favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : 'border-slate-100'}`
                           }`}
                         >
                           {/* Favorite Star */}
                           <div
                             onClick={(e) => toggleFavorite(command.id, e)}
-                            className="absolute top-3 right-3 p-1 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                            className={`absolute top-3 right-3 p-1 rounded-full transition-colors cursor-pointer ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-100'}`}
                           >
                             <Star
                               className={`w-4 h-4 transition-colors ${
                                 favorites.has(command.id)
-                                  ? 'fill-[#E53935] text-[#E53935]'
-                                  : 'text-slate-300 hover:text-slate-400'
+                                  ? 'fill-[#FF4C4C] text-[#FF4C4C]'
+                                  : isDark ? 'text-[rgba(255,255,255,0.35)] hover:text-[rgba(255,255,255,0.55)]' : 'text-slate-300 hover:text-slate-400'
                               }`}
                             />
                           </div>
                           
-                          <div className="text-xs font-semibold text-[#E53935] uppercase tracking-wide mb-2 pr-6">
+                          <div className="text-xs font-semibold text-[#FF4C4C] uppercase tracking-wide mb-2 pr-6">
                             {command.header}
                           </div>
-                          <p className="text-sm text-slate-600 group-hover:text-slate-800 leading-relaxed">
+                          <p className={`text-sm leading-relaxed ${isDark ? 'text-[rgba(255,255,255,0.75)] group-hover:text-white' : 'text-slate-600 group-hover:text-slate-800'}`}>
                             {command.text}
                           </p>
                         </button>
@@ -750,22 +757,22 @@ export default function KaiCommand() {
                     <div key={message.id} className="flex gap-3">
                       {message.role === 'user' ? (
                         <>
-                          <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-medium shrink-0">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0 ${isDark ? 'bg-[#18181A]' : 'bg-slate-900'}`}>
                             You
                           </div>
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 mb-1">You</div>
-                            <p className="text-slate-700">{message.content}</p>
+                            <div className={`font-medium mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>You</div>
+                            <p className={isDark ? 'text-[rgba(255,255,255,0.75)]' : 'text-slate-700'}>{message.content}</p>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="w-8 h-8 rounded-full bg-[#ED393D] flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#FF4C4C] flex items-center justify-center shrink-0">
                             <Sparkles className="w-4 h-4 text-white" />
                           </div>
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 mb-1">Kai</div>
-                            <div className="text-slate-700 whitespace-pre-wrap prose prose-sm max-w-none">
+                            <div className={`font-medium mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Kai</div>
+                            <div className={`whitespace-pre-wrap prose prose-sm max-w-none ${isDark ? 'text-[rgba(255,255,255,0.75)] prose-invert' : 'text-slate-700'}`}>
                               {message.content}
                             </div>
                           </div>
@@ -775,15 +782,15 @@ export default function KaiCommand() {
                   ))}
                   {isLoading && (
                     <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#ED393D] flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[#FF4C4C] flex items-center justify-center shrink-0">
                         <Sparkles className="w-4 h-4 text-white animate-pulse" />
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-slate-900 mb-1">Kai</div>
+                        <div className={`font-medium mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Kai</div>
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
                         </div>
                       </div>
                     </div>
@@ -795,20 +802,20 @@ export default function KaiCommand() {
           </div>
 
           {/* Input Bar - Apple-style floating bar */}
-          <div className={`p-4 border-t border-slate-100 bg-white/80 backdrop-blur-sm transition-all ${expandedInput ? 'pb-8' : ''}`}>
+          <div className={`p-4 border-t transition-all ${expandedInput ? 'pb-8' : ''} ${isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm`}>
             <div className="max-w-3xl mx-auto relative">
               {/* Expand/Collapse Button */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setExpandedInput(!expandedInput)}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 bg-slate-100 hover:bg-slate-200 rounded-full z-10 shadow-sm"
+                className={`absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full z-10 shadow-sm ${isDark ? 'bg-[#202022] hover:bg-[#2A2A2D] text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
               >
                 {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </Button>
               
-              <div className="flex items-center gap-2 bg-white rounded-[22px] border border-slate-200 p-2 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all duration-200">
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full">
+              <div className={`flex items-center gap-2 rounded-[22px] border p-2 transition-all duration-200 ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' : 'bg-white border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'}`}>
+                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
                   <Paperclip className="w-5 h-5" />
                 </Button>
                 <Textarea
@@ -817,22 +824,22 @@ export default function KaiCommand() {
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-slate-800 placeholder:text-slate-400 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'}`}
+                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${isDark ? 'text-white placeholder:text-[rgba(255,255,255,0.45)]' : 'text-slate-800 placeholder:text-slate-400'} ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'}`}
                   rows={expandedInput ? 5 : 1}
                 />
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full">
+                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
                   <Mic className="w-5 h-5" />
                 </Button>
                 <Button 
                   size="icon" 
-                  className="h-9 w-9 bg-[#E53935] hover:bg-[#D32F2F] text-white rounded-full shadow-sm"
+                  className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
                   onClick={handleSendMessage}
                   disabled={!messageInput.trim() || isLoading}
                 >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-xs text-slate-400 text-center mt-2">
+              <p className={`text-xs text-center mt-2 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>
                 Kai can make mistakes. Consider checking important information.
               </p>
             </div>
@@ -850,7 +857,8 @@ function ConversationCard({
   getStatusColor,
   isSelected,
   onClick,
-  onDelete
+  onDelete,
+  isDark
 }: { 
   conversation: Conversation; 
   getCategoryColor: (category: string) => string;
@@ -858,20 +866,25 @@ function ConversationCard({
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: (id: string) => void;
+  isDark?: boolean;
 }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   return (
     <div 
       onClick={onClick}
-      className={`rounded-lg border p-3 mb-2 hover:shadow-sm transition-all cursor-pointer ${
+      className={`rounded-lg border p-3 mb-2 transition-all cursor-pointer ${
         isSelected 
-          ? 'bg-slate-100 border-slate-300 shadow-sm' 
-          : 'bg-white border-slate-200'
+          ? isDark 
+            ? 'bg-[rgba(255,255,255,0.08)] border-l-2 border-l-[#FF4C4C] border-[rgba(255,255,255,0.10)]' 
+            : 'bg-slate-100 border-slate-300 shadow-sm'
+          : isDark 
+            ? 'bg-[#18181A] border-[rgba(255,255,255,0.05)] hover:bg-[#1F1F22]' 
+            : 'bg-white border-slate-200 hover:shadow-sm'
       }`}
     >
       <div className="flex items-start justify-between mb-1">
-        <h5 className="text-sm font-medium text-slate-900 truncate flex-1 pr-2">{conversation.title}</h5>
+        <h5 className={`text-sm font-medium truncate flex-1 pr-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{conversation.title}</h5>
         <div className="flex items-center gap-1 shrink-0">
           <span className="text-xs text-slate-400">{conversation.timestamp}</span>
           <DropdownMenu>

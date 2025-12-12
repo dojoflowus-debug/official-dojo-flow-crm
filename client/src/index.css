@@ -96,54 +96,56 @@
 }
 
 .dark {
-  /* DojoFlow Dark Mode - Apple-style design system */
-  /* Background: #0F0F11 */
-  --background: oklch(0.08 0.005 270); /* #0F0F11 */
+  /* DojoFlow Premium Dark Mode - Matches mockup */
+  /* Main Background: #0C0C0D (near-black) */
+  --background: oklch(0.06 0.002 270); /* #0C0C0D */
   --foreground: oklch(1 0 0); /* #FFFFFF */
   
-  /* Panels: #1A1B1F */
-  --card: oklch(0.13 0.005 270); /* #1A1B1F */
+  /* Card/Panel Background: #18181A */
+  --card: oklch(0.11 0.002 270); /* #18181A */
   --card-foreground: oklch(1 0 0);
   
-  --popover: oklch(0.13 0.005 270); /* #1A1B1F */
+  --popover: oklch(0.11 0.002 270); /* #18181A */
   --popover-foreground: oklch(1 0 0);
   
-  /* Accent Red: #FF4F4F */
-  --primary: oklch(0.65 0.22 25); /* #FF4F4F */
+  /* Accent Red: #FF4C4C */
+  --primary: oklch(0.63 0.24 25); /* #FF4C4C */
   --primary-foreground: oklch(1 0 0);
   
-  --secondary: oklch(0.13 0.005 270);
+  /* Secondary: #202022 (input fields) */
+  --secondary: oklch(0.14 0.002 270); /* #202022 */
   --secondary-foreground: oklch(1 0 0);
   
-  --muted: oklch(0.13 0.005 270);
-  --muted-foreground: oklch(0.65 0.01 250); /* #9CA0AE */
+  /* Muted: rgba(255,255,255,0.45) for placeholder */
+  --muted: oklch(0.11 0.002 270);
+  --muted-foreground: oklch(0.75 0 0); /* rgba(255,255,255,0.65) */
   
-  --accent: oklch(0.13 0.01 25);
+  --accent: oklch(0.11 0.01 25);
   --accent-foreground: oklch(1 0 0);
   
-  --destructive: oklch(0.65 0.22 25); /* #FF4F4F */
+  --destructive: oklch(0.63 0.24 25); /* #FF4C4C */
   --destructive-foreground: oklch(1 0 0);
   
-  /* Borders: #2A2B2F */
-  --border: oklch(0.20 0.005 270); /* #2A2B2F */
-  --input: oklch(0.20 0.005 270);
-  --ring: oklch(0.65 0.22 25); /* #FF4F4F */
+  /* Borders: rgba(255,255,255,0.05) - very subtle */
+  --border: oklch(1 0 0 / 0.08); /* rgba(255,255,255,0.08) */
+  --input: oklch(1 0 0 / 0.10); /* rgba(255,255,255,0.10) */
+  --ring: oklch(0.63 0.24 25); /* #FF4C4C */
   
-  --chart-1: oklch(0.65 0.22 25); /* Accent red */
+  --chart-1: oklch(0.63 0.24 25); /* Accent red */
   --chart-2: oklch(0.55 0.18 250);
   --chart-3: oklch(0.65 0.18 150);
   --chart-4: oklch(0.75 0.18 80);
   --chart-5: oklch(0.60 0.18 320);
   
-  /* Dark sidebar (not used with bottom nav, but kept for compatibility) */
-  --sidebar: oklch(0.13 0.005 270); /* #1A1B1F */
+  /* Sidebar: #121214 */
+  --sidebar: oklch(0.09 0.002 270); /* #121214 */
   --sidebar-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.65 0.22 25); /* #FF4F4F */
+  --sidebar-primary: oklch(0.63 0.24 25); /* #FF4C4C */
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.20 0.005 270);
+  --sidebar-accent: oklch(1 0 0 / 0.08); /* rgba(255,255,255,0.08) */
   --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.20 0.005 270);
-  --sidebar-ring: oklch(0.65 0.22 25);
+  --sidebar-border: oklch(1 0 0 / 0.05); /* rgba(255,255,255,0.05) */
+  --sidebar-ring: oklch(0.63 0.24 25);
 }
 
 /* Cinematic Glass Mode - Glassmorphism Dashboard Aesthetic */
