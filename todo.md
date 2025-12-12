@@ -2548,3 +2548,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add dark gradient overlay: linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.35))
 - [x] DO NOT dim entire background - only darken under UI
 - [x] Acceptance: Text readable over white/bright backgrounds, all UI legible
+
+## Cinematic Mode Entrance Animations
+- [x] Add fade-in animation to frosted glass panels
+- [x] Add upward slide animation to text elements (heading, tagline)
+- [x] Add staggered animation to quick command cards
+- [x] Smooth transition when entering Cinematic mode

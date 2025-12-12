@@ -764,7 +764,8 @@ export default function KaiCommand() {
             style={isCinematic ? {
               background: 'rgba(0, 0, 0, 0.40)',
               backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)'
+              WebkitBackdropFilter: 'blur(12px)',
+              animation: 'cinematicBannerSlideDown 0.5s ease-out forwards'
             } : {}}
           >
             <p 
@@ -816,7 +817,8 @@ export default function KaiCommand() {
                     style={isCinematic ? {
                       background: 'rgba(0, 0, 0, 0.40)',
                       backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)'
+                      WebkitBackdropFilter: 'blur(12px)',
+                      animation: 'cinematicGlassFadeIn 0.6s ease-out forwards'
                     } : {}}
                   >
                   {/* Kai Logo with spotlight and animation in cinematic mode */}
@@ -838,7 +840,7 @@ export default function KaiCommand() {
                   <h2 
                     className={`${isCinematic ? 'text-4xl text-white' : 'text-3xl'} font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicBreathing_4s_ease-in-out_infinite]' : ''}`}
                     style={isCinematic ? { 
-                      animation: 'cinematicFadeIn 0.8s ease-out, cinematicBreathing 4s ease-in-out infinite',
+                      animation: 'cinematicTextSlideUp 0.5s ease-out 0.2s both, cinematicBreathing 4s ease-in-out 0.7s infinite',
                       textShadow: '0 2px 4px rgba(0,0,0,0.75)'
                     } : {}}
                   >
@@ -848,7 +850,10 @@ export default function KaiCommand() {
                   {isCinematic ? (
                     <p 
                       className={`text-center max-w-md mb-10 text-white text-lg transition-opacity duration-500 ${taglineVisible ? 'opacity-100' : 'opacity-0'}`}
-                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.75)' }}
+                      style={{ 
+                        textShadow: '0 2px 4px rgba(0,0,0,0.75)',
+                        animation: 'cinematicTextSlideUp 0.5s ease-out 0.35s both'
+                      }}
                     >
                       {cinematicTaglines[currentTaglineIndex]}
                     </p>
@@ -860,7 +865,7 @@ export default function KaiCommand() {
                   
                   {/* Quick Commands Carousel */}
                   <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
-                    style={isCinematic ? { animation: 'cinematicSlideUp 0.8s ease-out 0.3s both' } : {}}
+                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
                   >
                     {/* Left Arrow */}
                     {canScrollLeft && (
@@ -993,7 +998,7 @@ export default function KaiCommand() {
           {/* Input Bar - Apple-style floating bar */}
           <div 
             className={`p-4 border-t transition-all duration-500 ${expandedInput ? 'pb-8' : ''} ${isCinematic ? 'pb-6 pt-5 border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} backdrop-blur-sm`}
-            style={isCinematic ? { animation: 'cinematicSlideUp 0.8s ease-out 0.5s both' } : {}}
+            style={isCinematic ? { animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both' } : {}}
           >
             {/* Frosted Glass Container for Input in Cinematic Mode - 45% opacity */}
             {isCinematic && (
@@ -1003,6 +1008,7 @@ export default function KaiCommand() {
                   zIndex: 0,
                   background: 'rgba(0, 0, 0, 0.45)',
                   backdropFilter: 'blur(12px)',
+                  animation: 'cinematicGlassFadeIn 0.5s ease-out 0.7s both',
                   WebkitBackdropFilter: 'blur(12px)'
                 }}
               />

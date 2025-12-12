@@ -630,3 +630,50 @@ body {
     box-shadow: 0 0 30px rgba(255, 76, 76, 0.2), 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 }
+
+/* Cinematic Glass Panel Entrance Animations */
+@keyframes cinematicGlassFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes cinematicTextSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cinematicBannerSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cinematicInputSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
