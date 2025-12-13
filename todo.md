@@ -2833,3 +2833,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Ensure pointer-events: auto on overlay card
 - [x] Mobile: Edit button accessible on bottom sheet
 - [x] QA: Edit from marker click, save updates card, address change moves marker
+
+## ✅ COMPLETED: Add Details Tab to Student Card Overlay
+- [x] Add Profile/Details tab toggle to card overlay header
+- [x] Profile tab: current view with avatar, name, status, contact info
+- [x] Details tab: full student info (DOB, guardian, address, membership, notes)
+- [x] Smooth tab transition animation
+- [x] Responsive layout for both tabs on mobile
