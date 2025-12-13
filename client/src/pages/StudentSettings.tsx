@@ -50,6 +50,8 @@ export default function StudentSettings() {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   
   // Photo upload state
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -69,6 +71,9 @@ export default function StudentSettings() {
   // Photo upload mutations
   const uploadPhotoMutation = trpc.studentPortal.uploadProfilePhoto.useMutation();
   const updatePhotoMutation = trpc.studentPortal.updateStudentPhoto.useMutation();
+  
+  // Contact info update mutation
+  const updateContactInfoMutation = trpc.studentPortal.updateStudentContactInfo.useMutation();
   
   // Form state - populated from API data
   const [formData, setFormData] = useState({
@@ -184,11 +189,30 @@ export default function StudentSettings() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    // Show success message (in a real app, use a toast)
-    alert("Settings saved successfully!");
+    setSaveError(null);
+    setSaveSuccess(false);
+    
+    try {
+      const result = await updateContactInfoMutation.mutateAsync({
+        studentId,
+        phone: formData.phone,
+        guardianName: formData.emergencyContact,
+        guardianPhone: formData.emergencyPhone,
+      });
+      
+      if (result.success) {
+        setSaveSuccess(true);
+        refetch();
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        setSaveError(result.error || 'Failed to save changes');
+      }
+    } catch (error: any) {
+      console.error('Save error:', error);
+      setSaveError(error.message || 'Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = () => {
@@ -222,14 +246,46 @@ export default function StudentSettings() {
             </div>
           </div>
           
-          <Button 
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+          <div className="flex items-center gap-3">
+            {saveSuccess && (
+              <span className="text-sm text-green-600 flex items-center gap-1">
+                <CheckCircle2 className="h-4 w-4" />
+                Saved!
+              </span>
+            )}
+            {saveError && (
+              <span className="text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-4 w-4" />
+                {saveError}
+              </span>
+            )}
+            <Button 
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`rounded-xl transition-all ${
+                saveSuccess 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-orange-500 hover:bg-orange-600'
+              } text-white`}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : saveSuccess ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Saved!
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -321,8 +377,8 @@ export default function StudentSettings() {
                   id="firstName"
                   name="firstName"
                   value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="mt-1 rounded-xl border-gray-200"
+                  disabled
+                  className="mt-1 rounded-xl border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
               </div>
               <div>
@@ -331,8 +387,8 @@ export default function StudentSettings() {
                   id="lastName"
                   name="lastName"
                   value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="mt-1 rounded-xl border-gray-200"
+                  disabled
+                  className="mt-1 rounded-xl border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
               </div>
               <div>
@@ -344,8 +400,8 @@ export default function StudentSettings() {
                     name="email"
                     type="email"
                     value={formData.email}
-                    onChange={handleInputChange}
-                    className="pl-10 rounded-xl border-gray-200"
+                    disabled
+                    className="pl-10 rounded-xl border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -364,6 +420,9 @@ export default function StudentSettings() {
                 </div>
               </div>
             </div>
+            <p className="mt-4 text-xs text-gray-400">
+              Name and email cannot be changed here. Contact the front desk to update these fields.
+            </p>
           </SoftCard>
 
           {/* Emergency Contact */}

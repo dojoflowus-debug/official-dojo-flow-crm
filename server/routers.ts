@@ -2118,6 +2118,38 @@ export const appRouter = router({
           return { success: false, error: error.message || 'Failed to update photo' };
         }
       }),
+
+    // Update student contact information
+    updateStudentContactInfo: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        phone: z.string().optional(),
+        guardianName: z.string().optional(),
+        guardianPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        if (!db) return { success: false, error: 'Database not available' };
+        
+        try {
+          const updateData: Record<string, string> = {};
+          if (input.phone !== undefined) updateData.phone = input.phone;
+          if (input.guardianName !== undefined) updateData.guardianName = input.guardianName;
+          if (input.guardianPhone !== undefined) updateData.guardianPhone = input.guardianPhone;
+          
+          if (Object.keys(updateData).length === 0) {
+            return { success: false, error: 'No fields to update' };
+          }
+          
+          await db.update(students)
+            .set(updateData)
+            .where(eq(students.id, input.studentId));
+          
+          return { success: true };
+        } catch (error: any) {
+          console.error('Error updating student contact info:', error);
+          return { success: false, error: error.message || 'Failed to update contact info' };
+        }
+      }),
   }),
 });
 

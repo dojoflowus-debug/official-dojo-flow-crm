@@ -3281,3 +3281,21 @@ Note: The logo was already correctly implemented. The navigation uses:
 ### Integration
 - [x] Link Settings from dashboard user menu
 - [x] Test photo update flow end-to-end
+
+
+## ✅ COMPLETED: Student Contact Info Editing
+
+### Backend
+- [x] Create updateStudentContactInfo tRPC procedure
+- [x] Accept phone, guardianName, guardianPhone fields
+- [x] Validate and update student record
+
+### Frontend
+- [x] Make phone number field editable in StudentSettings
+- [x] Make emergency contact fields editable
+- [x] Add Save Changes button with loading state
+- [x] Show success/error feedback after save
+- [x] Made name/email fields read-only with helper text
+
+### Integration
+- [x] Test contact info update flow end-to-end
