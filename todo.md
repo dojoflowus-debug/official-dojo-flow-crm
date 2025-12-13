@@ -3486,3 +3486,29 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Update signWaiver procedure to generate PDF after signing
 - [x] 18 vitest tests passing for PDF generation
 - [x] Verify PDF is downloadable from Student Dashboard
+
+
+## 🐛 BUG FIX: Kai Command Buttons Not Working
+
+- [ ] Navigate to Kai Command page and identify all buttons
+- [ ] Test each button (Start with your goals, Check health, Fix billing, Increase retention, etc.)
+- [ ] Identify which buttons are not working
+- [ ] Fix broken button handlers or navigation
+- [ ] Verify all buttons work correctly
+
+
+## ✅ COMPLETED: Kai Command Buttons Not Working
+
+### Issue
+- User reported buttons on Kai Command page were not functional
+- Smart Collection buttons (Urgent, Kai Insights, Pending Tasks) had no onClick handlers
+- Toolbar buttons (Summarize, Invite Team, Voice Replies, Full Screen) had no onClick handlers
+
+### Tasks
+- [x] Navigate to Kai Command page and identify all buttons
+- [x] Test each button to identify non-working ones
+- [x] Fixed Smart Collection buttons - now populate input with relevant prompts
+- [x] Fixed toolbar buttons - Summarize, Invite Team, Voice Replies now show "coming soon" toast
+- [x] Fixed Full Screen button - now triggers fullscreen mode via enterFullscreen()
+- [x] Quick action cards (START WITH YOUR GOALS, etc.) - already working, populate input with prompts
+- [x] Verified all buttons work correctly in browser testing

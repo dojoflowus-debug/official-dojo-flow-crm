@@ -708,6 +708,18 @@ export default function KaiCommand() {
               {smartCollections.map((collection) => (
                 <button
                   key={collection.id}
+                  onClick={() => {
+                    // Handle smart collection click - send relevant prompt to Kai
+                    const prompts: Record<string, string> = {
+                      urgent: 'Show me all urgent items that need my attention right now.',
+                      insights: 'What insights do you have about my dojo performance?',
+                      pending: 'Show me all pending tasks I need to complete.'
+                    };
+                    const prompt = prompts[collection.id];
+                    if (prompt) {
+                      setMessageInput(prompt);
+                    }
+                  }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-50'}`}
                 >
                   <div className="flex items-center gap-2">
@@ -897,16 +909,40 @@ export default function KaiCommand() {
               Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Summarize & Extract">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Summarize & Extract"
+                onClick={() => toast.info('Summarize & Extract feature coming soon')}
+              >
                 <FileText className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Invite Team Members">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Invite Team Members"
+                onClick={() => toast.info('Invite Team Members feature coming soon')}
+              >
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Enable Voice Replies">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Enable Voice Replies"
+                onClick={() => toast.info('Voice Replies feature coming soon')}
+              >
                 <Volume2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Full Screen">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Full Screen"
+                onClick={enterFullscreen}
+              >
                 <Maximize2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
               <Button 
