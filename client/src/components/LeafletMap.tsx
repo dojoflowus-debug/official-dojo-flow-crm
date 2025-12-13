@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -21,12 +21,19 @@ export interface StudentMarker {
   beltRank?: string;
 }
 
+export interface LeafletMapHandle {
+  invalidateSize: () => void;
+  panToStudent: (studentId: string, paddingBottom?: number) => void;
+  getMap: () => L.Map | null;
+}
+
 interface LeafletMapProps {
   markers?: StudentMarker[];
   selectedStudentId?: string | null;
   onMarkerClick?: (studentId: string) => void;
   isDarkMode?: boolean;
   className?: string;
+  paddingBottom?: number;
 }
 
 // Dark mode tile layer (CartoDB Dark Matter)
@@ -36,17 +43,60 @@ const LIGHT_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{
 
 const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-export const LeafletMap: React.FC<LeafletMapProps> = ({
+export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
   markers = [],
   selectedStudentId,
   onMarkerClick,
   isDarkMode = false,
   className = '',
-}) => {
+  paddingBottom = 0,
+}, ref) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const markersDataRef = useRef<StudentMarker[]>([]);
+
+  // Keep markers data in ref for imperative access
+  useEffect(() => {
+    markersDataRef.current = markers;
+  }, [markers]);
+
+  // Expose imperative methods
+  useImperativeHandle(ref, () => ({
+    invalidateSize: () => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    },
+    panToStudent: (studentId: string, padding: number = 0) => {
+      if (!mapRef.current) return;
+      const student = markersDataRef.current.find(m => m.id === studentId);
+      if (student) {
+        // Calculate the offset to keep marker visible above bottom card
+        const map = mapRef.current;
+        const targetLatLng = L.latLng(student.lat, student.lng);
+        
+        if (padding > 0) {
+          // Pan with offset to account for bottom card
+          const targetPoint = map.latLngToContainerPoint(targetLatLng);
+          const offsetPoint = L.point(targetPoint.x, targetPoint.y - (padding / 2));
+          const offsetLatLng = map.containerPointToLatLng(offsetPoint);
+          
+          map.setView(offsetLatLng, 14, {
+            animate: true,
+            duration: 0.5,
+          });
+        } else {
+          map.setView(targetLatLng, 14, {
+            animate: true,
+            duration: 0.5,
+          });
+        }
+      }
+    },
+    getMap: () => mapRef.current,
+  }), []);
 
   // Initialize map
   useEffect(() => {
@@ -117,7 +167,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           : '#ef4444';
 
       // Create custom icon
-      const iconSize = isSelected ? 40 : 32;
+      const iconSize = isSelected ? 44 : 36;
       const icon = L.divIcon({
         className: 'custom-student-marker',
         html: `
@@ -136,6 +186,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             ${isSelected ? 'box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.3), 0 2px 8px rgba(0,0,0,0.3);' : ''}
             transition: all 0.2s ease;
+            cursor: pointer;
           ">
             ${student.initials}
           </div>
@@ -146,14 +197,6 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       const marker = L.marker([student.lat, student.lng], { icon })
         .addTo(markersLayerRef.current!);
-
-      // Add popup
-      marker.bindPopup(`
-        <div style="text-align: center; padding: 4px;">
-          <strong>${student.name}</strong>
-          ${student.beltRank ? `<br><span style="font-size: 12px; color: #666;">${student.beltRank}</span>` : ''}
-        </div>
-      `);
 
       // Add click handler
       marker.on('click', () => {
@@ -166,27 +209,50 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       bounds.extend([student.lat, student.lng]);
     });
 
-    // Fit bounds if we have markers
+    // Fit bounds if we have markers (with padding for bottom card)
     if (markers.length > 0 && bounds.isValid()) {
       mapRef.current.fitBounds(bounds, {
         padding: [50, 50],
+        paddingBottomRight: [50, paddingBottom + 50],
         maxZoom: 14,
       });
     }
-  }, [markers, selectedStudentId, onMarkerClick, isDarkMode]);
+  }, [markers, selectedStudentId, onMarkerClick, isDarkMode, paddingBottom]);
 
-  // Pan to selected student
+  // Pan to selected student when selection changes
   useEffect(() => {
     if (!mapRef.current || !selectedStudentId) return;
 
     const selectedMarker = markers.find(m => m.id === selectedStudentId);
     if (selectedMarker) {
-      mapRef.current.setView([selectedMarker.lat, selectedMarker.lng], 14, {
-        animate: true,
-        duration: 0.5,
-      });
+      const map = mapRef.current;
+      const targetLatLng = L.latLng(selectedMarker.lat, selectedMarker.lng);
+      
+      if (paddingBottom > 0) {
+        // Pan with offset to account for bottom card
+        map.setView(targetLatLng, 14, {
+          animate: true,
+          duration: 0.5,
+        });
+        
+        // After animation, adjust for padding
+        setTimeout(() => {
+          if (mapRef.current) {
+            const currentCenter = mapRef.current.getCenter();
+            const point = mapRef.current.latLngToContainerPoint(currentCenter);
+            const offsetPoint = L.point(point.x, point.y + (paddingBottom / 3));
+            const newCenter = mapRef.current.containerPointToLatLng(offsetPoint);
+            mapRef.current.panTo(newCenter, { animate: true, duration: 0.3 });
+          }
+        }, 500);
+      } else {
+        map.setView(targetLatLng, 14, {
+          animate: true,
+          duration: 0.5,
+        });
+      }
     }
-  }, [selectedStudentId, markers]);
+  }, [selectedStudentId, markers, paddingBottom]);
 
   return (
     <div 
@@ -195,6 +261,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       style={{ minHeight: '300px' }}
     />
   );
-};
+});
+
+LeafletMap.displayName = 'LeafletMap';
 
 export default LeafletMap;

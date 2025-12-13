@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { trpc } from '../lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
 import BottomNavLayout from '@/components/BottomNavLayout'
-import LeafletMap, { StudentMarker } from '../components/LeafletMap'
+import LeafletMap, { StudentMarker, LeafletMapHandle } from '../components/LeafletMap'
 import MapOverlay from '../components/MapOverlay'
 import StudentCardOverlay from '../components/StudentCardOverlay'
 import ResizableDivider from '../components/ResizableDivider'
@@ -409,8 +409,9 @@ export default function StudentsSplitScreen() {
   const [isTablet, setIsTablet] = useState(false)
   const [isHeaderHidden, setIsHeaderHidden] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
+  const [isCardOverlayOpen, setIsCardOverlayOpen] = useState(false) // Track if bottom card is open
   const containerRef = useRef<HTMLDivElement>(null)
-  // Leaflet map doesn't need refs - the component manages its own state
+  const mapRef = useRef<LeafletMapHandle>(null) // Ref to access map imperative methods
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -643,24 +644,50 @@ export default function StudentsSplitScreen() {
             <div className="flex-1 relative min-h-[300px]" style={{ position: 'relative', zIndex: 0 }}>
               {/* Map View - Leaflet/OpenStreetMap */}
               <LeafletMap
+                ref={mapRef}
                 markers={leafletMarkers}
                 selectedStudentId={selectedStudent ? String(selectedStudent.id) : null}
+                paddingBottom={isCardOverlayOpen && viewMode === 'fullMap' ? 280 : 0}
                 onMarkerClick={(studentId) => {
                   const student = students.find(s => String(s.id) === studentId)
                   if (student) {
                     setSelectedStudent(student)
                     setHighlightedStudentId(student.id)
-                    // Scroll to student in list if in split mode
-                    if (viewMode === 'split') {
+                    
+                    if (viewMode === 'fullMap') {
+                      // In full map mode, open the bottom card overlay
+                      setIsCardOverlayOpen(true)
+                    } else if (viewMode === 'split') {
+                      // In split mode, scroll to student in list and open modal
                       const studentCard = document.getElementById(`student-card-${student.id}`)
                       studentCard?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                      setIsModalOpen(true)
                     }
-                    setIsModalOpen(true)
                   }
                 }}
                 isDarkMode={isDarkMode}
                 className="w-full h-full absolute inset-0"
               />
+              
+              {/* Floating Search/Filters - Full Map Mode Only */}
+              {viewMode === 'fullMap' && (
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm ${
+                    isDarkMode ? 'bg-[#1C1C1E]/90 border border-white/10' : 'bg-white/90 border border-slate-200'
+                  }`}>
+                    <Search className={`h-4 w-4 ${isDarkMode ? 'text-white/50' : 'text-slate-400'}`} />
+                    <input
+                      type="text"
+                      placeholder="Search students..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className={`bg-transparent border-none outline-none text-sm w-48 ${
+                        isDarkMode ? 'text-white placeholder:text-white/40' : 'text-slate-700 placeholder:text-slate-400'
+                      }`}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -669,9 +696,11 @@ export default function StudentsSplitScreen() {
         {viewMode === 'split' && !isMobile && !isTablet && (
           <ResizableDivider
             onResize={(width) => setMapWidth(width)}
+            onDragEnd={() => mapRef.current?.invalidateSize()}
             onDoubleClick={() => setMapWidth(50)}
             containerRef={containerRef as React.RefObject<HTMLDivElement>}
             isDarkMode={isDarkMode}
+            initialWidth={mapWidth}
           />
         )}
 
@@ -826,11 +855,16 @@ export default function StudentsSplitScreen() {
         }}
         onStudentUpdated={handleStudentUpdated}
         onViewOnMap={(student) => {
-          // Switch to full map mode and select student
+          // Switch to full map mode, select student, and open card overlay
           setSelectedStudent(student)
           setHighlightedStudentId(student.id)
           setViewMode('fullMap')
+          setIsCardOverlayOpen(true)
           setIsModalOpen(false)
+          // Pan map to student after mode switch
+          setTimeout(() => {
+            mapRef.current?.panToStudent(String(student.id), 280)
+          }, 100)
         }}
         isFullMapMode={viewMode === 'fullMap'}
       />
@@ -850,12 +884,13 @@ export default function StudentsSplitScreen() {
       />
 
       {/* Student Card Overlay - Portal for Full Map mode */}
-      <MapOverlay isVisible={viewMode === 'fullMap' && !!selectedStudent}>
+      <MapOverlay isVisible={viewMode === 'fullMap' && isCardOverlayOpen && !!selectedStudent}>
         {selectedStudent && (
           <StudentCardOverlay
             student={selectedStudent}
             onClose={() => {
               // Close card but stay in map mode
+              setIsCardOverlayOpen(false)
               setSelectedStudent(null)
               setHighlightedStudentId(null)
             }}

@@ -2812,3 +2812,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Full Map View: clicking marker opens Student Card overlay
 - [x] Keep existing student cards unchanged
 - [x] Remove empty gray gaps, flush aligned layout
+
+## ✅ COMPLETED: Restore Students Map UI with Enhanced Behavior
+- [x] Add localStorage persistence for divider position
+- [x] Update LeafletMap to call invalidateSize on mode/divider changes
+- [x] Add paddingBottom support for map when student card is open
+- [x] Full Map mode: floating search/filters overlay (top-left)
+- [x] Student card overlay: bottom-center, above map, proper z-index
+- [x] Map auto-pan to keep marker visible above card
+- [x] Card close returns to map without leaving map mode
+- [x] Move map attribution up when card is open
+- [x] Responsive card: bottom sheet on mobile

@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, X, Edit, FileText, Calendar, Award } from 'lucide-react';
+import { Mail, Phone, MapPin, X, Edit, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Student {
@@ -33,6 +33,7 @@ interface StudentCardOverlayProps {
 /**
  * StudentCardOverlay - Apple-like floating sheet card for full map mode
  * Positioned bottom-center with max-width constraint
+ * Responsive: becomes bottom sheet on mobile
  */
 export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
   student,
@@ -55,90 +56,107 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
   const getStatusBadgeStyle = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'active':
-        return 'bg-green-100 text-green-700';
+        return isDarkMode ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700';
       case 'on hold':
-        return 'bg-yellow-100 text-yellow-700';
+        return isDarkMode ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700';
       default:
-        return 'bg-red-100 text-red-700';
+        return isDarkMode ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-700';
     }
   };
 
   return (
     <div
+      className="fixed left-0 right-0 bottom-0 md:absolute md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:right-auto"
       style={{
-        position: 'absolute',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        bottom: '24px',
-        width: 'min(920px, calc(100vw - 32px))',
+        width: '100%',
+        maxWidth: 'min(920px, calc(100vw - 32px))',
+        margin: '0 auto',
         pointerEvents: 'auto',
+        zIndex: 9999,
       }}
     >
       <div
         className={`
-          rounded-[24px] shadow-2xl overflow-hidden
-          ${isDarkMode ? 'bg-[#1C1C1E]' : 'bg-white'}
-          backdrop-blur-xl
+          rounded-t-[24px] md:rounded-[24px] shadow-2xl overflow-hidden
+          ${isDarkMode ? 'bg-[#1C1C1E]/95 backdrop-blur-xl' : 'bg-white/95 backdrop-blur-xl'}
+          animate-in slide-in-from-bottom-4 duration-300
         `}
         style={{
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 12px 24px -8px rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.2), 0 -2px 8px rgba(0, 0, 0, 0.1)',
         }}
       >
-        {/* Card Content - Horizontal Layout */}
-        <div className="flex items-stretch">
+        {/* Drag Handle - Mobile only */}
+        <div className="md:hidden flex justify-center pt-3 pb-1">
+          <div className={`w-10 h-1 rounded-full ${isDarkMode ? 'bg-white/20' : 'bg-gray-300'}`} />
+        </div>
+
+        {/* Card Content */}
+        <div className="flex flex-col md:flex-row md:items-stretch">
           {/* Left Section - Avatar and Basic Info */}
-          <div className={`flex-shrink-0 p-6 flex items-center gap-5 border-r ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
+          <div className={`flex-shrink-0 p-4 md:p-6 flex items-center gap-4 md:border-r ${isDarkMode ? 'md:border-white/10' : 'md:border-gray-100'}`}>
             {/* Avatar */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               {student.photo_url ? (
                 <img
                   src={student.photo_url}
                   alt={`${student.first_name} ${student.last_name}`}
-                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-3 border-white shadow-lg"
                 />
               ) : (
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center border-4 border-white shadow-lg ${isDarkMode ? 'bg-slate-700' : 'bg-gradient-to-br from-slate-200 to-slate-300'}`}>
-                  <span className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-600'}`}>
+                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center border-3 border-white shadow-lg ${isDarkMode ? 'bg-slate-700' : 'bg-gradient-to-br from-slate-200 to-slate-300'}`}>
+                  <span className={`text-xl md:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-600'}`}>
                     {student.first_name[0]}{student.last_name[0]}
                   </span>
                 </div>
               )}
-              <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${getStatusColor(student.status)}`} />
+              <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-white ${getStatusColor(student.status)}`} />
             </div>
 
             {/* Name and Program */}
-            <div>
-              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <div className="flex-1 min-w-0">
+              <h2 className={`text-lg md:text-xl font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {student.first_name} {student.last_name}
               </h2>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {student.program || 'General Program'}
               </p>
               {/* Status Badges */}
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeStyle(student.status)}`}>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeStyle(student.status)}`}>
                   {student.status}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isDarkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
                   {student.belt_rank || 'White Belt'}
                 </span>
               </div>
             </div>
+
+            {/* Close Button - Mobile */}
+            <button
+              onClick={onClose}
+              className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                isDarkMode 
+                  ? 'bg-white/10 hover:bg-white/20 text-white' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+              }`}
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Middle Section - Contact Info */}
-          <div className={`flex-1 p-6 flex flex-col justify-center gap-3 border-r ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
+          <div className={`hidden md:flex flex-1 p-6 flex-col justify-center gap-3 border-r ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
             {student.email && (
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
                   <Mail className={`h-4 w-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />
                 </div>
-                <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{student.email}</span>
+                <span className={`text-sm truncate ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{student.email}</span>
               </div>
             )}
             {student.phone && (
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-green-500/20' : 'bg-green-50'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-green-500/20' : 'bg-green-50'}`}>
                   <Phone className={`h-4 w-4 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} />
                 </div>
                 <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{student.phone}</span>
@@ -146,10 +164,10 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
             )}
             {(student.street_address || student.city) && (
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-50'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-50'}`}>
                   <MapPin className={`h-4 w-4 ${isDarkMode ? 'text-purple-400' : 'text-purple-500'}`} />
                 </div>
-                <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} truncate max-w-[200px]`}>
+                <span className={`text-sm truncate ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   {[student.city, student.state].filter(Boolean).join(', ')}
                 </span>
               </div>
@@ -157,28 +175,29 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
           </div>
 
           {/* Right Section - Actions */}
-          <div className="flex-shrink-0 p-6 flex items-center gap-3">
+          <div className="flex-shrink-0 p-4 md:p-6 flex items-center justify-center gap-2 md:gap-3 border-t md:border-t-0 ${isDarkMode ? 'border-white/10' : 'border-gray-100'}">
             <Button
               variant="outline"
               size="sm"
               onClick={onViewNotes}
-              className={`h-10 px-4 rounded-full ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
+              className={`h-9 md:h-10 px-3 md:px-4 rounded-full text-sm ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
             >
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 mr-1.5" />
               Notes
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={onEditProfile}
-              className={`h-10 px-4 rounded-full ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
+              className={`h-9 md:h-10 px-3 md:px-4 rounded-full text-sm ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4 mr-1.5" />
               Edit
             </Button>
+            {/* Close Button - Desktop */}
             <button
               onClick={onClose}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+              className={`hidden md:flex w-10 h-10 rounded-full items-center justify-center transition-colors ${
                 isDarkMode 
                   ? 'bg-white/10 hover:bg-white/20 text-white' 
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
