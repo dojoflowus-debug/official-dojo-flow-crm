@@ -626,3 +626,316 @@ export async function verifyStudentLogin(email: string, password: string) {
     beltProgress: progressResult[0] || null
   };
 }
+
+
+// ============================================
+// Belt Test Functions
+// ============================================
+
+// Get upcoming belt tests for a student's next belt level
+export async function getUpcomingBeltTests(nextBelt: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { beltTests } = await import("../drizzle/schema");
+  const { eq, and, gte } = await import("drizzle-orm");
+  
+  const now = new Date();
+  
+  const tests = await db.select()
+    .from(beltTests)
+    .where(and(
+      eq(beltTests.beltLevel, nextBelt),
+      eq(beltTests.status, 'open'),
+      gte(beltTests.testDate, now)
+    ))
+    .orderBy(beltTests.testDate);
+  
+  return tests;
+}
+
+// Get all upcoming belt tests (for admin view)
+export async function getAllUpcomingBeltTests() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { beltTests } = await import("../drizzle/schema");
+  const { gte, desc } = await import("drizzle-orm");
+  
+  const now = new Date();
+  
+  const tests = await db.select()
+    .from(beltTests)
+    .where(gte(beltTests.testDate, now))
+    .orderBy(beltTests.testDate);
+  
+  return tests;
+}
+
+// Get a single belt test by ID
+export async function getBeltTestById(testId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { beltTests } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  const result = await db.select().from(beltTests).where(eq(beltTests.id, testId)).limit(1);
+  return result[0] || null;
+}
+
+// Create a new belt test
+export async function createBeltTest(data: {
+  name: string;
+  beltLevel: string;
+  testDate: Date;
+  startTime: string;
+  endTime?: string;
+  location: string;
+  maxCapacity?: number;
+  instructorId?: number;
+  instructorName?: string;
+  fee?: number;
+  notes?: string;
+  minAttendanceRequired?: number;
+  minClassesRequired?: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { beltTests } = await import("../drizzle/schema");
+  
+  const result = await db.insert(beltTests).values({
+    name: data.name,
+    beltLevel: data.beltLevel,
+    testDate: data.testDate,
+    startTime: data.startTime,
+    endTime: data.endTime,
+    location: data.location,
+    maxCapacity: data.maxCapacity || 20,
+    instructorId: data.instructorId,
+    instructorName: data.instructorName,
+    fee: data.fee || 0,
+    notes: data.notes,
+    minAttendanceRequired: data.minAttendanceRequired || 80,
+    minClassesRequired: data.minClassesRequired || 20,
+    status: 'open'
+  });
+  
+  return { id: result[0].insertId };
+}
+
+// Check if student is eligible for belt test registration
+export async function checkBeltTestEligibility(studentId: number, testId: number) {
+  const db = await getDb();
+  if (!db) return { eligible: false, reason: 'Database error' };
+  
+  const { beltTests, beltProgress, beltTestRegistrations, students } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+  
+  // Get student info
+  const studentResult = await db.select().from(students).where(eq(students.id, studentId)).limit(1);
+  if (studentResult.length === 0) {
+    return { eligible: false, reason: 'Student not found' };
+  }
+  const student = studentResult[0];
+  
+  // Get belt test info
+  const testResult = await db.select().from(beltTests).where(eq(beltTests.id, testId)).limit(1);
+  if (testResult.length === 0) {
+    return { eligible: false, reason: 'Belt test not found' };
+  }
+  const test = testResult[0];
+  
+  // Check if test is still open
+  if (test.status !== 'open') {
+    return { eligible: false, reason: 'This belt test is no longer accepting registrations' };
+  }
+  
+  // Check capacity
+  if (test.currentRegistrations >= test.maxCapacity) {
+    return { eligible: false, reason: 'This belt test is full' };
+  }
+  
+  // Check if already registered
+  const existingReg = await db.select()
+    .from(beltTestRegistrations)
+    .where(and(
+      eq(beltTestRegistrations.testId, testId),
+      eq(beltTestRegistrations.studentId, studentId),
+      eq(beltTestRegistrations.status, 'registered')
+    ))
+    .limit(1);
+  
+  if (existingReg.length > 0) {
+    return { eligible: false, reason: 'You are already registered for this test' };
+  }
+  
+  // Get belt progress
+  const progressResult = await db.select().from(beltProgress).where(eq(beltProgress.studentId, studentId)).limit(1);
+  if (progressResult.length === 0) {
+    return { eligible: false, reason: 'Belt progress not found. Please contact the front desk.' };
+  }
+  const progress = progressResult[0];
+  
+  // Check if testing for correct belt level
+  if (progress.nextBelt !== test.beltLevel) {
+    return { 
+      eligible: false, 
+      reason: `This test is for ${test.beltLevel} Belt. Your next belt is ${progress.nextBelt}.` 
+    };
+  }
+  
+  // Check attendance requirement
+  if (progress.qualifiedAttendance < test.minAttendanceRequired) {
+    return { 
+      eligible: false, 
+      reason: `Minimum ${test.minAttendanceRequired}% attendance required. Your current attendance: ${progress.qualifiedAttendance}%` 
+    };
+  }
+  
+  // Check class requirement
+  if (progress.qualifiedClasses < test.minClassesRequired) {
+    return { 
+      eligible: false, 
+      reason: `Minimum ${test.minClassesRequired} qualified classes required. Your current classes: ${progress.qualifiedClasses}` 
+    };
+  }
+  
+  return { 
+    eligible: true, 
+    student,
+    test,
+    progress
+  };
+}
+
+// Register student for belt test
+export async function registerForBeltTest(studentId: number, testId: number) {
+  const db = await getDb();
+  if (!db) return { success: false, error: 'Database error' };
+  
+  const { beltTests, beltTestRegistrations, beltProgress, students } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  // Check eligibility first
+  const eligibility = await checkBeltTestEligibility(studentId, testId);
+  if (!eligibility.eligible) {
+    return { success: false, error: eligibility.reason };
+  }
+  
+  // Get student and progress data
+  const studentResult = await db.select().from(students).where(eq(students.id, studentId)).limit(1);
+  const progressResult = await db.select().from(beltProgress).where(eq(beltProgress.studentId, studentId)).limit(1);
+  
+  const student = studentResult[0];
+  const progress = progressResult[0];
+  
+  // Create registration
+  const result = await db.insert(beltTestRegistrations).values({
+    testId,
+    studentId,
+    studentName: `${student.firstName} ${student.lastName}`,
+    currentBelt: progress.currentBelt,
+    attendanceAtRegistration: progress.qualifiedAttendance,
+    classesAtRegistration: progress.qualifiedClasses,
+    status: 'registered',
+    paymentStatus: 'pending'
+  });
+  
+  // Update test registration count
+  await db.update(beltTests)
+    .set({ 
+      currentRegistrations: eligibility.test!.currentRegistrations + 1,
+      updatedAt: new Date()
+    })
+    .where(eq(beltTests.id, testId));
+  
+  return { 
+    success: true, 
+    registrationId: result[0].insertId 
+  };
+}
+
+// Cancel belt test registration
+export async function cancelBeltTestRegistration(studentId: number, testId: number) {
+  const db = await getDb();
+  if (!db) return { success: false, error: 'Database error' };
+  
+  const { beltTests, beltTestRegistrations } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+  
+  // Find the registration
+  const regResult = await db.select()
+    .from(beltTestRegistrations)
+    .where(and(
+      eq(beltTestRegistrations.testId, testId),
+      eq(beltTestRegistrations.studentId, studentId),
+      eq(beltTestRegistrations.status, 'registered')
+    ))
+    .limit(1);
+  
+  if (regResult.length === 0) {
+    return { success: false, error: 'Registration not found' };
+  }
+  
+  // Update registration status
+  await db.update(beltTestRegistrations)
+    .set({ 
+      status: 'cancelled',
+      updatedAt: new Date()
+    })
+    .where(eq(beltTestRegistrations.id, regResult[0].id));
+  
+  // Get test to update count
+  const testResult = await db.select().from(beltTests).where(eq(beltTests.id, testId)).limit(1);
+  if (testResult.length > 0) {
+    await db.update(beltTests)
+      .set({ 
+        currentRegistrations: Math.max(0, testResult[0].currentRegistrations - 1),
+        updatedAt: new Date()
+      })
+      .where(eq(beltTests.id, testId));
+  }
+  
+  return { success: true };
+}
+
+// Get student's belt test registrations
+export async function getStudentBeltTestRegistrations(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { beltTestRegistrations, beltTests } = await import("../drizzle/schema");
+  const { eq, desc } = await import("drizzle-orm");
+  
+  const registrations = await db.select({
+    registration: beltTestRegistrations,
+    test: beltTests
+  })
+    .from(beltTestRegistrations)
+    .leftJoin(beltTests, eq(beltTestRegistrations.testId, beltTests.id))
+    .where(eq(beltTestRegistrations.studentId, studentId))
+    .orderBy(desc(beltTestRegistrations.registeredAt));
+  
+  return registrations;
+}
+
+// Get registrations for a specific belt test (admin view)
+export async function getBeltTestRegistrations(testId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { beltTestRegistrations, students } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  const registrations = await db.select({
+    registration: beltTestRegistrations,
+    student: students
+  })
+    .from(beltTestRegistrations)
+    .leftJoin(students, eq(beltTestRegistrations.studentId, students.id))
+    .where(eq(beltTestRegistrations.testId, testId));
+  
+  return registrations;
+}

@@ -3162,3 +3162,28 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Implement Student Schedule page with calendar view for upcoming and past classes
 - [x] Redesign Student Dashboard with WOW version - Apple-inspired light theme with belt progression
 - [x] Connect Student Dashboard to real student data for belt progress and attendance
+
+
+## 🚀 NEW: Belt Test Registration Feature for Students
+
+### Phase 1: Database Schema
+- [ ] Create belt_tests table (id, testDate, testTime, location, maxCapacity, beltLevel, status, instructorId)
+- [ ] Create belt_test_registrations table (id, testId, studentId, status, registeredAt, notes)
+- [ ] Push database migrations
+
+### Phase 2: Backend Procedures
+- [ ] Create getUpcomingBeltTests procedure (list available tests for student's next belt)
+- [ ] Create registerForBeltTest procedure (with eligibility check)
+- [ ] Create cancelBeltTestRegistration procedure
+- [ ] Create getStudentBeltTestRegistrations procedure
+
+### Phase 3: Student Portal UI
+- [ ] Add "Belt Test" section to Student Dashboard
+- [ ] Show eligibility status and upcoming tests
+- [ ] Create registration modal with test details
+- [ ] Add confirmation and cancellation functionality
+
+### Phase 4: Testing & Delivery
+- [ ] Test eligibility checks work correctly
+- [ ] Test registration and cancellation flows
+- [ ] Save checkpoint

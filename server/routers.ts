@@ -1549,6 +1549,78 @@ export const appRouter = router({
         const passwordHash = await bcrypt.hash(input.password, 10);
         return await createStudentAccount(input.studentId, input.email, passwordHash);
       }),
+
+    // ============================================
+    // Belt Test Procedures
+    // ============================================
+
+    // Get upcoming belt tests for student's next belt level
+    getUpcomingBeltTests: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getDb, getUpcomingBeltTests } = await import("./db");
+        const { beltProgress } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { tests: [], nextBelt: null };
+        
+        // Get student's next belt
+        const progress = await db.select().from(beltProgress).where(eq(beltProgress.studentId, input.studentId)).limit(1);
+        if (progress.length === 0) {
+          return { tests: [], nextBelt: null };
+        }
+        
+        const nextBelt = progress[0].nextBelt;
+        const tests = await getUpcomingBeltTests(nextBelt);
+        
+        return { tests, nextBelt, currentProgress: progress[0] };
+      }),
+
+    // Check eligibility for a specific belt test
+    checkBeltTestEligibility: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        testId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { checkBeltTestEligibility } = await import("./db");
+        return await checkBeltTestEligibility(input.studentId, input.testId);
+      }),
+
+    // Register for a belt test
+    registerForBeltTest: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        testId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { registerForBeltTest } = await import("./db");
+        return await registerForBeltTest(input.studentId, input.testId);
+      }),
+
+    // Cancel belt test registration
+    cancelBeltTestRegistration: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        testId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { cancelBeltTestRegistration } = await import("./db");
+        return await cancelBeltTestRegistration(input.studentId, input.testId);
+      }),
+
+    // Get student's belt test registrations
+    getMyBeltTestRegistrations: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getStudentBeltTestRegistrations } = await import("./db");
+        return await getStudentBeltTestRegistrations(input.studentId);
+      }),
   }),
 });
 

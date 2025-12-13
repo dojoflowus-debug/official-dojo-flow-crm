@@ -19,6 +19,7 @@ import Feedback from "./pages/Feedback";
 import StudentLogin from "./pages/StudentLogin";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentSchedule from "./pages/StudentSchedule";
+import StudentBeltTests from "./pages/StudentBeltTests";
 import StudentPayments from "./pages/StudentPayments";
 import StudentMessages from "./pages/StudentMessages";
 import StudentProfile from "./pages/StudentProfile";
@@ -92,6 +93,7 @@ function Router() {
       <Route path="/student-login" element={<StudentLogin />} />
       <Route path="/student-dashboard" element={<StudentDashboard />} />
       <Route path="/student-schedule" element={<StudentSchedule />} />
+      <Route path="/student-belt-tests" element={<StudentBeltTests />} />
       <Route path="/chat" element={<PublicChat />} />
       <Route path="/student-payments" element={<StudentPayments />} />
       <Route path="/student-messages" element={<StudentMessages />} />

@@ -1221,3 +1221,80 @@ export const studentAttendance = mysqlTable("student_attendance", {
 
 export type StudentAttendance = typeof studentAttendance.$inferSelect;
 export type InsertStudentAttendance = typeof studentAttendance.$inferInsert;
+
+
+/**
+ * Belt Tests table
+ * Stores scheduled belt testing events that students can register for
+ */
+export const beltTests = mysqlTable("belt_tests", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Name of the belt test event */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Belt level being tested for (e.g., "Yellow", "Orange", "Green") */
+  beltLevel: varchar("beltLevel", { length: 50 }).notNull(),
+  /** Date of the belt test */
+  testDate: timestamp("testDate").notNull(),
+  /** Start time of the test */
+  startTime: varchar("startTime", { length: 10 }).notNull(),
+  /** End time of the test */
+  endTime: varchar("endTime", { length: 10 }),
+  /** Location of the test */
+  location: varchar("location", { length: 255 }).notNull(),
+  /** Maximum number of students that can register */
+  maxCapacity: int("maxCapacity").default(20).notNull(),
+  /** Current number of registered students */
+  currentRegistrations: int("currentRegistrations").default(0).notNull(),
+  /** Lead instructor for the test */
+  instructorId: int("instructorId"),
+  /** Instructor name for display */
+  instructorName: varchar("instructorName", { length: 255 }),
+  /** Registration fee in cents */
+  fee: int("fee").default(0),
+  /** Test status: open, closed, completed, cancelled */
+  status: mysqlEnum("status", ["open", "closed", "completed", "cancelled"]).default("open").notNull(),
+  /** Additional notes or requirements */
+  notes: text("notes"),
+  /** Minimum attendance percentage required to register */
+  minAttendanceRequired: int("minAttendanceRequired").default(80),
+  /** Minimum qualified classes required to register */
+  minClassesRequired: int("minClassesRequired").default(20),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BeltTest = typeof beltTests.$inferSelect;
+export type InsertBeltTest = typeof beltTests.$inferInsert;
+
+/**
+ * Belt Test Registrations table
+ * Tracks student registrations for belt tests
+ */
+export const beltTestRegistrations = mysqlTable("belt_test_registrations", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to the belt test */
+  testId: int("testId").notNull(),
+  /** Reference to the student */
+  studentId: int("studentId").notNull(),
+  /** Student name for display */
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  /** Current belt at time of registration */
+  currentBelt: varchar("currentBelt", { length: 50 }).notNull(),
+  /** Registration status: registered, cancelled, passed, failed, no_show */
+  status: mysqlEnum("status", ["registered", "cancelled", "passed", "failed", "no_show"]).default("registered").notNull(),
+  /** Attendance percentage at time of registration */
+  attendanceAtRegistration: int("attendanceAtRegistration"),
+  /** Qualified classes at time of registration */
+  classesAtRegistration: int("classesAtRegistration"),
+  /** Payment status: pending, paid, refunded */
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded", "waived"]).default("pending"),
+  /** Instructor notes about the student's test */
+  instructorNotes: text("instructorNotes"),
+  /** Result notes after test completion */
+  resultNotes: text("resultNotes"),
+  registeredAt: timestamp("registeredAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BeltTestRegistration = typeof beltTestRegistrations.$inferSelect;
+export type InsertBeltTestRegistration = typeof beltTestRegistrations.$inferInsert;

@@ -13,7 +13,8 @@ import {
   ChevronRight,
   CheckCircle2,
   Sparkles,
-  Loader2
+  Loader2,
+  Award
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -414,7 +415,7 @@ export default function StudentDashboard() {
             </SoftCard>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Button 
                 className="h-auto py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl flex flex-col items-center gap-2 shadow-lg"
                 onClick={handleCheckIn}
@@ -434,7 +435,16 @@ export default function StudentDashboard() {
                 onClick={() => setLocation("/student-schedule")}
               >
                 <Calendar className="h-6 w-6" />
-                <span className="font-semibold">View Schedule</span>
+                <span className="font-semibold">Schedule</span>
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="h-auto py-4 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-2xl flex flex-col items-center gap-2 border-orange-200 shadow-sm"
+                onClick={() => setLocation("/student-belt-tests")}
+              >
+                <Award className="h-6 w-6" />
+                <span className="font-semibold">Belt Tests</span>
               </Button>
               
               <Button 
