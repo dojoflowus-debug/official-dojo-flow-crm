@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_LOGO, APP_TITLE } from "@/const";
-import { LogIn, ArrowLeft, User, Lock } from "lucide-react";
+import { LogIn, ArrowLeft, User, Lock, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 /**
  * Student Login Page - Authentication for student portal access
@@ -14,31 +15,71 @@ export default function StudentLogin() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      // TODO: Connect to backend API for authentication
-      // For now, mock authentication
-      if (email && password) {
+  // Login mutation
+  const loginMutation = trpc.studentPortal.login.useMutation({
+    onSuccess: (data) => {
+      if (data?.success && data.student) {
         // Store student session
         localStorage.setItem("student_email", email);
         localStorage.setItem("student_logged_in", "true");
+        localStorage.setItem("student_id", String(data.student.id));
+        localStorage.setItem("student_name", data.student.firstName || 'Student');
         
         // Redirect to student dashboard
         setLocation("/student-dashboard");
       } else {
-        setError("Please enter both email and password");
+        setError(data?.error || "Login failed. Please check your credentials.");
+      }
+    },
+    onError: (err) => {
+      setError(err.message || "Login failed. Please try again.");
+    }
+  });
+
+  // Query to find student by email (for students without portal accounts)
+  const findStudentMutation = trpc.studentPortal.getByEmail.useQuery(
+    { email },
+    { enabled: false }
+  );
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      return;
+    }
+
+    // Try to login with credentials
+    loginMutation.mutate({ email, password });
+  };
+
+  // Demo login for testing (finds student by email without password)
+  const handleDemoLogin = async () => {
+    if (!email) {
+      setError("Please enter an email address");
+      return;
+    }
+
+    try {
+      const result = await findStudentMutation.refetch();
+      if (result.data?.student) {
+        // Store student session
+        localStorage.setItem("student_email", email);
+        localStorage.setItem("student_logged_in", "true");
+        localStorage.setItem("student_id", String(result.data.student.id));
+        localStorage.setItem("student_name", result.data.student.firstName || 'Student');
+        
+        // Redirect to student dashboard
+        setLocation("/student-dashboard");
+      } else {
+        setError("No student found with this email. Please contact the front desk.");
       }
     } catch (err) {
-      setError("Login failed. Please check your credentials.");
-    } finally {
-      setLoading(false);
+      setError("Failed to find student. Please try again.");
     }
   };
 
@@ -125,15 +166,45 @@ export default function StudentLogin() {
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-6 text-lg"
-              disabled={loading}
+              disabled={loginMutation.isPending}
             >
-              {loading ? (
-                "Logging in..."
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Logging in...
+                </>
               ) : (
                 <>
                   <LogIn className="h-5 w-5 mr-2" />
                   Login to Portal
                 </>
+              )}
+            </Button>
+
+            {/* Demo login for testing */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-700" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-slate-900 px-2 text-slate-500">Or</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white py-5"
+              onClick={handleDemoLogin}
+              disabled={findStudentMutation.isFetching}
+            >
+              {findStudentMutation.isFetching ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Finding student...
+                </>
+              ) : (
+                "Quick Login (Demo Mode)"
               )}
             </Button>
 

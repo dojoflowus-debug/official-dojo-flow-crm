@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { APP_LOGO, APP_TITLE } from "@/const";
+import { trpc } from "@/lib/trpc";
 import { 
   Calendar,
   Clock,
@@ -11,7 +12,8 @@ import {
   LogOut,
   ChevronRight,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -24,6 +26,8 @@ const belts = [
   { name: 'Brown', color: '#A16207', borderColor: '#78350F' },
   { name: 'Blue', color: '#60A5FA', borderColor: '#2563EB' },
   { name: 'Purple', color: '#A78BFA', borderColor: '#7C3AED' },
+  { name: 'Red', color: '#EF4444', borderColor: '#DC2626' },
+  { name: 'Black', color: '#1F2937', borderColor: '#111827' },
 ];
 
 // Soft Card Component
@@ -157,53 +161,119 @@ function WeeklyTrainingBar({ day, attended, isToday }: { day: string; attended: 
 
 /**
  * Student Dashboard - WOW Version
- * Apple-inspired light theme with emotional engagement
+ * Apple-inspired light theme with real data from backend
  */
 export default function StudentDashboard() {
   const [, setLocation] = useLocation();
   const [mounted, setMounted] = useState(false);
-  const [studentName] = useState("Miike");
-  const [currentBelt] = useState("Yellow");
-  const [nextBelt] = useState("Orange");
-  const [beltProgress] = useState(67);
-  const [qualifiedAttendance] = useState(78);
-  const [classesNeeded] = useState(3);
-  const [nextEvaluation] = useState(12);
+  const [studentId, setStudentId] = useState<number | null>(null);
 
-  // Weekly training data
-  const weeklyTraining = [
-    { day: 'M', attended: false },
-    { day: 'T', attended: false },
-    { day: 'W', attended: false },
-    { day: 'T', attended: true },
-    { day: 'F', attended: true },
-    { day: 'S', attended: true },
-    { day: 'S', attended: true },
-  ];
-
+  // Check login status and get student ID
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("student_logged_in");
+    const storedStudentId = localStorage.getItem("student_id");
+    
     if (!isLoggedIn) {
       setLocation("/student-login");
       return;
     }
+    
+    if (storedStudentId) {
+      setStudentId(parseInt(storedStudentId, 10));
+    }
+    
     setTimeout(() => setMounted(true), 100);
   }, [setLocation]);
+
+  // Fetch dashboard data from backend
+  const { data: dashboardData, isLoading, error } = trpc.studentPortal.getDashboardData.useQuery(
+    { studentId: studentId! },
+    { enabled: !!studentId }
+  );
+
+  // Check-in mutation
+  const checkInMutation = trpc.studentPortal.checkIn.useMutation({
+    onSuccess: () => {
+      // Refetch dashboard data after check-in
+      window.location.reload();
+    }
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("student_logged_in");
     localStorage.removeItem("student_email");
+    localStorage.removeItem("student_id");
     setLocation("/student-login");
   };
 
+  const handleCheckIn = () => {
+    if (studentId) {
+      checkInMutation.mutate({ studentId });
+    }
+  };
+
+  // No student ID - redirect to login
+  if (!studentId && !isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">Please log in to view your dashboard</p>
+          <Button onClick={() => setLocation("/student-login")}>Go to Login</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-4" />
+          <p className="text-gray-500">Loading your dashboard...</p>
+          {studentId && <p className="text-xs text-gray-400 mt-2">Student ID: {studentId}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Failed to load dashboard data</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { student, beltProgress, weeklyTraining, checkInsThisMonth, enrolledClasses } = dashboardData;
+  
+  // Derived values
+  const studentName = student.firstName || 'Student';
+  const currentBelt = beltProgress?.currentBelt || student.beltRank || 'White';
+  const nextBelt = beltProgress?.nextBelt || 'Yellow';
+  const progressPercent = beltProgress?.progressPercent || 0;
+  const qualifiedAttendance = beltProgress?.qualifiedAttendance || 0;
+  const classesNeeded = Math.max(0, (beltProgress?.classesRequired || 20) - (beltProgress?.qualifiedClasses || 0));
+  const nextEvaluation = beltProgress?.nextEvaluationDate 
+    ? Math.ceil((new Date(beltProgress.nextEvaluationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 30;
+
   // Get attendance status color
   const getAttendanceColor = () => {
-    if (qualifiedAttendance >= 80) return { color: '#22C55E', bg: '#DCFCE7', status: 'Eligible' };
-    if (qualifiedAttendance >= 70) return { color: '#EAB308', bg: '#FEF9C3', status: 'At Risk' };
+    const required = beltProgress?.attendanceRequired || 80;
+    if (qualifiedAttendance >= required) return { color: '#22C55E', bg: '#DCFCE7', status: 'Eligible' };
+    if (qualifiedAttendance >= required - 10) return { color: '#EAB308', bg: '#FEF9C3', status: 'At Risk' };
     return { color: '#EF4444', bg: '#FEE2E2', status: 'Ineligible' };
   };
 
   const attendanceStatus = getAttendanceColor();
+
+  // Get next class from enrolled classes
+  const nextClass = enrolledClasses && enrolledClasses.length > 0 ? enrolledClasses[0] : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -247,8 +317,8 @@ export default function StudentDashboard() {
               <div className="relative">
                 <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
                   <img 
-                    src="https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=533&fit=crop&crop=face"
-                    alt="Student in gi"
+                    src={student.photoUrl || "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=533&fit=crop&crop=face"}
+                    alt={`${studentName} in gi`}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -257,8 +327,8 @@ export default function StudentDashboard() {
                 <div 
                   className="absolute bottom-4 left-4 px-4 py-2 rounded-xl font-semibold text-sm shadow-lg"
                   style={{ 
-                    backgroundColor: '#FCD34D',
-                    color: '#78350F'
+                    backgroundColor: belts.find(b => b.name === currentBelt)?.color || '#FCD34D',
+                    color: currentBelt === 'White' ? '#374151' : (currentBelt === 'Yellow' ? '#78350F' : '#FFF')
                   }}
                 >
                   {currentBelt} Belt
@@ -286,9 +356,9 @@ export default function StudentDashboard() {
                   <span className="text-orange-500">Attendance</span> beats intensity
                 </p>
                 
-                {qualifiedAttendance < 80 && (
+                {qualifiedAttendance < (beltProgress?.attendanceRequired || 80) && (
                   <p className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-                    Maintain 80%+ to stay belt-eligible
+                    Maintain {beltProgress?.attendanceRequired || 80}%+ to stay belt-eligible
                   </p>
                 )}
               </div>
@@ -305,15 +375,15 @@ export default function StudentDashboard() {
               {/* Belt Timeline */}
               <div className="flex items-center justify-between gap-2 mb-6 overflow-x-auto pb-2">
                 {belts.map((belt, index) => {
-                  const currentIndex = belts.findIndex(b => b.name === currentBelt);
+                  const currentIndex = belts.findIndex(b => b.name.toLowerCase() === currentBelt.toLowerCase());
                   return (
                     <BeltBadge
                       key={belt.name}
                       name={belt.name}
                       color={belt.color}
                       borderColor={belt.borderColor}
-                      isActive={belt.name === currentBelt}
-                      isNext={belt.name === nextBelt}
+                      isActive={belt.name.toLowerCase() === currentBelt.toLowerCase()}
+                      isNext={belt.name.toLowerCase() === nextBelt.toLowerCase()}
                       isPast={index < currentIndex}
                     />
                   );
@@ -327,12 +397,12 @@ export default function StudentDashboard() {
                     Qualified Attendance: {qualifiedAttendance}%
                   </p>
                   <p className="text-gray-500">
-                    Next evaluation: In {nextEvaluation} days
+                    Next evaluation: In {nextEvaluation > 0 ? nextEvaluation : 'N/A'} days
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Progress to {nextBelt} Belt</p>
-                  <p className="text-2xl font-bold text-orange-500">{beltProgress}%</p>
+                  <p className="text-2xl font-bold text-orange-500">{progressPercent}%</p>
                 </div>
               </div>
 
@@ -347,9 +417,14 @@ export default function StudentDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Button 
                 className="h-auto py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl flex flex-col items-center gap-2 shadow-lg"
-                onClick={() => setLocation("/kiosk")}
+                onClick={handleCheckIn}
+                disabled={checkInMutation.isPending}
               >
-                <CheckCircle2 className="h-6 w-6" />
+                {checkInMutation.isPending ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-6 w-6" />
+                )}
                 <span className="font-semibold">Check In</span>
               </Button>
               
@@ -383,18 +458,26 @@ export default function StudentDashboard() {
             <SoftCard className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Weekly Training</h2>
               <div className="flex items-end justify-between gap-4">
-                {weeklyTraining.map((day, index) => (
+                {(weeklyTraining || [
+                  { day: 'M', attended: false, isToday: false },
+                  { day: 'T', attended: false, isToday: false },
+                  { day: 'W', attended: false, isToday: false },
+                  { day: 'T', attended: false, isToday: false },
+                  { day: 'F', attended: false, isToday: true },
+                  { day: 'S', attended: false, isToday: false },
+                  { day: 'S', attended: false, isToday: false },
+                ]).map((day, index) => (
                   <WeeklyTrainingBar 
                     key={index}
                     day={day.day}
                     attended={day.attended}
-                    isToday={index === 4} // Friday is today in mock
+                    isToday={day.isToday}
                   />
                 ))}
               </div>
               <p className="mt-4 text-sm text-gray-500 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-green-500" />
-                Consistency improving compared to last month
+                {checkInsThisMonth || 0} classes attended this month
               </p>
             </SoftCard>
 
@@ -411,37 +494,52 @@ export default function StudentDashboard() {
                 </Button>
               </div>
               
-              <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
-                {/* Instructor Photo */}
-                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-200 flex-shrink-0">
-                  <img 
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
-                    alt="Instructor"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                
-                <div className="flex-1">
-                  <h3 className="font-bold text-gray-900 text-lg">Kids Karate - Intermediate</h3>
-                  <p className="text-gray-600">Samuel Silva</p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      Tue, May 7 · 5:00 PM
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" />
-                      Main Dojo
-                    </span>
+              {nextClass ? (
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
+                  {/* Instructor Photo */}
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-200 flex-shrink-0">
+                    <img 
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
+                      alt="Instructor"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                  
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 text-lg">{nextClass.name}</h3>
+                    <p className="text-gray-600">{nextClass.instructor || 'Instructor TBA'}</p>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {nextClass.dayOfWeek} · {nextClass.time}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        Main Dojo
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6 shadow-lg shadow-orange-500/30"
+                    onClick={handleCheckIn}
+                    disabled={checkInMutation.isPending}
+                  >
+                    {checkInMutation.isPending ? 'Checking in...' : 'Check in'}
+                  </Button>
                 </div>
-                
-                <Button 
-                  className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6 shadow-lg shadow-orange-500/30"
-                >
-                  Check in
-                </Button>
-              </div>
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-2xl text-center text-gray-500">
+                  <p>No upcoming classes scheduled</p>
+                  <Button 
+                    variant="link" 
+                    className="text-orange-500"
+                    onClick={() => setLocation("/student-schedule")}
+                  >
+                    View full schedule
+                  </Button>
+                </div>
+              )}
             </SoftCard>
           </div>
         </div>

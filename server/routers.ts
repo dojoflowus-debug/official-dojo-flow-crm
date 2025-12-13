@@ -1414,6 +1414,142 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // Student Portal Router
+  studentPortal: router({
+    // Login endpoint
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const { verifyStudentLogin } = await import("./db");
+        return await verifyStudentLogin(input.email, input.password);
+      }),
+
+    // Get student dashboard data
+    getDashboardData: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getStudentPortalData } = await import("./db");
+        const data = await getStudentPortalData(input.studentId);
+        if (!data) {
+          throw new Error('Student not found');
+        }
+        return data;
+      }),
+
+    // Get student by email (for login lookup)
+    getByEmail: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+      }))
+      .query(async ({ input }) => {
+        const { getStudentByEmail } = await import("./db");
+        return await getStudentByEmail(input.email);
+      }),
+
+    // Get attendance history
+    getAttendanceHistory: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        limit: z.number().optional().default(30),
+      }))
+      .query(async ({ input }) => {
+        const { getStudentAttendanceHistory } = await import("./db");
+        return await getStudentAttendanceHistory(input.studentId, input.limit);
+      }),
+
+    // Get upcoming classes for a student
+    getUpcomingClasses: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { classEnrollments, classes } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const enrollments = await db.select({
+          enrollment: classEnrollments,
+          class: classes
+        })
+          .from(classEnrollments)
+          .leftJoin(classes, eq(classEnrollments.classId, classes.id))
+          .where(and(
+            eq(classEnrollments.studentId, input.studentId),
+            eq(classEnrollments.status, 'active')
+          ));
+        
+        return enrollments.map(e => ({
+          id: e.class?.id,
+          name: e.class?.name,
+          time: e.class?.time,
+          dayOfWeek: e.class?.dayOfWeek,
+          instructor: e.class?.instructor,
+          enrollmentId: e.enrollment.id
+        })).filter(c => c.id);
+      }),
+
+    // Record check-in and update belt progress
+    checkIn: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb, updateBeltProgressAfterCheckIn } = await import("./db");
+        const { students, kioskCheckIns } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Get student info
+        const student = await db.select().from(students).where(eq(students.id, input.studentId)).limit(1);
+        
+        if (student.length === 0) {
+          return { success: false, message: 'Student not found' };
+        }
+        
+        // Record check-in
+        const fullName = `${student[0].firstName} ${student[0].lastName}`;
+        await db.insert(kioskCheckIns).values({
+          studentId: input.studentId,
+          studentName: fullName,
+          timestamp: new Date(),
+        });
+        
+        // Update belt progress
+        await updateBeltProgressAfterCheckIn(input.studentId);
+        
+        return {
+          success: true,
+          message: `Checked in ${fullName}`,
+          student: student[0]
+        };
+      }),
+
+    // Create student account
+    createAccount: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        email: z.string().email(),
+        password: z.string().min(6),
+      }))
+      .mutation(async ({ input }) => {
+        const { createStudentAccount } = await import("./db");
+        const bcrypt = await import("bcryptjs");
+        
+        const passwordHash = await bcrypt.hash(input.password, 10);
+        return await createStudentAccount(input.studentId, input.email, passwordHash);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -1124,3 +1124,100 @@ export const leadScoringRules = mysqlTable("lead_scoring_rules", {
 
 export type LeadScoringRule = typeof leadScoringRules.$inferSelect;
 export type InsertLeadScoringRule = typeof leadScoringRules.$inferInsert;
+
+
+/**
+ * Student Portal Accounts table - Student login credentials
+ * Separate from main users table for student-specific authentication
+ */
+export const studentAccounts = mysqlTable("student_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to students table */
+  studentId: int("studentId").notNull().unique(),
+  /** Login email (may differ from student contact email) */
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  /** Password hash (bcrypt) */
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  /** Password reset token */
+  resetToken: varchar("resetToken", { length: 255 }),
+  /** Password reset token expiry */
+  resetTokenExpiry: timestamp("resetTokenExpiry"),
+  /** Whether account is active */
+  isActive: int("isActive").default(1).notNull(),
+  /** Last login timestamp */
+  lastLoginAt: timestamp("lastLoginAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudentAccount = typeof studentAccounts.$inferSelect;
+export type InsertStudentAccount = typeof studentAccounts.$inferInsert;
+
+/**
+ * Belt Progress table - Track student progress toward next belt
+ * Records attendance, skills, and evaluation readiness
+ */
+export const beltProgress = mysqlTable("belt_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to students table */
+  studentId: int("studentId").notNull().unique(),
+  /** Current belt rank */
+  currentBelt: varchar("currentBelt", { length: 50 }).notNull().default("White"),
+  /** Next belt to achieve */
+  nextBelt: varchar("nextBelt", { length: 50 }).notNull().default("Yellow"),
+  /** Progress percentage toward next belt (0-100) */
+  progressPercent: int("progressPercent").default(0).notNull(),
+  /** Qualified classes attended this cycle */
+  qualifiedClasses: int("qualifiedClasses").default(0).notNull(),
+  /** Total classes required for next belt */
+  classesRequired: int("classesRequired").default(20).notNull(),
+  /** Qualified attendance percentage (0-100) */
+  qualifiedAttendance: int("qualifiedAttendance").default(0).notNull(),
+  /** Minimum attendance required for belt eligibility (default 80%) */
+  attendanceRequired: int("attendanceRequired").default(80).notNull(),
+  /** Next evaluation date */
+  nextEvaluationDate: timestamp("nextEvaluationDate"),
+  /** Whether student is eligible for belt test */
+  isEligible: int("isEligible").default(0).notNull(),
+  /** Notes from instructor */
+  instructorNotes: text("instructorNotes"),
+  /** Last belt promotion date */
+  lastPromotionDate: timestamp("lastPromotionDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BeltProgress = typeof beltProgress.$inferSelect;
+export type InsertBeltProgress = typeof beltProgress.$inferInsert;
+
+/**
+ * Student Attendance table - Detailed attendance records
+ * Tracks each class attendance with qualification status
+ */
+export const studentAttendance = mysqlTable("student_attendance", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to students table */
+  studentId: int("studentId").notNull(),
+  /** Foreign key to classes table */
+  classId: int("classId"),
+  /** Class name (denormalized for history) */
+  className: varchar("className", { length: 255 }),
+  /** Instructor name */
+  instructorName: varchar("instructorName", { length: 255 }),
+  /** Class date and time */
+  classDate: timestamp("classDate").notNull(),
+  /** Attendance status */
+  status: mysqlEnum("status", ["attended", "missed", "excused", "upcoming"]).default("upcoming").notNull(),
+  /** Whether this attendance counts toward belt qualification */
+  isQualified: int("isQualified").default(1).notNull(),
+  /** Check-in timestamp */
+  checkedInAt: timestamp("checkedInAt"),
+  /** Location */
+  location: varchar("location", { length: 255 }),
+  /** Belt requirement for this class */
+  beltRequirement: varchar("beltRequirement", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StudentAttendance = typeof studentAttendance.$inferSelect;
+export type InsertStudentAttendance = typeof studentAttendance.$inferInsert;

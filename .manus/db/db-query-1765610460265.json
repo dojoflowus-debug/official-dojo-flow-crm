@@ -1,0 +1,110 @@
+{
+  "query": "SELECT s.id, s.firstName, s.lastName, s.beltRank, bp.currentBelt, bp.nextBelt, bp.progressPercent, bp.qualifiedAttendance \nFROM students s \nLEFT JOIN belt_progress bp ON s.id = bp.studentId \nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT s.id, s.firstName, s.lastName, s.beltRank, bp.currentBelt, bp.nextBelt, bp.progressPercent, bp.qualifiedAttendance \nFROM students s \nLEFT JOIN belt_progress bp ON s.id = bp.studentId \nLIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "beltRank": "White",
+      "currentBelt": "White",
+      "nextBelt": "Yellow",
+      "progressPercent": "80",
+      "qualifiedAttendance": "72"
+    },
+    {
+      "id": "30001",
+      "firstName": "Marcus",
+      "lastName": "Johnson",
+      "beltRank": "Blue Belt",
+      "currentBelt": "Blue Belt",
+      "nextBelt": "Purple",
+      "progressPercent": "30",
+      "qualifiedAttendance": "83"
+    },
+    {
+      "id": "30002",
+      "firstName": "Sophia",
+      "lastName": "Williams",
+      "beltRank": "Green Belt",
+      "currentBelt": "Green Belt",
+      "nextBelt": "Brown",
+      "progressPercent": "35",
+      "qualifiedAttendance": "81"
+    },
+    {
+      "id": "30003",
+      "firstName": "Ethan",
+      "lastName": "Brown",
+      "beltRank": "White Belt",
+      "currentBelt": "White Belt",
+      "nextBelt": "Yellow",
+      "progressPercent": "25",
+      "qualifiedAttendance": "81"
+    },
+    {
+      "id": "30004",
+      "firstName": "Olivia",
+      "lastName": "Davis",
+      "beltRank": "Orange Belt",
+      "currentBelt": "Orange Belt",
+      "nextBelt": "Green",
+      "progressPercent": "55",
+      "qualifiedAttendance": "67"
+    },
+    {
+      "id": "30005",
+      "firstName": "Liam",
+      "lastName": "Garcia",
+      "beltRank": "Black Belt",
+      "currentBelt": "Black Belt",
+      "nextBelt": "Black",
+      "progressPercent": "65",
+      "qualifiedAttendance": "63"
+    },
+    {
+      "id": "30006",
+      "firstName": "Emma",
+      "lastName": "Martinez",
+      "beltRank": "Yellow Belt",
+      "currentBelt": "Yellow Belt",
+      "nextBelt": "Orange",
+      "progressPercent": "45",
+      "qualifiedAttendance": "67"
+    },
+    {
+      "id": "30007",
+      "firstName": "Noah",
+      "lastName": "Rodriguez",
+      "beltRank": "Brown Belt",
+      "currentBelt": "Brown Belt",
+      "nextBelt": "Blue",
+      "progressPercent": "85",
+      "qualifiedAttendance": "76"
+    },
+    {
+      "id": "30008",
+      "firstName": "Ava",
+      "lastName": "Wilson",
+      "beltRank": "White Belt",
+      "currentBelt": "White Belt",
+      "nextBelt": "Yellow",
+      "progressPercent": "40",
+      "qualifiedAttendance": "67"
+    },
+    {
+      "id": "30009",
+      "firstName": "James",
+      "lastName": "Anderson",
+      "beltRank": "Purple Belt",
+      "currentBelt": "Purple Belt",
+      "nextBelt": "Red",
+      "progressPercent": "30",
+      "qualifiedAttendance": "64"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tbeltRank\tcurrentBelt\tnextBelt\tprogressPercent\tqualifiedAttendance\n1\tJohn\tSmith\tWhite\tWhite\tYellow\t80\t72\n30001\tMarcus\tJohnson\tBlue Belt\tBlue Belt\tPurple\t30\t83\n30002\tSophia\tWilliams\tGreen Belt\tGreen Belt\tBrown\t35\t81\n30003\tEthan\tBrown\tWhite Belt\tWhite Belt\tYellow\t25\t81\n30004\tOlivia\tDavis\tOrange Belt\tOrange Belt\tGreen\t55\t67\n30005\tLiam\tGarcia\tBlack Belt\tBlack Belt\tBlack\t65\t63\n30006\tEmma\tMartinez\tYellow Belt\tYellow Belt\tOrange\t45\t67\n30007\tNoah\tRodriguez\tBrown Belt\tBrown Belt\tBlue\t85\t76\n30008\tAva\tWilson\tWhite Belt\tWhite Belt\tYellow\t40\t67\n30009\tJames\tAnderson\tPurple Belt\tPurple Belt\tRed\t30\t64\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}
