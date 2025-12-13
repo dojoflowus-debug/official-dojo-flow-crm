@@ -3361,3 +3361,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] 13 vitest tests passing for guardian validation
 - [x] Test guardian requirement for minor students
 - [x] Test optional guardian for adult students
+
+
+## ✅ BUG FIX: Student Login Missing Create Account Link
+
+- [x] Review StudentLogin page for Create Account link
+- [x] Ensure link is visible and properly styled (red underlined text)
+- [x] Added "New student?" prompt text for clarity
+- [x] Link navigates to /student-onboarding
+- [x] Test the link functionality - working
