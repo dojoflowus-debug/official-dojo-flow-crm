@@ -2019,8 +2019,8 @@ export const appRouter = router({
         email: z.string().email(),
         dateOfBirth: z.string(),
         program: z.enum(['kids', 'teens', 'adults']),
-        emergencyContactName: z.string().min(1),
-        emergencyContactPhone: z.string().min(1),
+        emergencyContactName: z.string().optional(),
+        emergencyContactPhone: z.string().optional(),
         photoUrl: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -2057,6 +2057,17 @@ export const appRouter = router({
             success: false, 
             error: `Age ${age} is outside the ${input.program} program range (${range.min}-${range.max} years)` 
           };
+        }
+        
+        // Guardian required for minors (under 18)
+        const isMinor = age < 18;
+        if (isMinor) {
+          if (!input.emergencyContactName || !input.emergencyContactName.trim()) {
+            return { success: false, error: 'Parent/Guardian name is required for students under 18' };
+          }
+          if (!input.emergencyContactPhone || !input.emergencyContactPhone.trim()) {
+            return { success: false, error: 'Parent/Guardian phone is required for students under 18' };
+          }
         }
         
         try {

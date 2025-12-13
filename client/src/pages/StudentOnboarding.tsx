@@ -259,9 +259,17 @@ export default function StudentOnboarding() {
 
   // Step validation
   const canProceedStep1 = selectedSchool !== null;
-  const isPhoneValid = extractDigits(emergencyPhone).length === 10;
-  const isAgeValid = dateOfBirth && calculateAge(dateOfBirth) >= PROGRAM_AGE_RANGES.kids.min && !ageError;
-  const canProceedStep2 = firstName.trim() && lastName.trim() && dateOfBirth && isAgeValid && emergencyContact.trim() && emergencyPhone.trim() && isPhoneValid;
+  const currentAge = dateOfBirth ? calculateAge(dateOfBirth) : -1;
+  const isMinor = currentAge >= 0 && currentAge < 18;
+  const isPhoneValid = !emergencyPhone.trim() || extractDigits(emergencyPhone).length === 10;
+  const isAgeValid = dateOfBirth && currentAge >= PROGRAM_AGE_RANGES.kids.min && !ageError;
+  
+  // Guardian info required for minors, optional for adults
+  const isGuardianValid = isMinor 
+    ? (emergencyContact.trim() && emergencyPhone.trim() && isPhoneValid)
+    : (!emergencyPhone.trim() || isPhoneValid); // If phone provided, must be valid
+  
+  const canProceedStep2 = firstName.trim() && lastName.trim() && dateOfBirth && isAgeValid && isGuardianValid;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -577,17 +585,32 @@ export default function StudentOnboarding() {
                   </div>
                 </div>
 
-                {/* Emergency Contact */}
+                {/* Emergency Contact / Guardian */}
                 <div className="pt-4 border-t border-gray-100">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Emergency Contact</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      {isMinor ? 'Parent/Guardian Information' : 'Emergency Contact'}
+                    </h3>
+                    {!isMinor && currentAge >= 0 && (
+                      <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                        Optional for adults
+                      </span>
+                    )}
+                  </div>
+                  {isMinor && (
+                    <p className="text-xs text-amber-600 mb-4 flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                      Required for students under 18
+                    </p>
+                  )}
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Contact Name *
+                        {isMinor ? 'Parent/Guardian Name' : 'Contact Name'} {isMinor && '*'}
                       </label>
                       <Input
                         type="text"
-                        placeholder="Parent or Guardian name"
+                        placeholder={isMinor ? "Parent or Guardian name" : "Emergency contact name (optional)"}
                         value={emergencyContact}
                         onChange={(e) => setEmergencyContact(e.target.value)}
                         className="h-12 px-4 bg-white border-gray-200 rounded-xl focus:border-red-500 focus:ring-red-500/20"
@@ -595,7 +618,7 @@ export default function StudentOnboarding() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Contact Phone *
+                        {isMinor ? 'Parent/Guardian Phone' : 'Contact Phone'} {isMinor && '*'}
                       </label>
                       <div className="relative">
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

@@ -3340,3 +3340,24 @@ Note: The logo was already correctly implemented. The navigation uses:
 ### Integration
 - [x] 13 vitest tests passing for age utilities
 - [x] Test age validation in onboarding flow
+
+
+## ✅ COMPLETED: Conditional Guardian Requirement for Minors
+
+### Frontend
+- [x] Update emergency contact section label based on age (Parent/Guardian vs Emergency Contact)
+- [x] Make guardian fields required for students under 18
+- [x] Make guardian fields optional for adults (18+)
+- [x] Show visual indicator that fields are optional for adults (gray badge)
+- [x] Show "Required for students under 18" warning for minors
+- [x] Update form validation based on age
+
+### Backend
+- [x] Update requestToJoin to require guardian info for minors
+- [x] Allow empty guardian fields for adults
+- [x] Return clear error messages for missing guardian info
+
+### Integration
+- [x] 13 vitest tests passing for guardian validation
+- [x] Test guardian requirement for minor students
+- [x] Test optional guardian for adult students
