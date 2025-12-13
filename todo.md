@@ -3464,3 +3464,25 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Program configuration for waiver/payment settings
 - [x] 4 sample programs with different configurations (Kids, Teen, Adult, Competition)
 - [x] 15 vitest tests passing for waiver/payment logic
+
+
+## ✅ COMPLETED: Signed Waiver PDF Generation
+
+### Backend
+- [x] Install PDF generation library (pdfkit)
+- [x] Create generateWaiverPdf service function
+- [x] Embed student signature image in PDF
+- [x] Embed guardian signature for minors
+- [x] Include waiver text, date, and student info
+- [x] Upload generated PDF to S3
+- [x] Store PDF URL in signed_waivers and student_documents tables
+
+### Frontend
+- [x] Add download button to My Documents section
+- [x] Show PDF preview or direct download (opens in new tab)
+- [x] Display document metadata (signed date, type)
+
+### Integration
+- [x] Update signWaiver procedure to generate PDF after signing
+- [x] 18 vitest tests passing for PDF generation
+- [x] Verify PDF is downloadable from Student Dashboard

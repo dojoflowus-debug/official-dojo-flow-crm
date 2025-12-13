@@ -20,6 +20,72 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+// Documents List Component
+function DocumentsList({ studentId }: { studentId: number | null }) {
+  const { data: documents, isLoading } = trpc.studentPortal.getStudentDocuments.useQuery(
+    { studentId: studentId || 0 },
+    { enabled: !!studentId }
+  );
+
+  const handleDownload = (fileUrl: string, title: string) => {
+    // Open PDF in new tab for download
+    window.open(fileUrl, '_blank');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-4">
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (!documents || documents.length === 0) {
+    return (
+      <p className="text-sm text-gray-400 text-center py-4">
+        No documents yet. Signed waivers and certificates will appear here.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {documents.slice(0, 3).map((doc: any) => (
+        <div 
+          key={doc.id} 
+          className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <FileText className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">{doc.title}</p>
+              <p className="text-xs text-gray-500">
+                {doc.mimeType === 'application/pdf' ? 'PDF Document' : 'Signed Document'}
+                {doc.createdAt && ` • ${new Date(doc.createdAt).toLocaleDateString()}`}
+              </p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-green-600 hover:text-green-700"
+            onClick={() => handleDownload(doc.fileUrl, doc.title)}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
+      ))}
+      {documents.length > 3 && (
+        <p className="text-sm text-gray-400 text-center">
+          +{documents.length - 3} more documents
+        </p>
+      )}
+    </div>
+  );
+}
+
 // Belt data with colors
 const belts = [
   { name: 'White', color: '#F5F5F5', borderColor: '#E0E0E0' },
@@ -622,28 +688,7 @@ export default function StudentDashboard() {
                 </Button>
               </div>
               
-              <div className="space-y-3">
-                {/* Signed Waiver */}
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Liability Waiver</p>
-                      <p className="text-xs text-gray-500">Signed on enrollment</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                {/* Placeholder for more documents */}
-                <p className="text-sm text-gray-400 text-center py-2">
-                  Certificates and receipts will appear here
-                </p>
-              </div>
+              <DocumentsList studentId={studentId} />
             </SoftCard>
           </div>
         </div>

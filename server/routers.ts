@@ -2353,20 +2353,60 @@ export const appRouter = router({
             }
           }
           
-          // Create document record for the signed waiver
+          // Get waiver template and student info for PDF generation
           const waiverTemplateResult = await db.select()
             .from(waiverTemplates)
             .where(eq(waiverTemplates.id, input.waiverTemplateId))
             .limit(1);
           const waiverTemplate = waiverTemplateResult[0];
           
+          // Get student info for PDF
+          const { students } = await import("../drizzle/schema");
+          const studentResult = await db.select()
+            .from(students)
+            .where(eq(students.id, input.studentId))
+            .limit(1);
+          const student = studentResult[0];
+          
+          // Generate PDF with embedded signature
+          let pdfUrl = '';
+          let pdfKey = '';
+          try {
+            const { generateWaiverPdf } = await import('./pdfService');
+            const isMinor = student?.dateOfBirth 
+              ? (new Date().getFullYear() - new Date(student.dateOfBirth).getFullYear()) < 18
+              : false;
+            
+            const pdfResult = await generateWaiverPdf({
+              studentId: input.studentId,
+              studentName: student ? `${student.firstName} ${student.lastName}` : input.signerName,
+              studentEmail: student?.email || input.signerEmail,
+              studentDob: student?.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : undefined,
+              waiverTitle: waiverTemplate?.title || 'Liability Waiver',
+              waiverContent: waiverTemplate?.content || 'Waiver content not available.',
+              signatureDataUrl: input.signatureData,
+              signerName: input.signerName,
+              signedAt: new Date(),
+              isMinor,
+              // Guardian signature would be passed separately if needed
+            });
+            pdfUrl = pdfResult.url;
+            pdfKey = pdfResult.key;
+          } catch (pdfError) {
+            console.error('PDF generation failed:', pdfError);
+            // Continue without PDF - signature data is still stored
+          }
+          
+          // Create document record for the signed waiver PDF
           await db.insert(studentDocuments).values({
             studentId: input.studentId,
             documentType: 'waiver',
             title: waiverTemplate?.title || 'Liability Waiver',
             description: `Signed by ${input.signerName} on ${new Date().toLocaleDateString()}`,
-            fileUrl: input.signatureData, // Store signature data as URL for now
-            mimeType: 'image/png',
+            fileUrl: pdfUrl || input.signatureData, // Use PDF URL or fallback to signature data
+            fileKey: pdfKey || null,
+            mimeType: pdfUrl ? 'application/pdf' : 'image/png',
+            fileSize: null,
             isImmutable: 1,
             relatedType: 'signed_waiver',
             relatedId: signedWaiverId,
