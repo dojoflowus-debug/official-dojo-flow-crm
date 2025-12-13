@@ -5,6 +5,8 @@ import BottomNavLayout from '@/components/BottomNavLayout'
 import LeafletMap, { StudentMarker } from '../components/LeafletMap'
 import MapOverlay from '../components/MapOverlay'
 import StudentCardOverlay from '../components/StudentCardOverlay'
+import ResizableDivider from '../components/ResizableDivider'
+import ViewModeToggle, { ViewMode } from '../components/ViewModeToggle'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
 import StudentModal from '../components/StudentModal'
@@ -392,8 +394,7 @@ export default function StudentsSplitScreen() {
   const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false)
   const [notesStudent, setNotesStudent] = useState<Student | null>(null)
   const [selectedStatFilter, setSelectedStatFilter] = useState<StatFilter>(null)
-  const [isFullMapMode, setIsFullMapMode] = useState(false)
-  const [highlightedMapStudent, setHighlightedMapStudent] = useState<Student | null>(null)
+  // View mode is now controlled by viewMode state ('split' | 'fullMap' | 'list')
   
   // Fetch school logo for brand consistency
   const { data: brandData } = trpc.setupWizard.getBrand.useQuery(undefined, {
@@ -402,10 +403,8 @@ export default function StudentsSplitScreen() {
   const schoolLogo = brandData?.logoSquare || null
   
   // Split pane state
-  const [mapWidth, setMapWidth] = useState(40) // percentage
-  const [isDragging, setIsDragging] = useState(false)
-  const [isMapExpanded, setIsMapExpanded] = useState(false)
-  const [isMapHidden, setIsMapHidden] = useState(true) // Hidden by default until Google Maps API key is configured
+  const [mapWidth, setMapWidth] = useState(50) // percentage - default 50/50
+  const [viewMode, setViewMode] = useState<ViewMode>('split') // Default to split view
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [isHeaderHidden, setIsHeaderHidden] = useState(false)
@@ -515,38 +514,6 @@ export default function StudentsSplitScreen() {
     return matchesSearch && matchesStatus && matchesStatFilter
   })
 
-  // Draggable divider handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || !containerRef.current) return
-    
-    const containerRect = containerRef.current.getBoundingClientRect()
-    const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100
-    
-    // Constrain between 25% and 70%
-    const clampedWidth = Math.min(70, Math.max(25, newWidth))
-    setMapWidth(clampedWidth)
-  }, [isDragging])
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false)
-  }, [])
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp])
-
   // Base locations for students without geocoded addresses (Tomball, TX area)
   const baseLocations = useMemo(() => [
     { lat: 30.0974, lng: -95.6163 },
@@ -637,10 +604,18 @@ export default function StudentsSplitScreen() {
           <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Students</h1>
           <p className={`text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>Manage your dojo's student roster</p>
         </div>
-        <Button className="bg-[#E73C3C] hover:bg-[#E73C3C]/90 rounded-xl shadow-[0_2px_8px_rgba(231,60,60,0.25)] hover:shadow-[0_4px_12px_rgba(231,60,60,0.35)] transition-all">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Student
-        </Button>
+        <div className="flex items-center gap-4">
+          {/* View Mode Toggle */}
+          <ViewModeToggle
+            mode={viewMode}
+            onChange={setViewMode}
+            isDarkMode={isDarkMode}
+          />
+          <Button className="bg-[#E73C3C] hover:bg-[#E73C3C]/90 rounded-xl shadow-[0_2px_8px_rgba(231,60,60,0.25)] hover:shadow-[0_4px_12px_rgba(231,60,60,0.35)] transition-all">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Student
+          </Button>
+        </div>
       </div>
 
       {/* Split Screen Container */}
@@ -649,130 +624,64 @@ export default function StudentsSplitScreen() {
         className={`flex-1 overflow-hidden ${
           isMobile ? 'flex flex-col' : 'flex'
         }`}
-        style={{ cursor: isDragging && !isMobile && !isTablet ? 'col-resize' : 'default' }}
       >
-        {/* Left Pane - Map + Stats */}
-        {!isMapHidden && (
+        {/* Left Pane - Map (visible in split and fullMap modes) */}
+        {(viewMode === 'split' || viewMode === 'fullMap') && (
           <div 
-          className={`flex flex-col transition-all duration-300 p-4 ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-white'} ${
-            isMapExpanded ? 'w-full' : ''
-          } ${
-            isMobile ? 'h-[350px] flex-shrink-0' : 'h-[calc(100vh-200px)]'
-          }`}
-          style={isMobile ? {} : { 
-            flexBasis: isMapExpanded ? '100%' : isTablet ? '35%' : `${mapWidth}%`,
-            minWidth: isMapExpanded ? '100%' : isTablet ? '35%' : '25%',
-            maxWidth: isMapExpanded ? '100%' : isTablet ? '35%' : '70%'
-          }}
-        >
-          {/* Map Card Container - Apple-style minimal grey design */}
-          <div className={`flex flex-col border rounded-[18px] overflow-hidden flex-1 ${isDarkMode ? 'bg-gradient-to-b from-[#18181A] to-[#1A1A1C] border-white/5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]' : 'bg-gradient-to-b from-slate-50 to-slate-100 border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)]'}`}>
-            {/* Map Header - Expand/Collapse only */}
-            <div className={`backdrop-blur-sm border-b px-4 py-2 flex items-center justify-end ${isDarkMode ? 'bg-[#18181A]/80 border-white/5' : 'bg-white/80 border-slate-200/60'}`}>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`h-9 w-9 p-0 rounded-xl ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
-                onClick={() => setIsMapExpanded(!isMapExpanded)}
-              >
-                {isMapExpanded ? (
-                  <Minimize2 className={`h-4 w-4 ${isDarkMode ? 'text-white/60' : 'text-slate-600'}`} />
-                ) : (
-                  <Maximize2 className={`h-4 w-4 ${isDarkMode ? 'text-white/60' : 'text-slate-600'}`} />
-                )}
-              </Button>
-            </div>
-
-            {/* Map Container with Vertical Filters */}
-            <div className="flex-1 relative min-h-[300px] flex">
-              {/* Vertical Filter Buttons */}
-              <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
-                {[
-                  { label: 'Active', icon: Users, active: true },
-                  { label: 'Missing', icon: X, active: false },
-                  { label: 'Nearby', icon: MapPin, active: false },
-                  { label: 'New', icon: Plus, active: false },
-                ].map((filter, idx) => (
-                  <button
-                    key={idx}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all shadow-sm ${
-                      filter.active 
-                        ? 'bg-[#E73C3C] text-white shadow-[0_2px_8px_rgba(231,60,60,0.3)]' 
-                        : isDarkMode 
-                          ? 'bg-[#18181A]/95 text-white/70 hover:bg-[#202022] hover:shadow-md border border-white/10'
-                          : 'bg-white/95 text-slate-600 hover:bg-white hover:shadow-md border border-slate-200/60'
-                    }`}
-                  >
-                    <filter.icon className="h-3.5 w-3.5" />
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-
+            className={`flex flex-col transition-all duration-300 ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-white'} ${
+              viewMode === 'fullMap' ? 'w-full' : ''
+            } ${
+              isMobile ? 'h-[350px] flex-shrink-0' : 'h-[calc(100vh-200px)]'
+            }`}
+            style={isMobile || viewMode === 'fullMap' ? {} : { 
+              flexBasis: `${mapWidth}%`,
+              minWidth: '25%',
+              maxWidth: '75%'
+            }}
+          >
+            {/* Map Container - Full height, no card wrapper */}
+            <div className="flex-1 relative min-h-[300px]" style={{ position: 'relative', zIndex: 0 }}>
               {/* Map View - Leaflet/OpenStreetMap */}
               <LeafletMap
                 markers={leafletMarkers}
                 selectedStudentId={selectedStudent ? String(selectedStudent.id) : null}
-                onMarkerClick={handleMarkerClick}
+                onMarkerClick={(studentId) => {
+                  const student = students.find(s => String(s.id) === studentId)
+                  if (student) {
+                    setSelectedStudent(student)
+                    setHighlightedStudentId(student.id)
+                    // Scroll to student in list if in split mode
+                    if (viewMode === 'split') {
+                      const studentCard = document.getElementById(`student-card-${student.id}`)
+                      studentCard?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }
+                    setIsModalOpen(true)
+                  }
+                }}
                 isDarkMode={isDarkMode}
                 className="w-full h-full absolute inset-0"
               />
             </div>
-
-            {/* Stats Strip - inside card with gradient */}
-            <div className={`border-t p-4 ${isDarkMode ? 'bg-gradient-to-r from-[#15181d] to-[#1a1d23] border-[#252a32]' : 'bg-gradient-to-r from-white to-slate-50 border-slate-200/60'}`}>
-              <StatsStrip 
-                stats={stats} 
-                selectedStat={selectedStatFilter}
-                onStatSelect={setSelectedStatFilter}
-                isDarkMode={isDarkMode}
-              />
-            </div>
-          </div>{/* End Map Card Container */}
-          
-          {/* Mobile Map Toggle */}
-          {isMobile && (
-            <button
-              onClick={() => setIsMapHidden(true)}
-              className={`border rounded-lg mt-2 py-2 text-center text-sm ${isDarkMode ? 'bg-[#18181A] border-white/10 text-white/60 hover:bg-[#202022]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-            >
-              Hide Map
-            </button>
-          )}
           </div>
         )}
 
-        {/* Show Map Button - visible when map is hidden */}
-        {isMapHidden && (
-          <button
-            onClick={() => setIsMapHidden(false)}
-            className={`border-b py-3 text-center text-sm text-primary font-medium ${isDarkMode ? 'bg-[#18181A] border-white/10 hover:bg-[#202022]' : 'bg-white border-slate-200 hover:bg-slate-50'} ${isMobile ? '' : 'absolute top-20 left-4 z-20 rounded-lg px-4 border shadow-lg'}`}
-          >
-            <MapPin className="h-4 w-4 inline mr-2" />
-            Show Map
-          </button>
+        {/* Draggable Divider - Split mode only, Desktop */}
+        {viewMode === 'split' && !isMobile && !isTablet && (
+          <ResizableDivider
+            onResize={(width) => setMapWidth(width)}
+            onDoubleClick={() => setMapWidth(50)}
+            containerRef={containerRef as React.RefObject<HTMLDivElement>}
+            isDarkMode={isDarkMode}
+          />
         )}
 
-        {/* Draggable Divider - Desktop only - Polished Apple-style */}
-        {!isMapExpanded && !isMobile && !isTablet && (
-          <div 
-            className="w-3 cursor-col-resize relative group flex items-center justify-center"
-            onMouseDown={handleMouseDown}
-          >
-            {/* Divider Track */}
-            <div className="absolute inset-y-4 w-[3px] rounded-full bg-white/40 shadow-[0_0_8px_rgba(0,0,0,0.08)] group-hover:bg-white/60 group-hover:shadow-[0_0_12px_rgba(0,0,0,0.12)] transition-all duration-200" />
-            {/* Grab Handle */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-12 rounded-full bg-white/50 shadow-[0_2px_8px_rgba(0,0,0,0.1)] group-hover:bg-white/70 group-hover:h-16 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-200" />
-          </div>
-        )}
-
-        {/* Right Pane - Search + Cards */}
-        {!isMapExpanded && (
+        {/* Right Pane - Search + Cards (visible in split and list modes) */}
+        {(viewMode === 'split' || viewMode === 'list') && (
           <div 
             className={`flex flex-col ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-b from-white to-slate-50/50'} ${
-              isMobile ? 'flex-1' : 'h-[calc(100vh-140px)]'
+              isMobile ? 'flex-1' : 'h-[calc(100vh-200px)]'
             }`}
-            style={isMobile ? {} : { flex: 1, paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '16px' }}
+            style={isMobile || viewMode === 'list' ? { flex: 1, padding: '16px' } : { flex: 1, padding: '16px' }}
           >
             {/* Students List Header */}
             <div className="space-y-4">
@@ -874,17 +783,19 @@ export default function StudentsSplitScreen() {
                 </div>
               ) : (
                 filteredStudents.map((student) => (
-                  <StudentCard
-                    key={student.id}
-                    student={student}
-                    isHighlighted={highlightedStudentId === student.id}
-                    schoolLogo={schoolLogo}
-                    isDarkMode={isDarkMode}
-                    onClick={() => {
-                      setSelectedStudent(student)
-                      setIsModalOpen(true)
-                    }}
-                  />
+                  <div key={student.id} id={`student-card-${student.id}`}>
+                    <StudentCard
+                      student={student}
+                      isHighlighted={highlightedStudentId === student.id}
+                      schoolLogo={schoolLogo}
+                      isDarkMode={isDarkMode}
+                      onClick={() => {
+                        setSelectedStudent(student)
+                        setHighlightedStudentId(student.id)
+                        setIsModalOpen(true)
+                      }}
+                    />
+                  </div>
                 ))
               )}
             </div>
@@ -899,10 +810,7 @@ export default function StudentsSplitScreen() {
         onClose={() => {
           setIsModalOpen(false)
           setSelectedStudent(null)
-          if (isFullMapMode) {
-            setIsFullMapMode(false)
-            setHighlightedMapStudent(null)
-          }
+          setHighlightedStudentId(null)
         }}
         onEditProfile={(student) => {
           console.log('Edit profile:', student.id)
@@ -918,13 +826,13 @@ export default function StudentsSplitScreen() {
         }}
         onStudentUpdated={handleStudentUpdated}
         onViewOnMap={(student) => {
-          // Keep the student selected and modal open
+          // Switch to full map mode and select student
           setSelectedStudent(student)
-          setHighlightedMapStudent(student)
-          setIsModalOpen(true)
-          setIsFullMapMode(true)
+          setHighlightedStudentId(student.id)
+          setViewMode('fullMap')
+          setIsModalOpen(false)
         }}
-        isFullMapMode={isFullMapMode}
+        isFullMapMode={viewMode === 'fullMap'}
       />
 
       {/* Notes Drawer */}
@@ -941,54 +849,15 @@ export default function StudentsSplitScreen() {
         }}
       />
 
-      {/* Full Map Mode - Clean full-screen map view */}
-      {isFullMapMode && (
-        <div className="fixed inset-0 z-40 pt-[72px]">
-          {/* Full Screen Map - Edge to edge, no backdrop, z-index 0 */}
-          <div className="absolute inset-0 top-0" style={{ position: 'relative', zIndex: 0 }}>
-            <LeafletMap
-              markers={leafletMarkers}
-              selectedStudentId={highlightedMapStudent ? String(highlightedMapStudent.id) : (selectedStudent ? String(selectedStudent.id) : null)}
-              onMarkerClick={(studentId) => {
-                const student = students.find(s => String(s.id) === studentId)
-                if (student) {
-                  setSelectedStudent(student)
-                  setHighlightedMapStudent(student)
-                }
-              }}
-              isDarkMode={isDarkMode}
-              className="w-full h-full"
-            />
-          </div>
-          
-          {/* Exit Full Map Mode Button - Upper Left with Arrow, z-index 100 */}
-          <button
-            onClick={() => {
-              setIsFullMapMode(false)
-              setHighlightedMapStudent(null)
-              setSelectedStudent(null)
-            }}
-            className={`absolute top-4 left-4 z-[100] px-4 py-2.5 rounded-lg shadow-lg border flex items-center gap-2 transition-all ${
-              isDarkMode 
-                ? 'bg-[#1C1C1E] border-white/20 hover:bg-[#2C2C2E]' 
-                : 'bg-white border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <ArrowLeft className={`h-4 w-4 ${isDarkMode ? 'text-white' : 'text-slate-700'}`} />
-            <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>Exit Full Map</span>
-          </button>
-        </div>
-      )}
-
-      {/* Student Card Overlay - Portal to document.body with z-index 9999 */}
-      <MapOverlay isVisible={isFullMapMode && !!selectedStudent}>
+      {/* Student Card Overlay - Portal for Full Map mode */}
+      <MapOverlay isVisible={viewMode === 'fullMap' && !!selectedStudent}>
         {selectedStudent && (
           <StudentCardOverlay
             student={selectedStudent}
             onClose={() => {
               // Close card but stay in map mode
               setSelectedStudent(null)
-              setHighlightedMapStudent(null)
+              setHighlightedStudentId(null)
             }}
             onViewNotes={() => {
               setNotesStudent(selectedStudent)

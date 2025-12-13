@@ -2798,3 +2798,17 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Remove fog/dim background in full map mode
 - [x] Close card keeps map mode, exit map mode restores split layout
 - [x] Keep gear button visible but below card overlay
+
+## ✅ COMPLETED: Restore Split-Screen Layout for Students Page
+- [x] Create draggable divider component with handle/grip
+- [x] Implement split layout: Map LEFT, List RIGHT
+- [x] Add mode toggle (Split View, Full Map, List View) in top menu
+- [x] Replace "Show Map" button with segmented toggle
+- [x] Double-click divider resets to 50/50
+- [x] Map-list sync: selecting student highlights marker and centers map
+- [x] Map-list sync: clicking marker highlights student in list and scrolls to it
+- [x] Search/filters affect both list and map markers
+- [x] Full Map View: markers show avatar + name + rank + status
+- [x] Full Map View: clicking marker opens Student Card overlay
+- [x] Keep existing student cards unchanged
+- [x] Remove empty gray gaps, flush aligned layout
