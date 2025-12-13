@@ -2985,3 +2985,69 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Max animation duration: 180ms
 - [x] Ease: ease-out only
 - [x] No bouncing, no dramatic scaling, no looping
+
+
+## DojoFlow Leads Signature Command Center Enhancement
+
+### Overall Style & Tone
+- [ ] Apple-inspired, premium, calm, confident design
+- [ ] Light mode first-class with soft gradients and glassmorphism
+- [ ] Rounded corners (16-20px), no harsh borders or heavy shadows
+- [ ] Subtle, purposeful motion only
+
+### Top Stats Row Enhancement
+- [ ] Status indicator dot on each card (green/yellow/red)
+- [ ] Resolve Mode ON: green stats soften, yellow pulse once, red gain glow
+- [ ] Kai Alerts card has strongest visual priority in Resolve Mode
+
+### Pipeline Stages Visual Flow
+- [ ] Thin connector lines between stages
+- [ ] Hover stage: leads in that stage highlight, others dim
+
+### Lead Cards Major Upgrade
+- [ ] Left edge status strip (3-4px): green (0-5 days), yellow (6-10 days), red (10+ days)
+- [ ] Connector lines between leads (SVG wires, 10-15% opacity)
+- [ ] Green/yellow/red connectors based on lead age
+- [ ] Kai glyph (icon only) on flagged leads with tooltip "Kai recommends action"
+
+### Resolve Mode Critical Features
+- [ ] Page background subtly darkens
+- [ ] Green leads fade back
+- [ ] Yellow + Red leads rise visually (z-index + slight scale)
+- [ ] Connector lines glow based on urgency
+- [ ] Kai Alerts card pulses once on activation
+
+### Micro-Interactions
+- [ ] Hover lead: visual attention toward next pipeline stage
+- [ ] "Move to Stage" hint animates toward correct stage icon
+
+
+## ✅ COMPLETED: DojoFlow Leads Signature Command Center Enhancements
+### Stat Cards (Signal Blocks)
+- [x] Status indicator light in top-right (green/yellow/red)
+- [x] Indicator pulses ONLY when Resolve Mode is ON
+- [x] Soft gradient background, subtle glow on hover only
+- [x] Green softens, yellow pulses gently, red glows when Resolve Mode ON
+
+### Lead Cards Enhancement
+- [x] Left edge status strip (3-4px) with age-based color
+- [x] Connector lines (10-15% opacity) below cards
+- [x] Kai tooltip on hover showing recommendation
+- [x] Resolve Mode: green leads dim, yellow/red elevate
+
+### Stage Rail Flow Intelligence
+- [x] Thin connector lines between stages
+- [x] Lines animate left → right subtly
+- [x] Color logic based on stage health
+- [x] Hover highlight behavior on stage pills
+
+### Resolve Mode Visual Effects
+- [x] Background dims slightly when ON
+- [x] Green leads fade back (opacity 40%)
+- [x] Yellow/Red leads remain fully opaque and elevate
+- [x] Stat cards pulse once (not repeatedly)
+
+### Motion Rules (Strict)
+- [x] Max animation duration: 180ms
+- [x] Ease: ease-out only
+- [x] No bouncing, no dramatic scaling, no looping

@@ -84,7 +84,7 @@ export default function LeadStatTiles({
     if (isResolveMode && !hasPulsed) {
       setHasPulsed(true);
       // Reset after animation completes
-      const timer = setTimeout(() => setHasPulsed(false), 180);
+      const timer = setTimeout(() => setHasPulsed(false), 500);
       return () => clearTimeout(timer);
     }
     if (!isResolveMode) {
@@ -136,80 +136,97 @@ export default function LeadStatTiles({
     },
   ];
 
-  // Health color mapping
-  const healthColors = {
-    green: {
-      dot: 'bg-green-500',
-      glow: 'shadow-green-500/20',
-      gradient: isDarkMode ? 'from-green-900/15 to-green-800/5' : 'from-green-50/80 to-green-100/40',
-      icon: 'text-green-500',
-    },
-    yellow: {
-      dot: 'bg-amber-500',
-      glow: 'shadow-amber-500/20',
-      gradient: isDarkMode ? 'from-amber-900/15 to-amber-800/5' : 'from-amber-50/80 to-amber-100/40',
-      icon: 'text-amber-500',
-    },
-    red: {
-      dot: 'bg-red-500',
-      glow: 'shadow-red-500/20',
-      gradient: isDarkMode ? 'from-red-900/15 to-red-800/5' : 'from-red-50/80 to-red-100/40',
-      icon: 'text-red-500',
-    },
-  };
-
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 px-4 md:px-6 py-4">
       {tiles.map((tile) => {
         const Icon = tile.icon;
         const isActive = activeFilter === tile.id;
-        const colors = healthColors[tile.health];
-        const shouldPulse = isResolveMode && hasPulsed;
+        const health = tile.health;
         
-        // In Resolve Mode, prioritize Kai Alerts tile
-        const isKaiPrioritized = isResolveMode && tile.id === 'kai';
+        // Resolve Mode visual effects per health status
+        const isGreen = health === 'green';
+        const isYellow = health === 'yellow';
+        const isRed = health === 'red';
+        const isKaiTile = tile.id === 'kai';
+        
+        // In Resolve Mode: green softens, yellow pulses once, red glows, Kai prioritized
+        const resolveModeClass = isResolveMode ? (
+          isGreen ? 'opacity-60' :
+          isYellow ? (hasPulsed ? 'scale-[1.02]' : '') :
+          isRed ? 'shadow-lg shadow-red-500/30' :
+          ''
+        ) : '';
+        
+        // Kai Alerts gets strongest priority in Resolve Mode
+        const kaiPriorityClass = isResolveMode && isKaiTile 
+          ? 'ring-2 ring-[#E53935]/60 shadow-xl shadow-[#E53935]/20 scale-[1.02]' 
+          : '';
+        
+        // Health-based styling
+        const healthStyles = {
+          green: {
+            dot: 'bg-green-500',
+            gradient: isDarkMode ? 'from-green-900/10 to-transparent' : 'from-green-50/60 to-white',
+            icon: 'text-green-500',
+            border: isDarkMode ? 'border-green-500/20' : 'border-green-200/50',
+          },
+          yellow: {
+            dot: 'bg-amber-500',
+            gradient: isDarkMode ? 'from-amber-900/15 to-transparent' : 'from-amber-50/70 to-white',
+            icon: 'text-amber-500',
+            border: isDarkMode ? 'border-amber-500/25' : 'border-amber-200/60',
+          },
+          red: {
+            dot: 'bg-red-500',
+            gradient: isDarkMode ? 'from-red-900/20 to-transparent' : 'from-red-50/80 to-white',
+            icon: 'text-red-500',
+            border: isDarkMode ? 'border-red-500/30' : 'border-red-200/70',
+          },
+        };
+        
+        const styles = healthStyles[health];
         
         return (
           <button
             key={tile.id}
             onClick={() => onFilterClick(isActive ? null : tile.id)}
             className={`
-              relative group p-4 md:p-5 rounded-[14px]
+              relative group p-4 md:p-5 rounded-[16px]
               transition-all duration-[180ms] ease-out
-              ${isDarkMode 
-                ? `bg-gradient-to-br ${colors.gradient} border border-white/10` 
-                : `bg-gradient-to-br ${colors.gradient} border border-slate-200/30`
-              }
-              ${isActive 
-                ? 'ring-2 ring-[#E53935] ring-offset-2 ring-offset-transparent' 
-                : ''
-              }
-              ${isKaiPrioritized ? 'ring-2 ring-[#E53935]/50' : ''}
-              hover:shadow-md hover:${colors.glow}
-              ${shouldPulse ? 'scale-[1.02]' : ''}
+              bg-gradient-to-br ${styles.gradient}
+              border ${styles.border}
+              ${isDarkMode ? 'backdrop-blur-sm' : 'bg-white/90 backdrop-blur-sm'}
+              ${isActive ? 'ring-2 ring-[#E53935] ring-offset-2 ring-offset-transparent' : ''}
+              ${resolveModeClass}
+              ${kaiPriorityClass}
+              hover:shadow-md hover:-translate-y-0.5
             `}
           >
-            {/* Status indicator light (top-right) */}
+            {/* Status indicator dot (top-right) */}
             <div className="absolute top-3 right-3">
               <div className={`
-                w-2 h-2 rounded-full ${colors.dot}
+                relative w-2.5 h-2.5 rounded-full ${styles.dot}
                 transition-all duration-[180ms] ease-out
-                ${isResolveMode ? 'animate-[pulse_2s_ease-out_1]' : ''}
-              `} />
+              `}>
+                {/* Glow ring for red in Resolve Mode */}
+                {isResolveMode && isRed && (
+                  <div className={`absolute inset-0 rounded-full ${styles.dot} animate-ping opacity-40`} />
+                )}
+              </div>
             </div>
 
             {/* Icon */}
             <div className={`
               w-10 h-10 rounded-xl flex items-center justify-center mb-3
               transition-all duration-[180ms] ease-out
-              ${isDarkMode ? 'bg-white/5' : 'bg-white/60'}
+              ${isDarkMode ? 'bg-white/5' : 'bg-white/70 shadow-sm'}
             `}>
-              <Icon className={`w-5 h-5 ${colors.icon}`} />
+              <Icon className={`w-5 h-5 ${styles.icon}`} />
             </div>
 
             {/* Value */}
             <div className={`
-              text-2xl md:text-3xl font-semibold mb-1
+              text-2xl md:text-3xl font-semibold mb-1 tabular-nums
               transition-all duration-[180ms] ease-out
               ${isDarkMode ? 'text-white' : 'text-slate-800'}
             `}>
@@ -226,7 +243,7 @@ export default function LeadStatTiles({
 
             {/* Active indicator bar */}
             {isActive && (
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#E53935] transition-all duration-[180ms] ease-out" />
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-[#E53935] transition-all duration-[180ms] ease-out" />
             )}
           </button>
         );
