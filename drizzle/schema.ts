@@ -1304,3 +1304,59 @@ export const beltTestRegistrations = mysqlTable("belt_test_registrations", {
 
 export type BeltTestRegistration = typeof beltTestRegistrations.$inferSelect;
 export type InsertBeltTestRegistration = typeof beltTestRegistrations.$inferInsert;
+
+
+/**
+ * Student Portal Messages table
+ * Stores messages between students and instructors/staff
+ */
+export const studentMessages = mysqlTable("student_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to students table - the student in the conversation */
+  studentId: int("studentId").notNull(),
+  /** Sender type: student or staff */
+  senderType: mysqlEnum("senderType", ["student", "staff"]).notNull(),
+  /** Sender ID - studentId if student, staffPinId or userId if staff */
+  senderId: int("senderId").notNull(),
+  /** Sender name for display */
+  senderName: varchar("senderName", { length: 255 }).notNull(),
+  /** Message subject */
+  subject: varchar("subject", { length: 500 }),
+  /** Message content */
+  content: text("content").notNull(),
+  /** Whether the message has been read */
+  isRead: int("isRead").default(0).notNull(),
+  /** Parent message ID for replies (thread support) */
+  parentMessageId: int("parentMessageId"),
+  /** Message priority */
+  priority: mysqlEnum("priority", ["normal", "high", "urgent"]).default("normal").notNull(),
+  /** Read timestamp */
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudentMessage = typeof studentMessages.$inferSelect;
+export type InsertStudentMessage = typeof studentMessages.$inferInsert;
+
+/**
+ * Student Message Attachments table
+ * Stores file attachments for student messages
+ */
+export const studentMessageAttachments = mysqlTable("student_message_attachments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to student_messages table */
+  messageId: int("messageId").notNull(),
+  /** File name */
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  /** File URL in S3 */
+  fileUrl: varchar("fileUrl", { length: 500 }).notNull(),
+  /** File MIME type */
+  mimeType: varchar("mimeType", { length: 100 }),
+  /** File size in bytes */
+  fileSize: int("fileSize"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StudentMessageAttachment = typeof studentMessageAttachments.$inferSelect;
+export type InsertStudentMessageAttachment = typeof studentMessageAttachments.$inferInsert;

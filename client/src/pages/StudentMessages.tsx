@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -14,87 +14,97 @@ import {
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { 
   ArrowLeft,
-  MessageSquare,
   Send,
   Inbox,
   User,
-  Clock
+  Clock,
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  Mail,
+  MailOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { trpc } from "@/lib/trpc";
+
+interface Message {
+  id: number;
+  studentId: number;
+  senderType: "student" | "staff";
+  senderId: number;
+  senderName: string;
+  subject: string | null;
+  content: string;
+  isRead: number;
+  parentMessageId: number | null;
+  priority: "normal" | "high" | "urgent";
+  readAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 /**
  * Student Messages - View and send messages to instructors
  */
 export default function StudentMessages() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<any[]>([]);
-  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [studentId, setStudentId] = useState<number | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showNewMessageDialog, setShowNewMessageDialog] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState("");
   const [newMessageBody, setNewMessageBody] = useState("");
   const [replyText, setReplyText] = useState("");
 
+  // Get student ID from localStorage
   useEffect(() => {
-    // Check if student is logged in
     const isLoggedIn = localStorage.getItem("student_logged_in");
+    const storedStudentId = localStorage.getItem("student_id");
+    
     if (!isLoggedIn) {
       navigate("/student-login");
       return;
     }
-
-    // TODO: Fetch messages from backend API
-    // Mock data for now
-    setMessages([
-      {
-        id: 1,
-        from: "John Smith",
-        subject: "Great progress in class!",
-        preview: "I wanted to let you know that you're doing excellent work...",
-        body: "I wanted to let you know that you're doing excellent work in class. Your technique has improved significantly over the past month. Keep up the great work!",
-        date: "Oct 25, 2025",
-        time: "2:30 PM",
-        read: false,
-        replies: []
-      },
-      {
-        id: 2,
-        from: "Sarah Johnson",
-        subject: "Belt Test Preparation",
-        preview: "Your belt test is scheduled for November 15th...",
-        body: "Your belt test is scheduled for November 15th at 6:00 PM. Please make sure to practice the required forms and techniques. Let me know if you have any questions.",
-        date: "Oct 23, 2025",
-        time: "10:15 AM",
-        read: true,
-        replies: [
-          {
-            id: 1,
-            from: "You",
-            body: "Thank you! I'll be ready.",
-            date: "Oct 23, 2025",
-            time: "11:00 AM"
-          }
-        ]
-      },
-      {
-        id: 3,
-        from: "Admin",
-        subject: "Upcoming Tournament",
-        preview: "We're hosting a tournament on December 5th...",
-        body: "We're hosting a tournament on December 5th. Registration is now open. This is a great opportunity to test your skills in a competitive environment.",
-        date: "Oct 20, 2025",
-        time: "9:00 AM",
-        read: true,
-        replies: []
-      }
-    ]);
+    
+    if (storedStudentId) {
+      setStudentId(parseInt(storedStudentId));
+    }
   }, [navigate]);
 
-  const handleMessageClick = (message: any) => {
+  // Fetch messages from backend
+  const { data: messages = [], isLoading, refetch } = trpc.studentPortal.getMessages.useQuery(
+    { studentId: studentId! },
+    { enabled: !!studentId }
+  );
+
+  // Fetch unread count
+  const { data: unreadCount = 0 } = trpc.studentPortal.getUnreadCount.useQuery(
+    { studentId: studentId! },
+    { enabled: !!studentId }
+  );
+
+  // Send message mutation
+  const sendMessageMutation = trpc.studentPortal.sendMessage.useMutation({
+    onSuccess: () => {
+      setShowNewMessageDialog(false);
+      setNewMessageSubject("");
+      setNewMessageBody("");
+      refetch();
+    },
+  });
+
+  // Mark as read mutation
+  const markAsReadMutation = trpc.studentPortal.markAsRead.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const handleMessageClick = (message: Message) => {
     setSelectedMessage(message);
-    // Mark as read
-    setMessages(messages.map(m => 
-      m.id === message.id ? { ...m, read: true } : m
-    ));
+    // Mark as read if it's from staff and unread
+    if (message.senderType === "staff" && !message.isRead && studentId) {
+      markAsReadMutation.mutate({ messageId: message.id, studentId });
+    }
   };
 
   const handleNewMessage = () => {
@@ -103,43 +113,71 @@ export default function StudentMessages() {
 
   const handleSendNewMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Send message through backend API
-    console.log("Sending message:", { newMessageSubject, newMessageBody });
-    setShowNewMessageDialog(false);
-    setNewMessageSubject("");
-    setNewMessageBody("");
+    if (!studentId || !newMessageBody.trim()) return;
+    
+    sendMessageMutation.mutate({
+      studentId,
+      subject: newMessageSubject || undefined,
+      content: newMessageBody,
+    });
   };
 
   const handleSendReply = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedMessage || !replyText.trim()) return;
+    if (!selectedMessage || !replyText.trim() || !studentId) return;
     
-    // TODO: Send reply through backend API
-    console.log("Sending reply:", replyText);
-    
-    // Add reply to selected message
-    const newReply = {
-      id: selectedMessage.replies.length + 1,
-      from: "You",
-      body: replyText,
-      date: new Date().toLocaleDateString(),
-      time: new Date().toLocaleTimeString()
-    };
-    
-    setSelectedMessage({
-      ...selectedMessage,
-      replies: [...selectedMessage.replies, newReply]
+    sendMessageMutation.mutate({
+      studentId,
+      subject: `Re: ${selectedMessage.subject || "No Subject"}`,
+      content: replyText,
+      parentMessageId: selectedMessage.id,
     });
     
     setReplyText("");
   };
 
-  const unreadCount = messages.filter(m => !m.read).length;
+  const formatDate = (date: Date) => {
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (days === 1) {
+      return "Yesterday";
+    } else if (days < 7) {
+      return d.toLocaleDateString([], { weekday: 'long' });
+    } else {
+      return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent": return "bg-red-600";
+      case "high": return "bg-orange-600";
+      default: return "bg-blue-600";
+    }
+  };
+
+  // Group messages by thread (parent messages only in list)
+  const parentMessages = messages.filter(m => !m.parentMessageId);
+  const getThreadReplies = (messageId: number) => 
+    messages.filter(m => m.parentMessageId === messageId);
+
+  if (!studentId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm">
+      <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -147,23 +185,37 @@ export default function StudentMessages() {
               onClick={() => selectedMessage ? setSelectedMessage(null) : navigate("/student-dashboard")}
               className="text-slate-400 hover:text-white"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              {selectedMessage ? "Back" : "Dashboard"}
             </Button>
             <div>
               <h1 className="text-xl font-bold text-white">Messages</h1>
               <p className="text-xs text-slate-400">
-                {selectedMessage ? selectedMessage.subject : `${unreadCount} unread message${unreadCount !== 1 ? 's' : ''}`}
+                {selectedMessage 
+                  ? selectedMessage.subject || "No Subject"
+                  : `${unreadCount} unread message${unreadCount !== 1 ? 's' : ''}`
+                }
               </p>
             </div>
           </div>
           
-          {APP_LOGO && (
-            <img 
-              src={APP_LOGO} 
-              alt={APP_TITLE} 
-              className="h-10 w-auto"
-            />
-          )}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => refetch()}
+              className="text-slate-400 hover:text-white"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </Button>
+            {APP_LOGO && (
+              <img 
+                src={APP_LOGO} 
+                alt={APP_TITLE} 
+                className="h-10 w-auto"
+              />
+            )}
+          </div>
         </div>
       </header>
 
@@ -181,7 +233,7 @@ export default function StudentMessages() {
                   <div>
                     <h2 className="text-2xl font-bold text-white">Inbox</h2>
                     <p className="text-sm text-slate-400">
-                      {messages.length} message{messages.length !== 1 ? 's' : ''}
+                      {parentMessages.length} conversation{parentMessages.length !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
@@ -194,92 +246,144 @@ export default function StudentMessages() {
                 </Button>
               </div>
 
-              {/* Messages List */}
-              <div className="space-y-3">
-                {messages.map((message) => (
-                  <Card
-                    key={message.id}
-                    onClick={() => handleMessageClick(message)}
-                    className={`bg-slate-900/50 backdrop-blur-sm border-slate-800 p-6 cursor-pointer hover:border-blue-600 transition-colors ${
-                      !message.read ? 'border-l-4 border-l-blue-600' : ''
-                    }`}
+              {/* Loading State */}
+              {isLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!isLoading && parentMessages.length === 0 && (
+                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-800 p-12 text-center">
+                  <div className="p-4 rounded-full bg-slate-800 w-fit mx-auto mb-4">
+                    <Mail className="h-8 w-8 text-slate-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">No messages yet</h3>
+                  <p className="text-slate-400 mb-6">
+                    Start a conversation with your instructors
+                  </p>
+                  <Button
+                    onClick={handleNewMessage}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="p-2 rounded-full bg-blue-600/20">
-                          <User className="h-5 w-5 text-blue-500" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-white">
-                              {message.from}
-                            </h3>
-                            {!message.read && (
-                              <Badge className="bg-blue-600 text-white border-0 text-xs">
-                                New
-                              </Badge>
-                            )}
+                    <Send className="h-4 w-4 mr-2" />
+                    Send First Message
+                  </Button>
+                </Card>
+              )}
+
+              {/* Messages List */}
+              {!isLoading && parentMessages.length > 0 && (
+                <div className="space-y-3">
+                  {parentMessages.map((message) => {
+                    const replies = getThreadReplies(message.id);
+                    const isUnread = message.senderType === "staff" && !message.isRead;
+                    
+                    return (
+                      <Card
+                        key={message.id}
+                        onClick={() => handleMessageClick(message)}
+                        className={`bg-slate-900/50 backdrop-blur-sm border-slate-800 p-6 cursor-pointer hover:border-blue-600 transition-all hover:shadow-lg hover:shadow-blue-900/20 ${
+                          isUnread ? 'border-l-4 border-l-blue-600' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className={`p-2 rounded-full ${message.senderType === 'staff' ? 'bg-blue-600/20' : 'bg-green-600/20'}`}>
+                              {isUnread ? (
+                                <Mail className={`h-5 w-5 ${message.senderType === 'staff' ? 'text-blue-500' : 'text-green-500'}`} />
+                              ) : (
+                                <MailOpen className={`h-5 w-5 ${message.senderType === 'staff' ? 'text-blue-500' : 'text-green-500'}`} />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className={`font-semibold ${isUnread ? 'text-white' : 'text-slate-300'}`}>
+                                  {message.senderType === 'student' ? 'You' : message.senderName}
+                                </h3>
+                                {isUnread && (
+                                  <Badge className="bg-blue-600 text-white border-0 text-xs">
+                                    New
+                                  </Badge>
+                                )}
+                                {message.priority !== 'normal' && (
+                                  <Badge className={`${getPriorityColor(message.priority)} text-white border-0 text-xs`}>
+                                    {message.priority}
+                                  </Badge>
+                                )}
+                                {replies.length > 0 && (
+                                  <Badge variant="outline" className="text-slate-400 border-slate-700 text-xs">
+                                    {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className={`text-sm font-medium mb-1 ${isUnread ? 'text-slate-200' : 'text-slate-400'}`}>
+                                {message.subject || "No Subject"}
+                              </p>
+                              <p className="text-sm text-slate-500 line-clamp-1">
+                                {message.content}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                                <Clock className="h-3 w-3" />
+                                <span>{formatDate(message.createdAt)}</span>
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-sm font-medium text-slate-300 mb-1">
-                            {message.subject}
-                          </p>
-                          <p className="text-sm text-slate-400 line-clamp-1">
-                            {message.preview}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                            <Clock className="h-3 w-3" />
-                            <span>{message.date} at {message.time}</span>
-                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </>
           ) : (
             <>
               {/* Message View */}
               <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-800 p-6 mb-6">
                 <div className="flex items-start gap-4 mb-6 pb-6 border-b border-slate-800">
-                  <div className="p-3 rounded-full bg-blue-600/20">
-                    <User className="h-6 w-6 text-blue-500" />
+                  <div className={`p-3 rounded-full ${selectedMessage.senderType === 'staff' ? 'bg-blue-600/20' : 'bg-green-600/20'}`}>
+                    <User className={`h-6 w-6 ${selectedMessage.senderType === 'staff' ? 'text-blue-500' : 'text-green-500'}`} />
                   </div>
                   <div className="flex-1">
                     <h2 className="text-xl font-bold text-white mb-1">
-                      {selectedMessage.subject}
+                      {selectedMessage.subject || "No Subject"}
                     </h2>
                     <p className="text-sm text-slate-400 mb-2">
-                      From: {selectedMessage.from}
+                      From: {selectedMessage.senderType === 'student' ? 'You' : selectedMessage.senderName}
                     </p>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       <Clock className="h-3 w-3" />
-                      <span>{selectedMessage.date} at {selectedMessage.time}</span>
+                      <span>{new Date(selectedMessage.createdAt).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="prose prose-invert max-w-none">
-                  <p className="text-slate-300 leading-relaxed">
-                    {selectedMessage.body}
+                  <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">
+                    {selectedMessage.content}
                   </p>
                 </div>
 
-                {/* Replies */}
-                {selectedMessage.replies.length > 0 && (
+                {/* Thread Replies */}
+                {getThreadReplies(selectedMessage.id).length > 0 && (
                   <div className="mt-6 pt-6 border-t border-slate-800 space-y-4">
-                    {selectedMessage.replies.map((reply: any) => (
-                      <div key={reply.id} className="pl-6 border-l-2 border-blue-600">
+                    <h3 className="text-sm font-semibold text-slate-400 mb-4">Replies</h3>
+                    {getThreadReplies(selectedMessage.id).map((reply) => (
+                      <div 
+                        key={reply.id} 
+                        className={`pl-6 border-l-2 ${reply.senderType === 'student' ? 'border-green-600' : 'border-blue-600'}`}
+                      >
                         <div className="flex items-center gap-2 mb-2">
                           <p className="text-sm font-semibold text-white">
-                            {reply.from}
+                            {reply.senderType === 'student' ? 'You' : reply.senderName}
                           </p>
                           <span className="text-xs text-slate-500">
-                            {reply.date} at {reply.time}
+                            {new Date(reply.createdAt).toLocaleString()}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-300">
-                          {reply.body}
+                        <p className="text-sm text-slate-300 whitespace-pre-wrap">
+                          {reply.content}
                         </p>
                       </div>
                     ))}
@@ -294,15 +398,19 @@ export default function StudentMessages() {
                     placeholder="Type your reply..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    className="bg-slate-800 border-slate-700 text-white mb-4 min-h-[120px]"
-                    required
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 min-h-[100px] mb-4"
                   />
                   <div className="flex justify-end">
                     <Button
                       type="submit"
+                      disabled={!replyText.trim() || sendMessageMutation.isPending}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
-                      <Send className="h-4 w-4 mr-2" />
+                      {sendMessageMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-2" />
+                      )}
                       Send Reply
                     </Button>
                   </div>
@@ -322,42 +430,44 @@ export default function StudentMessages() {
               Send a message to your instructors
             </DialogDescription>
           </DialogHeader>
-          
           <form onSubmit={handleSendNewMessage} className="space-y-4">
             <div>
+              <label className="text-sm text-slate-400 mb-1 block">Subject</label>
               <Input
-                placeholder="Subject"
+                placeholder="Enter subject..."
                 value={newMessageSubject}
                 onChange={(e) => setNewMessageSubject(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white"
-                required
+                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
               />
             </div>
-
             <div>
+              <label className="text-sm text-slate-400 mb-1 block">Message</label>
               <Textarea
                 placeholder="Type your message..."
                 value={newMessageBody}
                 onChange={(e) => setNewMessageBody(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white min-h-[200px]"
-                required
+                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 min-h-[150px]"
               />
             </div>
-
-            <div className="flex gap-3 pt-4">
+            <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowNewMessageDialog(false)}
-                className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={!newMessageBody.trim() || sendMessageMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Send className="h-4 w-4 mr-2" />
+                {sendMessageMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
                 Send Message
               </Button>
             </div>

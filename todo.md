@@ -3190,3 +3190,4 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Integrate Stripe payment for $50 belt test registration fee
 - [x] Fix navigation on Student Schedule page to return to Dashboard
 - [x] Ensure all buttons work on Student Portal/Dashboard page
+- [x] Connect messaging system to real backend for student-instructor communication

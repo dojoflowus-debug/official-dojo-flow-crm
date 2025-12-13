@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, and, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, staffPins, InsertStaffPin } from "../drizzle/schema";
+import { InsertUser, users, staffPins, InsertStaffPin, studentMessages, studentMessageAttachments, InsertStudentMessage, students } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -938,4 +938,284 @@ export async function getBeltTestRegistrations(testId: number) {
     .where(eq(beltTestRegistrations.testId, testId));
   
   return registrations;
+}
+
+
+// ==================== Student Portal Messaging ====================
+
+/**
+ * Get all messages for a student (inbox)
+ */
+export async function getStudentMessages(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const result = await db
+      .select()
+      .from(studentMessages)
+      .where(eq(studentMessages.studentId, studentId))
+      .orderBy(desc(studentMessages.createdAt));
+    
+    return result;
+  } catch (error) {
+    console.error("Error fetching student messages:", error);
+    return [];
+  }
+}
+
+/**
+ * Get a single message by ID
+ */
+export async function getStudentMessageById(messageId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .select()
+      .from(studentMessages)
+      .where(and(
+        eq(studentMessages.id, messageId),
+        eq(studentMessages.studentId, studentId)
+      ))
+      .limit(1);
+    
+    return result[0] || null;
+  } catch (error) {
+    console.error("Error fetching student message:", error);
+    return null;
+  }
+}
+
+/**
+ * Get message thread (message and its replies)
+ */
+export async function getMessageThread(messageId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    // Get the original message and all replies
+    const result = await db
+      .select()
+      .from(studentMessages)
+      .where(and(
+        eq(studentMessages.studentId, studentId),
+        or(
+          eq(studentMessages.id, messageId),
+          eq(studentMessages.parentMessageId, messageId)
+        )
+      ))
+      .orderBy(studentMessages.createdAt);
+    
+    return result;
+  } catch (error) {
+    console.error("Error fetching message thread:", error);
+    return [];
+  }
+}
+
+/**
+ * Send a new message (from student)
+ */
+export async function sendStudentMessage(data: {
+  studentId: number;
+  subject?: string;
+  content: string;
+  parentMessageId?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    // Get student name
+    const student = await db
+      .select({ firstName: students.firstName, lastName: students.lastName })
+      .from(students)
+      .where(eq(students.id, data.studentId))
+      .limit(1);
+    
+    const studentName = student[0] 
+      ? `${student[0].firstName} ${student[0].lastName}`
+      : "Student";
+
+    const result = await db.insert(studentMessages).values({
+      studentId: data.studentId,
+      senderType: "student",
+      senderId: data.studentId,
+      senderName: studentName,
+      subject: data.subject || null,
+      content: data.content,
+      parentMessageId: data.parentMessageId || null,
+      isRead: 0,
+      priority: "normal",
+    });
+
+    return { success: true, messageId: result[0].insertId };
+  } catch (error) {
+    console.error("Error sending student message:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send a message from staff to student
+ */
+export async function sendStaffMessageToStudent(data: {
+  studentId: number;
+  staffId: number;
+  staffName: string;
+  subject?: string;
+  content: string;
+  parentMessageId?: number;
+  priority?: "normal" | "high" | "urgent";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(studentMessages).values({
+      studentId: data.studentId,
+      senderType: "staff",
+      senderId: data.staffId,
+      senderName: data.staffName,
+      subject: data.subject || null,
+      content: data.content,
+      parentMessageId: data.parentMessageId || null,
+      isRead: 0,
+      priority: data.priority || "normal",
+    });
+
+    return { success: true, messageId: result[0].insertId };
+  } catch (error) {
+    console.error("Error sending staff message:", error);
+    throw error;
+  }
+}
+
+/**
+ * Mark a message as read
+ */
+export async function markMessageAsRead(messageId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    await db
+      .update(studentMessages)
+      .set({ 
+        isRead: 1,
+        readAt: new Date()
+      })
+      .where(and(
+        eq(studentMessages.id, messageId),
+        eq(studentMessages.studentId, studentId)
+      ));
+    
+    return true;
+  } catch (error) {
+    console.error("Error marking message as read:", error);
+    return false;
+  }
+}
+
+/**
+ * Get unread message count for a student
+ */
+export async function getUnreadMessageCount(studentId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+
+  try {
+    const result = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(studentMessages)
+      .where(and(
+        eq(studentMessages.studentId, studentId),
+        eq(studentMessages.isRead, 0),
+        eq(studentMessages.senderType, "staff") // Only count staff messages as unread
+      ));
+    
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error("Error getting unread count:", error);
+    return 0;
+  }
+}
+
+/**
+ * Get all students for staff messaging interface
+ */
+export async function getStudentsForMessaging() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const result = await db
+      .select({
+        id: students.id,
+        firstName: students.firstName,
+        lastName: students.lastName,
+        email: students.email,
+        phone: students.phone,
+        beltRank: students.beltRank,
+        status: students.status,
+        photoUrl: students.photoUrl,
+      })
+      .from(students)
+      .where(eq(students.status, "Active"))
+      .orderBy(students.lastName, students.firstName);
+    
+    return result;
+  } catch (error) {
+    console.error("Error fetching students for messaging:", error);
+    return [];
+  }
+}
+
+/**
+ * Get message history between staff and a specific student
+ */
+export async function getStaffStudentMessageHistory(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const result = await db
+      .select()
+      .from(studentMessages)
+      .where(eq(studentMessages.studentId, studentId))
+      .orderBy(desc(studentMessages.createdAt))
+      .limit(100);
+    
+    return result;
+  } catch (error) {
+    console.error("Error fetching message history:", error);
+    return [];
+  }
+}
+
+/**
+ * Delete a message (soft delete or hard delete based on requirements)
+ */
+export async function deleteStudentMessage(messageId: number, studentId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    // Only allow deleting messages sent by the student
+    await db
+      .delete(studentMessages)
+      .where(and(
+        eq(studentMessages.id, messageId),
+        eq(studentMessages.studentId, studentId),
+        eq(studentMessages.senderType, "student")
+      ));
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    return false;
+  }
 }

@@ -218,6 +218,13 @@
       "when": 1765611539976,
       "tag": "0030_secret_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1765612929457,
+      "tag": "0031_natural_captain_cross",
+      "breakpoints": true
     }
   ]
 }

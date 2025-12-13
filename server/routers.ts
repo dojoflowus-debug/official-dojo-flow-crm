@@ -1771,6 +1771,84 @@ export const appRouter = router({
           return { success: false, error: error.message };
         }
       }),
+
+    // ============================================
+    // Messaging Procedures
+    // ============================================
+
+    // Get all messages for a student
+    getMessages: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getStudentMessages } = await import("./db");
+        return await getStudentMessages(input.studentId);
+      }),
+
+    // Get a single message with thread
+    getMessage: publicProcedure
+      .input(z.object({
+        messageId: z.number(),
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getStudentMessageById, getMessageThread, markMessageAsRead } = await import("./db");
+        
+        // Mark as read
+        await markMessageAsRead(input.messageId, input.studentId);
+        
+        // Get message and thread
+        const message = await getStudentMessageById(input.messageId, input.studentId);
+        const thread = await getMessageThread(input.messageId, input.studentId);
+        
+        return { message, thread };
+      }),
+
+    // Send a message (from student)
+    sendMessage: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        subject: z.string().optional(),
+        content: z.string().min(1),
+        parentMessageId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { sendStudentMessage } = await import("./db");
+        return await sendStudentMessage(input);
+      }),
+
+    // Get unread message count
+    getUnreadCount: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getUnreadMessageCount } = await import("./db");
+        return await getUnreadMessageCount(input.studentId);
+      }),
+
+    // Mark message as read
+    markAsRead: publicProcedure
+      .input(z.object({
+        messageId: z.number(),
+        studentId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { markMessageAsRead } = await import("./db");
+        return await markMessageAsRead(input.messageId, input.studentId);
+      }),
+
+    // Delete a message (only student's own messages)
+    deleteMessage: publicProcedure
+      .input(z.object({
+        messageId: z.number(),
+        studentId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { deleteStudentMessage } = await import("./db");
+        return await deleteStudentMessage(input.messageId, input.studentId);
+      }),
   }),
 });
 
