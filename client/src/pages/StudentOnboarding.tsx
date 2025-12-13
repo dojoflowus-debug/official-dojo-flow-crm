@@ -240,12 +240,13 @@ export default function StudentOnboarding() {
       });
       
       if (result.success && result.studentId) {
-        // Store student info and navigate to confirmation
+        // Store student info
         localStorage.setItem("student_logged_in", "true");
         localStorage.setItem("student_name", `${firstName} ${lastName}`);
         localStorage.setItem("student_id", result.studentId.toString());
         
-        setStep(3);
+        // Navigate to waiver signing page
+        navigate(`/waiver-signing?studentId=${result.studentId}&programId=${selectedSchool.id}`);
       } else {
         alert(result.error || 'Failed to create account');
       }

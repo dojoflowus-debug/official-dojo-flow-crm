@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO `programs` (`name`, `description`, `monthly_price`, `waiver_required`, `payment_required`, `trial_type`, `trial_length_days`, `approval_required`, `is_active`) VALUES \n('Kids Karate', 'Martial arts training for children ages 4-12', 9900, 1, 1, 'free', 7, 0, 1),\n('Teen Martial Arts', 'Advanced training for teenagers ages 13-17', 12900, 1, 1, 'prorated', 14, 0, 1),\n('Adult Self Defense', 'Comprehensive self-defense for adults 18+', 14900, 1, 1, 'none', 0, 0, 1),\n('Competition Team', 'Elite training for tournament competitors', 19900, 1, 1, 'none', 0, 1, 1)\nON DUPLICATE KEY UPDATE name=name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO `programs` (`name`, `description`, `monthly_price`, `waiver_required`, `payment_required`, `trial_type`, `trial_length_days`, `approval_required`, `is_active`) VALUES \n('Kids Karate', 'Martial arts training for children ages 4-12', 9900, 1, 1, 'free', 7, 0, 1),\n('Teen Martial Arts', 'Advanced training for teenagers ages 13-17', 12900, 1, 1, 'prorated', 14, 0, 1),\n('Adult Self Defense', 'Comprehensive self-defense for adults 18+', 14900, 1, 1, 'none', 0, 0, 1),\n('Competition Team', 'Elite training for tournament competitors', 19900, 1, 1, 'none', 0, 1, 1)\nON DUPLICATE KEY UPDATE name=name;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'monthly_price' in 'field list'"
+  ]
+}

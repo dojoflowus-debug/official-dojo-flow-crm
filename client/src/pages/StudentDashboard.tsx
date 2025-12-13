@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   Sparkles,
   Loader2,
-  Award
+  Award,
+  FileText,
+  Download
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -605,6 +607,43 @@ export default function StudentDashboard() {
                   </Button>
                 </div>
               )}
+            </SoftCard>
+
+            {/* My Documents */}
+            <SoftCard className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">My Documents</h2>
+                <Button 
+                  variant="ghost" 
+                  className="text-gray-500 hover:text-gray-900"
+                  onClick={() => navigate("/student-documents")}
+                >
+                  View All <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {/* Signed Waiver */}
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Liability Waiver</p>
+                      <p className="text-xs text-gray-500">Signed on enrollment</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Placeholder for more documents */}
+                <p className="text-sm text-gray-400 text-center py-2">
+                  Certificates and receipts will appear here
+                </p>
+              </div>
             </SoftCard>
           </div>
         </div>

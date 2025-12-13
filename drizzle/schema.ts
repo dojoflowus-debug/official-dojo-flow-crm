@@ -363,6 +363,19 @@ export const programs = mysqlTable("programs", {
   allowAutopilot: int("allowAutopilot").default(0),
   description: text("description"),
   isActive: int("isActive").default(1).notNull(),
+  // Waiver & Payment Configuration
+  /** Whether a liability waiver is required for this program */
+  waiverRequired: int("waiverRequired").default(1).notNull(),
+  /** Whether payment is required before enrollment */
+  paymentRequired: int("paymentRequired").default(1).notNull(),
+  /** Whether instructor approval is required */
+  approvalRequired: int("approvalRequired").default(0).notNull(),
+  /** Trial configuration: 'none', 'free', 'prorated' */
+  trialType: mysqlEnum("trialType", ["none", "free", "prorated"]).default("none"),
+  /** Trial length in days (1-30) */
+  trialLengthDays: int("trialLengthDays").default(7),
+  /** Trial price in cents (for prorated trials) */
+  trialPrice: int("trialPrice").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1402,3 +1415,128 @@ export const studentPasswords = mysqlTable("student_passwords", {
 
 export type StudentPassword = typeof studentPasswords.$inferSelect;
 export type InsertStudentPassword = typeof studentPasswords.$inferInsert;
+
+
+/**
+ * Waiver Templates table - Stores liability waiver content per program
+ */
+export const waiverTemplates = mysqlTable("waiver_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Program ID this waiver applies to (null = default waiver for all) */
+  programId: int("programId"),
+  /** Waiver title */
+  title: varchar("title", { length: 255 }).notNull(),
+  /** Full waiver content in HTML/Markdown */
+  content: text("content").notNull(),
+  /** Version number for tracking updates */
+  version: int("version").default(1).notNull(),
+  /** Whether this waiver is currently active */
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WaiverTemplate = typeof waiverTemplates.$inferSelect;
+export type InsertWaiverTemplate = typeof waiverTemplates.$inferInsert;
+
+/**
+ * Signed Waivers table - Records of signed liability waivers
+ */
+export const signedWaivers = mysqlTable("signed_waivers", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student who the waiver is for */
+  studentId: int("studentId").notNull(),
+  /** Waiver template that was signed */
+  waiverTemplateId: int("waiverTemplateId").notNull(),
+  /** Program ID at time of signing */
+  programId: int("programId"),
+  /** Who signed: 'student' or 'guardian' */
+  signerType: mysqlEnum("signerType", ["student", "guardian"]).notNull(),
+  /** Name of the person who signed */
+  signerName: varchar("signerName", { length: 255 }).notNull(),
+  /** Signer's email */
+  signerEmail: varchar("signerEmail", { length: 320 }),
+  /** Base64 encoded signature image data */
+  signatureData: text("signatureData").notNull(),
+  /** URL to the stored PDF copy */
+  pdfUrl: varchar("pdfUrl", { length: 500 }),
+  /** IP address at time of signing */
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  /** User agent at time of signing */
+  userAgent: text("userAgent"),
+  /** Timestamp when signed */
+  signedAt: timestamp("signedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SignedWaiver = typeof signedWaivers.$inferSelect;
+export type InsertSignedWaiver = typeof signedWaivers.$inferInsert;
+
+/**
+ * Student Documents table - All documents associated with a student
+ */
+export const studentDocuments = mysqlTable("student_documents", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student this document belongs to */
+  studentId: int("studentId").notNull(),
+  /** Document type category */
+  documentType: mysqlEnum("documentType", ["waiver", "receipt", "certificate", "medical", "other"]).notNull(),
+  /** Document title */
+  title: varchar("title", { length: 255 }).notNull(),
+  /** Description or notes */
+  description: text("description"),
+  /** URL to the document file */
+  fileUrl: varchar("fileUrl", { length: 500 }).notNull(),
+  /** File MIME type */
+  mimeType: varchar("mimeType", { length: 100 }),
+  /** File size in bytes */
+  fileSize: int("fileSize"),
+  /** Whether document is read-only (immutable) */
+  isImmutable: int("isImmutable").default(0).notNull(),
+  /** Related entity type (e.g., 'signed_waiver', 'transaction') */
+  relatedType: varchar("relatedType", { length: 50 }),
+  /** Related entity ID */
+  relatedId: int("relatedId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StudentDocument = typeof studentDocuments.$inferSelect;
+export type InsertStudentDocument = typeof studentDocuments.$inferInsert;
+
+/**
+ * Program Enrollments table - Tracks student enrollment in programs
+ */
+export const programEnrollments = mysqlTable("program_enrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student enrolled */
+  studentId: int("studentId").notNull(),
+  /** Program enrolled in */
+  programId: int("programId").notNull(),
+  /** Enrollment status */
+  status: mysqlEnum("status", ["pending_waiver", "pending_payment", "pending_approval", "trial", "active", "expired", "cancelled"]).default("pending_waiver").notNull(),
+  /** Enrollment type */
+  enrollmentType: mysqlEnum("enrollmentType", ["paid", "free_trial", "prorated_trial", "instructor_approval"]).default("paid").notNull(),
+  /** Trial start date (if applicable) */
+  trialStartDate: timestamp("trialStartDate"),
+  /** Trial end date (if applicable) */
+  trialEndDate: timestamp("trialEndDate"),
+  /** Trial length in days */
+  trialLengthDays: int("trialLengthDays"),
+  /** Amount paid (in cents) */
+  amountPaid: int("amountPaid").default(0),
+  /** Stripe subscription ID (if recurring) */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  /** Waiver signed for this enrollment */
+  signedWaiverId: int("signedWaiverId"),
+  /** Instructor who approved (if approval required) */
+  approvedBy: int("approvedBy"),
+  /** Approval date */
+  approvedAt: timestamp("approvedAt"),
+  /** Notes */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProgramEnrollment = typeof programEnrollments.$inferSelect;
+export type InsertProgramEnrollment = typeof programEnrollments.$inferInsert;

@@ -2204,6 +2204,377 @@ export const appRouter = router({
           return { success: false, error: error.message || 'Failed to update contact info' };
         }
       }),
+
+    // Get waiver template for a program
+    getWaiverTemplate: publicProcedure
+      .input(z.object({
+        programId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { waiverTemplates } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+        const { getDb } = await import("./db");
+        
+        const db = await getDb();
+        if (!db) return { waiver: null };
+        
+        try {
+          // First try to get program-specific waiver, then fall back to default
+          let waiver = null;
+          
+          if (input.programId) {
+            const programWaivers = await db.select()
+              .from(waiverTemplates)
+              .where(and(
+                eq(waiverTemplates.programId, input.programId),
+                eq(waiverTemplates.isActive, 1)
+              ))
+              .limit(1);
+            waiver = programWaivers[0];
+          }
+          
+          // Fall back to default waiver (no programId)
+          if (!waiver) {
+            const defaultWaivers = await db.select()
+              .from(waiverTemplates)
+              .where(and(
+                isNull(waiverTemplates.programId),
+                eq(waiverTemplates.isActive, 1)
+              ))
+              .limit(1);
+            waiver = defaultWaivers[0];
+          }
+          
+          // If still no waiver, get any active waiver
+          if (!waiver) {
+            const anyWaivers = await db.select()
+              .from(waiverTemplates)
+              .where(eq(waiverTemplates.isActive, 1))
+              .limit(1);
+            waiver = anyWaivers[0];
+          }
+          
+          return { waiver };
+        } catch (error: any) {
+          console.error('Error fetching waiver template:', error);
+          return { waiver: null };
+        }
+      }),
+
+    // Sign a waiver
+    signWaiver: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        programId: z.number().optional(),
+        waiverTemplateId: z.number(),
+        signerType: z.enum(['student', 'guardian']),
+        signerName: z.string(),
+        signerEmail: z.string().optional(),
+        signatureData: z.string(), // Base64 encoded signature image
+      }))
+      .mutation(async ({ input }) => {
+        const { signedWaivers, programs, programEnrollments, studentDocuments, waiverTemplates } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { getDb } = await import("./db");
+        
+        const db = await getDb();
+        if (!db) return { success: false, error: 'Database not available' };
+        
+        try {
+          // Insert signed waiver record
+          const result = await db.insert(signedWaivers).values({
+            studentId: input.studentId,
+            waiverTemplateId: input.waiverTemplateId,
+            programId: input.programId || null,
+            signerType: input.signerType,
+            signerName: input.signerName,
+            signerEmail: input.signerEmail || null,
+            signatureData: input.signatureData,
+            signedAt: new Date(),
+          });
+          
+          const signedWaiverId = Number(result.insertId);
+          
+          // Get program config to determine next step
+          let nextStep = 'success';
+          let enrollmentId = null;
+          
+          if (input.programId) {
+            const programResults = await db.select()
+              .from(programs)
+              .where(eq(programs.id, input.programId))
+              .limit(1);
+            const program = programResults[0];
+            
+            if (program) {
+              // Determine enrollment type and status
+              let enrollmentType: 'paid' | 'free_trial' | 'prorated_trial' | 'instructor_approval' = 'paid';
+              let status: 'pending_payment' | 'pending_approval' | 'trial' | 'active' = 'pending_payment';
+              
+              if (program.approvalRequired) {
+                enrollmentType = 'instructor_approval';
+                status = 'pending_approval';
+                nextStep = 'pending_approval';
+              } else if (program.trialType === 'free') {
+                enrollmentType = 'free_trial';
+                status = 'trial';
+                nextStep = 'success';
+              } else if (program.trialType === 'prorated') {
+                enrollmentType = 'prorated_trial';
+                status = 'pending_payment';
+                nextStep = 'payment';
+              } else if (program.paymentRequired) {
+                enrollmentType = 'paid';
+                status = 'pending_payment';
+                nextStep = 'payment';
+              } else {
+                status = 'active';
+                nextStep = 'success';
+              }
+              
+              // Create or update enrollment
+              const trialStartDate = (program.trialType === 'free' || program.trialType === 'prorated') ? new Date() : null;
+              const trialEndDate = trialStartDate && program.trialLengthDays 
+                ? new Date(trialStartDate.getTime() + program.trialLengthDays * 24 * 60 * 60 * 1000)
+                : null;
+              
+              const enrollmentResult = await db.insert(programEnrollments).values({
+                studentId: input.studentId,
+                programId: input.programId,
+                status,
+                enrollmentType,
+                trialStartDate,
+                trialEndDate,
+                trialLengthDays: program.trialLengthDays || null,
+                signedWaiverId,
+              });
+              
+              enrollmentId = Number(enrollmentResult.insertId);
+            }
+          }
+          
+          // Create document record for the signed waiver
+          const waiverTemplateResult = await db.select()
+            .from(waiverTemplates)
+            .where(eq(waiverTemplates.id, input.waiverTemplateId))
+            .limit(1);
+          const waiverTemplate = waiverTemplateResult[0];
+          
+          await db.insert(studentDocuments).values({
+            studentId: input.studentId,
+            documentType: 'waiver',
+            title: waiverTemplate?.title || 'Liability Waiver',
+            description: `Signed by ${input.signerName} on ${new Date().toLocaleDateString()}`,
+            fileUrl: input.signatureData, // Store signature data as URL for now
+            mimeType: 'image/png',
+            isImmutable: 1,
+            relatedType: 'signed_waiver',
+            relatedId: signedWaiverId,
+          });
+          
+          return { 
+            success: true, 
+            signedWaiverId,
+            enrollmentId,
+            nextStep,
+          };
+        } catch (error: any) {
+          console.error('Error signing waiver:', error);
+          return { success: false, error: error.message || 'Failed to sign waiver' };
+        }
+      }),
+
+    // Get student documents
+    getStudentDocuments: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { studentDocuments } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+        const { getDb } = await import("./db");
+        
+        const db = await getDb();
+        if (!db) return { documents: [] };
+        
+        try {
+          const docs = await db.select()
+            .from(studentDocuments)
+            .where(eq(studentDocuments.studentId, input.studentId))
+            .orderBy(desc(studentDocuments.createdAt));
+          
+          return { documents: docs };
+        } catch (error: any) {
+          console.error('Error fetching student documents:', error);
+          return { documents: [] };
+        }
+      }),
+
+    // Get student enrollment status
+    getEnrollmentStatus: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        programId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { programEnrollments } = await import("../drizzle/schema");
+        const { eq, and, desc } = await import("drizzle-orm");
+        const { getDb } = await import("./db");
+        
+        const db = await getDb();
+        if (!db) return { enrollment: null };
+        
+        try {
+          let query = db.select()
+            .from(programEnrollments)
+            .where(eq(programEnrollments.studentId, input.studentId));
+          
+          if (input.programId) {
+            query = db.select()
+              .from(programEnrollments)
+              .where(and(
+                eq(programEnrollments.studentId, input.studentId),
+                eq(programEnrollments.programId, input.programId)
+              ));
+          }
+          
+          const enrollments = await query.orderBy(desc(programEnrollments.createdAt)).limit(1);
+          const enrollment = enrollments[0];
+          
+          // Calculate trial days remaining if applicable
+          let trialDaysRemaining = null;
+          if (enrollment?.trialEndDate) {
+            const now = new Date();
+            const endDate = new Date(enrollment.trialEndDate);
+            trialDaysRemaining = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+          }
+          
+          return { 
+            enrollment,
+            trialDaysRemaining,
+          };
+        } catch (error: any) {
+          console.error('Error fetching enrollment status:', error);
+          return { enrollment: null };
+        }
+      }),
+
+    // Get program by ID
+    getProgramById: publicProcedure
+      .input(z.object({
+        programId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { programs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { getDb } = await import("./db");
+        
+        const db = await getDb();
+        if (!db) return { program: null };
+        
+        try {
+          const result = await db.select()
+            .from(programs)
+            .where(eq(programs.id, input.programId))
+            .limit(1);
+          
+          return { program: result[0] || null };
+        } catch (error: any) {
+          console.error('Error fetching program:', error);
+          return { program: null };
+        }
+      }),
+
+    // Create enrollment checkout session
+    createEnrollmentCheckout: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        programId: z.number(),
+        enrollmentId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { programs, students, programEnrollments } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { getDb } = await import("./db");
+        const Stripe = (await import("stripe")).default;
+        
+        const db = await getDb();
+        if (!db) return { success: false, error: 'Database not available' };
+        
+        try {
+          // Get student and program info
+          const studentResult = await db.select().from(students).where(eq(students.id, input.studentId)).limit(1);
+          const student = studentResult[0];
+          if (!student) return { success: false, error: 'Student not found' };
+          
+          const programResult = await db.select().from(programs).where(eq(programs.id, input.programId)).limit(1);
+          const program = programResult[0];
+          if (!program) return { success: false, error: 'Program not found' };
+          
+          // If program is free or doesn't require payment, skip checkout
+          if (!program.paymentRequired || program.trialType === 'free') {
+            // Update enrollment status to active/trial
+            if (input.enrollmentId) {
+              await db.update(programEnrollments)
+                .set({ status: program.trialType === 'free' ? 'trial' : 'active' })
+                .where(eq(programEnrollments.id, input.enrollmentId));
+            }
+            return { success: true, nextStep: 'success' };
+          }
+          
+          // Calculate amount
+          const monthlyPrice = program.monthlyPrice || 0;
+          const trialDays = program.trialLengthDays || 0;
+          const isProrated = program.trialType === 'prorated';
+          const amount = isProrated && trialDays > 0 
+            ? Math.round((monthlyPrice / 30) * trialDays) 
+            : monthlyPrice;
+          
+          // Create Stripe checkout session
+          const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+          if (!stripeSecretKey) {
+            return { success: false, error: 'Payment system not configured' };
+          }
+          
+          const stripe = new Stripe(stripeSecretKey);
+          
+          const session = await stripe.checkout.sessions.create({
+            mode: 'payment',
+            payment_method_types: ['card'],
+            line_items: [{
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: program.name,
+                  description: isProrated 
+                    ? `${trialDays}-day prorated trial` 
+                    : 'Monthly membership',
+                },
+                unit_amount: amount,
+              },
+              quantity: 1,
+            }],
+            customer_email: student.email || undefined,
+            metadata: {
+              studentId: input.studentId.toString(),
+              programId: input.programId.toString(),
+              enrollmentId: input.enrollmentId?.toString() || '',
+              type: 'enrollment',
+            },
+            success_url: `${process.env.VITE_APP_URL || 'http://localhost:3000'}/student-onboarding-success?studentId=${input.studentId}&enrollmentId=${input.enrollmentId || ''}`,
+            cancel_url: `${process.env.VITE_APP_URL || 'http://localhost:3000'}/student-payment?studentId=${input.studentId}&programId=${input.programId}&enrollmentId=${input.enrollmentId || ''}`,
+          });
+          
+          return { 
+            success: true, 
+            checkoutUrl: session.url,
+            sessionId: session.id,
+          };
+        } catch (error: any) {
+          console.error('Error creating checkout session:', error);
+          return { success: false, error: error.message || 'Failed to create checkout session' };
+        }
+      }),
   }),
 });
 

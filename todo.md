@@ -3370,3 +3370,97 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Added "New student?" prompt text for clarity
 - [x] Link navigates to /student-onboarding
 - [x] Test the link functionality - working
+
+
+## 🚀 NEW: Waiver & Payment Onboarding Flow
+
+### Phase 1: Database Schema
+- [ ] Create waivers table (id, programId, content, version, createdAt)
+- [ ] Create signed_waivers table (id, studentId, waiverId, signedBy, signatureData, signedAt, pdfUrl)
+- [ ] Create student_documents table (id, studentId, type, title, url, createdAt)
+- [ ] Add program configuration fields (waiverRequired, trialLength, paymentRequired, trialPrice, approvalRequired)
+- [ ] Add student enrollment status fields (enrollmentStatus, trialStartDate, trialEndDate)
+
+### Phase 2: Liability Waiver Component
+- [ ] Create WaiverSigning page with embedded document viewer
+- [ ] Implement signature pad (touch/mouse compatible)
+- [ ] Auto-determine signer (guardian for under 18, student for 18+)
+- [ ] Add "I agree" checkbox with date/name auto-filled
+- [ ] Block progression without signature
+- [ ] Generate PDF of signed waiver
+- [ ] Store PDF in S3 and save reference to database
+
+### Phase 3: Payment Decision Engine
+- [ ] Create payment configuration per program
+- [ ] Implement checkout screen for paid programs
+- [ ] Support one-time fee and monthly subscription
+- [ ] Handle free trial (no payment, auto-expire)
+- [ ] Handle prorated trial (reduced fee)
+- [ ] Handle instructor approval trial (pending status)
+- [ ] Conditional routing based on program type
+
+### Phase 4: Email Notifications
+- [ ] Send waiver confirmation email after signing
+- [ ] Include program name, date signed, CTA to view document
+- [ ] Send to student and guardian (if applicable)
+
+### Phase 5: Student Dashboard Updates
+- [ ] Add Documents section to dashboard
+- [ ] Show active program and trial status
+- [ ] Display days remaining for trials
+- [ ] Show next required action
+- [ ] Make documents downloadable and viewable
+
+### Phase 6: Admin Controls
+- [ ] Add program configuration UI for instructors
+- [ ] Configure waiver required (on/off)
+- [ ] Configure trial length (1-30 days)
+- [ ] Configure payment required (yes/no)
+- [ ] Configure trial pricing
+- [ ] Configure approval required (yes/no)
+
+### Phase 7: Success State
+- [ ] Show success screen after waiver + payment complete
+- [ ] Display checkmarks for completed steps
+- [ ] CTA to go to dashboard
+
+
+## ✅ COMPLETED: Waiver & Payment Onboarding Flow
+
+### Phase 1: Database Schema
+- [x] Create waiver_templates table
+- [x] Create signed_waivers table
+- [x] Create student_documents table
+- [x] Create program_enrollments table
+- [x] Add waiver/payment config fields to programs table
+
+### Phase 2: Liability Waiver Signing
+- [x] Create WaiverSigning page component
+- [x] Implement signature pad with canvas (signature_pad library)
+- [x] Guardian signature for minors
+- [x] Waiver content display with scroll
+- [x] Date and checkbox acknowledgment
+- [x] Save signature as image to S3
+
+### Phase 3: Payment Decision Engine
+- [x] Check program payment requirements
+- [x] Handle free trials (skip payment, show green success)
+- [x] Handle prorated trials (partial payment calculation)
+- [x] Handle full payment programs
+- [x] Handle instructor approval required (pending approval page)
+- [x] Create Stripe checkout session
+
+### Phase 4: Document Storage
+- [x] Save signed waiver as PDF to S3
+- [x] Store document reference in database
+- [x] Add "My Documents" section to Student Dashboard
+
+### Phase 5: Success & Pending Pages
+- [x] StudentOnboardingSuccess with confetti animation
+- [x] StudentPendingApproval for instructor approval flow
+- [x] StudentPaymentCheckout for payment processing
+
+### Phase 6: Admin Controls
+- [x] Program configuration for waiver/payment settings
+- [x] 4 sample programs with different configurations (Kids, Teen, Adult, Competition)
+- [x] 15 vitest tests passing for waiver/payment logic

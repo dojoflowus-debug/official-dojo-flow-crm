@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO `programs` (`name`, `type`, `description`, `ageRange`, `price`, `billing`, `waiverRequired`, `paymentRequired`, `trialType`, `trialLengthDays`, `approvalRequired`, `isActive`) VALUES \n('Kids Karate', 'membership', 'Martial arts training for children ages 4-12', '4-12', 9900, 'monthly', 1, 1, 'free', 7, 0, 1),\n('Teen Martial Arts', 'membership', 'Advanced training for teenagers ages 13-17', '13-17', 12900, 'monthly', 1, 1, 'prorated', 14, 0, 1),\n('Adult Self Defense', 'membership', 'Comprehensive self-defense for adults 18+', '18+', 14900, 'monthly', 1, 1, 'none', 0, 0, 1),\n('Competition Team', 'membership', 'Elite training for tournament competitors', 'all', 19900, 'monthly', 1, 1, 'none', 0, 1, 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO `programs` (`name`, `type`, `description`, `ageRange`, `price`, `billing`, `waiverRequired`, `paymentRequired`, `trialType`, `trialLengthDays`, `approvalRequired`, `isActive`) VALUES \n('Kids Karate', 'membership', 'Martial arts training for children ages 4-12', '4-12', 9900, 'monthly', 1, 1, 'free', 7, 0, 1),\n('Teen Martial Arts', 'membership', 'Advanced training for teenagers ages 13-17', '13-17', 12900, 'monthly', 1, 1, 'prorated', 14, 0, 1),\n('Adult Self Defense', 'membership', 'Comprehensive self-defense for adults 18+', '18+', 14900, 'monthly', 1, 1, 'none', 0, 0, 1),\n('Competition Team', 'membership', 'Elite training for tournament competitors', 'all', 19900, 'monthly', 1, 1, 'none', 0, 1, 1);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 66
+}
