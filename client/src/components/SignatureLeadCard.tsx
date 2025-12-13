@@ -182,9 +182,9 @@ export default function SignatureLeadCard({
           </TooltipProvider>
         )}
 
-        {/* Header: Name + Age */}
+        {/* Header: Name + Score */}
         <div className="flex items-start justify-between mb-2 pr-8">
-          <div>
+          <div className="flex-1 min-w-0">
             <h3 className={`text-base font-semibold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
               {fullName}
             </h3>
@@ -192,6 +192,69 @@ export default function SignatureLeadCard({
               {ageDays === 0 ? 'New today' : `${ageDays} day${ageDays !== 1 ? 's' : ''} old`}
             </div>
           </div>
+          
+          {/* Lead Score Indicator */}
+          {lead.lead_score !== undefined && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative flex-shrink-0 w-10 h-10 cursor-help">
+                    {/* Circular Progress Background */}
+                    <svg className="w-10 h-10 transform -rotate-90" viewBox="0 0 36 36">
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="14"
+                        fill="none"
+                        stroke={isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}
+                        strokeWidth="3"
+                      />
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="14"
+                        fill="none"
+                        stroke={
+                          lead.lead_score >= 70 ? '#22c55e' :
+                          lead.lead_score >= 40 ? '#f59e0b' : '#ef4444'
+                        }
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeDasharray={`${(lead.lead_score / 100) * 88} 88`}
+                        className="transition-all duration-500 ease-out"
+                      />
+                    </svg>
+                    {/* Score Number */}
+                    <div className={`
+                      absolute inset-0 flex items-center justify-center
+                      text-[11px] font-bold
+                      ${lead.lead_score >= 70 ? 'text-green-500' :
+                        lead.lead_score >= 40 ? 'text-amber-500' : 'text-red-500'}
+                    `}>
+                      {lead.lead_score}
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="left" 
+                  className={`
+                    px-3 py-2 text-xs rounded-lg
+                    ${isDarkMode ? 'bg-slate-700 text-white border-slate-600' : 'bg-white text-slate-700 border-slate-200'}
+                  `}
+                >
+                  <div className="font-semibold mb-1">
+                    Lead Score: {lead.lead_score}/100
+                  </div>
+                  <div className={isDarkMode ? 'text-white/60' : 'text-slate-500'}>
+                    {lead.lead_score >= 80 ? 'Hot - Ready to convert' :
+                     lead.lead_score >= 60 ? 'Warm - High engagement' :
+                     lead.lead_score >= 40 ? 'Neutral - Needs nurturing' :
+                     lead.lead_score >= 20 ? 'Cool - Low engagement' : 'Cold - Needs attention'}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
 
         {/* Source Badge */}

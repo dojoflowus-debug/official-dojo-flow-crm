@@ -392,6 +392,7 @@ export const appRouter = router({
             status: statusKey,
             source: lead.source,
             notes: lead.notes,
+            lead_score: lead.leadScore,
             created_at: lead.createdAt,
             updated_at: lead.updatedAt,
           });
@@ -547,7 +548,99 @@ export const appRouter = router({
           metadata: input.metadata,
         });
         
+        // Update lead score after adding activity
+        const { updateLeadScore } = await import("./leadScoring");
+        await updateLeadScore(input.leadId);
+        
         return { success: true, id: result.insertId };
+      }),
+    
+    // Lead Scoring
+    getScore: publicProcedure
+      .input(z.object({
+        leadId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { calculateLeadScore, getScoreColor, getScoreLabel } = await import("./leadScoring");
+        
+        const score = await calculateLeadScore(input.leadId);
+        return {
+          score,
+          color: getScoreColor(score),
+          label: getScoreLabel(score),
+        };
+      }),
+    
+    recalculateScore: publicProcedure
+      .input(z.object({
+        leadId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateLeadScore, getScoreColor, getScoreLabel } = await import("./leadScoring");
+        
+        const score = await updateLeadScore(input.leadId);
+        return {
+          success: true,
+          score,
+          color: getScoreColor(score),
+          label: getScoreLabel(score),
+        };
+      }),
+    
+    recalculateAllScores: publicProcedure
+      .mutation(async () => {
+        const { recalculateAllLeadScores } = await import("./leadScoring");
+        
+        const result = await recalculateAllLeadScores();
+        return {
+          success: true,
+          ...result,
+        };
+      }),
+    
+    // Get all leads with scores for sorting
+    getAllWithScores: publicProcedure
+      .input(z.object({
+        sortBy: z.enum(["score", "created", "updated"]).optional().default("created"),
+        sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { leads } = await import("../drizzle/schema");
+        const { desc, asc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        let orderBy;
+        const orderFn = input.sortOrder === "asc" ? asc : desc;
+        
+        switch (input.sortBy) {
+          case "score":
+            orderBy = orderFn(leads.leadScore);
+            break;
+          case "updated":
+            orderBy = orderFn(leads.updatedAt);
+            break;
+          default:
+            orderBy = orderFn(leads.createdAt);
+        }
+        
+        const allLeads = await db.select().from(leads).orderBy(orderBy);
+        
+        return allLeads.map(lead => ({
+          id: lead.id,
+          firstName: lead.firstName,
+          lastName: lead.lastName,
+          email: lead.email,
+          phone: lead.phone,
+          status: lead.status,
+          source: lead.source,
+          leadScore: lead.leadScore,
+          leadScoreUpdatedAt: lead.leadScoreUpdatedAt,
+          createdAt: lead.createdAt,
+          updatedAt: lead.updatedAt,
+        }));
       }),
   }),
 

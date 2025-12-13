@@ -3100,3 +3100,61 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Automated activity badge for system actions
 - [x] Integrate timeline into LeadDrawer with Details/Activity tabs
 - [x] Log activities when using quick actions (Call, Text, Email)
+
+
+## Automatic Lead Scoring System
+### Database Schema
+- [ ] Add lead_score column to leads table (integer 0-100)
+- [ ] Add lead_score_updated_at timestamp column
+- [ ] Create lead_scoring_rules table (activity_type, points, description)
+
+### Scoring Rules Engine
+- [ ] Define default scoring rules:
+  - Email opened: +5 points
+  - Email clicked: +10 points
+  - Website visit: +3 points
+  - Form submission: +15 points
+  - Call completed: +20 points
+  - Call attempted (no answer): +5 points
+  - SMS sent: +5 points
+  - SMS replied: +15 points
+  - Intro scheduled: +25 points
+  - Trial attended: +30 points
+  - Note added: +2 points
+- [ ] Implement score decay (reduce score by 10% weekly for inactivity)
+- [ ] Cap score at 100, minimum 0
+
+### Backend Implementation
+- [ ] Create calculateLeadScore function
+- [ ] Add recalculateScore procedure to leads router
+- [ ] Auto-update score when activity is logged
+- [ ] Add batch recalculation for all leads
+- [ ] Create getLeadsByScore procedure for sorting
+
+### UI Updates
+- [ ] Display score prominently on lead cards (circular progress indicator)
+- [ ] Color-code score: green (70+), yellow (40-69), red (0-39)
+- [ ] Add score breakdown tooltip showing activity contributions
+- [ ] Add "Sort by Score" option in leads filter
+- [ ] Show score trend indicator (up/down arrow)
+- [ ] Display score in lead drawer header
+
+### Testing
+- [ ] Test score calculation for various activity combinations
+- [ ] Test score decay functionality
+- [ ] Test UI displays scores correctly
+- [ ] Test sorting by score works
+
+
+## ✅ COMPLETED: Automatic Lead Scoring System
+- [x] Add lead_score and lead_score_updated_at columns to leads table
+- [x] Create lead_scoring_rules table for configurable scoring
+- [x] Implement scoring calculation engine with point values
+- [x] Activity-based scoring: call (+15), email (+10), sms (+8), note (+5), meeting (+20)
+- [x] Engagement decay: reduce score over time without activity
+- [x] Stage progression bonus: +10 points when lead advances
+- [x] Auto-update score when activity is added
+- [x] Display circular score indicator on lead cards (50 default score visible)
+- [x] Color-coded scores: green (70+), amber (40-69), red (<40)
+- [x] Tooltip showing score breakdown and label
+- [x] API endpoints for getting and recalculating scores

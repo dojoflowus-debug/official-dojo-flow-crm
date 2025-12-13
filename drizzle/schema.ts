@@ -186,6 +186,9 @@ export const leads = mysqlTable("leads", {
   zipCode: varchar("zipCode", { length: 20 }),
   lat: varchar("lat", { length: 50 }),
   lng: varchar("lng", { length: 50 }),
+  // Lead scoring
+  leadScore: int("leadScore").default(50).notNull(),
+  leadScoreUpdatedAt: timestamp("leadScoreUpdatedAt").defaultNow(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1099,3 +1102,25 @@ export const leadActivities = mysqlTable("lead_activities", {
 
 export type LeadActivity = typeof leadActivities.$inferSelect;
 export type InsertLeadActivity = typeof leadActivities.$inferInsert;
+
+
+/**
+ * Lead Scoring Rules table - Define point values for different activities
+ * Used to automatically calculate lead scores based on engagement
+ */
+export const leadScoringRules = mysqlTable("lead_scoring_rules", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Activity type that triggers this rule */
+  activityType: varchar("activityType", { length: 100 }).notNull().unique(),
+  /** Points to add/subtract for this activity */
+  points: int("points").notNull(),
+  /** Human-readable description */
+  description: varchar("description", { length: 255 }),
+  /** Whether this rule is active */
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeadScoringRule = typeof leadScoringRules.$inferSelect;
+export type InsertLeadScoringRule = typeof leadScoringRules.$inferInsert;
