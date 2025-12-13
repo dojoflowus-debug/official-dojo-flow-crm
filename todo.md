@@ -3241,3 +3241,24 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Red accents only for importance
 - [x] No clutter - emotion over raw data
 - [x] Consistent styling across all screens
+
+
+## ✅ COMPLETED: Student Profile Picture Upload During Onboarding
+
+### Backend
+- [x] Create uploadProfilePhoto tRPC procedure
+- [x] Integrate with S3 storage using storagePut helper
+- [x] Generate unique file keys with student ID prefix
+- [x] Return public URL for the uploaded photo
+
+### Frontend
+- [x] Update StudentOnboarding Step 2 with functional photo upload
+- [x] Add file input with image preview
+- [x] Show upload progress indicator
+- [x] Handle upload errors gracefully
+- [x] Pass photoUrl to requestToJoin mutation
+
+### Integration
+- [x] Save photoUrl to student record in database
+- [x] Display uploaded photo in confirmation step
+- [x] Test complete flow from upload to display (3 vitest tests passing)

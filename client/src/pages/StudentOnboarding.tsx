@@ -123,9 +123,15 @@ export default function StudentOnboarding() {
   const [emergencyPhone, setEmergencyPhone] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // tRPC mutations
+  const uploadPhotoMutation = trpc.studentPortal.uploadProfilePhoto.useMutation();
+  const requestToJoinMutation = trpc.studentPortal.requestToJoin.useMutation();
 
   useEffect(() => {
     setTimeout(() => setMounted(true), 100);
@@ -149,14 +155,43 @@ export default function StudentOnboarding() {
       )
     : [];
 
-  // Handle photo upload
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle photo upload with S3 integration
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Photo must be less than 5MB');
+        return;
+      }
+
       setPhotoFile(file);
+      setIsUploadingPhoto(true);
+      
+      // Read file as base64 for preview and upload
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
+      reader.onloadend = async () => {
+        const base64Data = reader.result as string;
+        setPhotoPreview(base64Data);
+        
+        // Upload to S3
+        try {
+          const result = await uploadPhotoMutation.mutateAsync({
+            imageData: base64Data,
+            mimeType: file.type,
+          });
+          
+          if (result.success && result.url) {
+            setUploadedPhotoUrl(result.url);
+            console.log('Photo uploaded successfully:', result.url);
+          } else {
+            console.error('Photo upload failed:', result.error);
+          }
+        } catch (error) {
+          console.error('Photo upload error:', error);
+        } finally {
+          setIsUploadingPhoto(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -171,19 +206,41 @@ export default function StudentOnboarding() {
     }
   };
 
-  // Handle form submission
+  // Handle form submission with real API call
   const handleSubmit = async () => {
+    if (!selectedSchool) return;
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Store student info and navigate to dashboard
-    localStorage.setItem("student_logged_in", "true");
-    localStorage.setItem("student_name", `${firstName} ${lastName}`);
-    
-    setIsSubmitting(false);
-    setStep(3);
+    try {
+      const result = await requestToJoinMutation.mutateAsync({
+        schoolId: selectedSchool.id,
+        firstName,
+        lastName,
+        email: '', // Will be set during account creation
+        dateOfBirth,
+        program,
+        emergencyContactName: emergencyContact,
+        emergencyContactPhone: emergencyPhone,
+        photoUrl: uploadedPhotoUrl || undefined,
+      });
+      
+      if (result.success && result.studentId) {
+        // Store student info and navigate to confirmation
+        localStorage.setItem("student_logged_in", "true");
+        localStorage.setItem("student_name", `${firstName} ${lastName}`);
+        localStorage.setItem("student_id", result.studentId.toString());
+        
+        setStep(3);
+      } else {
+        alert(result.error || 'Failed to create account');
+      }
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      alert(error.message || 'Failed to create account');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Step validation
@@ -329,25 +386,52 @@ export default function StudentOnboarding() {
               )}
 
               {/* Photo Upload */}
-              <div className="flex justify-center">
+              <div className="flex flex-col items-center gap-3">
                 <label className="relative cursor-pointer group">
                   <div className="w-28 h-28 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg transition-all group-hover:shadow-xl">
-                    {photoPreview ? (
+                    {isUploadingPhoto ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="h-8 w-8 text-red-500 animate-spin" />
+                      </div>
+                    ) : photoPreview ? (
                       <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <User className="h-10 w-10 text-gray-400" />
                     )}
                   </div>
-                  <div className="absolute bottom-0 right-0 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:bg-red-600 transition-colors">
-                    <Camera className="h-4 w-4 text-white" />
+                  {/* Upload/Success Indicator */}
+                  <div className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+                    uploadedPhotoUrl 
+                      ? 'bg-green-500' 
+                      : isUploadingPhoto 
+                        ? 'bg-gray-400' 
+                        : 'bg-red-500 group-hover:bg-red-600'
+                  }`}>
+                    {uploadedPhotoUrl ? (
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    ) : isUploadingPhoto ? (
+                      <Loader2 className="h-4 w-4 text-white animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4 text-white" />
+                    )}
                   </div>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoChange}
                     className="hidden"
+                    disabled={isUploadingPhoto}
                   />
                 </label>
+                {/* Status Text */}
+                <p className="text-sm text-gray-500">
+                  {isUploadingPhoto 
+                    ? 'Uploading photo...' 
+                    : uploadedPhotoUrl 
+                      ? 'Photo uploaded successfully!' 
+                      : 'Tap to add your photo'
+                  }
+                </p>
               </div>
 
               {/* Form Fields */}
@@ -514,7 +598,9 @@ export default function StudentOnboarding() {
               <div className="bg-white rounded-3xl p-6 shadow-lg max-w-sm mx-auto">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
-                    {photoPreview ? (
+                    {uploadedPhotoUrl ? (
+                      <img src={uploadedPhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : photoPreview ? (
                       <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <User className="h-8 w-8 text-gray-400" />

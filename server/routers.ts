@@ -2058,6 +2058,45 @@ export const appRouter = router({
           return { success: false, error: error.message || 'Failed to create account' };
         }
       }),
+
+    // Upload profile photo to S3
+    uploadProfilePhoto: publicProcedure
+      .input(z.object({
+        // Base64 encoded image data
+        imageData: z.string(),
+        // MIME type (image/jpeg, image/png, etc.)
+        mimeType: z.string(),
+        // Optional: existing student ID for updates
+        studentId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { storagePut } = await import("./storage");
+        
+        try {
+          // Generate unique file key
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 8);
+          const extension = input.mimeType.split('/')[1] || 'jpg';
+          const prefix = input.studentId ? `student-${input.studentId}` : 'new-student';
+          const fileKey = `profile-photos/${prefix}-${timestamp}-${randomSuffix}.${extension}`;
+          
+          // Convert base64 to buffer
+          const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, '');
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+          
+          // Upload to S3
+          const { url } = await storagePut(fileKey, imageBuffer, input.mimeType);
+          
+          return {
+            success: true,
+            url,
+            fileKey,
+          };
+        } catch (error: any) {
+          console.error('Error uploading profile photo:', error);
+          return { success: false, error: error.message || 'Failed to upload photo' };
+        }
+      }),
   }),
 });
 
