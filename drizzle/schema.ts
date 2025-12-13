@@ -1360,3 +1360,45 @@ export const studentMessageAttachments = mysqlTable("student_message_attachments
 
 export type StudentMessageAttachment = typeof studentMessageAttachments.$inferSelect;
 export type InsertStudentMessageAttachment = typeof studentMessageAttachments.$inferInsert;
+
+
+/**
+ * Student Password Reset Tokens table
+ * Stores temporary tokens for password reset flow
+ */
+export const studentPasswordResetTokens = mysqlTable("student_password_reset_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student ID (foreign key to students table) */
+  studentId: int("studentId").notNull(),
+  /** Unique reset token (hashed) */
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  /** Token expiration timestamp */
+  expiresAt: timestamp("expiresAt").notNull(),
+  /** Whether the token has been used */
+  used: int("used").default(0).notNull(),
+  /** When the token was used */
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StudentPasswordResetToken = typeof studentPasswordResetTokens.$inferSelect;
+export type InsertStudentPasswordResetToken = typeof studentPasswordResetTokens.$inferInsert;
+
+/**
+ * Student Passwords table
+ * Stores hashed passwords for student portal authentication
+ */
+export const studentPasswords = mysqlTable("student_passwords", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student ID (foreign key to students table) */
+  studentId: int("studentId").notNull().unique(),
+  /** Hashed password */
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  /** Last password change */
+  lastChangedAt: timestamp("lastChangedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudentPassword = typeof studentPasswords.$inferSelect;
+export type InsertStudentPassword = typeof studentPasswords.$inferInsert;

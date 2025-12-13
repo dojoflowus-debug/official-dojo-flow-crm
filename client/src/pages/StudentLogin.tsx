@@ -162,6 +162,17 @@ export default function StudentLogin() {
                 "Continue"
               )}
             </Button>
+
+            {/* Forgot Password Link */}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => navigate("/student-forgot-password")}
+                className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                Forgot your password?
+              </button>
+            </div>
           </form>
 
           {/* Divider */}

@@ -1417,6 +1417,75 @@ export const appRouter = router({
 
   // Student Portal Router
   studentPortal: router({
+    // Request password reset
+    requestPasswordReset: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getStudentByEmail, createPasswordResetToken, getStudentById } = await import("./db");
+        
+        // Find student by email
+        const studentData = await getStudentByEmail(input.email);
+        if (!studentData || !studentData.student) {
+          // Don't reveal if email exists for security
+          return { success: true, message: "If an account exists with this email, you will receive a password reset link." };
+        }
+        
+        // Create reset token
+        const tokenData = await createPasswordResetToken(studentData.student.id);
+        if (!tokenData) {
+          return { success: false, error: "Failed to create reset token" };
+        }
+        
+        // In production, send email here. For demo, return the token.
+        // The token would be sent via email with a link like:
+        // /student-reset-password?token=xxx
+        console.log(`Password reset token for ${input.email}: ${tokenData.token}`);
+        
+        return {
+          success: true,
+          message: "If an account exists with this email, you will receive a password reset link.",
+          // For demo purposes only - remove in production
+          _demoToken: tokenData.token,
+          _demoExpiresAt: tokenData.expiresAt,
+        };
+      }),
+
+    // Validate reset token
+    validateResetToken: publicProcedure
+      .input(z.object({
+        token: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { validateResetToken, getStudentById } = await import("./db");
+        
+        const validation = await validateResetToken(input.token);
+        if (!validation.valid || !validation.studentId) {
+          return { valid: false, error: validation.error };
+        }
+        
+        // Get student info for display
+        const student = await getStudentById(validation.studentId);
+        
+        return {
+          valid: true,
+          studentEmail: student?.email,
+          studentName: student?.firstName,
+        };
+      }),
+
+    // Reset password with token
+    resetPassword: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        newPassword: z.string().min(8, "Password must be at least 8 characters"),
+      }))
+      .mutation(async ({ input }) => {
+        const { resetStudentPassword } = await import("./db");
+        return await resetStudentPassword(input.token, input.newPassword);
+      }),
+
     // Login endpoint
     login: publicProcedure
       .input(z.object({

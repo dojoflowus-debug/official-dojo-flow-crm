@@ -1219,3 +1219,162 @@ export async function deleteStudentMessage(messageId: number, studentId: number)
     return false;
   }
 }
+
+
+// ============================================
+// STUDENT PASSWORD RESET HELPERS
+// ============================================
+
+import { studentPasswordResetTokens, studentPasswords } from "../drizzle/schema";
+import crypto from "crypto";
+
+/**
+ * Generate a secure random token for password reset
+ */
+export function generateResetToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+/**
+ * Hash a password using SHA256 (for demo - use bcrypt in production)
+ */
+export function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
+
+/**
+ * Verify a password against a hash
+ */
+export function verifyPasswordHash(password: string, hash: string): boolean {
+  return hashPassword(password) === hash;
+}
+
+/**
+ * Create a password reset token for a student
+ */
+export async function createPasswordResetToken(studentId: number): Promise<{ token: string; expiresAt: Date } | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const token = generateResetToken();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+  
+  try {
+    // Invalidate any existing tokens for this student
+    await db.update(studentPasswordResetTokens)
+      .set({ used: 1 })
+      .where(eq(studentPasswordResetTokens.studentId, studentId));
+    
+    // Create new token
+    await db.insert(studentPasswordResetTokens).values({
+      studentId,
+      token,
+      expiresAt,
+      used: 0,
+    });
+    
+    return { token, expiresAt };
+  } catch (error) {
+    console.error("Error creating reset token:", error);
+    return null;
+  }
+}
+
+/**
+ * Validate a password reset token
+ */
+export async function validateResetToken(token: string): Promise<{ valid: boolean; studentId?: number; error?: string }> {
+  const db = await getDb();
+  if (!db) return { valid: false, error: "Database not available" };
+  
+  try {
+    const [tokenRecord] = await db.select()
+      .from(studentPasswordResetTokens)
+      .where(eq(studentPasswordResetTokens.token, token))
+      .limit(1);
+    
+    if (!tokenRecord) {
+      return { valid: false, error: "Invalid or expired reset link" };
+    }
+    
+    if (tokenRecord.used) {
+      return { valid: false, error: "This reset link has already been used" };
+    }
+    
+    if (new Date() > tokenRecord.expiresAt) {
+      return { valid: false, error: "This reset link has expired" };
+    }
+    
+    return { valid: true, studentId: tokenRecord.studentId };
+  } catch (error) {
+    console.error("Error validating token:", error);
+    return { valid: false, error: "Failed to validate token" };
+  }
+}
+
+/**
+ * Reset a student's password using a valid token
+ */
+export async function resetStudentPassword(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  const db = await getDb();
+  if (!db) return { success: false, error: "Database not available" };
+  
+  // Validate the token first
+  const validation = await validateResetToken(token);
+  if (!validation.valid || !validation.studentId) {
+    return { success: false, error: validation.error };
+  }
+  
+  const passwordHash = hashPassword(newPassword);
+  
+  try {
+    // Check if student already has a password record
+    const [existingPassword] = await db.select()
+      .from(studentPasswords)
+      .where(eq(studentPasswords.studentId, validation.studentId))
+      .limit(1);
+    
+    if (existingPassword) {
+      // Update existing password
+      await db.update(studentPasswords)
+        .set({ passwordHash, lastChangedAt: new Date() })
+        .where(eq(studentPasswords.studentId, validation.studentId));
+    } else {
+      // Create new password record
+      await db.insert(studentPasswords).values({
+        studentId: validation.studentId,
+        passwordHash,
+      });
+    }
+    
+    // Mark token as used
+    await db.update(studentPasswordResetTokens)
+      .set({ used: 1, usedAt: new Date() })
+      .where(eq(studentPasswordResetTokens.token, token));
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return { success: false, error: "Failed to reset password" };
+  }
+}
+
+/**
+ * Get student by ID for password reset
+ */
+export async function getStudentById(studentId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const [student] = await db.select()
+      .from(students)
+      .where(eq(students.id, studentId))
+      .limit(1);
+    
+    return student || null;
+  } catch (error) {
+    console.error("Error getting student:", error);
+    return null;
+  }
+}
