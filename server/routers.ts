@@ -1918,6 +1918,146 @@ export const appRouter = router({
         const { deleteStudentMessage } = await import("./db");
         return await deleteStudentMessage(input.messageId, input.studentId);
       }),
+
+    // ============================================
+    // Multi-School Support
+    // ============================================
+
+    // Get schools a student is enrolled in
+    // For now, returns the single dojo settings as the only school
+    // In a multi-tenant system, this would query a student_schools junction table
+    getStudentSchools: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { dojoSettings, students } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { schools: [], studentName: null };
+        
+        // Get student info
+        const studentResult = await db.select().from(students).where(eq(students.id, input.studentId)).limit(1);
+        const student = studentResult[0];
+        
+        // Get dojo settings (single school for now)
+        const settingsResult = await db.select().from(dojoSettings).limit(1);
+        const settings = settingsResult[0];
+        
+        if (!settings) {
+          return { schools: [], studentName: student?.firstName || null };
+        }
+        
+        // Return single school based on dojo settings
+        const schools = [{
+          id: 1,
+          name: settings.businessName || settings.schoolName || 'My Dojo',
+          city: settings.city || 'Unknown',
+          state: settings.state || 'Unknown',
+          logoUrl: settings.logoSquare || null,
+          lastAccessed: new Date(),
+          isPinned: true,
+        }];
+        
+        return { 
+          schools, 
+          studentName: student?.firstName || null,
+          singleSchool: true // Flag indicating only one school
+        };
+      }),
+
+    // Search schools for onboarding
+    searchSchools: publicProcedure
+      .input(z.object({
+        query: z.string().min(2),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { dojoSettings } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) return { schools: [] };
+        
+        // For now, return the single dojo if it matches the query
+        const settingsResult = await db.select().from(dojoSettings).limit(1);
+        const settings = settingsResult[0];
+        
+        if (!settings) return { schools: [] };
+        
+        const schoolName = settings.businessName || settings.schoolName || '';
+        const query = input.query.toLowerCase();
+        
+        // Check if school matches query
+        if (
+          schoolName.toLowerCase().includes(query) ||
+          (settings.city && settings.city.toLowerCase().includes(query)) ||
+          (settings.zipCode && settings.zipCode.includes(query))
+        ) {
+          return {
+            schools: [{
+              id: 1,
+              name: schoolName,
+              address: settings.addressLine1 || '',
+              city: settings.city || '',
+              state: settings.state || '',
+              logoUrl: settings.logoSquare || null,
+            }]
+          };
+        }
+        
+        return { schools: [] };
+      }),
+
+    // Request to join a school (for new students)
+    requestToJoin: publicProcedure
+      .input(z.object({
+        schoolId: z.number(),
+        firstName: z.string().min(1),
+        lastName: z.string().min(1),
+        email: z.string().email(),
+        dateOfBirth: z.string(),
+        program: z.enum(['kids', 'teens', 'adults']),
+        emergencyContactName: z.string().min(1),
+        emergencyContactPhone: z.string().min(1),
+        photoUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) return { success: false, error: 'Database not available' };
+        
+        try {
+          // Create new student
+          const result = await db.insert(students).values({
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
+            dateOfBirth: new Date(input.dateOfBirth),
+            program: input.program,
+            guardianName: input.emergencyContactName,
+            guardianPhone: input.emergencyContactPhone,
+            photoUrl: input.photoUrl,
+            status: 'Active',
+            beltRank: 'White',
+            membershipStatus: 'Trial',
+          });
+          
+          const studentId = result[0].insertId;
+          
+          return {
+            success: true,
+            studentId,
+            message: `Welcome to the dojo, ${input.firstName}!`
+          };
+        } catch (error: any) {
+          console.error('Error creating student:', error);
+          return { success: false, error: error.message || 'Failed to create account' };
+        }
+      }),
   }),
 });
 

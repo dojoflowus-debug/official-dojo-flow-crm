@@ -163,14 +163,22 @@ export default function StudentLogin() {
               )}
             </Button>
 
-            {/* Forgot Password Link */}
-            <div className="text-center">
+            {/* Secondary Links */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => navigate("/student-onboarding")}
+                className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors"
+              >
+                Create account
+              </button>
+              <span className="text-slate-300">|</span>
               <button
                 type="button"
                 onClick={() => navigate("/student-forgot-password")}
                 className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
               >
-                Forgot your password?
+                Forgot password?
               </button>
             </div>
           </form>

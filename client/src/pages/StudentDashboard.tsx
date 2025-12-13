@@ -100,7 +100,7 @@ function ProgressRing({
   );
 }
 
-// Belt Badge Component
+// Belt Badge Component - Enhanced with glow effect for next belt
 function BeltBadge({ 
   name, 
   color, 
@@ -117,13 +117,26 @@ function BeltBadge({
   isPast: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-1 relative">
+      {/* Glow effect for next belt */}
+      {isNext && (
+        <div 
+          className="absolute inset-0 rounded-lg animate-pulse"
+          style={{ 
+            backgroundColor: color,
+            filter: 'blur(8px)',
+            opacity: 0.4,
+            transform: 'scale(1.2)'
+          }}
+        />
+      )}
       <div 
         className={`
-          px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300
+          relative px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300
           ${isActive ? 'ring-2 ring-offset-2 shadow-lg scale-110' : ''}
-          ${isNext ? 'opacity-60' : ''}
-          ${!isActive && !isNext && !isPast ? 'opacity-30' : ''}
+          ${isNext ? 'shadow-lg scale-105' : ''}
+          ${!isActive && !isNext && !isPast ? 'opacity-30 grayscale' : ''}
+          ${isPast ? 'opacity-70' : ''}
         `}
         style={{ 
           backgroundColor: color,
@@ -137,6 +150,9 @@ function BeltBadge({
       </div>
       {isActive && (
         <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1" />
+      )}
+      {isNext && (
+        <div className="text-[10px] text-gray-400 mt-1">Next</div>
       )}
     </div>
   );
@@ -302,10 +318,17 @@ export default function StudentDashboard() {
       <main className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Hero Welcome Section */}
         <div className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Student Portal</span>
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
             Welcome back, {studentName}
           </h1>
-          <p className="text-xl text-gray-500 italic">My Martial Path</p>
+          <p className="text-lg text-gray-500">
+            <span className="italic">My Martial Path</span>
+            <span className="mx-2">·</span>
+            <span className="font-medium text-gray-700">{currentBelt} Belt</span>
+          </p>
         </div>
 
         {/* Main Grid */}
@@ -336,7 +359,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {/* Attendance Ring */}
+              {/* Attendance Ring - Enhanced with status badge */}
               <div className="mt-8 flex flex-col items-center">
                 <div className="relative">
                   <ProgressRing 
@@ -349,18 +372,38 @@ export default function StudentDashboard() {
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-4xl font-bold text-gray-900">{qualifiedAttendance}%</span>
                     <span className="text-sm text-gray-500">Attendance</span>
-                    <span className="text-xs text-gray-400">for belt</span>
+                    {/* Status Badge */}
+                    <span 
+                      className="mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide"
+                      style={{ 
+                        backgroundColor: attendanceStatus.bg,
+                        color: attendanceStatus.color
+                      }}
+                    >
+                      {attendanceStatus.status}
+                    </span>
                   </div>
                 </div>
                 
+                {/* Motivational Microcopy */}
                 <p className="mt-4 text-center text-gray-600 font-medium">
-                  <span className="text-orange-500">Attendance</span> beats intensity
+                  <span className="text-orange-500">Consistency</span> is your superpower
                 </p>
                 
+                {/* Eligibility Warning */}
                 {qualifiedAttendance < (beltProgress?.attendanceRequired || 80) && (
-                  <p className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-                    Maintain {beltProgress?.attendanceRequired || 80}%+ to stay belt-eligible
-                  </p>
+                  <div className="mt-3 flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-xl">
+                    <Sparkles className="h-4 w-4" />
+                    <span>Need {(beltProgress?.attendanceRequired || 80) - qualifiedAttendance}% more for belt eligibility</span>
+                  </div>
+                )}
+                
+                {/* Success Message */}
+                {qualifiedAttendance >= (beltProgress?.attendanceRequired || 80) && (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-green-600 bg-green-50 px-4 py-2 rounded-xl">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>You're on track for your next belt!</span>
+                  </div>
                 )}
               </div>
             </SoftCard>

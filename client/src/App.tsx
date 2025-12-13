@@ -26,6 +26,8 @@ import StudentProfile from "./pages/StudentProfile";
 import StudentSettings from "./pages/StudentSettings";
 import StudentForgotPassword from "./pages/StudentForgotPassword";
 import StudentResetPassword from "./pages/StudentResetPassword";
+import SelectSchool from "./pages/SelectSchool";
+import StudentOnboarding from "./pages/StudentOnboarding";
 import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
 import CRMDashboard from "./pages/CRMDashboard";
@@ -96,6 +98,8 @@ function Router() {
       <Route path="/student-login" element={<StudentLogin />} />
       <Route path="/student-forgot-password" element={<StudentForgotPassword />} />
       <Route path="/student-reset-password" element={<StudentResetPassword />} />
+      <Route path="/select-school" element={<SelectSchool />} />
+      <Route path="/student-onboarding" element={<StudentOnboarding />} />
       <Route path="/student-dashboard" element={<StudentDashboard />} />
       <Route path="/student-schedule" element={<StudentSchedule />} />
       <Route path="/student-belt-tests" element={<StudentBeltTests />} />

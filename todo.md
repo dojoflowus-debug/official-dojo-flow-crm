@@ -3194,3 +3194,50 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Redesign Student Login with premium Apple-inspired split-screen aesthetic
 - [x] Implement Forgot Password functionality with email verification and reset flow
 - [x] Generate traditional Japanese dojo image for Student Login welcome screen
+
+
+## 🚀 NEW: DojoFlow Student Flow - Premium Apple-Inspired Experience
+
+### Phase 1: Universal Login Screen Enhancement
+- [x] Update StudentLogin with Apple-style light mode design
+- [x] Left panel: DojoFlow logo, headline, email/password inputs, Continue button
+- [x] Left panel: Create account and Forgot password links
+- [x] Left panel: Social login icons (Apple, Google)
+- [x] Right panel: Large cinematic martial arts illustration (already done)
+- [x] Implement global authentication (not school-specific)
+
+### Phase 2: School Resolution Logic (Smart Routing)
+- [x] After login, check user state for school associations
+- [x] Case A: Single school → Auto-redirect to Student Dashboard
+- [x] Case B: Multiple schools → Show School Selector
+- [x] Case C: New student (no school) → Start Onboarding
+
+### Phase 3: School Selector (Multi-School Users)
+- [x] Create SelectSchool page with centered card grid
+- [x] Apple Wallet-style school cards with logo, name, city/state
+- [x] "Enter School" button on each card
+- [x] Soft hover glow effect
+- [x] Last accessed school pinned first
+
+### Phase 4: New Student Onboarding Flow
+- [x] Create StudentOnboarding page with 3 steps
+- [x] Step 1: Find School (search by name/ZIP, invite code field)
+- [x] Step 2: Student Profile (name, DOB, program, emergency contact, photo)
+- [x] Step 3: Confirmation with success animation
+
+### Phase 5: Enhanced Student Dashboard
+- [x] Hero section with large student photo and greeting
+- [x] Horizontal belt progression strip (White → Black)
+- [x] Current belt highlighted, next belt glowing
+- [x] Tooltip with qualified attendance % and classes remaining
+- [x] Circular attendance progress ring with 80% threshold warning
+- [x] Quick action bar (Check In, View Schedule, Messages, Payments)
+- [x] Training Intelligence section with weekly pills and performance curve
+- [x] Upcoming classes card list with instructor and belt requirement
+
+### Phase 6: Design Requirements
+- [x] Light mode primary throughout
+- [x] Apple-grade spacing and typography
+- [x] Red accents only for importance
+- [x] No clutter - emotion over raw data
+- [x] Consistent styling across all screens
