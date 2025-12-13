@@ -21,13 +21,13 @@ import {
   XCircle,
   Clock
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Student Payments - View payment history and make payments
  */
 export default function StudentPayments() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [payments, setPayments] = useState<any[]>([]);
   const [accountBalance, setAccountBalance] = useState(0);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -37,7 +37,7 @@ export default function StudentPayments() {
     // Check if student is logged in
     const isLoggedIn = localStorage.getItem("student_logged_in");
     if (!isLoggedIn) {
-      setLocation("/student-login");
+      navigate("/student-login");
       return;
     }
 
@@ -91,7 +91,7 @@ export default function StudentPayments() {
         invoice: "INV-2025-005"
       }
     ]);
-  }, [setLocation]);
+  }, [navigate]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -139,7 +139,7 @@ export default function StudentPayments() {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => setLocation("/student-dashboard")}
+              onClick={() => navigate("/student-dashboard")}
               className="text-slate-400 hover:text-white"
             >
               <ArrowLeft className="h-5 w-5" />

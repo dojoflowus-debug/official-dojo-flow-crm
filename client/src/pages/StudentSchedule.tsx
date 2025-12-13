@@ -15,7 +15,7 @@ import {
   List,
   Grid3X3
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 
 // Belt color mapping
 const beltColors: Record<string, { primary: string; glow: string }> = {
@@ -177,7 +177,7 @@ function CalendarDay({
  * Student Schedule - Calendar View for Classes
  */
 export default function StudentSchedule() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
@@ -315,11 +315,11 @@ export default function StudentSchedule() {
     // Check if student is logged in
     const isLoggedIn = localStorage.getItem("student_logged_in");
     if (!isLoggedIn) {
-      setLocation("/student-login");
+      navigate("/student-login");
       return;
     }
     setTimeout(() => setMounted(true), 100);
-  }, [setLocation]);
+  }, [navigate]);
 
   // Calendar calculations
   const calendarDays = useMemo(() => {
@@ -437,7 +437,7 @@ export default function StudentSchedule() {
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setLocation("/student-dashboard")}
+                onClick={() => navigate("/student-dashboard")}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all"
               >
                 <ArrowLeft className="h-5 w-5" />

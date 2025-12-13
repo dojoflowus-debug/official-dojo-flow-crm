@@ -16,13 +16,13 @@ import {
   Save,
   Camera
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Student Profile - View and edit profile settings
  */
 export default function StudentProfile() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -30,7 +30,7 @@ export default function StudentProfile() {
     // Check if student is logged in
     const isLoggedIn = localStorage.getItem("student_logged_in");
     if (!isLoggedIn) {
-      setLocation("/student-login");
+      navigate("/student-login");
       return;
     }
 
@@ -57,7 +57,7 @@ export default function StudentProfile() {
         smsReminders: false
       }
     });
-  }, [setLocation]);
+  }, [navigate]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +87,7 @@ export default function StudentProfile() {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => setLocation("/student-dashboard")}
+              onClick={() => navigate("/student-dashboard")}
               className="text-slate-400 hover:text-white"
             >
               <ArrowLeft className="h-5 w-5" />

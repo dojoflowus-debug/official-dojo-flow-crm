@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { LogIn, ArrowLeft, User, Lock, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
 /**
  * Student Login Page - Authentication for student portal access
  */
 export default function StudentLogin() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +28,7 @@ export default function StudentLogin() {
         localStorage.setItem("student_name", data.student.firstName || 'Student');
         
         // Redirect to student dashboard
-        setLocation("/student-dashboard");
+        navigate("/student-dashboard");
       } else {
         setError(data?.error || "Login failed. Please check your credentials.");
       }
@@ -74,7 +74,7 @@ export default function StudentLogin() {
         localStorage.setItem("student_name", result.data.student.firstName || 'Student');
         
         // Redirect to student dashboard
-        setLocation("/student-dashboard");
+        navigate("/student-dashboard");
       } else {
         setError("No student found with this email. Please contact the front desk.");
       }
@@ -90,7 +90,7 @@ export default function StudentLogin() {
         <div className="container mx-auto px-6 py-6 flex items-center justify-between">
           <Button
             variant="ghost"
-            onClick={() => setLocation("/")}
+            onClick={() => navigate("/")}
             className="text-slate-400 hover:text-white"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />

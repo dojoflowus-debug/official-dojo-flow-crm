@@ -307,7 +307,7 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
  * Shows upcoming belt tests and allows registration with payment
  */
 export default function StudentBeltTests() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const searchString = useSearch();
   const [studentId, setStudentId] = useState<number | null>(null);
   const [selectedTest, setSelectedTest] = useState<any>(null);
@@ -330,14 +330,14 @@ export default function StudentBeltTests() {
     const storedStudentId = localStorage.getItem("student_id");
     
     if (!isLoggedIn) {
-      setLocation("/student-login");
+      navigate("/student-login");
       return;
     }
     
     if (storedStudentId) {
       setStudentId(parseInt(storedStudentId, 10));
     }
-  }, [setLocation]);
+  }, [navigate]);
 
   // Show success modal after payment verification
   useEffect(() => {
@@ -395,7 +395,7 @@ export default function StudentBeltTests() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setLocation("/student-dashboard")}
+              onClick={() => navigate("/student-dashboard")}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ChevronLeft className="h-5 w-5 text-gray-600" />

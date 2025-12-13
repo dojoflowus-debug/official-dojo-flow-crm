@@ -16,7 +16,7 @@ import {
   Loader2,
   Award
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 
 // Belt data with colors
 const belts = [
@@ -165,7 +165,7 @@ function WeeklyTrainingBar({ day, attended, isToday }: { day: string; attended: 
  * Apple-inspired light theme with real data from backend
  */
 export default function StudentDashboard() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [studentId, setStudentId] = useState<number | null>(null);
 
@@ -175,7 +175,7 @@ export default function StudentDashboard() {
     const storedStudentId = localStorage.getItem("student_id");
     
     if (!isLoggedIn) {
-      setLocation("/student-login");
+      navigate("/student-login");
       return;
     }
     
@@ -184,7 +184,7 @@ export default function StudentDashboard() {
     }
     
     setTimeout(() => setMounted(true), 100);
-  }, [setLocation]);
+  }, [navigate]);
 
   // Fetch dashboard data from backend
   const { data: dashboardData, isLoading, error } = trpc.studentPortal.getDashboardData.useQuery(
@@ -204,7 +204,7 @@ export default function StudentDashboard() {
     localStorage.removeItem("student_logged_in");
     localStorage.removeItem("student_email");
     localStorage.removeItem("student_id");
-    setLocation("/student-login");
+    navigate("/student-login");
   };
 
   const handleCheckIn = () => {
@@ -219,7 +219,7 @@ export default function StudentDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Please log in to view your dashboard</p>
-          <Button onClick={() => setLocation("/student-login")}>Go to Login</Button>
+          <Button onClick={() => navigate("/student-login")}>Go to Login</Button>
         </div>
       </div>
     );
@@ -432,7 +432,7 @@ export default function StudentDashboard() {
               <Button 
                 variant="outline"
                 className="h-auto py-4 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl flex flex-col items-center gap-2 border-gray-200 shadow-sm"
-                onClick={() => setLocation("/student-schedule")}
+                onClick={() => navigate("/student-schedule")}
               >
                 <Calendar className="h-6 w-6" />
                 <span className="font-semibold">Schedule</span>
@@ -441,7 +441,7 @@ export default function StudentDashboard() {
               <Button 
                 variant="outline"
                 className="h-auto py-4 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-2xl flex flex-col items-center gap-2 border-orange-200 shadow-sm"
-                onClick={() => setLocation("/student-belt-tests")}
+                onClick={() => navigate("/student-belt-tests")}
               >
                 <Award className="h-6 w-6" />
                 <span className="font-semibold">Belt Tests</span>
@@ -450,6 +450,7 @@ export default function StudentDashboard() {
               <Button 
                 variant="outline"
                 className="h-auto py-4 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl flex flex-col items-center gap-2 border-gray-200 shadow-sm"
+                onClick={() => navigate("/student-messages")}
               >
                 <MessageSquare className="h-6 w-6" />
                 <span className="font-semibold">Messages</span>
@@ -458,6 +459,7 @@ export default function StudentDashboard() {
               <Button 
                 variant="outline"
                 className="h-auto py-4 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl flex flex-col items-center gap-2 border-gray-200 shadow-sm"
+                onClick={() => navigate("/student-payments")}
               >
                 <CreditCard className="h-6 w-6" />
                 <span className="font-semibold">Payments</span>
@@ -498,7 +500,7 @@ export default function StudentDashboard() {
                 <Button 
                   variant="ghost" 
                   className="text-gray-500 hover:text-gray-900"
-                  onClick={() => setLocation("/student-schedule")}
+                  onClick={() => navigate("/student-schedule")}
                 >
                   View All <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
@@ -544,7 +546,7 @@ export default function StudentDashboard() {
                   <Button 
                     variant="link" 
                     className="text-orange-500"
-                    onClick={() => setLocation("/student-schedule")}
+                    onClick={() => navigate("/student-schedule")}
                   >
                     View full schedule
                   </Button>
@@ -559,6 +561,7 @@ export default function StudentDashboard() {
           <Button 
             variant="ghost" 
             className="text-gray-400 hover:text-gray-600"
+            onClick={() => navigate("/student-settings")}
           >
             <Settings className="h-4 w-4 mr-2" />
             Account Settings

@@ -23,6 +23,7 @@ import StudentBeltTests from "./pages/StudentBeltTests";
 import StudentPayments from "./pages/StudentPayments";
 import StudentMessages from "./pages/StudentMessages";
 import StudentProfile from "./pages/StudentProfile";
+import StudentSettings from "./pages/StudentSettings";
 import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
 import CRMDashboard from "./pages/CRMDashboard";
@@ -98,6 +99,7 @@ function Router() {
       <Route path="/student-payments" element={<StudentPayments />} />
       <Route path="/student-messages" element={<StudentMessages />} />
       <Route path="/student-profile" element={<StudentProfile />} />
+      <Route path="/student-settings" element={<StudentSettings />} />
       <Route path="/kai-dashboard" element={<KaiDashboard />} />
       <Route path="/kai" element={<KaiDashboard />} />
       <Route path="/kai-command" element={<KaiCommand />} />

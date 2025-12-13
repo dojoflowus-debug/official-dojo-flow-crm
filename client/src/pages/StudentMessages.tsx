@@ -20,13 +20,13 @@ import {
   User,
   Clock
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Student Messages - View and send messages to instructors
  */
 export default function StudentMessages() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [showNewMessageDialog, setShowNewMessageDialog] = useState(false);
@@ -38,7 +38,7 @@ export default function StudentMessages() {
     // Check if student is logged in
     const isLoggedIn = localStorage.getItem("student_logged_in");
     if (!isLoggedIn) {
-      setLocation("/student-login");
+      navigate("/student-login");
       return;
     }
 
@@ -87,7 +87,7 @@ export default function StudentMessages() {
         replies: []
       }
     ]);
-  }, [setLocation]);
+  }, [navigate]);
 
   const handleMessageClick = (message: any) => {
     setSelectedMessage(message);
@@ -144,7 +144,7 @@ export default function StudentMessages() {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => selectedMessage ? setSelectedMessage(null) : setLocation("/student-dashboard")}
+              onClick={() => selectedMessage ? setSelectedMessage(null) : navigate("/student-dashboard")}
               className="text-slate-400 hover:text-white"
             >
               <ArrowLeft className="h-5 w-5" />
