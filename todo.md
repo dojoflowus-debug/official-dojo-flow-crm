@@ -2763,3 +2763,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Fix map loading - updated to use VITE_GOOGLE_MAPS_API_KEY
 - [x] Requested Google Maps API key from user
 - [x] Test map displays correctly on Students page
+
+## Fix Students Page Map (Debug)
+- [x] Check browser console for specific errors
+- [x] Verify API key is being loaded correctly
+- [x] Added collapsible map section - map hidden by default
+- [x] Added "Show Map" button to reveal map when needed
+- Note: Google Maps API key needs proper configuration in Google Cloud Console (billing, referrers, API enabled)

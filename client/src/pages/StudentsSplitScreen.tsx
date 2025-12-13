@@ -403,7 +403,7 @@ export default function StudentsSplitScreen() {
   const [mapWidth, setMapWidth] = useState(40) // percentage
   const [isDragging, setIsDragging] = useState(false)
   const [isMapExpanded, setIsMapExpanded] = useState(false)
-  const [isMapHidden, setIsMapHidden] = useState(false) // For mobile toggle
+  const [isMapHidden, setIsMapHidden] = useState(true) // Hidden by default until Google Maps API key is configured
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [isHeaderHidden, setIsHeaderHidden] = useState(false)
@@ -785,7 +785,7 @@ export default function StudentsSplitScreen() {
         style={{ cursor: isDragging && !isMobile && !isTablet ? 'col-resize' : 'default' }}
       >
         {/* Left Pane - Map + Stats */}
-        {(!isMobile || !isMapHidden) && (
+        {!isMapHidden && (
           <div 
           className={`flex flex-col transition-all duration-300 p-4 ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-white'} ${
             isMapExpanded ? 'w-full' : ''
@@ -875,11 +875,11 @@ export default function StudentsSplitScreen() {
           </div>
         )}
 
-        {/* Mobile: Show Map Button */}
-        {isMobile && isMapHidden && (
+        {/* Show Map Button - visible when map is hidden */}
+        {isMapHidden && (
           <button
             onClick={() => setIsMapHidden(false)}
-            className={`border-b py-3 text-center text-sm text-primary font-medium ${isDarkMode ? 'bg-[#18181A] border-white/10 hover:bg-[#202022]' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+            className={`border-b py-3 text-center text-sm text-primary font-medium ${isDarkMode ? 'bg-[#18181A] border-white/10 hover:bg-[#202022]' : 'bg-white border-slate-200 hover:bg-slate-50'} ${isMobile ? '' : 'absolute top-20 left-4 z-20 rounded-lg px-4 border shadow-lg'}`}
           >
             <MapPin className="h-4 w-4 inline mr-2" />
             Show Map
