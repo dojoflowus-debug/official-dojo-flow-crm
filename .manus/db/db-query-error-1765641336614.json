@@ -1,0 +1,8 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS message_threads (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  contextType VARCHAR(50) NOT NULL DEFAULT 'general',\n  contextId INT,\n  participants TEXT NOT NULL DEFAULT '[]',\n  subject VARCHAR(255),\n  lastMessageAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS message_threads (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  contextType VARCHAR(50) NOT NULL DEFAULT 'general',\n  contextId INT,\n  participants TEXT NOT NULL DEFAULT '[]',\n  subject VARCHAR(255),\n  lastMessageAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1101 (42000) at line 1: BLOB/TEXT/JSON column 'participants' can't have a default value"
+  ]
+}

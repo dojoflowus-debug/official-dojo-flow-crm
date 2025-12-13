@@ -1540,3 +1540,103 @@ export const programEnrollments = mysqlTable("program_enrollments", {
 
 export type ProgramEnrollment = typeof programEnrollments.$inferSelect;
 export type InsertProgramEnrollment = typeof programEnrollments.$inferInsert;
+
+
+/**
+ * Message threads for @ mentions system
+ * Tracks conversation threads between staff, students, and instructors
+ */
+export const messageThreads = mysqlTable("message_threads", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Context type: student, general, class, billing, etc. */
+  contextType: varchar("contextType", { length: 50 }).notNull().default("general"),
+  /** Optional context ID (e.g., studentId, classId) */
+  contextId: int("contextId"),
+  /** JSON array of participants: [{userId, userType, role}] */
+  participants: text("participants").notNull().default("[]"),
+  /** Thread subject/title */
+  subject: varchar("subject", { length: 255 }),
+  /** Last message timestamp for sorting */
+  lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MessageThread = typeof messageThreads.$inferSelect;
+export type InsertMessageThread = typeof messageThreads.$inferInsert;
+
+/**
+ * Direct messages for @ mentions system
+ * Individual messages within a thread
+ */
+export const directMessages = mysqlTable("direct_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  threadId: int("threadId").notNull(),
+  /** Sender ID (can be staff, student, or system) */
+  senderId: int("senderId").notNull(),
+  /** Sender type: staff, student, system, kai */
+  senderType: varchar("senderType", { length: 20 }).notNull(),
+  /** Sender role for display */
+  senderRole: varchar("senderRole", { length: 50 }),
+  /** Message body (plain text) */
+  body: text("body").notNull(),
+  /** JSON array of mentions: [{type: "student"|"staff"|"kai", id, displayName}] */
+  mentions: text("mentions").notNull().default("[]"),
+  /** JSON array of users who read this message: [{userId, userType, readAt}] */
+  readBy: text("readBy").notNull().default("[]"),
+  /** Whether this message triggered Kai response */
+  triggeredKai: int("triggeredKai").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DirectMessage = typeof directMessages.$inferSelect;
+export type InsertDirectMessage = typeof directMessages.$inferInsert;
+
+/**
+ * Student notes extended to support message type
+ * Links notes to message threads for unified view
+ */
+export const studentNotes = mysqlTable("student_notes", {
+  id: int("id").autoincrement().primaryKey(),
+  studentId: int("studentId").notNull(),
+  /** Note type: note, message, activity */
+  noteType: varchar("noteType", { length: 20 }).notNull().default("note"),
+  /** Staff member who created the note */
+  createdBy: int("createdBy"),
+  /** Staff name for display */
+  createdByName: varchar("createdByName", { length: 255 }),
+  /** Note content */
+  content: text("content"),
+  /** Link to message thread if noteType = message */
+  threadId: int("threadId"),
+  /** Link to specific message if noteType = message */
+  messageId: int("messageId"),
+  /** Whether note is pinned */
+  isPinned: int("isPinned").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudentNote = typeof studentNotes.$inferSelect;
+export type InsertStudentNote = typeof studentNotes.$inferInsert;
+
+/**
+ * Unread message counts per user for badge display
+ */
+export const unreadMessageCounts = mysqlTable("unread_message_counts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** User ID (can be staff or student) */
+  userId: int("userId").notNull(),
+  /** User type: staff, student */
+  userType: varchar("userType", { length: 20 }).notNull(),
+  /** Thread ID */
+  threadId: int("threadId").notNull(),
+  /** Number of unread messages in this thread */
+  unreadCount: int("unreadCount").default(0).notNull(),
+  /** Last read message ID */
+  lastReadMessageId: int("lastReadMessageId"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UnreadMessageCount = typeof unreadMessageCounts.$inferSelect;
+export type InsertUnreadMessageCount = typeof unreadMessageCounts.$inferInsert;

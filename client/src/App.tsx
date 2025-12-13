@@ -32,6 +32,7 @@ import WaiverSigning from "./pages/WaiverSigning";
 import StudentPaymentCheckout from "./pages/StudentPaymentCheckout";
 import StudentOnboardingSuccess from "./pages/StudentOnboardingSuccess";
 import StudentPendingApproval from "./pages/StudentPendingApproval";
+import StaffInbox from "./pages/StaffInbox";
 import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
 import CRMDashboard from "./pages/CRMDashboard";
@@ -130,6 +131,7 @@ function Router() {
       {/* Kiosk removed - Kai Command is the central focus */}
       <Route path="/classes" element={<Classes />} />
       <Route path="/staff" element={<Staff />} />
+      <Route path="/staff-inbox" element={<StaffInbox />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/billing/setup" element={<BillingSetup />} />
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />

@@ -3512,3 +3512,96 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Fixed Full Screen button - now triggers fullscreen mode via enterFullscreen()
 - [x] Quick action cards (START WITH YOUR GOALS, etc.) - already working, populate input with prompts
 - [x] Verified all buttons work correctly in browser testing
+
+
+## 🚀 NEW: @ Mentions for Students + Instructors (Targeted Messaging)
+
+### Phase 1: Database Schema
+- [ ] Create message_threads table (id, contextType, contextId, participants, createdAt, updatedAt)
+- [ ] Create messages table (id, threadId, senderId, senderRole, body, mentions JSON, createdAt, readBy JSON)
+- [ ] Extend student_notes table to support noteType = "message" with messageId, threadId links
+- [ ] Add studentMessagingEnabled field to dojo_settings
+
+### Phase 2: MentionInput Component
+- [ ] Create MentionInput component with @ trigger
+- [ ] Build suggestion dropdown with students, instructors, Kai
+- [ ] Show avatar, name, rank/role, location for each suggestion
+- [ ] Insert styled mention chip on selection
+- [ ] Support multiple mentions in one message
+
+### Phase 3: Message Routing Backend
+- [ ] Create sendMessage tRPC procedure
+- [ ] Parse mentions from message body
+- [ ] Route to student participants (create thread, message, note entry)
+- [ ] Route to instructor participants (create thread, message)
+- [ ] Route to Kai only if @Kai is mentioned
+- [ ] Track unread counts per participant
+
+### Phase 4: Student Portal Messages
+- [ ] Add Messages/Inbox section to Student Dashboard
+- [ ] Show threads by sender/context
+- [ ] Display unread badge count in top bar
+- [ ] Message detail view with replies
+- [ ] Notification toast for new messages
+
+### Phase 5: Student Card Notes Integration
+- [ ] Add "Messages" filter chip to Notes section
+- [ ] Display messages as note items with sender, timestamp, mentions
+- [ ] Add Reply action that stays in same thread
+
+### Phase 6: Staff Inbox/Mentions Center
+- [ ] Create Staff Inbox page with "Assigned to me" feel
+- [ ] Add filters: Students, Instructors, All
+- [ ] Show unread badge count
+- [ ] Thread view with reply capability
+
+### Phase 7: Kai Integration
+- [ ] Modify Kai response logic to check for @Kai mention
+- [ ] Only respond if @Kai is explicitly mentioned
+- [ ] Reply stays in thread where @Kai was invoked
+
+### Phase 8: Permissions & Privacy
+- [ ] Only authenticated staff can @message students
+- [ ] Students can reply only if dojoSettings.studentMessagingEnabled = true
+- [ ] Instructors can only message students assigned to their dojo
+
+
+## ✅ COMPLETED: @ Mentions for Student/Instructor/Kai Messaging
+
+### Phase 1: Database Schema
+- [x] Create message_threads table
+- [x] Create direct_messages table
+- [x] Create student_notes table for message integration
+- [x] Create unread_message_counts table
+
+### Phase 2: MentionInput Component
+- [x] Build @ suggestion dropdown with search
+- [x] Support student, staff, and Kai mentions
+- [x] Show avatars and roles in dropdown
+- [x] Parse mentions from message body
+
+### Phase 3: Message Routing Backend
+- [x] Create sendMessage procedure
+- [x] Route to Student Portal inbox for @student
+- [x] Route to Student Card Notes for @student
+- [x] Route to Staff Inbox for @staff
+- [x] Trigger Kai response only when @Kai mentioned
+
+### Phase 4: Student Portal Inbox
+- [x] Create StudentMessages page
+- [x] Show threads with unread badges
+- [x] Display message history
+- [x] Allow replies
+
+### Phase 5: Staff Inbox
+- [x] Create StaffInbox page (/staff-inbox)
+- [x] Filter by students/staff
+- [x] Show unread counts
+- [x] Compose new messages with @ mentions
+
+### Phase 6: Kai Integration
+- [x] Only respond when @Kai is explicitly mentioned
+- [x] Insert Kai response as message in thread
+- [x] Show Kai messages with distinct styling (bot icon)
+- [x] 17 vitest tests passing for messaging logic
+
