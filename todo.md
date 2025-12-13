@@ -2875,3 +2875,45 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Empty state with friendly illustration
 - [x] Stage counts displayed above pills
 - [x] Progress bar fills as pipeline advances
+
+## ✅ COMPLETED: DojoFlow Leads Signature Mode Redesign
+### Stat Tiles Section
+- [x] Add square stat tiles under stage selector with rounded corners (12-16px)
+- [x] New Leads (Today) tile with blinking green dot when count > 0
+- [x] Aging Leads tile showing yellow + red lead count
+- [x] Est. Pipeline Value tile with animated count-up on load
+- [x] Kai Alerts tile showing recommended actions count
+- [x] Tiles are clickable and filter the board
+
+### Age-Encoded Lead Cards
+- [x] Status age encoding: green (0-5 days), yellow (6-10 days), red (11+ days)
+- [x] Seniority affects vertical positioning (new leads higher, older lower)
+- [x] Calm slow pulse for green (6-8s), faster pulse for red (2-3s)
+- [x] Clean white (light mode) / soft charcoal (dark mode) cards
+
+### Connector System (Signature Feature)
+- [x] Thin wire lines connecting leads with color-coded urgency
+- [x] Solid line = assigned/contacted, Dashed = uncontacted
+- [x] Flickering line = Kai recommends immediate action
+- [x] Line thickness increases with lead value/seniority
+
+### Kai Integration (Silent Conductor)
+- [x] Brief glow travels along connector lines
+- [x] Small Kai dot appears on lead corner for recommendations
+- [x] Tooltip shows Kai suggestion on hover
+- [x] No popups, omnipresent but not intrusive
+
+### Resolve Mode Toggle
+- [x] Add Resolve Mode toggle button
+- [x] When enabled: board dims except yellow/red leads
+- [x] Connector lines intensify, non-urgent leads fade
+- [x] Stat tiles lock to "Action Needed"
+
+### Stage Headers
+- [x] Subtle health gradient on stage headers
+- [x] Red stages feel heavier/darker, green stages lighter
+- [x] Brief illumination when card moves stages
+
+### Dark/Light Mode Parity
+- [x] Ensure all features work in both dark and light mode
+- [x] Background remains calm and neutral

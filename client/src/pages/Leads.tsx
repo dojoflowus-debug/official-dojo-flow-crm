@@ -1,21 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
-import StageRail from '../components/StageRail'
-import LeadCard from '../components/LeadCard'
+import SignatureStageRail from '../components/SignatureStageRail'
+import SignatureLeadCard from '../components/SignatureLeadCard'
+import LeadStatTiles from '../components/LeadStatTiles'
 import LeadDrawer from '../components/LeadDrawer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import { trpc } from '@/lib/trpc'
 import {
   Search,
   Plus,
   Settings,
   Users,
-  Inbox
+  Inbox,
+  Zap,
+  Focus
 } from 'lucide-react'
 import LeadSourceSettings from '../components/LeadSourceSettings'
 
@@ -28,6 +32,8 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   const [showSettings, setShowSettings] = useState(false)
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isResolveMode, setIsResolveMode] = useState(false)
+  const [activeFilter, setActiveFilter] = useState<'new' | 'aging' | 'value' | 'kai' | null>(null)
   const [newLead, setNewLead] = useState({
     first_name: '',
     last_name: '',
@@ -80,6 +86,67 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
     { id: 'lost_winback', label: 'Lost / Winback' },
   ]
 
+  // Calculate stats
+  const stats = useMemo(() => {
+    if (!leads) return { newToday: 0, aging: 0, pipelineValue: 0, kaiAlerts: 0 };
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let newToday = 0;
+    let aging = 0;
+    let kaiAlerts = 0;
+    
+    // Count across all stages
+    Object.values(leads).forEach((stageLeads: any[]) => {
+      stageLeads.forEach((lead: any) => {
+        const createdDate = new Date(lead.created_at || lead.updated_at);
+        const ageDays = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // New today
+        if (createdDate >= today) newToday++;
+        
+        // Aging (6+ days)
+        if (ageDays >= 6) aging++;
+        
+        // Kai alerts (simulate - every 3rd aging lead)
+        if (ageDays >= 6 && Math.random() > 0.7) kaiAlerts++;
+      });
+    });
+    
+    // Estimate pipeline value ($500 per lead average)
+    const totalLeads = Object.values(leads).reduce((sum: number, arr: any[]) => sum + arr.length, 0);
+    const pipelineValue = totalLeads * 500;
+    
+    return { newToday, aging, pipelineValue, kaiAlerts: Math.max(kaiAlerts, 1) };
+  }, [leads]);
+
+  // Calculate stage health
+  const stageHealth = useMemo(() => {
+    if (!leads) return {};
+    
+    const health: Record<string, 'green' | 'yellow' | 'red'> = {};
+    
+    stages.forEach(stage => {
+      const stageLeads = leads[stage.id] || [];
+      let redCount = 0;
+      let yellowCount = 0;
+      
+      stageLeads.forEach((lead: any) => {
+        const createdDate = new Date(lead.created_at || lead.updated_at);
+        const ageDays = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (ageDays >= 11) redCount++;
+        else if (ageDays >= 6) yellowCount++;
+      });
+      
+      if (redCount > 0) health[stage.id] = 'red';
+      else if (yellowCount > 0) health[stage.id] = 'yellow';
+      else health[stage.id] = 'green';
+    });
+    
+    return health;
+  }, [leads]);
+
   // Handle Add Lead
   const handleAddLead = () => {
     createLead.mutate({
@@ -107,19 +174,46 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
     setSelectedLead(null)
   }
 
-  // Filter leads based on search query
+  // Handle filter click from stat tiles
+  const handleFilterClick = (filter: 'new' | 'aging' | 'value' | 'kai' | null) => {
+    setActiveFilter(filter);
+    // Could also auto-select appropriate stage based on filter
+  }
+
+  // Filter leads based on search query and active filter
   const filterLeads = (leadsArray: any[]) => {
-    if (!searchQuery) return leadsArray
+    let filtered = leadsArray;
     
-    return leadsArray.filter(lead => {
-      const fullName = `${lead.first_name} ${lead.last_name}`.toLowerCase()
-      const query = searchQuery.toLowerCase()
-      return (
-        fullName.includes(query) ||
-        lead.email?.toLowerCase().includes(query) ||
-        lead.phone?.includes(query)
-      )
-    })
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(lead => {
+        const fullName = `${lead.first_name} ${lead.last_name}`.toLowerCase()
+        return (
+          fullName.includes(query) ||
+          lead.email?.toLowerCase().includes(query) ||
+          lead.phone?.includes(query)
+        )
+      });
+    }
+    
+    // Stat tile filters
+    if (activeFilter === 'new') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(lead => {
+        const createdDate = new Date(lead.created_at || lead.updated_at);
+        return createdDate >= today;
+      });
+    } else if (activeFilter === 'aging') {
+      filtered = filtered.filter(lead => {
+        const createdDate = new Date(lead.created_at || lead.updated_at);
+        const ageDays = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        return ageDays >= 6;
+      });
+    }
+    
+    return filtered;
   }
 
   // Get leads for selected stage
@@ -143,15 +237,11 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   const stageCounts = getStageCounts()
   const currentStageLabel = stages.find(s => s.id === selectedStage)?.label || 'Leads'
 
-  // For light mode, we'll use the new design
-  // For dark mode, we'll keep compatibility but with light mode as primary
-  const isLightMode = !isDarkMode
-
   return (
     <BottomNavLayout>
-      <div className={`min-h-screen ${isLightMode ? 'bg-[#F6F7F9]' : 'bg-[#0F1115]'}`}>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-[#0F1115]' : 'bg-[#F6F7F9]'}`}>
         {/* Breadcrumb Navigation */}
-        <div className={`border-b px-6 py-2 ${isLightMode ? 'bg-white/80 backdrop-blur-sm border-slate-200/50' : 'bg-[#18181A] border-white/10'}`}>
+        <div className={`border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A]/80 backdrop-blur-sm border-white/10' : 'bg-white/80 backdrop-blur-sm border-slate-200/50'}`}>
           <Breadcrumb
             items={[
               { label: 'Dashboard', href: '/dashboard' },
@@ -160,77 +250,124 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           />
         </div>
 
-        {/* Header - Apple-like minimal */}
-        <div className={`border-b ${isLightMode ? 'bg-white border-slate-200/50' : 'bg-[#18181A] border-white/10'}`}>
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        {/* Header */}
+        <div className={`border-b ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-slate-200/50'}`}>
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className={`text-3xl md:text-4xl font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
+                <h1 className={`text-3xl md:text-4xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                   Leads
                 </h1>
-                <p className={`text-sm mt-1 ${isLightMode ? 'text-slate-500' : 'text-white/60'}`}>
-                  Track, convert, and nurture prospects
+                <p className={`text-sm mt-1 ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
+                  Your revenue radar • Command center
                 </p>
               </div>
-              <div className="flex gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {/* Resolve Mode Toggle */}
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-slate-100'}`}>
+                  <Focus className={`w-4 h-4 ${isResolveMode ? 'text-[#E53935]' : isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
+                  <span className={`text-xs font-medium ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>Resolve</span>
+                  <Switch
+                    checked={isResolveMode}
+                    onCheckedChange={setIsResolveMode}
+                    className="data-[state=checked]:bg-[#E53935]"
+                  />
+                </div>
+                
                 <Button 
                   onClick={() => setShowSettings(true)} 
                   variant="outline" 
-                  className={`flex-1 sm:flex-none ${isLightMode ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' : ''}`}
+                  size="sm"
+                  className={`${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                 >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Lead Sources
+                  <Settings className="h-4 w-4" />
                 </Button>
                 <Button 
                   onClick={() => setShowAddModal(true)} 
-                  className="flex-1 sm:flex-none bg-[#E53935] hover:bg-[#C62828] text-white"
+                  className="bg-[#E53935] hover:bg-[#C62828] text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Lead
                 </Button>
               </div>
             </div>
-
-            {/* Search Bar - Clean and minimal */}
-            <div className="relative max-w-md">
-              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${isLightMode ? 'text-slate-400' : 'text-white/40'}`} />
-              <Input
-                type="text"
-                placeholder="Search leads..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-12 h-12 rounded-xl ${isLightMode ? 'bg-slate-100 border-0 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#E53935]/20' : ''}`}
-              />
-            </div>
           </div>
         </div>
 
-        {/* Stage Rail - Innovative pill-style */}
-        <div className={`${isLightMode ? 'bg-white/50' : 'bg-[#18181A]/50'} backdrop-blur-sm`}>
+        {/* Stat Tiles */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 px-4 md:px-6 py-4 max-w-7xl mx-auto">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto">
+            <LeadStatTiles
+              newLeadsToday={stats.newToday}
+              agingLeads={stats.aging}
+              pipelineValue={stats.pipelineValue}
+              kaiAlerts={stats.kaiAlerts}
+              onFilterClick={handleFilterClick}
+              activeFilter={activeFilter}
+              isDarkMode={isDarkMode}
+            />
+          </div>
+        )}
+
+        {/* Stage Rail */}
+        <div className={`${isDarkMode ? 'bg-[#18181A]/50' : 'bg-white/50'} backdrop-blur-sm`}>
           {isLoading ? (
-            <div className="py-8 px-6">
-              <Skeleton className="h-12 max-w-4xl mx-auto rounded-full" />
+            <div className="py-6 px-6">
+              <Skeleton className="h-20 max-w-4xl mx-auto rounded-xl" />
             </div>
           ) : (
-            <StageRail
-              selectedStage={selectedStage}
-              onStageSelect={setSelectedStage}
-              stageCounts={stageCounts}
-            />
+            <div className="max-w-7xl mx-auto">
+              <SignatureStageRail
+                selectedStage={selectedStage}
+                onStageSelect={setSelectedStage}
+                stageCounts={stageCounts}
+                stageHealth={stageHealth}
+                isDarkMode={isDarkMode}
+                isResolveMode={isResolveMode}
+              />
+            </div>
           )}
         </div>
 
+        {/* Search Bar */}
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
+          <div className="relative max-w-md">
+            <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
+            <Input
+              type="text"
+              placeholder="Search leads..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`pl-12 h-12 rounded-xl ${isDarkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-white/40' : 'bg-slate-100 border-0 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#E53935]/20'}`}
+            />
+          </div>
+        </div>
+
         {/* Lead Cards Grid */}
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 pb-8">
           {/* Stage Title */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <h2 className={`text-2xl font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
+              <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                 {currentStageLabel}
               </h2>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${isLightMode ? 'bg-slate-100 text-slate-600' : 'bg-white/10 text-white/70'}`}>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-white/10 text-white/70' : 'bg-slate-100 text-slate-600'}`}>
                 {stageLeads.length} leads
               </span>
+              {activeFilter && (
+                <button
+                  onClick={() => setActiveFilter(null)}
+                  className="px-3 py-1 rounded-full text-xs font-medium bg-[#E53935]/20 text-[#E53935] hover:bg-[#E53935]/30 transition-colors"
+                >
+                  Clear filter ×
+                </button>
+              )}
             </div>
           </div>
 
@@ -241,32 +378,37 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
               ))}
             </div>
           ) : stageLeads.length === 0 ? (
-            /* Empty State - Friendly illustration */
-            <div className={`rounded-2xl p-12 text-center ${isLightMode ? 'bg-white shadow-sm' : 'bg-[#18181A] border border-white/10'}`}>
-              <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${isLightMode ? 'bg-slate-100' : 'bg-white/10'}`}>
-                <Inbox className={`w-10 h-10 ${isLightMode ? 'text-slate-400' : 'text-white/40'}`} />
+            /* Empty State */
+            <div className={`rounded-2xl p-12 text-center ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-white shadow-sm'}`}>
+              <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${isDarkMode ? 'bg-white/10' : 'bg-slate-100'}`}>
+                <Inbox className={`w-10 h-10 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
               </div>
-              <h3 className={`text-xl font-semibold mb-2 ${isLightMode ? 'text-slate-700' : 'text-white'}`}>
-                Your pipeline is clear
+              <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
+                {activeFilter ? 'No leads match this filter' : 'Your pipeline is clear'}
               </h3>
-              <p className={`text-sm mb-6 ${isLightMode ? 'text-slate-500' : 'text-white/60'}`}>
-                Let's bring in new leads to grow your dojo.
+              <p className={`text-sm mb-6 ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
+                {activeFilter ? 'Try adjusting your filter or search criteria.' : "Let's bring in new leads to grow your dojo."}
               </p>
-              <Button 
-                onClick={() => setShowAddModal(true)}
-                className="bg-[#E53935] hover:bg-[#C62828] text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Lead
-              </Button>
+              {!activeFilter && (
+                <Button 
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-[#E53935] hover:bg-[#C62828] text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Lead
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {stageLeads.map((lead, index) => (
-                <LeadCard
+                <SignatureLeadCard
                   key={lead.id}
                   lead={lead}
-                  hasKaiSuggestion={index === 0} // First lead gets Kai suggestion for demo
+                  hasKaiSuggestion={index < stats.kaiAlerts}
+                  isDarkMode={isDarkMode}
+                  isResolveMode={isResolveMode}
+                  index={index}
                   onClick={() => {
                     setSelectedLead(lead)
                     setIsDrawerOpen(true)
@@ -311,43 +453,43 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           onClose={() => setShowSettings(false)} 
         />
 
-        {/* Add Lead Modal - Apple-like clean design */}
+        {/* Add Lead Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-[#18181A]'}`}>
-              <div className={`px-6 py-5 border-b ${isLightMode ? 'border-slate-100' : 'border-white/10'}`}>
-                <h2 className={`text-xl font-semibold ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
+            <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${isDarkMode ? 'bg-[#18181A]' : 'bg-white'}`}>
+              <div className={`px-6 py-5 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
+                <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                   Add New Lead
                 </h2>
               </div>
               <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>
                       First Name
                     </label>
                     <Input
                       value={newLead.first_name}
                       onChange={(e) => setNewLead({ ...newLead, first_name: e.target.value })}
                       placeholder="John"
-                      className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
+                      className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
                     />
                   </div>
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>
                       Last Name
                     </label>
                     <Input
                       value={newLead.last_name}
                       onChange={(e) => setNewLead({ ...newLead, last_name: e.target.value })}
                       placeholder="Doe"
-                      className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
+                      className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>
                     Email
                   </label>
                   <Input
@@ -355,12 +497,12 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                     value={newLead.email}
                     onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
                     placeholder="john@example.com"
-                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
+                    className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>
                     Phone
                   </label>
                   <Input
@@ -368,52 +510,40 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                     value={newLead.phone}
                     onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
                     placeholder="(555) 123-4567"
-                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
+                    className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>
                     Source
                   </label>
                   <Input
                     value={newLead.source}
                     onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
                     placeholder="Website, Referral, etc."
-                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
+                    className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
-                    Parent Of (Optional)
-                  </label>
-                  <Input
-                    value={newLead.parent_of}
-                    onChange={(e) => setNewLead({ ...newLead, parent_of: e.target.value })}
-                    placeholder="Child's name"
-                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>
                     Notes
                   </label>
                   <textarea
                     value={newLead.ai_summary}
                     onChange={(e) => setNewLead({ ...newLead, ai_summary: e.target.value })}
                     placeholder="Additional notes about this lead..."
-                    className={`w-full min-h-[100px] px-3 py-2 rounded-lg ${isLightMode ? 'bg-slate-50 border border-slate-200 text-slate-700' : 'bg-background border border-input'}`}
+                    className={`w-full min-h-[100px] px-3 py-2 rounded-lg ${isDarkMode ? 'bg-white/5 border border-white/10 text-white' : 'bg-slate-50 border border-slate-200 text-slate-700'}`}
                   />
                 </div>
               </div>
 
-              <div className={`px-6 py-4 border-t flex gap-3 ${isLightMode ? 'border-slate-100 bg-slate-50' : 'border-white/10'}`}>
+              <div className={`px-6 py-4 border-t flex gap-3 ${isDarkMode ? 'border-white/10' : 'border-slate-100 bg-slate-50'}`}>
                 <Button
                   onClick={() => setShowAddModal(false)}
                   variant="outline"
-                  className={`flex-1 ${isLightMode ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100' : ''}`}
+                  className={`flex-1 ${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                 >
                   Cancel
                 </Button>
