@@ -974,31 +974,129 @@ export default function StudentsSplitScreen() {
             <span className="text-sm font-medium text-slate-700">Exit Full Map</span>
           </button>
           
-          {/* Docked Student Card on Right Side - Clean shadow, no blur */}
-          {isModalOpen && selectedStudent && (
-            <div className="absolute right-4 top-4 bottom-4 w-[400px] z-10 pointer-events-auto">
-              <StudentModal
-                student={selectedStudent}
-                isOpen={true}
-                onClose={() => {
-                  // Close card but stay in full map mode
-                  setIsModalOpen(false)
-                  // Keep highlighted student so mini label shows
-                }}
-                onEditProfile={(student) => {
-                  console.log('Edit profile:', student.id)
-                }}
-                onViewNotes={(student) => {
-                  setNotesStudent(student)
-                  setIsNotesDrawerOpen(true)
-                }}
-                onCloseNotesDrawer={() => {
-                  setIsNotesDrawerOpen(false)
-                  setNotesStudent(null)
-                }}
-                onStudentUpdated={handleStudentUpdated}
-                isFullMapMode={true}
-              />
+          {/* Docked Student Card on Right Side */}
+          {selectedStudent && (
+            <div className="absolute right-4 top-20 bottom-4 w-[400px] z-50 pointer-events-auto overflow-hidden">
+              <div className="h-full bg-white rounded-[26px] shadow-2xl overflow-y-auto">
+                {/* Card Header */}
+                <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 6h16" />
+                        <path d="M6 6v12" />
+                        <path d="M18 6v12" />
+                        <path d="M2 4h20" />
+                        <path d="M8 10h8" />
+                      </svg>
+                    </div>
+                    <span className="font-semibold text-gray-800">Student Profile</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedStudent(null)
+                      setHighlightedMapStudent(null)
+                    }}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="h-5 w-5 text-gray-500" />
+                  </button>
+                </div>
+                
+                {/* Student Info */}
+                <div className="p-6">
+                  {/* Avatar and Name */}
+                  <div className="flex flex-col items-center text-center mb-6">
+                    <div className="relative mb-4">
+                      {selectedStudent.photo_url ? (
+                        <img 
+                          src={selectedStudent.photo_url} 
+                          alt={`${selectedStudent.first_name} ${selectedStudent.last_name}`}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center border-4 border-white shadow-lg">
+                          <span className="text-2xl font-bold text-slate-600">
+                            {selectedStudent.first_name[0]}{selectedStudent.last_name[0]}
+                          </span>
+                        </div>
+                      )}
+                      <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white ${
+                        selectedStudent.status === 'Active' ? 'bg-green-500' : 
+                        selectedStudent.status === 'On Hold' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`} />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      {selectedStudent.first_name} {selectedStudent.last_name}
+                    </h2>
+                    <p className="text-gray-500">{selectedStudent.program || 'General'}</p>
+                  </div>
+                  
+                  {/* Status Badges */}
+                  <div className="flex flex-wrap justify-center gap-2 mb-6">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedStudent.status === 'Active' ? 'bg-green-100 text-green-700' : 
+                      selectedStudent.status === 'On Hold' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {selectedStudent.status}
+                    </span>
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-700">
+                      {selectedStudent.belt_rank || 'White Belt'}
+                    </span>
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
+                      {selectedStudent.membership_status || 'Standard'}
+                    </span>
+                  </div>
+                  
+                  {/* Contact Info */}
+                  <div className="space-y-3 mb-6">
+                    {selectedStudent.email && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">{selectedStudent.email}</span>
+                      </div>
+                    )}
+                    {selectedStudent.phone && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">{selectedStudent.phone}</span>
+                      </div>
+                    )}
+                    {(selectedStudent.street_address || selectedStudent.city) && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">
+                          {[selectedStudent.street_address, selectedStudent.city, selectedStudent.state, selectedStudent.zip_code].filter(Boolean).join(', ')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setNotesStudent(selectedStudent)
+                        setIsNotesDrawerOpen(true)
+                      }}
+                      className="w-full h-12 rounded-full"
+                    >
+                      View Notes
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        console.log('Edit profile:', selectedStudent.id)
+                      }}
+                      className="w-full h-12 rounded-full"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

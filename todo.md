@@ -2782,3 +2782,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Student location should be highlighted/centered on the map
 - [x] Student card should remain visible alongside the map
 - [x] Test the View on Map interaction works correctly
+
+## ✅ FIXED: Student Card Not Showing in Full Map Mode
+- [x] Student card appears as blank white/gray area instead of showing student details
+- [x] Investigate StudentModal rendering in full map mode context
+- [x] Fix the display issue so student card is visible
+- [x] Replaced StudentModal with inline card component for full map mode
