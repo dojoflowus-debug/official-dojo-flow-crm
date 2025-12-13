@@ -425,6 +425,40 @@ export default function StudentsSplitScreen() {
     return () => window.removeEventListener('resize', checkBreakpoints)
   }, [])
 
+  // Invalidate map size when view mode changes or on window resize
+  useEffect(() => {
+    if (viewMode === 'split' || viewMode === 'fullMap') {
+      // Use requestAnimationFrame + setTimeout to ensure DOM has updated
+      const invalidateMap = () => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize()
+        }
+      }
+      
+      // Immediate invalidate
+      requestAnimationFrame(() => {
+        invalidateMap()
+        // Also invalidate after CSS transitions complete (300ms)
+        setTimeout(invalidateMap, 150)
+        setTimeout(invalidateMap, 350)
+      })
+    }
+  }, [viewMode])
+
+  // Handle window resize for map
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapRef.current && (viewMode === 'split' || viewMode === 'fullMap')) {
+        requestAnimationFrame(() => {
+          mapRef.current?.invalidateSize()
+        })
+      }
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [viewMode])
+
   // tRPC utils for cache invalidation
   const utils = trpc.useUtils()
   
@@ -635,23 +669,35 @@ export default function StudentsSplitScreen() {
         className={`flex-1 overflow-hidden ${
           isMobile ? 'flex flex-col' : 'flex'
         }`}
+        style={{
+          minHeight: 0,
+          height: viewMode === 'fullMap' ? 'calc(100vh - 180px)' : undefined
+        }}
       >
         {/* Left Pane - Map (visible in split and fullMap modes) */}
         {(viewMode === 'split' || viewMode === 'fullMap') && (
           <div 
             className={`flex flex-col transition-all duration-300 ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-white'} ${
-              viewMode === 'fullMap' ? 'w-full' : ''
+              viewMode === 'fullMap' ? 'w-full h-full flex-1' : ''
             } ${
-              isMobile ? 'h-[350px] flex-shrink-0' : 'h-[calc(100vh-200px)]'
+              isMobile ? 'h-[350px] flex-shrink-0' : viewMode === 'fullMap' ? '' : 'h-[calc(100vh-200px)]'
             }`}
-            style={isMobile || viewMode === 'fullMap' ? {} : { 
+            style={isMobile ? {} : viewMode === 'fullMap' ? { height: '100%', minHeight: 0 } : { 
               flexBasis: `${mapWidth}%`,
               minWidth: '25%',
               maxWidth: '75%'
             }}
           >
             {/* Map Container - Full height, no card wrapper */}
-            <div className="flex-1 relative min-h-[300px]" style={{ position: 'relative', zIndex: 0 }}>
+            <div 
+              className="flex-1 relative" 
+              style={{ 
+                position: 'relative', 
+                zIndex: 0, 
+                minHeight: viewMode === 'fullMap' ? 'calc(100vh - 180px)' : '300px',
+                height: viewMode === 'fullMap' ? '100%' : undefined
+              }}
+            >
               {/* Map View - Leaflet/OpenStreetMap */}
               <LeafletMap
                 ref={mapRef}

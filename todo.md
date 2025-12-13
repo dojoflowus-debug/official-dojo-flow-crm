@@ -2840,3 +2840,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Details tab: full student info (DOB, guardian, address, membership, notes)
 - [x] Smooth tab transition animation
 - [x] Responsive layout for both tabs on mobile
+
+## ✅ COMPLETED: Fix Leaflet Map Partial Rendering
+- [x] Ensure map container has proper height/width (flex: 1, min-height: 0)
+- [x] Call invalidateSize() after view mode switches (Split/Map/List)
+- [x] Call invalidateSize() after split handle drag ends
+- [x] Call invalidateSize() on window resize
+- [x] Use requestAnimationFrame + setTimeout for proper timing
+- [x] Keep stable map ref to prevent remounting
+- [x] QA: Switch modes, resize, drag handle - map always fills container
