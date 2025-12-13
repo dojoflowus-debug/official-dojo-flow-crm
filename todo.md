@@ -3646,3 +3646,40 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Replaced Textarea with MentionInput component
 - [x] Verified @ mentions dropdown now appears when typing @
 - [x] Verified selecting Kai from dropdown inserts @Kai into message
+
+## 🐛 BUGFIX + UI UPGRADE: Kai Command Chat Bar Not Editable + Apple-Clean Composer
+
+### Problem
+- After adding @mentions, the Kai Command message input is no longer editable
+- Cannot type or focus cursor in the input field
+- Composer icons need to be bolder, cleaner, Apple-like
+
+### Fix Requirements (Typing / Focus)
+- [x] Input MUST always be focusable and editable
+- [x] Mentions should not block typing - dropdown only on "@"
+- [x] Remove any overlay blocking the input (z-index / pointer-events)
+- [x] Ensure input is not disabled/readonly
+- [x] Confirm focus management after selecting mention and sending message
+
+### UI Upgrade: Apple-like Composer Bar
+- [x] Rounded pill container (2xl radius), subtle border, soft shadow
+- [x] Clear spacing left-to-right, no clutter
+- [x] Icons: Paperclip (attachment), AtSign (mentions), Mic (voice), Send (filled red)
+- [x] Icons 20-22px, consistent stroke (2.0), high contrast in Light/Dark mode
+- [x] Placeholder: "Message Kai… Type @ to mention"
+- [x] Helper text: "Kai responds only when @Kai is mentioned."
+
+### Mention UI Behavior
+- [x] Dropdown appears above composer when typing "@"
+- [x] Sections: Students, Staff/Instructors, Kai
+- [x] Keyboard navigation: ↑ ↓ Enter
+- [x] Mention chips render as pill tokens inside input
+- [x] Chips never break typing
+
+### Acceptance Tests
+- [x] Can click input and type normally
+- [x] Can type "@jo" and dropdown appears; selecting inserts chip
+- [x] No invisible overlay blocks input
+- [x] Icons are crisp, Apple-like, aligned
+- [x] Enter sends, Shift+Enter newline
+- [x] After sending, input clears and remains focused

@@ -1190,81 +1190,101 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* COMPOSER DOCK (Row 3 of 3-row layout) */}
+          {/* COMPOSER DOCK (Row 3 of 3-row layout) - Apple-Clean Design */}
           {/* flex-shrink-0 ensures this element reserves its height and doesn't get compressed */}
-          {/* This is NOT an overlay - it's a proper flex child that pushes content above it */}
           <div 
-            className={`transition-all duration-500 flex-shrink-0 relative z-20 ${isFocusMode ? 'px-6 py-4' : isCinematic ? 'px-6 py-4' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-sm' : ''}`}
+            className={`transition-all duration-500 flex-shrink-0 relative z-20 ${isFocusMode ? 'px-6 py-5' : isCinematic ? 'px-6 py-5' : 'px-4 py-4'} ${(isCinematic || isFocusMode) ? '' : isDark ? 'bg-[#0F1115]/95 backdrop-blur-xl' : 'bg-white/95 backdrop-blur-xl border-t border-slate-100'}`}
             style={(isCinematic && !isFocusMode) ? { 
               animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both'
             } : {}}>
-            {/* No extra background blur layer - removed to eliminate double box */}
             {/* Shared content width wrapper - max-w-4xl to match messages area */}
             <div className={`max-w-4xl mx-auto relative transition-all duration-500`}>
-              {/* Expand/Collapse Button - Hidden in Focus Mode for cleaner look */}
-              {!isFocusMode && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setExpandedInput(!expandedInput)}
-                  className={`absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full z-10 shadow-sm ${isCinematic ? 'bg-black/80 hover:bg-black/90 text-white' : isDark ? 'bg-[#202022] hover:bg-[#2A2A2D] text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
-                >
-                  {expandedInput ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                </Button>
-              )}
               
-              {/* Input container - Single clean glass pill for Cinematic/Focus Mode */}
-              <div className={`flex items-center gap-2 transition-all duration-300 ${
+              {/* Apple-style Composer Pill Container */}
+              <div className={`flex items-center gap-3 transition-all duration-300 ${
                 isFocusMode 
-                  ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
+                  ? 'rounded-[28px] px-4 py-3 relative z-10 border border-white/25 shadow-[0_8px_40px_rgba(0,0,0,0.5)] focus-within:border-[rgba(237,57,61,0.5)] focus-within:shadow-[0_8px_40px_rgba(237,57,61,0.15)]'
                   : isCinematic
-                    ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)] focus-within:border-[rgba(255,76,76,0.6)]'
+                    ? 'rounded-[28px] px-4 py-3 relative z-10 border border-white/25 shadow-[0_8px_40px_rgba(0,0,0,0.6)] focus-within:border-[rgba(237,57,61,0.5)] focus-within:shadow-[0_8px_40px_rgba(237,57,61,0.15)]'
                     : isDark 
-                      ? 'rounded-[22px] p-2 bg-[#18181A] border border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' 
-                      : 'rounded-[22px] p-2 bg-white border border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
+                      ? 'rounded-[28px] px-4 py-3 bg-[#1C1C1E] border border-white/8 shadow-[0_4px_24px_rgba(0,0,0,0.25)] focus-within:border-white/15 focus-within:shadow-[0_4px_32px_rgba(0,0,0,0.35)]' 
+                      : 'rounded-[28px] px-4 py-3 bg-white border border-slate-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_32px_rgba(0,0,0,0.1)]'
               }`}
               style={(isCinematic || isFocusMode) ? { 
-                animation: isCinematic && !isFocusMode ? 'cinematicInputGlow 3s ease-in-out infinite' : 'none',
-                background: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)'
+                background: 'rgba(0, 0, 0, 0.75)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)'
               } : {}}
               >
-                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
-                  <Paperclip className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
-                </Button>
+                {/* Attachment Button - Paperclip */}
+                <button 
+                  className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shrink-0 ${
+                    (isCinematic || isFocusMode) 
+                      ? 'text-white/70 hover:text-white hover:bg-white/10' 
+                      : isDark 
+                        ? 'text-white/50 hover:text-white hover:bg-white/8' 
+                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  }`}
+                  title="Attach file"
+                >
+                  <Paperclip className="w-[22px] h-[22px]" strokeWidth={2} />
+                </button>
+
+                {/* MentionInput - Main text area */}
                 <MentionInput
                   value={messageInput}
                   onChange={setMessageInput}
                   onSubmit={(value, mentions) => {
-                    // Handle mentions in the message
                     console.log('Mentions:', mentions);
                     handleSendMessage();
                   }}
-                  placeholder="Message Kai... (Type @ to mention)"
-                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'} ${(isCinematic || isFocusMode) ? 'cinematic-input placeholder:text-white placeholder:opacity-100 [&_textarea]:text-white [&_textarea]:placeholder:text-white' : isDark ? '[&_textarea]:text-white' : '[&_textarea]:text-slate-800'}`}
+                  placeholder="Message Kai… Type @ to mention"
+                  theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
+                  variant="apple"
                 />
-                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
-                  <Mic className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
-                </Button>
-                <Button 
-                  size="icon" 
-                  className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
+
+                {/* Voice Button - Mic */}
+                <button 
+                  className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shrink-0 ${
+                    (isCinematic || isFocusMode) 
+                      ? 'text-white/70 hover:text-white hover:bg-white/10' 
+                      : isDark 
+                        ? 'text-white/50 hover:text-white hover:bg-white/8' 
+                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  }`}
+                  title="Voice input"
+                >
+                  <Mic className="w-[22px] h-[22px]" strokeWidth={2} />
+                </button>
+
+                {/* Send Button - DojoFlow Red */}
+                <button 
+                  className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shrink-0 ${
+                    !messageInput.trim() || isLoading
+                      ? (isCinematic || isFocusMode)
+                        ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                        : isDark 
+                          ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                          : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                      : 'bg-[#ED393D] hover:bg-[#D9292D] text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/35 active:scale-95'
+                  }`}
                   onClick={handleSendMessage}
                   disabled={!messageInput.trim() || isLoading}
+                  title="Send message"
                 >
-                  <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
-                </Button>
+                  <Send className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                </button>
               </div>
+
+              {/* Helper text - Kai responds only when @Kai is mentioned */}
               <p 
-                className={`text-xs text-center mt-2 relative z-10`}
+                className={`text-[11px] text-center mt-3 tracking-wide relative z-10`}
                 style={(isCinematic || isFocusMode) ? { 
                   textShadow: '0 1px 3px rgba(0,0,0,0.9)', 
-                  color: '#FFFFFF',
-                  opacity: 1
-                } : isDark ? { color: 'rgba(255,255,255,0.45)' } : { color: '#94a3b8' }}
+                  color: 'rgba(255,255,255,0.5)'
+                } : isDark ? { color: 'rgba(255,255,255,0.35)' } : { color: '#94a3b8' }}
               >
-                Kai can make mistakes. Consider checking important information.
+                Kai responds only when @Kai is mentioned. Press Enter to send, Shift+Enter for new line.
               </p>
             </div>
           </div>
