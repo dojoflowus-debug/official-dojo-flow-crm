@@ -2130,6 +2130,20 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         if (!db) return { success: false, error: 'Database not available' };
         
+        // Phone validation helper
+        const validatePhone = (phone: string): boolean => {
+          const digits = phone.replace(/\D/g, '');
+          return digits.length === 0 || digits.length === 10;
+        };
+        
+        // Validate phone numbers
+        if (input.phone && !validatePhone(input.phone)) {
+          return { success: false, error: 'Phone number must be exactly 10 digits' };
+        }
+        if (input.guardianPhone && !validatePhone(input.guardianPhone)) {
+          return { success: false, error: 'Emergency phone must be exactly 10 digits' };
+        }
+        
         try {
           const updateData: Record<string, string> = {};
           if (input.phone !== undefined) updateData.phone = input.phone;

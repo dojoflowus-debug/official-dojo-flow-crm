@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { formatPhoneNumber, getPhoneValidationMessage, isValidPhoneNumber, extractDigits } from "@/lib/phoneUtils";
 import { 
   ArrowLeft,
   User,
@@ -177,10 +178,29 @@ export default function StudentSettings() {
   
   // Get current photo URL
   const currentPhotoUrl = photoPreview || studentData?.student?.photoUrl;
+  
+  // Phone validation state
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [emergencyPhoneError, setEmergencyPhoneError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Apply phone formatting for phone fields
+    if (name === 'phone' || name === 'emergencyPhone') {
+      const formatted = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      
+      // Update validation message
+      const validationMsg = getPhoneValidationMessage(formatted);
+      if (name === 'phone') {
+        setPhoneError(validationMsg);
+      } else {
+        setEmergencyPhoneError(validationMsg);
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
@@ -188,6 +208,20 @@ export default function StudentSettings() {
   };
 
   const handleSave = async () => {
+    // Validate phone numbers before saving
+    const phoneDigits = extractDigits(formData.phone);
+    const emergencyPhoneDigits = extractDigits(formData.emergencyPhone);
+    
+    // Check if phone numbers are valid (either empty or exactly 10 digits)
+    if (phoneDigits.length > 0 && phoneDigits.length !== 10) {
+      setSaveError('Please enter a valid 10-digit phone number');
+      return;
+    }
+    if (emergencyPhoneDigits.length > 0 && emergencyPhoneDigits.length !== 10) {
+      setSaveError('Please enter a valid 10-digit emergency phone number');
+      return;
+    }
+    
     setIsSaving(true);
     setSaveError(null);
     setSaveSuccess(false);
@@ -195,9 +229,9 @@ export default function StudentSettings() {
     try {
       const result = await updateContactInfoMutation.mutateAsync({
         studentId,
-        phone: formData.phone,
+        phone: formData.phone, // Already formatted as (XXX) XXX-XXXX
         guardianName: formData.emergencyContact,
-        guardianPhone: formData.emergencyPhone,
+        guardianPhone: formData.emergencyPhone, // Already formatted
       });
       
       if (result.success) {
@@ -413,11 +447,15 @@ export default function StudentSettings() {
                     id="phone"
                     name="phone"
                     type="tel"
+                    placeholder="(555) 123-4567"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="pl-10 rounded-xl border-gray-200"
+                    className={`pl-10 rounded-xl ${phoneError ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200'}`}
                   />
                 </div>
+                {phoneError && (
+                  <p className="mt-1 text-xs text-amber-600">{phoneError}</p>
+                )}
               </div>
             </div>
             <p className="mt-4 text-xs text-gray-400">
@@ -453,11 +491,15 @@ export default function StudentSettings() {
                     id="emergencyPhone"
                     name="emergencyPhone"
                     type="tel"
+                    placeholder="(555) 123-4567"
                     value={formData.emergencyPhone}
                     onChange={handleInputChange}
-                    className="pl-10 rounded-xl border-gray-200"
+                    className={`pl-10 rounded-xl ${emergencyPhoneError ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200'}`}
                   />
                 </div>
+                {emergencyPhoneError && (
+                  <p className="mt-1 text-xs text-amber-600">{emergencyPhoneError}</p>
+                )}
               </div>
             </div>
           </SoftCard>

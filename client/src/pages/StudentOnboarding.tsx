@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
+import { formatPhoneNumber, getPhoneValidationMessage, extractDigits } from "@/lib/phoneUtils";
 
 // School type for search results
 interface School {
@@ -121,6 +122,7 @@ export default function StudentOnboarding() {
   const [program, setProgram] = useState<"kids" | "teens" | "adults">("adults");
   const [emergencyContact, setEmergencyContact] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [emergencyPhoneError, setEmergencyPhoneError] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
@@ -245,7 +247,8 @@ export default function StudentOnboarding() {
 
   // Step validation
   const canProceedStep1 = selectedSchool !== null;
-  const canProceedStep2 = firstName.trim() && lastName.trim() && dateOfBirth && emergencyContact.trim() && emergencyPhone.trim();
+  const isPhoneValid = extractDigits(emergencyPhone).length === 10;
+  const canProceedStep2 = firstName.trim() && lastName.trim() && dateOfBirth && emergencyContact.trim() && emergencyPhone.trim() && isPhoneValid;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -531,10 +534,17 @@ export default function StudentOnboarding() {
                           type="tel"
                           placeholder="(555) 123-4567"
                           value={emergencyPhone}
-                          onChange={(e) => setEmergencyPhone(e.target.value)}
-                          className="h-12 pl-12 pr-4 bg-white border-gray-200 rounded-xl focus:border-red-500 focus:ring-red-500/20"
+                          onChange={(e) => {
+                            const formatted = formatPhoneNumber(e.target.value);
+                            setEmergencyPhone(formatted);
+                            setEmergencyPhoneError(getPhoneValidationMessage(formatted));
+                          }}
+                          className={`h-12 pl-12 pr-4 bg-white rounded-xl focus:ring-red-500/20 ${emergencyPhoneError ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200 focus:border-red-500'}`}
                         />
                       </div>
+                      {emergencyPhoneError && (
+                        <p className="mt-1 text-xs text-amber-600">{emergencyPhoneError}</p>
+                      )}
                     </div>
                   </div>
                 </div>

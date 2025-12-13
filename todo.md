@@ -3299,3 +3299,22 @@ Note: The logo was already correctly implemented. The navigation uses:
 
 ### Integration
 - [x] Test contact info update flow end-to-end
+
+
+## ✅ COMPLETED: Phone Number Validation & Formatting
+
+### Frontend
+- [x] Create phone formatting utility function (phoneUtils.ts)
+- [x] Auto-format phone numbers as (XXX) XXX-XXXX while typing
+- [x] Update StudentSettings phone inputs with formatting
+- [x] Update StudentOnboarding phone inputs with formatting
+- [x] Show validation error for invalid phone numbers (amber border + message)
+
+### Backend
+- [x] Add phone validation in updateStudentContactInfo procedure
+- [x] Validate 10-digit requirement before saving
+
+### Integration
+- [x] 17 vitest tests passing for phone utilities
+- [x] Test phone formatting in settings page
+- [x] Test phone formatting in onboarding flow
