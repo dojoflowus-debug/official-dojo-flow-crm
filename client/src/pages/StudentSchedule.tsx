@@ -436,14 +436,13 @@ export default function StudentSchedule() {
         <header className="border-b border-white/[0.05] bg-white/[0.02] backdrop-blur-xl">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={() => setLocation("/student-dashboard")}
-                className="text-white/60 hover:text-white hover:bg-white/10"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all"
               >
                 <ArrowLeft className="h-5 w-5" />
-              </Button>
+                <span className="text-sm font-medium">Dashboard</span>
+              </button>
               <div className="flex items-center gap-3">
                 {APP_LOGO && (
                   <img 

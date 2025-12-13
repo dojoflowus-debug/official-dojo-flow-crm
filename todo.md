@@ -3188,3 +3188,4 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Test registration and cancellation flows
 - [ ] Save checkpoint
 - [x] Integrate Stripe payment for $50 belt test registration fee
+- [x] Fix navigation on Student Schedule page to return to Dashboard
