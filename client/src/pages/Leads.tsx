@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
-import HorizontalPipeline from '../components/HorizontalPipeline'
+import StageRail from '../components/StageRail'
+import LeadCard from '../components/LeadCard'
+import LeadDrawer from '../components/LeadDrawer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,17 +13,9 @@ import { trpc } from '@/lib/trpc'
 import {
   Search,
   Plus,
-  Phone,
-  Mail,
-  MessageSquare,
-  Calendar,
-  Star,
-  Clock,
-  User,
-  MapPin,
-  Trash2,
-  MoveRight,
-  Settings
+  Settings,
+  Users,
+  Inbox
 } from 'lucide-react'
 import LeadSourceSettings from '../components/LeadSourceSettings'
 
@@ -32,7 +26,8 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   const [selectedStage, setSelectedStage] = useState('new_lead')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [columnMenuOpen, setColumnMenuOpen] = useState(null)
+  const [selectedLead, setSelectedLead] = useState<any>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [newLead, setNewLead] = useState({
     first_name: '',
     last_name: '',
@@ -66,31 +61,24 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
     onSuccess: () => refetch()
   })
   const deleteLead = trpc.leads.delete.useMutation({
-    onSuccess: () => refetch()
+    onSuccess: () => {
+      refetch()
+      setIsDrawerOpen(false)
+      setSelectedLead(null)
+    }
   })
 
   // Pipeline stages
   const stages = [
-    'new_lead',
-    'attempting_contact',
-    'contact_made',
-    'intro_scheduled',
-    'offer_presented',
-    'enrolled',
-    'nurture',
-    'lost_winback'
+    { id: 'new_lead', label: 'New Lead' },
+    { id: 'attempting_contact', label: 'Attempting Contact' },
+    { id: 'contact_made', label: 'Contact Made' },
+    { id: 'intro_scheduled', label: 'Intro Scheduled' },
+    { id: 'offer_presented', label: 'Offer Presented' },
+    { id: 'enrolled', label: 'Enrolled' },
+    { id: 'nurture', label: 'Nurture' },
+    { id: 'lost_winback', label: 'Lost / Winback' },
   ]
-
-  // Close column menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (columnMenuOpen && !e.target.closest('.column-menu-container')) {
-        setColumnMenuOpen(null)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [columnMenuOpen])
 
   // Handle Add Lead
   const handleAddLead = () => {
@@ -105,19 +93,22 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   }
 
   // Handle Delete Lead
-  const handleDeleteLead = (leadId) => {
+  const handleDeleteLead = () => {
+    if (!selectedLead) return
     if (!confirm('Are you sure you want to delete this lead?')) return
-    deleteLead.mutate({ id: leadId })
+    deleteLead.mutate({ id: selectedLead.id })
   }
 
   // Handle move to stage
-  const handleMoveToStage = (lead, toStage) => {
-    updateStatus.mutate({ id: lead.id, status: toStage })
-    setColumnMenuOpen(null)
+  const handleMoveToStage = (toStage: string) => {
+    if (!selectedLead) return
+    updateStatus.mutate({ id: selectedLead.id, status: toStage })
+    setIsDrawerOpen(false)
+    setSelectedLead(null)
   }
 
   // Filter leads based on search query
-  const filterLeads = (leadsArray) => {
+  const filterLeads = (leadsArray: any[]) => {
     if (!searchQuery) return leadsArray
     
     return leadsArray.filter(lead => {
@@ -141,166 +132,26 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   // Calculate stage counts
   const getStageCounts = () => {
     if (!leads) return {}
-    const counts = {}
+    const counts: Record<string, number> = {}
     stages.forEach(stage => {
-      counts[stage] = (leads[stage] || []).length
+      counts[stage.id] = (leads[stage.id] || []).length
     })
     return counts
   }
 
-  // Render lead card
-  const renderLeadCard = (lead) => {
-    const fullName = `${lead.first_name} ${lead.last_name}`
-    const tags = typeof lead.tags === 'string' ? lead.tags.split(',').filter(t => t) : (lead.tags || [])
-    
-    return (
-      <Card key={lead.id} className={`relative group hover:shadow-xl transition-all ${isDarkMode ? 'bg-[#18181A] border-white/10' : ''}`}>
-        <CardContent className="p-6">
-          {/* Delete button */}
-          <button
-            onClick={() => handleDeleteLead(lead.id)}
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-2 hover:bg-destructive/90"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-
-          <h4 className="font-semibold text-xl mb-2 pr-8">{fullName}</h4>
-          
-          {lead.parent_of && (
-            <p className="text-sm text-muted-foreground mb-2">Parent of: {lead.parent_of}</p>
-          )}
-
-          <div className="flex items-center gap-1 mb-3">
-            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-            <span className="text-sm font-semibold">{lead.lead_score || 50}</span>
-          </div>
-
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Phone className="h-4 w-4" />
-              <span>{lead.phone || 'No phone'}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Mail className="h-4 w-4" />
-              <span className="truncate">{lead.email || 'No email'}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              <span>{lead.source || 'Unknown'}</span>
-            </div>
-            {lead.assigned_to && (
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                <span>{lead.assigned_to}</span>
-              </div>
-            )}
-          </div>
-
-          {lead.updated_at && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
-              <Clock className="h-3 w-3" />
-              <span>{new Date(lead.updated_at).toLocaleDateString()}</span>
-            </div>
-          )}
-
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
-                >
-                  {tag.trim()}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {lead.ai_summary && (
-            <p className="text-sm text-muted-foreground italic mb-3">
-              {lead.ai_summary}
-            </p>
-          )}
-
-          <div className="flex gap-2 mb-3">
-            <Button size="sm" variant="outline" className="flex-1">
-              <Phone className="h-4 w-4 mr-1" />
-              Call
-            </Button>
-            <Button size="sm" variant="outline" className="flex-1">
-              <MessageSquare className="h-4 w-4 mr-1" />
-              Text
-            </Button>
-            <Button size="sm" variant="outline" className="flex-1">
-              <Calendar className="h-4 w-4 mr-1" />
-              Schedule
-            </Button>
-          </div>
-
-          {/* Move to Stage button */}
-          <div className="relative column-menu-container">
-            <Button
-              onClick={() => setColumnMenuOpen(columnMenuOpen === lead.id ? null : lead.id)}
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2"
-            >
-              <MoveRight className="h-4 w-4" />
-              Move to Stage
-            </Button>
-
-            {/* Stage selection dropdown */}
-            {columnMenuOpen === lead.id && (
-              <div className={`absolute bottom-full left-0 right-0 mb-2 border-2 rounded-lg shadow-xl z-50 overflow-hidden ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card border-border'}`}>
-                {stages.map((stage) => {
-                  const isCurrentStage = stage === selectedStage
-                  const stageLabels = {
-                    new_lead: 'New Lead',
-                    attempting_contact: 'Attempting Contact',
-                    contact_made: 'Contact Made',
-                    intro_scheduled: 'Intro Scheduled',
-                    offer_presented: 'Offer Presented',
-                    enrolled: 'Enrolled',
-                    nurture: 'Nurture',
-                    lost_winback: 'Lost / Winback'
-                  }
-                  
-                  return (
-                    <button
-                      key={stage}
-                      onClick={() => !isCurrentStage && handleMoveToStage(lead, stage)}
-                      disabled={isCurrentStage}
-                      className={`
-                        w-full px-4 py-3 text-left transition-colors
-                        ${isCurrentStage 
-                          ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                          : 'hover:bg-accent hover:text-accent-foreground cursor-pointer'
-                        }
-                      `}
-                    >
-                      {stageLabels[stage]}
-                      {isCurrentStage && ' (Current)'}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   const stageLeads = getLeadsForStage()
   const stageCounts = getStageCounts()
+  const currentStageLabel = stages.find(s => s.id === selectedStage)?.label || 'Leads'
+
+  // For light mode, we'll use the new design
+  // For dark mode, we'll keep compatibility but with light mode as primary
+  const isLightMode = !isDarkMode
 
   return (
     <BottomNavLayout>
-      <div className={`min-h-screen ${isDarkMode ? 'bg-[#0F1115]' : 'bg-gradient-to-br from-gray-950 via-gray-900 to-red-950/20'}`}>
+      <div className={`min-h-screen ${isLightMode ? 'bg-[#F6F7F9]' : 'bg-[#0F1115]'}`}>
         {/* Breadcrumb Navigation */}
-        <div className={`backdrop-blur-sm border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card/30 border-border/30'}`}>
+        <div className={`border-b px-6 py-2 ${isLightMode ? 'bg-white/80 backdrop-blur-sm border-slate-200/50' : 'bg-[#18181A] border-white/10'}`}>
           <Breadcrumb
             items={[
               { label: 'Dashboard', href: '/dashboard' },
@@ -309,76 +160,150 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           />
         </div>
 
-        {/* Header */}
-        <div className={`border-b backdrop-blur-sm ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card/50 border-border/50'}`}>
-          <div className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-6">
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Lead Pipeline</h1>
-              <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
-                <Button onClick={() => setShowSettings(true)} size="sm" variant="outline" className="flex-1 sm:flex-none text-xs md:text-sm">
-                  <Settings className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">Lead Sources</span>
-                  <span className="sm:hidden">Sources</span>
+        {/* Header - Apple-like minimal */}
+        <div className={`border-b ${isLightMode ? 'bg-white border-slate-200/50' : 'bg-[#18181A] border-white/10'}`}>
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h1 className={`text-3xl md:text-4xl font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
+                  Leads
+                </h1>
+                <p className={`text-sm mt-1 ${isLightMode ? 'text-slate-500' : 'text-white/60'}`}>
+                  Track, convert, and nurture prospects
+                </p>
+              </div>
+              <div className="flex gap-3 w-full sm:w-auto">
+                <Button 
+                  onClick={() => setShowSettings(true)} 
+                  variant="outline" 
+                  className={`flex-1 sm:flex-none ${isLightMode ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' : ''}`}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Lead Sources
                 </Button>
-                <Button onClick={() => setShowAddModal(true)} size="sm" className="md:size-lg flex-1 sm:flex-none text-xs md:text-sm">
-                  <Plus className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+                <Button 
+                  onClick={() => setShowAddModal(true)} 
+                  className="flex-1 sm:flex-none bg-[#E53935] hover:bg-[#C62828] text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Lead
                 </Button>
               </div>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar - Clean and minimal */}
             <div className="relative max-w-md">
-              <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${isLightMode ? 'text-slate-400' : 'text-white/40'}`} />
               <Input
                 type="text"
                 placeholder="Search leads..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 md:pl-12 h-10 md:h-12 text-sm md:text-base"
+                className={`pl-12 h-12 rounded-xl ${isLightMode ? 'bg-slate-100 border-0 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#E53935]/20' : ''}`}
               />
             </div>
           </div>
         </div>
 
-        {/* Horizontal Pipeline */}
-        {isLoading ? (
-          <div className="py-12">
-            <Skeleton className="h-40 max-w-7xl mx-auto" />
-          </div>
-        ) : (
-          <HorizontalPipeline
-            selectedStage={selectedStage}
-            onStageSelect={setSelectedStage}
-            stageCounts={stageCounts}
-          />
-        )}
+        {/* Stage Rail - Innovative pill-style */}
+        <div className={`${isLightMode ? 'bg-white/50' : 'bg-[#18181A]/50'} backdrop-blur-sm`}>
+          {isLoading ? (
+            <div className="py-8 px-6">
+              <Skeleton className="h-12 max-w-4xl mx-auto rounded-full" />
+            </div>
+          ) : (
+            <StageRail
+              selectedStage={selectedStage}
+              onStageSelect={setSelectedStage}
+              stageCounts={stageCounts}
+            />
+          )}
+        </div>
 
-        {/* Lead Cards for Selected Stage */}
-        <div className="max-w-7xl mx-auto px-6 pb-12">
-          <h2 className="text-2xl font-bold mb-6">
-            {selectedStage.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-            <span className="text-muted-foreground ml-2">({stageLeads.length})</span>
-          </h2>
+        {/* Lead Cards Grid */}
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+          {/* Stage Title */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <h2 className={`text-2xl font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
+                {currentStageLabel}
+              </h2>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${isLightMode ? 'bg-slate-100 text-slate-600' : 'bg-white/10 text-white/70'}`}>
+                {stageLeads.length} leads
+              </span>
+            </div>
+          </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-64" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {[1, 2, 3, 4].map(i => (
+                <Skeleton key={i} className="h-64 rounded-2xl" />
               ))}
             </div>
           ) : stageLeads.length === 0 ? (
-            <Card className={isDarkMode ? 'bg-[#18181A] border-white/10' : ''}>
-              <CardContent className="p-12 text-center">
-                <p className="text-muted-foreground">No leads in this stage</p>
-              </CardContent>
-            </Card>
+            /* Empty State - Friendly illustration */
+            <div className={`rounded-2xl p-12 text-center ${isLightMode ? 'bg-white shadow-sm' : 'bg-[#18181A] border border-white/10'}`}>
+              <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${isLightMode ? 'bg-slate-100' : 'bg-white/10'}`}>
+                <Inbox className={`w-10 h-10 ${isLightMode ? 'text-slate-400' : 'text-white/40'}`} />
+              </div>
+              <h3 className={`text-xl font-semibold mb-2 ${isLightMode ? 'text-slate-700' : 'text-white'}`}>
+                Your pipeline is clear
+              </h3>
+              <p className={`text-sm mb-6 ${isLightMode ? 'text-slate-500' : 'text-white/60'}`}>
+                Let's bring in new leads to grow your dojo.
+              </p>
+              <Button 
+                onClick={() => setShowAddModal(true)}
+                className="bg-[#E53935] hover:bg-[#C62828] text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Lead
+              </Button>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {stageLeads.map(lead => renderLeadCard(lead))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {stageLeads.map((lead, index) => (
+                <LeadCard
+                  key={lead.id}
+                  lead={lead}
+                  hasKaiSuggestion={index === 0} // First lead gets Kai suggestion for demo
+                  onClick={() => {
+                    setSelectedLead(lead)
+                    setIsDrawerOpen(true)
+                  }}
+                  onCall={() => {
+                    if (lead.phone) window.location.href = `tel:${lead.phone}`
+                  }}
+                  onText={() => {
+                    if (lead.phone) window.location.href = `sms:${lead.phone}`
+                  }}
+                  onSchedule={() => {
+                    setSelectedLead(lead)
+                    setIsDrawerOpen(true)
+                  }}
+                  onMoveToStage={() => {
+                    setSelectedLead(lead)
+                    setIsDrawerOpen(true)
+                  }}
+                />
+              ))}
             </div>
           )}
         </div>
+
+        {/* Lead Drawer */}
+        <LeadDrawer
+          lead={selectedLead}
+          isOpen={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false)
+            setSelectedLead(null)
+          }}
+          onMoveToStage={handleMoveToStage}
+          onDelete={handleDeleteLead}
+          stages={stages}
+          currentStage={selectedStage}
+        />
 
         {/* Lead Source Settings Modal */}
         <LeadSourceSettings 
@@ -386,108 +311,121 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           onClose={() => setShowSettings(false)} 
         />
 
-        {/* Add Lead Modal */}
+        {/* Add Lead Modal - Apple-like clean design */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-[#18181A] border-white/10' : ''}`}>
-              <CardHeader>
-                <CardTitle className="text-2xl">Add New Lead</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-[#18181A]'}`}>
+              <div className={`px-6 py-5 border-b ${isLightMode ? 'border-slate-100' : 'border-white/10'}`}>
+                <h2 className={`text-xl font-semibold ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
+                  Add New Lead
+                </h2>
+              </div>
+              <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">First Name</label>
+                    <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                      First Name
+                    </label>
                     <Input
                       value={newLead.first_name}
                       onChange={(e) => setNewLead({ ...newLead, first_name: e.target.value })}
                       placeholder="John"
+                      className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Last Name</label>
+                    <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                      Last Name
+                    </label>
                     <Input
                       value={newLead.last_name}
                       onChange={(e) => setNewLead({ ...newLead, last_name: e.target.value })}
                       placeholder="Doe"
+                      className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                    Email
+                  </label>
                   <Input
                     type="email"
                     value={newLead.email}
                     onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
                     placeholder="john@example.com"
+                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Phone</label>
+                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                    Phone
+                  </label>
                   <Input
                     type="tel"
                     value={newLead.phone}
                     onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
                     placeholder="(555) 123-4567"
+                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Source</label>
+                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                    Source
+                  </label>
                   <Input
                     value={newLead.source}
                     onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
                     placeholder="Website, Referral, etc."
+                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Parent Of (Optional)</label>
+                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                    Parent Of (Optional)
+                  </label>
                   <Input
                     value={newLead.parent_of}
                     onChange={(e) => setNewLead({ ...newLead, parent_of: e.target.value })}
                     placeholder="Child's name"
+                    className={isLightMode ? 'bg-slate-50 border-slate-200' : ''}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tags (comma-separated)</label>
-                  <Input
-                    value={newLead.tags}
-                    onChange={(e) => setNewLead({ ...newLead, tags: e.target.value })}
-                    placeholder="hot, referral, interested"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Notes</label>
+                  <label className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`}>
+                    Notes
+                  </label>
                   <textarea
                     value={newLead.ai_summary}
                     onChange={(e) => setNewLead({ ...newLead, ai_summary: e.target.value })}
                     placeholder="Additional notes about this lead..."
-                    className="w-full min-h-[100px] px-3 py-2 border border-input rounded-md bg-background"
+                    className={`w-full min-h-[100px] px-3 py-2 rounded-lg ${isLightMode ? 'bg-slate-50 border border-slate-200 text-slate-700' : 'bg-background border border-input'}`}
                   />
                 </div>
+              </div>
 
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    onClick={handleAddLead}
-                    disabled={!newLead.first_name || !newLead.last_name}
-                    className="flex-1"
-                  >
-                    Add Lead
-                  </Button>
-                  <Button
-                    onClick={() => setShowAddModal(false)}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              <div className={`px-6 py-4 border-t flex gap-3 ${isLightMode ? 'border-slate-100 bg-slate-50' : 'border-white/10'}`}>
+                <Button
+                  onClick={() => setShowAddModal(false)}
+                  variant="outline"
+                  className={`flex-1 ${isLightMode ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100' : ''}`}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddLead}
+                  disabled={!newLead.first_name || !newLead.last_name}
+                  className="flex-1 bg-[#E53935] hover:bg-[#C62828] text-white"
+                >
+                  Add Lead
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

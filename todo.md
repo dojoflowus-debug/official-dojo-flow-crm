@@ -2849,3 +2849,29 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Use requestAnimationFrame + setTimeout for proper timing
 - [x] Keep stable map ref to prevent remounting
 - [x] QA: Switch modes, resize, drag handle - map always fills container
+
+## Redesign Leads Page (Innovative Light Mode)
+- [ ] Create horizontal pill-style stage rail with snap scroll
+- [ ] Implement floating lead cards grid (3-4 columns)
+- [ ] Add soft shadows and Apple-like styling
+- [ ] DojoFlow red (#E53935) accents and active stage glow
+- [ ] Card hover effects: lift, shadow deepen, buttons fade in
+- [ ] Lead card drawer/modal on click (no page navigation)
+- [ ] Kai AI suggestion hints on cards
+- [ ] Empty state with friendly illustration
+- [ ] Smooth animations (120-180ms)
+- [ ] Light mode only, off-white background (#F6F7F9)
+
+## ✅ COMPLETED: Redesign Leads Page (Innovative Light Mode)
+- [x] Soft off-white background (#F6F7F9) with white cards
+- [x] Horizontal pill-style stage rail with smooth scroll
+- [x] DojoFlow red (#E53935) accent for active stage with glow
+- [x] Floating lead cards with soft shadows (Apple-like)
+- [x] Card hover: lift + shadow deepen + buttons fade in
+- [x] Source badges (Google, Website, Walk-In, etc.)
+- [x] Status dot (green/yellow/red) based on lead score
+- [x] Kai AI suggestion badge on cards
+- [x] Side drawer for lead details (not modal)
+- [x] Empty state with friendly illustration
+- [x] Stage counts displayed above pills
+- [x] Progress bar fills as pipeline advances
