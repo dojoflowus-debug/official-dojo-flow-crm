@@ -2788,3 +2788,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Investigate StudentModal rendering in full map mode context
 - [x] Fix the display issue so student card is visible
 - [x] Replaced StudentModal with inline card component for full map mode
+
+## ✅ COMPLETED: Implement Proper Map Overlay System for Student Card
+- [x] Create MapOverlay portal component that renders to document.body
+- [x] Create StudentCardOverlay with Apple-like floating sheet styling
+- [x] Position card bottom-center with max-width 920px
+- [x] Use fixed positioning with z-index 9999 for overlay
+- [x] Set Leaflet container z-index to 0
+- [x] Remove fog/dim background in full map mode
+- [x] Close card keeps map mode, exit map mode restores split layout
+- [x] Keep gear button visible but below card overlay

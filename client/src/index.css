@@ -498,6 +498,19 @@ body {
   width: 8px;
 }
 
+/* Leaflet map z-index control - ensure map stays below overlays */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-pane {
+  z-index: 0 !important;
+}
+
+.leaflet-control-container {
+  z-index: 10 !important;
+}
+
 .scrollbar-visible::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 4px;
