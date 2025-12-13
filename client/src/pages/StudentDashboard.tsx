@@ -2,551 +2,461 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { 
-  LogOut, 
-  Calendar, 
+  Calendar,
+  Clock,
+  MapPin,
+  MessageSquare,
   CreditCard,
   Settings,
-  MessageSquare,
-  MapPin,
-  Clock,
-  TrendingUp,
-  Flame,
-  ChevronRight
+  LogOut,
+  ChevronRight,
+  CheckCircle2,
+  Sparkles
 } from "lucide-react";
 import { useLocation } from "wouter";
 
-// Belt color mapping
-const beltColors: Record<string, { primary: string; glow: string; gradient: string }> = {
-  'White Belt': { primary: '#E5E7EB', glow: 'rgba(229, 231, 235, 0.4)', gradient: 'from-gray-200 to-gray-400' },
-  'Yellow Belt': { primary: '#FCD34D', glow: 'rgba(252, 211, 77, 0.4)', gradient: 'from-yellow-300 to-yellow-500' },
-  'Orange Belt': { primary: '#FB923C', glow: 'rgba(251, 146, 60, 0.4)', gradient: 'from-orange-400 to-orange-600' },
-  'Green Belt': { primary: '#4ADE80', glow: 'rgba(74, 222, 128, 0.4)', gradient: 'from-green-400 to-green-600' },
-  'Blue Belt': { primary: '#60A5FA', glow: 'rgba(96, 165, 250, 0.4)', gradient: 'from-blue-400 to-blue-600' },
-  'Purple Belt': { primary: '#A78BFA', glow: 'rgba(167, 139, 250, 0.4)', gradient: 'from-purple-400 to-purple-600' },
-  'Brown Belt': { primary: '#A16207', glow: 'rgba(161, 98, 7, 0.4)', gradient: 'from-amber-700 to-amber-900' },
-  'Red Belt': { primary: '#EF4444', glow: 'rgba(239, 68, 68, 0.4)', gradient: 'from-red-500 to-red-700' },
-  'Black Belt': { primary: '#1F2937', glow: 'rgba(31, 41, 55, 0.6)', gradient: 'from-gray-800 to-black' },
-};
+// Belt data with colors
+const belts = [
+  { name: 'White', color: '#F5F5F5', borderColor: '#E0E0E0' },
+  { name: 'Yellow', color: '#FCD34D', borderColor: '#F59E0B' },
+  { name: 'Orange', color: '#FB923C', borderColor: '#EA580C' },
+  { name: 'Green', color: '#4ADE80', borderColor: '#16A34A' },
+  { name: 'Brown', color: '#A16207', borderColor: '#78350F' },
+  { name: 'Blue', color: '#60A5FA', borderColor: '#2563EB' },
+  { name: 'Purple', color: '#A78BFA', borderColor: '#7C3AED' },
+];
 
-// Glass Panel Component
-function GlassPanel({ 
+// Soft Card Component
+function SoftCard({ 
   children, 
-  className = "", 
-  hover = true,
-  glow = false,
-  glowColor = "rgba(255,255,255,0.1)"
+  className = "",
+  hover = false
 }: { 
   children: React.ReactNode; 
   className?: string;
   hover?: boolean;
-  glow?: boolean;
-  glowColor?: string;
 }) {
   return (
     <div 
       className={`
-        relative rounded-3xl 
-        bg-gradient-to-br from-white/[0.08] to-white/[0.02]
-        backdrop-blur-xl
-        border border-white/[0.08]
-        ${hover ? 'transition-all duration-500 hover:translate-y-[-2px] hover:shadow-2xl hover:border-white/[0.15]' : ''}
+        bg-white rounded-3xl 
+        shadow-[0_2px_20px_rgba(0,0,0,0.06)]
+        border border-gray-100/50
+        ${hover ? 'transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] hover:-translate-y-1' : ''}
         ${className}
       `}
-      style={glow ? { boxShadow: `0 0 40px ${glowColor}, 0 0 80px ${glowColor}` } : {}}
     >
       {children}
     </div>
   );
 }
 
-// Circular Progress Ring Component
+// Circular Progress Ring
 function ProgressRing({ 
   progress, 
-  size = 120, 
-  strokeWidth = 8,
-  color = "#FCD34D",
-  glowColor = "rgba(252, 211, 77, 0.4)"
+  size = 140, 
+  strokeWidth = 10,
+  color = '#EF4444',
+  bgColor = '#FEE2E2'
 }: { 
   progress: number; 
-  size?: number; 
+  size?: number;
   strokeWidth?: number;
   color?: string;
-  glowColor?: string;
+  bgColor?: string;
 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="transform -rotate-90">
-        {/* Background ring */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(255,255,255,0.1)"
-          strokeWidth={strokeWidth}
-        />
-        {/* Progress ring */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="transition-all duration-1000 ease-out"
-          style={{ filter: `drop-shadow(0 0 8px ${glowColor})` }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold text-white">{progress}%</span>
+    <svg width={size} height={size} className="transform -rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={bgColor}
+        strokeWidth={strokeWidth}
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-all duration-1000 ease-out"
+      />
+    </svg>
+  );
+}
+
+// Belt Badge Component
+function BeltBadge({ 
+  name, 
+  color, 
+  borderColor,
+  isActive,
+  isNext,
+  isPast
+}: { 
+  name: string;
+  color: string;
+  borderColor: string;
+  isActive: boolean;
+  isNext: boolean;
+  isPast: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div 
+        className={`
+          px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300
+          ${isActive ? 'ring-2 ring-offset-2 shadow-lg scale-110' : ''}
+          ${isNext ? 'opacity-60' : ''}
+          ${!isActive && !isNext && !isPast ? 'opacity-30' : ''}
+        `}
+        style={{ 
+          backgroundColor: color,
+          borderColor: borderColor,
+          border: `2px solid ${borderColor}`,
+          ringColor: isActive ? borderColor : 'transparent',
+          color: name === 'White' ? '#374151' : (name === 'Yellow' ? '#78350F' : '#FFF')
+        }}
+      >
+        {name}
       </div>
+      {isActive && (
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1" />
+      )}
     </div>
   );
 }
 
-// Weekly Activity Bar Chart
-function WeeklyActivityChart({ data, beltColor }: { data: number[]; beltColor: string }) {
-  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const maxValue = Math.max(...data, 1);
-
+// Weekly Training Bar
+function WeeklyTrainingBar({ day, attended, isToday }: { day: string; attended: boolean; isToday: boolean }) {
   return (
-    <div className="flex items-end justify-between gap-2 h-32">
-      {data.map((value, index) => (
-        <div key={index} className="flex flex-col items-center gap-2 flex-1">
-          <div 
-            className="w-full rounded-t-lg transition-all duration-500 hover:opacity-80"
-            style={{ 
-              height: `${(value / maxValue) * 100}%`,
-              minHeight: value > 0 ? '8px' : '4px',
-              background: value > 0 
-                ? `linear-gradient(to top, ${beltColor}, ${beltColor}88)`
-                : 'rgba(255,255,255,0.1)',
-              boxShadow: value > 0 ? `0 0 12px ${beltColor}40` : 'none'
-            }}
-          />
-          <span className={`text-xs ${value > 0 ? 'text-white' : 'text-white/40'}`}>{days[index]}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Performance Line Chart
-function PerformanceChart({ data }: { data: number[] }) {
-  const maxValue = Math.max(...data, 1);
-  const points = data.map((value, index) => ({
-    x: (index / (data.length - 1)) * 100,
-    y: 100 - (value / maxValue) * 100
-  }));
-
-  const pathD = points.reduce((acc, point, index) => {
-    if (index === 0) return `M ${point.x} ${point.y}`;
-    const prev = points[index - 1];
-    const cpX1 = prev.x + (point.x - prev.x) / 3;
-    const cpX2 = prev.x + (point.x - prev.x) * 2 / 3;
-    return `${acc} C ${cpX1} ${prev.y}, ${cpX2} ${point.y}, ${point.x} ${point.y}`;
-  }, '');
-
-  return (
-    <div className="relative h-32 w-full">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
-        <defs>
-          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#60A5FA" />
-            <stop offset="100%" stopColor="#A78BFA" />
-          </linearGradient>
-          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(96, 165, 250, 0.3)" />
-            <stop offset="100%" stopColor="rgba(96, 165, 250, 0)" />
-          </linearGradient>
-        </defs>
-        {/* Area fill */}
-        <path
-          d={`${pathD} L 100 100 L 0 100 Z`}
-          fill="url(#areaGradient)"
-        />
-        {/* Line */}
-        <path
-          d={pathD}
-          fill="none"
-          stroke="url(#lineGradient)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          className="drop-shadow-lg"
-        />
-        {/* Dots */}
-        {points.map((point, index) => (
-          <circle
-            key={index}
-            cx={point.x}
-            cy={point.y}
-            r="2"
-            fill="#60A5FA"
-            className="drop-shadow-lg"
-          />
-        ))}
-      </svg>
+    <div className="flex flex-col items-center gap-2">
+      <div 
+        className={`
+          w-8 h-16 rounded-full transition-all duration-300
+          ${attended ? 'bg-gradient-to-t from-orange-400 to-orange-300' : 'bg-gray-100'}
+          ${isToday ? 'ring-2 ring-orange-400 ring-offset-2' : ''}
+        `}
+      />
+      <span className={`text-xs font-medium ${isToday ? 'text-orange-500' : 'text-gray-400'}`}>
+        {day}
+      </span>
     </div>
   );
 }
 
 /**
- * Student Dashboard - Elite Martial Arts Command Cockpit
+ * Student Dashboard - WOW Version
+ * Apple-inspired light theme with emotional engagement
  */
 export default function StudentDashboard() {
   const [, setLocation] = useLocation();
-  const [studentData, setStudentData] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
+  const [studentName] = useState("Miike");
+  const [currentBelt] = useState("Yellow");
+  const [nextBelt] = useState("Orange");
+  const [beltProgress] = useState(67);
+  const [qualifiedAttendance] = useState(78);
+  const [classesNeeded] = useState(3);
+  const [nextEvaluation] = useState(12);
+
+  // Weekly training data
+  const weeklyTraining = [
+    { day: 'M', attended: false },
+    { day: 'T', attended: false },
+    { day: 'W', attended: false },
+    { day: 'T', attended: true },
+    { day: 'F', attended: true },
+    { day: 'S', attended: true },
+    { day: 'S', attended: true },
+  ];
 
   useEffect(() => {
-    // Check if student is logged in
     const isLoggedIn = localStorage.getItem("student_logged_in");
-    const email = localStorage.getItem("student_email");
-    
     if (!isLoggedIn) {
       setLocation("/student-login");
       return;
     }
-
-    // Mock data - would be fetched from backend
-    setStudentData({
-      name: "Mike Johnson",
-      email: email || "mike.j@example.com",
-      photo: "https://i.pravatar.cc/150?img=1",
-      belt_rank: "Yellow Belt",
-      belt_progress: 67,
-      membership_status: "Active",
-      plan_type: "Kids Karate",
-      account_balance: 0,
-      next_payment_due: "Nov 1, 2025",
-      classes_this_month: 12,
-      streak_days: 3,
-      weekly_activity: [2, 1, 2, 0, 1, 2, 0], // Classes per day this week
-      performance_trend: [45, 52, 48, 61, 58, 72, 67, 75], // Last 8 weeks
-      upcoming_classes: [
-        {
-          id: 1,
-          name: "Kids Karate - Intermediate",
-          instructor: "Sensei John Smith",
-          date: "Today",
-          time: "4:00 PM",
-          location: "Main Dojo",
-          belt_requirement: "Yellow Belt"
-        },
-        {
-          id: 2,
-          name: "Sparring Practice",
-          instructor: "Sensei Sarah Lee",
-          date: "Tomorrow",
-          time: "5:30 PM",
-          location: "Training Hall B",
-          belt_requirement: "Yellow Belt"
-        },
-        {
-          id: 3,
-          name: "Kids Karate - Intermediate",
-          instructor: "Sensei John Smith",
-          date: "Wed, Oct 30",
-          time: "4:00 PM",
-          location: "Main Dojo",
-          belt_requirement: "Yellow Belt"
-        }
-      ]
-    });
-
-    // Trigger mount animation
     setTimeout(() => setMounted(true), 100);
   }, [setLocation]);
 
   const handleLogout = () => {
     localStorage.removeItem("student_logged_in");
     localStorage.removeItem("student_email");
-    setLocation("/");
+    setLocation("/student-login");
   };
 
-  if (!studentData) {
-    return (
-      <div className="min-h-screen bg-[#0A0E1A] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/20 border-t-white/80 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Get attendance status color
+  const getAttendanceColor = () => {
+    if (qualifiedAttendance >= 80) return { color: '#22C55E', bg: '#DCFCE7', status: 'Eligible' };
+    if (qualifiedAttendance >= 70) return { color: '#EAB308', bg: '#FEF9C3', status: 'At Risk' };
+    return { color: '#EF4444', bg: '#FEE2E2', status: 'Ineligible' };
+  };
 
-  const beltStyle = beltColors[studentData.belt_rank] || beltColors['White Belt'];
+  const attendanceStatus = getAttendanceColor();
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0A0E1A] via-[#111827] to-[#0A0E1A]" />
-        <div 
-          className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-20 blur-[120px] animate-pulse"
-          style={{ background: `radial-gradient(circle, ${beltStyle.glow}, transparent)` }}
-        />
-        <div 
-          className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full opacity-10 blur-[100px] animate-pulse"
-          style={{ background: 'radial-gradient(circle, rgba(96, 165, 250, 0.4), transparent)', animationDelay: '1s' }}
-        />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {APP_LOGO && (
+              <img src={APP_LOGO} alt={APP_TITLE} className="h-8 w-auto" />
+            )}
+            <span className="text-lg font-semibold text-gray-900">Student Portal</span>
+          </div>
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </header>
 
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="border-b border-white/[0.05] bg-white/[0.02] backdrop-blur-xl">
-          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {APP_LOGO && (
-                <img 
-                  src={APP_LOGO} 
-                  alt={APP_TITLE} 
-                  className="h-10 w-auto"
-                />
-              )}
-              <div>
-                <h1 className="text-lg font-semibold text-white">{APP_TITLE}</h1>
-                <p className="text-xs text-white/40">Student Portal</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              {/* Profile with belt ring */}
+      {/* Main Content */}
+      <main className="container mx-auto px-6 py-8 max-w-6xl">
+        {/* Hero Welcome Section */}
+        <div className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+            Welcome back, {studentName}
+          </h1>
+          <p className="text-xl text-gray-500 italic">My Martial Path</p>
+        </div>
+
+        {/* Main Grid */}
+        <div className={`grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          
+          {/* Left Column - Student Portrait */}
+          <div className="lg:col-span-4">
+            <SoftCard className="p-6 relative overflow-hidden">
+              {/* Student Image */}
               <div className="relative">
+                <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
+                  <img 
+                    src="https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=533&fit=crop&crop=face"
+                    alt="Student in gi"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                {/* Belt Badge Overlay */}
                 <div 
-                  className="absolute inset-0 rounded-full"
+                  className="absolute bottom-4 left-4 px-4 py-2 rounded-xl font-semibold text-sm shadow-lg"
                   style={{ 
-                    padding: '3px',
-                    background: `linear-gradient(135deg, ${beltStyle.primary}, ${beltStyle.primary}88)`,
-                    boxShadow: `0 0 20px ${beltStyle.glow}`
+                    backgroundColor: '#FCD34D',
+                    color: '#78350F'
                   }}
                 >
-                  <div className="w-full h-full rounded-full bg-[#0A0E1A]" />
+                  {currentBelt} Belt
                 </div>
-                <img 
-                  src={studentData.photo} 
-                  alt={studentData.name} 
-                  className="relative h-11 w-11 rounded-full object-cover"
-                  style={{ border: `3px solid ${beltStyle.primary}` }}
-                />
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-                className="text-white/40 hover:text-white hover:bg-white/10"
+
+              {/* Attendance Ring */}
+              <div className="mt-8 flex flex-col items-center">
+                <div className="relative">
+                  <ProgressRing 
+                    progress={qualifiedAttendance} 
+                    size={160}
+                    strokeWidth={12}
+                    color={attendanceStatus.color}
+                    bgColor={attendanceStatus.bg}
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-bold text-gray-900">{qualifiedAttendance}%</span>
+                    <span className="text-sm text-gray-500">Attendance</span>
+                    <span className="text-xs text-gray-400">for belt</span>
+                  </div>
+                </div>
+                
+                <p className="mt-4 text-center text-gray-600 font-medium">
+                  <span className="text-orange-500">Attendance</span> beats intensity
+                </p>
+                
+                {qualifiedAttendance < 80 && (
+                  <p className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                    Maintain 80%+ to stay belt-eligible
+                  </p>
+                )}
+              </div>
+            </SoftCard>
+          </div>
+
+          {/* Right Column - Progress & Actions */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* Belt Progression */}
+            <SoftCard className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Belt Progression</h2>
+              
+              {/* Belt Timeline */}
+              <div className="flex items-center justify-between gap-2 mb-6 overflow-x-auto pb-2">
+                {belts.map((belt, index) => {
+                  const currentIndex = belts.findIndex(b => b.name === currentBelt);
+                  return (
+                    <BeltBadge
+                      key={belt.name}
+                      name={belt.name}
+                      color={belt.color}
+                      borderColor={belt.borderColor}
+                      isActive={belt.name === currentBelt}
+                      isNext={belt.name === nextBelt}
+                      isPast={index < currentIndex}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Progress Info */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">
+                    Qualified Attendance: {qualifiedAttendance}%
+                  </p>
+                  <p className="text-gray-500">
+                    Next evaluation: In {nextEvaluation} days
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Progress to {nextBelt} Belt</p>
+                  <p className="text-2xl font-bold text-orange-500">{beltProgress}%</p>
+                </div>
+              </div>
+
+              {/* Microcopy */}
+              <div className="mt-4 flex items-center gap-2 text-gray-600">
+                <Sparkles className="h-4 w-4 text-orange-400" />
+                <span>{classesNeeded} more qualified classes to reach next belt</span>
+              </div>
+            </SoftCard>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Button 
+                className="h-auto py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl flex flex-col items-center gap-2 shadow-lg"
+                onClick={() => setLocation("/kiosk")}
               >
-                <LogOut className="h-5 w-5" />
+                <CheckCircle2 className="h-6 w-6" />
+                <span className="font-semibold">Check In</span>
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="h-auto py-4 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl flex flex-col items-center gap-2 border-gray-200 shadow-sm"
+                onClick={() => setLocation("/student-schedule")}
+              >
+                <Calendar className="h-6 w-6" />
+                <span className="font-semibold">View Schedule</span>
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="h-auto py-4 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl flex flex-col items-center gap-2 border-gray-200 shadow-sm"
+              >
+                <MessageSquare className="h-6 w-6" />
+                <span className="font-semibold">Messages</span>
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="h-auto py-4 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl flex flex-col items-center gap-2 border-gray-200 shadow-sm"
+              >
+                <CreditCard className="h-6 w-6" />
+                <span className="font-semibold">Payments</span>
               </Button>
             </div>
-          </div>
-        </header>
 
-        {/* Main Content */}
-        <main className="container mx-auto px-6 py-8 max-w-7xl">
-          {/* Hero Header */}
-          <div className={`mb-10 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-2">
-              Welcome back, <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">{studentData.name.split(' ')[0]}</span>
-            </h2>
-            <p className="text-lg text-white/40 tracking-wide">Train. Progress. Advance.</p>
-          </div>
-
-          {/* Top Metric Cards */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            {/* Training Balance */}
-            <GlassPanel className="p-6" glow glowColor="rgba(74, 222, 128, 0.1)">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-600/10">
-                  <CreditCard className="h-6 w-6 text-green-400" />
-                </div>
-                <span className="text-xs text-white/40 uppercase tracking-wider">Balance</span>
-              </div>
-              <p className="text-4xl font-bold text-white mb-1">
-                ${studentData.account_balance}
-              </p>
-              <p className="text-sm text-white/40">
-                {studentData.account_balance === 0 ? 'All caught up!' : `Due: ${studentData.next_payment_due}`}
-              </p>
-            </GlassPanel>
-
-            {/* Classes This Month */}
-            <GlassPanel className="p-6" glow glowColor={beltStyle.glow}>
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-2xl" style={{ background: `linear-gradient(135deg, ${beltStyle.primary}33, ${beltStyle.primary}11)` }}>
-                  <Calendar className="h-6 w-6" style={{ color: beltStyle.primary }} />
-                </div>
-                <span className="text-xs text-white/40 uppercase tracking-wider">This Month</span>
-              </div>
-              <p className="text-4xl font-bold text-white mb-1">
-                {studentData.classes_this_month}
-              </p>
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-400" />
-                <span className="text-sm text-orange-400">{studentData.streak_days}-day streak</span>
-              </div>
-            </GlassPanel>
-
-            {/* Belt Progress */}
-            <GlassPanel className="p-6" glow glowColor={beltStyle.glow}>
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-xs text-white/40 uppercase tracking-wider">Belt Progress</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <ProgressRing 
-                  progress={studentData.belt_progress} 
-                  size={80} 
-                  strokeWidth={6}
-                  color={beltStyle.primary}
-                  glowColor={beltStyle.glow}
-                />
-                <div>
-                  <p className="text-lg font-semibold text-white">{studentData.belt_rank}</p>
-                  <p className="text-sm text-white/40">Next: Orange Belt</p>
-                </div>
-              </div>
-            </GlassPanel>
-
-            {/* Membership Status */}
-            <GlassPanel className="p-6" glow glowColor="rgba(167, 139, 250, 0.1)">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-600/10">
-                  <TrendingUp className="h-6 w-6 text-purple-400" />
-                </div>
-                <span className="text-xs text-white/40 uppercase tracking-wider">Membership</span>
-              </div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-lg font-semibold text-white">{studentData.membership_status}</span>
-              </div>
-              <p className="text-sm text-white/40">{studentData.plan_type}</p>
-            </GlassPanel>
-          </div>
-
-          {/* Quick Action Strip */}
-          <div className={`mb-8 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <GlassPanel className="p-2" hover={false}>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { icon: Calendar, label: 'My Schedule', route: '/student-schedule' },
-                  { icon: MessageSquare, label: 'Messages', route: '/student-messages' },
-                  { icon: CreditCard, label: 'Payments', route: '/student-payments' },
-                  { icon: Settings, label: 'Settings', route: '/student-profile' },
-                ].map((action, index) => (
-                  <button
+            {/* Weekly Training */}
+            <SoftCard className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Weekly Training</h2>
+              <div className="flex items-end justify-between gap-4">
+                {weeklyTraining.map((day, index) => (
+                  <WeeklyTrainingBar 
                     key={index}
-                    onClick={() => setLocation(action.route)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 hover:bg-white/[0.05] group"
-                  >
-                    <div 
-                      className="p-3 rounded-xl transition-all duration-300 group-hover:scale-110"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${beltStyle.primary}22, transparent)`,
-                      }}
-                    >
-                      <action.icon 
-                        className="h-5 w-5 transition-all duration-300" 
-                        style={{ color: beltStyle.primary }}
-                      />
-                    </div>
-                    <span className="text-sm text-white/60 group-hover:text-white transition-colors">{action.label}</span>
-                  </button>
+                    day={day.day}
+                    attended={day.attended}
+                    isToday={index === 4} // Friday is today in mock
+                  />
                 ))}
               </div>
-            </GlassPanel>
-          </div>
-
-          {/* Training Intelligence Panel */}
-          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            {/* Weekly Training Activity */}
-            <GlassPanel className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">Weekly Training</h3>
-                <span className="text-xs text-white/40">This Week</span>
-              </div>
-              <WeeklyActivityChart data={studentData.weekly_activity} beltColor={beltStyle.primary} />
-            </GlassPanel>
-
-            {/* Performance Curve */}
-            <GlassPanel className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">Performance Curve</h3>
-                <span className="text-xs text-white/40">Last 8 Weeks</span>
-              </div>
-              <PerformanceChart data={studentData.performance_trend} />
-              <p className="text-sm text-white/40 mt-4 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-                Your consistency is improving compared to last month
+              <p className="mt-4 text-sm text-gray-500 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                Consistency improving compared to last month
               </p>
-            </GlassPanel>
-          </div>
+            </SoftCard>
 
-          {/* Upcoming Classes - Focus Zone */}
-          <div className={`transition-all duration-700 delay-400 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-semibold text-white">Upcoming Classes</h3>
-              <button className="text-sm text-white/40 hover:text-white transition-colors flex items-center gap-1">
-                View All <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              {studentData.upcoming_classes.map((classItem: any, index: number) => (
-                <GlassPanel 
-                  key={classItem.id} 
-                  className="p-5 cursor-pointer"
-                  glow={index === 0}
-                  glowColor={index === 0 ? beltStyle.glow : undefined}
+            {/* Upcoming Class */}
+            <SoftCard className="p-6" hover>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Next Class</h2>
+                <Button 
+                  variant="ghost" 
+                  className="text-gray-500 hover:text-gray-900"
+                  onClick={() => setLocation("/student-schedule")}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                        style={{ background: `linear-gradient(135deg, ${beltStyle.primary}22, ${beltStyle.primary}11)` }}
-                      >
-                        <Calendar className="h-6 w-6" style={{ color: beltStyle.primary }} />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white mb-1">{classItem.name}</p>
-                        <p className="text-sm text-white/50">{classItem.instructor}</p>
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className="flex items-center gap-1 text-xs text-white/40">
-                            <MapPin className="h-3 w-3" />
-                            {classItem.location}
-                          </span>
-                          <span 
-                            className="text-xs px-2 py-0.5 rounded-full"
-                            style={{ 
-                              background: `${beltStyle.primary}22`,
-                              color: beltStyle.primary
-                            }}
-                          >
-                            {classItem.belt_requirement}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-white">{classItem.date}</p>
-                      <p className="text-sm text-white/40 flex items-center justify-end gap-1">
-                        <Clock className="h-3 w-3" />
-                        {classItem.time}
-                      </p>
-                    </div>
+                  View All <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
+                {/* Instructor Photo */}
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-200 flex-shrink-0">
+                  <img 
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
+                    alt="Instructor"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-lg">Kids Karate - Intermediate</h3>
+                  <p className="text-gray-600">Samuel Silva</p>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      Tue, May 7 · 5:00 PM
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      Main Dojo
+                    </span>
                   </div>
-                </GlassPanel>
-              ))}
-            </div>
+                </div>
+                
+                <Button 
+                  className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6 shadow-lg shadow-orange-500/30"
+                >
+                  Check in
+                </Button>
+              </div>
+            </SoftCard>
           </div>
+        </div>
 
-          {/* Bottom Spacing */}
-          <div className="h-8" />
-        </main>
-      </div>
+        {/* Settings Link */}
+        <div className={`mt-8 flex justify-center transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <Button 
+            variant="ghost" 
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Account Settings
+          </Button>
+        </div>
+      </main>
     </div>
   );
 }
