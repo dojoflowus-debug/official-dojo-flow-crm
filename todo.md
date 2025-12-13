@@ -3222,3 +3222,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add 6 mock staff members to the database
 - [x] Include variety of roles (instructors, admin, etc.)
 - [x] Verify staff members appear in the system
+
+## Feature: Add Staff to Mention Dropdown
+
+### Requirements
+- [x] Fetch staff members from API in MentionInput component
+- [x] Display staff members in a "Staff" section in the dropdown
+- [x] Show staff role and addressAs (e.g., "Coach Sarah")
+- [x] Test mentioning staff members in Kai Command

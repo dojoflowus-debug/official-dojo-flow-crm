@@ -370,6 +370,43 @@ export const appRouter = router({
           message: "PIN deleted successfully"
         };
       }),
+    
+    // Get all staff members for mention dropdown
+    getAll: publicProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        limit: z.number().optional().default(10),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { teamMembers } = await import("../drizzle/schema");
+        const { eq, like, or, sql } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { staff: [] };
+        
+        let query = db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+        
+        if (input.search && input.search.length > 0) {
+          const searchPattern = `%${input.search}%`;
+          query = db.select().from(teamMembers).where(
+            sql`${teamMembers.isActive} = 1 AND (${teamMembers.name} LIKE ${searchPattern} OR ${teamMembers.addressAs} LIKE ${searchPattern} OR ${teamMembers.role} LIKE ${searchPattern})`
+          );
+        }
+        
+        const staff = await query.limit(input.limit);
+        
+        return {
+          staff: staff.map(s => ({
+            id: s.id,
+            name: s.addressAs || s.name,
+            fullName: s.name,
+            role: s.role.charAt(0).toUpperCase() + s.role.slice(1).replace('_', ' '),
+            email: s.email,
+            photoUrl: null,
+          }))
+        };
+      }),
   }),
 
   // CRM Dashboard APIs
