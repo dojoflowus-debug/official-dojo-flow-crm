@@ -2097,6 +2097,27 @@ export const appRouter = router({
           return { success: false, error: error.message || 'Failed to upload photo' };
         }
       }),
+
+    // Update student photo URL in database
+    updateStudentPhoto: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        photoUrl: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        if (!db) return { success: false, error: 'Database not available' };
+        
+        try {
+          await db.update(students)
+            .set({ photoUrl: input.photoUrl })
+            .where(eq(students.id, input.studentId));
+          
+          return { success: true };
+        } catch (error: any) {
+          console.error('Error updating student photo:', error);
+          return { success: false, error: error.message || 'Failed to update photo' };
+        }
+      }),
   }),
 });
 

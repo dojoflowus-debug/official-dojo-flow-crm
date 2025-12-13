@@ -303,14 +303,24 @@ export default function StudentDashboard() {
             )}
             <span className="text-lg font-semibold text-gray-900">Student Portal</span>
           </div>
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/student-settings")}
+              className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 

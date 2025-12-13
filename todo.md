@@ -3262,3 +3262,22 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Save photoUrl to student record in database
 - [x] Display uploaded photo in confirmation step
 - [x] Test complete flow from upload to display (3 vitest tests passing)
+
+
+## ✅ COMPLETED: Student Profile Photo Update from Dashboard
+
+### Backend
+- [x] Create updateStudentPhoto tRPC procedure
+- [x] Accept studentId and new photo data
+- [x] Upload to S3 and update student record
+
+### Frontend
+- [x] Update StudentSettings page with photo management
+- [x] Display current photo with edit button
+- [x] Photo upload with preview and progress indicator
+- [x] Success/error feedback
+- [x] Add Settings link to Student Dashboard header
+
+### Integration
+- [x] Link Settings from dashboard user menu
+- [x] Test photo update flow end-to-end
