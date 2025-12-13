@@ -1288,6 +1288,12 @@ export const beltTestRegistrations = mysqlTable("belt_test_registrations", {
   classesAtRegistration: int("classesAtRegistration"),
   /** Payment status: pending, paid, refunded */
   paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded", "waived"]).default("pending"),
+  /** Stripe checkout session ID */
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  /** Stripe payment intent ID */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  /** Amount paid in cents */
+  amountPaid: int("amountPaid"),
   /** Instructor notes about the student's test */
   instructorNotes: text("instructorNotes"),
   /** Result notes after test completion */

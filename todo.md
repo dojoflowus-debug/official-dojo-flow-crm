@@ -3187,3 +3187,4 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Test eligibility checks work correctly
 - [ ] Test registration and cancellation flows
 - [ ] Save checkpoint
+- [x] Integrate Stripe payment for $50 belt test registration fee

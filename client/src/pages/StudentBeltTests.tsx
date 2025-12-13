@@ -12,9 +12,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  X
+  X,
+  CreditCard,
+  Lock
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 
 // Belt colors for visual display
 const beltColors: Record<string, { bg: string; border: string; text: string }> = {
@@ -54,7 +56,7 @@ function SoftCard({
   );
 }
 
-// Registration Modal
+// Registration Modal with Payment
 function RegistrationModal({ 
   test, 
   studentId,
@@ -66,7 +68,7 @@ function RegistrationModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const eligibilityQuery = trpc.studentPortal.checkBeltTestEligibility.useQuery(
@@ -74,30 +76,45 @@ function RegistrationModal({
     { enabled: !!test }
   );
   
-  const registerMutation = trpc.studentPortal.registerForBeltTest.useMutation({
+  const paymentMutation = trpc.studentPortal.createBeltTestPayment.useMutation({
     onSuccess: (data) => {
       if (data.success) {
-        onSuccess();
+        if (data.free) {
+          // Free registration completed
+          onSuccess();
+        } else if (data.checkoutUrl) {
+          // Redirect to Stripe checkout
+          window.location.href = data.checkoutUrl;
+        }
       } else {
         setError(data.error || 'Registration failed');
+        setIsProcessing(false);
       }
-      setIsRegistering(false);
     },
     onError: (err) => {
       setError(err.message);
-      setIsRegistering(false);
+      setIsProcessing(false);
     }
   });
 
   const handleRegister = () => {
-    setIsRegistering(true);
+    setIsProcessing(true);
     setError(null);
-    registerMutation.mutate({ studentId, testId: test.id });
+    
+    const baseUrl = window.location.origin;
+    paymentMutation.mutate({ 
+      studentId, 
+      testId: test.id,
+      successUrl: `${baseUrl}/student-belt-tests?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/student-belt-tests?cancelled=true`,
+    });
   };
 
   const beltColor = beltColors[test.beltLevel] || beltColors['White'];
   const testDate = new Date(test.testDate);
   const spotsLeft = test.maxCapacity - test.currentRegistrations;
+  const hasFee = test.fee && test.fee > 0;
+  const feeAmount = hasFee ? (test.fee / 100).toFixed(2) : '0.00';
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -161,17 +178,32 @@ function RegistrationModal({
               </p>
             )}
 
-            {test.fee > 0 && (
-              <p className="text-sm text-gray-500">
-                Registration Fee: <span className="font-medium text-gray-700">${(test.fee / 100).toFixed(2)}</span>
-              </p>
-            )}
-
             {test.notes && (
               <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-xl">
                 {test.notes}
               </p>
             )}
+          </div>
+
+          {/* Payment Info */}
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-4 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-300">Registration Fee</p>
+                  <p className="text-2xl font-bold">${feeAmount}</p>
+                </div>
+              </div>
+              {hasFee && (
+                <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <Lock className="h-3 w-3" />
+                  <span>Secure payment via Stripe</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Eligibility Check */}
@@ -221,13 +253,18 @@ function RegistrationModal({
           </Button>
           <Button 
             onClick={handleRegister}
-            disabled={!eligibilityQuery.data?.eligible || isRegistering}
+            disabled={!eligibilityQuery.data?.eligible || isProcessing}
             className="flex-1 bg-black hover:bg-gray-800 text-white"
           >
-            {isRegistering ? (
+            {isProcessing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Registering...
+                Processing...
+              </>
+            ) : hasFee ? (
+              <>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Pay ${feeAmount} & Register
               </>
             ) : (
               <>
@@ -252,7 +289,7 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Registration Complete!</h2>
         <p className="text-gray-600 mb-6">
-          You have successfully registered for the belt test. We'll send you a reminder before the test date.
+          You have successfully registered and paid for the belt test. We'll send you a reminder before the test date.
         </p>
         <Button 
           onClick={onClose}
@@ -267,13 +304,25 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
 
 /**
  * Student Belt Tests Page
- * Shows upcoming belt tests and allows registration
+ * Shows upcoming belt tests and allows registration with payment
  */
 export default function StudentBeltTests() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const [studentId, setStudentId] = useState<number | null>(null);
   const [selectedTest, setSelectedTest] = useState<any>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Parse URL params
+  const urlParams = new URLSearchParams(searchString);
+  const paymentSuccess = urlParams.get('success') === 'true';
+  const sessionId = urlParams.get('session_id');
+
+  // Verify payment if returning from Stripe
+  const verifyPaymentQuery = trpc.studentPortal.verifyBeltTestPayment.useQuery(
+    { sessionId: sessionId || '' },
+    { enabled: !!sessionId && paymentSuccess }
+  );
 
   // Check login status
   useEffect(() => {
@@ -289,6 +338,15 @@ export default function StudentBeltTests() {
       setStudentId(parseInt(storedStudentId, 10));
     }
   }, [setLocation]);
+
+  // Show success modal after payment verification
+  useEffect(() => {
+    if (verifyPaymentQuery.data?.paid) {
+      setShowSuccess(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/student-belt-tests');
+    }
+  }, [verifyPaymentQuery.data]);
 
   // Fetch upcoming belt tests
   const testsQuery = trpc.studentPortal.getUpcomingBeltTests.useQuery(
@@ -403,14 +461,27 @@ export default function StudentBeltTests() {
                           <p className="text-sm text-gray-500">
                             {testDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {test.startTime}
                           </p>
-                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                            reg.registration.status === 'registered' ? 'bg-green-100 text-green-700' :
-                            reg.registration.status === 'passed' ? 'bg-blue-100 text-blue-700' :
-                            reg.registration.status === 'failed' ? 'bg-red-100 text-red-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {reg.registration.status.charAt(0).toUpperCase() + reg.registration.status.slice(1)}
-                          </span>
+                          <div className="flex gap-2 mt-1">
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                              reg.registration.status === 'registered' ? 'bg-green-100 text-green-700' :
+                              reg.registration.status === 'passed' ? 'bg-blue-100 text-blue-700' :
+                              reg.registration.status === 'failed' ? 'bg-red-100 text-red-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {reg.registration.status.charAt(0).toUpperCase() + reg.registration.status.slice(1)}
+                            </span>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                              reg.registration.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                              reg.registration.paymentStatus === 'waived' ? 'bg-blue-100 text-blue-700' :
+                              reg.registration.paymentStatus === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {reg.registration.paymentStatus === 'paid' ? '✓ Paid' :
+                               reg.registration.paymentStatus === 'waived' ? 'Free' :
+                               reg.registration.paymentStatus === 'pending' ? 'Payment Pending' :
+                               reg.registration.paymentStatus}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       {reg.registration.status === 'registered' && !isPast && (
@@ -458,6 +529,7 @@ export default function StudentBeltTests() {
                 const testDate = new Date(test.testDate);
                 const spotsLeft = test.maxCapacity - test.currentRegistrations;
                 const isRegistered = registeredTestIds.includes(test.id);
+                const hasFee = test.fee && test.fee > 0;
                 
                 return (
                   <SoftCard key={test.id} className="p-6" hover>
@@ -485,10 +557,17 @@ export default function StudentBeltTests() {
                               {test.location}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-500 mt-2">
-                            <Users className="h-4 w-4 inline mr-1" />
-                            {spotsLeft} of {test.maxCapacity} spots available
-                          </p>
+                          <div className="flex items-center gap-3 mt-2">
+                            <p className="text-sm text-gray-500">
+                              <Users className="h-4 w-4 inline mr-1" />
+                              {spotsLeft} of {test.maxCapacity} spots available
+                            </p>
+                            {hasFee && (
+                              <span className="text-sm font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
+                                ${(test.fee / 100).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex-shrink-0">
@@ -506,7 +585,14 @@ export default function StudentBeltTests() {
                             onClick={() => setSelectedTest(test)}
                             className="bg-black hover:bg-gray-800 text-white"
                           >
-                            Register
+                            {hasFee ? (
+                              <>
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                Register (${(test.fee / 100).toFixed(2)})
+                              </>
+                            ) : (
+                              'Register'
+                            )}
                           </Button>
                         )}
                       </div>
@@ -526,8 +612,15 @@ export default function StudentBeltTests() {
             <li>• Minimum 20 qualified classes since last promotion</li>
             <li>• Must be testing for your next belt level</li>
             <li>• Registration closes when capacity is reached</li>
+            <li>• Payment is processed securely via Stripe</li>
           </ul>
         </SoftCard>
+
+        {/* Stripe Badge */}
+        <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
+          <Lock className="h-4 w-4" />
+          <span>Payments secured by Stripe</span>
+        </div>
       </main>
 
       {/* Registration Modal */}

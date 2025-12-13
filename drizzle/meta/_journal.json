@@ -211,6 +211,13 @@
       "when": 1765610970142,
       "tag": "0029_curly_lyja",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1765611539976,
+      "tag": "0030_secret_hydra",
+      "breakpoints": true
     }
   ]
 }

@@ -1621,6 +1621,156 @@ export const appRouter = router({
         const { getStudentBeltTestRegistrations } = await import("./db");
         return await getStudentBeltTestRegistrations(input.studentId);
       }),
+
+    // Create Stripe checkout session for belt test payment
+    createBeltTestPayment: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        testId: z.number(),
+        successUrl: z.string(),
+        cancelUrl: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { checkBeltTestEligibility, getDb } = await import("./db");
+        const { createBeltTestCheckoutSession } = await import("./stripe");
+        const { students, beltTests, beltProgress, beltTestRegistrations } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        // Check eligibility first
+        const eligibility = await checkBeltTestEligibility(input.studentId, input.testId);
+        if (!eligibility.eligible) {
+          return { success: false, error: eligibility.reason };
+        }
+        
+        const db = await getDb();
+        if (!db) return { success: false, error: 'Database not available' };
+        
+        // Get student info
+        const studentResult = await db.select().from(students).where(eq(students.id, input.studentId)).limit(1);
+        if (studentResult.length === 0) {
+          return { success: false, error: 'Student not found' };
+        }
+        const student = studentResult[0];
+        
+        // Get test info
+        const testResult = await db.select().from(beltTests).where(eq(beltTests.id, input.testId)).limit(1);
+        if (testResult.length === 0) {
+          return { success: false, error: 'Belt test not found' };
+        }
+        const test = testResult[0];
+        
+        // Get belt progress
+        const progressResult = await db.select().from(beltProgress).where(eq(beltProgress.studentId, input.studentId)).limit(1);
+        const progress = progressResult[0];
+        
+        // Check if test is free
+        if (!test.fee || test.fee === 0) {
+          // Free registration - register directly
+          await db.insert(beltTestRegistrations).values({
+            testId: input.testId,
+            studentId: input.studentId,
+            studentName: `${student.firstName} ${student.lastName}`,
+            currentBelt: progress?.currentBelt || 'White',
+            attendanceAtRegistration: progress?.qualifiedAttendance || 0,
+            classesAtRegistration: progress?.qualifiedClasses || 0,
+            status: 'registered',
+            paymentStatus: 'waived',
+            amountPaid: 0,
+          });
+          
+          // Update test registration count
+          await db.update(beltTests)
+            .set({ 
+              currentRegistrations: test.currentRegistrations + 1,
+              updatedAt: new Date()
+            })
+            .where(eq(beltTests.id, input.testId));
+          
+          return { success: true, free: true };
+        }
+        
+        // Create Stripe checkout session
+        try {
+          const session = await createBeltTestCheckoutSession({
+            testId: input.testId,
+            testName: test.name,
+            studentId: input.studentId,
+            studentName: `${student.firstName} ${student.lastName}`,
+            studentEmail: student.email || '',
+            amount: test.fee,
+            successUrl: input.successUrl,
+            cancelUrl: input.cancelUrl,
+          });
+          
+          // Create pending registration
+          await db.insert(beltTestRegistrations).values({
+            testId: input.testId,
+            studentId: input.studentId,
+            studentName: `${student.firstName} ${student.lastName}`,
+            currentBelt: progress?.currentBelt || 'White',
+            attendanceAtRegistration: progress?.qualifiedAttendance || 0,
+            classesAtRegistration: progress?.qualifiedClasses || 0,
+            status: 'registered',
+            paymentStatus: 'pending',
+            stripeSessionId: session.id,
+            amountPaid: test.fee,
+          });
+          
+          // Update test registration count
+          await db.update(beltTests)
+            .set({ 
+              currentRegistrations: test.currentRegistrations + 1,
+              updatedAt: new Date()
+            })
+            .where(eq(beltTests.id, input.testId));
+          
+          return { 
+            success: true, 
+            checkoutUrl: session.url,
+            sessionId: session.id
+          };
+        } catch (error: any) {
+          console.error('Stripe checkout error:', error);
+          return { success: false, error: error.message || 'Payment processing failed' };
+        }
+      }),
+
+    // Verify payment completion
+    verifyBeltTestPayment: publicProcedure
+      .input(z.object({
+        sessionId: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getCheckoutSession } = await import("./stripe");
+        const { getDb } = await import("./db");
+        const { beltTestRegistrations } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        try {
+          const session = await getCheckoutSession(input.sessionId);
+          
+          if (session.payment_status === 'paid') {
+            // Update registration payment status
+            const db = await getDb();
+            if (db) {
+              await db.update(beltTestRegistrations)
+                .set({ 
+                  paymentStatus: 'paid',
+                  stripePaymentIntentId: session.payment_intent as string,
+                  updatedAt: new Date()
+                })
+                .where(eq(beltTestRegistrations.stripeSessionId, input.sessionId));
+            }
+            
+            return { success: true, paid: true };
+          }
+          
+          return { success: true, paid: false, status: session.payment_status };
+        } catch (error: any) {
+          console.error('Payment verification error:', error);
+          return { success: false, error: error.message };
+        }
+      }),
   }),
 });
 
