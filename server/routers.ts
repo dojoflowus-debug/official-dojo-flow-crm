@@ -2030,6 +2030,35 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) return { success: false, error: 'Database not available' };
         
+        // Age validation
+        const PROGRAM_AGE_RANGES = {
+          kids: { min: 4, max: 12 },
+          teens: { min: 13, max: 17 },
+          adults: { min: 18, max: 120 },
+        };
+        
+        const birthDate = new Date(input.dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        
+        // Check minimum age
+        if (age < PROGRAM_AGE_RANGES.kids.min) {
+          return { success: false, error: `Students must be at least ${PROGRAM_AGE_RANGES.kids.min} years old to enroll` };
+        }
+        
+        // Check age matches program
+        const range = PROGRAM_AGE_RANGES[input.program];
+        if (age < range.min || age > range.max) {
+          return { 
+            success: false, 
+            error: `Age ${age} is outside the ${input.program} program range (${range.min}-${range.max} years)` 
+          };
+        }
+        
         try {
           // Create new student
           const result = await db.insert(students).values({

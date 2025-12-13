@@ -3318,3 +3318,25 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] 17 vitest tests passing for phone utilities
 - [x] Test phone formatting in settings page
 - [x] Test phone formatting in onboarding flow
+
+
+## ✅ COMPLETED: Date of Birth Validation with Age Requirements
+
+### Frontend
+- [x] Create age validation utility function (ageUtils.ts)
+- [x] Calculate age from date of birth
+- [x] Define program-specific age ranges (Kids: 4-12, Teens: 13-17, Adults: 18+)
+- [x] Update StudentOnboarding with DOB validation
+- [x] Auto-suggest appropriate program based on age (green highlight)
+- [x] Show validation error for invalid ages (amber border + message)
+- [x] Display calculated age next to DOB field
+- [x] Program buttons show age ranges (4-12, 13-17, 18+)
+
+### Backend
+- [x] Add age validation in requestToJoin procedure
+- [x] Validate age matches selected program
+- [x] Minimum age enforcement (4 years old)
+
+### Integration
+- [x] 13 vitest tests passing for age utilities
+- [x] Test age validation in onboarding flow

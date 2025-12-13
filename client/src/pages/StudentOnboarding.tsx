@@ -20,6 +20,16 @@ import {
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { formatPhoneNumber, getPhoneValidationMessage, extractDigits } from "@/lib/phoneUtils";
+import { 
+  calculateAge, 
+  getRecommendedProgram, 
+  getAgeValidationMessage, 
+  getMinBirthDate, 
+  getMaxBirthDate,
+  formatAgeDisplay,
+  PROGRAM_AGE_RANGES,
+  type ProgramType 
+} from "@/lib/ageUtils";
 
 // School type for search results
 interface School {
@@ -119,7 +129,9 @@ export default function StudentOnboarding() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
-  const [program, setProgram] = useState<"kids" | "teens" | "adults">("adults");
+  const [program, setProgram] = useState<ProgramType>("adults");
+  const [ageError, setAgeError] = useState<string | null>(null);
+  const [showAgeInfo, setShowAgeInfo] = useState(false);
   const [emergencyContact, setEmergencyContact] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
   const [emergencyPhoneError, setEmergencyPhoneError] = useState<string | null>(null);
@@ -248,7 +260,8 @@ export default function StudentOnboarding() {
   // Step validation
   const canProceedStep1 = selectedSchool !== null;
   const isPhoneValid = extractDigits(emergencyPhone).length === 10;
-  const canProceedStep2 = firstName.trim() && lastName.trim() && dateOfBirth && emergencyContact.trim() && emergencyPhone.trim() && isPhoneValid;
+  const isAgeValid = dateOfBirth && calculateAge(dateOfBirth) >= PROGRAM_AGE_RANGES.kids.min && !ageError;
+  const canProceedStep2 = firstName.trim() && lastName.trim() && dateOfBirth && isAgeValid && emergencyContact.trim() && emergencyPhone.trim() && isPhoneValid;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -477,10 +490,50 @@ export default function StudentOnboarding() {
                     <Input
                       type="date"
                       value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      className="h-12 pl-12 pr-4 bg-white border-gray-200 rounded-xl focus:border-red-500 focus:ring-red-500/20"
+                      min={getMinBirthDate()}
+                      max={getMaxBirthDate()}
+                      onChange={(e) => {
+                        const dob = e.target.value;
+                        setDateOfBirth(dob);
+                        
+                        if (dob) {
+                          const age = calculateAge(dob);
+                          const recommended = getRecommendedProgram(age);
+                          
+                          // Auto-select recommended program
+                          if (recommended) {
+                            setProgram(recommended);
+                            setShowAgeInfo(true);
+                          }
+                          
+                          // Validate age
+                          const error = getAgeValidationMessage(dob, recommended || program);
+                          setAgeError(error);
+                        } else {
+                          setAgeError(null);
+                          setShowAgeInfo(false);
+                        }
+                      }}
+                      className={`h-12 pl-12 pr-4 bg-white rounded-xl focus:ring-red-500/20 ${ageError ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200 focus:border-red-500'}`}
                     />
                   </div>
+                  {dateOfBirth && (
+                    <div className="mt-2 flex items-center gap-2">
+                      {calculateAge(dateOfBirth) >= 0 && (
+                        <span className="text-sm text-gray-500">
+                          {formatAgeDisplay(calculateAge(dateOfBirth))}
+                        </span>
+                      )}
+                      {showAgeInfo && !ageError && (
+                        <span className="text-sm text-green-600">
+                          ✓ {PROGRAM_AGE_RANGES[program].label} recommended
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {ageError && (
+                    <p className="mt-1 text-xs text-amber-600">{ageError}</p>
+                  )}
                 </div>
 
                 {/* Program Selection */}
@@ -489,22 +542,38 @@ export default function StudentOnboarding() {
                     Program
                   </label>
                   <div className="grid grid-cols-3 gap-3">
-                    {(["kids", "teens", "adults"] as const).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setProgram(p)}
-                        className={`
-                          h-12 rounded-xl font-medium transition-all capitalize
-                          ${program === p 
-                            ? 'bg-red-500 text-white shadow-lg shadow-red-500/25' 
-                            : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
-                          }
-                        `}
-                      >
-                        {p}
-                      </button>
-                    ))}
+                    {(["kids", "teens", "adults"] as const).map((p) => {
+                      const range = PROGRAM_AGE_RANGES[p];
+                      const age = calculateAge(dateOfBirth);
+                      const isRecommended = age >= 0 && getRecommendedProgram(age) === p;
+                      
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            setProgram(p);
+                            if (dateOfBirth) {
+                              setAgeError(getAgeValidationMessage(dateOfBirth, p));
+                            }
+                          }}
+                          className={`
+                            h-14 rounded-xl font-medium transition-all flex flex-col items-center justify-center
+                            ${program === p 
+                              ? 'bg-red-500 text-white shadow-lg shadow-red-500/25' 
+                              : isRecommended
+                                ? 'bg-green-50 border-2 border-green-400 text-green-700'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+                            }
+                          `}
+                        >
+                          <span className="capitalize">{p}</span>
+                          <span className={`text-xs ${program === p ? 'text-white/80' : 'text-gray-400'}`}>
+                            {range.min}-{range.max === 120 ? '∞' : range.max} yrs
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
