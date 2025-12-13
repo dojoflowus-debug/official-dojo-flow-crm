@@ -26,13 +26,6 @@ import StudentProfile from "./pages/StudentProfile";
 import StudentSettings from "./pages/StudentSettings";
 import StudentForgotPassword from "./pages/StudentForgotPassword";
 import StudentResetPassword from "./pages/StudentResetPassword";
-import SelectSchool from "./pages/SelectSchool";
-import StudentOnboarding from "./pages/StudentOnboarding";
-import WaiverSigning from "./pages/WaiverSigning";
-import StudentPaymentCheckout from "./pages/StudentPaymentCheckout";
-import StudentOnboardingSuccess from "./pages/StudentOnboardingSuccess";
-import StudentPendingApproval from "./pages/StudentPendingApproval";
-import StaffInbox from "./pages/StaffInbox";
 import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
 import CRMDashboard from "./pages/CRMDashboard";
@@ -103,12 +96,6 @@ function Router() {
       <Route path="/student-login" element={<StudentLogin />} />
       <Route path="/student-forgot-password" element={<StudentForgotPassword />} />
       <Route path="/student-reset-password" element={<StudentResetPassword />} />
-      <Route path="/select-school" element={<SelectSchool />} />
-      <Route path="/student-onboarding" element={<StudentOnboarding />} />
-      <Route path="/waiver-signing" element={<WaiverSigning />} />
-      <Route path="/student-payment" element={<StudentPaymentCheckout />} />
-      <Route path="/student-onboarding-success" element={<StudentOnboardingSuccess />} />
-      <Route path="/student-pending-approval" element={<StudentPendingApproval />} />
       <Route path="/student-dashboard" element={<StudentDashboard />} />
       <Route path="/student-schedule" element={<StudentSchedule />} />
       <Route path="/student-belt-tests" element={<StudentBeltTests />} />
@@ -131,7 +118,6 @@ function Router() {
       {/* Kiosk removed - Kai Command is the central focus */}
       <Route path="/classes" element={<Classes />} />
       <Route path="/staff" element={<Staff />} />
-      <Route path="/staff-inbox" element={<StaffInbox />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/billing/setup" element={<BillingSetup />} />
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />

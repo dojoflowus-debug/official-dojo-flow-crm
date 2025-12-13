@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `signed_waivers` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `studentId` int NOT NULL,\n  `waiverTemplateId` int NOT NULL,\n  `programId` int,\n  `signerType` enum('student', 'guardian') NOT NULL,\n  `signerName` varchar(255) NOT NULL,\n  `signerEmail` varchar(320),\n  `signatureData` text NOT NULL,\n  `pdfUrl` varchar(500),\n  `ipAddress` varchar(45),\n  `userAgent` text,\n  `signedAt` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS `signed_waivers` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `studentId` int NOT NULL,\n  `waiverTemplateId` int NOT NULL,\n  `programId` int,\n  `signerType` enum('student', 'guardian') NOT NULL,\n  `signerName` varchar(255) NOT NULL,\n  `signerEmail` varchar(320),\n  `signatureData` text NOT NULL,\n  `pdfUrl` varchar(500),\n  `ipAddress` varchar(45),\n  `userAgent` text,\n  `signedAt` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 63
-}

@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { APP_LOGO, APP_TITLE } from "@/const";
-import { trpc } from "@/lib/trpc";
-import { formatPhoneNumber, getPhoneValidationMessage, isValidPhoneNumber, extractDigits } from "@/lib/phoneUtils";
 import { 
   ArrowLeft,
   User,
@@ -15,10 +13,7 @@ import {
   Shield,
   Camera,
   Save,
-  LogOut,
-  Loader2,
-  CheckCircle2,
-  AlertCircle
+  LogOut
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -51,39 +46,15 @@ export default function StudentSettings() {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   
-  // Photo upload state
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  
-  // Get student ID from localStorage
-  const studentId = parseInt(localStorage.getItem("student_id") || "0");
-  
-  // Fetch student data
-  const { data: studentData, refetch } = trpc.studentPortal.getStudentDashboard.useQuery(
-    { studentId },
-    { enabled: studentId > 0 }
-  );
-  
-  // Photo upload mutations
-  const uploadPhotoMutation = trpc.studentPortal.uploadProfilePhoto.useMutation();
-  const updatePhotoMutation = trpc.studentPortal.updateStudentPhoto.useMutation();
-  
-  // Contact info update mutation
-  const updateContactInfoMutation = trpc.studentPortal.updateStudentContactInfo.useMutation();
-  
-  // Form state - populated from API data
+  // Form state
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    emergencyContact: "",
-    emergencyPhone: ""
+    firstName: "Mike",
+    lastName: "Johnson",
+    email: "mike.johnson@example.com",
+    phone: "(555) 123-4567",
+    emergencyContact: "Jane Johnson",
+    emergencyPhone: "(555) 987-6543"
   });
 
   // Notification preferences
@@ -104,103 +75,10 @@ export default function StudentSettings() {
     }
     setTimeout(() => setMounted(true), 100);
   }, [navigate]);
-  
-  // Update form data when student data loads
-  useEffect(() => {
-    if (studentData?.student) {
-      const s = studentData.student;
-      setFormData({
-        firstName: s.firstName || "",
-        lastName: s.lastName || "",
-        email: s.email || "",
-        phone: s.phone || "",
-        emergencyContact: s.guardianName || "",
-        emergencyPhone: s.guardianPhone || ""
-      });
-    }
-  }, [studentData]);
-  
-  // Handle photo change with S3 upload
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Photo must be less than 5MB');
-      return;
-    }
-
-    setIsUploadingPhoto(true);
-    setUploadError(null);
-    setUploadSuccess(false);
-
-    // Read file as base64
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Data = reader.result as string;
-      setPhotoPreview(base64Data);
-
-      try {
-        // Upload to S3
-        const uploadResult = await uploadPhotoMutation.mutateAsync({
-          imageData: base64Data,
-          mimeType: file.type,
-          studentId,
-        });
-
-        if (uploadResult.success && uploadResult.url) {
-          // Update student record with new photo URL
-          const updateResult = await updatePhotoMutation.mutateAsync({
-            studentId,
-            photoUrl: uploadResult.url,
-          });
-
-          if (updateResult.success) {
-            setUploadSuccess(true);
-            refetch();
-            setTimeout(() => setUploadSuccess(false), 3000);
-          } else {
-            setUploadError(updateResult.error || 'Failed to update profile');
-          }
-        } else {
-          setUploadError(uploadResult.error || 'Failed to upload photo');
-        }
-      } catch (error: any) {
-        console.error('Photo upload error:', error);
-        setUploadError(error.message || 'Failed to upload photo');
-      } finally {
-        setIsUploadingPhoto(false);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-  
-  // Get current photo URL
-  const currentPhotoUrl = photoPreview || studentData?.student?.photoUrl;
-  
-  // Phone validation state
-  const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [emergencyPhoneError, setEmergencyPhoneError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    // Apply phone formatting for phone fields
-    if (name === 'phone' || name === 'emergencyPhone') {
-      const formatted = formatPhoneNumber(value);
-      setFormData(prev => ({ ...prev, [name]: formatted }));
-      
-      // Update validation message
-      const validationMsg = getPhoneValidationMessage(formatted);
-      if (name === 'phone') {
-        setPhoneError(validationMsg);
-      } else {
-        setEmergencyPhoneError(validationMsg);
-      }
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleNotificationChange = (key: keyof typeof notifications) => {
@@ -208,45 +86,12 @@ export default function StudentSettings() {
   };
 
   const handleSave = async () => {
-    // Validate phone numbers before saving
-    const phoneDigits = extractDigits(formData.phone);
-    const emergencyPhoneDigits = extractDigits(formData.emergencyPhone);
-    
-    // Check if phone numbers are valid (either empty or exactly 10 digits)
-    if (phoneDigits.length > 0 && phoneDigits.length !== 10) {
-      setSaveError('Please enter a valid 10-digit phone number');
-      return;
-    }
-    if (emergencyPhoneDigits.length > 0 && emergencyPhoneDigits.length !== 10) {
-      setSaveError('Please enter a valid 10-digit emergency phone number');
-      return;
-    }
-    
     setIsSaving(true);
-    setSaveError(null);
-    setSaveSuccess(false);
-    
-    try {
-      const result = await updateContactInfoMutation.mutateAsync({
-        studentId,
-        phone: formData.phone, // Already formatted as (XXX) XXX-XXXX
-        guardianName: formData.emergencyContact,
-        guardianPhone: formData.emergencyPhone, // Already formatted
-      });
-      
-      if (result.success) {
-        setSaveSuccess(true);
-        refetch();
-        setTimeout(() => setSaveSuccess(false), 3000);
-      } else {
-        setSaveError(result.error || 'Failed to save changes');
-      }
-    } catch (error: any) {
-      console.error('Save error:', error);
-      setSaveError(error.message || 'Failed to save changes');
-    } finally {
-      setIsSaving(false);
-    }
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsSaving(false);
+    // Show success message (in a real app, use a toast)
+    alert("Settings saved successfully!");
   };
 
   const handleLogout = () => {
@@ -280,46 +125,14 @@ export default function StudentSettings() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            {saveSuccess && (
-              <span className="text-sm text-green-600 flex items-center gap-1">
-                <CheckCircle2 className="h-4 w-4" />
-                Saved!
-              </span>
-            )}
-            {saveError && (
-              <span className="text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="h-4 w-4" />
-                {saveError}
-              </span>
-            )}
-            <Button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`rounded-xl transition-all ${
-                saveSuccess 
-                  ? 'bg-green-500 hover:bg-green-600' 
-                  : 'bg-orange-500 hover:bg-orange-600'
-              } text-white`}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : saveSuccess ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Saved!
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          </div>
+          <Button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
       </header>
 
@@ -331,66 +144,23 @@ export default function StudentSettings() {
           <SoftCard className="p-6">
             <div className="flex items-center gap-6">
               <div className="relative">
-                <label className="cursor-pointer group">
-                  <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden border-4 border-white shadow-lg transition-all group-hover:shadow-xl">
-                    {isUploadingPhoto ? (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
-                      </div>
-                    ) : currentPhotoUrl ? (
-                      <img 
-                        src={currentPhotoUrl}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <User className="h-10 w-10 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <div className={`absolute bottom-0 right-0 p-2 rounded-full text-white transition-all ${
-                    uploadSuccess 
-                      ? 'bg-green-500' 
-                      : isUploadingPhoto 
-                        ? 'bg-gray-400' 
-                        : 'bg-orange-500 hover:bg-orange-600 group-hover:scale-110'
-                  }`}>
-                    {uploadSuccess ? (
-                      <CheckCircle2 className="h-4 w-4" />
-                    ) : isUploadingPhoto ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                    disabled={isUploadingPhoto}
+                <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1555597673-b21d5c935865?w=200&h=200&fit=crop&crop=face"
+                    alt="Profile"
+                    className="w-full h-full object-cover"
                   />
-                </label>
+                </div>
+                <button className="absolute bottom-0 right-0 p-2 bg-orange-500 rounded-full text-white hover:bg-orange-600 transition-colors">
+                  <Camera className="h-4 w-4" />
+                </button>
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{formData.firstName} {formData.lastName}</h2>
-                <p className="text-gray-500">{studentData?.student?.beltRank || 'White'} Belt</p>
-                {uploadSuccess && (
-                  <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Photo updated!
-                  </p>
-                )}
-                {uploadError && (
-                  <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {uploadError}
-                  </p>
-                )}
-                {!uploadSuccess && !uploadError && (
-                  <p className="text-sm text-gray-400 mt-1">Tap photo to change</p>
-                )}
+                <p className="text-gray-500">Yellow Belt • Member since Oct 2025</p>
+                <Button variant="link" className="text-orange-500 p-0 h-auto mt-1">
+                  Change profile photo
+                </Button>
               </div>
             </div>
           </SoftCard>
@@ -411,8 +181,8 @@ export default function StudentSettings() {
                   id="firstName"
                   name="firstName"
                   value={formData.firstName}
-                  disabled
-                  className="mt-1 rounded-xl border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+                  onChange={handleInputChange}
+                  className="mt-1 rounded-xl border-gray-200"
                 />
               </div>
               <div>
@@ -421,8 +191,8 @@ export default function StudentSettings() {
                   id="lastName"
                   name="lastName"
                   value={formData.lastName}
-                  disabled
-                  className="mt-1 rounded-xl border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+                  onChange={handleInputChange}
+                  className="mt-1 rounded-xl border-gray-200"
                 />
               </div>
               <div>
@@ -434,8 +204,8 @@ export default function StudentSettings() {
                     name="email"
                     type="email"
                     value={formData.email}
-                    disabled
-                    className="pl-10 rounded-xl border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+                    onChange={handleInputChange}
+                    className="pl-10 rounded-xl border-gray-200"
                   />
                 </div>
               </div>
@@ -447,20 +217,13 @@ export default function StudentSettings() {
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="(555) 123-4567"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className={`pl-10 rounded-xl ${phoneError ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200'}`}
+                    className="pl-10 rounded-xl border-gray-200"
                   />
                 </div>
-                {phoneError && (
-                  <p className="mt-1 text-xs text-amber-600">{phoneError}</p>
-                )}
               </div>
             </div>
-            <p className="mt-4 text-xs text-gray-400">
-              Name and email cannot be changed here. Contact the front desk to update these fields.
-            </p>
           </SoftCard>
 
           {/* Emergency Contact */}
@@ -491,15 +254,11 @@ export default function StudentSettings() {
                     id="emergencyPhone"
                     name="emergencyPhone"
                     type="tel"
-                    placeholder="(555) 123-4567"
                     value={formData.emergencyPhone}
                     onChange={handleInputChange}
-                    className={`pl-10 rounded-xl ${emergencyPhoneError ? 'border-amber-400 focus:border-amber-500' : 'border-gray-200'}`}
+                    className="pl-10 rounded-xl border-gray-200"
                   />
                 </div>
-                {emergencyPhoneError && (
-                  <p className="mt-1 text-xs text-amber-600">{emergencyPhoneError}</p>
-                )}
               </div>
             </div>
           </SoftCard>

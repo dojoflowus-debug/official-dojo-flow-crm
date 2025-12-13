@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS unread_message_counts (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId INT NOT NULL,\n  userType VARCHAR(20) NOT NULL,\n  threadId INT NOT NULL,\n  unreadCount INT DEFAULT 0 NOT NULL,\n  lastReadMessageId INT,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS unread_message_counts (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId INT NOT NULL,\n  userType VARCHAR(20) NOT NULL,\n  threadId INT NOT NULL,\n  unreadCount INT DEFAULT 0 NOT NULL,\n  lastReadMessageId INT,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 217
-}

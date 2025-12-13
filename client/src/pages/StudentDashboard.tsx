@@ -14,77 +14,9 @@ import {
   CheckCircle2,
   Sparkles,
   Loader2,
-  Award,
-  FileText,
-  Download
+  Award
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Documents List Component
-function DocumentsList({ studentId }: { studentId: number | null }) {
-  const { data: documents, isLoading } = trpc.studentPortal.getStudentDocuments.useQuery(
-    { studentId: studentId || 0 },
-    { enabled: !!studentId }
-  );
-
-  const handleDownload = (fileUrl: string, title: string) => {
-    // Open PDF in new tab for download
-    window.open(fileUrl, '_blank');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-      </div>
-    );
-  }
-
-  if (!documents || documents.length === 0) {
-    return (
-      <p className="text-sm text-gray-400 text-center py-4">
-        No documents yet. Signed waivers and certificates will appear here.
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {documents.slice(0, 3).map((doc: any) => (
-        <div 
-          key={doc.id} 
-          className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <FileText className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">{doc.title}</p>
-              <p className="text-xs text-gray-500">
-                {doc.mimeType === 'application/pdf' ? 'PDF Document' : 'Signed Document'}
-                {doc.createdAt && ` • ${new Date(doc.createdAt).toLocaleDateString()}`}
-              </p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-green-600 hover:text-green-700"
-            onClick={() => handleDownload(doc.fileUrl, doc.title)}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
-      {documents.length > 3 && (
-        <p className="text-sm text-gray-400 text-center">
-          +{documents.length - 3} more documents
-        </p>
-      )}
-    </div>
-  );
-}
 
 // Belt data with colors
 const belts = [
@@ -168,7 +100,7 @@ function ProgressRing({
   );
 }
 
-// Belt Badge Component - Enhanced with glow effect for next belt
+// Belt Badge Component
 function BeltBadge({ 
   name, 
   color, 
@@ -185,26 +117,13 @@ function BeltBadge({
   isPast: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 relative">
-      {/* Glow effect for next belt */}
-      {isNext && (
-        <div 
-          className="absolute inset-0 rounded-lg animate-pulse"
-          style={{ 
-            backgroundColor: color,
-            filter: 'blur(8px)',
-            opacity: 0.4,
-            transform: 'scale(1.2)'
-          }}
-        />
-      )}
+    <div className="flex flex-col items-center gap-1">
       <div 
         className={`
-          relative px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300
+          px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300
           ${isActive ? 'ring-2 ring-offset-2 shadow-lg scale-110' : ''}
-          ${isNext ? 'shadow-lg scale-105' : ''}
-          ${!isActive && !isNext && !isPast ? 'opacity-30 grayscale' : ''}
-          ${isPast ? 'opacity-70' : ''}
+          ${isNext ? 'opacity-60' : ''}
+          ${!isActive && !isNext && !isPast ? 'opacity-30' : ''}
         `}
         style={{ 
           backgroundColor: color,
@@ -218,9 +137,6 @@ function BeltBadge({
       </div>
       {isActive && (
         <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1" />
-      )}
-      {isNext && (
-        <div className="text-[10px] text-gray-400 mt-1">Next</div>
       )}
     </div>
   );
@@ -371,24 +287,14 @@ export default function StudentDashboard() {
             )}
             <span className="text-lg font-semibold text-gray-900">Student Portal</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/student-settings")}
-              className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
         </div>
       </header>
 
@@ -396,17 +302,10 @@ export default function StudentDashboard() {
       <main className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Hero Welcome Section */}
         <div className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Student Portal</span>
-          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
             Welcome back, {studentName}
           </h1>
-          <p className="text-lg text-gray-500">
-            <span className="italic">My Martial Path</span>
-            <span className="mx-2">·</span>
-            <span className="font-medium text-gray-700">{currentBelt} Belt</span>
-          </p>
+          <p className="text-xl text-gray-500 italic">My Martial Path</p>
         </div>
 
         {/* Main Grid */}
@@ -437,7 +336,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {/* Attendance Ring - Enhanced with status badge */}
+              {/* Attendance Ring */}
               <div className="mt-8 flex flex-col items-center">
                 <div className="relative">
                   <ProgressRing 
@@ -450,38 +349,18 @@ export default function StudentDashboard() {
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-4xl font-bold text-gray-900">{qualifiedAttendance}%</span>
                     <span className="text-sm text-gray-500">Attendance</span>
-                    {/* Status Badge */}
-                    <span 
-                      className="mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide"
-                      style={{ 
-                        backgroundColor: attendanceStatus.bg,
-                        color: attendanceStatus.color
-                      }}
-                    >
-                      {attendanceStatus.status}
-                    </span>
+                    <span className="text-xs text-gray-400">for belt</span>
                   </div>
                 </div>
                 
-                {/* Motivational Microcopy */}
                 <p className="mt-4 text-center text-gray-600 font-medium">
-                  <span className="text-orange-500">Consistency</span> is your superpower
+                  <span className="text-orange-500">Attendance</span> beats intensity
                 </p>
                 
-                {/* Eligibility Warning */}
                 {qualifiedAttendance < (beltProgress?.attendanceRequired || 80) && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-xl">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Need {(beltProgress?.attendanceRequired || 80) - qualifiedAttendance}% more for belt eligibility</span>
-                  </div>
-                )}
-                
-                {/* Success Message */}
-                {qualifiedAttendance >= (beltProgress?.attendanceRequired || 80) && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-green-600 bg-green-50 px-4 py-2 rounded-xl">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>You're on track for your next belt!</span>
-                  </div>
+                  <p className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                    Maintain {beltProgress?.attendanceRequired || 80}%+ to stay belt-eligible
+                  </p>
                 )}
               </div>
             </SoftCard>
@@ -673,22 +552,6 @@ export default function StudentDashboard() {
                   </Button>
                 </div>
               )}
-            </SoftCard>
-
-            {/* My Documents */}
-            <SoftCard className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">My Documents</h2>
-                <Button 
-                  variant="ghost" 
-                  className="text-gray-500 hover:text-gray-900"
-                  onClick={() => navigate("/student-documents")}
-                >
-                  View All <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-              
-              <DocumentsList studentId={studentId} />
             </SoftCard>
           </div>
         </div>

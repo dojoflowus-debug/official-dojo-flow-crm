@@ -52,7 +52,6 @@ const NOTE_CATEGORIES = [
   { value: 'behavior', label: 'Behavior', color: 'bg-yellow-100 text-yellow-700' },
   { value: 'achievement', label: 'Achievement', color: 'bg-purple-100 text-purple-700' },
   { value: 'parent-contact', label: 'Parent Contact', color: 'bg-orange-100 text-orange-700' },
-  { value: 'message', label: 'Messages', color: 'bg-red-100 text-red-700' },
 ]
 
 // Mock notes data for demo
