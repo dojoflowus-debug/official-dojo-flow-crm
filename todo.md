@@ -2776,3 +2776,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Create LeafletMap component with dark mode styling
 - [x] Update StudentsSplitScreen to use LeafletMap instead of MapView
 - [x] Test map displays correctly without API key
+
+## ✅ COMPLETED: Fix View on Map Behavior
+- [x] When clicking "View on Map" on student card, show full-screen map with student card docked
+- [x] Student location should be highlighted/centered on the map
+- [x] Student card should remain visible alongside the map
+- [x] Test the View on Map interaction works correctly

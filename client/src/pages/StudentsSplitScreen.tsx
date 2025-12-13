@@ -916,14 +916,11 @@ export default function StudentsSplitScreen() {
         }}
         onStudentUpdated={handleStudentUpdated}
         onViewOnMap={(student) => {
+          // Keep the student selected and modal open
+          setSelectedStudent(student)
           setHighlightedMapStudent(student)
+          setIsModalOpen(true)
           setIsFullMapMode(true)
-          // Center map on student and highlight marker
-          const location = studentLocationsRef.current.get(student.id)
-          if (location && mapRef.current) {
-            mapRef.current.panTo(location)
-            mapRef.current.setZoom(15)
-          }
         }}
         isFullMapMode={isFullMapMode}
       />
