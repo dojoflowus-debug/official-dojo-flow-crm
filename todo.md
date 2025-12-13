@@ -3605,3 +3605,26 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show Kai messages with distinct styling (bot icon)
 - [x] 17 vitest tests passing for messaging logic
 
+
+
+## ✅ COMPLETED: Bulk Class Messaging via @ Mentions
+
+### Frontend - MentionInput Enhancement
+- [x] Add "class" type to mention suggestions
+- [x] Fetch available classes from backend (getClassesForMention)
+- [x] Show class icon (purple Calendar) and student count in dropdown
+- [x] Display class mentions with distinct styling (purple badge with "X students")
+
+### Backend - Class Mention Expansion
+- [x] Create getClassesForMention procedure for mention suggestions
+- [x] Update sendMessage to detect class mentions
+- [x] Expand class mention to all enrolled students via classEnrollments table
+- [x] Create individual messages/notes for each student
+- [x] Deduplicate students (same student in multiple classes or mentioned directly)
+
+### Testing
+- [x] 14 vitest tests passing for bulk messaging logic
+- [x] Test class appears in mention dropdown
+- [x] Test selecting class shows student count
+- [x] Test message is delivered to all class students
+

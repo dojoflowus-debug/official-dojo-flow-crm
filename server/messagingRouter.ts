@@ -3,9 +3,10 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 
 // Mention schema
 const mentionSchema = z.object({
-  type: z.enum(["student", "staff", "kai"]),
+  type: z.enum(["student", "staff", "kai", "class"]),
   id: z.union([z.number(), z.string()]),
   displayName: z.string(),
+  studentCount: z.number().optional(),
 });
 
 export const messagingRouter = router({
@@ -30,8 +31,47 @@ export const messagingRouter = router({
       // Check if @Kai is mentioned
       const kaiMentioned = input.mentions.some(m => m.type === "kai");
       
-      // Get student mentions for routing
-      const studentMentions = input.mentions.filter(m => m.type === "student");
+      // Get class mentions and expand to individual students
+      const classMentions = input.mentions.filter(m => m.type === "class");
+      let expandedStudentMentions: typeof input.mentions = [];
+      
+      // Expand class mentions to individual students
+      if (classMentions.length > 0) {
+        const { classEnrollments, students } = await import("../drizzle/schema");
+        
+        for (const classMention of classMentions) {
+          // Get all students enrolled in this class
+          const enrolledStudents = await db!.select({
+            id: students.id,
+            name: students.name,
+            firstName: students.firstName,
+            lastName: students.lastName,
+          })
+            .from(classEnrollments)
+            .innerJoin(students, eq(classEnrollments.studentId, students.id))
+            .where(eq(classEnrollments.classId, Number(classMention.id)));
+          
+          // Add each enrolled student as a mention
+          for (const student of enrolledStudents) {
+            const studentName = student.name || `${student.firstName} ${student.lastName}`;
+            expandedStudentMentions.push({
+              type: "student" as const,
+              id: student.id,
+              displayName: studentName,
+            });
+          }
+        }
+      }
+      
+      // Get direct student mentions and combine with expanded class students
+      const directStudentMentions = input.mentions.filter(m => m.type === "student");
+      const allStudentMentions = [...directStudentMentions, ...expandedStudentMentions];
+      
+      // Deduplicate students (in case same student is in multiple classes or mentioned directly)
+      const studentMentions = allStudentMentions.filter((mention, index, self) =>
+        index === self.findIndex(m => m.id === mention.id)
+      );
+      
       const staffMentions = input.mentions.filter(m => m.type === "staff");
 
       let threadId = input.threadId;
@@ -405,6 +445,48 @@ export const messagingRouter = router({
       }
 
       return { success: true };
+    }),
+
+  // Get classes for @ mention dropdown (bulk messaging)
+  getClassesForMention: protectedProcedure
+    .input(z.object({
+      search: z.string().optional(),
+    }))
+    .query(async ({ input }) => {
+      const { db } = await import("./db");
+      const { classes, classEnrollments } = await import("../drizzle/schema");
+      const { like, sql, eq } = await import("drizzle-orm");
+
+      // Get all active classes with student counts
+      let query = db!.select({
+        id: classes.id,
+        name: classes.name,
+        schedule: classes.schedule,
+        studentCount: sql<number>`(SELECT COUNT(*) FROM class_enrollments WHERE class_id = ${classes.id})`,
+      })
+        .from(classes)
+        .where(eq(classes.isActive, 1));
+
+      // Apply search filter if provided
+      const allClasses = await query;
+      
+      let filteredClasses = allClasses;
+      if (input.search && input.search.length > 0) {
+        const searchLower = input.search.toLowerCase();
+        filteredClasses = allClasses.filter(c => 
+          c.name.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Limit to 10 results
+      return { 
+        classes: filteredClasses.slice(0, 10).map(c => ({
+          id: c.id,
+          name: c.name,
+          schedule: c.schedule || '',
+          studentCount: Number(c.studentCount) || 0,
+        }))
+      };
     }),
 
   // Student reply to a message

@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { trpc } from '@/lib/trpc';
-import { User, Users, Bot, GraduationCap } from 'lucide-react';
+import { User, Users, Bot, GraduationCap, Calendar } from 'lucide-react';
 
 interface Mention {
-  type: 'student' | 'staff' | 'kai';
+  type: 'student' | 'staff' | 'kai' | 'class';
   id: number | string;
   displayName: string;
   avatar?: string;
   subtitle?: string;
+  studentCount?: number;
 }
 
 interface MentionInputProps {
@@ -47,6 +48,12 @@ export function MentionInput({
     { enabled: showSuggestions && searchQuery.length > 0 }
   );
 
+  // Fetch classes for bulk messaging
+  const { data: classesData } = trpc.messaging.getClassesForMention.useQuery(
+    { search: searchQuery },
+    { enabled: showSuggestions && searchQuery.length > 0 }
+  );
+
   // Build suggestions list
   const suggestions: Mention[] = [];
   
@@ -82,6 +89,19 @@ export function MentionInput({
         displayName: member.name,
         avatar: member.photoUrl,
         subtitle: member.role || 'Staff',
+      });
+    });
+  }
+
+  // Add classes for bulk messaging
+  if (classesData?.classes) {
+    classesData.classes.forEach((cls: any) => {
+      suggestions.push({
+        type: 'class',
+        id: cls.id,
+        displayName: cls.name,
+        subtitle: `${cls.studentCount} students • ${cls.schedule || 'Class'}`,
+        studentCount: cls.studentCount,
       });
     });
   }
@@ -196,6 +216,8 @@ export function MentionInput({
         return <GraduationCap className="w-4 h-4 text-blue-500" />;
       case 'staff':
         return <Users className="w-4 h-4 text-green-500" />;
+      case 'class':
+        return <Calendar className="w-4 h-4 text-purple-500" />;
       default:
         return <User className="w-4 h-4 text-gray-500" />;
     }
@@ -278,9 +300,11 @@ export function MentionInput({
                     ? 'bg-red-500/10 text-red-600 dark:text-red-400'
                     : suggestion.type === 'student'
                     ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                    : suggestion.type === 'class'
+                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
                     : 'bg-green-500/10 text-green-600 dark:text-green-400'
                 }`}>
-                  {suggestion.type === 'kai' ? 'AI' : suggestion.type}
+                  {suggestion.type === 'kai' ? 'AI' : suggestion.type === 'class' ? `${suggestion.studentCount} students` : suggestion.type}
                 </span>
               </button>
             ))}
