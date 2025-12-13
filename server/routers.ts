@@ -488,6 +488,67 @@ export const appRouter = router({
         
         return { success: true };
       }),
+    
+    // Lead Activities - Timeline
+    getActivities: publicProcedure
+      .input(z.object({
+        leadId: z.number(),
+        limit: z.number().optional().default(50),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { leadActivities } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const activities = await db.select()
+          .from(leadActivities)
+          .where(eq(leadActivities.leadId, input.leadId))
+          .orderBy(desc(leadActivities.createdAt))
+          .limit(input.limit);
+        
+        return activities;
+      }),
+    
+    addActivity: publicProcedure
+      .input(z.object({
+        leadId: z.number(),
+        type: z.enum(["call", "email", "sms", "note", "status_change", "meeting", "task"]),
+        title: z.string().optional(),
+        content: z.string().optional(),
+        previousStatus: z.string().optional(),
+        newStatus: z.string().optional(),
+        callDuration: z.number().optional(),
+        callOutcome: z.enum(["answered", "voicemail", "no_answer", "busy", "wrong_number"]).optional(),
+        isAutomated: z.boolean().optional().default(false),
+        createdByName: z.string().optional(),
+        metadata: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { leadActivities } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const result = await db.insert(leadActivities).values({
+          leadId: input.leadId,
+          type: input.type,
+          title: input.title,
+          content: input.content,
+          previousStatus: input.previousStatus,
+          newStatus: input.newStatus,
+          callDuration: input.callDuration,
+          callOutcome: input.callOutcome,
+          isAutomated: input.isAutomated ? 1 : 0,
+          createdByName: input.createdByName || "System",
+          metadata: input.metadata,
+        });
+        
+        return { success: true, id: result.insertId };
+      }),
   }),
 
   kiosk: router({

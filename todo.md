@@ -3051,3 +3051,52 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Max animation duration: 180ms
 - [x] Ease: ease-out only
 - [x] No bouncing, no dramatic scaling, no looping
+
+
+## Lead Activity Timeline in Lead Drawer
+
+### Database Schema
+- [ ] Create lead_activities table with fields: id, lead_id, type (call, email, sms, note, status_change), content, metadata (JSON), created_by, created_at
+- [ ] Add indexes for lead_id and created_at for efficient queries
+
+### Backend API
+- [ ] Create leads.getActivities procedure to fetch activities for a lead
+- [ ] Create leads.addActivity procedure to log new activities
+- [ ] Auto-log status changes when lead moves stages
+- [ ] Auto-log when calls/texts are initiated from the UI
+
+### LeadActivityTimeline Component
+- [ ] Vertical timeline with colored icons for each activity type
+- [ ] Activity types: Call (phone icon, blue), Email (mail icon, purple), SMS (message icon, green), Note (pencil icon, amber), Status Change (arrow icon, slate)
+- [ ] Each activity shows: icon, type label, content preview, timestamp, created by
+- [ ] Expandable content for long notes/emails
+- [ ] "Add Note" button at top of timeline
+- [ ] Empty state with friendly message
+
+### Visual Design (Apple-like)
+- [ ] Soft vertical line connecting activities
+- [ ] Circular icon badges with subtle shadows
+- [ ] Relative timestamps (2 hours ago, Yesterday, Dec 10)
+- [ ] Hover effect on activity items
+- [ ] Smooth fade-in animation on load
+
+### Integration
+- [ ] Add Activity tab to LeadDrawer
+- [ ] Show timeline in Activity tab
+- [ ] Log activities when user clicks Call/Text/Email buttons
+- [ ] Log status changes automatically
+
+
+## ✅ COMPLETED: Lead Activity Timeline in Drawer
+- [x] Create lead_activities database table (type, title, content, timestamps)
+- [x] Add backend API for getting and adding activities
+- [x] Create LeadActivityTimeline component with Apple-like design
+- [x] Activity types: call, email, sms, note, status_change, meeting, task
+- [x] Color-coded icons for each activity type
+- [x] Relative timestamps (Just now, 2h ago, Yesterday)
+- [x] Add note functionality with textarea
+- [x] Show call duration and outcome for calls
+- [x] Status change shows previous → new stage
+- [x] Automated activity badge for system actions
+- [x] Integrate timeline into LeadDrawer with Details/Activity tabs
+- [x] Log activities when using quick actions (Call, Text, Email)

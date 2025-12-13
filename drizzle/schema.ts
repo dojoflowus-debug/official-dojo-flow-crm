@@ -1062,3 +1062,40 @@ export const smsPreferences = mysqlTable("sms_preferences", {
 
 export type SmsPreference = typeof smsPreferences.$inferSelect;
 export type InsertSmsPreference = typeof smsPreferences.$inferInsert;
+
+
+/**
+ * Lead Activities table - Track all interactions with leads
+ * Stores calls, emails, SMS, notes, and status changes for timeline display
+ */
+export const leadActivities = mysqlTable("lead_activities", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to leads table */
+  leadId: int("leadId").notNull(),
+  /** Activity type */
+  type: mysqlEnum("type", ["call", "email", "sms", "note", "status_change", "meeting", "task"]).notNull(),
+  /** Activity title/subject */
+  title: varchar("title", { length: 255 }),
+  /** Activity content/description */
+  content: text("content"),
+  /** Previous status (for status_change type) */
+  previousStatus: varchar("previousStatus", { length: 100 }),
+  /** New status (for status_change type) */
+  newStatus: varchar("newStatus", { length: 100 }),
+  /** Call duration in seconds (for call type) */
+  callDuration: int("callDuration"),
+  /** Call outcome (for call type) */
+  callOutcome: mysqlEnum("callOutcome", ["answered", "voicemail", "no_answer", "busy", "wrong_number"]),
+  /** Whether the activity was automated (vs manual) */
+  isAutomated: int("isAutomated").default(0).notNull(),
+  /** User who created this activity (null for automated) */
+  createdById: int("createdById"),
+  /** Name of the user who created this (denormalized for display) */
+  createdByName: varchar("createdByName", { length: 255 }),
+  /** Metadata (JSON) for additional type-specific data */
+  metadata: text("metadata"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LeadActivity = typeof leadActivities.$inferSelect;
+export type InsertLeadActivity = typeof leadActivities.$inferInsert;
