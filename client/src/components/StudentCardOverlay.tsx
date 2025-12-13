@@ -64,9 +64,20 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
     }
   };
 
+  // Stop propagation to prevent Leaflet from intercepting clicks
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleButtonClick = (e: React.MouseEvent, callback?: () => void) => {
+    e.stopPropagation();
+    callback?.();
+  };
+
   return (
     <div
       className="fixed left-0 right-0 bottom-0 md:absolute md:left-1/2 md:-translate-x-1/2 md:bottom-6 md:right-auto"
+      onClick={handleCardClick}
       style={{
         width: '100%',
         maxWidth: 'min(920px, calc(100vw - 32px))',
@@ -133,7 +144,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
 
             {/* Close Button - Mobile */}
             <button
-              onClick={onClose}
+              onClick={(e) => handleButtonClick(e, onClose)}
               className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
                 isDarkMode 
                   ? 'bg-white/10 hover:bg-white/20 text-white' 
@@ -179,7 +190,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={onViewNotes}
+              onClick={(e) => handleButtonClick(e, onViewNotes)}
               className={`h-9 md:h-10 px-3 md:px-4 rounded-full text-sm ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
             >
               <FileText className="h-4 w-4 mr-1.5" />
@@ -188,7 +199,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={onEditProfile}
+              onClick={(e) => handleButtonClick(e, onEditProfile)}
               className={`h-9 md:h-10 px-3 md:px-4 rounded-full text-sm ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
             >
               <Edit className="h-4 w-4 mr-1.5" />
@@ -196,7 +207,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
             </Button>
             {/* Close Button - Desktop */}
             <button
-              onClick={onClose}
+              onClick={(e) => handleButtonClick(e, onClose)}
               className={`hidden md:flex w-10 h-10 rounded-full items-center justify-center transition-colors ${
                 isDarkMode 
                   ? 'bg-white/10 hover:bg-white/20 text-white' 

@@ -437,7 +437,7 @@ export default function StudentModal({
       {!isFullMapMode && (
         <div 
           className={`
-            fixed inset-0 bg-black/40 backdrop-blur-sm z-[9990]
+            fixed inset-0 bg-black/40 backdrop-blur-sm z-[10000]
             transition-opacity duration-300
             ${isAnimatingIn ? 'opacity-0' : 'opacity-100'}
           `}
@@ -449,7 +449,7 @@ export default function StudentModal({
       <div className={`
         ${isFullMapMode 
           ? 'relative w-full h-full' 
-          : 'fixed inset-0 flex items-center justify-center z-[9995] p-4 pointer-events-none'
+          : 'fixed inset-0 flex items-center justify-center z-[10005] p-4 pointer-events-none'
         }
       `}>
         <div 

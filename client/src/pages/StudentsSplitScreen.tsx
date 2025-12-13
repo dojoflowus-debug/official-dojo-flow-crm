@@ -432,10 +432,12 @@ export default function StudentsSplitScreen() {
   const { data: studentsData, isLoading: studentsLoading } = trpc.students.list.useQuery()
   const { data: statsData } = trpc.students.stats.useQuery()
   
-  // Callback when student is updated - refresh data
+  // Callback when student is updated - refresh data and update selected student
   const handleStudentUpdated = useCallback(() => {
     utils.students.list.invalidate()
     utils.students.stats.invalidate()
+    // If we have a selected student, we need to refresh it from the updated data
+    // The useEffect below will handle updating selectedStudent when studentsData changes
   }, [utils])
 
   // Update local state when data changes
@@ -466,9 +468,17 @@ export default function StudentsSplitScreen() {
         guardian_email: s.guardianEmail,
       }))
       setStudents(transformedStudents)
+      
+      // If we have a selected student, update it with fresh data
+      if (selectedStudent) {
+        const updatedStudent = transformedStudents.find((s: any) => s.id === selectedStudent.id)
+        if (updatedStudent) {
+          setSelectedStudent(updatedStudent)
+        }
+      }
     }
     setLoading(studentsLoading)
-  }, [studentsData, studentsLoading])
+  }, [studentsData, studentsLoading, selectedStudent?.id])
 
   useEffect(() => {
     if (statsData) {
@@ -838,8 +848,11 @@ export default function StudentsSplitScreen() {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false)
-          setSelectedStudent(null)
-          setHighlightedStudentId(null)
+          // In map mode, keep the student selected for the card overlay
+          if (viewMode !== 'fullMap') {
+            setSelectedStudent(null)
+            setHighlightedStudentId(null)
+          }
         }}
         onEditProfile={(student) => {
           console.log('Edit profile:', student.id)
@@ -899,7 +912,9 @@ export default function StudentsSplitScreen() {
               setIsNotesDrawerOpen(true)
             }}
             onEditProfile={() => {
-              console.log('Edit profile:', selectedStudent.id)
+              // Open the student modal for editing
+              // Keep the card overlay open so user can see the context
+              setIsModalOpen(true)
             }}
             isDarkMode={isDarkMode}
           />

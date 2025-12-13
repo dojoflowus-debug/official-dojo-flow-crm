@@ -2823,3 +2823,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Card close returns to map without leaving map mode
 - [x] Move map attribution up when card is open
 - [x] Responsive card: bottom sheet on mobile
+
+## ✅ COMPLETED: Fix Students Map Card Edit Functionality
+- [x] Wire Edit button to open existing Edit Student modal
+- [x] Ensure modal has highest z-index (above map + overlay card)
+- [x] Add event propagation handling (stopPropagation on card/button clicks)
+- [x] Update overlay card immediately after save
+- [x] Update marker position if address changed
+- [x] Ensure pointer-events: auto on overlay card
+- [x] Mobile: Edit button accessible on bottom sheet
+- [x] QA: Edit from marker click, save updates card, address change moves marker
