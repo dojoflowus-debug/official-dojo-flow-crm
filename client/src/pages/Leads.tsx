@@ -239,7 +239,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
 
   return (
     <BottomNavLayout>
-      <div className={`min-h-screen ${isDarkMode ? 'bg-[#0F1115]' : 'bg-[#F6F7F9]'}`}>
+      <div className={`min-h-screen transition-all duration-[180ms] ease-out ${isDarkMode ? 'bg-[#0F1115]' : 'bg-[#F6F7F9]'} ${isResolveMode ? (isDarkMode ? 'bg-[#0A0B0D]' : 'bg-[#E8E9EB]') : ''}`}>
         {/* Breadcrumb Navigation */}
         <div className={`border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A]/80 backdrop-blur-sm border-white/10' : 'bg-white/80 backdrop-blur-sm border-slate-200/50'}`}>
           <Breadcrumb
@@ -311,6 +311,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
               onFilterClick={handleFilterClick}
               activeFilter={activeFilter}
               isDarkMode={isDarkMode}
+              isResolveMode={isResolveMode}
             />
           </div>
         )}

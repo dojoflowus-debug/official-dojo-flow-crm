@@ -2917,3 +2917,71 @@ Note: The logo was already correctly implemented. The navigation uses:
 ### Dark/Light Mode Parity
 - [x] Ensure all features work in both dark and light mode
 - [x] Background remains calm and neutral
+
+## Leads Page Precision Refinements (Signature Mode)
+### Stat Cards (Signal Blocks)
+- [ ] Keep current layout, enhance with status indicator light (top-right)
+- [ ] Green/yellow/red indicator based on health
+- [ ] Indicator pulses ONLY when Resolve Mode is ON
+- [ ] Soft glow only on hover, no heavy shadows
+- [ ] Minimal micro-copy, no additional labels
+
+### Pipeline Stages (Flow Intelligence)
+- [ ] Add thin connector lines between stages
+- [ ] Lines animate left → right subtly
+- [ ] Color logic: green=moving, yellow=stalled, red=drop-off
+- [ ] Tiny numeric badge on each stage icon (fade-in)
+
+### Lead Cards (Signature System)
+- [ ] Card hierarchy by age: 0-2 days (light), 3-5 days (heavier), 6+ days (dense)
+- [ ] Thin curved SVG connector lines between cards in same stage
+- [ ] Lines are subtle, semi-transparent
+- [ ] No chaos, no spider webs - living revenue circuit
+
+### Resolve Mode Behavior
+- [ ] Background dims slightly when ON
+- [ ] Green leads fade back, yellow/red remain opaque
+- [ ] Connector lines intensify slightly
+- [ ] Stat cards pulse once (not repeatedly)
+- [ ] Kai Alert card becomes prioritized
+- [ ] Everything returns to calm baseline when OFF
+
+### Motion Rules (Strict)
+- [ ] No bouncing, no dramatic scaling, no looping
+- [ ] Max animation duration: 180ms
+- [ ] Ease: ease-out only
+- [ ] Premium feel, not playful
+
+
+## ✅ COMPLETED: Leads Page Precision Refinements (Signature Mode)
+### Stat Cards Enhancement
+- [x] Status indicator light in top-right (green/yellow/red)
+- [x] Indicator pulses ONLY when Resolve Mode is ON
+- [x] Soft gradient background, subtle glow on hover only
+- [x] No shadows heavier than current design
+
+### Pipeline Stages Flow Intelligence
+- [x] Thin connector lines between stages
+- [x] Lines animate left → right subtly
+- [x] Color logic: green=moving, yellow=stalled, red=drop-off risk
+- [x] Tiny numeric badge on each stage icon (fade-in)
+
+### Lead Cards Hierarchy
+- [x] New leads (0-2 days): light surface, green connectors
+- [x] Mid-age (3-5 days): heavier surface, yellow connectors
+- [x] Aged (6+ days): visually denser, red connectors
+- [x] Thin curved SVG connector lines (subtle, semi-transparent)
+- [x] No chaos, no spider webs - living revenue circuit feel
+
+### Resolve Mode Behavior
+- [x] Background dims slightly when ON
+- [x] Green leads fade back
+- [x] Yellow/Red leads remain fully opaque
+- [x] Connector lines intensify slightly
+- [x] Stat cards pulse once (not repeatedly)
+- [x] Kai Alert card becomes visually prioritized
+
+### Motion Rules (Strict)
+- [x] Max animation duration: 180ms
+- [x] Ease: ease-out only
+- [x] No bouncing, no dramatic scaling, no looping

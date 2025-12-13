@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { User, Mail, Phone, Calendar, Flame, Star, MessageSquare, Clock, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Flame, Star, MessageSquare, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PipelineStage {
   id: string;
@@ -27,31 +27,6 @@ const stages: PipelineStage[] = [
   { id: 'lost_winback', label: 'Lost / Winback', icon: Clock },
 ];
 
-// Health color configurations
-const healthColors = {
-  green: {
-    bg: 'from-green-500/10 to-green-500/5',
-    border: 'border-green-500/30',
-    text: 'text-green-500',
-    glow: 'shadow-green-500/20',
-    line: 'bg-green-500',
-  },
-  yellow: {
-    bg: 'from-amber-500/10 to-amber-500/5',
-    border: 'border-amber-500/30',
-    text: 'text-amber-500',
-    glow: 'shadow-amber-500/20',
-    line: 'bg-amber-500',
-  },
-  red: {
-    bg: 'from-red-500/10 to-red-500/5',
-    border: 'border-red-500/30',
-    text: 'text-red-500',
-    glow: 'shadow-red-500/20',
-    line: 'bg-red-500',
-  },
-};
-
 export default function SignatureStageRail({ 
   selectedStage, 
   onStageSelect,
@@ -63,7 +38,6 @@ export default function SignatureStageRail({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
-  const [illuminatedStage, setIlluminatedStage] = useState<string | null>(null);
 
   // Check scroll position to show/hide arrows
   const checkScroll = () => {
@@ -97,7 +71,7 @@ export default function SignatureStageRail({
     }
   };
 
-  // Calculate default health based on stage counts
+  // Calculate health based on stage counts
   const getStageHealth = (stageId: string): 'green' | 'yellow' | 'red' => {
     if (stageHealth[stageId]) return stageHealth[stageId];
     const count = stageCounts[stageId] || 0;
@@ -107,11 +81,15 @@ export default function SignatureStageRail({
     return 'red';
   };
 
-  // Handle stage selection with illumination effect
-  const handleStageSelect = (stageId: string) => {
-    setIlluminatedStage(stageId);
-    setTimeout(() => setIlluminatedStage(null), 500);
-    onStageSelect(stageId);
+  // Get connector line color based on flow status
+  const getConnectorColor = (fromIndex: number, toIndex: number): string => {
+    const fromHealth = getStageHealth(stages[fromIndex].id);
+    const toHealth = getStageHealth(stages[toIndex].id);
+    
+    // If either stage has issues, connector shows that
+    if (fromHealth === 'red' || toHealth === 'red') return 'bg-red-400';
+    if (fromHealth === 'yellow' || toHealth === 'yellow') return 'bg-amber-400';
+    return 'bg-green-400';
   };
 
   return (
@@ -120,9 +98,14 @@ export default function SignatureStageRail({
       {showLeftArrow && (
         <button
           onClick={() => scroll('left')}
-          className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDarkMode ? 'bg-slate-800 shadow-lg hover:bg-slate-700' : 'bg-white shadow-lg hover:bg-slate-50'}`}
+          className={`
+            absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full 
+            flex items-center justify-center
+            transition-all duration-[180ms] ease-out
+            ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white shadow-sm hover:bg-slate-50'}
+          `}
         >
-          <ChevronLeft className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-slate-600'}`} />
+          <ChevronLeft className={`w-4 h-4 ${isDarkMode ? 'text-white' : 'text-slate-600'}`} />
         </button>
       )}
 
@@ -130,16 +113,21 @@ export default function SignatureStageRail({
       {showRightArrow && (
         <button
           onClick={() => scroll('right')}
-          className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDarkMode ? 'bg-slate-800 shadow-lg hover:bg-slate-700' : 'bg-white shadow-lg hover:bg-slate-50'}`}
+          className={`
+            absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full 
+            flex items-center justify-center
+            transition-all duration-[180ms] ease-out
+            ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white shadow-sm hover:bg-slate-50'}
+          `}
         >
-          <ChevronRight className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-slate-600'}`} />
+          <ChevronRight className={`w-4 h-4 ${isDarkMode ? 'text-white' : 'text-slate-600'}`} />
         </button>
       )}
 
       {/* Scrollable stage rail */}
       <div 
         ref={scrollRef}
-        className="flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-smooth px-8 md:px-12"
+        className="flex items-center gap-1 overflow-x-auto scrollbar-hide scroll-smooth px-6 md:px-10"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {stages.map((stage, index) => {
@@ -147,43 +135,57 @@ export default function SignatureStageRail({
           const isSelected = selectedStage === stage.id;
           const count = stageCounts[stage.id] || 0;
           const health = getStageHealth(stage.id);
-          const colors = healthColors[health];
-          const isIlluminated = illuminatedStage === stage.id;
-          const selectedIndex = stages.findIndex(s => s.id === selectedStage);
-          const isPast = index < selectedIndex;
           
           // In resolve mode, dim green stages
           const isDimmed = isResolveMode && health === 'green';
+          
+          // Health-based styling
+          const healthStyles = {
+            green: {
+              border: isSelected ? 'border-green-400/50' : 'border-transparent',
+              text: isSelected ? 'text-green-600' : isDarkMode ? 'text-white/60' : 'text-slate-500',
+              bg: isSelected ? (isDarkMode ? 'bg-green-900/20' : 'bg-green-50') : '',
+            },
+            yellow: {
+              border: isSelected ? 'border-amber-400/50' : 'border-transparent',
+              text: isSelected ? 'text-amber-600' : isDarkMode ? 'text-white/60' : 'text-slate-500',
+              bg: isSelected ? (isDarkMode ? 'bg-amber-900/20' : 'bg-amber-50') : '',
+            },
+            red: {
+              border: isSelected ? 'border-red-400/50' : 'border-transparent',
+              text: isSelected ? 'text-red-600' : isDarkMode ? 'text-white/60' : 'text-slate-500',
+              bg: isSelected ? (isDarkMode ? 'bg-red-900/20' : 'bg-red-50') : '',
+            },
+          };
+          
+          const styles = healthStyles[health];
           
           return (
             <div key={stage.id} className="flex items-center flex-shrink-0">
               {/* Stage button */}
               <button
-                onClick={() => handleStageSelect(stage.id)}
+                onClick={() => onStageSelect(stage.id)}
                 className={`
-                  relative flex flex-col items-center gap-2 px-4 py-3 rounded-xl
-                  transition-all duration-300 ease-out cursor-pointer
+                  relative flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl
+                  transition-all duration-[180ms] ease-out cursor-pointer
+                  border ${styles.border} ${styles.bg}
                   ${isDimmed ? 'opacity-30' : ''}
                   ${isSelected 
-                    ? `bg-gradient-to-br ${colors.bg} border-2 ${colors.border} shadow-lg ${colors.glow}` 
+                    ? '' 
                     : isDarkMode
-                      ? 'bg-slate-800/50 border border-white/10 hover:bg-slate-700/50'
-                      : 'bg-white/50 border border-slate-200 hover:bg-slate-50'
+                      ? 'hover:bg-white/5'
+                      : 'hover:bg-slate-50'
                   }
-                  ${isIlluminated ? 'animate-pulse' : ''}
                 `}
               >
-                {/* Count badge */}
+                {/* Count badge - fade in */}
                 {count > 0 && (
                   <div className={`
-                    absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5 rounded-full 
-                    flex items-center justify-center text-xs font-bold
-                    ${isSelected 
-                      ? `${health === 'green' ? 'bg-green-500' : health === 'yellow' ? 'bg-amber-500' : 'bg-red-500'} text-white` 
-                      : isDarkMode 
-                        ? 'bg-white/20 text-white' 
-                        : 'bg-slate-200 text-slate-600'
-                    }
+                    absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full 
+                    flex items-center justify-center text-[10px] font-semibold
+                    transition-opacity duration-[180ms] ease-out
+                    ${health === 'green' ? 'bg-green-500' : health === 'yellow' ? 'bg-amber-500' : 'bg-red-500'} 
+                    text-white
                   `}>
                     {count}
                   </div>
@@ -191,53 +193,49 @@ export default function SignatureStageRail({
 
                 {/* Icon */}
                 <div className={`
-                  w-10 h-10 rounded-lg flex items-center justify-center
+                  w-9 h-9 rounded-lg flex items-center justify-center
+                  transition-all duration-[180ms] ease-out
                   ${isSelected 
-                    ? colors.text 
-                    : isDarkMode ? 'text-white/60' : 'text-slate-500'
+                    ? styles.text 
+                    : isDarkMode ? 'text-white/50' : 'text-slate-400'
                   }
-                  ${isSelected ? `bg-gradient-to-br ${colors.bg}` : isDarkMode ? 'bg-white/5' : 'bg-slate-100'}
+                  ${isDarkMode ? 'bg-white/5' : 'bg-slate-100/50'}
                 `}>
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-4 h-4" />
                 </div>
 
                 {/* Label */}
                 <span className={`
-                  text-xs font-medium whitespace-nowrap
-                  ${isSelected 
-                    ? colors.text 
-                    : isDarkMode ? 'text-white/60' : 'text-slate-500'
-                  }
+                  text-[10px] font-medium whitespace-nowrap
+                  transition-all duration-[180ms] ease-out
+                  ${styles.text}
                 `}>
                   {stage.label}
                 </span>
-
-                {/* Health indicator bar */}
-                <div className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full ${colors.line} ${isSelected ? 'opacity-100' : 'opacity-30'}`} />
               </button>
 
               {/* Connector line between stages */}
               {index < stages.length - 1 && (
-                <div className="relative w-8 h-8 flex items-center justify-center mx-1">
-                  {/* Base line */}
+                <div className="relative w-6 h-6 flex items-center justify-center">
+                  {/* Base connector line */}
                   <div className={`
-                    absolute w-full h-0.5 rounded-full
+                    absolute w-full h-[2px] rounded-full
+                    transition-all duration-[180ms] ease-out
                     ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'}
                   `} />
                   
-                  {/* Animated glow for Kai suggestions */}
-                  {isPast && (
-                    <div className={`
-                      absolute w-full h-0.5 rounded-full bg-[#E53935]
-                      animate-[shimmer_2s_ease-in-out_infinite]
-                    `} style={{ opacity: 0.5 }} />
-                  )}
-                  
-                  {/* Connector dot */}
-                  <Zap className={`
-                    w-3 h-3 z-10
-                    ${isPast ? 'text-[#E53935]' : isDarkMode ? 'text-white/20' : 'text-slate-300'}
-                  `} />
+                  {/* Animated flow line (left to right) */}
+                  <div 
+                    className={`
+                      absolute h-[2px] rounded-full
+                      ${getConnectorColor(index, index + 1)}
+                      ${isResolveMode ? 'opacity-60' : 'opacity-30'}
+                    `}
+                    style={{
+                      width: '100%',
+                      animation: 'flowRight 2s ease-out infinite',
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -245,11 +243,24 @@ export default function SignatureStageRail({
         })}
       </div>
 
-      {/* Add shimmer animation */}
+      {/* Flow animation keyframes */}
       <style>{`
-        @keyframes shimmer {
-          0%, 100% { opacity: 0.3; transform: scaleX(0.8); }
-          50% { opacity: 0.8; transform: scaleX(1); }
+        @keyframes flowRight {
+          0% { 
+            transform: scaleX(0); 
+            transform-origin: left;
+            opacity: 0;
+          }
+          50% { 
+            transform: scaleX(1); 
+            transform-origin: left;
+            opacity: 0.5;
+          }
+          100% { 
+            transform: scaleX(0); 
+            transform-origin: right;
+            opacity: 0;
+          }
         }
       `}</style>
     </div>

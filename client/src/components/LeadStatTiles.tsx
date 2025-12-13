@@ -9,10 +9,11 @@ interface LeadStatTilesProps {
   onFilterClick: (filter: 'new' | 'aging' | 'value' | 'kai' | null) => void;
   activeFilter: 'new' | 'aging' | 'value' | 'kai' | null;
   isDarkMode: boolean;
+  isResolveMode?: boolean;
 }
 
-// Animated counter hook
-function useAnimatedCounter(target: number, duration: number = 1000) {
+// Animated counter hook with 180ms max duration
+function useAnimatedCounter(target: number, duration: number = 180) {
   const [count, setCount] = useState(0);
   const startTime = useRef<number | null>(null);
   const animationFrame = useRef<number | null>(null);
@@ -24,9 +25,9 @@ function useAnimatedCounter(target: number, duration: number = 1000) {
       if (!startTime.current) startTime.current = timestamp;
       const progress = Math.min((timestamp - startTime.current) / duration, 1);
       
-      // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      setCount(Math.floor(easeOutQuart * target));
+      // Ease-out only
+      const easeOut = 1 - Math.pow(1 - progress, 2);
+      setCount(Math.floor(easeOut * target));
       
       if (progress < 1) {
         animationFrame.current = requestAnimationFrame(animate);
@@ -45,6 +46,27 @@ function useAnimatedCounter(target: number, duration: number = 1000) {
   return count;
 }
 
+// Determine health status based on tile type and value
+function getHealthStatus(tileId: string, value: number): 'green' | 'yellow' | 'red' {
+  if (tileId === 'new') {
+    return value > 0 ? 'green' : 'green';
+  }
+  if (tileId === 'aging') {
+    if (value === 0) return 'green';
+    if (value <= 3) return 'yellow';
+    return 'red';
+  }
+  if (tileId === 'value') {
+    return 'green';
+  }
+  if (tileId === 'kai') {
+    if (value === 0) return 'green';
+    if (value <= 2) return 'yellow';
+    return 'red';
+  }
+  return 'green';
+}
+
 export default function LeadStatTiles({
   newLeadsToday,
   agingLeads,
@@ -52,12 +74,28 @@ export default function LeadStatTiles({
   kaiAlerts,
   onFilterClick,
   activeFilter,
-  isDarkMode
+  isDarkMode,
+  isResolveMode = false
 }: LeadStatTilesProps) {
-  const animatedNewLeads = useAnimatedCounter(newLeadsToday, 800);
-  const animatedAgingLeads = useAnimatedCounter(agingLeads, 800);
-  const animatedPipelineValue = useAnimatedCounter(pipelineValue, 1200);
-  const animatedKaiAlerts = useAnimatedCounter(kaiAlerts, 800);
+  const [hasPulsed, setHasPulsed] = useState(false);
+  
+  // Pulse once when Resolve Mode turns ON
+  useEffect(() => {
+    if (isResolveMode && !hasPulsed) {
+      setHasPulsed(true);
+      // Reset after animation completes
+      const timer = setTimeout(() => setHasPulsed(false), 180);
+      return () => clearTimeout(timer);
+    }
+    if (!isResolveMode) {
+      setHasPulsed(false);
+    }
+  }, [isResolveMode]);
+
+  const animatedNewLeads = useAnimatedCounter(newLeadsToday, 180);
+  const animatedAgingLeads = useAnimatedCounter(agingLeads, 180);
+  const animatedPipelineValue = useAnimatedCounter(pipelineValue, 180);
+  const animatedKaiAlerts = useAnimatedCounter(kaiAlerts, 180);
 
   const tiles = [
     {
@@ -67,12 +105,7 @@ export default function LeadStatTiles({
       value: animatedNewLeads,
       rawValue: newLeadsToday,
       format: (v: number) => v.toString(),
-      dotColor: newLeadsToday > 0 ? 'bg-green-500' : 'bg-slate-400',
-      showBlink: newLeadsToday > 0,
-      gradient: isDarkMode 
-        ? 'from-green-900/20 to-green-800/10' 
-        : 'from-green-50 to-green-100/50',
-      iconColor: 'text-green-500',
+      health: getHealthStatus('new', newLeadsToday),
     },
     {
       id: 'aging' as const,
@@ -81,12 +114,7 @@ export default function LeadStatTiles({
       value: animatedAgingLeads,
       rawValue: agingLeads,
       format: (v: number) => v.toString(),
-      dotColor: agingLeads > 0 ? 'bg-amber-500' : 'bg-slate-400',
-      showBlink: false,
-      gradient: isDarkMode 
-        ? 'from-amber-900/20 to-amber-800/10' 
-        : 'from-amber-50 to-amber-100/50',
-      iconColor: 'text-amber-500',
+      health: getHealthStatus('aging', agingLeads),
     },
     {
       id: 'value' as const,
@@ -95,12 +123,7 @@ export default function LeadStatTiles({
       value: animatedPipelineValue,
       rawValue: pipelineValue,
       format: (v: number) => `$${v.toLocaleString()}`,
-      dotColor: 'bg-emerald-500',
-      showBlink: false,
-      gradient: isDarkMode 
-        ? 'from-emerald-900/20 to-emerald-800/10' 
-        : 'from-emerald-50 to-emerald-100/50',
-      iconColor: 'text-emerald-500',
+      health: getHealthStatus('value', pipelineValue),
     },
     {
       id: 'kai' as const,
@@ -109,61 +132,101 @@ export default function LeadStatTiles({
       value: animatedKaiAlerts,
       rawValue: kaiAlerts,
       format: (v: number) => v.toString(),
-      dotColor: kaiAlerts > 0 ? 'bg-[#E53935]' : 'bg-slate-400',
-      showBlink: kaiAlerts > 0,
-      gradient: isDarkMode 
-        ? 'from-red-900/20 to-red-800/10' 
-        : 'from-red-50 to-red-100/50',
-      iconColor: 'text-[#E53935]',
+      health: getHealthStatus('kai', kaiAlerts),
     },
   ];
+
+  // Health color mapping
+  const healthColors = {
+    green: {
+      dot: 'bg-green-500',
+      glow: 'shadow-green-500/20',
+      gradient: isDarkMode ? 'from-green-900/15 to-green-800/5' : 'from-green-50/80 to-green-100/40',
+      icon: 'text-green-500',
+    },
+    yellow: {
+      dot: 'bg-amber-500',
+      glow: 'shadow-amber-500/20',
+      gradient: isDarkMode ? 'from-amber-900/15 to-amber-800/5' : 'from-amber-50/80 to-amber-100/40',
+      icon: 'text-amber-500',
+    },
+    red: {
+      dot: 'bg-red-500',
+      glow: 'shadow-red-500/20',
+      gradient: isDarkMode ? 'from-red-900/15 to-red-800/5' : 'from-red-50/80 to-red-100/40',
+      icon: 'text-red-500',
+    },
+  };
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 px-4 md:px-6 py-4">
       {tiles.map((tile) => {
         const Icon = tile.icon;
         const isActive = activeFilter === tile.id;
+        const colors = healthColors[tile.health];
+        const shouldPulse = isResolveMode && hasPulsed;
+        
+        // In Resolve Mode, prioritize Kai Alerts tile
+        const isKaiPrioritized = isResolveMode && tile.id === 'kai';
         
         return (
           <button
             key={tile.id}
             onClick={() => onFilterClick(isActive ? null : tile.id)}
             className={`
-              relative group p-4 md:p-5 rounded-2xl transition-all duration-300
+              relative group p-4 md:p-5 rounded-[14px]
+              transition-all duration-[180ms] ease-out
               ${isDarkMode 
-                ? `bg-gradient-to-br ${tile.gradient} border border-white/10` 
-                : `bg-gradient-to-br ${tile.gradient} border border-slate-200/50`
+                ? `bg-gradient-to-br ${colors.gradient} border border-white/10` 
+                : `bg-gradient-to-br ${colors.gradient} border border-slate-200/30`
               }
               ${isActive 
-                ? 'ring-2 ring-[#E53935] ring-offset-2 ring-offset-transparent scale-[1.02]' 
-                : 'hover:scale-[1.02]'
+                ? 'ring-2 ring-[#E53935] ring-offset-2 ring-offset-transparent' 
+                : ''
               }
-              shadow-sm hover:shadow-md
+              ${isKaiPrioritized ? 'ring-2 ring-[#E53935]/50' : ''}
+              hover:shadow-md hover:${colors.glow}
+              ${shouldPulse ? 'scale-[1.02]' : ''}
             `}
           >
-            {/* Status dot with optional blink */}
+            {/* Status indicator light (top-right) */}
             <div className="absolute top-3 right-3">
-              <div className={`w-2.5 h-2.5 rounded-full ${tile.dotColor} ${tile.showBlink ? 'animate-pulse' : ''}`} />
+              <div className={`
+                w-2 h-2 rounded-full ${colors.dot}
+                transition-all duration-[180ms] ease-out
+                ${isResolveMode ? 'animate-[pulse_2s_ease-out_1]' : ''}
+              `} />
             </div>
 
             {/* Icon */}
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${isDarkMode ? 'bg-white/10' : 'bg-white/80'}`}>
-              <Icon className={`w-5 h-5 ${tile.iconColor}`} />
+            <div className={`
+              w-10 h-10 rounded-xl flex items-center justify-center mb-3
+              transition-all duration-[180ms] ease-out
+              ${isDarkMode ? 'bg-white/5' : 'bg-white/60'}
+            `}>
+              <Icon className={`w-5 h-5 ${colors.icon}`} />
             </div>
 
             {/* Value */}
-            <div className={`text-2xl md:text-3xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+            <div className={`
+              text-2xl md:text-3xl font-semibold mb-1
+              transition-all duration-[180ms] ease-out
+              ${isDarkMode ? 'text-white' : 'text-slate-800'}
+            `}>
               {tile.format(tile.value)}
             </div>
 
-            {/* Label */}
-            <div className={`text-xs md:text-sm font-medium ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
+            {/* Label - minimal micro-copy */}
+            <div className={`
+              text-xs font-medium
+              ${isDarkMode ? 'text-white/50' : 'text-slate-500'}
+            `}>
               {tile.label}
             </div>
 
-            {/* Active indicator */}
+            {/* Active indicator bar */}
             {isActive && (
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-[#E53935]" />
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#E53935] transition-all duration-[180ms] ease-out" />
             )}
           </button>
         );

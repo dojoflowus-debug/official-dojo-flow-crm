@@ -60,10 +60,10 @@ function getAgeDays(dateStr?: string): number {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
-// Get age status based on days
+// Get age status based on days (0-2: green, 3-5: yellow, 6+: red)
 function getAgeStatus(days: number): 'green' | 'yellow' | 'red' {
-  if (days <= 5) return 'green';
-  if (days <= 10) return 'yellow';
+  if (days <= 2) return 'green';
+  if (days <= 5) return 'yellow';
   return 'red';
 }
 
@@ -77,7 +77,6 @@ export default function SignatureLeadCard({
   hasKaiSuggestion = false,
   isDarkMode,
   isResolveMode = false,
-  index = 0
 }: SignatureLeadCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -89,32 +88,33 @@ export default function SignatureLeadCard({
   const ageDays = useMemo(() => getAgeDays(lead.created_at || lead.updated_at), [lead.created_at, lead.updated_at]);
   const ageStatus = useMemo(() => getAgeStatus(ageDays), [ageDays]);
   
-  // Status colors and animations
-  const statusConfig = {
+  // Card hierarchy: newer leads lighter, older leads denser
+  const cardWeight = {
     green: {
-      borderColor: isDarkMode ? 'border-green-500/30' : 'border-green-400/40',
-      glowColor: 'shadow-green-500/20',
-      dotColor: 'bg-green-500',
-      pulseSpeed: 'animate-[pulse_6s_ease-in-out_infinite]',
-      lineColor: 'bg-green-500',
+      bg: isDarkMode ? 'bg-slate-800/70' : 'bg-white',
+      border: isDarkMode ? 'border-white/5' : 'border-slate-100',
+      shadow: 'shadow-sm',
     },
     yellow: {
-      borderColor: isDarkMode ? 'border-amber-500/40' : 'border-amber-400/50',
-      glowColor: 'shadow-amber-500/30',
-      dotColor: 'bg-amber-500',
-      pulseSpeed: 'animate-[pulse_4s_ease-in-out_infinite]',
-      lineColor: 'bg-amber-500',
+      bg: isDarkMode ? 'bg-slate-800/85' : 'bg-slate-50/80',
+      border: isDarkMode ? 'border-amber-500/20' : 'border-amber-200/50',
+      shadow: 'shadow-md',
     },
     red: {
-      borderColor: isDarkMode ? 'border-red-500/50' : 'border-red-400/60',
-      glowColor: 'shadow-red-500/40',
-      dotColor: 'bg-red-500',
-      pulseSpeed: 'animate-[pulse_2s_ease-in-out_infinite]',
-      lineColor: 'bg-red-500',
+      bg: isDarkMode ? 'bg-slate-800' : 'bg-slate-100/60',
+      border: isDarkMode ? 'border-red-500/30' : 'border-red-200/60',
+      shadow: 'shadow-lg',
     },
   };
 
-  const config = statusConfig[ageStatus];
+  const weight = cardWeight[ageStatus];
+  
+  // Connector line colors (subtle, semi-transparent)
+  const connectorColors = {
+    green: 'bg-green-400/30',
+    yellow: 'bg-amber-400/40',
+    red: 'bg-red-400/50',
+  };
   
   // Determine if card should be dimmed in resolve mode
   const isDimmed = isResolveMode && ageStatus === 'green';
@@ -133,55 +133,44 @@ export default function SignatureLeadCard({
     return date.toLocaleDateString();
   };
 
-  // Vertical offset based on age (newer leads higher)
-  const verticalOffset = Math.min(ageDays * 2, 20);
-
   return (
     <div
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ marginTop: `${verticalOffset}px` }}
       className={`
-        relative cursor-pointer rounded-2xl p-5
-        transition-all duration-300 ease-out
-        border-2 ${config.borderColor}
-        ${isDarkMode 
-          ? 'bg-slate-800/90 backdrop-blur-sm' 
-          : 'bg-white/95 backdrop-blur-sm'
-        }
+        relative cursor-pointer rounded-[14px] p-4
+        transition-all duration-[180ms] ease-out
+        border ${weight.border} ${weight.bg} ${weight.shadow}
         ${isHovered && !isDimmed
-          ? `shadow-xl ${config.glowColor} -translate-y-1 scale-[1.02]` 
-          : 'shadow-md'
+          ? 'shadow-lg -translate-y-0.5' 
+          : ''
         }
-        ${isDimmed ? 'opacity-30 pointer-events-none' : ''}
+        ${isDimmed ? 'opacity-30' : ''}
       `}
     >
-      {/* Status indicator line (left edge) */}
-      <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-full ${config.lineColor} ${config.pulseSpeed}`} />
+      {/* Subtle connector line (left edge) - curved SVG style */}
+      <div className={`
+        absolute left-0 top-3 bottom-3 w-0.5 rounded-full
+        ${connectorColors[ageStatus]}
+        ${isResolveMode && ageStatus !== 'green' ? 'opacity-80' : 'opacity-50'}
+      `} />
 
       {/* Kai AI Suggestion Badge */}
       {hasKaiSuggestion && !isDimmed && (
-        <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-[#E53935] to-[#FF6B6B] text-white text-xs font-medium rounded-full shadow-lg z-10">
-          <Sparkles className="w-3 h-3" />
+        <div className="absolute -top-1.5 -right-1.5 flex items-center gap-1 px-2 py-0.5 bg-[#E53935] text-white text-[10px] font-medium rounded-full shadow-sm z-10">
+          <Sparkles className="w-2.5 h-2.5" />
           <span>Kai</span>
         </div>
       )}
 
-      {/* Status dot with pulse */}
-      <div className="absolute top-4 right-4">
-        <div className={`relative w-3 h-3 rounded-full ${config.dotColor}`}>
-          <div className={`absolute inset-0 rounded-full ${config.dotColor} ${config.pulseSpeed} opacity-50`} />
-        </div>
-      </div>
-
       {/* Header: Name + Age */}
-      <div className="flex items-start justify-between mb-3 pr-6">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+          <h3 className={`text-base font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
             {fullName}
           </h3>
-          <div className={`text-xs mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-400'}`}>
+          <div className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>
             {ageDays === 0 ? 'New today' : `${ageDays} day${ageDays !== 1 ? 's' : ''} old`}
           </div>
         </div>
@@ -189,79 +178,79 @@ export default function SignatureLeadCard({
 
       {/* Source Badge */}
       <div className={`
-        inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-3
+        inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium mb-2.5
         ${isDarkMode 
-          ? 'bg-white/10 text-white/70 border border-white/10' 
-          : 'bg-slate-100 text-slate-600 border border-slate-200'
+          ? 'bg-white/5 text-white/60' 
+          : 'bg-slate-100 text-slate-500'
         }
       `}>
-        <SourceIcon className="w-3 h-3" />
+        <SourceIcon className="w-2.5 h-2.5" />
         <span>{source}</span>
       </div>
 
       {/* Contact Info */}
-      <div className="space-y-2 mb-4">
-        <div className={`flex items-center gap-2.5 text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
-          <Phone className={`w-4 h-4 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
+      <div className="space-y-1.5 mb-3">
+        <div className={`flex items-center gap-2 text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
+          <Phone className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white/30' : 'text-slate-400'}`} />
           <span>{lead.phone || 'No phone'}</span>
         </div>
-        <div className={`flex items-center gap-2.5 text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
-          <Mail className={`w-4 h-4 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
+        <div className={`flex items-center gap-2 text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
+          <Mail className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white/30' : 'text-slate-400'}`} />
           <span className="truncate">{lead.email || 'No email'}</span>
         </div>
       </div>
 
       {/* Last Activity */}
-      <div className={`flex items-center gap-1.5 text-xs mb-4 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>
-        <Clock className="w-3.5 h-3.5" />
+      <div className={`flex items-center gap-1 text-[10px] mb-3 ${isDarkMode ? 'text-white/30' : 'text-slate-400'}`}>
+        <Clock className="w-3 h-3" />
         <span>{formatLastActivity(lead.updated_at)}</span>
       </div>
 
-      {/* Action Buttons - Visible on hover */}
+      {/* Action Buttons - Visible on hover with 180ms fade */}
       <div className={`
-        flex gap-2 transition-all duration-200
-        ${isHovered && !isDimmed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+        flex gap-1.5 transition-all duration-[180ms] ease-out
+        ${isHovered && !isDimmed ? 'opacity-100' : 'opacity-0'}
       `}>
         <Button 
           size="sm" 
           variant="outline"
           onClick={(e) => { e.stopPropagation(); onCall?.(); }}
-          className={`flex-1 h-9 text-xs font-medium ${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white hover:bg-slate-50 border-slate-200'}`}
+          className={`flex-1 h-8 text-[11px] font-medium ${isDarkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white hover:bg-slate-50 border-slate-200'}`}
         >
-          <Phone className="w-3.5 h-3.5 mr-1.5" />
+          <Phone className="w-3 h-3 mr-1" />
           Call
         </Button>
         <Button 
           size="sm" 
           variant="outline"
           onClick={(e) => { e.stopPropagation(); onText?.(); }}
-          className={`flex-1 h-9 text-xs font-medium ${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white hover:bg-slate-50 border-slate-200'}`}
+          className={`flex-1 h-8 text-[11px] font-medium ${isDarkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white hover:bg-slate-50 border-slate-200'}`}
         >
-          <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+          <MessageSquare className="w-3 h-3 mr-1" />
           Text
         </Button>
         <Button 
           size="sm" 
           variant="outline"
           onClick={(e) => { e.stopPropagation(); onSchedule?.(); }}
-          className={`flex-1 h-9 text-xs font-medium ${isDarkMode ? 'bg-white/5 border-white/20 text-white hover:bg-white/10' : 'bg-white hover:bg-slate-50 border-slate-200'}`}
+          className={`flex-1 h-8 text-[11px] font-medium ${isDarkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white hover:bg-slate-50 border-slate-200'}`}
         >
-          <Calendar className="w-3.5 h-3.5 mr-1.5" />
+          <Calendar className="w-3 h-3 mr-1" />
           Book
         </Button>
       </div>
 
       {/* Move to Stage - Visible on hover */}
       <div className={`
-        mt-3 transition-all duration-200
-        ${isHovered && !isDimmed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+        mt-2 transition-all duration-[180ms] ease-out
+        ${isHovered && !isDimmed ? 'opacity-100' : 'opacity-0'}
       `}>
         <button
           onClick={(e) => { e.stopPropagation(); onMoveToStage?.(); }}
-          className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-[#E53935] hover:text-[#C62828] transition-colors"
+          className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-medium text-[#E53935] hover:text-[#C62828] transition-colors duration-[180ms] ease-out"
         >
           Move to Stage
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
