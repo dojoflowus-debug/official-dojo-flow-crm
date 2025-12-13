@@ -3628,3 +3628,21 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test selecting class shows student count
 - [x] Test message is delivered to all class students
 
+
+
+## 🐛 BUG FIX: Task Bar Mentions Not Working
+
+- [ ] Investigate task bar mentions implementation
+- [ ] Identify why @ mentions aren't triggering
+- [ ] Fix the issue
+- [ ] Test mentions work correctly on task bar
+
+
+
+## ✅ BUG FIX: Task Bar Mentions Not Working on Kai Command
+
+- [x] Identified issue: KaiCommand was using regular Textarea instead of MentionInput component
+- [x] Added MentionInput import to KaiCommand.tsx
+- [x] Replaced Textarea with MentionInput component
+- [x] Verified @ mentions dropdown now appears when typing @
+- [x] Verified selecting Kai from dropdown inserts @Kai into message

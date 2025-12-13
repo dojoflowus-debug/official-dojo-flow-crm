@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { MentionInput } from '@/components/MentionInput';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -1232,20 +1233,16 @@ export default function KaiCommand() {
                 <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
                   <Paperclip className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
                 </Button>
-                <Textarea
-                  ref={messageInputRef}
-                  placeholder="Message Kai... (Type @ to mention)"
+                <MentionInput
                   value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'} ${(isCinematic || isFocusMode) ? 'cinematic-input placeholder:text-white placeholder:opacity-100' : ''}`}
-                  style={(isCinematic || isFocusMode) ? { 
-                    color: '#FFFFFF',
-                    opacity: 1,
-                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                    caretColor: '#FFFFFF'
-                  } : isDark ? { color: 'white' } : { color: '#1e293b' }}
-                  rows={expandedInput ? 5 : 1}
+                  onChange={setMessageInput}
+                  onSubmit={(value, mentions) => {
+                    // Handle mentions in the message
+                    console.log('Mentions:', mentions);
+                    handleSendMessage();
+                  }}
+                  placeholder="Message Kai... (Type @ to mention)"
+                  className={`flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${expandedInput ? 'min-h-[120px]' : 'min-h-[40px] max-h-32'} ${(isCinematic || isFocusMode) ? 'cinematic-input placeholder:text-white placeholder:opacity-100 [&_textarea]:text-white [&_textarea]:placeholder:text-white' : isDark ? '[&_textarea]:text-white' : '[&_textarea]:text-slate-800'}`}
                 />
                 <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
                   <Mic className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
