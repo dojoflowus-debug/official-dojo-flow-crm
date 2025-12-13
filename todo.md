@@ -3201,3 +3201,17 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Button should insert "@" into the input and trigger mention dropdown
 - [x] Style consistently with other composer buttons (Paperclip, Mic, Send)
 - [x] Test in Light, Dark, and Cinematic modes
+
+## Feature: File Attachments for Kai Command Composer
+
+### Requirements
+- [x] Enable Paperclip button to open file picker
+- [x] Support image uploads (jpg, png, gif, webp)
+- [x] Support document uploads (pdf, doc, docx, txt)
+- [x] Show attachment preview thumbnails above the composer
+- [x] Allow removing attachments before sending
+- [x] Upload files to S3 storage
+- [x] Include attachment URLs in message when sent
+- [x] Show upload progress indicator
+- [x] Limit file size (max 10MB per file)
+- [x] Support multiple file attachments

@@ -137,6 +137,81 @@ function formatFunctionResults(results: any[]): string {
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  
+  // File upload for attachments
+  upload: router({
+    // Upload a file attachment (image or document)
+    uploadAttachment: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        fileData: z.string(), // base64 data URL
+        fileType: z.string(), // MIME type
+        fileSize: z.number(), // Size in bytes
+        context: z.enum(['kai-command', 'message', 'general']).default('general'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { storagePut } = await import("./storage");
+        
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (input.fileSize > maxSize) {
+          throw new Error('File size exceeds 10MB limit');
+        }
+        
+        // Validate file type
+        const allowedTypes = [
+          // Images
+          'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+          // Documents
+          'application/pdf', 
+          'application/msword', 
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'text/plain',
+        ];
+        
+        if (!allowedTypes.includes(input.fileType)) {
+          throw new Error('File type not supported. Allowed: images (jpg, png, gif, webp) and documents (pdf, doc, docx, txt)');
+        }
+        
+        // Extract base64 data from data URL
+        const base64Match = input.fileData.match(/^data:[^;]+;base64,(.+)$/);
+        if (!base64Match) {
+          throw new Error('Invalid file data format');
+        }
+        
+        const buffer = Buffer.from(base64Match[1], 'base64');
+        
+        // Generate unique key with timestamp and random suffix
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const sanitizedFileName = input.fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const userId = ctx.user?.id || 'anonymous';
+        const key = `attachments/${input.context}/${userId}/${timestamp}-${randomSuffix}-${sanitizedFileName}`;
+        
+        // Upload to S3
+        const result = await storagePut(key, buffer, input.fileType);
+        
+        return {
+          success: true,
+          url: result.url,
+          key: result.key,
+          fileName: input.fileName,
+          fileType: input.fileType,
+          fileSize: input.fileSize,
+        };
+      }),
+    
+    // Get allowed file types
+    getAllowedTypes: publicProcedure
+      .query(() => {
+        return {
+          images: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+          documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
+          maxSize: 10 * 1024 * 1024, // 10MB
+          maxSizeLabel: '10MB',
+        };
+      }),
+  }),
   setupWizard: setupWizardRouter,
   billing: billingRouter,
   webhook: webhookRouter,

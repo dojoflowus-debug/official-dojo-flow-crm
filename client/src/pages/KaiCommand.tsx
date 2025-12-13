@@ -44,7 +44,11 @@ import {
   Play,
   Pause,
   Presentation,
-  AtSign
+  AtSign,
+  X,
+  Image,
+  File,
+  Loader2
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -70,6 +74,18 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  attachments?: Attachment[];
+}
+
+// Attachment type
+interface Attachment {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  url: string;
+  uploading?: boolean;
+  error?: string;
 }
 
 export default function KaiCommand() {
@@ -79,6 +95,8 @@ export default function KaiCommand() {
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedInput, setExpandedInput] = useState(false);
   const [commandCenterWidth, setCommandCenterWidth] = useState(320);
@@ -412,19 +430,137 @@ export default function KaiCommand() {
     };
   }, [isResizing]);
 
+  // Upload mutation
+  const uploadMutation = trpc.upload.uploadAttachment.useMutation();
+
+  // Handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+
+    for (const file of Array.from(files)) {
+      // Validate file size
+      if (file.size > maxSize) {
+        toast.error(`File "${file.name}" exceeds 10MB limit`);
+        continue;
+      }
+
+      // Validate file type
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`File type not supported: ${file.name}`);
+        continue;
+      }
+
+      // Create temporary attachment with uploading state
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const tempAttachment: Attachment = {
+        id: tempId,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        url: '',
+        uploading: true
+      };
+
+      setAttachments(prev => [...prev, tempAttachment]);
+
+      // Read file as base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const base64Data = event.target?.result as string;
+          
+          const result = await uploadMutation.mutateAsync({
+            fileName: file.name,
+            fileData: base64Data,
+            fileType: file.type,
+            fileSize: file.size,
+            context: 'kai-command'
+          });
+
+          // Update attachment with uploaded URL
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId 
+              ? { ...att, url: result.url, uploading: false }
+              : att
+          ));
+        } catch (error) {
+          console.error('Upload failed:', error);
+          // Mark attachment as failed
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId 
+              ? { ...att, uploading: false, error: 'Upload failed' }
+              : att
+          ));
+          toast.error(`Failed to upload ${file.name}`);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Remove attachment
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(att => att.id !== id));
+  };
+
+  // Format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // Check if file is an image
+  const isImageFile = (type: string): boolean => {
+    return type.startsWith('image/');
+  };
+
   const handleSendMessage = async () => {
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim() && attachments.length === 0) return;
+    
+    // Check if any attachments are still uploading
+    if (attachments.some(att => att.uploading)) {
+      toast.error('Please wait for attachments to finish uploading');
+      return;
+    }
+
+    // Build message content with attachments
+    let messageContent = messageInput;
+    if (attachments.length > 0) {
+      const attachmentUrls = attachments.map(att => `[${att.fileName}](${att.url})`).join('\n');
+      if (messageContent) {
+        messageContent += '\n\nAttachments:\n' + attachmentUrls;
+      } else {
+        messageContent = 'Attachments:\n' + attachmentUrls;
+      }
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: messageInput,
-      timestamp: new Date()
+      content: messageContent,
+      timestamp: new Date(),
+      attachments: [...attachments]
     };
 
     setMessages(prev => [...prev, userMessage]);
-    const currentInput = messageInput;
+    const currentInput = messageContent;
     setMessageInput('');
+    setAttachments([]); // Clear attachments after sending
     setIsLoading(true);
 
     // Save user message to database if we have a valid conversation
@@ -1178,6 +1314,69 @@ export default function KaiCommand() {
                 </Button>
               )}
               
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                multiple
+                className="hidden"
+              />
+
+              {/* Attachment Preview Area */}
+              {attachments.length > 0 && (
+                <div className={`flex flex-wrap gap-2 mb-3 p-3 rounded-xl ${isCinematic || isFocusMode ? 'bg-black/60 border border-white/20' : isDark ? 'bg-[#1A1A1C] border border-white/5' : 'bg-slate-50 border border-slate-200'}`}>
+                  {attachments.map((attachment) => (
+                    <div
+                      key={attachment.id}
+                      className={`relative group flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${attachment.error ? 'bg-red-500/20 border border-red-500/50' : isCinematic || isFocusMode ? 'bg-white/10 border border-white/20' : isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}
+                    >
+                      {/* File icon or thumbnail */}
+                      {isImageFile(attachment.fileType) && attachment.url ? (
+                        <img
+                          src={attachment.url}
+                          alt={attachment.fileName}
+                          className="w-10 h-10 rounded object-cover"
+                        />
+                      ) : (
+                        <div className={`w-10 h-10 rounded flex items-center justify-center ${isCinematic || isFocusMode ? 'bg-white/10' : isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+                          {isImageFile(attachment.fileType) ? (
+                            <Image className={`w-5 h-5 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
+                          ) : (
+                            <File className={`w-5 h-5 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* File info */}
+                      <div className="flex-1 min-w-0 max-w-[120px]">
+                        <p className={`text-xs font-medium truncate ${isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-700'}`}>
+                          {attachment.fileName}
+                        </p>
+                        <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                          {formatFileSize(attachment.fileSize)}
+                        </p>
+                      </div>
+                      
+                      {/* Upload status or remove button */}
+                      {attachment.uploading ? (
+                        <Loader2 className={`w-4 h-4 animate-spin ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
+                      ) : attachment.error ? (
+                        <span className="text-xs text-red-400">Failed</span>
+                      ) : (
+                        <button
+                          onClick={() => removeAttachment(attachment.id)}
+                          className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${isCinematic || isFocusMode ? 'bg-white/20 hover:bg-white/30 text-white' : isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-600'}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Input container - Single clean glass pill for Cinematic/Focus Mode */}
               <div className={`flex items-center gap-2 transition-all duration-300 ${
                 isFocusMode 
@@ -1196,7 +1395,13 @@ export default function KaiCommand() {
               } : {}}
               >
                 {/* Attachment Button */}
-                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} title="Attach file">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} 
+                  title="Attach file (images, PDFs, documents)"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <Paperclip className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
                 </Button>
                 {/* @ Mention Button */}
@@ -1231,7 +1436,7 @@ export default function KaiCommand() {
                   size="icon" 
                   className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
                   onClick={handleSendMessage}
-                  disabled={!messageInput.trim() || isLoading}
+                  disabled={(!messageInput.trim() && attachments.length === 0) || isLoading || attachments.some(att => att.uploading)}
                 >
                   <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
                 </Button>
