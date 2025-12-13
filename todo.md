@@ -2770,3 +2770,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Added collapsible map section - map hidden by default
 - [x] Added "Show Map" button to reveal map when needed
 - Note: Google Maps API key needs proper configuration in Google Cloud Console (billing, referrers, API enabled)
+
+## ✅ COMPLETED: Replace Google Maps with Leaflet/OpenStreetMap
+- [x] Install Leaflet and react-leaflet dependencies
+- [x] Create LeafletMap component with dark mode styling
+- [x] Update StudentsSplitScreen to use LeafletMap instead of MapView
+- [x] Test map displays correctly without API key

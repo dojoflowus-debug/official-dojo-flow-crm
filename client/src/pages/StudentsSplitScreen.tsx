@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { trpc } from '../lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
 import BottomNavLayout from '@/components/BottomNavLayout'
-import { MapView } from '../components/Map'
+import LeafletMap, { StudentMarker } from '../components/LeafletMap'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
 import StudentModal from '../components/StudentModal'
@@ -409,8 +409,7 @@ export default function StudentsSplitScreen() {
   const [isHeaderHidden, setIsHeaderHidden] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<google.maps.Map | null>(null)
-  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([])
+  // Leaflet map doesn't need refs - the component manages its own state
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -546,192 +545,58 @@ export default function StudentsSplitScreen() {
     }
   }, [isDragging, handleMouseMove, handleMouseUp])
 
-  // Student locations from database or fallback to sample locations
-  const studentLocationsRef = useRef<Map<number, { lat: number; lng: number }>>(new Map())
-  
-  // Update locations when students change - use actual lat/lng from database if available
-  useEffect(() => {
-    // Base locations for students without geocoded addresses (spread around San Francisco)
-    const baseLocations = [
-      { lat: 37.7749, lng: -122.4194 },
-      { lat: 37.7849, lng: -122.4094 },
-      { lat: 37.7649, lng: -122.4294 },
-      { lat: 37.7799, lng: -122.4144 },
-      { lat: 37.7699, lng: -122.4244 },
-      { lat: 37.7899, lng: -122.3994 },
-      { lat: 37.7549, lng: -122.4394 },
-      { lat: 37.7949, lng: -122.4044 },
-      { lat: 37.7599, lng: -122.4344 },
-      { lat: 37.7849, lng: -122.4244 },
-    ]
-    
-    // Clear and rebuild locations map
-    studentLocationsRef.current.clear()
-    
-    students.forEach((student, index) => {
+  // Base locations for students without geocoded addresses (Tomball, TX area)
+  const baseLocations = useMemo(() => [
+    { lat: 30.0974, lng: -95.6163 },
+    { lat: 30.1074, lng: -95.6063 },
+    { lat: 30.0874, lng: -95.6263 },
+    { lat: 30.1024, lng: -95.6113 },
+    { lat: 30.0924, lng: -95.6213 },
+    { lat: 30.1124, lng: -95.5963 },
+    { lat: 30.0774, lng: -95.6363 },
+    { lat: 30.1174, lng: -95.6013 },
+    { lat: 30.0824, lng: -95.6313 },
+    { lat: 30.1074, lng: -95.6213 },
+  ], [])
+
+  // Convert students to Leaflet markers format
+  const leafletMarkers: StudentMarker[] = useMemo(() => {
+    return filteredStudents.map((student, index) => {
       // Use actual lat/lng from database if available
-      if (student.lat && student.lng && !isNaN(student.lat) && !isNaN(student.lng)) {
-        studentLocationsRef.current.set(student.id, {
-          lat: student.lat,
-          lng: student.lng,
-        })
-      } else {
+      let lat = student.lat
+      let lng = student.lng
+      
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
         // Fallback to sample location
         const baseIdx = index % baseLocations.length
         const offset = Math.floor(index / baseLocations.length) * 0.005
-        studentLocationsRef.current.set(student.id, {
-          lat: baseLocations[baseIdx].lat + offset + (Math.random() - 0.5) * 0.01,
-          lng: baseLocations[baseIdx].lng + offset + (Math.random() - 0.5) * 0.01,
-        })
+        lat = baseLocations[baseIdx].lat + offset
+        lng = baseLocations[baseIdx].lng + offset
+      }
+      
+      return {
+        id: String(student.id),
+        name: `${student.first_name} ${student.last_name}`,
+        initials: `${student.first_name[0]}${student.last_name[0]}`,
+        lat,
+        lng,
+        status: student.status?.toLowerCase() === 'active' ? 'active' 
+          : student.status?.toLowerCase() === 'on hold' ? 'on-hold' 
+          : 'inactive',
+        photoUrl: student.photo_url,
+        beltRank: student.belt_rank,
       }
     })
-    
-    // If map is ready, refresh markers
-    if (mapRef.current && students.length > 0) {
-      handleMapReady(mapRef.current)
-    }
-  }, [students])
+  }, [filteredStudents, baseLocations])
 
-  // Map ready handler - centers on all students
-  const handleMapReady = useCallback((map: google.maps.Map) => {
-    mapRef.current = map
-    
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.map = null)
-    markersRef.current = []
-    
-    // Create bounds to fit all students
-    const bounds = new google.maps.LatLngBounds()
-    let hasMarkers = false
-    
-    // Add markers for all students
-    students.forEach((student) => {
-      const location = studentLocationsRef.current.get(student.id)
-      if (location) {
-        hasMarkers = true
-        bounds.extend(location)
-        
-        // Create custom marker element
-        const markerContent = document.createElement('div')
-        markerContent.className = 'student-marker'
-        markerContent.innerHTML = `
-          <div style="
-            width: 32px;
-            height: 32px;
-            background: ${student.status === 'Active' ? '#22c55e' : '#ef4444'};
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-          " data-student-id="${student.id}">
-            ${student.first_name[0]}${student.last_name[0]}
-          </div>
-        `
-        
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-          map,
-          position: location,
-          title: `${student.first_name} ${student.last_name}`,
-          content: markerContent,
-        })
-        
-        // Click handler to open student modal
-        marker.addListener('click', () => {
-          setSelectedStudent(student)
-          setIsModalOpen(true)
-        })
-        
-        markersRef.current.push(marker)
-      }
-    })
-    
-    // Fit map to show all student markers
-    if (hasMarkers) {
-      map.fitBounds(bounds, { padding: 50 })
-      // Set a max zoom level so we don't zoom in too close
-      const listener = google.maps.event.addListener(map, 'idle', () => {
-        const currentZoom = map.getZoom()
-        if (currentZoom && currentZoom > 15) {
-          map.setZoom(15)
-        }
-        google.maps.event.removeListener(listener)
-      })
+  // Handle marker click from Leaflet map
+  const handleMarkerClick = useCallback((studentId: string) => {
+    const student = students.find(s => String(s.id) === studentId)
+    if (student) {
+      setSelectedStudent(student)
+      setIsModalOpen(true)
     }
   }, [students])
-  
-  // Pan to selected student when modal opens
-  useEffect(() => {
-    if (selectedStudent && mapRef.current) {
-      const location = studentLocationsRef.current.get(selectedStudent.id)
-      if (location) {
-        // Pan to the student's location
-        mapRef.current.panTo(location)
-        mapRef.current.setZoom(15)
-        
-        // Highlight the marker briefly
-        const markerIndex = students.findIndex(s => s.id === selectedStudent.id)
-        if (markerIndex >= 0 && markersRef.current[markerIndex]) {
-          const marker = markersRef.current[markerIndex]
-          const content = marker.content as HTMLElement
-          if (content) {
-            const innerDiv = content.querySelector('div') as HTMLElement
-            if (innerDiv) {
-              // Add highlight animation
-              innerDiv.style.transform = 'scale(1.3)'
-              innerDiv.style.boxShadow = '0 0 0 4px rgba(231, 60, 60, 0.4), 0 4px 12px rgba(0,0,0,0.4)'
-              
-              // Remove highlight after 1.5 seconds
-              setTimeout(() => {
-                innerDiv.style.transform = 'scale(1)'
-                innerDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'
-              }, 1500)
-            }
-          }
-        }
-      }
-    }
-  }, [selectedStudent, students])
-  
-  // Update map markers visibility based on stat filter
-  useEffect(() => {
-    if (!mapRef.current) return
-    
-    markersRef.current.forEach((marker, index) => {
-      const student = students[index]
-      if (!student) return
-      
-      // Check if student matches the stat filter
-      let shouldShow = true
-      if (selectedStatFilter) {
-        switch (selectedStatFilter) {
-          case 'active':
-            shouldShow = student.status?.toLowerCase() === 'active'
-            break
-          case 'pending':
-            shouldShow = student.membership_status?.toLowerCase() === 'pending cancel' || 
-                        student.status?.toLowerCase() === 'on hold'
-            break
-          case 'cancelled':
-            shouldShow = student.status?.toLowerCase() === 'inactive' || 
-                        student.membership_status?.toLowerCase() === 'expired'
-            break
-          case 'new':
-            shouldShow = student.membership_status?.toLowerCase() === 'trial'
-            break
-        }
-      }
-      
-      // Show/hide marker
-      marker.map = shouldShow ? mapRef.current : null
-    })
-  }, [selectedStatFilter, students])
 
   // Status counts
   const activeCount = students.filter(s => s.status === 'Active').length
@@ -842,13 +707,13 @@ export default function StudentsSplitScreen() {
                 ))}
               </div>
 
-              {/* Map View */}
-              <MapView 
+              {/* Map View - Leaflet/OpenStreetMap */}
+              <LeafletMap
+                markers={leafletMarkers}
+                selectedStudentId={selectedStudent ? String(selectedStudent.id) : null}
+                onMarkerClick={handleMarkerClick}
+                isDarkMode={isDarkMode}
                 className="w-full h-full absolute inset-0"
-                initialCenter={{ lat: 37.7749, lng: -122.4194 }}
-                initialZoom={12}
-                darkMode={isDarkMode}
-                onMapReady={handleMapReady}
               />
             </div>
 
@@ -1082,91 +947,19 @@ export default function StudentsSplitScreen() {
         <div className="fixed inset-0 z-40 pt-[72px]">
           {/* Full Screen Map - Edge to edge, no backdrop */}
           <div className="absolute inset-0 top-0">
-            <MapView 
-              className="w-full h-full"
-              initialCenter={{ lat: 37.7749, lng: -122.4194 }}
-              initialZoom={12}
-              darkMode={isDarkMode}
-              onMapReady={(map) => {
-                mapRef.current = map
-                
-                // Clear existing markers
-                markersRef.current.forEach(marker => marker.map = null)
-                markersRef.current = []
-                
-                // Create bounds to fit all students
-                const bounds = new google.maps.LatLngBounds()
-                let hasMarkers = false
-                
-                // Add markers for all students
-                students.forEach((student) => {
-                  const location = studentLocationsRef.current.get(student.id)
-                  if (location) {
-                    hasMarkers = true
-                    bounds.extend(location)
-                    
-                    const isHighlighted = highlightedMapStudent?.id === student.id
-                    
-                    // Create custom marker element with mini label for highlighted student
-                    const markerContent = document.createElement('div')
-                    markerContent.className = 'student-marker cursor-pointer'
-                    markerContent.innerHTML = `
-                      <div class="flex flex-col items-center">
-                        <div class="${isHighlighted ? 'w-16 h-16' : 'w-10 h-10'} rounded-full bg-white shadow-lg flex items-center justify-center border-2 ${isHighlighted ? 'border-[#E73C3C] ring-4 ring-[#E73C3C]/20' : 'border-slate-200 hover:border-slate-300'} transition-all duration-300 overflow-hidden">
-                          ${student.photo_url 
-                            ? `<img src="${student.photo_url}" class="w-full h-full object-cover" />`
-                            : `<span class="${isHighlighted ? 'text-lg' : 'text-xs'} font-bold text-slate-600">${student.first_name[0]}${student.last_name[0]}</span>`
-                          }
-                        </div>
-                        ${isHighlighted ? `
-                          <div class="mt-2 bg-white rounded-lg shadow-lg px-3 py-2 min-w-[140px] text-center border border-slate-100">
-                            <div class="flex items-center justify-center gap-2 mb-1">
-                              ${student.photo_url 
-                                ? `<img src="${student.photo_url}" class="w-6 h-6 rounded-full object-cover" />`
-                                : `<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center"><span class="text-[10px] font-bold text-slate-600">${student.first_name[0]}${student.last_name[0]}</span></div>`
-                              }
-                              <span class="font-semibold text-slate-800 text-sm">${student.first_name} ${student.last_name}</span>
-                            </div>
-                            <div class="flex items-center justify-center gap-2">
-                              <span class="text-xs text-slate-500">${student.belt_rank || 'White Belt'}</span>
-                              <span class="w-2 h-2 rounded-full ${student.status === 'Active' ? 'bg-green-500' : student.status === 'Inactive' ? 'bg-gray-400' : 'bg-yellow-500'}"></span>
-                            </div>
-                          </div>
-                        ` : ''}
-                      </div>
-                    `
-                    
-                    const marker = new google.maps.marker.AdvancedMarkerElement({
-                      map,
-                      position: location,
-                      content: markerContent,
-                      zIndex: isHighlighted ? 1000 : 1,
-                    })
-                    
-                    // Add click listener to open student card
-                    marker.addListener('click', () => {
-                      setSelectedStudent(student)
-                      setHighlightedMapStudent(student)
-                      setIsModalOpen(true)
-                      // Center on clicked student
-                      map.panTo(location)
-                    })
-                    
-                    markersRef.current.push(marker)
-                  }
-                })
-                
-                // If we have a highlighted student, center on them
-                if (highlightedMapStudent) {
-                  const location = studentLocationsRef.current.get(highlightedMapStudent.id)
-                  if (location) {
-                    map.setCenter(location)
-                    map.setZoom(15)
-                  }
-                } else if (hasMarkers) {
-                  map.fitBounds(bounds, { padding: 50 })
+            <LeafletMap
+              markers={leafletMarkers}
+              selectedStudentId={highlightedMapStudent ? String(highlightedMapStudent.id) : (selectedStudent ? String(selectedStudent.id) : null)}
+              onMarkerClick={(studentId) => {
+                const student = students.find(s => String(s.id) === studentId)
+                if (student) {
+                  setSelectedStudent(student)
+                  setHighlightedMapStudent(student)
+                  setIsModalOpen(true)
                 }
               }}
+              isDarkMode={isDarkMode}
+              className="w-full h-full"
             />
           </div>
           
