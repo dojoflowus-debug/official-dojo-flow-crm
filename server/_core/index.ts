@@ -281,6 +281,68 @@ async function startServer() {
     });
   });
   
+  // Staff members REST API endpoint
+  app.get("/api/staff", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { teamMembers } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      
+      // Transform to match expected format
+      const transformedStaff = staff.map(s => ({
+        id: s.id,
+        first_name: s.name.split(' ')[0],
+        last_name: s.name.split(' ').slice(1).join(' ') || '',
+        email: s.email,
+        phone: s.phone,
+        role: s.role.charAt(0).toUpperCase() + s.role.slice(1).replace('_', ' '),
+        bio: s.focusAreas ? JSON.parse(s.focusAreas).join(', ') : '',
+        photo_url: '',
+        addressAs: s.addressAs,
+      }));
+      
+      res.json(transformedStaff);
+    } catch (error) {
+      console.error("Staff endpoint error:", error);
+      res.status(500).json({ error: "Failed to fetch staff members" });
+    }
+  });
+  
+  // Staff stats REST API endpoint
+  app.get("/api/staff/stats", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { teamMembers } = await import("../../drizzle/schema");
+      const { eq, sql } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      
+      const stats = {
+        total_staff: staff.length,
+        instructors: staff.filter(s => s.role === 'instructor' || s.role === 'coach' || s.role === 'trainer').length,
+        assistants: staff.filter(s => s.role === 'assistant').length,
+        admin_staff: staff.filter(s => s.role === 'manager' || s.role === 'front_desk' || s.role === 'owner').length,
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Staff stats endpoint error:", error);
+      res.status(500).json({ error: "Failed to fetch staff stats" });
+    }
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

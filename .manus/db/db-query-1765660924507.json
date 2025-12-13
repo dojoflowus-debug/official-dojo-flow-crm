@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, name, role, email, addressAs FROM team_members;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, role, email, addressAs FROM team_members;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Sarah Martinez",
+      "role": "instructor",
+      "email": "sarah.martinez@dojoflow.com",
+      "addressAs": "Coach Sarah"
+    },
+    {
+      "id": "2",
+      "name": "James Chen",
+      "role": "manager",
+      "email": "james.chen@dojoflow.com",
+      "addressAs": "Mr. Chen"
+    },
+    {
+      "id": "3",
+      "name": "Maria Santos",
+      "role": "instructor",
+      "email": "maria.santos@dojoflow.com",
+      "addressAs": "Professor Maria"
+    },
+    {
+      "id": "4",
+      "name": "David Kim",
+      "role": "front_desk",
+      "email": "david.kim@dojoflow.com",
+      "addressAs": "David"
+    },
+    {
+      "id": "5",
+      "name": "Emily Johnson",
+      "role": "coach",
+      "email": "emily.johnson@dojoflow.com",
+      "addressAs": "Coach Emily"
+    },
+    {
+      "id": "6",
+      "name": "Michael Brown",
+      "role": "assistant",
+      "email": "michael.brown@dojoflow.com",
+      "addressAs": "Mike"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\temail\taddressAs\n1\tSarah Martinez\tinstructor\tsarah.martinez@dojoflow.com\tCoach Sarah\n2\tJames Chen\tmanager\tjames.chen@dojoflow.com\tMr. Chen\n3\tMaria Santos\tinstructor\tmaria.santos@dojoflow.com\tProfessor Maria\n4\tDavid Kim\tfront_desk\tdavid.kim@dojoflow.com\tDavid\n5\tEmily Johnson\tcoach\temily.johnson@dojoflow.com\tCoach Emily\n6\tMichael Brown\tassistant\tmichael.brown@dojoflow.com\tMike\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

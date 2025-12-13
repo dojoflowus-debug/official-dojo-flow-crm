@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS team_members (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(255) NOT NULL,\n  role ENUM('owner', 'manager', 'instructor', 'front_desk', 'coach', 'trainer', 'assistant') NOT NULL,\n  email VARCHAR(320),\n  phone VARCHAR(20),\n  locationIds TEXT,\n  addressAs VARCHAR(255),\n  focusAreas TEXT,\n  canViewFinancials INT DEFAULT 0,\n  canEditSchedule INT DEFAULT 0,\n  canManageLeads INT DEFAULT 0,\n  viewOnly INT DEFAULT 1,\n  isActive INT DEFAULT 1 NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS team_members (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(255) NOT NULL,\n  role ENUM('owner', 'manager', 'instructor', 'front_desk', 'coach', 'trainer', 'assistant') NOT NULL,\n  email VARCHAR(320),\n  phone VARCHAR(20),\n  locationIds TEXT,\n  addressAs VARCHAR(255),\n  focusAreas TEXT,\n  canViewFinancials INT DEFAULT 0,\n  canEditSchedule INT DEFAULT 0,\n  canManageLeads INT DEFAULT 0,\n  viewOnly INT DEFAULT 1,\n  isActive INT DEFAULT 1 NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 184
+}

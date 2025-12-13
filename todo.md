@@ -3215,3 +3215,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show upload progress indicator
 - [x] Limit file size (max 10MB per file)
 - [x] Support multiple file attachments
+
+## Data: Add Mock Staff Members
+
+### Requirements
+- [x] Add 6 mock staff members to the database
+- [x] Include variety of roles (instructors, admin, etc.)
+- [x] Verify staff members appear in the system
