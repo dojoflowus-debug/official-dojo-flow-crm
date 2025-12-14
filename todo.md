@@ -3819,3 +3819,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add proper error logging with specific error extraction
 - [x] Show user-friendly toast with specific error reason (file type, size, format)
 - [x] Added reader.onerror handler for FileReader failures
+
+## Retry Button for Failed Uploads
+- [x] Store original file reference in Attachment type for retry (originalFile field)
+- [x] Add retryUpload handler function with full upload pipeline
+- [x] Add retry button UI to failed attachment chips (RefreshCw icon)
+- [x] Show retry and remove buttons with proper hover states
+- [x] Theme-aware styling for Light, Dark, Cinematic, and Focus modes

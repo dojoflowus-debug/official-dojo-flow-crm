@@ -67,7 +67,8 @@ import {
   FileImage,
   FileVideo,
   FileAudio,
-  Upload
+  Upload,
+  RefreshCw
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -110,6 +111,7 @@ interface Attachment {
   docId?: number; // Reference to documents table
   uploadedAt?: Date;
   uploadedBy?: string;
+  originalFile?: File; // Store original file for retry
 }
 
 export default function KaiCommand() {
@@ -1090,7 +1092,8 @@ export default function KaiCommand() {
         fileSize: file.size,
         url: '',
         uploading: true,
-        progress: 0
+        progress: 0,
+        originalFile: file // Store for retry
       };
 
       setAttachments(prev => [...prev, tempAttachment]);
@@ -1236,6 +1239,142 @@ export default function KaiCommand() {
     setAttachments(prev => prev.filter(att => att.id !== id));
   };
   
+  // Retry failed upload
+  const retryUpload = async (attachmentId: string) => {
+    const attachment = attachments.find(att => att.id === attachmentId);
+    if (!attachment?.originalFile) {
+      toast.error('Cannot retry: original file not available');
+      return;
+    }
+    
+    const file = attachment.originalFile;
+    const tempId = attachmentId;
+    
+    // Reset attachment state to uploading
+    setAttachments(prev => prev.map(att => 
+      att.id === tempId 
+        ? { ...att, uploading: true, progress: 0, error: undefined }
+        : att
+    ));
+    
+    // Read file as base64 with progress tracking
+    const reader = new FileReader();
+    
+    reader.onprogress = (progressEvent) => {
+      if (progressEvent.lengthComputable) {
+        const readProgress = Math.round((progressEvent.loaded / progressEvent.total) * 50);
+        setAttachments(prev => prev.map(att => 
+          att.id === tempId ? { ...att, progress: readProgress } : att
+        ));
+      }
+    };
+    
+    reader.onload = async (event) => {
+      try {
+        const base64Data = event.target?.result as string;
+        
+        setAttachments(prev => prev.map(att => 
+          att.id === tempId ? { ...att, progress: 50 } : att
+        ));
+        
+        const progressInterval = setInterval(() => {
+          setAttachments(prev => prev.map(att => {
+            if (att.id === tempId && att.uploading && (att.progress || 0) < 95) {
+              return { ...att, progress: Math.min((att.progress || 50) + 5, 95) };
+            }
+            return att;
+          }));
+        }, 100);
+        
+        const result = await uploadMutation.mutateAsync({
+          fileName: file.name,
+          fileData: base64Data,
+          fileType: file.type,
+          fileSize: file.size,
+          context: 'kai-command'
+        });
+        
+        clearInterval(progressInterval);
+        
+        setAttachments(prev => prev.map(att => 
+          att.id === tempId 
+            ? { ...att, url: result.url, uploading: false, progress: 100, error: undefined }
+            : att
+        ));
+        
+        toast.success(`${file.name} uploaded successfully`);
+        
+        // Trigger file intelligence analysis
+        try {
+          let imageDimensions: { width: number; height: number } | undefined;
+          if (file.type.startsWith('image/')) {
+            imageDimensions = await getImageDimensions(result.url);
+          }
+          
+          const analysis = await analyzeFile(
+            { fileName: file.name, fileType: file.type, fileSize: file.size, url: result.url },
+            imageDimensions
+          );
+          
+          const updatedAttachment: Attachment = {
+            id: tempId,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            url: result.url,
+            uploading: false,
+            progress: 100,
+            originalFile: file
+          };
+          
+          setPendingFileAnalysis({ attachment: updatedAttachment, analysis });
+          
+          const kaiResponse = generateKaiFileResponse(analysis, file.name);
+          const analysisMessage: Message = {
+            id: `analysis-${Date.now()}`,
+            role: 'assistant',
+            content: kaiResponse,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, analysisMessage]);
+        } catch (analysisError) {
+          console.error('File analysis failed:', analysisError);
+        }
+      } catch (error: any) {
+        console.error('Retry upload failed:', error);
+        
+        let errorMessage = 'Upload failed';
+        if (error?.message) {
+          if (error.message.includes('File type not supported')) {
+            errorMessage = 'File type not supported';
+          } else if (error.message.includes('File size exceeds')) {
+            errorMessage = 'File too large (max 10MB)';
+          } else {
+            errorMessage = error.message;
+          }
+        }
+        
+        setAttachments(prev => prev.map(att => 
+          att.id === tempId 
+            ? { ...att, uploading: false, progress: 0, error: errorMessage }
+            : att
+        ));
+        toast.error(`${file.name}: ${errorMessage}`);
+      }
+    };
+    
+    reader.onerror = () => {
+      setAttachments(prev => prev.map(att => 
+        att.id === tempId 
+          ? { ...att, uploading: false, progress: 0, error: 'Failed to read file' }
+          : att
+      ));
+      toast.error(`Failed to read ${file.name}`);
+    };
+    
+    reader.readAsDataURL(file);
+  };
+  
   // Handle drag-and-drop file upload
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -1302,7 +1441,8 @@ export default function KaiCommand() {
         fileSize: file.size,
         url: '',
         uploading: true,
-        progress: 0
+        progress: 0,
+        originalFile: file // Store for retry
       };
       
       setAttachments(prev => [...prev, tempAttachment]);
@@ -3076,7 +3216,22 @@ export default function KaiCommand() {
                       {attachment.uploading ? (
                         <Loader2 className={`w-4 h-4 animate-spin ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
                       ) : attachment.error ? (
-                        <span className="text-xs text-red-400">Failed</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => retryUpload(attachment.id)}
+                            title="Retry upload"
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isCinematic || isFocusMode ? 'bg-white/10 hover:bg-white/20 text-white' : isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => removeAttachment(attachment.id)}
+                            title="Remove"
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isCinematic || isFocusMode ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' : isDark ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-500'}`}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => removeAttachment(attachment.id)}
