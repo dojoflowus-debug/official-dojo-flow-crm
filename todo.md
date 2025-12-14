@@ -3684,3 +3684,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Adjust overlay for Light Mode (reduce or remove white overlay)
 - [x] Ensure message bubbles use theme tokens, not hardcoded values
 - [x] Test all theme combinations (Light, Dark, Cinematic) with Focus Mode
+
+## Instructor Profile Access - Edit Profile + Setup Wizard Separation
+- [x] Update avatar dropdown menu with Edit Profile, Setup Wizard, and Sign out items
+- [x] Create Edit Profile modal component (photo, name, phone, bio)
+- [x] Add profile photo upload with square crop
+- [x] Add backend tRPC procedure for profile updates
+- [x] Remove automatic wizard launch from Profile
+- [x] Test Edit Profile modal functionality (vitest tests pass)
+- [x] Test Setup Wizard separate entry

@@ -15,7 +15,9 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-  Palette
+  Palette,
+  User,
+  Wand2
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
 import { AppLogo } from '@/components/AppLogo'
@@ -33,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { EditProfileModal } from '@/components/EditProfileModal'
 import ThemeToggle from '@/components/ThemeToggle'
 
 // Navigation items for bottom bar
@@ -88,6 +91,9 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   
   // Hover state for Apple dock bubble effect
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  
+  // Edit Profile modal state
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
   
   useEffect(() => {
     const handleScroll = () => {
@@ -356,15 +362,23 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                   </div>
                   <DropdownMenuSeparator className={isDark ? 'bg-[#2A2B2F]' : 'bg-[#E2E3E6]'} />
                   <DropdownMenuItem 
-                    onClick={() => navigate('/profile')}
+                    onClick={() => setIsEditProfileOpen(true)}
                     className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
                   >
-                    <Users className="h-4 w-4 mr-2" />
-                    Profile
+                    <User className="h-4 w-4 mr-2" />
+                    Edit Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={handleLogout}
+                    onClick={() => navigate('/setup-wizard')}
                     className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    Setup Wizard
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className={isDark ? 'bg-[#2A2B2F]' : 'bg-[#E2E3E6]'} />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className={`cursor-pointer text-red-500 ${isDark ? 'hover:bg-[#2A2B2F]' : 'hover:bg-gray-100'}`}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign out
@@ -532,6 +546,12 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
           )}
         </button>
       </nav>
+      
+      {/* Edit Profile Modal */}
+      <EditProfileModal 
+        open={isEditProfileOpen} 
+        onOpenChange={setIsEditProfileOpen} 
+      />
     </div>
   )
 }

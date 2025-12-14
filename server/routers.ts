@@ -176,10 +176,12 @@ export const appRouter = router({
     // Update current user's profile
     update: protectedProcedure
       .input(z.object({
+        name: z.string().max(255).optional(),
         displayName: z.string().max(255).optional(),
         preferredName: z.string().max(255).optional(),
-        phone: z.string().max(20).optional(),
-        bio: z.string().max(160).optional(),
+        phone: z.string().max(20).nullable().optional(),
+        bio: z.string().max(160).nullable().optional(),
+        avatarUrl: z.string().nullable().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
@@ -191,14 +193,22 @@ export const appRouter = router({
           throw new Error('Not authenticated');
         }
         
-        await db.update(users)
-          .set({
-            displayName: input.displayName,
-            preferredName: input.preferredName,
-            phone: input.phone,
-            bio: input.bio,
-          })
-          .where(eq(users.id, ctx.user.id));
+        const updateData: Record<string, any> = {};
+        if (input.name !== undefined) updateData.name = input.name;
+        if (input.displayName !== undefined) updateData.displayName = input.displayName;
+        if (input.preferredName !== undefined) updateData.preferredName = input.preferredName;
+        if (input.phone !== undefined) updateData.phone = input.phone;
+        if (input.bio !== undefined) updateData.bio = input.bio;
+        if (input.avatarUrl !== undefined) {
+          updateData.photoUrl = input.avatarUrl;
+          updateData.photoUrlSmall = input.avatarUrl;
+        }
+        
+        if (Object.keys(updateData).length > 0) {
+          await db.update(users)
+            .set(updateData)
+            .where(eq(users.id, ctx.user.id));
+        }
         
         return { success: true };
       }),

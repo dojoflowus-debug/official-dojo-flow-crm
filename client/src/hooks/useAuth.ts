@@ -6,6 +6,9 @@ export interface AuthUser {
   openId: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
   role: "user" | "admin";
   setupCompleted: boolean;
 }
@@ -25,7 +28,7 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Get current user from API
-  const { data: currentUser, isLoading: userLoading } = trpc.auth.getCurrentUser.useQuery(
+  const { data: currentUser, isLoading: userLoading, refetch: refetchUser } = trpc.auth.getCurrentUser.useQuery(
     undefined,
     {
       retry: false,
@@ -51,6 +54,9 @@ export function useAuth() {
           openId: currentUser.openId,
           name: currentUser.name,
           email: currentUser.email,
+          phone: currentUser.phone || null,
+          bio: currentUser.bio || null,
+          avatarUrl: currentUser.photoUrl || null,
           role: currentUser.role,
           setupCompleted: dojoSettings?.setupCompleted === 1,
         });
@@ -79,10 +85,16 @@ export function useAuth() {
     }
   };
 
+  // Refetch user data
+  const refetch = async () => {
+    await refetchUser();
+  };
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
     logout,
+    refetch,
   };
 }
