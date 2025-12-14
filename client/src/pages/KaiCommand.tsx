@@ -2797,21 +2797,23 @@ export default function KaiCommand() {
                 WebkitBackdropFilter: 'blur(20px)'
               }) : {}}
               >
-                {/* Attachment Button */}
+                {/* Attachment Button - Fixed size container to prevent distortion */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`h-9 w-9 rounded-full ${isCinematic ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} 
+                  className={`chat-bar-button rounded-full ${isCinematic ? 'text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? 'text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} 
                   title="Attach file (images, PDFs, documents)"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Paperclip className="w-5 h-5" style={isCinematic ? { color: '#FFFFFF' } : isFocusMode ? (isDark ? { color: '#FFFFFF' } : {}) : {}} />
+                  <span className="chat-bar-icon-container">
+                    <Paperclip style={{ color: isCinematic || (isFocusMode && isDark) ? '#FFFFFF' : undefined }} />
+                  </span>
                 </Button>
-                {/* @ Mention Button */}
+                {/* @ Mention Button - Fixed size container to prevent distortion */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`h-9 w-9 rounded-full ${isCinematic ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                  className={`chat-bar-button rounded-full ${isCinematic ? 'text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? 'text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
                   title="Mention someone"
                   onClick={() => {
                     // Insert @ at cursor position and focus the input
@@ -2819,7 +2821,9 @@ export default function KaiCommand() {
                     messageInputRef.current?.focus();
                   }}
                 >
-                  <AtSign className="w-5 h-5" style={isCinematic ? { color: '#FFFFFF' } : isFocusMode ? (isDark ? { color: '#FFFFFF' } : {}) : {}} />
+                  <span className="chat-bar-icon-container">
+                    <AtSign style={{ color: isCinematic || (isFocusMode && isDark) ? '#FFFFFF' : undefined }} />
+                  </span>
                 </Button>
                 <MentionInput
                   value={messageInput}
@@ -2832,16 +2836,26 @@ export default function KaiCommand() {
                   theme={isCinematic ? 'cinematic' : isFocusMode ? (isDark ? 'dark' : 'light') : isDark ? 'dark' : 'light'}
                   variant="apple"
                 />
-                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${isCinematic ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
-                  <Mic className="w-5 h-5" style={isCinematic ? { color: '#FFFFFF' } : isFocusMode ? (isDark ? { color: '#FFFFFF' } : {}) : {}} />
+                {/* Mic Button - Fixed size container to prevent distortion */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`chat-bar-button rounded-full ${isCinematic ? 'text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? 'text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                >
+                  <span className="chat-bar-icon-container">
+                    <Mic style={{ color: isCinematic || (isFocusMode && isDark) ? '#FFFFFF' : undefined }} />
+                  </span>
                 </Button>
+                {/* Send Button - Fixed size container to prevent distortion */}
                 <Button 
                   size="icon" 
-                  className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
+                  className="chat-bar-button bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
                   onClick={handleSendMessage}
                   disabled={(!messageInput.trim() && attachments.length === 0) || isLoading || attachments.some(att => att.uploading)}
                 >
-                  <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
+                  <span className="chat-bar-icon-container" style={{ width: '16px', height: '16px' }}>
+                    <Send style={{ color: '#FFFFFF', width: '16px', height: '16px' }} />
+                  </span>
                 </Button>
               </div>
               <p 

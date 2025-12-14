@@ -3784,3 +3784,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Fix "Failed to update profile" error - fixed EditProfileModal to use tRPC uploadPhoto mutation instead of /api/upload
 - [x] Profile photo upload now uses proper tRPC procedure with base64 encoding
 - [x] Kai professional tone confirmed working - responses are now direct and business-focused (tested: "Welcome. To set up your dojo's operations...")
+
+## Fix Distorted Chat Bar Icons in Cinematic Mode
+- [x] Lock icon dimensions in fixed-size containers (20x20 icons in 36x36 buttons)
+- [x] Prevent cinematic transforms from affecting icons (CSS isolation with transform: none)
+- [x] Ensure SVG icons use viewBox correctly at 1:1 scale (chat-bar-icon-container class)
+- [x] Icons render crisp and identical across Light, Dark, and Cinematic modes
+- [x] Works in Focus Mode and normal mode
