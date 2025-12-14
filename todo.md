@@ -3677,3 +3677,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Delete Dashboard page components (CRMDashboard, Dashboard, DataDashboard, KaiDashboard, MinimalDashboard, SimpleDashboard)
 - [x] Update default route to redirect appropriately (all dashboard routes now redirect to Kai Command)
 - [x] Test navigation works without Dashboard
+
+## Fix Light Mode + Focus Mode Text Contrast
+- [x] Make message text theme-aware in Focus Mode (dark text for Light Mode)
+- [x] Remove opacity/blur filters from text elements in Focus Mode
+- [x] Adjust overlay for Light Mode (reduce or remove white overlay)
+- [x] Ensure message bubbles use theme tokens, not hardcoded values
+- [x] Test all theme combinations (Light, Dark, Cinematic) with Focus Mode

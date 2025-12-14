@@ -1460,7 +1460,7 @@ export default function KaiCommand() {
     <BottomNavLayout hiddenInFocusMode={isFocusMode} isUIHidden={isUIHidden}>
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isFocusMode ? (isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]') : isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -2045,15 +2045,19 @@ export default function KaiCommand() {
                           <div className="flex-1">
                             <div 
                               className={`font-medium mb-1`}
-                              style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                              style={isCinematic ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isFocusMode ? (isDark ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : { color: '#111827' }) : isDark ? { color: 'white' } : { color: '#0f172a' }}
                             >{user?.name || 'You'}</div>
                             <p 
                               className="relative"
-                              style={(isCinematic || isFocusMode) ? { 
+                              style={isCinematic ? { 
                                 color: 'rgba(255,255,255,0.92)', 
                                 textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                                 zIndex: 30
-                              } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
+                              } : isFocusMode ? (isDark ? { 
+                                color: 'rgba(255,255,255,0.92)', 
+                                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                                zIndex: 30
+                              } : { color: '#1f2937', zIndex: 30 }) : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
                             >{renderMessageWithMentions(stripAttachmentLinks(message.content))}</p>
                             {/* Inline Attachments */}
                             {renderInlineAttachments(message.attachments)}
@@ -2067,15 +2071,19 @@ export default function KaiCommand() {
                           <div className="flex-1">
                             <div 
                               className={`font-medium mb-1`}
-                              style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                              style={isCinematic ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isFocusMode ? (isDark ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : { color: '#111827' }) : isDark ? { color: 'white' } : { color: '#0f172a' }}
                             >Kai</div>
                             <div 
-                              className={`whitespace-pre-wrap prose prose-sm max-w-none relative ${(isCinematic || isFocusMode) ? '' : isDark ? 'prose-invert' : ''}`}
-                              style={(isCinematic || isFocusMode) ? { 
+                              className={`whitespace-pre-wrap prose prose-sm max-w-none relative ${isCinematic ? '' : isFocusMode ? (isDark ? '' : 'prose-slate') : isDark ? 'prose-invert' : ''}`}
+                              style={isCinematic ? { 
                                 color: 'rgba(255,255,255,0.92)', 
                                 textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                                 zIndex: 30
-                              } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
+                              } : isFocusMode ? (isDark ? { 
+                                color: 'rgba(255,255,255,0.92)', 
+                                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                                zIndex: 30
+                              } : { color: '#1f2937', zIndex: 30 }) : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
                             >
                               {renderMessageWithMentions(stripAttachmentLinks(message.content))}
                             </div>
@@ -2094,12 +2102,12 @@ export default function KaiCommand() {
                       <div className="flex-1">
                         <div 
                           className={`font-medium mb-1`}
-                          style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                          style={isCinematic ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isFocusMode ? (isDark ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : { color: '#111827' }) : isDark ? { color: 'white' } : { color: '#0f172a' }}
                         >Kai</div>
                         <div className="flex gap-1">
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${isCinematic ? 'bg-white/50' : isFocusMode ? (isDark ? 'bg-white/50' : 'bg-slate-400') : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${isCinematic ? 'bg-white/50' : isFocusMode ? (isDark ? 'bg-white/50' : 'bg-slate-400') : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${isCinematic ? 'bg-white/50' : isFocusMode ? (isDark ? 'bg-white/50' : 'bg-slate-400') : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
                         </div>
                       </div>
                     </div>
@@ -2198,36 +2206,46 @@ export default function KaiCommand() {
 
               {/* Input container - Single clean glass pill for Cinematic/Focus Mode */}
               <div className={`flex items-center gap-2 transition-all duration-300 ${
-                isFocusMode 
-                  ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
-                  : isCinematic
-                    ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)] focus-within:border-[rgba(255,76,76,0.6)]'
+                isCinematic
+                  ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)] focus-within:border-[rgba(255,76,76,0.6)]'
+                  : isFocusMode 
+                    ? isDark
+                      ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
+                      : 'rounded-full p-3 relative z-10 border border-slate-300 shadow-[0_4px_16px_rgba(0,0,0,0.08)] focus-within:border-[rgba(255,76,76,0.5)]'
                     : isDark 
                       ? 'rounded-[22px] p-2 bg-[#18181A] border border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' 
                       : 'rounded-[22px] p-2 bg-white border border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
               }`}
-              style={(isCinematic || isFocusMode) ? { 
-                animation: isCinematic && !isFocusMode ? 'cinematicInputGlow 3s ease-in-out infinite' : 'none',
+              style={isCinematic ? { 
+                animation: 'cinematicInputGlow 3s ease-in-out infinite',
                 background: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)'
-              } : {}}
+              } : isFocusMode ? (isDark ? {
+                background: 'rgba(0, 0, 0, 0.85)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)'
+              } : {
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)'
+              }) : {}}
               >
                 {/* Attachment Button */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} 
+                  className={`h-9 w-9 rounded-full ${isCinematic ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} 
                   title="Attach file (images, PDFs, documents)"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Paperclip className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
+                  <Paperclip className="w-5 h-5" style={isCinematic ? { color: '#FFFFFF' } : isFocusMode ? (isDark ? { color: '#FFFFFF' } : {}) : {}} />
                 </Button>
                 {/* @ Mention Button */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                  className={`h-9 w-9 rounded-full ${isCinematic ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
                   title="Mention someone"
                   onClick={() => {
                     // Insert @ at cursor position and focus the input
@@ -2235,7 +2253,7 @@ export default function KaiCommand() {
                     messageInputRef.current?.focus();
                   }}
                 >
-                  <AtSign className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
+                  <AtSign className="w-5 h-5" style={isCinematic ? { color: '#FFFFFF' } : isFocusMode ? (isDark ? { color: '#FFFFFF' } : {}) : {}} />
                 </Button>
                 <MentionInput
                   value={messageInput}
@@ -2245,11 +2263,11 @@ export default function KaiCommand() {
                     handleSendMessage();
                   }}
                   placeholder="Message Kai… Type @ to mention"
-                  theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
+                  theme={isCinematic ? 'cinematic' : isFocusMode ? (isDark ? 'dark' : 'light') : isDark ? 'dark' : 'light'}
                   variant="apple"
                 />
-                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
-                  <Mic className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
+                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${isCinematic ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
+                  <Mic className="w-5 h-5" style={isCinematic ? { color: '#FFFFFF' } : isFocusMode ? (isDark ? { color: '#FFFFFF' } : {}) : {}} />
                 </Button>
                 <Button 
                   size="icon" 
