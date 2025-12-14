@@ -3761,3 +3761,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Handle spreadsheet rosters (CSV parsing with delimiter detection)
 - [x] File intelligence already detects roster files (existing implementation)
 - [x] Test with various roster formats (21 vitest tests passing)
+
+## Excel (.xlsx) Support for Roster Extraction
+- [x] Install xlsx library for Excel parsing
+- [x] Add parseExcelToText function to rosterExtraction.ts
+- [x] Update tRPC extractRoster procedure to handle .xlsx files
+- [x] Add tests for Excel parsing (25 vitest tests passing)
+- [x] Supports both .xlsx and .xls file formats

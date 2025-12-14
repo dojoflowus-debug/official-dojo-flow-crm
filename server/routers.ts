@@ -2896,10 +2896,14 @@ Return the data as a structured JSON object.`
         additionalContext: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { extractRosterFromImage, extractRosterFromText, parseCSVToText } = await import("./rosterExtraction");
+        const { extractRosterFromImage, extractRosterFromText, parseCSVToText, parseExcelFromUrl } = await import("./rosterExtraction");
         
         const isImage = input.fileType.startsWith('image/');
         const isCSV = input.fileType === 'text/csv' || input.fileName.endsWith('.csv');
+        const isExcel = input.fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                        input.fileType === 'application/vnd.ms-excel' ||
+                        input.fileName.endsWith('.xlsx') || 
+                        input.fileName.endsWith('.xls');
         
         if (isImage) {
           // Use vision model for images
@@ -2920,6 +2924,29 @@ Return the data as a structured JSON object.`
               error: "Failed to read CSV file: " + (error instanceof Error ? error.message : "Unknown error"),
             };
           }
+        } else if (isExcel) {
+          // For Excel files, fetch and parse using xlsx library
+          try {
+            const parsedText = await parseExcelFromUrl(input.fileUrl);
+            if (!parsedText) {
+              return {
+                success: false,
+                students: [],
+                confidence: 0,
+                totalFound: 0,
+                error: "Failed to parse Excel file. Please ensure it contains student data.",
+              };
+            }
+            return await extractRosterFromText(parsedText, input.additionalContext);
+          } catch (error) {
+            return {
+              success: false,
+              students: [],
+              confidence: 0,
+              totalFound: 0,
+              error: "Failed to read Excel file: " + (error instanceof Error ? error.message : "Unknown error"),
+            };
+          }
         } else {
           // For PDFs and other documents
           return {
@@ -2927,7 +2954,7 @@ Return the data as a structured JSON object.`
             students: [],
             confidence: 0,
             totalFound: 0,
-            error: "PDF text extraction coming soon. Please upload an image or CSV file for now.",
+            error: "Unsupported file type. Please upload an image, CSV, or Excel (.xlsx) file.",
           };
         }
       }),

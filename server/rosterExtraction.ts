@@ -1,4 +1,5 @@
 import { invokeLLM } from "./_core/llm";
+import * as XLSX from "xlsx";
 
 // Types for extracted student data
 export type ExtractedStudent = {
@@ -308,6 +309,66 @@ export function parseCSVToText(csvContent: string): string {
   }
   
   return result;
+}
+
+// Parse Excel content into text for extraction
+export function parseExcelToText(buffer: Buffer): string {
+  try {
+    const workbook = XLSX.read(buffer, { type: "buffer" });
+    
+    // Get the first sheet
+    const sheetName = workbook.SheetNames[0];
+    if (!sheetName) return "";
+    
+    const worksheet = workbook.Sheets[sheetName];
+    if (!worksheet) return "";
+    
+    // Convert to JSON to get structured data
+    const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { header: 1 });
+    if (jsonData.length === 0) return "";
+    
+    // First row is headers
+    const headers = (jsonData[0] as unknown[]).map(h => String(h || "").trim());
+    if (headers.length === 0) return "";
+    
+    // Build formatted text
+    let result = `Headers: ${headers.join(", ")}\n\n`;
+    
+    for (let i = 1; i < jsonData.length; i++) {
+      const rowData = jsonData[i] as unknown[];
+      if (!rowData || rowData.length === 0) continue;
+      
+      const row: string[] = [];
+      headers.forEach((header, idx) => {
+        const value = rowData[idx];
+        if (value !== undefined && value !== null && value !== "") {
+          row.push(`${header}: ${String(value)}`);
+        }
+      });
+      
+      if (row.length > 0) {
+        result += `Student ${i}: ${row.join(", ")}\n`;
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("Excel parsing error:", error);
+    return "";
+  }
+}
+
+// Parse Excel from URL (fetches and parses)
+export async function parseExcelFromUrl(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return parseExcelToText(buffer);
+  } catch (error) {
+    console.error("Failed to fetch Excel file:", error);
+    return "";
+  }
 }
 
 // Helper to format phone number

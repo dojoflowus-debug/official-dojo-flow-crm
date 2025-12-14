@@ -114,6 +114,31 @@ describe('Roster Extraction Utilities', () => {
     });
   });
 
+  describe('parseExcelToText', () => {
+    it('should export parseExcelToText function', async () => {
+      const { parseExcelToText } = await import('./rosterExtraction');
+      expect(typeof parseExcelToText).toBe('function');
+    });
+
+    it('should export parseExcelFromUrl function', async () => {
+      const { parseExcelFromUrl } = await import('./rosterExtraction');
+      expect(typeof parseExcelFromUrl).toBe('function');
+    });
+
+    it('handles invalid buffer gracefully', async () => {
+      const { parseExcelToText } = await import('./rosterExtraction');
+      const result = parseExcelToText(Buffer.from('invalid data'));
+      // xlsx library may parse invalid data as text, so we just check it doesn't throw
+      expect(typeof result).toBe('string');
+    });
+
+    it('returns empty string for empty buffer', async () => {
+      const { parseExcelToText } = await import('./rosterExtraction');
+      const result = parseExcelToText(Buffer.from([]));
+      expect(result).toBe('');
+    });
+  });
+
   describe('parseCSVToText', () => {
     it('parses comma-separated CSV correctly', () => {
       const csv = 'First Name,Last Name,Email\nJohn,Doe,john@example.com\nJane,Smith,jane@example.com';
