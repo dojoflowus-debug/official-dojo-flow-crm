@@ -3241,7 +3241,7 @@ export default function KaiCommand() {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileSelect}
-                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/plain,.xlsx,.xls,.csv"
                 multiple
                 className="hidden"
               />

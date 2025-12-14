@@ -3855,3 +3855,8 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Update RosterPreviewCard to show duplicate warnings (orange warning box)
 - [x] Allow user to skip duplicates or import anyway (can remove students before import)
 - [x] All 25 roster extraction tests passing
+
+
+## Fix xlsx file upload issue
+- [x] Add xlsx/xls/csv MIME types to file input accept attribute
+- [x] Test xlsx file upload works correctly (MIME type validation passes, all tests passing)
