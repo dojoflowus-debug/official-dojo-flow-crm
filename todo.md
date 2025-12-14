@@ -3645,3 +3645,16 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Optimistic UI updates after save
 - [ ] Save checkpoint
 
+
+## 🐛 BUG FIX: Incorrect Logo in Dark + Cinematic Modes
+
+- [x] Create centralized LOGO_BY_THEME map with hard-coded asset paths
+- [x] Map: light -> dark logo (dark text on light bg)
+- [x] Map: dark -> light logo (white text on dark bg)  
+- [x] Map: cinematic -> light logo (white text on dark bg)
+- [x] Normalize theme string to lowercase before mapping
+- [x] Remove any CSS filters on logo elements
+- [x] Add version suffix to logo filenames for cache busting
+- [x] Test all three themes toggle correctly without refresh
+- [x] Ensure Light mode remains unchanged
+
