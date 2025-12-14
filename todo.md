@@ -3326,3 +3326,33 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Students fetched from students table with belt rank
 - [x] Classes fetched with student counts for bulk messaging
 
+
+
+## 🐛 FIX: Recent Chats Delete/Archive Errors + Soft-Delete
+
+### Backend Changes
+- [x] Add deletedAt column to conversations table
+- [x] Update getConversations to filter out deleted conversations
+- [x] Create/fix DELETE endpoint for soft-delete
+- [x] Add archive endpoint (sets status='archived')
+- [x] Return { success: true } with conversation id
+- [x] Add RBAC check for delete permissions (user ownership verified)
+
+### Frontend Changes
+- [x] Implement optimistic delete (remove from list immediately)
+- [x] Call API and restore on failure
+- [x] Show clean toast error: "Couldn't delete chat. [reason]"
+- [x] Log full error to console
+- [x] Refetch/update local state on success
+
+### Archive vs Delete
+- [x] Archive sets status='archived', not deleted
+- [x] Delete sets deletedAt = now()
+- [x] Archived chats appear in Archived tab
+- [x] Deleted chats don't appear anywhere by default
+
+### Testing
+- [x] Delete chat removes it from Recent Chats
+- [x] Deleted chats don't appear in Active or All lists
+- [x] Archived chats appear under Archived tab
+

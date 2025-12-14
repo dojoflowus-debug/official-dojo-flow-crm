@@ -39,6 +39,7 @@ import {
   AlertCircle,
   Trash2,
   Star,
+  Archive,
   Minimize2,
   Focus,
   Play,
@@ -238,23 +239,93 @@ export default function KaiCommand() {
   const createConversationMutation = trpc.kai.createConversation.useMutation();
   const addMessageMutation = trpc.kai.addMessage.useMutation();
   const deleteConversationMutation = trpc.kai.deleteConversation.useMutation();
+  const archiveConversationMutation = trpc.kai.archiveConversation.useMutation();
+  const unarchiveConversationMutation = trpc.kai.unarchiveConversation.useMutation();
   const utils = trpc.useUtils();
 
-  // Handle delete conversation
+  // Handle delete conversation with optimistic update
   const handleDeleteConversation = async (conversationId: string) => {
+    // Store previous data for rollback
+    const previousConversations = utils.kai.getConversations.getData();
+    
+    // Optimistically remove from list
+    utils.kai.getConversations.setData(undefined, (old) => 
+      old?.filter(conv => conv.id.toString() !== conversationId) ?? []
+    );
+    
+    // Clear selection if deleted conversation was selected
+    if (selectedConversationId === conversationId) {
+      setSelectedConversationId(null);
+      setMessages([]);
+    }
+    
     try {
-      await deleteConversationMutation.mutateAsync({ conversationId: parseInt(conversationId) });
-      // Clear selection if deleted conversation was selected
-      if (selectedConversationId === conversationId) {
-        setSelectedConversationId(null);
-        setMessages([]);
-      }
-      // Refresh conversations list
-      utils.kai.getConversations.invalidate();
+      await deleteConversationMutation.mutateAsync({ id: parseInt(conversationId) });
       toast.success('Conversation deleted');
-    } catch (error) {
+    } catch (error: any) {
+      // Rollback on failure
+      if (previousConversations) {
+        utils.kai.getConversations.setData(undefined, previousConversations);
+      }
       console.error('Failed to delete conversation:', error);
-      toast.error('Failed to delete conversation');
+      const errorMessage = error?.message || 'Unknown error';
+      toast.error(`Couldn't delete chat. ${errorMessage}`);
+    }
+  };
+
+  // Handle archive conversation with optimistic update
+  const handleArchiveConversation = async (conversationId: string) => {
+    // Store previous data for rollback
+    const previousConversations = utils.kai.getConversations.getData();
+    
+    // Optimistically update status in list
+    utils.kai.getConversations.setData(undefined, (old) => 
+      old?.map(conv => 
+        conv.id.toString() === conversationId 
+          ? { ...conv, status: 'archived' as const }
+          : conv
+      ) ?? []
+    );
+    
+    try {
+      await archiveConversationMutation.mutateAsync({ id: parseInt(conversationId) });
+      toast.success('Conversation archived');
+    } catch (error: any) {
+      // Rollback on failure
+      if (previousConversations) {
+        utils.kai.getConversations.setData(undefined, previousConversations);
+      }
+      console.error('Failed to archive conversation:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      toast.error(`Couldn't archive chat. ${errorMessage}`);
+    }
+  };
+
+  // Handle unarchive conversation
+  const handleUnarchiveConversation = async (conversationId: string) => {
+    // Store previous data for rollback
+    const previousConversations = utils.kai.getConversations.getData();
+    
+    // Optimistically update status in list
+    utils.kai.getConversations.setData(undefined, (old) => 
+      old?.map(conv => 
+        conv.id.toString() === conversationId 
+          ? { ...conv, status: 'active' as const }
+          : conv
+      ) ?? []
+    );
+    
+    try {
+      await unarchiveConversationMutation.mutateAsync({ id: parseInt(conversationId) });
+      toast.success('Conversation restored');
+    } catch (error: any) {
+      // Rollback on failure
+      if (previousConversations) {
+        utils.kai.getConversations.setData(undefined, previousConversations);
+      }
+      console.error('Failed to restore conversation:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      toast.error(`Couldn't restore chat. ${errorMessage}`);
     }
   };
 
@@ -1045,6 +1116,8 @@ export default function KaiCommand() {
                         setMessages([]);
                       }}
                       onDelete={handleDeleteConversation}
+                      onArchive={handleArchiveConversation}
+                      onUnarchive={handleUnarchiveConversation}
                       isDark={isDark}
                     />
                   ))}
@@ -1067,6 +1140,8 @@ export default function KaiCommand() {
                         setMessages([]);
                       }}
                       onDelete={handleDeleteConversation}
+                      onArchive={handleArchiveConversation}
+                      onUnarchive={handleUnarchiveConversation}
                       isDark={isDark}
                     />
                   ))}
@@ -1740,6 +1815,8 @@ function ConversationCard({
   isSelected,
   onClick,
   onDelete,
+  onArchive,
+  onUnarchive,
   isDark
 }: { 
   conversation: Conversation; 
@@ -1748,9 +1825,12 @@ function ConversationCard({
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onUnarchive?: (id: string) => void;
   isDark?: boolean;
 }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const isArchived = conversation.status === 'archived';
   
   return (
     <div 
@@ -1781,9 +1861,17 @@ function ConversationCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem onClick={() => toast.info('Archive feature coming soon')}>
-                Archive
-              </DropdownMenuItem>
+              {isArchived ? (
+                <DropdownMenuItem onClick={() => onUnarchive?.(conversation.id)}>
+                  <Archive className="w-4 h-4 mr-2" />
+                  Restore
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => onArchive?.(conversation.id)}>
+                  <Archive className="w-4 h-4 mr-2" />
+                  Archive
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem 
                 className="text-red-600 focus:text-red-600 focus:bg-red-50"
                 onClick={() => setShowDeleteConfirm(true)}

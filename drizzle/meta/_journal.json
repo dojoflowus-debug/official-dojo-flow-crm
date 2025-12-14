@@ -246,6 +246,13 @@
       "when": 1765690504182,
       "tag": "0034_needy_tusk",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1765690991280,
+      "tag": "0035_woozy_slapstick",
+      "breakpoints": true
     }
   ]
 }

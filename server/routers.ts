@@ -1238,19 +1238,23 @@ export const appRouter = router({
   }),
 
   kai: router({
-    // Get all conversations for the current user
+    // Get all conversations for the current user (excludes soft-deleted)
     getConversations: protectedProcedure
       .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { kaiConversations } = await import("../drizzle/schema");
-        const { eq, desc } = await import("drizzle-orm");
+        const { eq, desc, and, isNull } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
+        // Filter out soft-deleted conversations (deletedAt is null)
         const conversations = await db.select()
           .from(kaiConversations)
-          .where(eq(kaiConversations.userId, ctx.user.id))
+          .where(and(
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
           .orderBy(desc(kaiConversations.lastMessageAt));
         
         return conversations;
@@ -1386,29 +1390,112 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Delete a conversation
+    // Soft-delete a conversation (sets deletedAt timestamp)
     deleteConversation: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
-        const { eq, and } = await import("drizzle-orm");
+        const { kaiConversations } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
-        // Delete messages first
-        await db.delete(kaiMessages)
-          .where(eq(kaiMessages.conversationId, input.id));
+        // Verify user owns this conversation and it's not already deleted
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
         
-        // Delete conversation
-        await db.delete(kaiConversations)
+        if (!conversation) {
+          throw new Error("Conversation not found or already deleted");
+        }
+        
+        // Soft-delete by setting deletedAt timestamp
+        await db.update(kaiConversations)
+          .set({ deletedAt: new Date() })
           .where(and(
             eq(kaiConversations.id, input.id),
             eq(kaiConversations.userId, ctx.user.id)
           ));
         
-        return { success: true };
+        return { success: true, id: input.id };
+      }),
+
+    // Archive a conversation (sets status to 'archived')
+    archiveConversation: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation and it's not deleted
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
+        
+        if (!conversation) {
+          throw new Error("Conversation not found or deleted");
+        }
+        
+        // Archive by setting status to 'archived'
+        await db.update(kaiConversations)
+          .set({ status: 'archived' })
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id)
+          ));
+        
+        return { success: true, id: input.id };
+      }),
+
+    // Unarchive a conversation (sets status back to 'active')
+    unarchiveConversation: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation and it's not deleted
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
+        
+        if (!conversation) {
+          throw new Error("Conversation not found or deleted");
+        }
+        
+        // Unarchive by setting status back to 'active'
+        await db.update(kaiConversations)
+          .set({ status: 'active' })
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id)
+          ));
+        
+        return { success: true, id: input.id };
       }),
 
     chat: publicProcedure

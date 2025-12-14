@@ -969,6 +969,8 @@ export const kaiConversations = mysqlTable("kai_conversations", {
   priority: mysqlEnum("priority", ["neutral", "attention", "urgent"]).default("neutral").notNull(),
   /** Last message timestamp */
   lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
+  /** Soft delete timestamp - null means not deleted */
+  deletedAt: timestamp("deletedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
