@@ -1,14 +1,16 @@
-import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { trpc } from '@/lib/trpc';
-import { User, Users, Bot, GraduationCap, Calendar, AtSign } from 'lucide-react';
+import { User, Users, Bot, GraduationCap, Calendar, Shield, Briefcase } from 'lucide-react';
 
-interface Mention {
+export interface Mention {
   type: 'student' | 'staff' | 'kai' | 'class';
   id: number | string;
   displayName: string;
   avatar?: string;
   subtitle?: string;
   studentCount?: number;
+  role?: string;
+  beltRank?: string;
 }
 
 interface MentionInputProps {
@@ -25,6 +27,13 @@ interface MentionInputProps {
 export interface MentionInputRef {
   focus: () => void;
   clear: () => void;
+  getMentions: () => Mention[];
+}
+
+interface SuggestionGroup {
+  title: string;
+  type: 'kai' | 'student' | 'staff' | 'class';
+  items: Mention[];
 }
 
 export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
@@ -51,18 +60,19 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     clear: () => {
       onChange('');
       setMentions([]);
-    }
+    },
+    getMentions: () => mentions
   }));
 
   // Fetch students for suggestions
   const { data: studentsData } = trpc.students.getAll.useQuery(
-    { search: searchQuery, limit: 5 },
+    { search: searchQuery, limit: 8 },
     { enabled: showSuggestions && searchQuery.length > 0 }
   );
 
   // Fetch staff for suggestions
   const { data: staffData } = trpc.staff.getAll.useQuery(
-    { search: searchQuery, limit: 5 },
+    { search: searchQuery, limit: 8 },
     { enabled: showSuggestions && searchQuery.length > 0 }
   );
 
@@ -72,57 +82,73 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     { enabled: showSuggestions && searchQuery.length > 0 }
   );
 
-  // Build suggestions list
-  const suggestions: Mention[] = [];
+  // Build grouped suggestions
+  const suggestionGroups: SuggestionGroup[] = [];
   
-  // Add Kai as first option if query matches
+  // Kai group (always first)
   if (!searchQuery || 'kai'.includes(searchQuery.toLowerCase())) {
-    suggestions.push({
+    suggestionGroups.push({
+      title: 'AI Assistant',
       type: 'kai',
-      id: 'kai',
-      displayName: 'Kai',
-      subtitle: 'AI Assistant',
+      items: [{
+        type: 'kai',
+        id: 'kai',
+        displayName: 'Kai',
+        subtitle: 'AI-powered assistant for your dojo',
+      }]
     });
   }
 
-  // Add students
-  if (studentsData?.students) {
-    studentsData.students.forEach((student: any) => {
-      suggestions.push({
-        type: 'student',
+  // Students group
+  if (studentsData?.students && studentsData.students.length > 0) {
+    suggestionGroups.push({
+      title: 'Students',
+      type: 'student',
+      items: studentsData.students.map((student: any) => ({
+        type: 'student' as const,
         id: student.id,
         displayName: student.name || `${student.firstName} ${student.lastName}`,
         avatar: student.photoUrl,
-        subtitle: `${student.beltRank || 'White'} Belt • Student`,
-      });
+        subtitle: student.email || '',
+        beltRank: student.beltRank || 'White',
+        role: 'Student',
+      }))
     });
   }
 
-  // Add staff
-  if (staffData?.staff) {
-    staffData.staff.forEach((member: any) => {
-      suggestions.push({
-        type: 'staff',
+  // Staff group
+  if (staffData?.staff && staffData.staff.length > 0) {
+    suggestionGroups.push({
+      title: 'Staff & Instructors',
+      type: 'staff',
+      items: staffData.staff.map((member: any) => ({
+        type: 'staff' as const,
         id: member.id,
         displayName: member.name,
         avatar: member.photoUrl,
-        subtitle: member.role || 'Staff',
-      });
+        subtitle: member.email || '',
+        role: member.role || 'Staff',
+      }))
     });
   }
 
-  // Add classes for bulk messaging
-  if (classesData?.classes) {
-    classesData.classes.forEach((cls: any) => {
-      suggestions.push({
-        type: 'class',
+  // Classes group (for bulk messaging)
+  if (classesData?.classes && classesData.classes.length > 0) {
+    suggestionGroups.push({
+      title: 'Classes',
+      type: 'class',
+      items: classesData.classes.map((cls: any) => ({
+        type: 'class' as const,
         id: cls.id,
         displayName: cls.name,
-        subtitle: `${cls.studentCount} students • ${cls.schedule || 'Class'}`,
+        subtitle: cls.schedule || 'Class',
         studentCount: cls.studentCount,
-      });
+      }))
     });
   }
+
+  // Flatten for keyboard navigation
+  const flatSuggestions = suggestionGroups.flatMap(g => g.items);
 
   // Handle input change
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -191,7 +217,7 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
       case 'ArrowDown':
         e.preventDefault();
         setSelectedIndex((prev) => 
-          prev < suggestions.length - 1 ? prev + 1 : prev
+          prev < flatSuggestions.length - 1 ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
@@ -201,18 +227,17 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
       case 'Enter':
       case 'Tab':
         e.preventDefault();
-        if (suggestions[selectedIndex]) {
-          selectSuggestion(suggestions[selectedIndex]);
+        if (flatSuggestions[selectedIndex]) {
+          selectSuggestion(flatSuggestions[selectedIndex]);
         }
         break;
       case 'Escape':
         e.preventDefault();
         setShowSuggestions(false);
-        // Keep focus on input
         inputRef.current?.focus();
         break;
     }
-  }, [showSuggestions, suggestions, selectedIndex, selectSuggestion, onSubmit, value, mentions]);
+  }, [showSuggestions, flatSuggestions, selectedIndex, selectSuggestion, onSubmit, value, mentions]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -248,6 +273,35 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     }
   };
 
+  // Get role icon
+  const getRoleIcon = (role: string) => {
+    const lowerRole = role?.toLowerCase() || '';
+    if (lowerRole.includes('admin') || lowerRole.includes('owner') || lowerRole.includes('manager')) {
+      return <Shield className="w-3 h-3" />;
+    }
+    if (lowerRole.includes('instructor') || lowerRole.includes('coach')) {
+      return <Users className="w-3 h-3" />;
+    }
+    return <Briefcase className="w-3 h-3" />;
+  };
+
+  // Get belt color
+  const getBeltColor = (belt: string) => {
+    const lowerBelt = belt?.toLowerCase() || 'white';
+    const colors: Record<string, string> = {
+      'white': 'bg-gray-200 text-gray-700',
+      'yellow': 'bg-yellow-400 text-yellow-900',
+      'orange': 'bg-orange-400 text-orange-900',
+      'green': 'bg-green-500 text-white',
+      'blue': 'bg-blue-500 text-white',
+      'purple': 'bg-purple-500 text-white',
+      'brown': 'bg-amber-700 text-white',
+      'black': 'bg-gray-900 text-white',
+      'red': 'bg-red-600 text-white',
+    };
+    return colors[lowerBelt] || colors['white'];
+  };
+
   // Determine theme-based styling
   const isDark = theme === 'dark' || theme === 'cinematic';
   const isCinematic = theme === 'cinematic';
@@ -273,6 +327,9 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
             : 'bg-white/95 backdrop-blur-xl border border-slate-200/80 shadow-[0_8px_32px_rgba(0,0,0,0.12)]'
       }`
     : 'absolute bottom-full left-0 right-0 mb-2 bg-popover border border-border rounded-lg shadow-lg overflow-hidden z-50';
+
+  // Track global index for keyboard navigation
+  let globalIndex = 0;
 
   return (
     <div className={`relative flex-1 ${className}`}>
@@ -300,8 +357,8 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
         }}
       />
 
-      {/* Suggestions dropdown - Apple-style */}
-      {showSuggestions && suggestions.length > 0 && (
+      {/* Suggestions dropdown - Apple-style with grouped sections */}
+      {showSuggestions && flatSuggestions.length > 0 && (
         <div ref={suggestionsRef} className={dropdownClasses}>
           {/* Header */}
           <div className={`px-4 py-2.5 text-xs font-medium tracking-wide uppercase ${
@@ -314,103 +371,148 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
             Mention someone
           </div>
           
-          {/* Suggestions list */}
-          <div className="max-h-72 overflow-y-auto py-1">
-            {suggestions.map((suggestion, index) => (
-              <button
-                key={`${suggestion.type}-${suggestion.id}`}
-                onClick={() => selectSuggestion(suggestion)}
-                onMouseEnter={() => setSelectedIndex(index)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 ${
-                  index === selectedIndex 
-                    ? isCinematic 
-                      ? 'bg-white/10' 
-                      : isDark 
-                        ? 'bg-white/5' 
-                        : 'bg-slate-50'
-                    : ''
+          {/* Grouped suggestions list */}
+          <div className="max-h-80 overflow-y-auto">
+            {suggestionGroups.map((group, groupIdx) => (
+              <div key={group.type}>
+                {/* Section header */}
+                <div className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-2 ${
+                  groupIdx > 0 ? 'border-t' : ''
                 } ${
                   isCinematic 
-                    ? 'hover:bg-white/10' 
+                    ? 'text-white/40 border-white/10 bg-white/5' 
                     : isDark 
-                      ? 'hover:bg-white/5' 
-                      : 'hover:bg-slate-50'
-                }`}
-              >
-                {/* Avatar or icon */}
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center overflow-hidden shrink-0 ${
-                  suggestion.avatar 
-                    ? '' 
-                    : isCinematic 
-                      ? 'bg-white/10' 
-                      : isDark 
-                        ? 'bg-white/5' 
-                        : 'bg-slate-100'
+                      ? 'text-white/30 border-white/5 bg-white/[0.02]' 
+                      : 'text-slate-400 border-slate-100 bg-slate-50/50'
                 }`}>
-                  {suggestion.avatar ? (
-                    <img
-                      src={suggestion.avatar}
-                      alt={suggestion.displayName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    getIcon(suggestion.type, 'md')
-                  )}
+                  {getIcon(group.type, 'sm')}
+                  {group.title}
+                  <span className={`ml-auto text-[10px] font-normal ${
+                    isCinematic ? 'text-white/30' : isDark ? 'text-white/20' : 'text-slate-300'
+                  }`}>
+                    {group.items.length}
+                  </span>
                 </div>
                 
-                {/* Name and subtitle */}
-                <div className="flex-1 min-w-0">
-                  <div className={`font-medium text-[15px] truncate ${
-                    isCinematic 
-                      ? 'text-white' 
-                      : isDark 
-                        ? 'text-white' 
-                        : 'text-slate-800'
-                  }`}>
-                    {suggestion.displayName}
-                  </div>
-                  {suggestion.subtitle && (
-                    <div className={`text-xs truncate mt-0.5 ${
-                      isCinematic 
-                        ? 'text-white/50' 
-                        : isDark 
-                          ? 'text-white/40' 
-                          : 'text-slate-500'
-                    }`}>
-                      {suggestion.subtitle}
-                    </div>
-                  )}
-                </div>
+                {/* Section items */}
+                {group.items.map((suggestion) => {
+                  const currentIndex = globalIndex++;
+                  return (
+                    <button
+                      key={`${suggestion.type}-${suggestion.id}`}
+                      onClick={() => selectSuggestion(suggestion)}
+                      onMouseEnter={() => setSelectedIndex(currentIndex)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 ${
+                        currentIndex === selectedIndex 
+                          ? isCinematic 
+                            ? 'bg-white/10' 
+                            : isDark 
+                              ? 'bg-white/5' 
+                              : 'bg-slate-50'
+                          : ''
+                      } ${
+                        isCinematic 
+                          ? 'hover:bg-white/10' 
+                          : isDark 
+                            ? 'hover:bg-white/5' 
+                            : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      {/* Avatar or icon */}
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center overflow-hidden shrink-0 ${
+                        suggestion.avatar 
+                          ? '' 
+                          : isCinematic 
+                            ? 'bg-white/10' 
+                            : isDark 
+                              ? 'bg-white/5' 
+                              : 'bg-slate-100'
+                      }`}>
+                        {suggestion.avatar ? (
+                          <img
+                            src={suggestion.avatar}
+                            alt={suggestion.displayName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          getIcon(suggestion.type, 'md')
+                        )}
+                      </div>
+                      
+                      {/* Name and subtitle */}
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-medium text-[15px] truncate ${
+                          isCinematic 
+                            ? 'text-white' 
+                            : isDark 
+                              ? 'text-white' 
+                              : 'text-slate-800'
+                        }`}>
+                          {suggestion.displayName}
+                        </div>
+                        {suggestion.subtitle && (
+                          <div className={`text-xs truncate mt-0.5 ${
+                            isCinematic 
+                              ? 'text-white/50' 
+                              : isDark 
+                                ? 'text-white/40' 
+                                : 'text-slate-500'
+                          }`}>
+                            {suggestion.subtitle}
+                          </div>
+                        )}
+                      </div>
 
-                {/* Type badge - Apple pill style */}
-                <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 ${
-                  suggestion.type === 'kai' 
-                    ? isCinematic 
-                      ? 'bg-red-500/20 text-red-300' 
-                      : isDark 
-                        ? 'bg-red-500/15 text-red-400' 
-                        : 'bg-red-50 text-red-600'
-                    : suggestion.type === 'student'
-                    ? isCinematic 
-                      ? 'bg-blue-500/20 text-blue-300' 
-                      : isDark 
-                        ? 'bg-blue-500/15 text-blue-400' 
-                        : 'bg-blue-50 text-blue-600'
-                    : suggestion.type === 'class'
-                    ? isCinematic 
-                      ? 'bg-purple-500/20 text-purple-300' 
-                      : isDark 
-                        ? 'bg-purple-500/15 text-purple-400' 
-                        : 'bg-purple-50 text-purple-600'
-                    : isCinematic 
-                      ? 'bg-green-500/20 text-green-300' 
-                      : isDark 
-                        ? 'bg-green-500/15 text-green-400' 
-                        : 'bg-green-50 text-green-600'
-                }`}>
-                  {suggestion.type === 'kai' ? 'AI' : suggestion.type === 'class' ? `${suggestion.studentCount}` : suggestion.type}
-                </span>
-              </button>
+                      {/* Badge - Role for staff, Belt for students, AI for Kai */}
+                      {suggestion.type === 'kai' && (
+                        <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1 ${
+                          isCinematic 
+                            ? 'bg-gradient-to-r from-red-500/30 to-orange-500/30 text-red-300' 
+                            : isDark 
+                              ? 'bg-gradient-to-r from-red-500/20 to-orange-500/20 text-red-400' 
+                              : 'bg-gradient-to-r from-red-50 to-orange-50 text-red-600'
+                        }`}>
+                          <Bot className="w-3 h-3" />
+                          AI
+                        </span>
+                      )}
+                      
+                      {suggestion.type === 'student' && suggestion.beltRank && (
+                        <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1 ${getBeltColor(suggestion.beltRank)}`}>
+                          <GraduationCap className="w-3 h-3" />
+                          {suggestion.beltRank}
+                        </span>
+                      )}
+                      
+                      {suggestion.type === 'staff' && suggestion.role && (
+                        <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1 ${
+                          isCinematic 
+                            ? 'bg-green-500/20 text-green-300' 
+                            : isDark 
+                              ? 'bg-green-500/15 text-green-400' 
+                              : 'bg-green-50 text-green-600'
+                        }`}>
+                          {getRoleIcon(suggestion.role)}
+                          {suggestion.role}
+                        </span>
+                      )}
+                      
+                      {suggestion.type === 'class' && (
+                        <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1 ${
+                          isCinematic 
+                            ? 'bg-purple-500/20 text-purple-300' 
+                            : isDark 
+                              ? 'bg-purple-500/15 text-purple-400' 
+                              : 'bg-purple-50 text-purple-600'
+                        }`}>
+                          <Calendar className="w-3 h-3" />
+                          {suggestion.studentCount} students
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             ))}
           </div>
           

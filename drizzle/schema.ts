@@ -1403,3 +1403,81 @@ export const studentPasswords = mysqlTable("student_passwords", {
 
 export type StudentPassword = typeof studentPasswords.$inferSelect;
 export type InsertStudentPassword = typeof studentPasswords.$inferInsert;
+
+
+/**
+ * Directed Messages table - Messages created from @mentions
+ * Polymorphic recipients: student, staff, or group (class)
+ * Used for routing messages to appropriate inboxes
+ */
+export const directedMessages = mysqlTable("directed_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Recipient type: student, staff, or group */
+  recipientType: mysqlEnum("recipientType", ["student", "staff", "group"]).notNull(),
+  /** Recipient ID - studentId, staffId (team_members.id), or classId */
+  recipientId: int("recipientId").notNull(),
+  /** Sender user ID (from users table) */
+  senderId: int("senderId").notNull(),
+  /** Sender name for display */
+  senderName: varchar("senderName", { length: 255 }).notNull(),
+  /** Message content */
+  content: text("content").notNull(),
+  /** Optional subject line */
+  subject: varchar("subject", { length: 500 }),
+  /** Source conversation ID (kai_conversations.id) if from Kai Command */
+  sourceConversationId: int("sourceConversationId"),
+  /** Source message ID (kai_messages.id) if from Kai Command */
+  sourceMessageId: int("sourceMessageId"),
+  /** Whether @Kai was also mentioned (Kai should respond) */
+  kaiMentioned: int("kaiMentioned").default(0).notNull(),
+  /** Whether the message has been read */
+  isRead: int("isRead").default(0).notNull(),
+  /** Read timestamp */
+  readAt: timestamp("readAt"),
+  /** Message priority */
+  priority: mysqlEnum("priority", ["normal", "high", "urgent"]).default("normal").notNull(),
+  /** Message label for categorization */
+  label: varchar("label", { length: 100 }).default("message"),
+  /** Attachments JSON array [{url, name, type, size}] */
+  attachments: text("attachments"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DirectedMessage = typeof directedMessages.$inferSelect;
+export type InsertDirectedMessage = typeof directedMessages.$inferInsert;
+
+/**
+ * Staff Messages table - Messages in staff inbox
+ * Similar to studentMessages but for staff members
+ */
+export const staffMessages = mysqlTable("staff_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to team_members table - the staff member */
+  staffId: int("staffId").notNull(),
+  /** Sender type: staff, student, system */
+  senderType: mysqlEnum("senderType", ["staff", "student", "system"]).notNull(),
+  /** Sender ID - staffId, studentId, or null for system */
+  senderId: int("senderId"),
+  /** Sender name for display */
+  senderName: varchar("senderName", { length: 255 }).notNull(),
+  /** Message subject */
+  subject: varchar("subject", { length: 500 }),
+  /** Message content */
+  content: text("content").notNull(),
+  /** Whether the message has been read */
+  isRead: int("isRead").default(0).notNull(),
+  /** Parent message ID for replies (thread support) */
+  parentMessageId: int("parentMessageId"),
+  /** Message priority */
+  priority: mysqlEnum("priority", ["normal", "high", "urgent"]).default("normal").notNull(),
+  /** Read timestamp */
+  readAt: timestamp("readAt"),
+  /** Attachments JSON array */
+  attachments: text("attachments"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StaffMessage = typeof staffMessages.$inferSelect;
+export type InsertStaffMessage = typeof staffMessages.$inferInsert;

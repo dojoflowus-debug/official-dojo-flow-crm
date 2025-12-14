@@ -239,6 +239,13 @@
       "when": 1765689190610,
       "tag": "0033_absent_champions",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1765690504182,
+      "tag": "0034_needy_tusk",
+      "breakpoints": true
     }
   ]
 }

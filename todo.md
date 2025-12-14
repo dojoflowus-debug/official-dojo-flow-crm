@@ -3267,3 +3267,62 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Handle captured photo the same as file upload
 - [x] Style camera button consistently with upload button
 - [x] Test on mobile viewport
+
+## Feature: @Mentions Expansion + Data Integration
+
+### Part A: @Mentions must include Staff + Students + Kai
+- [ ] Dropdown sections in order: Kai, Students, Staff
+- [ ] Staff searchable by first/last name, role, location
+- [ ] Students searchable by name, belt rank
+- [ ] Each item shows: Avatar, Display Name, Role/Belt badge
+- [ ] Mention insertion creates chip token with type/id/displayName
+- [ ] Routing: Kai only responds if @Kai mentioned
+- [ ] Keyboard navigation: ↑↓ navigate, Enter select, Esc close
+
+### Part B: Delivery behavior for mentions
+- [ ] @Student creates Directed Message in Student Portal inbox
+- [ ] @Student appears in Student Card Notes with "Message" label
+- [ ] @Staff creates Directed Message in Staff inbox
+- [ ] @Staff appears in Staff profile Notes/Comms
+- [ ] @Kai processes message normally (no auto-reply to human-only messages)
+- [ ] Messages auditable with timestamp + sender
+
+### Part C: Staff Dashboard data integration
+- [ ] Staff uses same backend/database as Students/Leads/Classes
+- [ ] Staff linked to locations, classes, students, messages, schedules
+- [ ] Staff edits to student notes show everywhere
+- [ ] Staff attendance updates reflect in student progress
+- [ ] RBAC: Owner/Admin/Manager/Instructor/FrontDesk roles
+- [ ] All dashboards call same canonical endpoints
+
+### Part D: Acceptance tests
+- [ ] Typing "@" shows Kai + Students + Staff
+- [ ] Selecting staff mention sends to Staff inbox, no Kai response
+- [ ] Staff dashboard updates appear on Student Card
+- [ ] No mock data - connected to real database
+- [ ] Permissions prevent unauthorized access
+
+
+## ✅ COMPLETED: Expand @Mentions to Include Staff and Students
+
+### Part A: Mention UI & Data
+- [x] Update MentionInput to show grouped sections (Kai first, then Students, then Staff)
+- [x] Add section headers with icons for each group
+- [x] Show role badges for Staff (Instructor, Admin, etc.)
+- [x] Show belt rank badges for Students
+- [x] Fetch staff from team_members table (shared database)
+- [x] Fetch students from students table
+
+### Part B: Delivery Behavior
+- [x] Create directedMessages table for routing @mentions
+- [x] Create staffMessages table for staff inbox
+- [x] When @Staff is mentioned, route message to Staff inbox
+- [x] @Kai only responds when explicitly mentioned
+- [x] Show toast confirmation when message is routed
+- [x] Added messaging router with sendDirectedMessage procedure
+
+### Part C: Data Integration
+- [x] Staff dashboard uses shared team_members table
+- [x] Students fetched from students table with belt rank
+- [x] Classes fetched with student counts for bulk messaging
+

@@ -457,6 +457,177 @@ export const appRouter = router({
       }),
   }),
 
+  // Messaging router for @mentions and directed messages
+  messaging: router({
+    // Get classes for mention dropdown (bulk messaging)
+    getClassesForMention: publicProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        limit: z.number().optional().default(5),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { classes, classEnrollments } = await import("../drizzle/schema");
+        const { eq, like, sql } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { classes: [] };
+        
+        // Get classes with student counts
+        let query;
+        if (input.search && input.search.length > 0) {
+          const searchPattern = `%${input.search}%`;
+          query = db.select({
+            id: classes.id,
+            name: classes.name,
+            schedule: classes.schedule,
+            studentCount: sql<number>`(SELECT COUNT(*) FROM class_enrollments WHERE class_enrollments.classId = ${classes.id})`,
+          }).from(classes).where(like(classes.name, searchPattern));
+        } else {
+          query = db.select({
+            id: classes.id,
+            name: classes.name,
+            schedule: classes.schedule,
+            studentCount: sql<number>`(SELECT COUNT(*) FROM class_enrollments WHERE class_enrollments.classId = ${classes.id})`,
+          }).from(classes);
+        }
+        
+        const result = await query.limit(input.limit);
+        
+        return {
+          classes: result.map(c => ({
+            id: c.id,
+            name: c.name,
+            schedule: c.schedule || '',
+            studentCount: Number(c.studentCount) || 0,
+          }))
+        };
+      }),
+    
+    // Send a directed message from @mention
+    sendDirectedMessage: protectedProcedure
+      .input(z.object({
+        recipientType: z.enum(['student', 'staff', 'group']),
+        recipientId: z.number(),
+        content: z.string().min(1),
+        subject: z.string().optional(),
+        sourceConversationId: z.number().optional(),
+        sourceMessageId: z.number().optional(),
+        kaiMentioned: z.boolean().default(false),
+        attachments: z.array(z.object({
+          url: z.string(),
+          name: z.string(),
+          type: z.string(),
+          size: z.number(),
+        })).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { directedMessages, studentMessages, staffMessages } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const senderName = ctx.user?.name || 'Unknown';
+        const senderId = ctx.user?.id || 0;
+        
+        // Create the directed message record
+        const [directedMsg] = await db.insert(directedMessages).values({
+          recipientType: input.recipientType,
+          recipientId: input.recipientId,
+          senderId,
+          senderName,
+          content: input.content,
+          subject: input.subject,
+          sourceConversationId: input.sourceConversationId,
+          sourceMessageId: input.sourceMessageId,
+          kaiMentioned: input.kaiMentioned ? 1 : 0,
+          attachments: input.attachments ? JSON.stringify(input.attachments) : null,
+          label: 'message',
+        }).$returningId();
+        
+        // Also create a record in the appropriate inbox table
+        if (input.recipientType === 'student') {
+          await db.insert(studentMessages).values({
+            studentId: input.recipientId,
+            senderType: 'staff',
+            senderId,
+            senderName,
+            subject: input.subject || 'New Message',
+            content: input.content,
+          });
+        } else if (input.recipientType === 'staff') {
+          await db.insert(staffMessages).values({
+            staffId: input.recipientId,
+            senderType: 'staff',
+            senderId,
+            senderName,
+            subject: input.subject || 'New Message',
+            content: input.content,
+            attachments: input.attachments ? JSON.stringify(input.attachments) : null,
+          });
+        }
+        
+        return {
+          success: true,
+          messageId: directedMsg.id,
+          kaiShouldRespond: input.kaiMentioned,
+        };
+      }),
+    
+    // Get staff inbox messages
+    getStaffInbox: protectedProcedure
+      .input(z.object({
+        staffId: z.number().optional(),
+        limit: z.number().optional().default(50),
+        offset: z.number().optional().default(0),
+      }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { staffMessages } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { messages: [], total: 0 };
+        
+        // Use provided staffId or try to get from user context
+        const staffId = input.staffId;
+        if (!staffId) return { messages: [], total: 0 };
+        
+        const messages = await db.select()
+          .from(staffMessages)
+          .where(eq(staffMessages.staffId, staffId))
+          .orderBy(desc(staffMessages.createdAt))
+          .limit(input.limit)
+          .offset(input.offset);
+        
+        return {
+          messages,
+          total: messages.length,
+        };
+      }),
+    
+    // Mark staff message as read
+    markStaffMessageRead: protectedProcedure
+      .input(z.object({
+        messageId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { staffMessages } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        await db.update(staffMessages)
+          .set({ isRead: 1, readAt: new Date() })
+          .where(eq(staffMessages.id, input.messageId));
+        
+        return { success: true };
+      }),
+  }),
+
   // CRM Dashboard APIs
   dashboard: router({
     stats: publicProcedure.query(async () => {

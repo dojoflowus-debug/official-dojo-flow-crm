@@ -620,6 +620,38 @@ export default function KaiCommand() {
     return type.startsWith('image/');
   };
 
+  // Mutation for sending directed messages
+  const sendDirectedMessageMutation = trpc.messaging.sendDirectedMessage.useMutation();
+  
+  // Parse @mentions from message content
+  const parseMentions = (content: string) => {
+    const mentionRegex = /@([A-Za-z][A-Za-z0-9.\s]*?)(?=\s|$|,|\.|!|\?)/g;
+    const mentions: { type: 'student' | 'staff' | 'kai'; name: string; id?: number }[] = [];
+    let match;
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      const mentionName = match[1].trim();
+      
+      // Check if it's Kai
+      if (mentionName.toLowerCase() === 'kai') {
+        mentions.push({ type: 'kai', name: 'Kai' });
+        continue;
+      }
+      
+      // Check if it's a staff member
+      const staffMember = staffData?.staff?.find(
+        (s: any) => s.name.toLowerCase() === mentionName.toLowerCase() ||
+                    s.fullName?.toLowerCase() === mentionName.toLowerCase()
+      );
+      
+      if (staffMember) {
+        mentions.push({ type: 'staff', name: staffMember.name, id: staffMember.id });
+      }
+    }
+    
+    return mentions;
+  };
+
   const handleSendMessage = async () => {
     if (!messageInput.trim() && attachments.length === 0) return;
     
@@ -637,6 +669,34 @@ export default function KaiCommand() {
         messageContent += '\n\nAttachments:\n' + attachmentUrls;
       } else {
         messageContent = 'Attachments:\n' + attachmentUrls;
+      }
+    }
+    
+    // Parse mentions from the message
+    const mentions = parseMentions(messageContent);
+    const kaiMentioned = mentions.some(m => m.type === 'kai');
+    const staffMentions = mentions.filter(m => m.type === 'staff' && m.id);
+    
+    // Route messages to staff inboxes
+    for (const staffMention of staffMentions) {
+      if (staffMention.id) {
+        try {
+          await sendDirectedMessageMutation.mutateAsync({
+            recipientType: 'staff',
+            recipientId: staffMention.id,
+            content: messageContent,
+            kaiMentioned,
+            attachments: attachments.map(att => ({
+              url: att.url || '',
+              name: att.fileName,
+              type: att.fileType,
+              size: att.fileSize,
+            })),
+          });
+          toast.success(`Message sent to ${staffMention.name}'s inbox`);
+        } catch (error) {
+          console.error('Failed to send directed message:', error);
+        }
       }
     }
 
@@ -671,50 +731,60 @@ export default function KaiCommand() {
       }
     }
 
-    try {
-      const stats = statsQuery.data;
-      const response = await kaiChatMutation.mutateAsync({
-        message: currentInput,
-        context: stats ? {
-          totalStudents: stats.totalStudents,
-          activeStudents: stats.activeStudents,
-          totalLeads: stats.totalLeads,
-          totalClasses: stats.totalClasses
-        } : undefined
-      });
+    // Only get Kai response if @Kai was mentioned
+    if (kaiMentioned) {
+      try {
+        const stats = statsQuery.data;
+        const response = await kaiChatMutation.mutateAsync({
+          message: currentInput,
+          context: stats ? {
+            totalStudents: stats.totalStudents,
+            activeStudents: stats.activeStudents,
+            totalLeads: stats.totalLeads,
+            totalClasses: stats.totalClasses
+          } : undefined
+        });
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response.response,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: response.response,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
 
-      // Save AI response to database
-      if (conversationId) {
-        try {
-          await addMessageMutation.mutateAsync({
-            conversationId,
-            role: 'assistant',
-            content: response.response
-          });
-          // Refresh conversations to update preview
-          utils.kai.getConversations.invalidate();
-        } catch (error) {
-          console.error('Failed to save AI message:', error);
+        // Save AI response to database
+        if (conversationId) {
+          try {
+            await addMessageMutation.mutateAsync({
+              conversationId,
+              role: 'assistant',
+              content: response.response
+            });
+            // Refresh conversations to update preview
+            utils.kai.getConversations.invalidate();
+          } catch (error) {
+            console.error('Failed to save AI message:', error);
+          }
         }
+      } catch (error) {
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `I can help you with "${currentInput}". Let me analyze your dojo's performance metrics and identify key areas for growth.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `I can help you with "${currentInput}". Let me analyze your dojo's performance metrics and identify key areas for growth.`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    } finally {
+    } else {
+      // No @Kai mention - just show message was sent
       setIsLoading(false);
+      if (staffMentions.length === 0) {
+        // No mentions at all - show hint
+        toast.info('Tip: Use @Kai to get AI assistance or @Staff to message team members');
+      }
     }
   };
 
