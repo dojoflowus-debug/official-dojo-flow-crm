@@ -171,6 +171,12 @@ export default function KaiCommand() {
     sourceFile: string;
   } | null>(null);
   const [isCreatingStudents, setIsCreatingStudents] = useState(false);
+  const [isCheckingStudentDuplicates, setIsCheckingStudentDuplicates] = useState(false);
+  const [rosterDuplicates, setRosterDuplicates] = useState<Array<{
+    importIndex: number;
+    existingStudent: { id: number; firstName: string; lastName: string; email: string | null };
+    matchType: 'exact' | 'name_only' | 'email_match' | 'phone_match';
+  }>>([]);
   
   // Pasted structured data state
   const [pastedData, setPastedData] = useState<DetectedStructuredData | null>(null);
@@ -1738,6 +1744,27 @@ export default function KaiCommand() {
                   warnings: result.warnings,
                   sourceFile: attachment.fileName,
                 });
+                setRosterDuplicates([]);
+                
+                // Check for duplicates
+                setIsCheckingStudentDuplicates(true);
+                try {
+                  const dupResult = await trpc.kai.checkDuplicateStudents.mutate({
+                    students: result.students.map(s => ({
+                      firstName: s.firstName,
+                      lastName: s.lastName,
+                      email: s.email,
+                      phone: s.phone,
+                    })),
+                  });
+                  if (dupResult.hasDuplicates) {
+                    setRosterDuplicates(dupResult.duplicates);
+                  }
+                } catch (dupErr) {
+                  console.error('Student duplicate check error:', dupErr);
+                } finally {
+                  setIsCheckingStudentDuplicates(false);
+                }
                 
                 const successRosterMsg: Message = {
                   id: `roster-success-${Date.now()}`,
@@ -1850,6 +1877,7 @@ export default function KaiCommand() {
         };
         setMessages(prev => [...prev, successMsg]);
         setRosterPreview(null);
+        setRosterDuplicates([]);
       }
     } catch (err) {
       console.error('Student creation error:', err);
@@ -1862,6 +1890,7 @@ export default function KaiCommand() {
   // Cancel roster preview
   const handleCancelRoster = () => {
     setRosterPreview(null);
+    setRosterDuplicates([]);
     const cancelMsg: Message = {
       id: `roster-cancel-${Date.now()}`,
       role: 'assistant',
@@ -1904,6 +1933,27 @@ export default function KaiCommand() {
           sourceFile: 'Pasted Data',
         });
         setPastedData(null);
+        setRosterDuplicates([]);
+        
+        // Check for duplicates
+        setIsCheckingStudentDuplicates(true);
+        try {
+          const dupResult = await trpc.kai.checkDuplicateStudents.mutate({
+            students: students.map(s => ({
+              firstName: s.firstName,
+              lastName: s.lastName,
+              email: s.email,
+              phone: s.phone,
+            })),
+          });
+          if (dupResult.hasDuplicates) {
+            setRosterDuplicates(dupResult.duplicates);
+          }
+        } catch (dupErr) {
+          console.error('Student duplicate check error:', dupErr);
+        } finally {
+          setIsCheckingStudentDuplicates(false);
+        }
         
         const confirmMsg: Message = {
           id: `confirm-roster-${Date.now()}`,
@@ -3128,9 +3178,11 @@ export default function KaiCommand() {
                         students={rosterPreview.students}
                         confidence={rosterPreview.confidence}
                         warnings={rosterPreview.warnings}
+                        duplicates={rosterDuplicates}
                         onConfirm={handleConfirmRoster}
                         onCancel={handleCancelRoster}
                         isProcessing={isCreatingStudents}
+                        isCheckingDuplicates={isCheckingStudentDuplicates}
                         isDark={isDark}
                         isCinematic={isCinematic}
                         isFocusMode={isFocusMode}

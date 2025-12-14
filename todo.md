@@ -3847,3 +3847,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Update SchedulePreviewCard to show duplicate warnings (orange warning box)
 - [x] Allow user to skip duplicates or import anyway (can remove classes before import)
 - [x] All 10 schedule extraction tests passing
+
+## Duplicate Detection for Student Roster Import
+- [x] Add server procedure to check for duplicate students (kai.checkDuplicateStudents)
+- [x] Check by student name, email, and phone combinations (exact, name_only, email_match, phone_match)
+- [x] Return list of potential duplicates with existing student IDs
+- [x] Update RosterPreviewCard to show duplicate warnings (orange warning box)
+- [x] Allow user to skip duplicates or import anyway (can remove students before import)
+- [x] All 25 roster extraction tests passing

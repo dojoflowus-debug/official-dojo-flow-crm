@@ -3104,6 +3104,102 @@ Return the data as a structured JSON object.`
         }
       }),
     
+    // Check for duplicate students before import
+    checkDuplicateStudents: protectedProcedure
+      .input(z.object({
+        students: z.array(z.object({
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string().optional(),
+          phone: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        const { eq, or, and, like } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Get all existing students
+        const existingStudents = await db.select().from(students);
+        
+        const duplicates: Array<{
+          importIndex: number;
+          importStudent: { firstName: string; lastName: string; email?: string; phone?: string };
+          existingStudent: { id: number; firstName: string; lastName: string; email: string | null };
+          matchType: 'exact' | 'name_only' | 'email_match' | 'phone_match';
+        }> = [];
+        
+        for (let i = 0; i < input.students.length; i++) {
+          const importStudent = input.students[i];
+          const importFullName = `${importStudent.firstName} ${importStudent.lastName}`.toLowerCase().trim();
+          
+          for (const existing of existingStudents) {
+            const existingFullName = `${existing.firstName} ${existing.lastName}`.toLowerCase().trim();
+            
+            // Check for exact match (same name and email)
+            if (existingFullName === importFullName && 
+                importStudent.email && existing.email && 
+                importStudent.email.toLowerCase() === existing.email.toLowerCase()) {
+              duplicates.push({
+                importIndex: i,
+                importStudent,
+                existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
+                matchType: 'exact',
+              });
+              break;
+            }
+            
+            // Check for email match only
+            if (importStudent.email && existing.email && 
+                importStudent.email.toLowerCase() === existing.email.toLowerCase()) {
+              duplicates.push({
+                importIndex: i,
+                importStudent,
+                existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
+                matchType: 'email_match',
+              });
+              break;
+            }
+            
+            // Check for name-only match
+            if (existingFullName === importFullName) {
+              duplicates.push({
+                importIndex: i,
+                importStudent,
+                existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
+                matchType: 'name_only',
+              });
+              break;
+            }
+            
+            // Check for phone match
+            if (importStudent.phone && existing.phone) {
+              const importPhoneDigits = importStudent.phone.replace(/\D/g, '');
+              const existingPhoneDigits = existing.phone.replace(/\D/g, '');
+              if (importPhoneDigits.length >= 10 && existingPhoneDigits.length >= 10 &&
+                  importPhoneDigits.slice(-10) === existingPhoneDigits.slice(-10)) {
+                duplicates.push({
+                  importIndex: i,
+                  importStudent,
+                  existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
+                  matchType: 'phone_match',
+                });
+                break;
+              }
+            }
+          }
+        }
+        
+        return {
+          hasDuplicates: duplicates.length > 0,
+          duplicates,
+          totalChecked: input.students.length,
+        };
+      }),
+    
     // Create students from extracted roster data
     createStudentsFromRoster: protectedProcedure
       .input(z.object({

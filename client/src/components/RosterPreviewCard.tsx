@@ -38,13 +38,21 @@ export type ExtractedStudent = {
   membershipStatus?: string;
 };
 
+export type StudentDuplicateInfo = {
+  importIndex: number;
+  existingStudent: { id: number; firstName: string; lastName: string; email: string | null };
+  matchType: 'exact' | 'name_only' | 'email_match' | 'phone_match';
+};
+
 type RosterPreviewCardProps = {
   students: ExtractedStudent[];
   confidence: number;
   warnings?: string[];
+  duplicates?: StudentDuplicateInfo[];
   onConfirm: (students: ExtractedStudent[]) => void;
   onCancel: () => void;
   isProcessing?: boolean;
+  isCheckingDuplicates?: boolean;
   isDark?: boolean;
   isCinematic?: boolean;
   isFocusMode?: boolean;
@@ -67,9 +75,11 @@ export function RosterPreviewCard({
   students: initialStudents,
   confidence,
   warnings,
+  duplicates = [],
   onConfirm,
   onCancel,
   isProcessing = false,
+  isCheckingDuplicates = false,
   isDark = false,
   isCinematic = false,
   isFocusMode = false,
@@ -153,6 +163,60 @@ export function RosterPreviewCard({
                   <p key={i}>{w}</p>
                 ))}
               </div>
+            </div>
+          )}
+          
+          {/* Duplicate Warnings */}
+          {duplicates.length > 0 && (
+            <div className={`p-3 rounded-lg border ${
+              isCinematic || isFocusMode || isDark ? 'bg-orange-500/10 border-orange-500/30' : 'bg-orange-50 border-orange-200'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4 text-orange-500" />
+                <span className={`text-sm font-medium ${
+                  isCinematic || isFocusMode || isDark ? 'text-orange-400' : 'text-orange-700'
+                }`}>
+                  {duplicates.length} potential duplicate{duplicates.length > 1 ? 's' : ''} found
+                </span>
+              </div>
+              <div className="space-y-1">
+                {duplicates.map((dup, i) => {
+                  const student = students[dup.importIndex];
+                  if (!student) return null;
+                  const matchLabel = dup.matchType === 'exact' ? 'Exact match' 
+                    : dup.matchType === 'name_only' ? 'Same name' 
+                    : dup.matchType === 'email_match' ? 'Same email'
+                    : 'Same phone';
+                  return (
+                    <div key={i} className={`text-xs ${
+                      isCinematic || isFocusMode || isDark ? 'text-orange-300' : 'text-orange-600'
+                    }`}>
+                      <span className="font-medium">{student.firstName} {student.lastName}</span>
+                      {student.email && <span className="ml-1">({student.email})</span>}
+                      <span className="mx-1">→</span>
+                      <span className="italic">{matchLabel}</span> with existing "{dup.existingStudent.firstName} {dup.existingStudent.lastName}"
+                      {dup.existingStudent.email && <span className="ml-1">({dup.existingStudent.email})</span>}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className={`text-xs mt-2 ${
+                isCinematic || isFocusMode || isDark ? 'text-orange-400/70' : 'text-orange-500'
+              }`}>
+                You can remove duplicates above before importing, or import anyway.
+              </p>
+            </div>
+          )}
+          
+          {/* Checking duplicates indicator */}
+          {isCheckingDuplicates && (
+            <div className={`p-2 rounded-lg flex items-center gap-2 ${
+              isCinematic || isFocusMode || isDark ? 'bg-blue-500/10' : 'bg-blue-50'
+            }`}>
+              <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+              <span className={`text-xs ${
+                isCinematic || isFocusMode || isDark ? 'text-blue-400' : 'text-blue-600'
+              }`}>Checking for duplicate students...</span>
             </div>
           )}
           
