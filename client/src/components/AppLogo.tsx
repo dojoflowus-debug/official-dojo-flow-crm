@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface AppLogoProps {
@@ -45,22 +45,53 @@ function getLogoForTheme(theme: string): { src: string; isDarkBackground: boolea
 }
 
 /**
- * AppLogo - Theme-aware DojoFlow logo component
+ * AppLogo - Theme-aware DojoFlow logo component with fade animation
  * 
  * Shows the correct logo variant based on the current theme.
+ * Includes smooth fade transition when theme changes.
  * Includes fallback to text wordmark if image fails to load.
  */
 export function AppLogo({ className = '', height = 32, showText = false }: AppLogoProps) {
   const { theme } = useTheme();
   const [imageError, setImageError] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [displayedTheme, setDisplayedTheme] = useState(theme);
+  const prevThemeRef = useRef(theme);
   
-  // Get the correct logo for the current theme
-  const { src: logoSrc, isDarkBackground } = getLogoForTheme(theme);
+  // Handle theme change with fade animation
+  useEffect(() => {
+    if (prevThemeRef.current !== theme) {
+      // Theme changed - start fade out
+      setIsTransitioning(true);
+      
+      // After fade out, update the logo and fade back in
+      const fadeOutTimer = setTimeout(() => {
+        setDisplayedTheme(theme);
+        setImageError(false); // Reset error state for new logo
+        
+        // Small delay before fade in
+        const fadeInTimer = setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+        
+        return () => clearTimeout(fadeInTimer);
+      }, 150); // Duration of fade out
+      
+      prevThemeRef.current = theme;
+      return () => clearTimeout(fadeOutTimer);
+    }
+  }, [theme]);
+  
+  // Get the correct logo for the displayed theme
+  const { src: logoSrc, isDarkBackground } = getLogoForTheme(displayedTheme);
   
   // Fallback text wordmark
   if (imageError) {
     return (
-      <div className={`flex items-center gap-2 ${className}`}>
+      <div 
+        className={`flex items-center gap-2 transition-opacity duration-150 ${className}`}
+        style={{ opacity: isTransitioning ? 0 : 1 }}
+      >
         <span 
           className={`font-bold text-xl ${
             isDarkBackground ? 'text-white' : 'text-slate-900'
@@ -74,7 +105,10 @@ export function AppLogo({ className = '', height = 32, showText = false }: AppLo
   }
   
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div 
+      className={`flex items-center gap-2 transition-opacity duration-150 ease-in-out ${className}`}
+      style={{ opacity: isTransitioning ? 0 : 1 }}
+    >
       <img
         src={logoSrc}
         alt="DojoFlow"
