@@ -3866,3 +3866,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Check LLM invocation for schedule extraction
 - [x] Fixed JSON schema format issue - changed from json_schema to json_object response format
 - [x] Test with the Mock_Class_Schedule.xlsx file - successfully extracted 16 classes
+
+
+## Fix schedule extraction error on published site
+- [x] Check if published site has the latest code with json_object fix
+- [x] Add better error logging to extractSchedule procedure
+- [x] Test extraction works in dev environment - ready for publish

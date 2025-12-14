@@ -2874,6 +2874,8 @@ Return the data as a structured JSON object.`
             return await extractScheduleFromText(textContent, input.additionalContext);
           } catch (error: any) {
             console.error('Schedule extraction error:', error);
+            console.error('Schedule extraction error stack:', error.stack);
+            console.error('Schedule extraction input:', { fileUrl: input.fileUrl, fileType: input.fileType, fileName: input.fileName });
             return {
               success: false,
               classes: [],
