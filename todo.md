@@ -3569,3 +3569,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test login page in both light and dark modes
 - [ ] Save checkpoint
 
+
+## 🐛 BUG FIX: Paperclip (Attachments) Crash
+
+- [x] Find the paperclip click handler that references selectedConversation
+- [x] Add safe check for selectedConversation before accessing it
+- [x] Show toast "Select a chat to attach a file" if no conversation selected
+- [x] Ensure paperclip never throws an error
+- [x] Test with and without selected conversation
+- [ ] Save checkpoint
+

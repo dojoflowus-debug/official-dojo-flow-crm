@@ -2536,7 +2536,7 @@ export default function KaiCommand() {
               <div>
                 <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Thread Attachments</h2>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                  {selectedConversation?.title || 'Current conversation'}
+                  {conversations.find(c => c.id === selectedConversationId)?.title || 'Current conversation'}
                 </p>
               </div>
               <button
