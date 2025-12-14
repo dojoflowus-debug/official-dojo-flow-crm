@@ -3394,3 +3394,25 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Refresh page → data persists
 - [ ] Mention a student → extracted item links correctly
 
+
+## ✨ FEATURE: Save to Student Card
+
+### Requirements
+- [ ] Create backend procedure to add notes to student profiles
+- [ ] Parse extraction messages to identify student mentions
+- [ ] Add "Save to Card" button next to each student mention
+- [ ] Show success toast when note is saved
+- [ ] Link saved notes to the conversation source
+
+
+
+## ✅ COMPLETED: Save to Student Card Feature
+
+### Requirements
+- [x] Create studentNotes table in database
+- [x] Add addNote procedure to students router
+- [x] Update extraction message rendering to detect [STUDENT_ID:X] markers
+- [x] Add "Save to Card" button next to each extracted student mention
+- [x] On click, save the context as a note to the student's profile
+- [x] Show success/error toast
+- [x] Test saving notes from extraction results

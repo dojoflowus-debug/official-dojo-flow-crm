@@ -51,7 +51,8 @@ import {
   Image,
   File,
   Loader2,
-  List
+  List,
+  Save
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -143,7 +144,82 @@ export default function KaiCommand() {
   const { data: staffData } = trpc.staff.getAll.useQuery({ limit: 50 });
   
   // Render message content with styled @mentions
+  // Add note to student mutation
+  const addStudentNoteMutation = trpc.students.addNote.useMutation();
+  
+  // Handle saving note to student card
+  const handleSaveToStudentCard = async (studentId: number, studentName: string, noteContent: string) => {
+    try {
+      const result = await addStudentNoteMutation.mutateAsync({
+        studentId,
+        content: noteContent,
+        noteType: 'extraction',
+        priority: 'medium',
+        sourceConversationId: selectedConversationId ? parseInt(selectedConversationId) : undefined,
+      });
+      toast.success(`Note saved to ${result.studentName}'s profile`);
+    } catch (error: any) {
+      console.error('Failed to save note to student card:', error);
+      toast.error(`Couldn't save note. ${error?.message || 'Unknown error'}`);
+    }
+  };
+  
   const renderMessageWithMentions = (content: string) => {
+    // First, handle [STUDENT_ID:X] markers for Save to Card functionality
+    const studentIdRegex = /\*\*([^*]+)\*\*\s*\[STUDENT_ID:(\d+)\]:\s*([^\n]+)/g;
+    const hasStudentIds = studentIdRegex.test(content);
+    studentIdRegex.lastIndex = 0; // Reset regex
+    
+    if (hasStudentIds) {
+      // Parse content with student IDs and render with Save to Card buttons
+      const lines = content.split('\n');
+      return (
+        <div className="space-y-1">
+          {lines.map((line, lineIndex) => {
+            const studentMatch = line.match(/\*\*([^*]+)\*\*\s*\[STUDENT_ID:(\d+)\]:\s*(.+)/);
+            if (studentMatch) {
+              const [, studentName, studentIdStr, context] = studentMatch;
+              const studentId = parseInt(studentIdStr);
+              return (
+                <div key={lineIndex} className="flex items-start gap-2 group">
+                  <span className="flex-1">
+                    - <strong className={isDark || isCinematic ? 'text-green-400' : 'text-green-700'}>{studentName}</strong>: {context}
+                  </span>
+                  <button
+                    onClick={() => handleSaveToStudentCard(studentId, studentName, context)}
+                    className={`opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 text-xs rounded-full flex items-center gap-1 ${
+                      isDark || isCinematic
+                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
+                    }`}
+                    title={`Save to ${studentName}'s profile`}
+                  >
+                    <Save className="w-3 h-3" />
+                    Save to Card
+                  </button>
+                </div>
+              );
+            }
+            // Render other lines normally (handle markdown-like formatting)
+            if (line.startsWith('## ') || line.startsWith('### ')) {
+              const level = line.startsWith('## ') ? 'text-lg font-bold' : 'text-base font-semibold';
+              const text = line.replace(/^#+ /, '');
+              return <div key={lineIndex} className={`${level} mt-3 mb-1`}>{text}</div>;
+            }
+            if (line.startsWith('- ')) {
+              // Handle bold text in list items
+              const boldMatch = line.match(/- \*\*([^*]+)\*\*(.*)/);
+              if (boldMatch) {
+                return <div key={lineIndex}>- <strong>{boldMatch[1]}</strong>{boldMatch[2]}</div>;
+              }
+              return <div key={lineIndex}>{line}</div>;
+            }
+            return <div key={lineIndex}>{line}</div>;
+          })}
+        </div>
+      );
+    }
+    
     // Match @mentions (e.g., @Coach Sarah, @Kai, @Mr. Chen)
     const mentionRegex = /@([A-Za-z][A-Za-z0-9.\s]*?)(?=\s|$|,|\.|!|\?)/g;
     const parts: (string | JSX.Element)[] = [];

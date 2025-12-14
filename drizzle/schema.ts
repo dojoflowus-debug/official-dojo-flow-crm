@@ -1483,3 +1483,35 @@ export const staffMessages = mysqlTable("staff_messages", {
 
 export type StaffMessage = typeof staffMessages.$inferSelect;
 export type InsertStaffMessage = typeof staffMessages.$inferInsert;
+
+
+/**
+ * Student Notes table - Notes attached to student profiles
+ * Can be created manually or extracted from Kai conversations
+ */
+export const studentNotes = mysqlTable("student_notes", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student this note belongs to */
+  studentId: int("studentId").notNull(),
+  /** Note content */
+  content: text("content").notNull(),
+  /** Note type: manual, extraction, action_item, follow_up */
+  noteType: mysqlEnum("noteType", ["manual", "extraction", "action_item", "follow_up"]).default("manual").notNull(),
+  /** Priority for action items */
+  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium"),
+  /** User who created the note */
+  createdById: int("createdById"),
+  /** User name for display */
+  createdByName: varchar("createdByName", { length: 255 }),
+  /** Source conversation ID if extracted from Kai */
+  sourceConversationId: int("sourceConversationId"),
+  /** Whether the note/action is completed */
+  isCompleted: int("isCompleted").default(0).notNull(),
+  /** Completion timestamp */
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudentNote = typeof studentNotes.$inferSelect;
+export type InsertStudentNote = typeof studentNotes.$inferInsert;

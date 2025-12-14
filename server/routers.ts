@@ -1235,6 +1235,92 @@ export const appRouter = router({
         
         return { success: true };
       }),
+    
+    // Add a note to a student's profile
+    addNote: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+        content: z.string(),
+        noteType: z.enum(['manual', 'extraction', 'action_item', 'follow_up']).default('manual'),
+        priority: z.enum(['low', 'medium', 'high']).optional(),
+        sourceConversationId: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { studentNotes, students } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Verify student exists
+        const student = await db.select().from(students).where(eq(students.id, input.studentId)).limit(1);
+        if (student.length === 0) {
+          throw new Error('Student not found');
+        }
+        
+        // Insert the note
+        const result = await db.insert(studentNotes).values({
+          studentId: input.studentId,
+          content: input.content,
+          noteType: input.noteType,
+          priority: input.priority || 'medium',
+          createdById: ctx.user.id,
+          createdByName: ctx.user.name || 'Unknown',
+          sourceConversationId: input.sourceConversationId || null,
+        });
+        
+        return { 
+          success: true, 
+          noteId: result.insertId,
+          studentName: `${student[0].firstName} ${student[0].lastName}`
+        };
+      }),
+    
+    // Get notes for a student
+    getNotes: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { studentNotes } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const notes = await db.select()
+          .from(studentNotes)
+          .where(eq(studentNotes.studentId, input.studentId))
+          .orderBy(desc(studentNotes.createdAt));
+        
+        return notes;
+      }),
+    
+    // Mark a note as completed
+    completeNote: protectedProcedure
+      .input(z.object({
+        noteId: z.number(),
+        isCompleted: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { studentNotes } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        await db.update(studentNotes)
+          .set({ 
+            isCompleted: input.isCompleted ? 1 : 0,
+            completedAt: input.isCompleted ? new Date() : null
+          })
+          .where(eq(studentNotes.id, input.noteId));
+        
+        return { success: true };
+      }),
   }),
 
   kai: router({
@@ -1809,9 +1895,45 @@ Return the data as a structured JSON object.`
         
         if (extractedData.mentionedStudents?.length > 0) {
           formattedContent += '### 👤 Mentioned Students\n';
-          extractedData.mentionedStudents.forEach((item: any) => {
-            formattedContent += `- **${item.name}**: ${item.context}\n`;
-          });
+          
+          // Look up student IDs for each mentioned student
+          const { students } = await import("../drizzle/schema");
+          const { like, or } = await import("drizzle-orm");
+          
+          for (const item of extractedData.mentionedStudents) {
+            // Try to find the student in the database
+            const nameParts = item.name.trim().split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
+            let studentId = null;
+            let studentMatch = null;
+            
+            if (firstName) {
+              const matchingStudents = await db.select()
+                .from(students)
+                .where(or(
+                  like(students.firstName, `%${firstName}%`),
+                  like(students.lastName, `%${lastName || firstName}%`)
+                ))
+                .limit(1);
+              
+              if (matchingStudents.length > 0) {
+                studentMatch = matchingStudents[0];
+                studentId = studentMatch.id;
+              }
+            }
+            
+            // Add to formatted content with student ID for Save to Card button
+            if (studentId) {
+              formattedContent += `- **${item.name}** [STUDENT_ID:${studentId}]: ${item.context}\n`;
+              // Store the student ID in the extracted data for frontend use
+              item.studentId = studentId;
+              item.fullName = `${studentMatch?.firstName} ${studentMatch?.lastName}`;
+            } else {
+              formattedContent += `- **${item.name}**: ${item.context}\n`;
+            }
+          }
           formattedContent += '\n';
         }
         
