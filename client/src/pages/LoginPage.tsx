@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import logo from '../assets/logo.png'
+import { AppLogo } from '@/components/AppLogo'
 
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('')
@@ -31,8 +31,8 @@ export default function LoginPage({ onLogin }) {
 
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-border/50 backdrop-blur-sm">
         <CardHeader className="space-y-4 text-center">
-          <div className="flex justify-center mb-4">
-            <img src={logo} alt="Dojo Flow" className="h-20 w-20 animate-in zoom-in duration-500" />
+          <div className="flex justify-center mb-4 animate-in zoom-in duration-500">
+            <AppLogo height={80} />
           </div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
             Welcome to Dojo Flow
