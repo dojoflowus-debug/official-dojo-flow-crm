@@ -3826,3 +3826,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add retry button UI to failed attachment chips (RefreshCw icon)
 - [x] Show retry and remove buttons with proper hover states
 - [x] Theme-aware styling for Light, Dark, Cinematic, and Focus modes
+
+## Fix Class Schedule Import Error
+- [x] Debug schedule extraction error from xlsx files - root cause: xlsx files weren't being parsed
+- [x] Fix the schedule extraction procedure to handle xlsx properly - added xlsx parsing with sheet_to_csv
+- [x] Ensure classes are created in the Classes page after import - uses extractScheduleFromText with LLM
+- [x] All 10 schedule extraction tests passing

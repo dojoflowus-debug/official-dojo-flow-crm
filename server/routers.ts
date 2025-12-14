@@ -2825,18 +2825,63 @@ Return the data as a structured JSON object.`
         const { extractScheduleFromImage, extractScheduleFromText } = await import("./scheduleExtraction");
         
         const isImage = input.fileType.startsWith('image/');
+        const isExcel = input.fileType.includes('spreadsheet') || 
+                        input.fileType.includes('excel') || 
+                        input.fileName.endsWith('.xlsx') || 
+                        input.fileName.endsWith('.xls');
+        const isCsv = input.fileType === 'text/csv' || input.fileName.endsWith('.csv');
         
         if (isImage) {
           // Use vision model for images
           return await extractScheduleFromImage(input.fileUrl, input.additionalContext);
+        } else if (isExcel || isCsv) {
+          // Handle Excel and CSV files
+          try {
+            // Fetch the file content
+            const response = await fetch(input.fileUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch file: ${response.status}`);
+            }
+            
+            let textContent: string;
+            
+            if (isExcel) {
+              // Parse Excel file
+              const xlsx = await import('xlsx');
+              const arrayBuffer = await response.arrayBuffer();
+              const workbook = xlsx.read(arrayBuffer, { type: 'array' });
+              
+              // Convert all sheets to text
+              const sheets: string[] = [];
+              for (const sheetName of workbook.SheetNames) {
+                const sheet = workbook.Sheets[sheetName];
+                const csv = xlsx.utils.sheet_to_csv(sheet);
+                sheets.push(`Sheet: ${sheetName}\n${csv}`);
+              }
+              textContent = sheets.join('\n\n');
+            } else {
+              // CSV file - just read as text
+              textContent = await response.text();
+            }
+            
+            // Use LLM to extract schedule from text
+            return await extractScheduleFromText(textContent, input.additionalContext);
+          } catch (error: any) {
+            console.error('Schedule extraction error:', error);
+            return {
+              success: false,
+              classes: [],
+              confidence: 0,
+              error: `Failed to parse file: ${error.message}`,
+            };
+          }
         } else {
           // For PDFs and documents, we'd need to extract text first
-          // For now, return a message that text extraction is coming soon
           return {
             success: false,
             classes: [],
             confidence: 0,
-            error: "PDF text extraction coming soon. Please upload an image of your schedule for now.",
+            error: "PDF text extraction coming soon. Please upload an image or Excel file of your schedule.",
           };
         }
       }),
