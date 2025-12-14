@@ -232,6 +232,13 @@
       "when": 1765614620732,
       "tag": "0032_whole_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1765689190610,
+      "tag": "0033_absent_champions",
+      "breakpoints": true
     }
   ]
 }

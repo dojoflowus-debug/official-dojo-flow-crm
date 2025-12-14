@@ -403,8 +403,56 @@ export const appRouter = router({
             fullName: s.name,
             role: s.role.charAt(0).toUpperCase() + s.role.slice(1).replace('_', ' '),
             email: s.email,
-            photoUrl: null,
+            photoUrl: s.photoUrl || null,
           }))
+        };
+      }),
+    
+    // Update staff member photo
+    updatePhoto: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        photoUrl: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { teamMembers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        await db.update(teamMembers)
+          .set({ photoUrl: input.photoUrl })
+          .where(eq(teamMembers.id, input.id));
+        
+        return { success: true };
+      }),
+    
+    // Get single staff member by ID
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { teamMembers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return null;
+        
+        const [staff] = await db.select().from(teamMembers).where(eq(teamMembers.id, input.id));
+        if (!staff) return null;
+        
+        return {
+          id: staff.id,
+          name: staff.name,
+          addressAs: staff.addressAs,
+          role: staff.role,
+          email: staff.email,
+          phone: staff.phone,
+          photoUrl: staff.photoUrl,
+          focusAreas: staff.focusAreas,
+          isActive: staff.isActive,
         };
       }),
   }),

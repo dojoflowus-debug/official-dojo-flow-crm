@@ -383,6 +383,7 @@ export const teamMembers = mysqlTable("team_members", {
   locationIds: text("locationIds"), // JSON: [1, 2, 3]
   addressAs: varchar("addressAs", { length: 255 }), // "Coach Sarah", "Professor João"
   focusAreas: text("focusAreas"), // JSON: ["kids", "advanced", "beginners", "sales"]
+  photoUrl: varchar("photoUrl", { length: 500 }), // S3 URL for profile photo
   canViewFinancials: int("canViewFinancials").default(0),
   canEditSchedule: int("canEditSchedule").default(0),
   canManageLeads: int("canManageLeads").default(0),

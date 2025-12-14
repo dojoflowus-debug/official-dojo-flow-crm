@@ -3239,3 +3239,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Display full name on hover or in the chip
 - [x] Style mentions distinctly from regular text
 - [x] Test mention display in conversation thread
+
+## Feature: Staff Profile Photo Upload
+
+### Requirements
+- [x] Add photoUrl column to team_members table
+- [x] Create API endpoint for uploading staff photos to S3
+- [x] Add photo upload UI on Staff page (in add/edit modal)
+- [x] Display staff photos in the Staff directory
+- [x] Update mention dropdown to show staff photos
+- [x] Test photo upload and display in mentions

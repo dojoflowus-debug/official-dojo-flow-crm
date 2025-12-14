@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,10 @@ import {
   Users,
   Shield,
   Loader2,
+  Camera,
+  X,
 } from 'lucide-react'
+import { trpc } from '@/lib/trpc'
 import { toast } from 'sonner'
 
 const API_URL = '/api'  // Use relative path to work from any device
@@ -61,6 +64,14 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
     bio: '',
     photo_url: ''
   })
+  
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  
+  // tRPC mutations for photo upload
+  const uploadFileMutation = trpc.files.upload.useMutation()
+  const updatePhotoMutation = trpc.staff.updatePhoto.useMutation()
   
   const [staffMembers, setStaffMembers] = useState([])
 
@@ -111,6 +122,74 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
       bio: '',
       photo_url: ''
     })
+    setPhotoPreview(null)
+  }
+  
+  // Handle photo file selection and upload
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB')
+      return
+    }
+    
+    // Show preview immediately
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setPhotoPreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+    
+    // Upload to S3
+    try {
+      setPhotoUploading(true)
+      
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const result = reader.result as string
+          // Remove data URL prefix
+          const base64Data = result.split(',')[1]
+          resolve(base64Data)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      
+      const result = await uploadFileMutation.mutateAsync({
+        fileName: `staff-photo-${Date.now()}-${file.name}`,
+        fileType: file.type,
+        fileData: base64,
+      })
+      
+      // Update form data with the uploaded URL
+      handleInputChange('photo_url', result.url)
+      toast.success('Photo uploaded successfully')
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      toast.error('Failed to upload photo')
+      setPhotoPreview(null)
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
+  
+  const removePhoto = () => {
+    setPhotoPreview(null)
+    handleInputChange('photo_url', '')
+    if (photoInputRef.current) {
+      photoInputRef.current.value = ''
+    }
   }
 
   const handleAddStaff = async () => {
@@ -149,6 +228,8 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
       bio: staff.bio || '',
       photo_url: staff.photo_url || ''
     })
+    // Set photo preview to existing photo if available
+    setPhotoPreview(staff.photo_url || null)
     setShowEditModal(true)
   }
 
@@ -449,13 +530,62 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
               </div>
 
               <div className="col-span-2">
-                <Label htmlFor="photo_url">Photo URL</Label>
-                <Input
-                  id="photo_url"
-                  value={formData.photo_url}
-                  onChange={(e) => handleInputChange('photo_url', e.target.value)}
-                  placeholder="https://..."
-                />
+                <Label>Profile Photo</Label>
+                <div className="flex items-center gap-4 mt-2">
+                  {/* Photo Preview */}
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/30">
+                      {photoPreview || formData.photo_url ? (
+                        <img 
+                          src={photoPreview || formData.photo_url} 
+                          alt="Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-8 w-8 text-muted-foreground" />
+                      )}
+                      {photoUploading && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                          <Loader2 className="h-6 w-6 animate-spin text-white" />
+                        </div>
+                      )}
+                    </div>
+                    {(photoPreview || formData.photo_url) && !photoUploading && (
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Upload Button */}
+                  <div className="flex-1">
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                      id="photo-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={photoUploading}
+                      className="gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      {photoUploading ? 'Uploading...' : 'Upload Photo'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      JPG, PNG or GIF. Max 5MB.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -546,12 +676,61 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
               </div>
 
               <div className="col-span-2">
-                <Label htmlFor="edit_photo_url">Photo URL</Label>
-                <Input
-                  id="edit_photo_url"
-                  value={formData.photo_url}
-                  onChange={(e) => handleInputChange('photo_url', e.target.value)}
-                />
+                <Label>Profile Photo</Label>
+                <div className="flex items-center gap-4 mt-2">
+                  {/* Photo Preview */}
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/30">
+                      {photoPreview || formData.photo_url ? (
+                        <img 
+                          src={photoPreview || formData.photo_url} 
+                          alt="Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-8 w-8 text-muted-foreground" />
+                      )}
+                      {photoUploading && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                          <Loader2 className="h-6 w-6 animate-spin text-white" />
+                        </div>
+                      )}
+                    </div>
+                    {(photoPreview || formData.photo_url) && !photoUploading && (
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Upload Button */}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                      id="edit-photo-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('edit-photo-upload')?.click()}
+                      disabled={photoUploading}
+                      className="gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      {photoUploading ? 'Uploading...' : 'Change Photo'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      JPG, PNG or GIF. Max 5MB.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
