@@ -718,3 +718,15 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Hero container entrance animation - subtle fade-in with slide-up */
+@keyframes cinematicHeroEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

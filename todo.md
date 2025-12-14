@@ -3666,3 +3666,7 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Ensure chat bar remains sticky/fixed
 - [x] Reduce hero container height/padding and move up ~12-24px
 - [x] Test layout stability when switching themes and resizing window
+
+## Hero Container Entrance Animation (Cinematic Mode)
+- [x] Add fade-in and slide-up animation to hero container in Cinematic mode
+- [x] Test animation timing and smoothness

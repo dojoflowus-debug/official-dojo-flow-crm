@@ -1887,7 +1887,8 @@ export default function KaiCommand() {
                   className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? '' : 'py-8'} transition-all duration-500`}
                   style={isCinematic ? {
                     maxHeight: 'calc(100vh - 80px - 64px - 100px - 24px)', /* viewport - topbar - bottomnav - chatbar - safe padding */
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    animation: 'cinematicHeroEntrance 0.8s ease-out forwards'
                   } : {}}
                 >
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
