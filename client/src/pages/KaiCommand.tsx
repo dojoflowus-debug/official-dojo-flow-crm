@@ -793,7 +793,15 @@ export default function KaiCommand() {
         id: m.id.toString(),
         role: m.role as 'user' | 'assistant',
         content: m.content,
-        timestamp: new Date(m.createdAt)
+        timestamp: new Date(m.createdAt),
+        attachments: m.attachments && Array.isArray(m.attachments) ? m.attachments.map((att: any) => ({
+          id: att.id || `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          url: att.url,
+          fileName: att.fileName,
+          fileType: att.fileType,
+          fileSize: att.fileSize,
+          uploading: false,
+        })) : undefined,
       }));
       setMessages(loadedMessages);
     }
@@ -1227,12 +1235,15 @@ export default function KaiCommand() {
       }
     }
 
+    // Save attachments before clearing state
+    const savedAttachments = [...attachments];
+    
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: messageContent,
       timestamp: new Date(),
-      attachments: [...attachments]
+      attachments: savedAttachments
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -1251,7 +1262,14 @@ export default function KaiCommand() {
         await addMessageMutation.mutateAsync({
           conversationId,
           role: 'user',
-          content: currentInput
+          content: currentInput,
+          attachments: savedAttachments.length > 0 ? savedAttachments.map(att => ({
+            id: att.id,
+            url: att.url || '',
+            fileName: att.fileName,
+            fileType: att.fileType,
+            fileSize: att.fileSize,
+          })) : undefined,
         });
       } catch (error) {
         console.error('Failed to save user message:', error);

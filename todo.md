@@ -3705,3 +3705,8 @@ Note: The logo was already correctly implemented. The navigation uses:
 ## Fix Image Rendering - Stricter Constraints
 - [x] Apply stricter max-height and width constraints (280x200px for single, 140x140px for pairs, 120x100px for 3+)
 - [x] Ensure images don't break chat layout with fixed dimensions
+
+## Fix Attachment Persistence in Chat
+- [x] Investigate why images/docs disappear after a few seconds (attachments column missing from kai_messages)
+- [x] Ensure attachments persist in chat until conversation is deleted (added attachments column, updated addMessage and getMessages)
+- [x] Test attachment persistence across page refreshes (vitest tests pass)

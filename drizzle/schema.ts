@@ -1003,6 +1003,8 @@ export const kaiMessages = mysqlTable("kai_messages", {
   content: text("content").notNull(),
   /** Metadata (function calls, context, etc.) stored as JSON */
   metadata: text("metadata"),
+  /** Attachments JSON array [{url, name, type, size}] */
+  attachments: text("attachments"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

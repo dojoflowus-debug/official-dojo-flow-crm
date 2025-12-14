@@ -1865,7 +1865,11 @@ export const appRouter = router({
           .where(eq(kaiMessages.conversationId, input.conversationId))
           .orderBy(kaiMessages.createdAt);
         
-        return messages;
+        // Parse attachments JSON for each message
+        return messages.map(msg => ({
+          ...msg,
+          attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
+        }));
       }),
 
     // Create a new conversation
@@ -2049,6 +2053,13 @@ export const appRouter = router({
         role: z.enum(["user", "assistant", "system"]),
         content: z.string(),
         metadata: z.string().optional(),
+        attachments: z.array(z.object({
+          id: z.string(),
+          url: z.string(),
+          fileName: z.string(),
+          fileType: z.string(),
+          fileSize: z.number(),
+        })).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
@@ -2069,23 +2080,28 @@ export const appRouter = router({
         
         if (!conversation) throw new Error("Conversation not found");
         
-        // Insert the message
+        // Insert the message with attachments
         const [result] = await db.insert(kaiMessages).values({
           conversationId: input.conversationId,
           role: input.role,
           content: input.content,
           metadata: input.metadata,
+          attachments: input.attachments ? JSON.stringify(input.attachments) : null,
         });
         
         // Update conversation with preview and timestamp
-        const preview = input.content.substring(0, 200);
+        const preview = input.attachments && input.attachments.length > 0 && !input.content.trim()
+          ? `Attachments: [${input.attachments.map(a => a.fileName).join(', ')}]`
+          : input.content.substring(0, 200);
         await db.update(kaiConversations)
           .set({
             preview,
             lastMessageAt: new Date(),
             // Auto-update title from first user message if still "New Conversation"
             ...(conversation.title === "New Conversation" && input.role === "user" 
-              ? { title: input.content.substring(0, 50) + (input.content.length > 50 ? "..." : "") }
+              ? { title: input.attachments && input.attachments.length > 0 
+                  ? `Attachments: [${input.attachments[0].fileName}]`
+                  : input.content.substring(0, 50) + (input.content.length > 50 ? "..." : "") }
               : {}),
           })
           .where(eq(kaiConversations.id, input.conversationId));
