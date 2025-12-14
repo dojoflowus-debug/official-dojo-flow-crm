@@ -191,6 +191,87 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
       photoInputRef.current.value = ''
     }
   }
+  
+  // Drag-and-drop state
+  const [isDragging, setIsDragging] = useState(false)
+  
+  // Handle file from drag-and-drop
+  const handleFileDrop = async (file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please drop an image file')
+      return
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB')
+      return
+    }
+    
+    // Show preview immediately
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setPhotoPreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+    
+    // Upload to S3
+    try {
+      setPhotoUploading(true)
+      
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const result = reader.result as string
+          const base64Data = result.split(',')[1]
+          resolve(base64Data)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      
+      const result = await uploadFileMutation.mutateAsync({
+        fileName: `staff-photo-${Date.now()}-${file.name}`,
+        fileType: file.type,
+        fileData: base64,
+      })
+      
+      handleInputChange('photo_url', result.url)
+      toast.success('Photo uploaded successfully')
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      toast.error('Failed to upload photo')
+      setPhotoPreview(null)
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
+  
+  // Drag-and-drop event handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      handleFileDrop(files[0])
+    }
+  }
 
   const handleAddStaff = async () => {
     try {
@@ -532,9 +613,21 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
               <div className="col-span-2">
                 <Label>Profile Photo</Label>
                 <div className="flex items-center gap-4 mt-2">
-                  {/* Photo Preview */}
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/30">
+                  {/* Photo Preview with Drag-and-Drop */}
+                  <div 
+                    className="relative"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <div className={`w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed transition-all cursor-pointer ${
+                      isDragging 
+                        ? 'border-primary bg-primary/10 scale-110' 
+                        : 'border-muted-foreground/30 hover:border-primary/50'
+                    }`}
+                    onClick={() => photoInputRef.current?.click()}
+                    title="Click or drag image here"
+                    >
                       {photoPreview || formData.photo_url ? (
                         <img 
                           src={photoPreview || formData.photo_url} 
@@ -542,7 +635,10 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="h-8 w-8 text-muted-foreground" />
+                        <div className="flex flex-col items-center">
+                          <User className="h-6 w-6 text-muted-foreground" />
+                          {isDragging && <span className="text-[8px] text-primary mt-0.5">Drop!</span>}
+                        </div>
                       )}
                       {photoUploading && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
@@ -582,7 +678,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                       {photoUploading ? 'Uploading...' : 'Upload Photo'}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-1">
-                      JPG, PNG or GIF. Max 5MB.
+                      Drag & drop or click to upload. JPG, PNG, GIF. Max 5MB.
                     </p>
                   </div>
                 </div>
@@ -678,9 +774,21 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
               <div className="col-span-2">
                 <Label>Profile Photo</Label>
                 <div className="flex items-center gap-4 mt-2">
-                  {/* Photo Preview */}
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/30">
+                  {/* Photo Preview with Drag-and-Drop */}
+                  <div 
+                    className="relative"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <div className={`w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed transition-all cursor-pointer ${
+                      isDragging 
+                        ? 'border-primary bg-primary/10 scale-110' 
+                        : 'border-muted-foreground/30 hover:border-primary/50'
+                    }`}
+                    onClick={() => photoInputRef.current?.click()}
+                    title="Click or drag image here"
+                    >
                       {photoPreview || formData.photo_url ? (
                         <img 
                           src={photoPreview || formData.photo_url} 
@@ -688,7 +796,10 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="h-8 w-8 text-muted-foreground" />
+                        <div className="flex flex-col items-center">
+                          <User className="h-6 w-6 text-muted-foreground" />
+                          {isDragging && <span className="text-[8px] text-primary mt-0.5">Drop!</span>}
+                        </div>
                       )}
                       {photoUploading && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
@@ -727,7 +838,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                       {photoUploading ? 'Uploading...' : 'Change Photo'}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-1">
-                      JPG, PNG or GIF. Max 5MB.
+                      Drag & drop or click to upload. JPG, PNG, GIF. Max 5MB.
                     </p>
                   </div>
                 </div>

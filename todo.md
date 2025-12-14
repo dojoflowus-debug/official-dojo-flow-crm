@@ -3249,3 +3249,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Display staff photos in the Staff directory
 - [x] Update mention dropdown to show staff photos
 - [x] Test photo upload and display in mentions
+
+## Feature: Drag-and-Drop Photo Upload
+
+### Requirements
+- [x] Add drag-and-drop handlers to photo preview area
+- [x] Show visual feedback when dragging over the drop zone
+- [x] Handle dropped files the same as file picker selection
+- [x] Support both add and edit modals
+- [x] Test drag-and-drop functionality
