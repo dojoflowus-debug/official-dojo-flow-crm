@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { useEnvironment } from '@/contexts/EnvironmentContext';
 import { trpc } from '@/lib/trpc';
+import { analyzeFile, generateKaiFileResponse, getImageDimensions, type FileAnalysis, type ProposedAction } from '@/lib/fileIntelligence';
+import { FileActionCard } from '@/components/FileActionCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -130,6 +132,13 @@ export default function KaiCommand() {
   
   // Lightbox state for image preview
   const [lightboxImage, setLightboxImage] = useState<{url: string; filename: string} | null>(null);
+  
+  // File intelligence state for Kai-assisted setup
+  const [pendingFileAnalysis, setPendingFileAnalysis] = useState<{
+    attachment: Attachment;
+    analysis: FileAnalysis;
+  } | null>(null);
+  const [isProcessingFileAction, setIsProcessingFileAction] = useState(false);
   
   // Add Staff modal state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
@@ -1065,11 +1074,51 @@ export default function KaiCommand() {
           });
 
           // Update attachment with uploaded URL
+          const updatedAttachment: Attachment = {
+            id: tempId,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            url: result.url,
+            uploading: false,
+          };
+          
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, url: result.url, uploading: false }
+              ? updatedAttachment
               : att
           ));
+          
+          // Trigger file intelligence analysis
+          try {
+            let imageDimensions: { width: number; height: number } | undefined;
+            if (file.type.startsWith('image/')) {
+              imageDimensions = await getImageDimensions(result.url);
+            }
+            
+            const analysis = await analyzeFile(
+              { fileName: file.name, fileType: file.type, fileSize: file.size, url: result.url },
+              imageDimensions
+            );
+            
+            // Set pending analysis for user to review
+            setPendingFileAnalysis({ attachment: updatedAttachment, analysis });
+            
+            // Generate Kai's response about the file
+            const kaiResponse = generateKaiFileResponse(analysis, file.name);
+            
+            // Add Kai's analysis message to the chat
+            const analysisMessage: Message = {
+              id: `analysis-${Date.now()}`,
+              role: 'assistant',
+              content: kaiResponse,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, analysisMessage]);
+          } catch (analysisError) {
+            console.error('File analysis failed:', analysisError);
+            // Continue without analysis - file is still uploaded
+          }
         } catch (error) {
           console.error('Upload failed:', error);
           // Mark attachment as failed
@@ -1093,6 +1142,102 @@ export default function KaiCommand() {
   // Remove attachment
   const removeAttachment = (id: string) => {
     setAttachments(prev => prev.filter(att => att.id !== id));
+  };
+  
+  // Handle file action selection from Kai's proposals
+  const handleFileAction = async (action: ProposedAction) => {
+    if (!pendingFileAnalysis) return;
+    
+    setIsProcessingFileAction(true);
+    const { attachment } = pendingFileAnalysis;
+    
+    try {
+      switch (action.id) {
+        case 'set_instructor_profile':
+          // Update instructor profile photo
+          if (user) {
+            await trpc.profile.update.mutate({
+              avatarUrl: attachment.url,
+            });
+            toast.success('Profile photo updated!');
+            
+            // Add confirmation message
+            const confirmMsg: Message = {
+              id: `confirm-${Date.now()}`,
+              role: 'assistant',
+              content: `Done! I've set **${attachment.fileName}** as your profile photo. You can see the change in your profile settings.`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, confirmMsg]);
+          }
+          break;
+          
+        case 'assign_student_profile':
+          // Show student selection - for now, add a message asking which student
+          const studentSelectMsg: Message = {
+            id: `student-select-${Date.now()}`,
+            role: 'assistant',
+            content: `Which student would you like to assign this photo to? Type their name and I'll help you find them.`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, studentSelectMsg]);
+          break;
+          
+        case 'save_to_documents':
+          // Save to documents (already uploaded, just confirm)
+          toast.success('File saved to documents!');
+          const docConfirmMsg: Message = {
+            id: `doc-confirm-${Date.now()}`,
+            role: 'assistant',
+            content: `I've saved **${attachment.fileName}** to your documents. You can access it anytime from your document library.`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, docConfirmMsg]);
+          break;
+          
+        case 'import_schedule':
+          // Placeholder for schedule import
+          const scheduleMsg: Message = {
+            id: `schedule-${Date.now()}`,
+            role: 'assistant',
+            content: `I'll analyze **${attachment.fileName}** to extract class schedule information. This feature is coming soon - for now, you can manually add classes in the Classes section.`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, scheduleMsg]);
+          break;
+          
+        case 'import_roster':
+          // Placeholder for roster import
+          const rosterMsg: Message = {
+            id: `roster-${Date.now()}`,
+            role: 'assistant',
+            content: `I'll analyze **${attachment.fileName}** to extract student information. This feature is coming soon - for now, you can manually add students in the Students section.`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, rosterMsg]);
+          break;
+          
+        default:
+          toast.info('Action not yet implemented');
+      }
+      
+      // Clear pending analysis after action
+      setPendingFileAnalysis(null);
+      // Remove the attachment from the input area since it's been processed
+      setAttachments(prev => prev.filter(att => att.id !== attachment.id));
+      
+    } catch (error) {
+      console.error('File action failed:', error);
+      toast.error('Failed to complete action. Please try again.');
+    } finally {
+      setIsProcessingFileAction(false);
+    }
+  };
+  
+  // Cancel file action and dismiss the analysis card
+  const handleCancelFileAction = () => {
+    setPendingFileAnalysis(null);
+    // Keep the attachment in the input area for manual handling
   };
 
   // Mutation for sending directed messages
@@ -2142,6 +2287,25 @@ export default function KaiCommand() {
                       </div>
                     </div>
                   )}
+                  
+                  {/* File Action Card - Kai's proposed actions for uploaded files */}
+                  {pendingFileAnalysis && (
+                    <div className="px-4 py-2">
+                      <FileActionCard
+                        analysis={pendingFileAnalysis.analysis}
+                        fileName={pendingFileAnalysis.attachment.fileName}
+                        fileUrl={pendingFileAnalysis.attachment.url || ''}
+                        fileType={pendingFileAnalysis.attachment.fileType}
+                        onActionSelect={handleFileAction}
+                        onCancel={handleCancelFileAction}
+                        isProcessing={isProcessingFileAction}
+                        isDark={isDark}
+                        isCinematic={isCinematic}
+                        isFocusMode={isFocusMode}
+                      />
+                    </div>
+                  )}
+                  
                   <div ref={messagesEndRef} />
                 </div>
               )}

@@ -3710,3 +3710,33 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Investigate why images/docs disappear after a few seconds (attachments column missing from kai_messages)
 - [x] Ensure attachments persist in chat until conversation is deleted (added attachments column, updated addMessage and getMessages)
 - [x] Test attachment persistence across page refreshes (vitest tests pass)
+
+## Kai-First Assisted Setup (File Intelligence)
+
+### Image Upload Rendering
+- [x] Fix oversized/cropped images - render as contained attachment previews (already implemented)
+- [x] Constrain max width/height, preserve aspect ratio, no cropping (280x200px single, 140x140px pairs)
+- [x] Add click-to-expand lightbox for full image view (already implemented)
+- [x] Test in Light, Dark, Cinematic, and Focus modes (theme-aware backgrounds)
+### File Detection & Classification
+- [x] Detect file type on upload (image, PDF, document, schedule, roster)
+- [x] Classify intent (profile photo, schedule, student roster, general document)
+- [x] Build confidence scoring system (18 vitest tests passing)items, not raw chat content
+
+### ### Kai Action Proposals
+- [x] Kai proposes correct action based on file type (Add to Schedule, Set as Profile Photo, etc.)
+- [x] Ask minimal clarifying questions only if needed
+- [x] Create draft preview before applying (FileActionCard component)
+- [x] Require explicit user confirmation (confirmation dialog in FileActionCard)tion before any action
+
+### Profile Photo Routing
+- [x] If image appears to be profile photo, offer choices:
+  - Set as my instructor profile photo
+  - Assign to a student profile
+  - Save to documents
+- [x] Do not auto-assign without confirmation (all actions require explicit confirmation)
+
+### Constraints
+- [x] Do NOT auto-run setup wizard on file upload or Profile click (already fixed in previous task)
+- [x] Wizard is optional and manually launched only (Setup Wizard is separate menu item)
+- [x] Kai Command is the primary setup interface (file intelligence integrated)
