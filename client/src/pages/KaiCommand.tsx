@@ -40,6 +40,7 @@ import {
   Trash2,
   Star,
   Archive,
+  Pencil,
   Minimize2,
   Focus,
   Play,
@@ -241,6 +242,7 @@ export default function KaiCommand() {
   const deleteConversationMutation = trpc.kai.deleteConversation.useMutation();
   const archiveConversationMutation = trpc.kai.archiveConversation.useMutation();
   const unarchiveConversationMutation = trpc.kai.unarchiveConversation.useMutation();
+  const renameConversationMutation = trpc.kai.renameConversation.useMutation();
   const utils = trpc.useUtils();
 
   // Handle delete conversation with optimistic update
@@ -326,6 +328,34 @@ export default function KaiCommand() {
       console.error('Failed to restore conversation:', error);
       const errorMessage = error?.message || 'Unknown error';
       toast.error(`Couldn't restore chat. ${errorMessage}`);
+    }
+  };
+
+  // Handle rename conversation with optimistic update
+  const handleRenameConversation = async (conversationId: string, newTitle: string) => {
+    // Store previous data for rollback
+    const previousConversations = utils.kai.getConversations.getData();
+    
+    // Optimistically update title in list
+    utils.kai.getConversations.setData(undefined, (old) => 
+      old?.map(conv => 
+        conv.id.toString() === conversationId 
+          ? { ...conv, title: newTitle }
+          : conv
+      ) ?? []
+    );
+    
+    try {
+      await renameConversationMutation.mutateAsync({ id: parseInt(conversationId), title: newTitle });
+      toast.success('Conversation renamed');
+    } catch (error: any) {
+      // Rollback on failure
+      if (previousConversations) {
+        utils.kai.getConversations.setData(undefined, previousConversations);
+      }
+      console.error('Failed to rename conversation:', error);
+      const errorMessage = error?.message || 'Unknown error';
+      toast.error(`Couldn't rename chat. ${errorMessage}`);
     }
   };
 
@@ -1118,6 +1148,7 @@ export default function KaiCommand() {
                       onDelete={handleDeleteConversation}
                       onArchive={handleArchiveConversation}
                       onUnarchive={handleUnarchiveConversation}
+                      onRename={handleRenameConversation}
                       isDark={isDark}
                     />
                   ))}
@@ -1142,6 +1173,7 @@ export default function KaiCommand() {
                       onDelete={handleDeleteConversation}
                       onArchive={handleArchiveConversation}
                       onUnarchive={handleUnarchiveConversation}
+                      onRename={handleRenameConversation}
                       isDark={isDark}
                     />
                   ))}
@@ -1817,6 +1849,7 @@ function ConversationCard({
   onDelete,
   onArchive,
   onUnarchive,
+  onRename,
   isDark
 }: { 
   conversation: Conversation; 
@@ -1827,9 +1860,12 @@ function ConversationCard({
   onDelete?: (id: string) => void;
   onArchive?: (id: string) => void;
   onUnarchive?: (id: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
   isDark?: boolean;
 }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [renameValue, setRenameValue] = useState(conversation.title);
   const isArchived = conversation.status === 'archived';
   
   return (
@@ -1879,7 +1915,11 @@ function ConversationCard({
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info('Rename feature coming soon')}>
+              <DropdownMenuItem onClick={() => {
+                setRenameValue(conversation.title);
+                setShowRenameDialog(true);
+              }}>
+                <Pencil className="w-4 h-4 mr-2" />
                 Rename
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1887,6 +1927,47 @@ function ConversationCard({
         </div>
       </div>
       
+      {/* Rename Dialog */}
+      <AlertDialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rename Conversation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter a new name for this conversation.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              placeholder="Conversation name"
+              className="w-full"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && renameValue.trim()) {
+                  onRename?.(conversation.id, renameValue.trim());
+                  setShowRenameDialog(false);
+                }
+              }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!renameValue.trim()}
+              onClick={() => {
+                if (renameValue.trim()) {
+                  onRename?.(conversation.id, renameValue.trim());
+                  setShowRenameDialog(false);
+                }
+              }}
+            >
+              Save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>

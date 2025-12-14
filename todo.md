@@ -3356,3 +3356,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Deleted chats don't appear in Active or All lists
 - [x] Archived chats appear under Archived tab
 
+
+## ✨ FEATURE: Conversation Rename
+
+### Requirements
+- [x] Add renameConversation procedure to backend
+- [x] Add rename dialog UI to ConversationCard dropdown
+- [x] Allow inline editing of conversation title
+- [x] Optimistic update with rollback on failure
+- [x] Test rename functionality
+

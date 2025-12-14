@@ -1498,6 +1498,42 @@ export const appRouter = router({
         return { success: true, id: input.id };
       }),
 
+    // Rename a conversation
+    renameConversation: protectedProcedure
+      .input(z.object({ id: z.number(), title: z.string().min(1).max(500) }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation and it's not deleted
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
+        
+        if (!conversation) {
+          throw new Error("Conversation not found or deleted");
+        }
+        
+        // Update the title
+        await db.update(kaiConversations)
+          .set({ title: input.title.trim() })
+          .where(and(
+            eq(kaiConversations.id, input.id),
+            eq(kaiConversations.userId, ctx.user.id)
+          ));
+        
+        return { success: true, id: input.id, title: input.title.trim() };
+      }),
+
     chat: publicProcedure
       .input(z.object({
         message: z.string(),
