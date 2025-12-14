@@ -22,81 +22,6 @@ export type ScheduleExtractionResult = {
   error?: string;
 };
 
-// JSON schema for structured extraction
-const scheduleSchema = {
-  name: "schedule_extraction",
-  strict: true,
-  schema: {
-    type: "object",
-    properties: {
-      success: {
-        type: "boolean",
-        description: "Whether schedule data was successfully extracted",
-      },
-      classes: {
-        type: "array",
-        description: "List of extracted classes",
-        items: {
-          type: "object",
-          properties: {
-            name: {
-              type: "string",
-              description: "Name of the class (e.g., 'Kids Karate', 'Adult BJJ', 'Yoga Flow')",
-            },
-            dayOfWeek: {
-              type: "string",
-              enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-              description: "Day of the week the class occurs",
-            },
-            startTime: {
-              type: "string",
-              description: "Start time in HH:MM 24-hour format (e.g., '09:00', '18:30')",
-            },
-            endTime: {
-              type: "string",
-              description: "End time in HH:MM 24-hour format (e.g., '10:00', '20:00')",
-            },
-            instructor: {
-              type: "string",
-              description: "Name of the instructor if mentioned",
-            },
-            location: {
-              type: "string",
-              description: "Room or location if mentioned",
-            },
-            level: {
-              type: "string",
-              enum: ["Beginner", "Intermediate", "Advanced", "All Levels", "Kids", "Adults"],
-              description: "Skill level or age group if mentioned",
-            },
-            maxCapacity: {
-              type: "number",
-              description: "Maximum class capacity if mentioned",
-            },
-            notes: {
-              type: "string",
-              description: "Any additional notes about the class",
-            },
-          },
-          required: ["name", "dayOfWeek", "startTime", "endTime"],
-          additionalProperties: false,
-        },
-      },
-      confidence: {
-        type: "number",
-        description: "Confidence score from 0 to 1 indicating how certain the extraction is",
-      },
-      warnings: {
-        type: "array",
-        items: { type: "string" },
-        description: "Any warnings about ambiguous or unclear data",
-      },
-    },
-    required: ["success", "classes", "confidence"],
-    additionalProperties: false,
-  },
-};
-
 // Extract schedule from image URL (for photos of schedules)
 export async function extractScheduleFromImage(
   imageUrl: string,
@@ -106,19 +31,34 @@ export async function extractScheduleFromImage(
     const systemPrompt = `You are a schedule extraction assistant for a martial arts dojo management system called DojoFlow.
 Your task is to analyze images of class schedules and extract structured class information.
 
+You MUST respond with a valid JSON object in this exact format:
+{
+  "success": true,
+  "classes": [
+    {
+      "name": "Class Name",
+      "dayOfWeek": "Monday",
+      "startTime": "16:30",
+      "endTime": "17:30",
+      "instructor": "Instructor Name",
+      "location": "Room A",
+      "level": "Beginner",
+      "maxCapacity": 20,
+      "notes": "Any notes"
+    }
+  ],
+  "confidence": 0.95,
+  "warnings": []
+}
+
 Guidelines:
 - Extract all classes visible in the schedule
-- Convert times to 24-hour HH:MM format
-- Infer class names from context (e.g., "BJJ" = "Brazilian Jiu-Jitsu", "MT" = "Muay Thai")
+- Convert times to 24-hour HH:MM format (e.g., 4:30 PM = "16:30")
+- dayOfWeek must be one of: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 - If a class repeats on multiple days, create separate entries for each day
 - If end time is not specified, estimate based on typical class duration (45-60 min for kids, 60-90 min for adults)
-- Set confidence based on image clarity and data completeness
-- Add warnings for any ambiguous or unclear information
-
-Common martial arts class types:
-- Karate, Taekwondo, Judo, Brazilian Jiu-Jitsu (BJJ), Muay Thai, Kickboxing
-- Kids classes, Adult classes, Competition/Advanced classes
-- Open mat, Sparring, Fundamentals`;
+- Set confidence based on image clarity and data completeness (0.0 to 1.0)
+- Add warnings for any ambiguous or unclear information`;
 
     const userPrompt = additionalContext 
       ? `Please extract the class schedule from this image. Additional context: ${additionalContext}`
@@ -136,8 +76,7 @@ Common martial arts class types:
         },
       ],
       response_format: {
-        type: "json_schema",
-        json_schema: scheduleSchema,
+        type: "json_object",
       },
     });
 
@@ -173,13 +112,33 @@ export async function extractScheduleFromText(
     const systemPrompt = `You are a schedule extraction assistant for a martial arts dojo management system called DojoFlow.
 Your task is to analyze text content containing class schedules and extract structured class information.
 
+You MUST respond with a valid JSON object in this exact format:
+{
+  "success": true,
+  "classes": [
+    {
+      "name": "Class Name",
+      "dayOfWeek": "Monday",
+      "startTime": "16:30",
+      "endTime": "17:30",
+      "instructor": "Instructor Name",
+      "location": "Room A",
+      "level": "Beginner",
+      "maxCapacity": 20,
+      "notes": "Any notes"
+    }
+  ],
+  "confidence": 0.95,
+  "warnings": []
+}
+
 Guidelines:
 - Extract all classes mentioned in the text
-- Convert times to 24-hour HH:MM format
-- Infer class names from context (e.g., "BJJ" = "Brazilian Jiu-Jitsu", "MT" = "Muay Thai")
-- If a class repeats on multiple days, create separate entries for each day
+- Convert times to 24-hour HH:MM format (e.g., 4:30 PM = "16:30")
+- dayOfWeek must be one of: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+- If a class repeats on multiple days (e.g., "Mon, Wed"), create separate entries for each day
 - If end time is not specified, estimate based on typical class duration (45-60 min for kids, 60-90 min for adults)
-- Set confidence based on data completeness and clarity
+- Set confidence based on data completeness and clarity (0.0 to 1.0)
 - Add warnings for any ambiguous or unclear information
 
 Common martial arts class types:
@@ -197,8 +156,7 @@ Common martial arts class types:
         { role: "user", content: userPrompt },
       ],
       response_format: {
-        type: "json_schema",
-        json_schema: scheduleSchema,
+        type: "json_object",
       },
     });
 

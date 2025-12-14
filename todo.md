@@ -3860,3 +3860,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 ## Fix xlsx file upload issue
 - [x] Add xlsx/xls/csv MIME types to file input accept attribute
 - [x] Test xlsx file upload works correctly (MIME type validation passes, all tests passing)
+
+
+## Debug schedule extraction error from xlsx files
+- [x] Check LLM invocation for schedule extraction
+- [x] Fixed JSON schema format issue - changed from json_schema to json_object response format
+- [x] Test with the Mock_Class_Schedule.xlsx file - successfully extracted 16 classes
