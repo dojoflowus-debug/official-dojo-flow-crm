@@ -8,21 +8,54 @@ interface AppLogoProps {
 }
 
 /**
+ * Theme-to-logo mapping
+ * 
+ * Light Mode: Dark logo (high contrast on white background) - DO NOT CHANGE
+ * Dark Mode: Light logo (high contrast on dark background)
+ * Cinematic Mode: Light logo (high contrast on dark/cinematic background)
+ */
+function getLogoForTheme(theme: string): { src: string; isDarkBackground: boolean } {
+  switch (theme) {
+    case 'light':
+      // Light Mode: use DARK logo (black text on white background)
+      // This is working correctly - DO NOT CHANGE
+      return {
+        src: '/assets/branding/dojoflow-logo-dark.png',
+        isDarkBackground: false
+      };
+    case 'dark':
+      // Dark Mode: use LIGHT logo (white text on dark background)
+      return {
+        src: '/assets/branding/dojoflow-logo-light.png',
+        isDarkBackground: true
+      };
+    case 'cinematic':
+      // Cinematic Mode: ALWAYS use LIGHT logo (light-on-dark variant)
+      return {
+        src: '/assets/branding/dojoflow-logo-light.png',
+        isDarkBackground: true
+      };
+    default:
+      // Fallback to dark logo for unknown themes
+      return {
+        src: '/assets/branding/dojoflow-logo-dark.png',
+        isDarkBackground: false
+      };
+  }
+}
+
+/**
  * AppLogo - Theme-aware DojoFlow logo component
  * 
- * Shows dark logo on light backgrounds, light logo on dark backgrounds.
+ * Shows the correct logo variant based on the current theme.
  * Includes fallback to text wordmark if image fails to load.
  */
 export function AppLogo({ className = '', height = 32, showText = false }: AppLogoProps) {
   const { theme } = useTheme();
   const [imageError, setImageError] = useState(false);
   
-  // Dark logo for light mode (high contrast on white)
-  // Light logo for dark/cinematic mode (high contrast on dark)
-  const isDarkBackground = theme === 'dark' || theme === 'cinematic';
-  const logoSrc = isDarkBackground 
-    ? '/assets/branding/dojoflow-logo-light.png'
-    : '/assets/branding/dojoflow-logo-dark.png';
+  // Get the correct logo for the current theme
+  const { src: logoSrc, isDarkBackground } = getLogoForTheme(theme);
   
   // Fallback text wordmark
   if (imageError) {

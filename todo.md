@@ -3588,3 +3588,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Style badge to match theme (dark/light/cinematic)
 - [ ] Save checkpoint
 
+
+## 🚀 NEW: Cinematic Mode Logo Fix
+
+- [x] Copy light logo asset (Lightdojoflow.png) to branding folder
+- [x] Create getLogoForTheme() function with explicit mapping
+- [x] Light Mode: keep current working logo (NO CHANGES)
+- [x] Dark Mode: use dark-mode logo (existing behavior)
+- [x] Cinematic Mode: use LIGHT logo asset (light-on-dark)
+- [x] Test all three themes without refresh
+- [ ] Save checkpoint
+
