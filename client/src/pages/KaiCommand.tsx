@@ -1875,16 +1875,24 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-6 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
+            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : isCinematic && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-2 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
             style={{ zIndex: 10 }}
           >
             {/* Shared content column wrapper - max-w-4xl to match composer width */}
             <div className={`${isFocusMode ? 'max-w-4xl mx-auto px-4' : isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
               {messages.length === 0 ? (
-                /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
-                <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
+                /* Empty State - Kai Greeting */
+                /* In Cinematic mode: constrain hero height to prevent scrollbar, move up slightly */
+                <div 
+                  className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? '' : 'py-8'} transition-all duration-500`}
+                  style={isCinematic ? {
+                    maxHeight: 'calc(100vh - 80px - 64px - 100px - 24px)', /* viewport - topbar - bottomnav - chatbar - safe padding */
+                    overflow: 'hidden'
+                  } : {}}
+                >
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
-                  <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
+                  {/* Reduced padding in Cinematic mode to fit within viewport */}
+                  <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''} ${isCinematic ? 'px-12 py-8' : isFocusMode ? 'px-16 py-12' : ''}`}
                     style={(isCinematic || isFocusMode) ? {
                       background: 'rgba(0, 0, 0, 0.70)',
                       backdropFilter: 'blur(10px)',
@@ -1893,7 +1901,8 @@ export default function KaiCommand() {
                     } : {}}
                   >
                   {/* Kai Logo with spotlight and animation in cinematic mode */}
-                  <div className={`relative mb-6 ${isCinematic ? 'mb-8' : 'mb-4'}`}>
+                  {/* Reduced margins in Cinematic mode to fit within constrained height */}
+                  <div className={`relative ${isCinematic ? 'mb-4' : 'mb-6'}`}>
                     {/* Spotlight glow behind Kai in cinematic mode */}
                     {isCinematic && (
                       <div 
@@ -1905,7 +1914,7 @@ export default function KaiCommand() {
                       />
                     )}
                     <div className={`relative ${isDark ? 'drop-shadow-[0_0_20px_rgba(255,76,76,0.18)]' : ''} ${isCinematic ? 'drop-shadow-[0_0_40px_rgba(255,76,76,0.35)]' : ''}`}>
-                      <KaiLogo className={`${isCinematic ? 'w-[140px] h-[140px]' : 'w-[100px] h-[100px]'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicPulse_4s_ease-in-out_infinite]' : ''}`} />
+                      <KaiLogo className={`${isCinematic ? 'w-[100px] h-[100px]' : 'w-[100px] h-[100px]'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicPulse_4s_ease-in-out_infinite]' : ''}`} />
                     </div>
                   </div>
                   <h2 
@@ -1922,7 +1931,7 @@ export default function KaiCommand() {
                   {/* Rotating taglines in cinematic mode, static text otherwise */}
                   {(isCinematic || isFocusMode) ? (
                     <p 
-                      className={`text-center max-w-md mb-10 text-lg transition-opacity duration-500 ${taglineVisible ? '' : 'invisible'}`}
+                      className={`text-center max-w-md ${isCinematic ? 'mb-4' : 'mb-10'} text-lg transition-opacity duration-500 ${taglineVisible ? '' : 'invisible'}`}
                       style={{ 
                         textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                         animation: isCinematic ? 'cinematicTextSlideUp 0.5s ease-out 0.35s both' : 'none',
@@ -1939,7 +1948,7 @@ export default function KaiCommand() {
                   )}
                   
                   {/* Quick Commands Carousel */}
-                  <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
+                  <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-2' : 'max-w-4xl'} transition-all duration-500`}
                     style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
                   >
                     {/* Left Arrow */}
@@ -1973,7 +1982,7 @@ export default function KaiCommand() {
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border ${(isCinematic || isFocusMode) ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
+                          className={`relative flex-shrink-0 ${isCinematic ? 'w-[140px]' : isFocusMode ? 'w-[160px]' : 'w-[200px]'} border ${isCinematic ? 'rounded-[12px] p-3' : isFocusMode ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
                             (isCinematic || isFocusMode)
                               ? `border-white/30 hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
                               : isDark 

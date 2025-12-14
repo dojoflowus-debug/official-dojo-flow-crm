@@ -3658,3 +3658,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test all three themes toggle correctly without refresh
 - [x] Ensure Light mode remains unchanged
 
+
+## Cinematic Mode Layout Fix - Remove Scrollbar & Hero Overlap
+- [x] Remove initial scrollbar on first render (set hero container max-height using viewport math)
+- [x] Apply overflow: hidden to hero container
+- [x] Add bottom padding to main content wrapper (CHATBAR_HEIGHT + 16px)
+- [x] Ensure chat bar remains sticky/fixed
+- [x] Reduce hero container height/padding and move up ~12-24px
+- [x] Test layout stability when switching themes and resizing window
