@@ -3608,3 +3608,40 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Use CSS transitions for smooth animation
 - [ ] Save checkpoint
 
+
+## 🚀 NEW: Edit Profile Mode for Instructors
+
+### Database Schema
+- [x] Add profile fields to users table (displayName, preferredName, phone, bio, photoUrl)
+
+### Backend API
+- [x] Create profile.me query (GET current user profile)
+- [x] Create profile.update mutation (PATCH name/phone/bio)
+- [x] Create profile.uploadPhoto mutation (POST photo with S3 storage)
+
+### Profile Page UI
+- [ ] Add "Profile" menu item to top-right avatar dropdown
+- [ ] Create Profile page with read-only profile card
+- [ ] Add "Edit Profile" button to open edit panel
+
+### Edit Profile Panel
+- [ ] Create slide-over panel component
+- [ ] Add profile photo preview with "Change Photo" button
+- [ ] Add editable fields (Display Name, Preferred Name, Phone, Bio)
+- [ ] Add view-only fields (Role, Locations, Staff ID)
+- [ ] Add sticky footer with Cancel/Save buttons
+
+### Photo Upload
+- [ ] Accept jpg/png/webp formats
+- [ ] Implement square crop UI before upload
+- [ ] Enforce 10MB max file size
+- [ ] Store resized versions (256px/512px)
+- [ ] Handle upload failures gracefully
+
+### Permissions & UX
+- [ ] Instructors can only edit their own profile
+- [ ] Admins can edit any staff profile
+- [ ] Add unsaved changes warning on close
+- [ ] Optimistic UI updates after save
+- [ ] Save checkpoint
+

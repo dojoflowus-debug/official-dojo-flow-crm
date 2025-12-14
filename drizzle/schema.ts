@@ -30,6 +30,15 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  // Profile fields for Edit Profile Mode
+  displayName: varchar("displayName", { length: 255 }),
+  preferredName: varchar("preferredName", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  bio: varchar("bio", { length: 160 }),
+  photoUrl: varchar("photoUrl", { length: 500 }),
+  photoUrlSmall: varchar("photoUrlSmall", { length: 500 }),
+  staffId: varchar("staffId", { length: 50 }),
+  locationIds: text("locationIds"), // JSON array of location IDs
 });
 
 export type User = typeof users.$inferSelect;

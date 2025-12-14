@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users \nADD COLUMN displayName VARCHAR(255),\nADD COLUMN preferredName VARCHAR(255),\nADD COLUMN phone VARCHAR(20),\nADD COLUMN bio VARCHAR(160),\nADD COLUMN photoUrl VARCHAR(500),\nADD COLUMN photoUrlSmall VARCHAR(500),\nADD COLUMN staffId VARCHAR(50),\nADD COLUMN locationIds TEXT;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE users \nADD COLUMN displayName VARCHAR(255),\nADD COLUMN preferredName VARCHAR(255),\nADD COLUMN phone VARCHAR(20),\nADD COLUMN bio VARCHAR(160),\nADD COLUMN photoUrl VARCHAR(500),\nADD COLUMN photoUrlSmall VARCHAR(500),\nADD COLUMN staffId VARCHAR(50),\nADD COLUMN locationIds TEXT;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2546
+}

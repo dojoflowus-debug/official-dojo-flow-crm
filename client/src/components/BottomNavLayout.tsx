@@ -360,6 +360,13 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                   </div>
                   <DropdownMenuSeparator className={isDark ? 'bg-[#2A2B2F]' : 'bg-[#E2E3E6]'} />
                   <DropdownMenuItem 
+                    onClick={() => navigate('/profile')}
+                    className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     onClick={handleLogout}
                     className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
                   >

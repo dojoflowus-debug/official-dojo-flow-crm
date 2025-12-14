@@ -138,6 +138,211 @@ export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   
+  // Profile management for Edit Profile Mode
+  profile: router({
+    // Get current user's profile
+    me: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db || !ctx.user?.id) {
+          return null;
+        }
+        
+        const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+        
+        if (!user) return null;
+        
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          displayName: user.displayName,
+          preferredName: user.preferredName,
+          phone: user.phone,
+          bio: user.bio,
+          photoUrl: user.photoUrl,
+          photoUrlSmall: user.photoUrlSmall,
+          role: user.role,
+          staffId: user.staffId,
+          locationIds: user.locationIds ? JSON.parse(user.locationIds) : [],
+          createdAt: user.createdAt,
+        };
+      }),
+    
+    // Update current user's profile
+    update: protectedProcedure
+      .input(z.object({
+        displayName: z.string().max(255).optional(),
+        preferredName: z.string().max(255).optional(),
+        phone: z.string().max(20).optional(),
+        bio: z.string().max(160).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db || !ctx.user?.id) {
+          throw new Error('Not authenticated');
+        }
+        
+        await db.update(users)
+          .set({
+            displayName: input.displayName,
+            preferredName: input.preferredName,
+            phone: input.phone,
+            bio: input.bio,
+          })
+          .where(eq(users.id, ctx.user.id));
+        
+        return { success: true };
+      }),
+    
+    // Upload profile photo
+    uploadPhoto: protectedProcedure
+      .input(z.object({
+        fileData: z.string(), // base64 data URL
+        fileType: z.string(), // MIME type
+        fileSize: z.number(), // Size in bytes
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { storagePut } = await import("./storage");
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024;
+        if (input.fileSize > maxSize) {
+          throw new Error('File size exceeds 10MB limit');
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(input.fileType)) {
+          throw new Error('File type not supported. Allowed: jpg, png, webp');
+        }
+        
+        // Extract base64 data
+        const base64Match = input.fileData.match(/^data:[^;]+;base64,(.+)$/);
+        if (!base64Match) {
+          throw new Error('Invalid file data format');
+        }
+        
+        const buffer = Buffer.from(base64Match[1], 'base64');
+        
+        // Generate unique key
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const userId = ctx.user?.id || 'anonymous';
+        const ext = input.fileType.split('/')[1] || 'jpg';
+        const key = `profile-photos/${userId}/${timestamp}-${randomSuffix}.${ext}`;
+        
+        // Upload to S3
+        const result = await storagePut(key, buffer, input.fileType);
+        
+        // Update user record
+        const db = await getDb();
+        if (db && ctx.user?.id) {
+          await db.update(users)
+            .set({
+              photoUrl: result.url,
+              photoUrlSmall: result.url, // TODO: Generate resized version
+            })
+            .where(eq(users.id, ctx.user.id));
+        }
+        
+        return {
+          success: true,
+          url: result.url,
+        };
+      }),
+    
+    // Admin: Get any user's profile
+    getUser: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        // Only admins can view other profiles
+        if (ctx.user?.role !== 'admin' && ctx.user?.role !== 'owner') {
+          throw new Error('Unauthorized');
+        }
+        
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return null;
+        
+        const [user] = await db.select().from(users).where(eq(users.id, input.userId)).limit(1);
+        
+        if (!user) return null;
+        
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          displayName: user.displayName,
+          preferredName: user.preferredName,
+          phone: user.phone,
+          bio: user.bio,
+          photoUrl: user.photoUrl,
+          photoUrlSmall: user.photoUrlSmall,
+          role: user.role,
+          staffId: user.staffId,
+          locationIds: user.locationIds ? JSON.parse(user.locationIds) : [],
+          createdAt: user.createdAt,
+        };
+      }),
+    
+    // Admin: Update any user's profile
+    updateUser: protectedProcedure
+      .input(z.object({
+        userId: z.number(),
+        displayName: z.string().max(255).optional(),
+        preferredName: z.string().max(255).optional(),
+        phone: z.string().max(20).optional(),
+        bio: z.string().max(160).optional(),
+        role: z.enum(['user', 'admin', 'owner', 'staff']).optional(),
+        locationIds: z.array(z.number()).optional(),
+        staffId: z.string().max(50).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Only admins can update other profiles
+        if (ctx.user?.role !== 'admin' && ctx.user?.role !== 'owner') {
+          throw new Error('Unauthorized');
+        }
+        
+        const { getDb } = await import("./db");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) {
+          throw new Error('Database not available');
+        }
+        
+        await db.update(users)
+          .set({
+            displayName: input.displayName,
+            preferredName: input.preferredName,
+            phone: input.phone,
+            bio: input.bio,
+            role: input.role,
+            locationIds: input.locationIds ? JSON.stringify(input.locationIds) : undefined,
+            staffId: input.staffId,
+          })
+          .where(eq(users.id, input.userId));
+        
+        return { success: true };
+      }),
+  }),
+  
   // File upload for attachments
   upload: router({
     // Upload a file attachment (image or document)
