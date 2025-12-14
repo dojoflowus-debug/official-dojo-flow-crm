@@ -3230,3 +3230,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Display staff members in a "Staff" section in the dropdown
 - [x] Show staff role and addressAs (e.g., "Coach Sarah")
 - [x] Test mentioning staff members in Kai Command
+
+## Feature: Display Staff Profile in Chat Mentions
+
+### Requirements
+- [x] Render @mentions as styled chips/pills in chat messages
+- [x] Show staff profile picture (avatar) next to their name
+- [x] Display full name on hover or in the chip
+- [x] Style mentions distinctly from regular text
+- [x] Test mention display in conversation thread

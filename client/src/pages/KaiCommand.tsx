@@ -136,6 +136,97 @@ export default function KaiCommand() {
     return user.name.substring(0, 2).toUpperCase();
   };
 
+  // Staff data for mention rendering
+  const { data: staffData } = trpc.staff.getAll.useQuery({ limit: 50 });
+  
+  // Render message content with styled @mentions
+  const renderMessageWithMentions = (content: string) => {
+    // Match @mentions (e.g., @Coach Sarah, @Kai, @Mr. Chen)
+    const mentionRegex = /@([A-Za-z][A-Za-z0-9.\s]*?)(?=\s|$|,|\.|!|\?)/g;
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      // Add text before the mention
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+      
+      const mentionName = match[1].trim();
+      
+      // Find matching staff member
+      const staffMember = staffData?.staff?.find(
+        (s: any) => s.name.toLowerCase() === mentionName.toLowerCase() ||
+                    s.fullName?.toLowerCase() === mentionName.toLowerCase()
+      );
+      
+      // Check if it's Kai
+      const isKai = mentionName.toLowerCase() === 'kai';
+      
+      if (staffMember || isKai) {
+        // Get initials for avatar
+        const getInitials = (name: string) => {
+          const names = name.split(' ');
+          if (names.length >= 2) {
+            return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+          }
+          return name.substring(0, 2).toUpperCase();
+        };
+        
+        parts.push(
+          <span
+            key={`mention-${match.index}`}
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-sm font-medium ${
+              isKai 
+                ? 'bg-gradient-to-r from-red-500/20 to-orange-500/20 text-red-400 border border-red-500/30'
+                : isDark || isCinematic
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                  : 'bg-blue-100 text-blue-700 border border-blue-200'
+            }`}
+            title={isKai ? 'Kai - AI Assistant' : `${staffMember?.fullName || mentionName} - ${staffMember?.role || 'Staff'}`}
+          >
+            {isKai ? (
+              <img src="/kai-avatar.png" alt="Kai" className="w-4 h-4 rounded-full" />
+            ) : staffMember?.photoUrl ? (
+              <img src={staffMember.photoUrl} alt={mentionName} className="w-4 h-4 rounded-full object-cover" />
+            ) : (
+              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                isDark || isCinematic ? 'bg-blue-500/40 text-blue-200' : 'bg-blue-200 text-blue-700'
+              }`}>
+                {getInitials(staffMember?.fullName || mentionName)}
+              </span>
+            )}
+            <span>{isKai ? 'Kai' : staffMember?.name || mentionName}</span>
+          </span>
+        );
+      } else {
+        // Unknown mention - still style it but simpler
+        parts.push(
+          <span
+            key={`mention-${match.index}`}
+            className={`inline-flex items-center px-1.5 py-0.5 rounded text-sm font-medium ${
+              isDark || isCinematic
+                ? 'bg-gray-500/20 text-gray-300'
+                : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            @{mentionName}
+          </span>
+        );
+      }
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+    
+    return parts.length > 0 ? parts : content;
+  };
+
   // tRPC queries and mutations for Kai
   const kaiChatMutation = trpc.kai.chat.useMutation();
   const statsQuery = trpc.dashboard.stats.useQuery();
@@ -1239,7 +1330,7 @@ export default function KaiCommand() {
                                 textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                                 zIndex: 30
                               } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
-                            >{message.content}</p>
+                            >{renderMessageWithMentions(message.content)}</p>
                           </div>
                         </>
                       ) : (
@@ -1260,7 +1351,7 @@ export default function KaiCommand() {
                                 zIndex: 30
                               } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
                             >
-                              {message.content}
+                              {renderMessageWithMentions(message.content)}
                             </div>
                           </div>
                         </>
