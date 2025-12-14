@@ -3801,3 +3801,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show attachment preview immediately after drop
 - [x] Trigger Kai intake logic (detect schedule, roster, profile photo, etc.)
 - [x] Test across Light, Dark, and Cinematic modes (theme-aware styling)
+
+## Multi-File Upload Progress Indicators
+- [x] Add progress percentage to Attachment type
+- [x] Track upload progress using FileReader onprogress + simulated upload progress
+- [x] Display individual progress bar for each uploading file (red progress bar)
+- [x] Show percentage text alongside progress bar (0-100%)
+- [x] Animate progress bar smoothly (transition-all duration-150 ease-out)
+- [x] Works for both drag-and-drop and paperclip uploads

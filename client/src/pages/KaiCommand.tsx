@@ -105,6 +105,7 @@ interface Attachment {
   fileSize: number;
   url: string;
   uploading?: boolean;
+  progress?: number; // Upload progress 0-100
   error?: string;
   docId?: number; // Reference to documents table
   uploadedAt?: Date;
@@ -1085,16 +1086,43 @@ export default function KaiCommand() {
         fileType: file.type,
         fileSize: file.size,
         url: '',
-        uploading: true
+        uploading: true,
+        progress: 0
       };
 
       setAttachments(prev => [...prev, tempAttachment]);
 
-      // Read file as base64
+      // Read file as base64 with progress tracking
       const reader = new FileReader();
+      
+      // Track reading progress (first 50% of total progress)
+      reader.onprogress = (progressEvent) => {
+        if (progressEvent.lengthComputable) {
+          const readProgress = Math.round((progressEvent.loaded / progressEvent.total) * 50);
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId ? { ...att, progress: readProgress } : att
+          ));
+        }
+      };
+      
       reader.onload = async (event) => {
         try {
           const base64Data = event.target?.result as string;
+          
+          // Update progress to 50% (reading complete, starting upload)
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId ? { ...att, progress: 50 } : att
+          ));
+          
+          // Simulate upload progress (50-100%)
+          const progressInterval = setInterval(() => {
+            setAttachments(prev => prev.map(att => {
+              if (att.id === tempId && att.uploading && (att.progress || 0) < 95) {
+                return { ...att, progress: Math.min((att.progress || 50) + 5, 95) };
+              }
+              return att;
+            }));
+          }, 100);
           
           const result = await uploadMutation.mutateAsync({
             fileName: file.name,
@@ -1103,8 +1131,10 @@ export default function KaiCommand() {
             fileSize: file.size,
             context: 'kai-command'
           });
+          
+          clearInterval(progressInterval);
 
-          // Update attachment with uploaded URL
+          // Update attachment with uploaded URL and 100% progress
           const updatedAttachment: Attachment = {
             id: tempId,
             fileName: file.name,
@@ -1112,6 +1142,7 @@ export default function KaiCommand() {
             fileSize: file.size,
             url: result.url,
             uploading: false,
+            progress: 100
           };
           
           setAttachments(prev => prev.map(att => 
@@ -1240,16 +1271,43 @@ export default function KaiCommand() {
         fileType: file.type,
         fileSize: file.size,
         url: '',
-        uploading: true
+        uploading: true,
+        progress: 0
       };
       
       setAttachments(prev => [...prev, tempAttachment]);
       
-      // Read file as base64
+      // Read file as base64 with progress tracking
       const reader = new FileReader();
+      
+      // Track reading progress (first 50% of total progress)
+      reader.onprogress = (progressEvent) => {
+        if (progressEvent.lengthComputable) {
+          const readProgress = Math.round((progressEvent.loaded / progressEvent.total) * 50);
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId ? { ...att, progress: readProgress } : att
+          ));
+        }
+      };
+      
       reader.onload = async (event) => {
         try {
           const base64Data = event.target?.result as string;
+          
+          // Update progress to 50% (reading complete, starting upload)
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId ? { ...att, progress: 50 } : att
+          ));
+          
+          // Simulate upload progress (50-100%)
+          const progressInterval = setInterval(() => {
+            setAttachments(prev => prev.map(att => {
+              if (att.id === tempId && att.uploading && (att.progress || 0) < 95) {
+                return { ...att, progress: Math.min((att.progress || 50) + 5, 95) };
+              }
+              return att;
+            }));
+          }, 100);
           
           const result = await uploadMutation.mutateAsync({
             fileName: file.name,
@@ -1259,7 +1317,9 @@ export default function KaiCommand() {
             context: 'kai-command'
           });
           
-          // Update attachment with uploaded URL
+          clearInterval(progressInterval);
+          
+          // Update attachment with uploaded URL and 100% progress
           const updatedAttachment: Attachment = {
             id: tempId,
             fileName: file.name,
@@ -1267,6 +1327,7 @@ export default function KaiCommand() {
             fileSize: file.size,
             url: result.url,
             uploading: false,
+            progress: 100
           };
           
           setAttachments(prev => prev.map(att => 
@@ -2935,9 +2996,23 @@ export default function KaiCommand() {
                         <p className={`text-xs font-medium truncate ${isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-700'}`}>
                           {attachment.fileName}
                         </p>
-                        <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
-                          {formatFileSize(attachment.fileSize)}
-                        </p>
+                        {attachment.uploading ? (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isCinematic || isFocusMode ? 'bg-white/20' : isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+                              <div 
+                                className="h-full bg-[#FF4C4C] rounded-full transition-all duration-150 ease-out"
+                                style={{ width: `${attachment.progress || 0}%` }}
+                              />
+                            </div>
+                            <span className={`text-[10px] font-medium min-w-[28px] text-right ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-500'}`}>
+                              {attachment.progress || 0}%
+                            </span>
+                          </div>
+                        ) : (
+                          <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                            {formatFileSize(attachment.fileSize)}
+                          </p>
+                        )}
                       </div>
                       
                       {/* Upload status or remove button */}
