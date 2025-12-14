@@ -3258,3 +3258,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Handle dropped files the same as file picker selection
 - [x] Support both add and edit modals
 - [x] Test drag-and-drop functionality
+
+## Feature: Camera Capture for Mobile Devices
+
+### Requirements
+- [x] Add camera capture button that appears on mobile/touch devices
+- [x] Use HTML5 capture attribute to open device camera
+- [x] Handle captured photo the same as file upload
+- [x] Style camera button consistently with upload button
+- [x] Test on mobile viewport

@@ -33,6 +33,7 @@ import {
   Loader2,
   Camera,
   X,
+  Smartphone,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 import { toast } from 'sonner'
@@ -68,6 +69,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   
   // tRPC mutations for photo upload
   const uploadFileMutation = trpc.files.upload.useMutation()
@@ -667,18 +669,42 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                       className="hidden"
                       id="photo-upload"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => photoInputRef.current?.click()}
-                      disabled={photoUploading}
-                      className="gap-2"
-                    >
-                      <Camera className="h-4 w-4" />
-                      {photoUploading ? 'Uploading...' : 'Upload Photo'}
-                    </Button>
+                    {/* Camera capture input for mobile */}
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                      id="camera-capture"
+                    />
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => photoInputRef.current?.click()}
+                        disabled={photoUploading}
+                        className="gap-2"
+                      >
+                        <Camera className="h-4 w-4" />
+                        {photoUploading ? 'Uploading...' : 'Upload'}
+                      </Button>
+                      {/* Camera button - works on mobile devices */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => cameraInputRef.current?.click()}
+                        disabled={photoUploading}
+                        className="gap-2 sm:flex"
+                        title="Take photo with camera"
+                      >
+                        <Smartphone className="h-4 w-4" />
+                        Take Photo
+                      </Button>
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Drag & drop or click to upload. JPG, PNG, GIF. Max 5MB.
+                      Drag & drop, upload from gallery, or take a photo. Max 5MB.
                     </p>
                   </div>
                 </div>
@@ -827,18 +853,41 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
                       className="hidden"
                       id="edit-photo-upload"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('edit-photo-upload')?.click()}
-                      disabled={photoUploading}
-                      className="gap-2"
-                    >
-                      <Camera className="h-4 w-4" />
-                      {photoUploading ? 'Uploading...' : 'Change Photo'}
-                    </Button>
+                    {/* Camera capture input for mobile */}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                      id="edit-camera-capture"
+                    />
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('edit-photo-upload')?.click()}
+                        disabled={photoUploading}
+                        className="gap-2"
+                      >
+                        <Camera className="h-4 w-4" />
+                        {photoUploading ? 'Uploading...' : 'Change'}
+                      </Button>
+                      {/* Camera button - works on mobile devices */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('edit-camera-capture')?.click()}
+                        disabled={photoUploading}
+                        className="gap-2 sm:flex"
+                        title="Take photo with camera"
+                      >
+                        <Smartphone className="h-4 w-4" />
+                        Take Photo
+                      </Button>
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Drag & drop or click to upload. JPG, PNG, GIF. Max 5MB.
+                      Drag & drop, upload from gallery, or take a photo. Max 5MB.
                     </p>
                   </div>
                 </div>
