@@ -19,6 +19,7 @@ import {
   Palette
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
+import { AppLogo } from '@/components/AppLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useFocusMode } from '@/contexts/FocusModeContext'
@@ -268,11 +269,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
             {/* Left: DojoFlow Logo */}
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-2">
-                <img 
-                  src={isDark || isCinematic ? '/logo-dark.png' : '/logo-light.png'} 
-                  alt="DojoFlow" 
-                  className="h-9 object-contain opacity-95"
-                />
+                <AppLogo height={36} />
               </Link>
               
               {/* Page Title - Hidden on mobile */}

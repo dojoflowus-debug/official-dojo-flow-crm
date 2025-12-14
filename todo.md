@@ -3547,3 +3547,17 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Send email notification after waiver signing
 - [ ] Show in-app notification badge on Documents (future enhancement)
 
+
+
+## 🚀 NEW: Fix DojoFlow Logo for Light/Dark Mode
+
+### Requirements
+- [x] Create AppLogo component that reads global theme state
+- [x] Use dark logo for Light mode, light logo for Dark mode
+- [x] Remove any CSS filters that force incorrect appearance
+- [x] Add fallback text "DojoFlow" if logo fails to load
+- [x] Update BottomNavLayout to use AppLogo
+- [x] Update all pages using the logo (Kai Command, Students, Leads, Dashboard)
+- [x] Test logo toggles instantly without page refresh
+- [ ] Save checkpoint
+
