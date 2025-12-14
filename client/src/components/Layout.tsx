@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
+  LayoutDashboard,
   Users,
   UserPlus,
   Calendar,
@@ -35,6 +36,7 @@ export default function Layout({ children, onLogout = () => {}, theme = 'dark', 
   const [dragOverIndex, setDragOverIndex] = useState(null)
 
   const defaultNavigation = [
+    { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { id: 'students', name: 'Students', href: '/students', icon: Users },
     // { id: 'kiosk', name: 'Kiosk', href: '/kiosk', icon: Tablet },
     { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
@@ -78,6 +80,9 @@ export default function Layout({ children, onLogout = () => {}, theme = 'dark', 
   }, [])
 
   const isActive = (path) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/' || location.pathname === '/dashboard'
+    }
     return location.pathname.startsWith(path)
   }
 

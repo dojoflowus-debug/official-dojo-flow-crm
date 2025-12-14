@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS thread_participants (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  conversationId INT NOT NULL,\n  participantType ENUM('staff', 'student', 'system') NOT NULL,\n  participantId INT,\n  participantName VARCHAR(255) NOT NULL,\n  role ENUM('owner', 'member', 'viewer') NOT NULL DEFAULT 'member',\n  addedById INT,\n  addedByName VARCHAR(255),\n  isActive INT NOT NULL DEFAULT 1,\n  lastReadMessageId INT,\n  lastReadAt TIMESTAMP,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS thread_participants (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  conversationId INT NOT NULL,\n  participantType ENUM('staff', 'student', 'system') NOT NULL,\n  participantId INT,\n  participantName VARCHAR(255) NOT NULL,\n  role ENUM('owner', 'member', 'viewer') NOT NULL DEFAULT 'member',\n  addedById INT,\n  addedByName VARCHAR(255),\n  isActive INT NOT NULL DEFAULT 1,\n  lastReadMessageId INT,\n  lastReadAt TIMESTAMP,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 181
-}

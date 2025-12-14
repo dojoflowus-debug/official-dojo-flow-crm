@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
+  LayoutDashboard,
   Users,
   UserPlus,
   Sparkles,
@@ -15,12 +16,9 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-  Palette,
-  User,
-  Wand2
+  Palette
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
-import { AppLogo } from '@/components/AppLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useFocusMode } from '@/contexts/FocusModeContext'
@@ -35,11 +33,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { EditProfileModal } from '@/components/EditProfileModal'
 import ThemeToggle from '@/components/ThemeToggle'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
+  { id: 'dashboard', name: 'Dashboard', href: '/crm-dashboard', icon: LayoutDashboard },
   { id: 'students', name: 'Students', href: '/students', icon: Users },
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
   { id: 'kai-command', name: 'Kai', href: '/kai-command', icon: Sparkles, isCenter: true },
@@ -52,6 +50,8 @@ const NAVIGATION = [
 
 // Page titles mapping
 const PAGE_TITLES: Record<string, string> = {
+  '/crm-dashboard': 'Dashboard',
+  '/dashboard': 'Dashboard',
   '/students': 'Students',
   '/leads': 'Leads',
   '/kai-dashboard': 'Kai Command',
@@ -91,9 +91,6 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   
   // Hover state for Apple dock bubble effect
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  
-  // Edit Profile modal state
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
   
   useEffect(() => {
     const handleScroll = () => {
@@ -271,7 +268,11 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
             {/* Left: DojoFlow Logo */}
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-2">
-                <AppLogo height={36} />
+                <img 
+                  src={isDark || isCinematic ? '/logo-dark.png' : '/logo-light.png'} 
+                  alt="DojoFlow" 
+                  className="h-9 object-contain opacity-95"
+                />
               </Link>
               
               {/* Page Title - Hidden on mobile */}
@@ -362,23 +363,8 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                   </div>
                   <DropdownMenuSeparator className={isDark ? 'bg-[#2A2B2F]' : 'bg-[#E2E3E6]'} />
                   <DropdownMenuItem 
-                    onClick={() => setIsEditProfileOpen(true)}
-                    className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate('/setup-wizard')}
-                    className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Setup Wizard
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className={isDark ? 'bg-[#2A2B2F]' : 'bg-[#E2E3E6]'} />
-                  <DropdownMenuItem 
                     onClick={handleLogout}
-                    className={`cursor-pointer text-red-500 ${isDark ? 'hover:bg-[#2A2B2F]' : 'hover:bg-gray-100'}`}
+                    className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign out
@@ -546,12 +532,6 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
           )}
         </button>
       </nav>
-      
-      {/* Edit Profile Modal */}
-      <EditProfileModal 
-        open={isEditProfileOpen} 
-        onOpenChange={setIsEditProfileOpen} 
-      />
     </div>
   )
 }

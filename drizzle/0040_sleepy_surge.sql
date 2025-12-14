@@ -1,1 +1,0 @@
-ALTER TABLE `kai_messages` ADD `attachments` text;

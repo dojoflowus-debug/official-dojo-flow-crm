@@ -41,7 +41,7 @@ export default function Step8Review({ onBack, onEditStep }: Step8ReviewProps) {
       await completeSetupMutation.mutateAsync();
       // Show success message and redirect
       alert('🎉 DojoFlow is now live! Kai is ready to help you manage your business.');
-      navigate('/kai-command');
+      navigate('/crm-dashboard');
     } catch (error) {
       console.error('Error completing setup:', error);
       alert('Failed to complete setup. Please try again.');

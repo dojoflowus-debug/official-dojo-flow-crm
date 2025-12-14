@@ -6,12 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { useEnvironment } from '@/contexts/EnvironmentContext';
 import { trpc } from '@/lib/trpc';
-import { analyzeFile, generateKaiFileResponse, getImageDimensions, type FileAnalysis, type ProposedAction } from '@/lib/fileIntelligence';
-import { FileActionCard } from '@/components/FileActionCard';
-import { SchedulePreviewCard, type ExtractedClass } from '@/components/SchedulePreviewCard';
-import { RosterPreviewCard, type ExtractedStudent } from '@/components/RosterPreviewCard';
-import { PastedDataCard } from '@/components/PastedDataCard';
-import { detectStructuredData, looksLikeStructuredData, type DetectedStructuredData } from '@/lib/structuredDataDetection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,8 +14,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePreviewCard';
 import { 
   Search, 
   Plus, 
@@ -59,16 +53,7 @@ import {
   File,
   Loader2,
   List,
-  Save,
-  Download,
-  ZoomIn,
-  FileIcon,
-  FileSpreadsheet,
-  FileImage,
-  FileVideo,
-  FileAudio,
-  Upload,
-  RefreshCw
+  Save
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -86,7 +71,6 @@ interface Conversation {
   status: 'neutral' | 'attention' | 'urgent';
   category: 'kai' | 'growth' | 'billing';
   date: 'today' | 'yesterday' | 'older';
-  threadType?: 'kai_direct' | 'group';
 }
 
 // Message type
@@ -106,12 +90,7 @@ interface Attachment {
   fileSize: number;
   url: string;
   uploading?: boolean;
-  progress?: number; // Upload progress 0-100
   error?: string;
-  docId?: number; // Reference to documents table
-  uploadedAt?: Date;
-  uploadedBy?: string;
-  originalFile?: File; // Store original file for retry
 }
 
 export default function KaiCommand() {
@@ -123,6 +102,16 @@ export default function KaiCommand() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Schedule extraction state
+  const [schedulePreview, setSchedulePreview] = useState<{
+    classes: ExtractedClass[];
+    fileName: string;
+    confidence: number;
+    warnings?: string[];
+  } | null>(null);
+  const [isExtractingSchedule, setIsExtractingSchedule] = useState(false);
+  const [isCreatingClasses, setIsCreatingClasses] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedInput, setExpandedInput] = useState(false);
   const [commandCenterWidth, setCommandCenterWidth] = useState(320);
@@ -137,61 +126,6 @@ export default function KaiCommand() {
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
-  
-  // Lightbox state for image preview
-  const [lightboxImage, setLightboxImage] = useState<{url: string; filename: string} | null>(null);
-  
-  // File intelligence state for Kai-assisted setup
-  const [pendingFileAnalysis, setPendingFileAnalysis] = useState<{
-    attachment: Attachment;
-    analysis: FileAnalysis;
-  } | null>(null);
-  const [isProcessingFileAction, setIsProcessingFileAction] = useState(false);
-  
-  // Schedule extraction state
-  const [schedulePreview, setSchedulePreview] = useState<{
-    classes: ExtractedClass[];
-    confidence: number;
-    warnings?: string[];
-    sourceFile: string;
-  } | null>(null);
-  const [isCreatingClasses, setIsCreatingClasses] = useState(false);
-  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
-  const [scheduleDuplicates, setScheduleDuplicates] = useState<Array<{
-    importIndex: number;
-    existingClass: { id: number; name: string; schedule: string };
-    matchType: 'exact' | 'name_only' | 'time_conflict';
-  }>>([]);
-  
-  // Roster extraction state
-  const [rosterPreview, setRosterPreview] = useState<{
-    students: ExtractedStudent[];
-    confidence: number;
-    warnings?: string[];
-    sourceFile: string;
-  } | null>(null);
-  const [isCreatingStudents, setIsCreatingStudents] = useState(false);
-  const [isCheckingStudentDuplicates, setIsCheckingStudentDuplicates] = useState(false);
-  const [rosterDuplicates, setRosterDuplicates] = useState<Array<{
-    importIndex: number;
-    existingStudent: { id: number; firstName: string; lastName: string; email: string | null };
-    matchType: 'exact' | 'name_only' | 'email_match' | 'phone_match';
-  }>>([]);
-  
-  // Pasted structured data state
-  const [pastedData, setPastedData] = useState<DetectedStructuredData | null>(null);
-  const [isProcessingPastedData, setIsProcessingPastedData] = useState(false);
-  
-  // Drag-and-drop state
-  const [isDragging, setIsDragging] = useState(false);
-  const dragCounterRef = useRef(0);
-  
-  // Add Staff modal state
-  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
-  const [staffSearchQuery, setStaffSearchQuery] = useState('');
-  const [selectedStaffIds, setSelectedStaffIds] = useState<Set<number>>(new Set());
-  const [isAddingParticipants, setIsAddingParticipants] = useState(false);
-  const [isThreadAttachmentsOpen, setIsThreadAttachmentsOpen] = useState(false);
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
@@ -220,9 +154,6 @@ export default function KaiCommand() {
   // Staff data for mention rendering
   const { data: staffData } = trpc.staff.getAll.useQuery({ limit: 50 });
   
-  // Student data for mention rendering
-  const { data: studentsData } = trpc.students.getAll.useQuery({ limit: 100 });
-  
   // Render message content with styled @mentions
   // Add note to student mutation
   const addStudentNoteMutation = trpc.students.addNote.useMutation();
@@ -242,162 +173,6 @@ export default function KaiCommand() {
       console.error('Failed to save note to student card:', error);
       toast.error(`Couldn't save note. ${error?.message || 'Unknown error'}`);
     }
-  };
-  
-  // Helper to check if file is an image
-  const isImageFile = (mimeType: string) => {
-    return mimeType.startsWith('image/');
-  };
-  
-  // Helper to check if file is a document
-  const isDocumentFile = (mimeType: string) => {
-    const docTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'text/plain', 'text/csv'];
-    return docTypes.includes(mimeType);
-  };
-  
-  // Get icon for file type
-  const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return <FileImage className="w-5 h-5" />;
-    if (mimeType.startsWith('video/')) return <FileVideo className="w-5 h-5" />;
-    if (mimeType.startsWith('audio/')) return <FileAudio className="w-5 h-5" />;
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return <FileSpreadsheet className="w-5 h-5" />;
-    if (mimeType === 'application/pdf') return <FileText className="w-5 h-5 text-red-500" />;
-    return <FileIcon className="w-5 h-5" />;
-  };
-  
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-  
-  // Render inline attachments for a message
-  const renderInlineAttachments = (messageAttachments: Attachment[] | undefined) => {
-    if (!messageAttachments || messageAttachments.length === 0) return null;
-    
-    const images = messageAttachments.filter(att => isImageFile(att.fileType));
-    const documents = messageAttachments.filter(att => !isImageFile(att.fileType));
-    
-    return (
-      <div className="mt-3 space-y-3">
-        {/* Image Grid - Strictly constrained for proper chat layout */}
-        {images.length > 0 && (
-          <div 
-            className="inline-flex flex-wrap gap-2" 
-            style={{ maxWidth: images.length === 1 ? '280px' : '400px' }}
-          >
-            {images.map((img) => (
-              <div
-                key={img.id}
-                className={`relative group cursor-pointer rounded-lg overflow-hidden border shadow-sm transition-all duration-200 hover:shadow-md ${
-                  isCinematic || isFocusMode
-                    ? 'border-white/20 hover:border-white/40'
-                    : isDark
-                      ? 'border-white/10 hover:border-white/20'
-                      : 'border-slate-200 hover:border-slate-300'
-                }`}
-                style={{
-                  width: images.length === 1 ? '280px' : images.length === 2 ? '140px' : '120px',
-                  height: images.length === 1 ? '200px' : images.length === 2 ? '140px' : '100px',
-                }}
-                onClick={() => setLightboxImage({ url: img.url, filename: img.fileName })}
-              >
-                <img
-                  src={img.url}
-                  alt={img.fileName}
-                  className={`w-full h-full object-contain ${
-                    isCinematic || isFocusMode || isDark ? 'bg-black/20' : 'bg-slate-100'
-                  }`}
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ZoomIn className="w-3 h-3 text-white" />
-                    <span className="text-xs text-white font-medium">View</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {/* Document Cards */}
-        {documents.length > 0 && (
-          <div className="space-y-2">
-            {documents.map((doc) => (
-              <div
-                key={doc.id}
-                className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  isCinematic || isFocusMode
-                    ? 'bg-black/40 border-white/20'
-                    : isDark
-                      ? 'bg-[#1A1A1C] border-white/10'
-                      : 'bg-slate-50 border-slate-200'
-                }`}
-              >
-                <div className={`p-2 rounded-lg ${
-                  isCinematic || isFocusMode
-                    ? 'bg-white/10'
-                    : isDark
-                      ? 'bg-white/5'
-                      : 'bg-white'
-                }`}>
-                  {getFileIcon(doc.fileType)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium truncate ${
-                    isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-900'
-                  }`}>
-                    {doc.fileName}
-                  </p>
-                  <p className={`text-xs ${
-                    isCinematic || isFocusMode ? 'text-white/60' : isDark ? 'text-white/50' : 'text-slate-500'
-                  }`}>
-                    {formatFileSize(doc.fileSize)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  {doc.fileType === 'application/pdf' && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => window.open(doc.url, '_blank')}
-                      title="Preview"
-                    >
-                      <Eye className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-500'}`} />
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => {
-                      const a = document.createElement('a');
-                      a.href = doc.url;
-                      a.download = doc.fileName;
-                      a.click();
-                    }}
-                    title="Download"
-                  >
-                    <Download className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-500'}`} />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-  
-  // Strip attachment links from message content for clean display
-  const stripAttachmentLinks = (content: string) => {
-    // Remove "Attachments:\n[filename](url)" patterns
-    return content.replace(/\n*Attachments:\n(\[[^\]]+\]\([^)]+\)\n?)+/g, '').trim();
   };
   
   const renderMessageWithMentions = (content: string) => {
@@ -558,12 +333,6 @@ export default function KaiCommand() {
   const renameConversationMutation = trpc.kai.renameConversation.useMutation();
   const summarizeConversationMutation = trpc.kai.summarizeConversation.useMutation();
   const extractConversationMutation = trpc.kai.extractConversation.useMutation();
-  const addParticipantMutation = trpc.kai.addParticipant.useMutation();
-  const removeParticipantMutation = trpc.kai.removeParticipant.useMutation();
-  const participantsQuery = trpc.kai.getParticipants.useQuery(
-    { conversationId: selectedConversationId ? parseInt(selectedConversationId) : 0 },
-    { enabled: !!selectedConversationId && !selectedConversationId.startsWith('new-') }
-  );
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const utils = trpc.useUtils();
@@ -700,7 +469,8 @@ export default function KaiCommand() {
         id: `summary-${Date.now()}`,
         role: 'assistant',
         content: `## 📋 Conversation Summary\n\n${result.summary}`,
-        timestamp: new Date()
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        avatar: 'Kai'
       };
       setMessages(prev => [...prev, summaryMessage]);
       
@@ -753,44 +523,6 @@ export default function KaiCommand() {
     }
   };
 
-  // Handle adding staff to conversation
-  const handleAddStaffToConversation = async () => {
-    if (!selectedConversationId || selectedStaffIds.size === 0) {
-      toast.error('Please select staff members to add');
-      return;
-    }
-    
-    setIsAddingParticipants(true);
-    const staffToAdd = staffData?.staff?.filter((s: any) => selectedStaffIds.has(s.id)) || [];
-    let addedCount = 0;
-    
-    try {
-      for (const staff of staffToAdd) {
-        await addParticipantMutation.mutateAsync({
-          conversationId: parseInt(selectedConversationId),
-          participantType: 'staff',
-          participantId: staff.id,
-          participantName: staff.name || staff.fullName || 'Staff Member',
-          role: 'member'
-        });
-        addedCount++;
-      }
-      
-      // Refresh participants
-      utils.kai.getParticipants.invalidate({ conversationId: parseInt(selectedConversationId) });
-      
-      toast.success(`Added ${addedCount} staff member${addedCount > 1 ? 's' : ''} to conversation`);
-      setIsAddStaffModalOpen(false);
-      setSelectedStaffIds(new Set());
-      setStaffSearchQuery('');
-    } catch (error: any) {
-      console.error('Failed to add staff:', error);
-      toast.error(`Couldn't add staff. ${error?.message || 'Unknown error'}`);
-    } finally {
-      setIsAddingParticipants(false);
-    }
-  };
-
   // Handle starting a new chat
   const handleNewChat = async () => {
     try {
@@ -833,8 +565,7 @@ export default function KaiCommand() {
       tags: [c.category, c.priority],
       status: c.priority as 'neutral' | 'attention' | 'urgent',
       category: c.category as 'kai' | 'growth' | 'billing',
-      date: dateCategory,
-      threadType: (c as any).threadType || 'kai_direct'
+      date: dateCategory
     };
   });
 
@@ -848,15 +579,7 @@ export default function KaiCommand() {
         id: m.id.toString(),
         role: m.role as 'user' | 'assistant',
         content: m.content,
-        timestamp: new Date(m.createdAt),
-        attachments: m.attachments && Array.isArray(m.attachments) ? m.attachments.map((att: any) => ({
-          id: att.id || `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          url: att.url,
-          fileName: att.fileName,
-          fileType: att.fileType,
-          fileSize: att.fileSize,
-          uploading: false,
-        })) : undefined,
+        timestamp: new Date(m.createdAt)
       }));
       setMessages(loadedMessages);
     }
@@ -1065,6 +788,10 @@ export default function KaiCommand() {
 
   // Upload mutation
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();
+  
+  // Schedule extraction mutations
+  const extractScheduleMutation = trpc.classes.extractSchedule.useMutation();
+  const createClassesMutation = trpc.classes.createClassesFromSchedule.useMutation();
 
   // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1076,9 +803,9 @@ export default function KaiCommand() {
       'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
       'application/pdf', 'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-      'text/csv',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+      'application/vnd.ms-excel', // xls
+      'text/csv', // csv
       'text/plain'
     ];
 
@@ -1103,44 +830,16 @@ export default function KaiCommand() {
         fileType: file.type,
         fileSize: file.size,
         url: '',
-        uploading: true,
-        progress: 0,
-        originalFile: file // Store for retry
+        uploading: true
       };
 
       setAttachments(prev => [...prev, tempAttachment]);
 
-      // Read file as base64 with progress tracking
+      // Read file as base64
       const reader = new FileReader();
-      
-      // Track reading progress (first 50% of total progress)
-      reader.onprogress = (progressEvent) => {
-        if (progressEvent.lengthComputable) {
-          const readProgress = Math.round((progressEvent.loaded / progressEvent.total) * 50);
-          setAttachments(prev => prev.map(att => 
-            att.id === tempId ? { ...att, progress: readProgress } : att
-          ));
-        }
-      };
-      
       reader.onload = async (event) => {
         try {
           const base64Data = event.target?.result as string;
-          
-          // Update progress to 50% (reading complete, starting upload)
-          setAttachments(prev => prev.map(att => 
-            att.id === tempId ? { ...att, progress: 50 } : att
-          ));
-          
-          // Simulate upload progress (50-100%)
-          const progressInterval = setInterval(() => {
-            setAttachments(prev => prev.map(att => {
-              if (att.id === tempId && att.uploading && (att.progress || 0) < 95) {
-                return { ...att, progress: Math.min((att.progress || 50) + 5, 95) };
-              }
-              return att;
-            }));
-          }, 100);
           
           const result = await uploadMutation.mutateAsync({
             fileName: file.name,
@@ -1149,94 +848,38 @@ export default function KaiCommand() {
             fileSize: file.size,
             context: 'kai-command'
           });
-          
-          clearInterval(progressInterval);
 
-          // Update attachment with uploaded URL and 100% progress
-          const updatedAttachment: Attachment = {
-            id: tempId,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            url: result.url,
-            uploading: false,
-            progress: 100
-          };
-          
+          // Update attachment with uploaded URL
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? updatedAttachment
+              ? { ...att, url: result.url, uploading: false }
               : att
           ));
           
-          // Trigger file intelligence analysis
-          try {
-            let imageDimensions: { width: number; height: number } | undefined;
-            if (file.type.startsWith('image/')) {
-              imageDimensions = await getImageDimensions(result.url);
-            }
-            
-            const analysis = await analyzeFile(
-              { fileName: file.name, fileType: file.type, fileSize: file.size, url: result.url },
-              imageDimensions
-            );
-            
-            // Set pending analysis for user to review
-            setPendingFileAnalysis({ attachment: updatedAttachment, analysis });
-            
-            // Generate Kai's response about the file
-            const kaiResponse = generateKaiFileResponse(analysis, file.name);
-            
-            // Add Kai's analysis message to the chat
-            const analysisMessage: Message = {
-              id: `analysis-${Date.now()}`,
-              role: 'assistant',
-              content: kaiResponse,
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, analysisMessage]);
-          } catch (analysisError) {
-            console.error('File analysis failed:', analysisError);
-            // Continue without analysis - file is still uploaded
+          // Check if this is a schedule file (xlsx, xls, csv)
+          const isScheduleFile = 
+            file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+            file.type === 'application/vnd.ms-excel' ||
+            file.type === 'text/csv' ||
+            file.name.endsWith('.xlsx') ||
+            file.name.endsWith('.xls') ||
+            file.name.endsWith('.csv');
+          
+          if (isScheduleFile) {
+            // Auto-extract schedule from the file
+            handleScheduleExtraction(result.url, file.type, file.name);
           }
-        } catch (error: any) {
+        } catch (error) {
           console.error('Upload failed:', error);
-          clearInterval(progressInterval);
-          
-          // Extract specific error message
-          let errorMessage = 'Upload failed';
-          if (error?.message) {
-            if (error.message.includes('File type not supported')) {
-              errorMessage = 'File type not supported';
-            } else if (error.message.includes('File size exceeds')) {
-              errorMessage = 'File too large (max 10MB)';
-            } else if (error.message.includes('Invalid file data')) {
-              errorMessage = 'Invalid file format';
-            } else {
-              errorMessage = error.message;
-            }
-          }
-          
-          // Mark attachment as failed with specific error
+          // Mark attachment as failed
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, uploading: false, progress: 0, error: errorMessage }
+              ? { ...att, uploading: false, error: 'Upload failed' }
               : att
           ));
-          toast.error(`${file.name}: ${errorMessage}`);
+          toast.error(`Failed to upload ${file.name}`);
         }
       };
-      
-      reader.onerror = () => {
-        console.error('FileReader error');
-        setAttachments(prev => prev.map(att => 
-          att.id === tempId 
-            ? { ...att, uploading: false, progress: 0, error: 'Failed to read file' }
-            : att
-        ));
-        toast.error(`Failed to read ${file.name}`);
-      };
-      
       reader.readAsDataURL(file);
     }
 
@@ -1250,766 +893,122 @@ export default function KaiCommand() {
   const removeAttachment = (id: string) => {
     setAttachments(prev => prev.filter(att => att.id !== id));
   };
-  
-  // Retry failed upload
-  const retryUpload = async (attachmentId: string) => {
-    const attachment = attachments.find(att => att.id === attachmentId);
-    if (!attachment?.originalFile) {
-      toast.error('Cannot retry: original file not available');
-      return;
-    }
+
+  // Format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // Check if file is an image
+  const isImageFile = (type: string): boolean => {
+    return type.startsWith('image/');
+  };
+
+  // Handle schedule extraction from uploaded file
+  const handleScheduleExtraction = async (fileUrl: string, fileType: string, fileName: string) => {
+    setIsExtractingSchedule(true);
     
-    const file = attachment.originalFile;
-    const tempId = attachmentId;
-    
-    // Reset attachment state to uploading
-    setAttachments(prev => prev.map(att => 
-      att.id === tempId 
-        ? { ...att, uploading: true, progress: 0, error: undefined }
-        : att
-    ));
-    
-    // Read file as base64 with progress tracking
-    const reader = new FileReader();
-    
-    reader.onprogress = (progressEvent) => {
-      if (progressEvent.lengthComputable) {
-        const readProgress = Math.round((progressEvent.loaded / progressEvent.total) * 50);
-        setAttachments(prev => prev.map(att => 
-          att.id === tempId ? { ...att, progress: readProgress } : att
-        ));
-      }
+    // Add Kai message about analyzing
+    const analyzingMessage: Message = {
+      id: `analyzing-${Date.now()}`,
+      role: 'assistant',
+      content: `I'm analyzing **${fileName}** to extract class schedule information. This may take a moment...`,
+      timestamp: new Date()
     };
-    
-    reader.onload = async (event) => {
-      try {
-        const base64Data = event.target?.result as string;
-        
-        setAttachments(prev => prev.map(att => 
-          att.id === tempId ? { ...att, progress: 50 } : att
-        ));
-        
-        const progressInterval = setInterval(() => {
-          setAttachments(prev => prev.map(att => {
-            if (att.id === tempId && att.uploading && (att.progress || 0) < 95) {
-              return { ...att, progress: Math.min((att.progress || 50) + 5, 95) };
-            }
-            return att;
-          }));
-        }, 100);
-        
-        const result = await uploadMutation.mutateAsync({
-          fileName: file.name,
-          fileData: base64Data,
-          fileType: file.type,
-          fileSize: file.size,
-          context: 'kai-command'
-        });
-        
-        clearInterval(progressInterval);
-        
-        setAttachments(prev => prev.map(att => 
-          att.id === tempId 
-            ? { ...att, url: result.url, uploading: false, progress: 100, error: undefined }
-            : att
-        ));
-        
-        toast.success(`${file.name} uploaded successfully`);
-        
-        // Trigger file intelligence analysis
-        try {
-          let imageDimensions: { width: number; height: number } | undefined;
-          if (file.type.startsWith('image/')) {
-            imageDimensions = await getImageDimensions(result.url);
-          }
-          
-          const analysis = await analyzeFile(
-            { fileName: file.name, fileType: file.type, fileSize: file.size, url: result.url },
-            imageDimensions
-          );
-          
-          const updatedAttachment: Attachment = {
-            id: tempId,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            url: result.url,
-            uploading: false,
-            progress: 100,
-            originalFile: file
-          };
-          
-          setPendingFileAnalysis({ attachment: updatedAttachment, analysis });
-          
-          const kaiResponse = generateKaiFileResponse(analysis, file.name);
-          const analysisMessage: Message = {
-            id: `analysis-${Date.now()}`,
-            role: 'assistant',
-            content: kaiResponse,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, analysisMessage]);
-        } catch (analysisError) {
-          console.error('File analysis failed:', analysisError);
-        }
-      } catch (error: any) {
-        console.error('Retry upload failed:', error);
-        
-        let errorMessage = 'Upload failed';
-        if (error?.message) {
-          if (error.message.includes('File type not supported')) {
-            errorMessage = 'File type not supported';
-          } else if (error.message.includes('File size exceeds')) {
-            errorMessage = 'File too large (max 10MB)';
-          } else {
-            errorMessage = error.message;
-          }
-        }
-        
-        setAttachments(prev => prev.map(att => 
-          att.id === tempId 
-            ? { ...att, uploading: false, progress: 0, error: errorMessage }
-            : att
-        ));
-        toast.error(`${file.name}: ${errorMessage}`);
-      }
-    };
-    
-    reader.onerror = () => {
-      setAttachments(prev => prev.map(att => 
-        att.id === tempId 
-          ? { ...att, uploading: false, progress: 0, error: 'Failed to read file' }
-          : att
-      ));
-      toast.error(`Failed to read ${file.name}`);
-    };
-    
-    reader.readAsDataURL(file);
-  };
-  
-  // Handle drag-and-drop file upload
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounterRef.current++;
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      setIsDragging(true);
-    }
-  };
-  
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounterRef.current--;
-    if (dragCounterRef.current === 0) {
-      setIsDragging(false);
-    }
-  };
-  
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-  
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    dragCounterRef.current = 0;
-    
-    const files = e.dataTransfer.files;
-    if (!files || files.length === 0) return;
-    
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = [
-      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
-      'application/pdf', 'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-      'text/csv',
-      'text/plain'
-    ];
-    
-    for (const file of Array.from(files)) {
-      // Validate file size
-      if (file.size > maxSize) {
-        toast.error(`File "${file.name}" exceeds 10MB limit`);
-        continue;
-      }
-      
-      // Validate file type
-      if (!allowedTypes.includes(file.type)) {
-        toast.error(`File type not supported: ${file.name}`);
-        continue;
-      }
-      
-      // Create temporary attachment with uploading state
-      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const tempAttachment: Attachment = {
-        id: tempId,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        url: '',
-        uploading: true,
-        progress: 0,
-        originalFile: file // Store for retry
-      };
-      
-      setAttachments(prev => [...prev, tempAttachment]);
-      
-      // Read file as base64 with progress tracking
-      const reader = new FileReader();
-      
-      // Track reading progress (first 50% of total progress)
-      reader.onprogress = (progressEvent) => {
-        if (progressEvent.lengthComputable) {
-          const readProgress = Math.round((progressEvent.loaded / progressEvent.total) * 50);
-          setAttachments(prev => prev.map(att => 
-            att.id === tempId ? { ...att, progress: readProgress } : att
-          ));
-        }
-      };
-      
-      reader.onload = async (event) => {
-        try {
-          const base64Data = event.target?.result as string;
-          
-          // Update progress to 50% (reading complete, starting upload)
-          setAttachments(prev => prev.map(att => 
-            att.id === tempId ? { ...att, progress: 50 } : att
-          ));
-          
-          // Simulate upload progress (50-100%)
-          const progressInterval = setInterval(() => {
-            setAttachments(prev => prev.map(att => {
-              if (att.id === tempId && att.uploading && (att.progress || 0) < 95) {
-                return { ...att, progress: Math.min((att.progress || 50) + 5, 95) };
-              }
-              return att;
-            }));
-          }, 100);
-          
-          const result = await uploadMutation.mutateAsync({
-            fileName: file.name,
-            fileData: base64Data,
-            fileType: file.type,
-            fileSize: file.size,
-            context: 'kai-command'
-          });
-          
-          clearInterval(progressInterval);
-          
-          // Update attachment with uploaded URL and 100% progress
-          const updatedAttachment: Attachment = {
-            id: tempId,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            url: result.url,
-            uploading: false,
-            progress: 100
-          };
-          
-          setAttachments(prev => prev.map(att => 
-            att.id === tempId 
-              ? updatedAttachment
-              : att
-          ));
-          
-          // Trigger file intelligence analysis
-          try {
-            let imageDimensions: { width: number; height: number } | undefined;
-            if (file.type.startsWith('image/')) {
-              imageDimensions = await getImageDimensions(result.url);
-            }
-            
-            const analysis = await analyzeFile(
-              { fileName: file.name, fileType: file.type, fileSize: file.size, url: result.url },
-              imageDimensions
-            );
-            
-            // Set pending analysis for user to review
-            setPendingFileAnalysis({ attachment: updatedAttachment, analysis });
-            
-            // Generate Kai's response about the file
-            const kaiResponse = generateKaiFileResponse(analysis, file.name);
-            
-            // Add Kai's analysis message to the chat
-            const analysisMessage: Message = {
-              id: `analysis-${Date.now()}`,
-              role: 'assistant',
-              content: kaiResponse,
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, analysisMessage]);
-          } catch (analysisError) {
-            console.error('File analysis failed:', analysisError);
-            // Continue without analysis - file is still uploaded
-          }
-        } catch (error: any) {
-          console.error('Upload failed:', error);
-          clearInterval(progressInterval);
-          
-          // Extract specific error message
-          let errorMessage = 'Upload failed';
-          if (error?.message) {
-            if (error.message.includes('File type not supported')) {
-              errorMessage = 'File type not supported';
-            } else if (error.message.includes('File size exceeds')) {
-              errorMessage = 'File too large (max 10MB)';
-            } else if (error.message.includes('Invalid file data')) {
-              errorMessage = 'Invalid file format';
-            } else {
-              errorMessage = error.message;
-            }
-          }
-          
-          // Mark attachment as failed with specific error
-          setAttachments(prev => prev.map(att => 
-            att.id === tempId 
-              ? { ...att, uploading: false, progress: 0, error: errorMessage }
-              : att
-          ));
-          toast.error(`${file.name}: ${errorMessage}`);
-        }
-      };
-      
-      reader.onerror = () => {
-        console.error('FileReader error');
-        setAttachments(prev => prev.map(att => 
-          att.id === tempId 
-            ? { ...att, uploading: false, progress: 0, error: 'Failed to read file' }
-            : att
-        ));
-        toast.error(`Failed to read ${file.name}`);
-      };
-      
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  // Handle file action selection from Kai's proposals
-  const handleFileAction = async (action: ProposedAction) => {
-    if (!pendingFileAnalysis) return;
-    
-    setIsProcessingFileAction(true);
-    const { attachment } = pendingFileAnalysis;
+    setMessages(prev => [...prev, analyzingMessage]);
     
     try {
-      switch (action.id) {
-        case 'set_instructor_profile':
-          // Update instructor profile photo
-          if (user) {
-            await trpc.profile.update.mutate({
-              avatarUrl: attachment.url,
-            });
-            toast.success('Profile photo updated!');
-            
-            // Add confirmation message
-            const confirmMsg: Message = {
-              id: `confirm-${Date.now()}`,
-              role: 'assistant',
-              content: `Done! I've set **${attachment.fileName}** as your profile photo. You can see the change in your profile settings.`,
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, confirmMsg]);
-          }
-          break;
-          
-        case 'assign_student_profile':
-          // Show student selection - for now, add a message asking which student
-          const studentSelectMsg: Message = {
-            id: `student-select-${Date.now()}`,
-            role: 'assistant',
-            content: `Which student would you like to assign this photo to? Type their name and I'll help you find them.`,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, studentSelectMsg]);
-          break;
-          
-        case 'save_to_documents':
-          // Save to documents (already uploaded, just confirm)
-          toast.success('File saved to documents!');
-          const docConfirmMsg: Message = {
-            id: `doc-confirm-${Date.now()}`,
-            role: 'assistant',
-            content: `I've saved **${attachment.fileName}** to your documents. You can access it anytime from your document library.`,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, docConfirmMsg]);
-          break;
-          
-        case 'import_schedule':
-          // Use LLM to extract schedule from image
-          if (attachment.url) {
-            const extractingMsg: Message = {
-              id: `extracting-${Date.now()}`,
-              role: 'assistant',
-              content: `I'm analyzing **${attachment.fileName}** to extract class schedule information. This may take a moment...`,
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, extractingMsg]);
-            
-            try {
-              const result = await trpc.kai.extractSchedule.mutate({
-                fileUrl: attachment.url,
-                fileType: attachment.fileType,
-                fileName: attachment.fileName,
-              });
-              
-              if (result.success && result.classes.length > 0) {
-                // Show schedule preview card
-                setSchedulePreview({
-                  classes: result.classes,
-                  confidence: result.confidence,
-                  warnings: result.warnings,
-                  sourceFile: attachment.fileName,
-                });
-                setScheduleDuplicates([]);
-                
-                // Check for duplicates
-                setIsCheckingDuplicates(true);
-                try {
-                  const dupResult = await trpc.kai.checkDuplicateClasses.mutate({
-                    classes: result.classes.map(c => ({
-                      name: c.name,
-                      dayOfWeek: c.dayOfWeek,
-                      startTime: c.startTime,
-                      endTime: c.endTime,
-                    })),
-                  });
-                  if (dupResult.hasDuplicates) {
-                    setScheduleDuplicates(dupResult.duplicates);
-                  }
-                } catch (dupErr) {
-                  console.error('Duplicate check error:', dupErr);
-                } finally {
-                  setIsCheckingDuplicates(false);
-                }
-                
-                const successMsg: Message = {
-                  id: `schedule-success-${Date.now()}`,
-                  role: 'assistant',
-                  content: `I found **${result.classes.length} classes** in your schedule! Please review the details below and make any corrections before I create them.`,
-                  timestamp: new Date(),
-                };
-                setMessages(prev => [...prev, successMsg]);
-              } else {
-                const errorMsg: Message = {
-                  id: `schedule-error-${Date.now()}`,
-                  role: 'assistant',
-                  content: result.error || `I couldn't extract any classes from this file. Please make sure it's a clear schedule image or properly formatted spreadsheet. You can [download our sample template](/templates/class-schedule-template.xlsx) to see the expected format.`,
-                  timestamp: new Date(),
-                };
-                setMessages(prev => [...prev, errorMsg]);
-              }
-            } catch (err) {
-              console.error('Schedule extraction error:', err);
-              const errorMsg: Message = {
-                id: `schedule-error-${Date.now()}`,
-                role: 'assistant',
-                content: `Sorry, I encountered an error while analyzing the schedule. Please try again, [download our sample template](/templates/class-schedule-template.xlsx) for the correct format, or add classes manually in the Classes section.`,
-                timestamp: new Date(),
-              };
-              setMessages(prev => [...prev, errorMsg]);
-            }
-          }
-          break;
-          
-        case 'import_roster':
-          // Use LLM to extract roster from file
-          if (attachment.url) {
-            const extractingRosterMsg: Message = {
-              id: `extracting-roster-${Date.now()}`,
-              role: 'assistant',
-              content: `I'm analyzing **${attachment.fileName}** to extract student information. This may take a moment...`,
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, extractingRosterMsg]);
-            
-            try {
-              const result = await trpc.kai.extractRoster.mutate({
-                fileUrl: attachment.url,
-                fileType: attachment.fileType,
-                fileName: attachment.fileName,
-              });
-              
-              if (result.success && result.students.length > 0) {
-                // Show roster preview card
-                setRosterPreview({
-                  students: result.students,
-                  confidence: result.confidence,
-                  warnings: result.warnings,
-                  sourceFile: attachment.fileName,
-                });
-                setRosterDuplicates([]);
-                
-                // Check for duplicates
-                setIsCheckingStudentDuplicates(true);
-                try {
-                  const dupResult = await trpc.kai.checkDuplicateStudents.mutate({
-                    students: result.students.map(s => ({
-                      firstName: s.firstName,
-                      lastName: s.lastName,
-                      email: s.email,
-                      phone: s.phone,
-                    })),
-                  });
-                  if (dupResult.hasDuplicates) {
-                    setRosterDuplicates(dupResult.duplicates);
-                  }
-                } catch (dupErr) {
-                  console.error('Student duplicate check error:', dupErr);
-                } finally {
-                  setIsCheckingStudentDuplicates(false);
-                }
-                
-                const successRosterMsg: Message = {
-                  id: `roster-success-${Date.now()}`,
-                  role: 'assistant',
-                  content: `I found **${result.students.length} students** in your roster! Please review the details below and make any corrections before I add them.`,
-                  timestamp: new Date(),
-                };
-                setMessages(prev => [...prev, successRosterMsg]);
-              } else {
-                const errorRosterMsg: Message = {
-                  id: `roster-error-${Date.now()}`,
-                  role: 'assistant',
-                  content: result.error || `I couldn't extract any students from this file. Please make sure it's a clear roster image or CSV file, or try uploading a different file.`,
-                  timestamp: new Date(),
-                };
-                setMessages(prev => [...prev, errorRosterMsg]);
-              }
-            } catch (err) {
-              console.error('Roster extraction error:', err);
-              const errorRosterMsg: Message = {
-                id: `roster-error-${Date.now()}`,
-                role: 'assistant',
-                content: `Sorry, I encountered an error while analyzing the roster. Please try again or add students manually in the Students section.`,
-                timestamp: new Date(),
-              };
-              setMessages(prev => [...prev, errorRosterMsg]);
-            }
-          }
-          break;
-          
-        default:
-          toast.info('Action not yet implemented');
+      const result = await extractScheduleMutation.mutateAsync({
+        fileUrl,
+        fileType,
+        fileName
+      });
+      
+      if (result.success && result.classes.length > 0) {
+        // Show preview card
+        setSchedulePreview({
+          classes: result.classes,
+          fileName,
+          confidence: result.confidence,
+          warnings: result.warnings
+        });
+        
+        // Update Kai message
+        const successMessage: Message = {
+          id: `extracted-${Date.now()}`,
+          role: 'assistant',
+          content: `I found **${result.classes.length} classes** in your schedule. Please review them below and click "Create Classes" to add them to your dojo.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), successMessage]);
+      } else {
+        // Show error message
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: `Sorry, I couldn't extract any classes from **${fileName}**. ${result.error || 'Please make sure the file contains class schedule data with columns like Class Name, Day, Start Time, End Time, etc.'}\n\nYou can [download our sample template](/templates/class-schedule-template.xlsx) for the correct format.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
       }
-      
-      // Clear pending analysis after action
-      setPendingFileAnalysis(null);
-      // Remove the attachment from the input area since it's been processed
-      setAttachments(prev => prev.filter(att => att.id !== attachment.id));
-      
-    } catch (error) {
-      console.error('File action failed:', error);
-      toast.error('Failed to complete action. Please try again.');
+    } catch (error: any) {
+      console.error('Schedule extraction failed:', error);
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: `Sorry, I encountered an error while analyzing the schedule. Please try again or [download our sample template](/templates/class-schedule-template.xlsx) for the correct format.`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
     } finally {
-      setIsProcessingFileAction(false);
+      setIsExtractingSchedule(false);
     }
   };
-  
-  // Cancel file action and dismiss the analysis card
-  const handleCancelFileAction = () => {
-    setPendingFileAnalysis(null);
-    // Keep the attachment in the input area for manual handling
-  };
-  
-  // Handle schedule preview confirmation - create classes
-  const handleConfirmSchedule = async (classes: ExtractedClass[]) => {
+
+  // Handle creating classes from extracted schedule
+  const handleCreateClasses = async (selectedClasses: ExtractedClass[]) => {
     setIsCreatingClasses(true);
     
     try {
-      const result = await trpc.kai.createClassesFromSchedule.mutate({ classes });
+      const result = await createClassesMutation.mutateAsync({
+        classes: selectedClasses
+      });
       
       if (result.success) {
-        toast.success(`Created ${result.createdCount} classes!`);
-        
-        const successMsg: Message = {
-          id: `classes-created-${Date.now()}`,
-          role: 'assistant',
-          content: `I've created **${result.createdCount} classes** from your schedule. You can view and manage them in the Classes section.`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, successMsg]);
+        toast.success(`Successfully created ${result.createdCount} classes!`);
         setSchedulePreview(null);
-        setScheduleDuplicates([]);
+        
+        // Add success message
+        const successMessage: Message = {
+          id: `created-${Date.now()}`,
+          role: 'assistant',
+          content: `I've created **${result.createdCount} classes** in your dojo. You can view and manage them in the [Classes](/classes) section.`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, successMessage]);
+      } else {
+        toast.error('Failed to create classes');
       }
-    } catch (err) {
-      console.error('Class creation error:', err);
-      toast.error('Failed to create classes. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to create classes:', error);
+      toast.error('Failed to create classes: ' + (error.message || 'Unknown error'));
     } finally {
       setIsCreatingClasses(false);
     }
   };
-  
+
   // Cancel schedule preview
-  const handleCancelSchedule = () => {
+  const handleCancelSchedulePreview = () => {
     setSchedulePreview(null);
-    setScheduleDuplicates([]);
-    const cancelMsg: Message = {
-      id: `schedule-cancel-${Date.now()}`,
+    const cancelMessage: Message = {
+      id: `cancelled-${Date.now()}`,
       role: 'assistant',
-      content: `No problem! I've cancelled the schedule import. You can upload another schedule image or add classes manually anytime.`,
-      timestamp: new Date(),
+      content: `Schedule import cancelled. You can upload another file or add classes manually in the [Classes](/classes) section.`,
+      timestamp: new Date()
     };
-    setMessages(prev => [...prev, cancelMsg]);
-  };
-  
-  // Handle roster preview confirmation - create students
-  const handleConfirmRoster = async (students: ExtractedStudent[]) => {
-    setIsCreatingStudents(true);
-    
-    try {
-      const result = await trpc.kai.createStudentsFromRoster.mutate({ students });
-      
-      if (result.success) {
-        toast.success(`Added ${result.createdCount} students!`);
-        
-        const successMsg: Message = {
-          id: `students-created-${Date.now()}`,
-          role: 'assistant',
-          content: `I've added **${result.createdCount} students** from your roster. You can view and manage them in the Students section.${result.errors && result.errors.length > 0 ? `\n\n⚠️ Some students couldn't be added:\n${result.errors.join('\n')}` : ''}`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, successMsg]);
-        setRosterPreview(null);
-        setRosterDuplicates([]);
-      }
-    } catch (err) {
-      console.error('Student creation error:', err);
-      toast.error('Failed to add students. Please try again.');
-    } finally {
-      setIsCreatingStudents(false);
-    }
-  };
-  
-  // Cancel roster preview
-  const handleCancelRoster = () => {
-    setRosterPreview(null);
-    setRosterDuplicates([]);
-    const cancelMsg: Message = {
-      id: `roster-cancel-${Date.now()}`,
-      role: 'assistant',
-      content: `No problem! I've cancelled the roster import. You can upload another roster file or add students manually anytime.`,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, cancelMsg]);
-  };
-  
-  // Handle pasted data import
-  const handlePastedDataImport = async (data: DetectedStructuredData) => {
-    setIsProcessingPastedData(true);
-    
-    try {
-      if (data.type === 'student_roster') {
-        // Convert parsed rows to ExtractedStudent format
-        const students: ExtractedStudent[] = data.rows.map(row => {
-          // Try to find name fields
-          const firstName = row['First Name'] || row['FirstName'] || row['first name'] || row['Name']?.split(' ')[0] || '';
-          const lastName = row['Last Name'] || row['LastName'] || row['last name'] || row['Name']?.split(' ').slice(1).join(' ') || '';
-          
-          return {
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: row['Email'] || row['email'] || row['E-mail'] || '',
-            phone: row['Phone'] || row['phone'] || row['Phone Number'] || row['Cell'] || '',
-            beltRank: row['Belt'] || row['belt'] || row['Rank'] || row['rank'] || row['Belt Rank'] || '',
-            program: row['Program'] || row['program'] || row['Class'] || '',
-            guardianName: row['Guardian'] || row['guardian'] || row['Parent'] || row['parent'] || '',
-            guardianPhone: row['Guardian Phone'] || row['Parent Phone'] || '',
-            guardianEmail: row['Guardian Email'] || row['Parent Email'] || '',
-          };
-        });
-        
-        // Show roster preview card for confirmation
-        setRosterPreview({
-          students,
-          confidence: data.confidence,
-          warnings: data.confidence < 0.7 ? ['Some columns may not be mapped correctly. Please review before importing.'] : undefined,
-          sourceFile: 'Pasted Data',
-        });
-        setPastedData(null);
-        setRosterDuplicates([]);
-        
-        // Check for duplicates
-        setIsCheckingStudentDuplicates(true);
-        try {
-          const dupResult = await trpc.kai.checkDuplicateStudents.mutate({
-            students: students.map(s => ({
-              firstName: s.firstName,
-              lastName: s.lastName,
-              email: s.email,
-              phone: s.phone,
-            })),
-          });
-          if (dupResult.hasDuplicates) {
-            setRosterDuplicates(dupResult.duplicates);
-          }
-        } catch (dupErr) {
-          console.error('Student duplicate check error:', dupErr);
-        } finally {
-          setIsCheckingStudentDuplicates(false);
-        }
-        
-        const confirmMsg: Message = {
-          id: `confirm-roster-${Date.now()}`,
-          role: 'assistant',
-          content: `I've prepared ${students.length} students for import. Please review the details below and make any corrections before confirming.`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, confirmMsg]);
-      } else {
-        // For other types, show a message that we'll add support soon
-        const msg: Message = {
-          id: `unsupported-${Date.now()}`,
-          role: 'assistant',
-          content: `I detected ${data.rows.length} entries. Import for this data type is coming soon. For now, you can manually add this data in the appropriate section.`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, msg]);
-        setPastedData(null);
-      }
-    } catch (error) {
-      console.error('Pasted data import error:', error);
-      toast.error('Failed to process data. Please try again.');
-    } finally {
-      setIsProcessingPastedData(false);
-    }
-  };
-  
-  // Handle pasted data review (same as import for now, shows preview)
-  const handlePastedDataReview = (data: DetectedStructuredData) => {
-    handlePastedDataImport(data);
-  };
-  
-  // Handle pasted data save as draft
-  const handlePastedDataSaveDraft = (data: DetectedStructuredData) => {
-    // For now, just acknowledge and clear
-    const msg: Message = {
-      id: `draft-saved-${Date.now()}`,
-      role: 'assistant',
-      content: `Draft saved. You can access this data later from the conversation history.`,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, msg]);
-    setPastedData(null);
-    toast.success('Draft saved to conversation');
-  };
-  
-  // Cancel pasted data
-  const handlePastedDataCancel = () => {
-    setPastedData(null);
-    const msg: Message = {
-      id: `cancel-paste-${Date.now()}`,
-      role: 'assistant',
-      content: `No problem. Let me know if you need help with anything else.`,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, msg]);
+    setMessages(prev => [...prev, cancelMessage]);
   };
 
   // Mutation for sending directed messages
@@ -2032,28 +1031,12 @@ export default function KaiCommand() {
       
       // Check if it's a staff member
       const staffMember = staffData?.staff?.find(
-        (s: any) => s.name?.toLowerCase() === mentionName.toLowerCase() ||
+        (s: any) => s.name.toLowerCase() === mentionName.toLowerCase() ||
                     s.fullName?.toLowerCase() === mentionName.toLowerCase()
       );
       
       if (staffMember) {
         mentions.push({ type: 'staff', name: staffMember.name, id: staffMember.id });
-        continue;
-      }
-      
-      // Check if it's a student
-      const student = studentsData?.students?.find(
-        (s: any) => {
-          const fullName = `${s.firstName || ''} ${s.lastName || ''}`.trim().toLowerCase();
-          return fullName === mentionName.toLowerCase() ||
-                 s.firstName?.toLowerCase() === mentionName.toLowerCase() ||
-                 s.lastName?.toLowerCase() === mentionName.toLowerCase();
-        }
-      );
-      
-      if (student) {
-        const studentName = `${student.firstName || ''} ${student.lastName || ''}`.trim();
-        mentions.push({ type: 'student', name: studentName, id: student.id });
       }
     }
     
@@ -2067,42 +1050,6 @@ export default function KaiCommand() {
     if (attachments.some(att => att.uploading)) {
       toast.error('Please wait for attachments to finish uploading');
       return;
-    }
-    
-    // STRUCTURED DATA DETECTION: Check if pasted text looks like importable data
-    // Only check if no attachments and text has multiple lines with delimiters
-    if (attachments.length === 0 && looksLikeStructuredData(messageInput)) {
-      const detected = detectStructuredData(messageInput);
-      if (detected && detected.rows.length >= 1) {
-        // Show the user message first
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          role: 'user',
-          content: messageInput,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, userMessage]);
-        
-        // Then show Kai's detection response
-        const typeLabels: Record<string, string> = {
-          'student_roster': 'student roster',
-          'class_schedule': 'class schedule',
-          'lead_list': 'lead list',
-          'unknown': 'structured data'
-        };
-        const kaiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `I detected a **${typeLabels[detected.type]}** with ${detected.rows.length} ${detected.rows.length === 1 ? 'entry' : 'entries'}. Would you like me to import this into your dojo?`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, kaiResponse]);
-        
-        // Show the pasted data card for actions
-        setPastedData(detected);
-        setMessageInput('');
-        return; // Don't continue with normal message flow
-      }
     }
 
     // Build message content with attachments
@@ -2120,50 +1067,6 @@ export default function KaiCommand() {
     const mentions = parseMentions(messageContent);
     const kaiMentioned = mentions.some(m => m.type === 'kai');
     const staffMentions = mentions.filter(m => m.type === 'staff' && m.id);
-    const studentMentions = mentions.filter(m => m.type === 'student' && m.id);
-    
-    // Route messages to student portal inboxes and add notes to student cards
-    for (const studentMention of studentMentions) {
-      if (studentMention.id) {
-        try {
-          // Send to student's portal inbox
-          await sendDirectedMessageMutation.mutateAsync({
-            recipientType: 'student',
-            recipientId: studentMention.id,
-            content: messageContent,
-            kaiMentioned,
-            attachments: attachments.map(att => ({
-              url: att.url || '',
-              name: att.fileName,
-              type: att.fileType,
-              size: att.fileSize,
-            })),
-          });
-          toast.success(`Message sent to ${studentMention.name}'s portal inbox`);
-          
-          // Also add a note to the student's card
-          await addStudentNoteMutation.mutateAsync({
-            studentId: studentMention.id,
-            content: `Mentioned in Kai Command: ${messageContent.substring(0, 200)}${messageContent.length > 200 ? '...' : ''}`,
-            noteType: 'communication',
-            priority: 'low',
-            sourceConversationId: selectedConversationId ? parseInt(selectedConversationId) : undefined,
-          });
-        } catch (error) {
-          console.error('Failed to send message to student:', error);
-          toast.error(`Couldn't send message to ${studentMention.name}`);
-        }
-      }
-    }
-    
-    // Get current conversation's threadType
-    const currentConversation = conversations.find(c => c.id === selectedConversationId);
-    const threadType = currentConversation?.threadType || 'kai_direct';
-    
-    // Determine if Kai should respond:
-    // - kai_direct threads: Kai always responds
-    // - group threads: Kai only responds if @Kai is mentioned
-    const kaiShouldRespond = threadType === 'kai_direct' || kaiMentioned;
     
     // Route messages to staff inboxes
     for (const staffMention of staffMentions) {
@@ -2188,15 +1091,12 @@ export default function KaiCommand() {
       }
     }
 
-    // Save attachments before clearing state
-    const savedAttachments = [...attachments];
-    
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: messageContent,
       timestamp: new Date(),
-      attachments: savedAttachments
+      attachments: [...attachments]
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -2215,24 +1115,15 @@ export default function KaiCommand() {
         await addMessageMutation.mutateAsync({
           conversationId,
           role: 'user',
-          content: currentInput,
-          attachments: savedAttachments.length > 0 ? savedAttachments.map(att => ({
-            id: att.id,
-            url: att.url || '',
-            fileName: att.fileName,
-            fileType: att.fileType,
-            fileSize: att.fileSize,
-          })) : undefined,
+          content: currentInput
         });
       } catch (error) {
         console.error('Failed to save user message:', error);
       }
     }
 
-    // Kai response logic based on thread type
-    // - kai_direct: Kai always responds (no @Kai needed)
-    // - group: Kai only responds when @Kai is mentioned
-    if (kaiShouldRespond) {
+    // Only get Kai response if @Kai was mentioned
+    if (kaiMentioned) {
       try {
         const stats = statsQuery.data;
         const response = await kaiChatMutation.mutateAsync({
@@ -2279,13 +1170,10 @@ export default function KaiCommand() {
         setIsLoading(false);
       }
     } else {
-      // Kai not responding - either group thread without @Kai or no mentions
+      // No @Kai mention - just show message was sent
       setIsLoading(false);
-      if (threadType === 'group' && !kaiMentioned && staffMentions.length === 0) {
-        // Group thread with no mentions - just human message
-        toast.info('Message sent. Use @Kai to get AI assistance or @Staff to notify team members');
-      } else if (staffMentions.length === 0 && !kaiMentioned) {
-        // No mentions at all in kai_direct - this shouldn't happen but handle it
+      if (staffMentions.length === 0) {
+        // No mentions at all - show hint
         toast.info('Tip: Use @Kai to get AI assistance or @Staff to message team members');
       }
     }
@@ -2443,7 +1331,7 @@ export default function KaiCommand() {
     <BottomNavLayout hiddenInFocusMode={isFocusMode} isUIHidden={isUIHidden}>
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isFocusMode ? (isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]') : isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -2613,45 +1501,7 @@ export default function KaiCommand() {
         <div 
           className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
           style={{ zIndex: 10 }}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
         >
-          {/* Drag-and-drop overlay indicator */}
-          {isDragging && (
-            <div 
-              className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
-              style={{ 
-                background: isCinematic ? 'rgba(0, 0, 0, 0.85)' : isDark ? 'rgba(12, 12, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              <div className={`flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-dashed transition-all ${
-                isCinematic || isDark 
-                  ? 'border-[#FF4C4C] bg-[#FF4C4C]/10' 
-                  : 'border-[#FF4C4C] bg-[#FF4C4C]/5'
-              }`}>
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                  isCinematic || isDark ? 'bg-[#FF4C4C]/20' : 'bg-[#FF4C4C]/10'
-                }`}>
-                  <Upload className="w-8 h-8 text-[#FF4C4C]" />
-                </div>
-                <div className="text-center">
-                  <p className={`text-lg font-semibold ${
-                    isCinematic || isDark ? 'text-white' : 'text-slate-900'
-                  }`}>
-                    Drop files here
-                  </p>
-                  <p className={`text-sm mt-1 ${
-                    isCinematic || isDark ? 'text-white/60' : 'text-slate-500'
-                  }`}>
-                    Images, PDFs, Excel, CSV files supported
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
           {/* ENVIRONMENT LAYER - All background elements with z-index: 0 */}
           {/* Constrained to main content column only, not full page */}
           {isCinematic && (
@@ -2736,56 +1586,12 @@ export default function KaiCommand() {
               animation: 'cinematicBannerSlideDown 0.5s ease-out forwards'
             } : {}}
           >
-            <div className="flex items-center gap-4 flex-1">
-              <p 
-                className={`text-xs uppercase tracking-wide font-medium ${isCinematic ? 'text-white/90' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}
-                style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
-              >
-                Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
-              </p>
-              
-              {/* Participant Avatars */}
-              {selectedConversationId && participantsQuery.data && participantsQuery.data.length > 0 && (
-                <div className="flex items-center gap-1 ml-auto mr-4">
-                  <div className="flex -space-x-2">
-                    {participantsQuery.data.slice(0, 4).map((participant: any, index: number) => (
-                      <div
-                        key={participant.id || index}
-                        className={`relative w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border-2 ${
-                          isCinematic 
-                            ? 'border-black/40 bg-[#E53935] text-white' 
-                            : isDark 
-                              ? 'border-[#0C0C0D] bg-[#2A2A2E] text-white' 
-                              : 'border-white bg-slate-200 text-slate-700'
-                        }`}
-                        style={{ zIndex: 10 - index }}
-                        title={participant.participantName || 'Participant'}
-                      >
-                        {participant.participantName?.substring(0, 2).toUpperCase() || 'P'}
-                      </div>
-                    ))}
-                    {participantsQuery.data.length > 4 && (
-                      <div
-                        className={`relative w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border-2 ${
-                          isCinematic 
-                            ? 'border-black/40 bg-[rgba(255,255,255,0.2)] text-white' 
-                            : isDark 
-                              ? 'border-[#0C0C0D] bg-[#3A3A3E] text-white' 
-                              : 'border-white bg-slate-300 text-slate-700'
-                        }`}
-                        style={{ zIndex: 6 }}
-                        title={`+${participantsQuery.data.length - 4} more participants`}
-                      >
-                        +{participantsQuery.data.length - 4}
-                      </div>
-                    )}
-                  </div>
-                  <span className={`text-xs ml-2 ${isCinematic ? 'text-white/70' : isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>
-                    {participantsQuery.data.length} in thread
-                  </span>
-                </div>
-              )}
-            </div>
+            <p 
+              className={`text-xs uppercase tracking-wide font-medium ${isCinematic ? 'text-white/90' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}
+              style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
+            >
+              Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
+            </p>
             <div className="flex items-center gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -2820,52 +1626,8 @@ export default function KaiCommand() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
-                title="Add Staff to Conversation"
-                onClick={() => {
-                  if (!selectedConversationId) {
-                    toast.error('Please select a conversation first');
-                    return;
-                  }
-                  setIsAddStaffModalOpen(true);
-                }}
-              >
+              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Invite Team Members">
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`h-8 w-8 relative ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
-                title="Thread Attachments"
-                onClick={() => {
-                  if (!selectedConversationId) {
-                    toast.info('Select a conversation first');
-                    return;
-                  }
-                  setIsThreadAttachmentsOpen(true);
-                }}
-              >
-                <Paperclip className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
-                {(() => {
-                  const attachmentCount = messages.reduce((count, msg) => count + (msg.attachments?.length || 0), 0);
-                  if (attachmentCount > 0 && selectedConversationId) {
-                    return (
-                      <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-semibold rounded-full px-1 ${
-                        isCinematic 
-                          ? 'bg-red-500 text-white' 
-                          : isDark 
-                            ? 'bg-red-500 text-white' 
-                            : 'bg-red-500 text-white'
-                      }`}>
-                        {attachmentCount > 99 ? '99+' : attachmentCount}
-                      </span>
-                    );
-                  }
-                  return null;
-                })()}
               </Button>
               <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Enable Voice Replies">
                 <Volume2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
@@ -2896,25 +1658,16 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : isCinematic && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-2 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
+            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-6 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
             style={{ zIndex: 10 }}
           >
             {/* Shared content column wrapper - max-w-4xl to match composer width */}
             <div className={`${isFocusMode ? 'max-w-4xl mx-auto px-4' : isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
               {messages.length === 0 ? (
-                /* Empty State - Kai Greeting */
-                /* In Cinematic mode: constrain hero height to prevent scrollbar, move up slightly */
-                <div 
-                  className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? '' : 'py-8'} transition-all duration-500`}
-                  style={isCinematic ? {
-                    maxHeight: 'calc(100vh - 80px - 64px - 100px - 24px)', /* viewport - topbar - bottomnav - chatbar - safe padding */
-                    overflow: 'hidden',
-                    animation: 'cinematicHeroEntrance 0.8s ease-out forwards'
-                  } : {}}
-                >
+                /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
+                <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
-                  {/* Reduced padding in Cinematic mode to fit within viewport */}
-                  <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''} ${isCinematic ? 'px-12 py-8' : isFocusMode ? 'px-16 py-12' : ''}`}
+                  <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
                     style={(isCinematic || isFocusMode) ? {
                       background: 'rgba(0, 0, 0, 0.70)',
                       backdropFilter: 'blur(10px)',
@@ -2923,8 +1676,7 @@ export default function KaiCommand() {
                     } : {}}
                   >
                   {/* Kai Logo with spotlight and animation in cinematic mode */}
-                  {/* Reduced margins in Cinematic mode to fit within constrained height */}
-                  <div className={`relative ${isCinematic ? 'mb-4' : 'mb-6'}`}>
+                  <div className={`relative mb-6 ${isCinematic ? 'mb-8' : 'mb-4'}`}>
                     {/* Spotlight glow behind Kai in cinematic mode */}
                     {isCinematic && (
                       <div 
@@ -2936,7 +1688,7 @@ export default function KaiCommand() {
                       />
                     )}
                     <div className={`relative ${isDark ? 'drop-shadow-[0_0_20px_rgba(255,76,76,0.18)]' : ''} ${isCinematic ? 'drop-shadow-[0_0_40px_rgba(255,76,76,0.35)]' : ''}`}>
-                      <KaiLogo className={`${isCinematic ? 'w-[100px] h-[100px]' : 'w-[100px] h-[100px]'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicPulse_4s_ease-in-out_infinite]' : ''}`} />
+                      <KaiLogo className={`${isCinematic ? 'w-[140px] h-[140px]' : 'w-[100px] h-[100px]'} transition-all duration-500 ${isCinematic ? 'animate-[cinematicPulse_4s_ease-in-out_infinite]' : ''}`} />
                     </div>
                   </div>
                   <h2 
@@ -2953,7 +1705,7 @@ export default function KaiCommand() {
                   {/* Rotating taglines in cinematic mode, static text otherwise */}
                   {(isCinematic || isFocusMode) ? (
                     <p 
-                      className={`text-center max-w-md ${isCinematic ? 'mb-4' : 'mb-10'} text-lg transition-opacity duration-500 ${taglineVisible ? '' : 'invisible'}`}
+                      className={`text-center max-w-md mb-10 text-lg transition-opacity duration-500 ${taglineVisible ? '' : 'invisible'}`}
                       style={{ 
                         textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                         animation: isCinematic ? 'cinematicTextSlideUp 0.5s ease-out 0.35s both' : 'none',
@@ -2970,7 +1722,7 @@ export default function KaiCommand() {
                   )}
                   
                   {/* Quick Commands Carousel */}
-                  <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-2' : 'max-w-4xl'} transition-all duration-500`}
+                  <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
                     style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
                   >
                     {/* Left Arrow */}
@@ -3004,7 +1756,7 @@ export default function KaiCommand() {
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 ${isCinematic ? 'w-[140px]' : isFocusMode ? 'w-[160px]' : 'w-[200px]'} border ${isCinematic ? 'rounded-[12px] p-3' : isFocusMode ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
+                          className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border ${(isCinematic || isFocusMode) ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
                             (isCinematic || isFocusMode)
                               ? `border-white/30 hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
                               : isDark 
@@ -3066,22 +1818,16 @@ export default function KaiCommand() {
                           <div className="flex-1">
                             <div 
                               className={`font-medium mb-1`}
-                              style={isCinematic ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isFocusMode ? (isDark ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : { color: '#111827' }) : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                              style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
                             >{user?.name || 'You'}</div>
                             <p 
                               className="relative"
-                              style={isCinematic ? { 
+                              style={(isCinematic || isFocusMode) ? { 
                                 color: 'rgba(255,255,255,0.92)', 
                                 textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                                 zIndex: 30
-                              } : isFocusMode ? (isDark ? { 
-                                color: 'rgba(255,255,255,0.92)', 
-                                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                                zIndex: 30
-                              } : { color: '#1f2937', zIndex: 30 }) : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
-                            >{renderMessageWithMentions(stripAttachmentLinks(message.content))}</p>
-                            {/* Inline Attachments */}
-                            {renderInlineAttachments(message.attachments)}
+                              } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
+                            >{renderMessageWithMentions(message.content)}</p>
                           </div>
                         </>
                       ) : (
@@ -3092,24 +1838,18 @@ export default function KaiCommand() {
                           <div className="flex-1">
                             <div 
                               className={`font-medium mb-1`}
-                              style={isCinematic ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isFocusMode ? (isDark ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : { color: '#111827' }) : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                              style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
                             >Kai</div>
                             <div 
-                              className={`whitespace-pre-wrap prose prose-sm max-w-none relative ${isCinematic ? '' : isFocusMode ? (isDark ? '' : 'prose-slate') : isDark ? 'prose-invert' : ''}`}
-                              style={isCinematic ? { 
+                              className={`whitespace-pre-wrap prose prose-sm max-w-none relative ${(isCinematic || isFocusMode) ? '' : isDark ? 'prose-invert' : ''}`}
+                              style={(isCinematic || isFocusMode) ? { 
                                 color: 'rgba(255,255,255,0.92)', 
                                 textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                                 zIndex: 30
-                              } : isFocusMode ? (isDark ? { 
-                                color: 'rgba(255,255,255,0.92)', 
-                                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                                zIndex: 30
-                              } : { color: '#1f2937', zIndex: 30 }) : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
+                              } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
                             >
-                              {renderMessageWithMentions(stripAttachmentLinks(message.content))}
+                              {renderMessageWithMentions(message.content)}
                             </div>
-                            {/* Inline Attachments */}
-                            {renderInlineAttachments(message.attachments)}
                           </div>
                         </>
                       )}
@@ -3123,83 +1863,28 @@ export default function KaiCommand() {
                       <div className="flex-1">
                         <div 
                           className={`font-medium mb-1`}
-                          style={isCinematic ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isFocusMode ? (isDark ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : { color: '#111827' }) : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                          style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
                         >Kai</div>
                         <div className="flex gap-1">
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${isCinematic ? 'bg-white/50' : isFocusMode ? (isDark ? 'bg-white/50' : 'bg-slate-400') : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${isCinematic ? 'bg-white/50' : isFocusMode ? (isDark ? 'bg-white/50' : 'bg-slate-400') : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${isCinematic ? 'bg-white/50' : isFocusMode ? (isDark ? 'bg-white/50' : 'bg-slate-400') : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '0ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '150ms' }} />
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${(isCinematic || isFocusMode) ? 'bg-white/50' : isDark ? 'bg-[rgba(255,255,255,0.35)]' : 'bg-slate-300'}`} style={{ animationDelay: '300ms' }} />
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  {/* File Action Card - Kai's proposed actions for uploaded files */}
-                  {pendingFileAnalysis && (
-                    <div className="px-4 py-2">
-                      <FileActionCard
-                        analysis={pendingFileAnalysis.analysis}
-                        fileName={pendingFileAnalysis.attachment.fileName}
-                        fileUrl={pendingFileAnalysis.attachment.url || ''}
-                        fileType={pendingFileAnalysis.attachment.fileType}
-                        onActionSelect={handleFileAction}
-                        onCancel={handleCancelFileAction}
-                        isProcessing={isProcessingFileAction}
-                        isDark={isDark}
-                        isCinematic={isCinematic}
-                        isFocusMode={isFocusMode}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Schedule Preview Card - shows extracted classes for review */}
+                  {/* Schedule Preview Card */}
                   {schedulePreview && (
-                    <div className="px-4 py-2">
+                    <div className="mt-4" style={{ zIndex: 30 }}>
                       <SchedulePreviewCard
                         classes={schedulePreview.classes}
+                        fileName={schedulePreview.fileName}
                         confidence={schedulePreview.confidence}
                         warnings={schedulePreview.warnings}
-                        duplicates={scheduleDuplicates}
-                        onConfirm={handleConfirmSchedule}
-                        onCancel={handleCancelSchedule}
+                        onConfirm={handleCreateClasses}
+                        onCancel={handleCancelSchedulePreview}
                         isProcessing={isCreatingClasses}
-                        isCheckingDuplicates={isCheckingDuplicates}
-                        isDark={isDark}
-                        isCinematic={isCinematic}
-                        isFocusMode={isFocusMode}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Roster Preview Card - shows extracted students for review */}
-                  {rosterPreview && (
-                    <div className="px-4 py-2">
-                      <RosterPreviewCard
-                        students={rosterPreview.students}
-                        confidence={rosterPreview.confidence}
-                        warnings={rosterPreview.warnings}
-                        duplicates={rosterDuplicates}
-                        onConfirm={handleConfirmRoster}
-                        onCancel={handleCancelRoster}
-                        isProcessing={isCreatingStudents}
-                        isCheckingDuplicates={isCheckingStudentDuplicates}
-                        isDark={isDark}
-                        isCinematic={isCinematic}
-                        isFocusMode={isFocusMode}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Pasted Data Card - shows detected structured data for import */}
-                  {pastedData && (
-                    <div className="px-4 py-2">
-                      <PastedDataCard
-                        data={pastedData}
-                        onImport={handlePastedDataImport}
-                        onReview={handlePastedDataReview}
-                        onSaveDraft={handlePastedDataSaveDraft}
-                        onCancel={handlePastedDataCancel}
-                        isProcessing={isProcessingPastedData}
                         isDark={isDark}
                         isCinematic={isCinematic}
                         isFocusMode={isFocusMode}
@@ -3276,45 +1961,16 @@ export default function KaiCommand() {
                         <p className={`text-xs font-medium truncate ${isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-700'}`}>
                           {attachment.fileName}
                         </p>
-                        {attachment.uploading ? (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isCinematic || isFocusMode ? 'bg-white/20' : isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
-                              <div 
-                                className="h-full bg-[#FF4C4C] rounded-full transition-all duration-150 ease-out"
-                                style={{ width: `${attachment.progress || 0}%` }}
-                              />
-                            </div>
-                            <span className={`text-[10px] font-medium min-w-[28px] text-right ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-500'}`}>
-                              {attachment.progress || 0}%
-                            </span>
-                          </div>
-                        ) : (
-                          <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
-                            {formatFileSize(attachment.fileSize)}
-                          </p>
-                        )}
+                        <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                          {formatFileSize(attachment.fileSize)}
+                        </p>
                       </div>
                       
                       {/* Upload status or remove button */}
                       {attachment.uploading ? (
                         <Loader2 className={`w-4 h-4 animate-spin ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
                       ) : attachment.error ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => retryUpload(attachment.id)}
-                            title="Retry upload"
-                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isCinematic || isFocusMode ? 'bg-white/10 hover:bg-white/20 text-white' : isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => removeAttachment(attachment.id)}
-                            title="Remove"
-                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isCinematic || isFocusMode ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' : isDark ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-500'}`}
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        <span className="text-xs text-red-400">Failed</span>
                       ) : (
                         <button
                           onClick={() => removeAttachment(attachment.id)}
@@ -3330,48 +1986,36 @@ export default function KaiCommand() {
 
               {/* Input container - Single clean glass pill for Cinematic/Focus Mode */}
               <div className={`flex items-center gap-2 transition-all duration-300 ${
-                isCinematic
-                  ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)] focus-within:border-[rgba(255,76,76,0.6)]'
-                  : isFocusMode 
-                    ? isDark
-                      ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
-                      : 'rounded-full p-3 relative z-10 border border-slate-300 shadow-[0_4px_16px_rgba(0,0,0,0.08)] focus-within:border-[rgba(255,76,76,0.5)]'
+                isFocusMode 
+                  ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
+                  : isCinematic
+                    ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)] focus-within:border-[rgba(255,76,76,0.6)]'
                     : isDark 
                       ? 'rounded-[22px] p-2 bg-[#18181A] border border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' 
                       : 'rounded-[22px] p-2 bg-white border border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
               }`}
-              style={isCinematic ? { 
-                animation: 'cinematicInputGlow 3s ease-in-out infinite',
+              style={(isCinematic || isFocusMode) ? { 
+                animation: isCinematic && !isFocusMode ? 'cinematicInputGlow 3s ease-in-out infinite' : 'none',
                 background: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)'
-              } : isFocusMode ? (isDark ? {
-                background: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)'
-              } : {
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)'
-              }) : {}}
+              } : {}}
               >
-                {/* Attachment Button - Fixed size container to prevent distortion */}
+                {/* Attachment Button */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`chat-bar-button rounded-full ${isCinematic ? 'text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? 'text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} 
+                  className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} 
                   title="Attach file (images, PDFs, documents)"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <span className="chat-bar-icon-container">
-                    <Paperclip style={{ color: isCinematic || (isFocusMode && isDark) ? '#FFFFFF' : undefined }} />
-                  </span>
+                  <Paperclip className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
                 </Button>
-                {/* @ Mention Button - Fixed size container to prevent distortion */}
+                {/* @ Mention Button */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`chat-bar-button rounded-full ${isCinematic ? 'text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? 'text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                  className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
                   title="Mention someone"
                   onClick={() => {
                     // Insert @ at cursor position and focus the input
@@ -3379,9 +2023,7 @@ export default function KaiCommand() {
                     messageInputRef.current?.focus();
                   }}
                 >
-                  <span className="chat-bar-icon-container">
-                    <AtSign style={{ color: isCinematic || (isFocusMode && isDark) ? '#FFFFFF' : undefined }} />
-                  </span>
+                  <AtSign className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
                 </Button>
                 <MentionInput
                   value={messageInput}
@@ -3391,29 +2033,19 @@ export default function KaiCommand() {
                     handleSendMessage();
                   }}
                   placeholder="Message Kai… Type @ to mention"
-                  theme={isCinematic ? 'cinematic' : isFocusMode ? (isDark ? 'dark' : 'light') : isDark ? 'dark' : 'light'}
+                  theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
                   variant="apple"
                 />
-                {/* Mic Button - Fixed size container to prevent distortion */}
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`chat-bar-button rounded-full ${isCinematic ? 'text-white hover:text-white hover:bg-white/20' : isFocusMode ? (isDark ? 'text-white hover:text-white hover:bg-white/20' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100') : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
-                >
-                  <span className="chat-bar-icon-container">
-                    <Mic style={{ color: isCinematic || (isFocusMode && isDark) ? '#FFFFFF' : undefined }} />
-                  </span>
+                <Button variant="ghost" size="icon" className={`h-9 w-9 rounded-full ${(isCinematic || isFocusMode) ? '[&_svg]:fill-white text-white hover:text-white hover:bg-white/20' : isDark ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
+                  <Mic className="w-5 h-5" style={(isCinematic || isFocusMode) ? { color: '#FFFFFF' } : {}} />
                 </Button>
-                {/* Send Button - Fixed size container to prevent distortion */}
                 <Button 
                   size="icon" 
-                  className="chat-bar-button bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
+                  className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
                   onClick={handleSendMessage}
                   disabled={(!messageInput.trim() && attachments.length === 0) || isLoading || attachments.some(att => att.uploading)}
                 >
-                  <span className="chat-bar-icon-container" style={{ width: '16px', height: '16px' }}>
-                    <Send style={{ color: '#FFFFFF', width: '16px', height: '16px' }} />
-                  </span>
+                  <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
                 </Button>
               </div>
               <p 
@@ -3542,290 +2174,6 @@ export default function KaiCommand() {
           </div>
         </button>
       </div>
-      
-      {/* Add Staff Modal */}
-      <AlertDialog open={isAddStaffModalOpen} onOpenChange={setIsAddStaffModalOpen}>
-        <AlertDialogContent className={`max-w-md ${isDark ? 'bg-[#1F1F22] border-[rgba(255,255,255,0.1)]' : 'bg-white'}`}>
-          <AlertDialogHeader>
-            <AlertDialogTitle className={isDark ? 'text-white' : ''}>Add Staff to Conversation</AlertDialogTitle>
-            <AlertDialogDescription>
-              Select staff members to add to this conversation. They will be able to see and participate in the thread.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4 space-y-4">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`} />
-              <Input
-                placeholder="Search staff..."
-                value={staffSearchQuery}
-                onChange={(e) => setStaffSearchQuery(e.target.value)}
-                className={`pl-9 ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] text-white placeholder:text-[rgba(255,255,255,0.45)]' : ''}`}
-              />
-            </div>
-            
-            {/* Staff List */}
-            <div className={`max-h-64 overflow-y-auto rounded-lg border ${isDark ? 'border-[rgba(255,255,255,0.1)]' : 'border-slate-200'}`}>
-              {staffData?.staff?.filter((s: any) => 
-                staffSearchQuery === '' || 
-                s.name?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                s.fullName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                s.role?.toLowerCase().includes(staffSearchQuery.toLowerCase())
-              ).map((staff: any) => (
-                <div 
-                  key={staff.id}
-                  onClick={() => {
-                    const newSet = new Set(selectedStaffIds);
-                    if (newSet.has(staff.id)) {
-                      newSet.delete(staff.id);
-                    } else {
-                      newSet.add(staff.id);
-                    }
-                    setSelectedStaffIds(newSet);
-                  }}
-                  className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
-                    selectedStaffIds.has(staff.id)
-                      ? isDark ? 'bg-[#E53935]/20' : 'bg-red-50'
-                      : isDark ? 'hover:bg-[rgba(255,255,255,0.05)]' : 'hover:bg-slate-50'
-                  } ${isDark ? 'border-b border-[rgba(255,255,255,0.05)]' : 'border-b border-slate-100'} last:border-b-0`}
-                >
-                  {/* Avatar */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                    isDark ? 'bg-[#2A2A2E] text-white' : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {staff.name?.substring(0, 2).toUpperCase() || 'ST'}
-                  </div>
-                  
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {staff.name || staff.fullName || 'Staff Member'}
-                    </p>
-                    <p className={`text-xs truncate ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>
-                      {staff.role || 'Staff'}
-                    </p>
-                  </div>
-                  
-                  {/* Checkbox */}
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                    selectedStaffIds.has(staff.id)
-                      ? 'bg-[#E53935] border-[#E53935]'
-                      : isDark ? 'border-[rgba(255,255,255,0.3)]' : 'border-slate-300'
-                  }`}>
-                    {selectedStaffIds.has(staff.id) && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {(!staffData?.staff || staffData.staff.length === 0) && (
-                <div className={`p-4 text-center ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>
-                  No staff members found
-                </div>
-              )}
-            </div>
-            
-            {/* Selected Count */}
-            {selectedStaffIds.size > 0 && (
-              <p className={`text-sm ${isDark ? 'text-[rgba(255,255,255,0.7)]' : 'text-slate-600'}`}>
-                {selectedStaffIds.size} staff member{selectedStaffIds.size > 1 ? 's' : ''} selected
-              </p>
-            )}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setSelectedStaffIds(new Set());
-              setStaffSearchQuery('');
-            }}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={selectedStaffIds.size === 0 || isAddingParticipants}
-              onClick={handleAddStaffToConversation}
-              className="bg-[#E53935] hover:bg-[#D32F2F]"
-            >
-              {isAddingParticipants ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Adding...</>
-              ) : (
-                `Add ${selectedStaffIds.size > 0 ? selectedStaffIds.size : ''} Staff`
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-      {/* Image Lightbox Modal */}
-      <Dialog open={!!lightboxImage} onOpenChange={() => setLightboxImage(null)}>
-        <DialogContent className={`max-w-4xl p-0 overflow-hidden ${
-          isDark ? 'bg-[#0C0C0D] border-[rgba(255,255,255,0.1)]' : 'bg-white'
-        }`}>
-          <DialogHeader className={`p-4 border-b ${
-            isDark ? 'border-[rgba(255,255,255,0.1)]' : 'border-slate-200'
-          }`}>
-            <DialogTitle className={`flex items-center justify-between ${
-              isDark ? 'text-white' : 'text-slate-900'
-            }`}>
-              <span className="truncate">{lightboxImage?.filename}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => {
-                  if (lightboxImage) {
-                    const a = document.createElement('a');
-                    a.href = lightboxImage.url;
-                    a.download = lightboxImage.filename;
-                    a.click();
-                  }
-                }}
-                title="Download"
-              >
-                <Download className={`w-4 h-4 ${isDark ? 'text-white/70' : 'text-slate-500'}`} />
-              </Button>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4 flex items-center justify-center bg-black/5 dark:bg-black/20 rounded-lg mx-4 mb-4">
-            {lightboxImage && (
-              <img
-                src={lightboxImage.url}
-                alt={lightboxImage.filename}
-                className="max-w-full max-h-[75vh] object-contain rounded-lg"
-                style={{ maxWidth: '90vw' }}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Thread Attachments Drawer */}
-      {isThreadAttachmentsOpen && selectedConversationId && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998] transition-opacity duration-300"
-            onClick={() => setIsThreadAttachmentsOpen(false)}
-          />
-          
-          {/* Drawer */}
-          <div
-            className={`fixed top-0 right-0 h-full w-[480px] shadow-2xl z-[10000] flex flex-col transition-transform duration-300 ease-out ${
-              isDark ? 'bg-[#0F1115]' : 'bg-white'
-            }`}
-          >
-            {/* Header */}
-            <div className={`flex items-center justify-between px-6 py-4 border-b ${
-              isDark ? 'border-white/10' : 'border-slate-200'
-            }`}>
-              <div>
-                <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Thread Attachments</h2>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                  {conversations.find(c => c.id === selectedConversationId)?.title || 'Current conversation'}
-                </p>
-              </div>
-              <button
-                onClick={() => setIsThreadAttachmentsOpen(false)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                  isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                }`}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            
-            {/* Attachments List */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              {(() => {
-                // Collect all attachments from messages in this conversation
-                const allAttachments = messages.flatMap(msg => 
-                  (msg.attachments || []).map(att => ({
-                    ...att,
-                    messageTimestamp: msg.timestamp,
-                    senderName: msg.sender === 'user' ? 'You' : 'Kai'
-                  }))
-                );
-                
-                if (allAttachments.length === 0) {
-                  return (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Paperclip className={`h-12 w-12 mb-4 ${isDark ? 'text-gray-600' : 'text-slate-300'}`} />
-                      <h3 className={`text-lg font-medium ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>No Attachments</h3>
-                      <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>
-                        Files shared in this conversation will appear here.
-                      </p>
-                    </div>
-                  );
-                }
-                
-                return (
-                  <div className="space-y-3">
-                    {allAttachments.map((att, idx) => (
-                      <div
-                        key={`${att.id}-${idx}`}
-                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                          isDark 
-                            ? 'bg-white/5 border-white/10 hover:border-white/20' 
-                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className={`p-2 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-                          {getFileIcon(att.fileType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            {att.fileName}
-                          </p>
-                          <div className={`flex items-center gap-2 mt-1 text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                            <span>{formatFileSize(att.fileSize)}</span>
-                            <span>•</span>
-                            <span>{att.senderName}</span>
-                            <span>•</span>
-                            <span>{new Date(att.messageTimestamp).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {isImageFile(att.fileType) && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className={`h-8 w-8 ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'}`}
-                              onClick={() => setLightboxImage({ url: att.url, filename: att.fileName })}
-                              title="Preview"
-                            >
-                              <Eye className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`} />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-8 w-8 ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'}`}
-                            onClick={() => {
-                              const a = document.createElement('a');
-                              a.href = att.url;
-                              a.download = att.fileName;
-                              a.click();
-                            }}
-                            title="Download"
-                          >
-                            <Download className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`} />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
-            
-            {/* Footer */}
-            <div className={`px-6 py-4 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-              <p className={`text-xs text-center ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
-                {messages.flatMap(m => m.attachments || []).length} attachment{messages.flatMap(m => m.attachments || []).length !== 1 ? 's' : ''} in this thread
-              </p>
-            </div>
-          </div>
-        </>
-      )}
     </BottomNavLayout>
   );
 }

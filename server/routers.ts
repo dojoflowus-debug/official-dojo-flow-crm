@@ -14,12 +14,6 @@ import { z } from "zod";
 import * as bcrypt from "bcryptjs";
 import { getActiveStaffPins, updateStaffPinLastUsed, createStaffPin, getAllStaffPins, updateStaffPin, toggleStaffPinActive, deleteStaffPin } from "./db";
 
-// Helper to convert time string to minutes for comparison
-function timeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + (minutes || 0);
-}
-
 // Helper functions for CRM queries
 async function executeCRMFunction(name: string, args: any) {
   const { getDashboardStats, searchStudents, getKioskCheckIns, getKioskVisitors, getKioskWaivers } = await import("./db");
@@ -144,221 +138,6 @@ export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   
-  // Profile management for Edit Profile Mode
-  profile: router({
-    // Get current user's profile
-    me: protectedProcedure
-      .query(async ({ ctx }) => {
-        const { getDb } = await import("./db");
-        const { users } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db || !ctx.user?.id) {
-          return null;
-        }
-        
-        const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
-        
-        if (!user) return null;
-        
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          displayName: user.displayName,
-          preferredName: user.preferredName,
-          phone: user.phone,
-          bio: user.bio,
-          photoUrl: user.photoUrl,
-          photoUrlSmall: user.photoUrlSmall,
-          role: user.role,
-          staffId: user.staffId,
-          locationIds: user.locationIds ? JSON.parse(user.locationIds) : [],
-          createdAt: user.createdAt,
-        };
-      }),
-    
-    // Update current user's profile
-    update: protectedProcedure
-      .input(z.object({
-        name: z.string().max(255).optional(),
-        displayName: z.string().max(255).optional(),
-        preferredName: z.string().max(255).optional(),
-        phone: z.string().max(20).nullable().optional(),
-        bio: z.string().max(160).nullable().optional(),
-        avatarUrl: z.string().nullable().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { getDb } = await import("./db");
-        const { users } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db || !ctx.user?.id) {
-          throw new Error('Not authenticated');
-        }
-        
-        const updateData: Record<string, any> = {};
-        if (input.name !== undefined) updateData.name = input.name;
-        if (input.displayName !== undefined) updateData.displayName = input.displayName;
-        if (input.preferredName !== undefined) updateData.preferredName = input.preferredName;
-        if (input.phone !== undefined) updateData.phone = input.phone;
-        if (input.bio !== undefined) updateData.bio = input.bio;
-        if (input.avatarUrl !== undefined) {
-          updateData.photoUrl = input.avatarUrl;
-          updateData.photoUrlSmall = input.avatarUrl;
-        }
-        
-        if (Object.keys(updateData).length > 0) {
-          await db.update(users)
-            .set(updateData)
-            .where(eq(users.id, ctx.user.id));
-        }
-        
-        return { success: true };
-      }),
-    
-    // Upload profile photo
-    uploadPhoto: protectedProcedure
-      .input(z.object({
-        fileData: z.string(), // base64 data URL
-        fileType: z.string(), // MIME type
-        fileSize: z.number(), // Size in bytes
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { storagePut } = await import("./storage");
-        const { getDb } = await import("./db");
-        const { users } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        // Validate file size (max 10MB)
-        const maxSize = 10 * 1024 * 1024;
-        if (input.fileSize > maxSize) {
-          throw new Error('File size exceeds 10MB limit');
-        }
-        
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(input.fileType)) {
-          throw new Error('File type not supported. Allowed: jpg, png, webp');
-        }
-        
-        // Extract base64 data
-        const base64Match = input.fileData.match(/^data:[^;]+;base64,(.+)$/);
-        if (!base64Match) {
-          throw new Error('Invalid file data format');
-        }
-        
-        const buffer = Buffer.from(base64Match[1], 'base64');
-        
-        // Generate unique key
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 8);
-        const userId = ctx.user?.id || 'anonymous';
-        const ext = input.fileType.split('/')[1] || 'jpg';
-        const key = `profile-photos/${userId}/${timestamp}-${randomSuffix}.${ext}`;
-        
-        // Upload to S3
-        const result = await storagePut(key, buffer, input.fileType);
-        
-        // Update user record
-        const db = await getDb();
-        if (db && ctx.user?.id) {
-          await db.update(users)
-            .set({
-              photoUrl: result.url,
-              photoUrlSmall: result.url, // TODO: Generate resized version
-            })
-            .where(eq(users.id, ctx.user.id));
-        }
-        
-        return {
-          success: true,
-          url: result.url,
-        };
-      }),
-    
-    // Admin: Get any user's profile
-    getUser: protectedProcedure
-      .input(z.object({ userId: z.number() }))
-      .query(async ({ input, ctx }) => {
-        // Only admins can view other profiles
-        if (ctx.user?.role !== 'admin' && ctx.user?.role !== 'owner') {
-          throw new Error('Unauthorized');
-        }
-        
-        const { getDb } = await import("./db");
-        const { users } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) return null;
-        
-        const [user] = await db.select().from(users).where(eq(users.id, input.userId)).limit(1);
-        
-        if (!user) return null;
-        
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          displayName: user.displayName,
-          preferredName: user.preferredName,
-          phone: user.phone,
-          bio: user.bio,
-          photoUrl: user.photoUrl,
-          photoUrlSmall: user.photoUrlSmall,
-          role: user.role,
-          staffId: user.staffId,
-          locationIds: user.locationIds ? JSON.parse(user.locationIds) : [],
-          createdAt: user.createdAt,
-        };
-      }),
-    
-    // Admin: Update any user's profile
-    updateUser: protectedProcedure
-      .input(z.object({
-        userId: z.number(),
-        displayName: z.string().max(255).optional(),
-        preferredName: z.string().max(255).optional(),
-        phone: z.string().max(20).optional(),
-        bio: z.string().max(160).optional(),
-        role: z.enum(['user', 'admin', 'owner', 'staff']).optional(),
-        locationIds: z.array(z.number()).optional(),
-        staffId: z.string().max(50).optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // Only admins can update other profiles
-        if (ctx.user?.role !== 'admin' && ctx.user?.role !== 'owner') {
-          throw new Error('Unauthorized');
-        }
-        
-        const { getDb } = await import("./db");
-        const { users } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) {
-          throw new Error('Database not available');
-        }
-        
-        await db.update(users)
-          .set({
-            displayName: input.displayName,
-            preferredName: input.preferredName,
-            phone: input.phone,
-            bio: input.bio,
-            role: input.role,
-            locationIds: input.locationIds ? JSON.stringify(input.locationIds) : undefined,
-            staffId: input.staffId,
-          })
-          .where(eq(users.id, input.userId));
-        
-        return { success: true };
-      }),
-  }),
-  
   // File upload for attachments
   upload: router({
     // Upload a file attachment (image or document)
@@ -387,15 +166,11 @@ export const appRouter = router({
           'application/pdf', 
           'application/msword', 
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          // Spreadsheets
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-          'application/vnd.ms-excel', // .xls
-          'text/csv',
           'text/plain',
         ];
         
         if (!allowedTypes.includes(input.fileType)) {
-          throw new Error('File type not supported. Allowed: images (jpg, png, gif, webp), documents (pdf, doc, docx, txt), and spreadsheets (xlsx, xls, csv)');
+          throw new Error('File type not supported. Allowed: images (jpg, png, gif, webp) and documents (pdf, doc, docx, txt)');
         }
         
         // Extract base64 data from data URL
@@ -416,31 +191,6 @@ export const appRouter = router({
         // Upload to S3
         const result = await storagePut(key, buffer, input.fileType);
         
-        // Create document record in database
-        const { getDb } = await import("./db");
-        const { documents } = await import("../drizzle/schema");
-        const db = await getDb();
-        
-        let docId: number | undefined;
-        if (db) {
-          try {
-            const [doc] = await db.insert(documents).values({
-              ownerType: 'staff',
-              ownerId: ctx.user?.id || 0,
-              source: 'chat_upload',
-              filename: input.fileName,
-              mimeType: input.fileType,
-              sizeBytes: input.fileSize,
-              storageUrl: result.url,
-              uploadedById: ctx.user?.id,
-              uploadedByName: ctx.user?.name || 'Unknown',
-            });
-            docId = doc.insertId;
-          } catch (err) {
-            console.error('Failed to create document record:', err);
-          }
-        }
-        
         return {
           success: true,
           url: result.url,
@@ -448,7 +198,6 @@ export const appRouter = router({
           fileName: input.fileName,
           fileType: input.fileType,
           fileSize: input.fileSize,
-          docId,
         };
       }),
     
@@ -463,171 +212,6 @@ export const appRouter = router({
         };
       }),
   }),
-  
-  // Documents library router
-  documents: router({
-    // Get documents for a student
-    getStudentDocuments: protectedProcedure
-      .input(z.object({
-        studentId: z.number(),
-        source: z.enum(['all', 'chat_upload', 'waiver', 'invoice', 'onboarding', 'manual_upload', 'receipt']).default('all'),
-      }))
-      .query(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { documents } = await import("../drizzle/schema");
-        const { eq, or, desc } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) return { documents: [] };
-        
-        let query = db.select().from(documents)
-          .where(or(
-            eq(documents.linkedStudentId, input.studentId),
-            eq(documents.ownerId, input.studentId)
-          ))
-          .orderBy(desc(documents.createdAt));
-        
-        const docs = await query;
-        
-        // Filter by source if not 'all'
-        const filteredDocs = input.source === 'all' 
-          ? docs 
-          : docs.filter(d => d.source === input.source);
-        
-        return { documents: filteredDocs };
-      }),
-    
-    // Get documents for a thread
-    getThreadDocuments: protectedProcedure
-      .input(z.object({
-        threadId: z.number(),
-      }))
-      .query(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { documents } = await import("../drizzle/schema");
-        const { eq, desc } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) return { documents: [] };
-        
-        const docs = await db.select().from(documents)
-          .where(eq(documents.threadId, input.threadId))
-          .orderBy(desc(documents.createdAt));
-        
-        return { documents: docs };
-      }),
-    
-    // Link document to student
-    linkToStudent: protectedProcedure
-      .input(z.object({
-        docId: z.number(),
-        studentId: z.number(),
-      }))
-      .mutation(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { documents } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) return { success: false };
-        
-        await db.update(documents)
-          .set({ linkedStudentId: input.studentId })
-          .where(eq(documents.id, input.docId));
-        
-        return { success: true };
-      }),
-    
-    // Link document to thread/message
-    linkToThread: protectedProcedure
-      .input(z.object({
-        docId: z.number(),
-        threadId: z.number(),
-        messageId: z.number().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { documents } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) return { success: false };
-        
-        await db.update(documents)
-          .set({ 
-            threadId: input.threadId,
-            messageId: input.messageId,
-          })
-          .where(eq(documents.id, input.docId));
-        
-        return { success: true };
-      }),
-    
-    // Upload document directly to student
-    uploadToStudent: protectedProcedure
-      .input(z.object({
-        studentId: z.number(),
-        fileName: z.string(),
-        fileData: z.string(),
-        fileType: z.string(),
-        fileSize: z.number(),
-        description: z.string().optional(),
-        tags: z.array(z.string()).optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { storagePut } = await import("./storage");
-        const { getDb } = await import("./db");
-        const { documents } = await import("../drizzle/schema");
-        
-        // Extract base64 data
-        const base64Match = input.fileData.match(/^data:[^;]+;base64,(.+)$/);
-        if (!base64Match) throw new Error('Invalid file data format');
-        
-        const buffer = Buffer.from(base64Match[1], 'base64');
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 8);
-        const sanitizedFileName = input.fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const key = `documents/student/${input.studentId}/${timestamp}-${randomSuffix}-${sanitizedFileName}`;
-        
-        const result = await storagePut(key, buffer, input.fileType);
-        
-        const db = await getDb();
-        if (!db) throw new Error('Database not available');
-        
-        const [doc] = await db.insert(documents).values({
-          ownerType: 'staff',
-          ownerId: ctx.user?.id || 0,
-          linkedStudentId: input.studentId,
-          source: 'manual_upload',
-          filename: input.fileName,
-          mimeType: input.fileType,
-          sizeBytes: input.fileSize,
-          storageUrl: result.url,
-          description: input.description,
-          tags: input.tags ? JSON.stringify(input.tags) : null,
-          uploadedById: ctx.user?.id,
-          uploadedByName: ctx.user?.name || 'Unknown',
-        });
-        
-        return { success: true, docId: doc.insertId, url: result.url };
-      }),
-    
-    // Delete document
-    deleteDocument: protectedProcedure
-      .input(z.object({ docId: z.number() }))
-      .mutation(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { documents } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) return { success: false };
-        
-        await db.delete(documents).where(eq(documents.id, input.docId));
-        return { success: true };
-      }),
-  }),
-  
   setupWizard: setupWizardRouter,
   billing: billingRouter,
   webhook: webhookRouter,
@@ -1410,92 +994,6 @@ export const appRouter = router({
       return { data };
     }),
     
-    // Submit a waiver and send email confirmation
-    submitWaiver: publicProcedure
-      .input(z.object({
-        name: z.string(),
-        email: z.string().email(),
-        studentId: z.number().optional(),
-        signatureData: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { kioskWaivers, documents, dojoSettings } = await import("../drizzle/schema");
-        const { storagePut } = await import("./storage");
-        const { sendEmail } = await import("./_core/sendgrid");
-        
-        const db = await getDb();
-        if (!db) throw new Error('Database not available');
-        
-        // Record waiver signature
-        await db.insert(kioskWaivers).values({
-          name: input.name,
-          email: input.email,
-          timestamp: new Date(),
-        });
-        
-        // If signature data provided, save as document
-        let waiverDocUrl: string | undefined;
-        if (input.signatureData && input.studentId) {
-          try {
-            const base64Match = input.signatureData.match(/^data:[^;]+;base64,(.+)$/);
-            if (base64Match) {
-              const buffer = Buffer.from(base64Match[1], 'base64');
-              const timestamp = Date.now();
-              const key = `waivers/${input.studentId}/${timestamp}-signed-waiver.png`;
-              const result = await storagePut(key, buffer, 'image/png');
-              waiverDocUrl = result.url;
-              
-              // Create document record
-              await db.insert(documents).values({
-                ownerType: 'student',
-                ownerId: input.studentId,
-                linkedStudentId: input.studentId,
-                source: 'waiver',
-                filename: `Signed Waiver - ${input.name}.png`,
-                mimeType: 'image/png',
-                sizeBytes: buffer.length,
-                storageUrl: result.url,
-                uploadedByName: input.name,
-              });
-            }
-          } catch (err) {
-            console.error('Failed to save waiver signature:', err);
-          }
-        }
-        
-        // Get dojo settings for email
-        const settings = await db.select().from(dojoSettings).limit(1);
-        const dojoName = settings[0]?.dojoName || 'Our Dojo';
-        
-        // Send confirmation email to signer
-        try {
-          await sendEmail({
-            to: { email: input.email, name: input.name },
-            subject: `Waiver Signed - ${dojoName}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #E53935;">Waiver Confirmation</h2>
-                <p>Hi ${input.name},</p>
-                <p>Thank you for signing the waiver for <strong>${dojoName}</strong>.</p>
-                <p>This email confirms that your waiver was successfully submitted on ${new Date().toLocaleDateString()}.</p>
-                ${waiverDocUrl ? `<p>You can view your signed waiver <a href="${waiverDocUrl}">here</a>.</p>` : ''}
-                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-                <p style="color: #666; font-size: 12px;">This is an automated message from ${dojoName}.</p>
-              </div>
-            `,
-          });
-        } catch (err) {
-          console.error('Failed to send waiver confirmation email:', err);
-        }
-        
-        return {
-          success: true,
-          message: 'Waiver submitted successfully. A confirmation email has been sent.',
-          documentUrl: waiverDocUrl,
-        };
-      }),
-    
     recordCheckIn: publicProcedure
       .input(z.object({
         studentId: z.number(),
@@ -1875,185 +1373,27 @@ export const appRouter = router({
           .where(eq(kaiMessages.conversationId, input.conversationId))
           .orderBy(kaiMessages.createdAt);
         
-        // Parse attachments JSON for each message
-        return messages.map(msg => ({
-          ...msg,
-          attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
-        }));
+        return messages;
       }),
 
     // Create a new conversation
     createConversation: protectedProcedure
       .input(z.object({
         title: z.string().optional(),
-        threadType: z.enum(["kai_direct", "group"]).optional(),
       }).optional())
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
+        const { kaiConversations } = await import("../drizzle/schema");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
-        
-        const threadType = input?.threadType || "kai_direct";
         
         const [result] = await db.insert(kaiConversations).values({
           userId: ctx.user.id,
           title: input?.title || "New Conversation",
-          threadType,
         });
         
-        // For group conversations, add the creator as owner participant
-        if (threadType === "group") {
-          await db.insert(threadParticipants).values({
-            conversationId: result.insertId,
-            participantType: "staff",
-            participantId: ctx.user.id,
-            participantName: ctx.user.name || "Unknown",
-            role: "owner",
-            addedById: ctx.user.id,
-            addedByName: ctx.user.name || "Unknown",
-          });
-        }
-        
-        return { id: result.insertId, threadType };
-      }),
-
-    // Get conversation participants
-    getParticipants: protectedProcedure
-      .input(z.object({ conversationId: z.number() }))
-      .query(async ({ input, ctx }) => {
-        const { getDb } = await import("./db");
-        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
-        const { eq, and } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        // Verify user has access to this conversation
-        const [conversation] = await db.select()
-          .from(kaiConversations)
-          .where(and(
-            eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.userId, ctx.user.id)
-          ))
-          .limit(1);
-        
-        if (!conversation) throw new Error("Conversation not found");
-        
-        const participants = await db.select()
-          .from(threadParticipants)
-          .where(and(
-            eq(threadParticipants.conversationId, input.conversationId),
-            eq(threadParticipants.isActive, 1)
-          ));
-        
-        return participants;
-      }),
-
-    // Add participant to conversation
-    addParticipant: protectedProcedure
-      .input(z.object({
-        conversationId: z.number(),
-        participantType: z.enum(["staff", "student", "system"]),
-        participantId: z.number().optional(),
-        participantName: z.string(),
-        role: z.enum(["owner", "member", "viewer"]).optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { getDb } = await import("./db");
-        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
-        const { eq, and } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        // Verify user owns this conversation
-        const [conversation] = await db.select()
-          .from(kaiConversations)
-          .where(and(
-            eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.userId, ctx.user.id)
-          ))
-          .limit(1);
-        
-        if (!conversation) throw new Error("Conversation not found");
-        
-        // Check if participant already exists
-        const [existing] = await db.select()
-          .from(threadParticipants)
-          .where(and(
-            eq(threadParticipants.conversationId, input.conversationId),
-            eq(threadParticipants.participantType, input.participantType),
-            eq(threadParticipants.participantId, input.participantId || 0)
-          ))
-          .limit(1);
-        
-        if (existing) {
-          // Reactivate if previously removed
-          if (!existing.isActive) {
-            await db.update(threadParticipants)
-              .set({ isActive: 1 })
-              .where(eq(threadParticipants.id, existing.id));
-          }
-          return { id: existing.id, reactivated: !existing.isActive };
-        }
-        
-        // Insert new participant
-        const [result] = await db.insert(threadParticipants).values({
-          conversationId: input.conversationId,
-          participantType: input.participantType,
-          participantId: input.participantId,
-          participantName: input.participantName,
-          role: input.role || "member",
-          addedById: ctx.user.id,
-          addedByName: ctx.user.name || "Unknown",
-        });
-        
-        // If adding to a kai_direct conversation, convert to group
-        if (conversation.threadType === "kai_direct") {
-          await db.update(kaiConversations)
-            .set({ threadType: "group" })
-            .where(eq(kaiConversations.id, input.conversationId));
-        }
-        
-        return { id: result.insertId, reactivated: false };
-      }),
-
-    // Remove participant from conversation
-    removeParticipant: protectedProcedure
-      .input(z.object({
-        conversationId: z.number(),
-        participantId: z.number(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { getDb } = await import("./db");
-        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
-        const { eq, and } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        // Verify user owns this conversation
-        const [conversation] = await db.select()
-          .from(kaiConversations)
-          .where(and(
-            eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.userId, ctx.user.id)
-          ))
-          .limit(1);
-        
-        if (!conversation) throw new Error("Conversation not found");
-        
-        // Soft-remove participant (set isActive = 0)
-        await db.update(threadParticipants)
-          .set({ isActive: 0 })
-          .where(and(
-            eq(threadParticipants.conversationId, input.conversationId),
-            eq(threadParticipants.id, input.participantId)
-          ));
-        
-        return { success: true };
+        return { id: result.insertId };
       }),
 
     // Add a message to a conversation
@@ -2063,13 +1403,6 @@ export const appRouter = router({
         role: z.enum(["user", "assistant", "system"]),
         content: z.string(),
         metadata: z.string().optional(),
-        attachments: z.array(z.object({
-          id: z.string(),
-          url: z.string(),
-          fileName: z.string(),
-          fileType: z.string(),
-          fileSize: z.number(),
-        })).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
@@ -2090,28 +1423,23 @@ export const appRouter = router({
         
         if (!conversation) throw new Error("Conversation not found");
         
-        // Insert the message with attachments
+        // Insert the message
         const [result] = await db.insert(kaiMessages).values({
           conversationId: input.conversationId,
           role: input.role,
           content: input.content,
           metadata: input.metadata,
-          attachments: input.attachments ? JSON.stringify(input.attachments) : null,
         });
         
         // Update conversation with preview and timestamp
-        const preview = input.attachments && input.attachments.length > 0 && !input.content.trim()
-          ? `Attachments: [${input.attachments.map(a => a.fileName).join(', ')}]`
-          : input.content.substring(0, 200);
+        const preview = input.content.substring(0, 200);
         await db.update(kaiConversations)
           .set({
             preview,
             lastMessageAt: new Date(),
             // Auto-update title from first user message if still "New Conversation"
             ...(conversation.title === "New Conversation" && input.role === "user" 
-              ? { title: input.attachments && input.attachments.length > 0 
-                  ? `Attachments: [${input.attachments[0].fileName}]`
-                  : input.content.substring(0, 50) + (input.content.length > 50 ? "..." : "") }
+              ? { title: input.content.substring(0, 50) + (input.content.length > 50 ? "..." : "") }
               : {}),
           })
           .where(eq(kaiConversations.id, input.conversationId));
@@ -2818,458 +2146,6 @@ Return the data as a structured JSON object.`
         };
         }
       }),
-    
-    // Extract schedule from uploaded file using LLM
-    extractSchedule: protectedProcedure
-      .input(z.object({
-        fileUrl: z.string(),
-        fileType: z.string(),
-        fileName: z.string(),
-        additionalContext: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { extractScheduleFromImage, extractScheduleFromText } = await import("./scheduleExtraction");
-        
-        const isImage = input.fileType.startsWith('image/');
-        const isExcel = input.fileType.includes('spreadsheet') || 
-                        input.fileType.includes('excel') || 
-                        input.fileName.endsWith('.xlsx') || 
-                        input.fileName.endsWith('.xls');
-        const isCsv = input.fileType === 'text/csv' || input.fileName.endsWith('.csv');
-        
-        if (isImage) {
-          // Use vision model for images
-          return await extractScheduleFromImage(input.fileUrl, input.additionalContext);
-        } else if (isExcel || isCsv) {
-          // Handle Excel and CSV files
-          try {
-            // Fetch the file content
-            const response = await fetch(input.fileUrl);
-            if (!response.ok) {
-              throw new Error(`Failed to fetch file: ${response.status}`);
-            }
-            
-            let textContent: string;
-            
-            if (isExcel) {
-              // Parse Excel file
-              const xlsx = await import('xlsx');
-              const arrayBuffer = await response.arrayBuffer();
-              const workbook = xlsx.read(arrayBuffer, { type: 'array' });
-              
-              // Convert all sheets to text
-              const sheets: string[] = [];
-              for (const sheetName of workbook.SheetNames) {
-                const sheet = workbook.Sheets[sheetName];
-                const csv = xlsx.utils.sheet_to_csv(sheet);
-                sheets.push(`Sheet: ${sheetName}\n${csv}`);
-              }
-              textContent = sheets.join('\n\n');
-            } else {
-              // CSV file - just read as text
-              textContent = await response.text();
-            }
-            
-            // Use LLM to extract schedule from text
-            return await extractScheduleFromText(textContent, input.additionalContext);
-          } catch (error: any) {
-            console.error('Schedule extraction error:', error);
-            console.error('Schedule extraction error stack:', error.stack);
-            console.error('Schedule extraction input:', { fileUrl: input.fileUrl, fileType: input.fileType, fileName: input.fileName });
-            return {
-              success: false,
-              classes: [],
-              confidence: 0,
-              error: `Failed to parse file: ${error.message}`,
-            };
-          }
-        } else {
-          // For PDFs and documents, we'd need to extract text first
-          return {
-            success: false,
-            classes: [],
-            confidence: 0,
-            error: "PDF text extraction coming soon. Please upload an image or Excel file of your schedule.",
-          };
-        }
-      }),
-    
-    // Check for duplicate classes before import
-    checkDuplicateClasses: protectedProcedure
-      .input(z.object({
-        classes: z.array(z.object({
-          name: z.string(),
-          dayOfWeek: z.string(),
-          startTime: z.string(),
-          endTime: z.string(),
-        })),
-      }))
-      .mutation(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { classes } = await import("../drizzle/schema");
-        const { like, or, and, eq } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        // Get all existing classes
-        const existingClasses = await db.select().from(classes).where(eq(classes.status, 'active'));
-        
-        const duplicates: Array<{
-          importIndex: number;
-          importClass: { name: string; dayOfWeek: string; startTime: string; endTime: string };
-          existingClass: { id: number; name: string; schedule: string };
-          matchType: 'exact' | 'name_only' | 'time_conflict';
-        }> = [];
-        
-        for (let i = 0; i < input.classes.length; i++) {
-          const importClass = input.classes[i];
-          const importSchedule = `${importClass.dayOfWeek} ${importClass.startTime}-${importClass.endTime}`;
-          
-          for (const existing of existingClasses) {
-            // Check for exact match (same name and schedule)
-            if (existing.name.toLowerCase() === importClass.name.toLowerCase() && 
-                existing.schedule?.toLowerCase() === importSchedule.toLowerCase()) {
-              duplicates.push({
-                importIndex: i,
-                importClass,
-                existingClass: { id: existing.id, name: existing.name, schedule: existing.schedule || '' },
-                matchType: 'exact',
-              });
-              break;
-            }
-            
-            // Check for name-only match (same name, different time)
-            if (existing.name.toLowerCase() === importClass.name.toLowerCase()) {
-              duplicates.push({
-                importIndex: i,
-                importClass,
-                existingClass: { id: existing.id, name: existing.name, schedule: existing.schedule || '' },
-                matchType: 'name_only',
-              });
-              break;
-            }
-            
-            // Check for time conflict (same day and overlapping time)
-            if (existing.schedule) {
-              const scheduleMatch = existing.schedule.match(/^(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
-              if (scheduleMatch) {
-                const [, existingDay, existingStart, existingEnd] = scheduleMatch;
-                if (existingDay.toLowerCase() === importClass.dayOfWeek.toLowerCase()) {
-                  // Check for time overlap
-                  const importStartMins = timeToMinutes(importClass.startTime);
-                  const importEndMins = timeToMinutes(importClass.endTime);
-                  const existingStartMins = timeToMinutes(existingStart);
-                  const existingEndMins = timeToMinutes(existingEnd);
-                  
-                  if (importStartMins < existingEndMins && importEndMins > existingStartMins) {
-                    duplicates.push({
-                      importIndex: i,
-                      importClass,
-                      existingClass: { id: existing.id, name: existing.name, schedule: existing.schedule },
-                      matchType: 'time_conflict',
-                    });
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-        
-        return {
-          hasDuplicates: duplicates.length > 0,
-          duplicates,
-          totalChecked: input.classes.length,
-        };
-      }),
-    
-    // Create classes from extracted schedule data
-    createClassesFromSchedule: protectedProcedure
-      .input(z.object({
-        classes: z.array(z.object({
-          name: z.string(),
-          dayOfWeek: z.string(),
-          startTime: z.string(),
-          endTime: z.string(),
-          instructor: z.string().optional(),
-          location: z.string().optional(),
-          level: z.string().optional(),
-          maxCapacity: z.number().optional(),
-          notes: z.string().optional(),
-        })),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { getDb } = await import("./db");
-        const { classes } = await import("../drizzle/schema");
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        const createdClasses = [];
-        
-        for (const classData of input.classes) {
-          // Format schedule string
-          const scheduleStr = `${classData.dayOfWeek} ${classData.startTime}-${classData.endTime}`;
-          
-          const [newClass] = await db.insert(classes).values({
-            name: classData.name,
-            schedule: scheduleStr,
-            description: classData.notes || '',
-            maxCapacity: classData.maxCapacity || 20,
-            currentEnrollment: 0,
-            instructorId: null, // Would need to match instructor name to ID
-            status: 'active',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }).returning();
-          
-          createdClasses.push(newClass);
-        }
-        
-        return {
-          success: true,
-          createdCount: createdClasses.length,
-          classes: createdClasses,
-        };
-      }),
-    
-    // Extract roster from uploaded file using LLM
-    extractRoster: protectedProcedure
-      .input(z.object({
-        fileUrl: z.string(),
-        fileType: z.string(),
-        fileName: z.string(),
-        additionalContext: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { extractRosterFromImage, extractRosterFromText, parseCSVToText, parseExcelFromUrl } = await import("./rosterExtraction");
-        
-        const isImage = input.fileType.startsWith('image/');
-        const isCSV = input.fileType === 'text/csv' || input.fileName.endsWith('.csv');
-        const isExcel = input.fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-                        input.fileType === 'application/vnd.ms-excel' ||
-                        input.fileName.endsWith('.xlsx') || 
-                        input.fileName.endsWith('.xls');
-        
-        if (isImage) {
-          // Use vision model for images
-          return await extractRosterFromImage(input.fileUrl, input.additionalContext);
-        } else if (isCSV) {
-          // For CSV files, fetch and parse the content
-          try {
-            const response = await fetch(input.fileUrl);
-            const csvContent = await response.text();
-            const parsedText = parseCSVToText(csvContent);
-            return await extractRosterFromText(parsedText, input.additionalContext);
-          } catch (error) {
-            return {
-              success: false,
-              students: [],
-              confidence: 0,
-              totalFound: 0,
-              error: "Failed to read CSV file: " + (error instanceof Error ? error.message : "Unknown error"),
-            };
-          }
-        } else if (isExcel) {
-          // For Excel files, fetch and parse using xlsx library
-          try {
-            const parsedText = await parseExcelFromUrl(input.fileUrl);
-            if (!parsedText) {
-              return {
-                success: false,
-                students: [],
-                confidence: 0,
-                totalFound: 0,
-                error: "Failed to parse Excel file. Please ensure it contains student data.",
-              };
-            }
-            return await extractRosterFromText(parsedText, input.additionalContext);
-          } catch (error) {
-            return {
-              success: false,
-              students: [],
-              confidence: 0,
-              totalFound: 0,
-              error: "Failed to read Excel file: " + (error instanceof Error ? error.message : "Unknown error"),
-            };
-          }
-        } else {
-          // For PDFs and other documents
-          return {
-            success: false,
-            students: [],
-            confidence: 0,
-            totalFound: 0,
-            error: "Unsupported file type. Please upload an image, CSV, or Excel (.xlsx) file.",
-          };
-        }
-      }),
-    
-    // Check for duplicate students before import
-    checkDuplicateStudents: protectedProcedure
-      .input(z.object({
-        students: z.array(z.object({
-          firstName: z.string(),
-          lastName: z.string(),
-          email: z.string().optional(),
-          phone: z.string().optional(),
-        })),
-      }))
-      .mutation(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { students } = await import("../drizzle/schema");
-        const { eq, or, and, like } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        // Get all existing students
-        const existingStudents = await db.select().from(students);
-        
-        const duplicates: Array<{
-          importIndex: number;
-          importStudent: { firstName: string; lastName: string; email?: string; phone?: string };
-          existingStudent: { id: number; firstName: string; lastName: string; email: string | null };
-          matchType: 'exact' | 'name_only' | 'email_match' | 'phone_match';
-        }> = [];
-        
-        for (let i = 0; i < input.students.length; i++) {
-          const importStudent = input.students[i];
-          const importFullName = `${importStudent.firstName} ${importStudent.lastName}`.toLowerCase().trim();
-          
-          for (const existing of existingStudents) {
-            const existingFullName = `${existing.firstName} ${existing.lastName}`.toLowerCase().trim();
-            
-            // Check for exact match (same name and email)
-            if (existingFullName === importFullName && 
-                importStudent.email && existing.email && 
-                importStudent.email.toLowerCase() === existing.email.toLowerCase()) {
-              duplicates.push({
-                importIndex: i,
-                importStudent,
-                existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
-                matchType: 'exact',
-              });
-              break;
-            }
-            
-            // Check for email match only
-            if (importStudent.email && existing.email && 
-                importStudent.email.toLowerCase() === existing.email.toLowerCase()) {
-              duplicates.push({
-                importIndex: i,
-                importStudent,
-                existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
-                matchType: 'email_match',
-              });
-              break;
-            }
-            
-            // Check for name-only match
-            if (existingFullName === importFullName) {
-              duplicates.push({
-                importIndex: i,
-                importStudent,
-                existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
-                matchType: 'name_only',
-              });
-              break;
-            }
-            
-            // Check for phone match
-            if (importStudent.phone && existing.phone) {
-              const importPhoneDigits = importStudent.phone.replace(/\D/g, '');
-              const existingPhoneDigits = existing.phone.replace(/\D/g, '');
-              if (importPhoneDigits.length >= 10 && existingPhoneDigits.length >= 10 &&
-                  importPhoneDigits.slice(-10) === existingPhoneDigits.slice(-10)) {
-                duplicates.push({
-                  importIndex: i,
-                  importStudent,
-                  existingStudent: { id: existing.id, firstName: existing.firstName, lastName: existing.lastName, email: existing.email },
-                  matchType: 'phone_match',
-                });
-                break;
-              }
-            }
-          }
-        }
-        
-        return {
-          hasDuplicates: duplicates.length > 0,
-          duplicates,
-          totalChecked: input.students.length,
-        };
-      }),
-    
-    // Create students from extracted roster data
-    createStudentsFromRoster: protectedProcedure
-      .input(z.object({
-        students: z.array(z.object({
-          firstName: z.string(),
-          lastName: z.string(),
-          email: z.string().optional(),
-          phone: z.string().optional(),
-          dateOfBirth: z.string().optional(),
-          beltRank: z.string().optional(),
-          program: z.string().optional(),
-          guardianName: z.string().optional(),
-          guardianPhone: z.string().optional(),
-          guardianEmail: z.string().optional(),
-          address: z.string().optional(),
-          city: z.string().optional(),
-          state: z.string().optional(),
-          zipCode: z.string().optional(),
-          notes: z.string().optional(),
-          membershipStatus: z.string().optional(),
-        })),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { getDb } = await import("./db");
-        const { students } = await import("../drizzle/schema");
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        const createdStudents = [];
-        const errors: string[] = [];
-        
-        for (const studentData of input.students) {
-          try {
-            const [newStudent] = await db.insert(students).values({
-              firstName: studentData.firstName,
-              lastName: studentData.lastName,
-              email: studentData.email || null,
-              phone: studentData.phone || null,
-              dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
-              beltRank: studentData.beltRank || 'White',
-              program: studentData.program || 'Adults',
-              guardianName: studentData.guardianName || null,
-              guardianPhone: studentData.guardianPhone || null,
-              guardianEmail: studentData.guardianEmail || null,
-              address: studentData.address || null,
-              city: studentData.city || null,
-              state: studentData.state || null,
-              zipCode: studentData.zipCode || null,
-              notes: studentData.notes || null,
-              status: studentData.membershipStatus === 'Inactive' ? 'inactive' : 'active',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            }).returning();
-            
-            createdStudents.push(newStudent);
-          } catch (error) {
-            errors.push(`Failed to create ${studentData.firstName} ${studentData.lastName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          }
-        }
-        
-        return {
-          success: createdStudents.length > 0,
-          createdCount: createdStudents.length,
-          students: createdStudents,
-          errors: errors.length > 0 ? errors : undefined,
-        };
-      }),
   }),
 
   // Subscription and credits management
@@ -3956,6 +2832,170 @@ Return the data as a structured JSON object.`
       .mutation(async ({ input }) => {
         const { deleteStudentMessage } = await import("./db");
         return await deleteStudentMessage(input.messageId, input.studentId);
+      }),
+  }),
+
+  // Classes router for schedule extraction and class management
+  classes: router({
+    // Extract schedule from uploaded file
+    extractSchedule: protectedProcedure
+      .input(z.object({
+        fileUrl: z.string(),
+        fileType: z.string(),
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const xlsx = await import('xlsx');
+        
+        try {
+          // Fetch the file
+          const response = await fetch(input.fileUrl);
+          if (!response.ok) {
+            return { success: false, classes: [], confidence: 0, error: 'Failed to fetch file' };
+          }
+          
+          const arrayBuffer = await response.arrayBuffer();
+          const workbook = xlsx.read(arrayBuffer, { type: 'array' });
+          
+          // Get the first sheet
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          
+          // Convert to JSON
+          const data = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          
+          if (data.length < 2) {
+            return { success: false, classes: [], confidence: 0, error: 'File appears to be empty or has no data rows' };
+          }
+          
+          // Convert to text for LLM
+          const textContent = data.map(row => row.join(' | ')).join('\n');
+          
+          // Use LLM to extract structured data
+          const { invokeLLM } = await import('./_core/llm');
+          
+          const llmResponse = await invokeLLM({
+            messages: [
+              {
+                role: 'system',
+                content: `You are a schedule parser. Extract class schedule information from the provided text and return it as JSON.
+
+Return a JSON object with this structure:
+{
+  "classes": [
+    {
+      "name": "Class Name",
+      "dayOfWeek": "Monday",
+      "startTime": "16:00",
+      "endTime": "17:00",
+      "instructor": "Instructor Name",
+      "location": "Room/Location",
+      "level": "Beginner/Intermediate/Advanced/All Levels",
+      "maxCapacity": 20,
+      "notes": "Any additional notes"
+    }
+  ],
+  "confidence": 0.95,
+  "warnings": ["Any warnings about ambiguous data"]
+}
+
+Rules:
+- dayOfWeek must be: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, or Sunday
+- Times must be in 24-hour format (HH:MM)
+- If a class runs on multiple days, create separate entries for each day
+- If data is ambiguous, set confidence lower and add warnings
+- Extract as much information as possible from the data`
+              },
+              {
+                role: 'user',
+                content: `Extract class schedule from this data:\n\n${textContent}`
+              }
+            ],
+            response_format: { type: 'json_object' }
+          });
+          
+          const content = llmResponse.choices[0]?.message?.content;
+          if (!content) {
+            return { success: false, classes: [], confidence: 0, error: 'No response from AI' };
+          }
+          
+          const parsed = JSON.parse(content);
+          
+          return {
+            success: true,
+            classes: parsed.classes || [],
+            confidence: parsed.confidence || 0.8,
+            warnings: parsed.warnings || []
+          };
+        } catch (error: any) {
+          console.error('Schedule extraction error:', error);
+          return {
+            success: false,
+            classes: [],
+            confidence: 0,
+            error: error.message || 'Failed to extract schedule'
+          };
+        }
+      }),
+
+    // Create classes from extracted schedule
+    createClassesFromSchedule: protectedProcedure
+      .input(z.object({
+        classes: z.array(z.object({
+          name: z.string(),
+          dayOfWeek: z.string(),
+          startTime: z.string(),
+          endTime: z.string(),
+          instructor: z.string().optional(),
+          location: z.string().optional(),
+          level: z.string().optional(),
+          maxCapacity: z.number().optional(),
+          notes: z.string().optional(),
+        }))
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import('./db');
+        const { classes } = await import('../drizzle/schema');
+        
+        const db = await getDb();
+        if (!db) {
+          return { success: false, createdCount: 0, error: 'Database not available' };
+        }
+        
+        let createdCount = 0;
+        const errors: string[] = [];
+        
+        for (const classData of input.classes) {
+          try {
+            // Create schedule string
+            const schedule = `${classData.dayOfWeek} ${classData.startTime}-${classData.endTime}`;
+            
+            await db.insert(classes).values({
+              name: classData.name,
+              schedule: schedule,
+              dayOfWeek: classData.dayOfWeek,
+              time: classData.startTime,
+              endTime: classData.endTime,
+              instructor: classData.instructor || null,
+              room: classData.location || null,
+              level: classData.level || 'All Levels',
+              maxCapacity: classData.maxCapacity || 20,
+              description: classData.notes || null,
+              isActive: true,
+            });
+            
+            createdCount++;
+          } catch (error: any) {
+            console.error(`Failed to create class ${classData.name}:`, error);
+            errors.push(`Failed to create ${classData.name}: ${error.message}`);
+          }
+        }
+        
+        return {
+          success: createdCount > 0,
+          createdCount,
+          errors: errors.length > 0 ? errors : undefined
+        };
       }),
   }),
 });

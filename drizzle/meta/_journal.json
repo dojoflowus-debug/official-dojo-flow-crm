@@ -260,34 +260,6 @@
       "when": 1765692354535,
       "tag": "0036_pale_scream",
       "breakpoints": true
-    },
-    {
-      "idx": 37,
-      "version": "5",
-      "when": 1765720620289,
-      "tag": "0037_burly_peter_quill",
-      "breakpoints": true
-    },
-    {
-      "idx": 38,
-      "version": "5",
-      "when": 1765721477918,
-      "tag": "0038_faulty_ronan",
-      "breakpoints": true
-    },
-    {
-      "idx": 39,
-      "version": "5",
-      "when": 1765724971507,
-      "tag": "0039_fine_ben_parker",
-      "breakpoints": true
-    },
-    {
-      "idx": 40,
-      "version": "5",
-      "when": 1765728667347,
-      "tag": "0040_sleepy_surge",
-      "breakpoints": true
     }
   ]
 }
