@@ -1817,7 +1817,7 @@ export default function KaiCommand() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                className={`h-8 w-8 relative ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
                 title="Thread Attachments"
                 onClick={() => {
                   if (!selectedConversationId) {
@@ -1828,6 +1828,23 @@ export default function KaiCommand() {
                 }}
               >
                 <Paperclip className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
+                {(() => {
+                  const attachmentCount = messages.reduce((count, msg) => count + (msg.attachments?.length || 0), 0);
+                  if (attachmentCount > 0 && selectedConversationId) {
+                    return (
+                      <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-semibold rounded-full px-1 ${
+                        isCinematic 
+                          ? 'bg-red-500 text-white' 
+                          : isDark 
+                            ? 'bg-red-500 text-white' 
+                            : 'bg-red-500 text-white'
+                      }`}>
+                        {attachmentCount > 99 ? '99+' : attachmentCount}
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
               </Button>
               <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Enable Voice Replies">
                 <Volume2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />

@@ -3579,3 +3579,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test with and without selected conversation
 - [ ] Save checkpoint
 
+
+## 🚀 NEW: Attachment Count Badge on Paperclip Icon
+
+- [x] Calculate total attachments from messages in selected conversation
+- [x] Add badge component to paperclip icon showing count
+- [x] Only show badge when count > 0
+- [x] Style badge to match theme (dark/light/cinematic)
+- [ ] Save checkpoint
+
