@@ -2808,6 +2808,84 @@ Return the data as a structured JSON object.`
         };
         }
       }),
+    
+    // Extract schedule from uploaded file using LLM
+    extractSchedule: protectedProcedure
+      .input(z.object({
+        fileUrl: z.string(),
+        fileType: z.string(),
+        fileName: z.string(),
+        additionalContext: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { extractScheduleFromImage, extractScheduleFromText } = await import("./scheduleExtraction");
+        
+        const isImage = input.fileType.startsWith('image/');
+        
+        if (isImage) {
+          // Use vision model for images
+          return await extractScheduleFromImage(input.fileUrl, input.additionalContext);
+        } else {
+          // For PDFs and documents, we'd need to extract text first
+          // For now, return a message that text extraction is coming soon
+          return {
+            success: false,
+            classes: [],
+            confidence: 0,
+            error: "PDF text extraction coming soon. Please upload an image of your schedule for now.",
+          };
+        }
+      }),
+    
+    // Create classes from extracted schedule data
+    createClassesFromSchedule: protectedProcedure
+      .input(z.object({
+        classes: z.array(z.object({
+          name: z.string(),
+          dayOfWeek: z.string(),
+          startTime: z.string(),
+          endTime: z.string(),
+          instructor: z.string().optional(),
+          location: z.string().optional(),
+          level: z.string().optional(),
+          maxCapacity: z.number().optional(),
+          notes: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { classes } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        const createdClasses = [];
+        
+        for (const classData of input.classes) {
+          // Format schedule string
+          const scheduleStr = `${classData.dayOfWeek} ${classData.startTime}-${classData.endTime}`;
+          
+          const [newClass] = await db.insert(classes).values({
+            name: classData.name,
+            schedule: scheduleStr,
+            description: classData.notes || '',
+            maxCapacity: classData.maxCapacity || 20,
+            currentEnrollment: 0,
+            instructorId: null, // Would need to match instructor name to ID
+            status: 'active',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }).returning();
+          
+          createdClasses.push(newClass);
+        }
+        
+        return {
+          success: true,
+          createdCount: createdClasses.length,
+          classes: createdClasses,
+        };
+      }),
   }),
 
   // Subscription and credits management

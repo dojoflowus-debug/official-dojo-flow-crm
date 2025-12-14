@@ -8,6 +8,7 @@ import { useEnvironment } from '@/contexts/EnvironmentContext';
 import { trpc } from '@/lib/trpc';
 import { analyzeFile, generateKaiFileResponse, getImageDimensions, type FileAnalysis, type ProposedAction } from '@/lib/fileIntelligence';
 import { FileActionCard } from '@/components/FileActionCard';
+import { SchedulePreviewCard, type ExtractedClass } from '@/components/SchedulePreviewCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -139,6 +140,15 @@ export default function KaiCommand() {
     analysis: FileAnalysis;
   } | null>(null);
   const [isProcessingFileAction, setIsProcessingFileAction] = useState(false);
+  
+  // Schedule extraction state
+  const [schedulePreview, setSchedulePreview] = useState<{
+    classes: ExtractedClass[];
+    confidence: number;
+    warnings?: string[];
+    sourceFile: string;
+  } | null>(null);
+  const [isCreatingClasses, setIsCreatingClasses] = useState(false);
   
   // Add Staff modal state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
@@ -1196,14 +1206,59 @@ export default function KaiCommand() {
           break;
           
         case 'import_schedule':
-          // Placeholder for schedule import
-          const scheduleMsg: Message = {
-            id: `schedule-${Date.now()}`,
-            role: 'assistant',
-            content: `I'll analyze **${attachment.fileName}** to extract class schedule information. This feature is coming soon - for now, you can manually add classes in the Classes section.`,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, scheduleMsg]);
+          // Use LLM to extract schedule from image
+          if (attachment.url) {
+            const extractingMsg: Message = {
+              id: `extracting-${Date.now()}`,
+              role: 'assistant',
+              content: `I'm analyzing **${attachment.fileName}** to extract class schedule information. This may take a moment...`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, extractingMsg]);
+            
+            try {
+              const result = await trpc.kai.extractSchedule.mutate({
+                fileUrl: attachment.url,
+                fileType: attachment.fileType,
+                fileName: attachment.fileName,
+              });
+              
+              if (result.success && result.classes.length > 0) {
+                // Show schedule preview card
+                setSchedulePreview({
+                  classes: result.classes,
+                  confidence: result.confidence,
+                  warnings: result.warnings,
+                  sourceFile: attachment.fileName,
+                });
+                
+                const successMsg: Message = {
+                  id: `schedule-success-${Date.now()}`,
+                  role: 'assistant',
+                  content: `I found **${result.classes.length} classes** in your schedule! Please review the details below and make any corrections before I create them.`,
+                  timestamp: new Date(),
+                };
+                setMessages(prev => [...prev, successMsg]);
+              } else {
+                const errorMsg: Message = {
+                  id: `schedule-error-${Date.now()}`,
+                  role: 'assistant',
+                  content: result.error || `I couldn't extract any classes from this image. Please make sure it's a clear photo of a class schedule, or try uploading a different image.`,
+                  timestamp: new Date(),
+                };
+                setMessages(prev => [...prev, errorMsg]);
+              }
+            } catch (err) {
+              console.error('Schedule extraction error:', err);
+              const errorMsg: Message = {
+                id: `schedule-error-${Date.now()}`,
+                role: 'assistant',
+                content: `Sorry, I encountered an error while analyzing the schedule. Please try again or add classes manually in the Classes section.`,
+                timestamp: new Date(),
+              };
+              setMessages(prev => [...prev, errorMsg]);
+            }
+          }
           break;
           
         case 'import_roster':
@@ -1238,6 +1293,45 @@ export default function KaiCommand() {
   const handleCancelFileAction = () => {
     setPendingFileAnalysis(null);
     // Keep the attachment in the input area for manual handling
+  };
+  
+  // Handle schedule preview confirmation - create classes
+  const handleConfirmSchedule = async (classes: ExtractedClass[]) => {
+    setIsCreatingClasses(true);
+    
+    try {
+      const result = await trpc.kai.createClassesFromSchedule.mutate({ classes });
+      
+      if (result.success) {
+        toast.success(`Created ${result.createdCount} classes!`);
+        
+        const successMsg: Message = {
+          id: `classes-created-${Date.now()}`,
+          role: 'assistant',
+          content: `I've created **${result.createdCount} classes** from your schedule. You can view and manage them in the Classes section.`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, successMsg]);
+        setSchedulePreview(null);
+      }
+    } catch (err) {
+      console.error('Class creation error:', err);
+      toast.error('Failed to create classes. Please try again.');
+    } finally {
+      setIsCreatingClasses(false);
+    }
+  };
+  
+  // Cancel schedule preview
+  const handleCancelSchedule = () => {
+    setSchedulePreview(null);
+    const cancelMsg: Message = {
+      id: `schedule-cancel-${Date.now()}`,
+      role: 'assistant',
+      content: `No problem! I've cancelled the schedule import. You can upload another schedule image or add classes manually anytime.`,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, cancelMsg]);
   };
 
   // Mutation for sending directed messages
@@ -2299,6 +2393,23 @@ export default function KaiCommand() {
                         onActionSelect={handleFileAction}
                         onCancel={handleCancelFileAction}
                         isProcessing={isProcessingFileAction}
+                        isDark={isDark}
+                        isCinematic={isCinematic}
+                        isFocusMode={isFocusMode}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Schedule Preview Card - shows extracted classes for review */}
+                  {schedulePreview && (
+                    <div className="px-4 py-2">
+                      <SchedulePreviewCard
+                        classes={schedulePreview.classes}
+                        confidence={schedulePreview.confidence}
+                        warnings={schedulePreview.warnings}
+                        onConfirm={handleConfirmSchedule}
+                        onCancel={handleCancelSchedule}
+                        isProcessing={isCreatingClasses}
                         isDark={isDark}
                         isCinematic={isCinematic}
                         isFocusMode={isFocusMode}

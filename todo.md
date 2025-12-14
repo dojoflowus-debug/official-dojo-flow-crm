@@ -3740,3 +3740,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Do NOT auto-run setup wizard on file upload or Profile click (already fixed in previous task)
 - [x] Wizard is optional and manually launched only (Setup Wizard is separate menu item)
 - [x] Kai Command is the primary setup interface (file intelligence integrated)
+
+## LLM-Powered Schedule Extraction
+- [x] Create server-side LLM service for schedule extraction (scheduleExtraction.ts)
+- [x] Define structured JSON schema for extracted class data
+- [x] Build schedule preview UI component with editable fields (SchedulePreviewCard)
+- [x] Add confirmation flow before creating classes
+- [x] Integrate with existing class creation tRPC procedures (kai.createClassesFromSchedule)
+- [x] Handle image-based schedules (OCR via vision model) - using Gemini 2.5 Flash
+- [x] Handle PDF/document schedules (placeholder - text extraction coming soon)
+- [x] Test with various schedule formats (10 vitest tests passing)
