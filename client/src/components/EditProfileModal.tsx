@@ -74,6 +74,9 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
     }
   }
   
+  // Upload photo mutation
+  const uploadPhotoMutation = trpc.profile.uploadPhoto.useMutation()
+  
   // Handle form submission
   const handleSubmit = async () => {
     if (!displayName.trim()) {
@@ -93,21 +96,22 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
       
       // Upload avatar if a new file was selected
       if (avatarFile) {
-        const formData = new FormData()
-        formData.append('file', avatarFile)
-        
-        // Use the storage upload endpoint
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
+        // Convert file to base64 data URL
+        const reader = new FileReader()
+        const fileDataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(avatarFile)
         })
         
-        if (response.ok) {
-          const data = await response.json()
-          newAvatarUrl = data.url
-        } else {
-          throw new Error('Failed to upload avatar')
-        }
+        // Use tRPC uploadPhoto mutation
+        const uploadResult = await uploadPhotoMutation.mutateAsync({
+          fileData: fileDataUrl,
+          fileType: avatarFile.type,
+          fileSize: avatarFile.size,
+        })
+        
+        newAvatarUrl = uploadResult.url
       }
       
       // Update profile

@@ -3779,3 +3779,8 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Display preview table of detected data
 - [x] Require explicit confirmation before importing (uses RosterPreviewCard)
 - [x] Treat pasted structured text same as dropped file (15 vitest tests passing)
+
+## Bug Fixes - Profile Update & Kai Tone
+- [x] Fix "Failed to update profile" error - fixed EditProfileModal to use tRPC uploadPhoto mutation instead of /api/upload
+- [x] Profile photo upload now uses proper tRPC procedure with base64 encoding
+- [x] Kai professional tone confirmed working - responses are now direct and business-focused (tested: "Welcome. To set up your dojo's operations...")
