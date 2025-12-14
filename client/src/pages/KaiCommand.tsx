@@ -1568,12 +1568,56 @@ export default function KaiCommand() {
               animation: 'cinematicBannerSlideDown 0.5s ease-out forwards'
             } : {}}
           >
-            <p 
-              className={`text-xs uppercase tracking-wide font-medium ${isCinematic ? 'text-white/90' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}
-              style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
-            >
-              Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
-            </p>
+            <div className="flex items-center gap-4 flex-1">
+              <p 
+                className={`text-xs uppercase tracking-wide font-medium ${isCinematic ? 'text-white/90' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}
+                style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
+              >
+                Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
+              </p>
+              
+              {/* Participant Avatars */}
+              {selectedConversationId && participantsQuery.data && participantsQuery.data.length > 0 && (
+                <div className="flex items-center gap-1 ml-auto mr-4">
+                  <div className="flex -space-x-2">
+                    {participantsQuery.data.slice(0, 4).map((participant: any, index: number) => (
+                      <div
+                        key={participant.id || index}
+                        className={`relative w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border-2 ${
+                          isCinematic 
+                            ? 'border-black/40 bg-[#E53935] text-white' 
+                            : isDark 
+                              ? 'border-[#0C0C0D] bg-[#2A2A2E] text-white' 
+                              : 'border-white bg-slate-200 text-slate-700'
+                        }`}
+                        style={{ zIndex: 10 - index }}
+                        title={participant.participantName || 'Participant'}
+                      >
+                        {participant.participantName?.substring(0, 2).toUpperCase() || 'P'}
+                      </div>
+                    ))}
+                    {participantsQuery.data.length > 4 && (
+                      <div
+                        className={`relative w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border-2 ${
+                          isCinematic 
+                            ? 'border-black/40 bg-[rgba(255,255,255,0.2)] text-white' 
+                            : isDark 
+                              ? 'border-[#0C0C0D] bg-[#3A3A3E] text-white' 
+                              : 'border-white bg-slate-300 text-slate-700'
+                        }`}
+                        style={{ zIndex: 6 }}
+                        title={`+${participantsQuery.data.length - 4} more participants`}
+                      >
+                        +{participantsQuery.data.length - 4}
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-xs ml-2 ${isCinematic ? 'text-white/70' : isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>
+                    {participantsQuery.data.length} in thread
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

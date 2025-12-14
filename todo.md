@@ -3487,3 +3487,17 @@ Note: The logo was already correctly implemented. The navigation uses:
   - Adds note to student's card via addStudentNote mutation
 - [x] Toast notifications for successful student message delivery
 
+
+
+## 🚀 NEW: Add Participant Avatars to Conversation Header
+
+### Tasks
+- [x] Find conversation header section in KaiCommand.tsx
+- [x] Add participant avatars display component
+- [x] Show stacked avatar circles for thread participants
+- [x] Display participant count if more than 3-4 participants
+- [x] Add hover tooltip showing participant names
+- [x] Style avatars to match dark/light/cinematic themes
+- [x] Test with multiple participants
+- [ ] Save checkpoint
+
