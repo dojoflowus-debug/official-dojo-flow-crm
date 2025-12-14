@@ -3501,3 +3501,49 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test with multiple participants
 - [ ] Save checkpoint
 
+
+
+## ✅ COMPLETED: Documents System + Inline Attachments
+
+### Phase 1: Database Schema
+- [x] Create documents table with ownerType, ownerId, linkedStudentId, threadId, messageId, source, filename, mimeType, sizeBytes, storageUrl, tags, permissions
+- [x] Run database migration
+
+### Phase 2: Inline Attachment Rendering (Kai Command)
+- [x] Update attachment data model with structured fields (id, url, filename, mimeType, sizeBytes, uploadedAt, uploadedBy, docId)
+- [x] Render image attachments as inline thumbnails with lightbox modal
+- [x] Render document attachments as file cards (icon + filename + size + Preview + Download)
+- [x] Support grid layout for multiple attachments
+- [x] Remove raw "Attachments: [link]" text display
+
+### Phase 3: Documents Library Backend
+- [x] Create documents router with CRUD operations
+- [x] Implement auto-save on chat upload (source='chat_upload')
+- [x] Link documents to students when @StudentName mentioned
+- [x] Store waiver PDFs (source='waiver') linked to student
+- [x] Store invoices/receipts (source='invoice') linked to student
+
+### Phase 4: Student Portal Documents Page
+- [x] Add Documents to Student Portal navigation
+- [x] Add Documents card shortcut on dashboard
+- [x] Create Documents page with tabs (All, Waivers, Payments, Messages, Training)
+- [x] Add search functionality
+- [x] Display file list with icon, filename, date, source, Preview/Download
+
+### Phase 5: Admin Student Card Documents Tab
+- [x] Add Documents tab to Student Card (DocumentsDrawer component)
+- [x] Show all documents linked to student
+- [x] Allow admin upload to student documents
+- [x] Preview/download from card
+
+### Phase 6: Thread Attachments Drawer
+- [x] Add attachments icon to Kai Command toolbar (Paperclip icon)
+- [x] Create right-side drawer component
+- [x] List all documents linked to current threadId
+- [x] Preview/download from drawer
+
+### Phase 7: Waiver Email Notification
+- [x] Save signed waiver PDF in Student Documents
+- [x] Send email notification after waiver signing
+- [ ] Show in-app notification badge on Documents (future enhancement)
+

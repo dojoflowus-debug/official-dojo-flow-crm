@@ -20,12 +20,26 @@ import {
   MessageSquare,
   Settings,
   GraduationCap,
-  Users
+  Users,
+  FileText,
+  Download,
+  Eye,
+  Search,
+  File,
+  FileImage,
+  FileSpreadsheet,
+  FileVideo,
+  FileAudio,
+  Receipt,
+  ScrollText,
+  Upload
 } from "lucide-react";
 
 export default function StudentPortal() {
   const { user } = useAuth();
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [documentFilter, setDocumentFilter] = useState<'all' | 'waiver' | 'invoice' | 'chat_upload' | 'manual_upload'>('all');
+  const [documentSearch, setDocumentSearch] = useState('');
 
   // Fetch all students (for admin/staff to select which student to manage)
   const { data: students } = trpc.students.list.useQuery();
@@ -36,6 +50,12 @@ export default function StudentPortal() {
   // Fetch enrolled classes for selected student
   const { data: enrolledClasses, refetch: refetchEnrollments } = trpc.smsReminders.getStudentEnrollments.useQuery(
     { studentId: selectedStudentId! },
+    { enabled: !!selectedStudentId }
+  );
+  
+  // Fetch documents for selected student
+  const { data: documentsData, isLoading: documentsLoading } = trpc.documents.getStudentDocuments.useQuery(
+    { studentId: selectedStudentId!, source: documentFilter === 'all' ? 'all' : documentFilter },
     { enabled: !!selectedStudentId }
   );
   
@@ -195,6 +215,10 @@ export default function StudentPortal() {
               <TabsTrigger value="preferences" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">
                 <Settings className="h-4 w-4 mr-2" />
                 SMS Preferences
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">
+                <FileText className="h-4 w-4 mr-2" />
+                Documents
               </TabsTrigger>
             </TabsList>
 
@@ -536,6 +560,154 @@ export default function StudentPortal() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Documents Tab */}
+            <TabsContent value="documents" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">My Documents</h2>
+                <Badge variant="outline" className="border-white/20">
+                  {documentsData?.documents?.length || 0} documents
+                </Badge>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'all', label: 'All', icon: File },
+                  { value: 'waiver', label: 'Waivers', icon: ScrollText },
+                  { value: 'invoice', label: 'Payments', icon: Receipt },
+                  { value: 'chat_upload', label: 'Messages', icon: MessageSquare },
+                  { value: 'manual_upload', label: 'Training', icon: GraduationCap },
+                ].map(({ value, label, icon: Icon }) => (
+                  <Button
+                    key={value}
+                    variant={documentFilter === value ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setDocumentFilter(value as any)}
+                    className={documentFilter === value ? 'bg-red-500 hover:bg-red-600' : 'border-white/20 hover:bg-white/10'}
+                  >
+                    <Icon className="h-4 w-4 mr-2" />
+                    {label}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search documents..."
+                  value={documentSearch}
+                  onChange={(e) => setDocumentSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-[#18181A] border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50"
+                />
+              </div>
+
+              {/* Documents List */}
+              {documentsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="bg-[#18181A] border-white/10 animate-pulse">
+                      <CardContent className="h-20" />
+                    </Card>
+                  ))}
+                </div>
+              ) : documentsData?.documents && documentsData.documents.length > 0 ? (
+                <div className="space-y-3">
+                  {documentsData.documents
+                    .filter(doc => 
+                      !documentSearch || 
+                      doc.filename.toLowerCase().includes(documentSearch.toLowerCase())
+                    )
+                    .map((doc) => {
+                      const getIcon = () => {
+                        if (doc.mimeType.startsWith('image/')) return <FileImage className="h-5 w-5 text-blue-400" />;
+                        if (doc.mimeType.startsWith('video/')) return <FileVideo className="h-5 w-5 text-purple-400" />;
+                        if (doc.mimeType.startsWith('audio/')) return <FileAudio className="h-5 w-5 text-green-400" />;
+                        if (doc.mimeType.includes('spreadsheet') || doc.mimeType.includes('excel')) return <FileSpreadsheet className="h-5 w-5 text-green-400" />;
+                        if (doc.mimeType === 'application/pdf') return <FileText className="h-5 w-5 text-red-400" />;
+                        return <File className="h-5 w-5 text-gray-400" />;
+                      };
+                      
+                      const getSourceBadge = () => {
+                        const badges: Record<string, { label: string; color: string }> = {
+                          'waiver': { label: 'Waiver', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+                          'invoice': { label: 'Invoice', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+                          'receipt': { label: 'Receipt', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+                          'chat_upload': { label: 'Message', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+                          'manual_upload': { label: 'Training', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+                          'onboarding': { label: 'Onboarding', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
+                        };
+                        const badge = badges[doc.source] || { label: doc.source, color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
+                        return <Badge className={badge.color}>{badge.label}</Badge>;
+                      };
+                      
+                      const formatSize = (bytes: number) => {
+                        if (bytes < 1024) return `${bytes} B`;
+                        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+                        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+                      };
+                      
+                      return (
+                        <Card key={doc.id} className="bg-[#18181A] border-white/10 hover:border-white/20 transition-all">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-4">
+                              <div className="p-3 rounded-lg bg-white/5">
+                                {getIcon()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white truncate">{doc.filename}</p>
+                                <div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
+                                  <span>{formatSize(doc.sizeBytes)}</span>
+                                  <span>•</span>
+                                  <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
+                                  {getSourceBadge()}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {doc.mimeType === 'application/pdf' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 hover:bg-white/10"
+                                    onClick={() => window.open(doc.storageUrl, '_blank')}
+                                    title="Preview"
+                                  >
+                                    <Eye className="h-4 w-4 text-gray-400" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-9 w-9 hover:bg-white/10"
+                                  onClick={() => {
+                                    const a = document.createElement('a');
+                                    a.href = doc.storageUrl;
+                                    a.download = doc.filename;
+                                    a.click();
+                                  }}
+                                  title="Download"
+                                >
+                                  <Download className="h-4 w-4 text-gray-400" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                </div>
+              ) : (
+                <Card className="bg-[#18181A] border-white/10">
+                  <CardContent className="py-12 text-center">
+                    <FileText className="h-12 w-12 mx-auto text-gray-600 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-300">No Documents Yet</h3>
+                    <p className="text-gray-500 mt-2">Your waivers, receipts, and training materials will appear here.</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         )}

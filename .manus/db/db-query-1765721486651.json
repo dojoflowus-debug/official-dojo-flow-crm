@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `documents` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `ownerType` enum('student','guardian','staff','account') NOT NULL,\n  `ownerId` int NOT NULL,\n  `linkedStudentId` int,\n  `threadId` int,\n  `messageId` int,\n  `source` enum('chat_upload','waiver','invoice','onboarding','manual_upload','receipt') NOT NULL,\n  `filename` varchar(500) NOT NULL,\n  `mimeType` varchar(100) NOT NULL,\n  `sizeBytes` int NOT NULL,\n  `storageUrl` varchar(1000) NOT NULL,\n  `tags` text,\n  `permissions` text,\n  `description` text,\n  `uploadedById` int,\n  `uploadedByName` varchar(255),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `documents_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS `documents` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `ownerType` enum('student','guardian','staff','account') NOT NULL,\n  `ownerId` int NOT NULL,\n  `linkedStudentId` int,\n  `threadId` int,\n  `messageId` int,\n  `source` enum('chat_upload','waiver','invoice','onboarding','manual_upload','receipt') NOT NULL,\n  `filename` varchar(500) NOT NULL,\n  `mimeType` varchar(100) NOT NULL,\n  `sizeBytes` int NOT NULL,\n  `storageUrl` varchar(1000) NOT NULL,\n  `tags` text,\n  `permissions` text,\n  `description` text,\n  `uploadedById` int,\n  `uploadedByName` varchar(255),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `documents_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 210
+}

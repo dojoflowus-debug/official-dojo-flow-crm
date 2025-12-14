@@ -1550,3 +1550,47 @@ export const studentNotes = mysqlTable("student_notes", {
 
 export type StudentNote = typeof studentNotes.$inferSelect;
 export type InsertStudentNote = typeof studentNotes.$inferInsert;
+
+
+/**
+ * Documents table - Central document storage system
+ * Stores all uploaded files, waivers, invoices, and attachments
+ */
+export const documents = mysqlTable("documents", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Owner type: who owns this document */
+  ownerType: mysqlEnum("ownerType", ["student", "guardian", "staff", "account"]).notNull(),
+  /** Owner ID (references the owner based on ownerType) */
+  ownerId: int("ownerId").notNull(),
+  /** Linked student ID (for documents that should appear in student's documents) */
+  linkedStudentId: int("linkedStudentId"),
+  /** Thread ID if uploaded in a Kai conversation */
+  threadId: int("threadId"),
+  /** Message ID if attached to a specific message */
+  messageId: int("messageId"),
+  /** Document source */
+  source: mysqlEnum("source", ["chat_upload", "waiver", "invoice", "onboarding", "manual_upload", "receipt"]).notNull(),
+  /** Original filename */
+  filename: varchar("filename", { length: 500 }).notNull(),
+  /** MIME type */
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  /** File size in bytes */
+  sizeBytes: int("sizeBytes").notNull(),
+  /** S3 storage URL */
+  storageUrl: varchar("storageUrl", { length: 1000 }).notNull(),
+  /** Document tags (JSON array) */
+  tags: text("tags"),
+  /** Visibility/permissions (JSON) */
+  permissions: text("permissions"),
+  /** Document description/notes */
+  description: text("description"),
+  /** Who uploaded this document */
+  uploadedById: int("uploadedById"),
+  /** Uploader name for display */
+  uploadedByName: varchar("uploadedByName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Document = typeof documents.$inferSelect;
+export type InsertDocument = typeof documents.$inferInsert;

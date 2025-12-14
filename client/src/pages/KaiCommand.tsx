@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { 
   Search, 
@@ -52,7 +53,14 @@ import {
   File,
   Loader2,
   List,
-  Save
+  Save,
+  Download,
+  ZoomIn,
+  FileIcon,
+  FileSpreadsheet,
+  FileImage,
+  FileVideo,
+  FileAudio
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -91,6 +99,9 @@ interface Attachment {
   url: string;
   uploading?: boolean;
   error?: string;
+  docId?: number; // Reference to documents table
+  uploadedAt?: Date;
+  uploadedBy?: string;
 }
 
 export default function KaiCommand() {
@@ -117,11 +128,15 @@ export default function KaiCommand() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   
+  // Lightbox state for image preview
+  const [lightboxImage, setLightboxImage] = useState<{url: string; filename: string} | null>(null);
+  
   // Add Staff modal state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [staffSearchQuery, setStaffSearchQuery] = useState('');
   const [selectedStaffIds, setSelectedStaffIds] = useState<Set<number>>(new Set());
   const [isAddingParticipants, setIsAddingParticipants] = useState(false);
+  const [isThreadAttachmentsOpen, setIsThreadAttachmentsOpen] = useState(false);
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
@@ -172,6 +187,150 @@ export default function KaiCommand() {
       console.error('Failed to save note to student card:', error);
       toast.error(`Couldn't save note. ${error?.message || 'Unknown error'}`);
     }
+  };
+  
+  // Helper to check if file is an image
+  const isImageFile = (mimeType: string) => {
+    return mimeType.startsWith('image/');
+  };
+  
+  // Helper to check if file is a document
+  const isDocumentFile = (mimeType: string) => {
+    const docTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain', 'text/csv'];
+    return docTypes.includes(mimeType);
+  };
+  
+  // Get icon for file type
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <FileImage className="w-5 h-5" />;
+    if (mimeType.startsWith('video/')) return <FileVideo className="w-5 h-5" />;
+    if (mimeType.startsWith('audio/')) return <FileAudio className="w-5 h-5" />;
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return <FileSpreadsheet className="w-5 h-5" />;
+    if (mimeType === 'application/pdf') return <FileText className="w-5 h-5 text-red-500" />;
+    return <FileIcon className="w-5 h-5" />;
+  };
+  
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+  
+  // Render inline attachments for a message
+  const renderInlineAttachments = (messageAttachments: Attachment[] | undefined) => {
+    if (!messageAttachments || messageAttachments.length === 0) return null;
+    
+    const images = messageAttachments.filter(att => isImageFile(att.fileType));
+    const documents = messageAttachments.filter(att => !isImageFile(att.fileType));
+    
+    return (
+      <div className="mt-3 space-y-3">
+        {/* Image Grid */}
+        {images.length > 0 && (
+          <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+            {images.map((img) => (
+              <div
+                key={img.id}
+                className={`relative group cursor-pointer rounded-lg overflow-hidden border ${
+                  isCinematic || isFocusMode
+                    ? 'border-white/20 hover:border-white/40'
+                    : isDark
+                      ? 'border-white/10 hover:border-white/20'
+                      : 'border-slate-200 hover:border-slate-300'
+                }`}
+                onClick={() => setLightboxImage({ url: img.url, filename: img.fileName })}
+              >
+                <img
+                  src={img.url}
+                  alt={img.fileName}
+                  className="w-full h-32 object-cover"
+                />
+                <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center`}>
+                  <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Document Cards */}
+        {documents.length > 0 && (
+          <div className="space-y-2">
+            {documents.map((doc) => (
+              <div
+                key={doc.id}
+                className={`flex items-center gap-3 p-3 rounded-lg border ${
+                  isCinematic || isFocusMode
+                    ? 'bg-black/40 border-white/20'
+                    : isDark
+                      ? 'bg-[#1A1A1C] border-white/10'
+                      : 'bg-slate-50 border-slate-200'
+                }`}
+              >
+                <div className={`p-2 rounded-lg ${
+                  isCinematic || isFocusMode
+                    ? 'bg-white/10'
+                    : isDark
+                      ? 'bg-white/5'
+                      : 'bg-white'
+                }`}>
+                  {getFileIcon(doc.fileType)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium truncate ${
+                    isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    {doc.fileName}
+                  </p>
+                  <p className={`text-xs ${
+                    isCinematic || isFocusMode ? 'text-white/60' : isDark ? 'text-white/50' : 'text-slate-500'
+                  }`}>
+                    {formatFileSize(doc.fileSize)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {doc.fileType === 'application/pdf' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => window.open(doc.url, '_blank')}
+                      title="Preview"
+                    >
+                      <Eye className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-500'}`} />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      const a = document.createElement('a');
+                      a.href = doc.url;
+                      a.download = doc.fileName;
+                      a.click();
+                    }}
+                    title="Download"
+                  >
+                    <Download className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-500'}`} />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // Strip attachment links from message content for clean display
+  const stripAttachmentLinks = (content: string) => {
+    // Remove "Attachments:\n[filename](url)" patterns
+    return content.replace(/\n*Attachments:\n(\[[^\]]+\]\([^)]+\)\n?)+/g, '').trim();
   };
   
   const renderMessageWithMentions = (content: string) => {
@@ -916,18 +1075,6 @@ export default function KaiCommand() {
     setAttachments(prev => prev.filter(att => att.id !== id));
   };
 
-  // Format file size
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  // Check if file is an image
-  const isImageFile = (type: string): boolean => {
-    return type.startsWith('image/');
-  };
-
   // Mutation for sending directed messages
   const sendDirectedMessageMutation = trpc.messaging.sendDirectedMessage.useMutation();
   
@@ -1667,6 +1814,21 @@ export default function KaiCommand() {
               >
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Thread Attachments"
+                onClick={() => {
+                  if (!selectedConversationId) {
+                    toast.info('Select a conversation first');
+                    return;
+                  }
+                  setIsThreadAttachmentsOpen(true);
+                }}
+              >
+                <Paperclip className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
+              </Button>
               <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Enable Voice Replies">
                 <Volume2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
@@ -1865,7 +2027,9 @@ export default function KaiCommand() {
                                 textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                                 zIndex: 30
                               } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
-                            >{renderMessageWithMentions(message.content)}</p>
+                            >{renderMessageWithMentions(stripAttachmentLinks(message.content))}</p>
+                            {/* Inline Attachments */}
+                            {renderInlineAttachments(message.attachments)}
                           </div>
                         </>
                       ) : (
@@ -1886,8 +2050,10 @@ export default function KaiCommand() {
                                 zIndex: 30
                               } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
                             >
-                              {renderMessageWithMentions(message.content)}
+                              {renderMessageWithMentions(stripAttachmentLinks(message.content))}
                             </div>
+                            {/* Inline Attachments */}
+                            {renderInlineAttachments(message.attachments)}
                           </div>
                         </>
                       )}
@@ -2305,6 +2471,177 @@ export default function KaiCommand() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Image Lightbox Modal */}
+      <Dialog open={!!lightboxImage} onOpenChange={() => setLightboxImage(null)}>
+        <DialogContent className={`max-w-4xl p-0 overflow-hidden ${
+          isDark ? 'bg-[#0C0C0D] border-[rgba(255,255,255,0.1)]' : 'bg-white'
+        }`}>
+          <DialogHeader className={`p-4 border-b ${
+            isDark ? 'border-[rgba(255,255,255,0.1)]' : 'border-slate-200'
+          }`}>
+            <DialogTitle className={`flex items-center justify-between ${
+              isDark ? 'text-white' : 'text-slate-900'
+            }`}>
+              <span className="truncate">{lightboxImage?.filename}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  if (lightboxImage) {
+                    const a = document.createElement('a');
+                    a.href = lightboxImage.url;
+                    a.download = lightboxImage.filename;
+                    a.click();
+                  }
+                }}
+                title="Download"
+              >
+                <Download className={`w-4 h-4 ${isDark ? 'text-white/70' : 'text-slate-500'}`} />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 flex items-center justify-center max-h-[70vh]">
+            {lightboxImage && (
+              <img
+                src={lightboxImage.url}
+                alt={lightboxImage.filename}
+                className="max-w-full max-h-[65vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Thread Attachments Drawer */}
+      {isThreadAttachmentsOpen && selectedConversationId && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998] transition-opacity duration-300"
+            onClick={() => setIsThreadAttachmentsOpen(false)}
+          />
+          
+          {/* Drawer */}
+          <div
+            className={`fixed top-0 right-0 h-full w-[480px] shadow-2xl z-[10000] flex flex-col transition-transform duration-300 ease-out ${
+              isDark ? 'bg-[#0F1115]' : 'bg-white'
+            }`}
+          >
+            {/* Header */}
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${
+              isDark ? 'border-white/10' : 'border-slate-200'
+            }`}>
+              <div>
+                <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Thread Attachments</h2>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                  {selectedConversation?.title || 'Current conversation'}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsThreadAttachmentsOpen(false)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                  isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            {/* Attachments List */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {(() => {
+                // Collect all attachments from messages in this conversation
+                const allAttachments = messages.flatMap(msg => 
+                  (msg.attachments || []).map(att => ({
+                    ...att,
+                    messageTimestamp: msg.timestamp,
+                    senderName: msg.sender === 'user' ? 'You' : 'Kai'
+                  }))
+                );
+                
+                if (allAttachments.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Paperclip className={`h-12 w-12 mb-4 ${isDark ? 'text-gray-600' : 'text-slate-300'}`} />
+                      <h3 className={`text-lg font-medium ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>No Attachments</h3>
+                      <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>
+                        Files shared in this conversation will appear here.
+                      </p>
+                    </div>
+                  );
+                }
+                
+                return (
+                  <div className="space-y-3">
+                    {allAttachments.map((att, idx) => (
+                      <div
+                        key={`${att.id}-${idx}`}
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                          isDark 
+                            ? 'bg-white/5 border-white/10 hover:border-white/20' 
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+                          {getFileIcon(att.fileType)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            {att.fileName}
+                          </p>
+                          <div className={`flex items-center gap-2 mt-1 text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                            <span>{formatFileSize(att.fileSize)}</span>
+                            <span>•</span>
+                            <span>{att.senderName}</span>
+                            <span>•</span>
+                            <span>{new Date(att.messageTimestamp).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {isImageFile(att.fileType) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-8 w-8 ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'}`}
+                              onClick={() => setLightboxImage({ url: att.url, filename: att.fileName })}
+                              title="Preview"
+                            >
+                              <Eye className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`} />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-8 w-8 ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'}`}
+                            onClick={() => {
+                              const a = document.createElement('a');
+                              a.href = att.url;
+                              a.download = att.fileName;
+                              a.click();
+                            }}
+                            title="Download"
+                          >
+                            <Download className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`} />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+            
+            {/* Footer */}
+            <div className={`px-6 py-4 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+              <p className={`text-xs text-center ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
+                {messages.flatMap(m => m.attachments || []).length} attachment{messages.flatMap(m => m.attachments || []).length !== 1 ? 's' : ''} in this thread
+              </p>
+            </div>
+          </div>
+        </>
+      )}
     </BottomNavLayout>
   );
 }

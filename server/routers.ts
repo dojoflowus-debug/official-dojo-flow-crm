@@ -191,6 +191,31 @@ export const appRouter = router({
         // Upload to S3
         const result = await storagePut(key, buffer, input.fileType);
         
+        // Create document record in database
+        const { getDb } = await import("./db");
+        const { documents } = await import("../drizzle/schema");
+        const db = await getDb();
+        
+        let docId: number | undefined;
+        if (db) {
+          try {
+            const [doc] = await db.insert(documents).values({
+              ownerType: 'staff',
+              ownerId: ctx.user?.id || 0,
+              source: 'chat_upload',
+              filename: input.fileName,
+              mimeType: input.fileType,
+              sizeBytes: input.fileSize,
+              storageUrl: result.url,
+              uploadedById: ctx.user?.id,
+              uploadedByName: ctx.user?.name || 'Unknown',
+            });
+            docId = doc.insertId;
+          } catch (err) {
+            console.error('Failed to create document record:', err);
+          }
+        }
+        
         return {
           success: true,
           url: result.url,
@@ -198,6 +223,7 @@ export const appRouter = router({
           fileName: input.fileName,
           fileType: input.fileType,
           fileSize: input.fileSize,
+          docId,
         };
       }),
     
@@ -212,6 +238,171 @@ export const appRouter = router({
         };
       }),
   }),
+  
+  // Documents library router
+  documents: router({
+    // Get documents for a student
+    getStudentDocuments: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+        source: z.enum(['all', 'chat_upload', 'waiver', 'invoice', 'onboarding', 'manual_upload', 'receipt']).default('all'),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { documents } = await import("../drizzle/schema");
+        const { eq, or, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { documents: [] };
+        
+        let query = db.select().from(documents)
+          .where(or(
+            eq(documents.linkedStudentId, input.studentId),
+            eq(documents.ownerId, input.studentId)
+          ))
+          .orderBy(desc(documents.createdAt));
+        
+        const docs = await query;
+        
+        // Filter by source if not 'all'
+        const filteredDocs = input.source === 'all' 
+          ? docs 
+          : docs.filter(d => d.source === input.source);
+        
+        return { documents: filteredDocs };
+      }),
+    
+    // Get documents for a thread
+    getThreadDocuments: protectedProcedure
+      .input(z.object({
+        threadId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { documents } = await import("../drizzle/schema");
+        const { eq, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { documents: [] };
+        
+        const docs = await db.select().from(documents)
+          .where(eq(documents.threadId, input.threadId))
+          .orderBy(desc(documents.createdAt));
+        
+        return { documents: docs };
+      }),
+    
+    // Link document to student
+    linkToStudent: protectedProcedure
+      .input(z.object({
+        docId: z.number(),
+        studentId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { documents } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { success: false };
+        
+        await db.update(documents)
+          .set({ linkedStudentId: input.studentId })
+          .where(eq(documents.id, input.docId));
+        
+        return { success: true };
+      }),
+    
+    // Link document to thread/message
+    linkToThread: protectedProcedure
+      .input(z.object({
+        docId: z.number(),
+        threadId: z.number(),
+        messageId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { documents } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { success: false };
+        
+        await db.update(documents)
+          .set({ 
+            threadId: input.threadId,
+            messageId: input.messageId,
+          })
+          .where(eq(documents.id, input.docId));
+        
+        return { success: true };
+      }),
+    
+    // Upload document directly to student
+    uploadToStudent: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+        fileName: z.string(),
+        fileData: z.string(),
+        fileType: z.string(),
+        fileSize: z.number(),
+        description: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { storagePut } = await import("./storage");
+        const { getDb } = await import("./db");
+        const { documents } = await import("../drizzle/schema");
+        
+        // Extract base64 data
+        const base64Match = input.fileData.match(/^data:[^;]+;base64,(.+)$/);
+        if (!base64Match) throw new Error('Invalid file data format');
+        
+        const buffer = Buffer.from(base64Match[1], 'base64');
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const sanitizedFileName = input.fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const key = `documents/student/${input.studentId}/${timestamp}-${randomSuffix}-${sanitizedFileName}`;
+        
+        const result = await storagePut(key, buffer, input.fileType);
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const [doc] = await db.insert(documents).values({
+          ownerType: 'staff',
+          ownerId: ctx.user?.id || 0,
+          linkedStudentId: input.studentId,
+          source: 'manual_upload',
+          filename: input.fileName,
+          mimeType: input.fileType,
+          sizeBytes: input.fileSize,
+          storageUrl: result.url,
+          description: input.description,
+          tags: input.tags ? JSON.stringify(input.tags) : null,
+          uploadedById: ctx.user?.id,
+          uploadedByName: ctx.user?.name || 'Unknown',
+        });
+        
+        return { success: true, docId: doc.insertId, url: result.url };
+      }),
+    
+    // Delete document
+    deleteDocument: protectedProcedure
+      .input(z.object({ docId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { documents } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { success: false };
+        
+        await db.delete(documents).where(eq(documents.id, input.docId));
+        return { success: true };
+      }),
+  }),
+  
   setupWizard: setupWizardRouter,
   billing: billingRouter,
   webhook: webhookRouter,
@@ -993,6 +1184,92 @@ export const appRouter = router({
       const data = await getKioskWaivers();
       return { data };
     }),
+    
+    // Submit a waiver and send email confirmation
+    submitWaiver: publicProcedure
+      .input(z.object({
+        name: z.string(),
+        email: z.string().email(),
+        studentId: z.number().optional(),
+        signatureData: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { kioskWaivers, documents, dojoSettings } = await import("../drizzle/schema");
+        const { storagePut } = await import("./storage");
+        const { sendEmail } = await import("./_core/sendgrid");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Record waiver signature
+        await db.insert(kioskWaivers).values({
+          name: input.name,
+          email: input.email,
+          timestamp: new Date(),
+        });
+        
+        // If signature data provided, save as document
+        let waiverDocUrl: string | undefined;
+        if (input.signatureData && input.studentId) {
+          try {
+            const base64Match = input.signatureData.match(/^data:[^;]+;base64,(.+)$/);
+            if (base64Match) {
+              const buffer = Buffer.from(base64Match[1], 'base64');
+              const timestamp = Date.now();
+              const key = `waivers/${input.studentId}/${timestamp}-signed-waiver.png`;
+              const result = await storagePut(key, buffer, 'image/png');
+              waiverDocUrl = result.url;
+              
+              // Create document record
+              await db.insert(documents).values({
+                ownerType: 'student',
+                ownerId: input.studentId,
+                linkedStudentId: input.studentId,
+                source: 'waiver',
+                filename: `Signed Waiver - ${input.name}.png`,
+                mimeType: 'image/png',
+                sizeBytes: buffer.length,
+                storageUrl: result.url,
+                uploadedByName: input.name,
+              });
+            }
+          } catch (err) {
+            console.error('Failed to save waiver signature:', err);
+          }
+        }
+        
+        // Get dojo settings for email
+        const settings = await db.select().from(dojoSettings).limit(1);
+        const dojoName = settings[0]?.dojoName || 'Our Dojo';
+        
+        // Send confirmation email to signer
+        try {
+          await sendEmail({
+            to: { email: input.email, name: input.name },
+            subject: `Waiver Signed - ${dojoName}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #E53935;">Waiver Confirmation</h2>
+                <p>Hi ${input.name},</p>
+                <p>Thank you for signing the waiver for <strong>${dojoName}</strong>.</p>
+                <p>This email confirms that your waiver was successfully submitted on ${new Date().toLocaleDateString()}.</p>
+                ${waiverDocUrl ? `<p>You can view your signed waiver <a href="${waiverDocUrl}">here</a>.</p>` : ''}
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="color: #666; font-size: 12px;">This is an automated message from ${dojoName}.</p>
+              </div>
+            `,
+          });
+        } catch (err) {
+          console.error('Failed to send waiver confirmation email:', err);
+        }
+        
+        return {
+          success: true,
+          message: 'Waiver submitted successfully. A confirmation email has been sent.',
+          documentUrl: waiverDocUrl,
+        };
+      }),
     
     recordCheckIn: publicProcedure
       .input(z.object({
