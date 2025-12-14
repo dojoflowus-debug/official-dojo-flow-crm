@@ -53,7 +53,8 @@ import {
   File,
   Loader2,
   List,
-  Save
+  Save,
+  Upload
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -113,6 +114,10 @@ export default function KaiCommand() {
   const [isExtractingSchedule, setIsExtractingSchedule] = useState(false);
   const [isCreatingClasses, setIsCreatingClasses] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Drag-and-drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
   const [expandedInput, setExpandedInput] = useState(false);
   const [commandCenterWidth, setCommandCenterWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
@@ -894,6 +899,130 @@ export default function KaiCommand() {
     setAttachments(prev => prev.filter(att => att.id !== id));
   };
 
+  // Drag-and-drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounterRef.current = 0;
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+      'application/vnd.ms-excel', // xls
+      'text/csv', // csv
+      'text/plain'
+    ];
+
+    for (const file of Array.from(files)) {
+      // Validate file size
+      if (file.size > maxSize) {
+        toast.error(`File "${file.name}" exceeds 10MB limit`);
+        continue;
+      }
+
+      // Validate file type - also check by extension for xlsx files
+      const isAllowedType = allowedTypes.includes(file.type) ||
+        file.name.endsWith('.xlsx') ||
+        file.name.endsWith('.xls') ||
+        file.name.endsWith('.csv');
+      
+      if (!isAllowedType) {
+        toast.error(`File type not supported: ${file.name}`);
+        continue;
+      }
+
+      // Create temporary attachment with uploading state
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const tempAttachment: Attachment = {
+        id: tempId,
+        fileName: file.name,
+        fileType: file.type || 'application/octet-stream',
+        fileSize: file.size,
+        url: '',
+        uploading: true
+      };
+
+      setAttachments(prev => [...prev, tempAttachment]);
+
+      // Read file as base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const base64Data = event.target?.result as string;
+          
+          const result = await uploadMutation.mutateAsync({
+            fileName: file.name,
+            fileData: base64Data,
+            fileType: file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            fileSize: file.size,
+            context: 'kai-command'
+          });
+
+          // Update attachment with uploaded URL
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId 
+              ? { ...att, url: result.url, uploading: false }
+              : att
+          ));
+          
+          // Check if this is a schedule file (xlsx, xls, csv)
+          const isScheduleFile = 
+            file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+            file.type === 'application/vnd.ms-excel' ||
+            file.type === 'text/csv' ||
+            file.name.endsWith('.xlsx') ||
+            file.name.endsWith('.xls') ||
+            file.name.endsWith('.csv');
+          
+          if (isScheduleFile) {
+            // Auto-extract schedule from the file
+            handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
+          }
+        } catch (error) {
+          console.error('Upload failed:', error);
+          // Mark attachment as failed
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId 
+              ? { ...att, uploading: false, error: 'Upload failed' }
+              : att
+          ));
+          toast.error(`Failed to upload ${file.name}`);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Format file size
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -1501,7 +1630,36 @@ export default function KaiCommand() {
         <div 
           className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
           style={{ zIndex: 10 }}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
         >
+          {/* Drag-and-drop overlay */}
+          {isDragging && (
+            <div 
+              className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+              style={{ background: isDark ? 'rgba(12,12,13,0.95)' : 'rgba(255,255,255,0.95)' }}
+            >
+              <div className={`flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-dashed ${
+                isDark ? 'border-red-500/50 bg-red-500/10' : 'border-red-400/50 bg-red-50'
+              }`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                  isDark ? 'bg-red-500/20' : 'bg-red-100'
+                }`}>
+                  <Upload className={`w-8 h-8 ${isDark ? 'text-red-400' : 'text-red-500'}`} />
+                </div>
+                <div className="text-center">
+                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    Drop files here
+                  </p>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-white/60' : 'text-slate-500'}`}>
+                    Spreadsheets, images, PDFs, and documents
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           {/* ENVIRONMENT LAYER - All background elements with z-index: 0 */}
           {/* Constrained to main content column only, not full page */}
           {isCinematic && (

@@ -3425,3 +3425,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show preview card with extracted classes
 - [x] Add confirm button to create classes in database
 - [ ] Test complete flow end-to-end
+
+
+## Implement drag-and-drop file upload
+- [x] Add drag-and-drop event handlers to chat area
+- [x] Create visual drop zone indicator with overlay
+- [x] Handle file drops and trigger upload
+- [x] Test drag-and-drop with xlsx files
