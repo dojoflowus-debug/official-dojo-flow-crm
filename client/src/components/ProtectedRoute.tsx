@@ -51,7 +51,7 @@ export default function ProtectedRoute({ children, requireSetup = true }: Protec
 
       // Authenticated and setup completed, but on setup wizard
       if (user && user.setupCompleted && location.pathname === "/setup-wizard") {
-        navigate("/dashboard", { replace: true });
+        navigate("/kai-command", { replace: true });
       }
     }
   }, [isLoading, isAuthenticated, user, requireSetup, navigate, location]);

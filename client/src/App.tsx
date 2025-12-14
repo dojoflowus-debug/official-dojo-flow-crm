@@ -26,17 +26,13 @@ import StudentProfile from "./pages/StudentProfile";
 import StudentSettings from "./pages/StudentSettings";
 import StudentForgotPassword from "./pages/StudentForgotPassword";
 import StudentResetPassword from "./pages/StudentResetPassword";
-import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
-import CRMDashboard from "./pages/CRMDashboard";
 import StudentsNew from "./pages/StudentsNew";
 import StudentsSplitScreen from "./pages/StudentsSplitScreen";
 import StudentPortal from "./pages/StudentPortal";
 import Leads from "./pages/Leads";
 import TestData from "./pages/TestData";
-import SimpleDashboard from "./pages/SimpleDashboard";
-import DataDashboard from "./pages/DataDashboard";
-import MinimalDashboard from "./pages/MinimalDashboard";
+// Dashboard pages removed - Kai Command is the central focus
 // Kiosk removed - Kai Command is the central focus
 import Classes from "./pages/Classes";
 import Staff from "./pages/Staff";
@@ -84,7 +80,6 @@ function Router() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<KaiCommand />} />
-      <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
       <Route path="/new-visitor" element={<NewVisitor />} />
       <Route path="/waiver" element={<Waiver />} />
@@ -105,12 +100,11 @@ function Router() {
       <Route path="/student-messages" element={<StudentMessages />} />
       <Route path="/student-profile" element={<StudentProfile />} />
       <Route path="/student-settings" element={<StudentSettings />} />
-      <Route path="/kai-dashboard" element={<KaiDashboard />} />
-      <Route path="/kai" element={<KaiDashboard />} />
+      <Route path="/kai-dashboard" element={<KaiCommand />} />
+      <Route path="/kai" element={<KaiCommand />} />
       <Route path="/kai-command" element={<KaiCommand />} />
-      <Route path="/crm-dashboard" element={<CRMDashboard />} />
-      <Route path="/dashboard" element={<ProtectedRoute><MinimalDashboard /></ProtectedRoute>} />
-      <Route path="/simple-dashboard" element={<SimpleDashboard />} />
+      <Route path="/crm-dashboard" element={<KaiCommand />} />
+      <Route path="/dashboard" element={<KaiCommand />} />
       <Route path="/students" element={<StudentsSplitScreen />} />
       <Route path="/students-old" element={<StudentsNew />} />
       <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />

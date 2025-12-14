@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
-  LayoutDashboard,
   Users,
   UserPlus,
   Sparkles,
@@ -40,7 +39,6 @@ type NavigationItem = {
 }
 
 const DEFAULT_NAVIGATION: NavigationItem[] = [
-  { id: 'dashboard', name: 'Dashboard', href: '/crm-dashboard', icon: 'LayoutDashboard' },
   { id: 'students', name: 'Students', href: '/students', icon: 'Users' },
   { id: 'leads', name: 'Leads', href: '/leads', icon: 'UserPlus' },
   { id: 'classes', name: 'Classes', href: '/classes', icon: 'Calendar' },
@@ -67,7 +65,6 @@ const DEFAULT_NAVIGATION: NavigationItem[] = [
 ]
 
 const ICON_MAP = {
-  LayoutDashboard,
   Users,
   UserPlus,
   Sparkles,
@@ -176,9 +173,6 @@ export default function SimpleLayout({ children }) {
   // Navigation is only saved when explicitly modified by drag-and-drop or move actions.
 
   const isActive = (path: string) => {
-    if (path === '/crm-dashboard') {
-      return location.pathname === '/crm-dashboard' || location.pathname === '/dashboard'
-    }
     return location.pathname.startsWith(path)
   }
 

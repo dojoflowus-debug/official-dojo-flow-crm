@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
-  LayoutDashboard,
   Users,
   UserPlus,
   Sparkles,
@@ -35,7 +34,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 // Navigation items
 const NAVIGATION = [
-  { id: 'dashboard', name: 'Dashboard', href: '/crm-dashboard', icon: LayoutDashboard },
   { id: 'students', name: 'Students', href: '/students', icon: Users },
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
   { id: 'kai-command', name: 'Kai Command', href: '/kai-command', icon: Sparkles },
@@ -51,8 +49,6 @@ const NAVIGATION = [
 
 // Page titles mapping
 const PAGE_TITLES: Record<string, string> = {
-  '/crm-dashboard': 'Dashboard',
-  '/dashboard': 'Dashboard',
   '/students': 'Students',
   '/leads': 'Leads',
   '/kai-dashboard': 'Kai Command',
@@ -119,9 +115,6 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
 
   // Check if nav item is active
   const isActive = (href: string) => {
-    if (href === '/crm-dashboard') {
-      return location.pathname === '/crm-dashboard' || location.pathname === '/dashboard'
-    }
     return location.pathname.startsWith(href)
   }
 
@@ -158,7 +151,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
         <div className="flex flex-col h-full">
           {/* Logo and Eye Toggle */}
           <div className="flex items-center justify-between p-4 border-b border-slate-800">
-            <Link to="/crm-dashboard" className="flex items-center gap-2">
+            <Link to="/kai-command" className="flex items-center gap-2">
               {APP_LOGO ? (
                 <img src={APP_LOGO} alt="DojoFlow" className="h-8 w-auto" />
               ) : (
@@ -283,7 +276,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
             <div className="flex items-center gap-3">
               {/* Ask Kai Button */}
               <Button
-                onClick={() => navigate('/kai-dashboard')}
+                onClick={() => navigate('/kai-command')}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Sparkles className="h-4 w-4 mr-2" />

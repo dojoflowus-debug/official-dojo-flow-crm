@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
-  LayoutDashboard,
   Users,
   UserPlus,
   Sparkles,
@@ -38,7 +37,6 @@ import ThemeToggle from '@/components/ThemeToggle'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
-  { id: 'dashboard', name: 'Dashboard', href: '/crm-dashboard', icon: LayoutDashboard },
   { id: 'students', name: 'Students', href: '/students', icon: Users },
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
   { id: 'kai-command', name: 'Kai', href: '/kai-command', icon: Sparkles, isCenter: true },
@@ -51,8 +49,6 @@ const NAVIGATION = [
 
 // Page titles mapping
 const PAGE_TITLES: Record<string, string> = {
-  '/crm-dashboard': 'Dashboard',
-  '/dashboard': 'Dashboard',
   '/students': 'Students',
   '/leads': 'Leads',
   '/kai-dashboard': 'Kai Command',
