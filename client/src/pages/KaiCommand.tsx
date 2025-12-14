@@ -229,36 +229,38 @@ export default function KaiCommand() {
     
     return (
       <div className="mt-3 space-y-3">
-        {/* Image Grid - Constrained for proper chat layout */}
+        {/* Image Grid - Strictly constrained for proper chat layout */}
         {images.length > 0 && (
-          <div className={`flex flex-wrap gap-2 ${images.length === 1 ? 'max-w-[65%]' : 'max-w-full'}`}>
+          <div 
+            className="inline-flex flex-wrap gap-2" 
+            style={{ maxWidth: images.length === 1 ? '280px' : '400px' }}
+          >
             {images.map((img) => (
               <div
                 key={img.id}
-                className={`relative group cursor-pointer rounded-xl overflow-hidden border shadow-sm transition-all duration-200 hover:shadow-md ${
-                  images.length === 1 
-                    ? 'w-full max-h-[300px]' 
-                    : images.length === 2 
-                      ? 'w-[calc(50%-4px)] max-h-[200px]' 
-                      : 'w-[calc(33.333%-6px)] max-h-[150px]'
-                } ${
+                className={`relative group cursor-pointer rounded-lg overflow-hidden border shadow-sm transition-all duration-200 hover:shadow-md ${
                   isCinematic || isFocusMode
                     ? 'border-white/20 hover:border-white/40'
                     : isDark
                       ? 'border-white/10 hover:border-white/20'
                       : 'border-slate-200 hover:border-slate-300'
                 }`}
+                style={{
+                  width: images.length === 1 ? '280px' : images.length === 2 ? '140px' : '120px',
+                  height: images.length === 1 ? '200px' : images.length === 2 ? '140px' : '100px',
+                }}
                 onClick={() => setLightboxImage({ url: img.url, filename: img.fileName })}
               >
                 <img
                   src={img.url}
                   alt={img.fileName}
-                  className="w-full h-full object-contain bg-black/5"
-                  style={{ maxHeight: images.length === 1 ? '300px' : images.length === 2 ? '200px' : '150px' }}
+                  className={`w-full h-full object-contain ${
+                    isCinematic || isFocusMode || isDark ? 'bg-black/20' : 'bg-slate-100'
+                  }`}
                 />
-                <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center`}>
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ZoomIn className="w-4 h-4 text-white" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-3 h-3 text-white" />
                     <span className="text-xs text-white font-medium">View</span>
                   </div>
                 </div>

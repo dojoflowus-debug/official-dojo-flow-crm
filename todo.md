@@ -3701,3 +3701,7 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add click-to-expand functionality with "View" hover indicator
 - [x] Ensure no horizontal scrollbars or layout overflow
 - [x] Test in Light, Dark, Cinematic, and Focus modes
+
+## Fix Image Rendering - Stricter Constraints
+- [x] Apply stricter max-height and width constraints (280x200px for single, 140x140px for pairs, 120x100px for 3+)
+- [x] Ensure images don't break chat layout with fixed dimensions
