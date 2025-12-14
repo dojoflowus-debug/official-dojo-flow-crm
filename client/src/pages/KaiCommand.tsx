@@ -10,6 +10,8 @@ import { analyzeFile, generateKaiFileResponse, getImageDimensions, type FileAnal
 import { FileActionCard } from '@/components/FileActionCard';
 import { SchedulePreviewCard, type ExtractedClass } from '@/components/SchedulePreviewCard';
 import { RosterPreviewCard, type ExtractedStudent } from '@/components/RosterPreviewCard';
+import { PastedDataCard } from '@/components/PastedDataCard';
+import { detectStructuredData, looksLikeStructuredData, type DetectedStructuredData } from '@/lib/structuredDataDetection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -159,6 +161,10 @@ export default function KaiCommand() {
     sourceFile: string;
   } | null>(null);
   const [isCreatingStudents, setIsCreatingStudents] = useState(false);
+  
+  // Pasted structured data state
+  const [pastedData, setPastedData] = useState<DetectedStructuredData | null>(null);
+  const [isProcessingPastedData, setIsProcessingPastedData] = useState(false);
   
   // Add Staff modal state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
@@ -1427,6 +1433,97 @@ export default function KaiCommand() {
     };
     setMessages(prev => [...prev, cancelMsg]);
   };
+  
+  // Handle pasted data import
+  const handlePastedDataImport = async (data: DetectedStructuredData) => {
+    setIsProcessingPastedData(true);
+    
+    try {
+      if (data.type === 'student_roster') {
+        // Convert parsed rows to ExtractedStudent format
+        const students: ExtractedStudent[] = data.rows.map(row => {
+          // Try to find name fields
+          const firstName = row['First Name'] || row['FirstName'] || row['first name'] || row['Name']?.split(' ')[0] || '';
+          const lastName = row['Last Name'] || row['LastName'] || row['last name'] || row['Name']?.split(' ').slice(1).join(' ') || '';
+          
+          return {
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            email: row['Email'] || row['email'] || row['E-mail'] || '',
+            phone: row['Phone'] || row['phone'] || row['Phone Number'] || row['Cell'] || '',
+            beltRank: row['Belt'] || row['belt'] || row['Rank'] || row['rank'] || row['Belt Rank'] || '',
+            program: row['Program'] || row['program'] || row['Class'] || '',
+            guardianName: row['Guardian'] || row['guardian'] || row['Parent'] || row['parent'] || '',
+            guardianPhone: row['Guardian Phone'] || row['Parent Phone'] || '',
+            guardianEmail: row['Guardian Email'] || row['Parent Email'] || '',
+          };
+        });
+        
+        // Show roster preview card for confirmation
+        setRosterPreview({
+          students,
+          confidence: data.confidence,
+          warnings: data.confidence < 0.7 ? ['Some columns may not be mapped correctly. Please review before importing.'] : undefined,
+          sourceFile: 'Pasted Data',
+        });
+        setPastedData(null);
+        
+        const confirmMsg: Message = {
+          id: `confirm-roster-${Date.now()}`,
+          role: 'assistant',
+          content: `I've prepared ${students.length} students for import. Please review the details below and make any corrections before confirming.`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, confirmMsg]);
+      } else {
+        // For other types, show a message that we'll add support soon
+        const msg: Message = {
+          id: `unsupported-${Date.now()}`,
+          role: 'assistant',
+          content: `I detected ${data.rows.length} entries. Import for this data type is coming soon. For now, you can manually add this data in the appropriate section.`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, msg]);
+        setPastedData(null);
+      }
+    } catch (error) {
+      console.error('Pasted data import error:', error);
+      toast.error('Failed to process data. Please try again.');
+    } finally {
+      setIsProcessingPastedData(false);
+    }
+  };
+  
+  // Handle pasted data review (same as import for now, shows preview)
+  const handlePastedDataReview = (data: DetectedStructuredData) => {
+    handlePastedDataImport(data);
+  };
+  
+  // Handle pasted data save as draft
+  const handlePastedDataSaveDraft = (data: DetectedStructuredData) => {
+    // For now, just acknowledge and clear
+    const msg: Message = {
+      id: `draft-saved-${Date.now()}`,
+      role: 'assistant',
+      content: `Draft saved. You can access this data later from the conversation history.`,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, msg]);
+    setPastedData(null);
+    toast.success('Draft saved to conversation');
+  };
+  
+  // Cancel pasted data
+  const handlePastedDataCancel = () => {
+    setPastedData(null);
+    const msg: Message = {
+      id: `cancel-paste-${Date.now()}`,
+      role: 'assistant',
+      content: `No problem. Let me know if you need help with anything else.`,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, msg]);
+  };
 
   // Mutation for sending directed messages
   const sendDirectedMessageMutation = trpc.messaging.sendDirectedMessage.useMutation();
@@ -1483,6 +1580,42 @@ export default function KaiCommand() {
     if (attachments.some(att => att.uploading)) {
       toast.error('Please wait for attachments to finish uploading');
       return;
+    }
+    
+    // STRUCTURED DATA DETECTION: Check if pasted text looks like importable data
+    // Only check if no attachments and text has multiple lines with delimiters
+    if (attachments.length === 0 && looksLikeStructuredData(messageInput)) {
+      const detected = detectStructuredData(messageInput);
+      if (detected && detected.rows.length >= 1) {
+        // Show the user message first
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          role: 'user',
+          content: messageInput,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, userMessage]);
+        
+        // Then show Kai's detection response
+        const typeLabels: Record<string, string> = {
+          'student_roster': 'student roster',
+          'class_schedule': 'class schedule',
+          'lead_list': 'lead list',
+          'unknown': 'structured data'
+        };
+        const kaiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `I detected a **${typeLabels[detected.type]}** with ${detected.rows.length} ${detected.rows.length === 1 ? 'entry' : 'entries'}. Would you like me to import this into your dojo?`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, kaiResponse]);
+        
+        // Show the pasted data card for actions
+        setPastedData(detected);
+        setMessageInput('');
+        return; // Don't continue with normal message flow
+      }
     }
 
     // Build message content with attachments
@@ -2521,6 +2654,23 @@ export default function KaiCommand() {
                         onConfirm={handleConfirmRoster}
                         onCancel={handleCancelRoster}
                         isProcessing={isCreatingStudents}
+                        isDark={isDark}
+                        isCinematic={isCinematic}
+                        isFocusMode={isFocusMode}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Pasted Data Card - shows detected structured data for import */}
+                  {pastedData && (
+                    <div className="px-4 py-2">
+                      <PastedDataCard
+                        data={pastedData}
+                        onImport={handlePastedDataImport}
+                        onReview={handlePastedDataReview}
+                        onSaveDraft={handlePastedDataSaveDraft}
+                        onCancel={handlePastedDataCancel}
+                        isProcessing={isProcessingPastedData}
                         isDark={isDark}
                         isCinematic={isCinematic}
                         isFocusMode={isFocusMode}

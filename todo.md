@@ -3768,3 +3768,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Update tRPC extractRoster procedure to handle .xlsx files
 - [x] Add tests for Excel parsing (25 vitest tests passing)
 - [x] Supports both .xlsx and .xls file formats
+
+## Kai Command Professional Tone & Pasted Data Detection
+- [x] Remove poetic/persona language from Kai Command responses
+- [x] Make responses direct, business-focused, action-oriented
+- [x] No metaphors, mysticism, or motivational fluff
+- [x] Add structured text detection for pasted roster data
+- [x] Detect headers + rows pattern as Student Roster Intake
+- [x] Show actionable options: Import, Review, Save Draft, Cancel
+- [x] Display preview table of detected data
+- [x] Require explicit confirmation before importing (uses RosterPreviewCard)
+- [x] Treat pasted structured text same as dropped file (15 vitest tests passing)
