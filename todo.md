@@ -3791,3 +3791,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Ensure SVG icons use viewBox correctly at 1:1 scale (chat-bar-icon-container class)
 - [x] Icons render crisp and identical across Light, Dark, and Cinematic modes
 - [x] Works in Focus Mode and normal mode
+
+## Drag-and-Drop File Upload for Kai Command
+- [x] Add dragover, dragenter, dragleave, drop event handlers to chat input area
+- [x] Add visual dropzone indicator when file is being dragged (overlay with Upload icon)
+- [x] Process dropped files through same pipeline as paperclip uploads (same upload mutation + file intelligence)
+- [x] Ensure drag events work in Focus Mode and Cinematic mode (z-50 overlay)
+- [x] Support images (jpg/png/webp), PDFs, Excel/CSV files (allowedTypes array)
+- [x] Show attachment preview immediately after drop
+- [x] Trigger Kai intake logic (detect schedule, roster, profile photo, etc.)
+- [x] Test across Light, Dark, and Cinematic modes (theme-aware styling)

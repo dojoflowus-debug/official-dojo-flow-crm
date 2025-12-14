@@ -66,7 +66,8 @@ import {
   FileSpreadsheet,
   FileImage,
   FileVideo,
-  FileAudio
+  FileAudio,
+  Upload
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -165,6 +166,10 @@ export default function KaiCommand() {
   // Pasted structured data state
   const [pastedData, setPastedData] = useState<DetectedStructuredData | null>(null);
   const [isProcessingPastedData, setIsProcessingPastedData] = useState(false);
+  
+  // Drag-and-drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
   
   // Add Staff modal state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
@@ -1170,6 +1175,151 @@ export default function KaiCommand() {
     setAttachments(prev => prev.filter(att => att.id !== id));
   };
   
+  // Handle drag-and-drop file upload
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  };
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounterRef.current = 0;
+    
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv',
+      'text/plain'
+    ];
+    
+    for (const file of Array.from(files)) {
+      // Validate file size
+      if (file.size > maxSize) {
+        toast.error(`File "${file.name}" exceeds 10MB limit`);
+        continue;
+      }
+      
+      // Validate file type
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`File type not supported: ${file.name}`);
+        continue;
+      }
+      
+      // Create temporary attachment with uploading state
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const tempAttachment: Attachment = {
+        id: tempId,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        url: '',
+        uploading: true
+      };
+      
+      setAttachments(prev => [...prev, tempAttachment]);
+      
+      // Read file as base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const base64Data = event.target?.result as string;
+          
+          const result = await uploadMutation.mutateAsync({
+            fileName: file.name,
+            fileData: base64Data,
+            fileType: file.type,
+            fileSize: file.size,
+            context: 'kai-command'
+          });
+          
+          // Update attachment with uploaded URL
+          const updatedAttachment: Attachment = {
+            id: tempId,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            url: result.url,
+            uploading: false,
+          };
+          
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId 
+              ? updatedAttachment
+              : att
+          ));
+          
+          // Trigger file intelligence analysis
+          try {
+            let imageDimensions: { width: number; height: number } | undefined;
+            if (file.type.startsWith('image/')) {
+              imageDimensions = await getImageDimensions(result.url);
+            }
+            
+            const analysis = await analyzeFile(
+              { fileName: file.name, fileType: file.type, fileSize: file.size, url: result.url },
+              imageDimensions
+            );
+            
+            // Set pending analysis for user to review
+            setPendingFileAnalysis({ attachment: updatedAttachment, analysis });
+            
+            // Generate Kai's response about the file
+            const kaiResponse = generateKaiFileResponse(analysis, file.name);
+            
+            // Add Kai's analysis message to the chat
+            const analysisMessage: Message = {
+              id: `analysis-${Date.now()}`,
+              role: 'assistant',
+              content: kaiResponse,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, analysisMessage]);
+          } catch (analysisError) {
+            console.error('File analysis failed:', analysisError);
+            // Continue without analysis - file is still uploaded
+          }
+        } catch (error) {
+          console.error('Upload failed:', error);
+          // Mark attachment as failed
+          setAttachments(prev => prev.map(att => 
+            att.id === tempId 
+              ? { ...att, uploading: false, error: 'Upload failed' }
+              : att
+          ));
+          toast.error(`Failed to upload ${file.name}`);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
   // Handle file action selection from Kai's proposals
   const handleFileAction = async (action: ProposedAction) => {
     if (!pendingFileAnalysis) return;
@@ -2126,7 +2276,45 @@ export default function KaiCommand() {
         <div 
           className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
           style={{ zIndex: 10 }}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
         >
+          {/* Drag-and-drop overlay indicator */}
+          {isDragging && (
+            <div 
+              className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+              style={{ 
+                background: isCinematic ? 'rgba(0, 0, 0, 0.85)' : isDark ? 'rgba(12, 12, 13, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <div className={`flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-dashed transition-all ${
+                isCinematic || isDark 
+                  ? 'border-[#FF4C4C] bg-[#FF4C4C]/10' 
+                  : 'border-[#FF4C4C] bg-[#FF4C4C]/5'
+              }`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                  isCinematic || isDark ? 'bg-[#FF4C4C]/20' : 'bg-[#FF4C4C]/10'
+                }`}>
+                  <Upload className="w-8 h-8 text-[#FF4C4C]" />
+                </div>
+                <div className="text-center">
+                  <p className={`text-lg font-semibold ${
+                    isCinematic || isDark ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    Drop files here
+                  </p>
+                  <p className={`text-sm mt-1 ${
+                    isCinematic || isDark ? 'text-white/60' : 'text-slate-500'
+                  }`}>
+                    Images, PDFs, Excel, CSV files supported
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           {/* ENVIRONMENT LAYER - All background elements with z-index: 0 */}
           {/* Constrained to main content column only, not full page */}
           {isCinematic && (
