@@ -3693,3 +3693,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Remove automatic wizard launch from Profile
 - [x] Test Edit Profile modal functionality (vitest tests pass)
 - [x] Test Setup Wizard separate entry
+
+## Fix Image Upload Rendering in Chat
+- [x] Create ImageLightbox component for full-size image viewing (already existed, improved)
+- [x] Constrain image attachments (max-width 65%, max-height 300px)
+- [x] Use object-fit: contain to preserve aspect ratio
+- [x] Add click-to-expand functionality with "View" hover indicator
+- [x] Ensure no horizontal scrollbars or layout overflow
+- [x] Test in Light, Dark, Cinematic, and Focus modes

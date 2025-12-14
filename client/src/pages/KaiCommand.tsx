@@ -229,13 +229,19 @@ export default function KaiCommand() {
     
     return (
       <div className="mt-3 space-y-3">
-        {/* Image Grid */}
+        {/* Image Grid - Constrained for proper chat layout */}
         {images.length > 0 && (
-          <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          <div className={`flex flex-wrap gap-2 ${images.length === 1 ? 'max-w-[65%]' : 'max-w-full'}`}>
             {images.map((img) => (
               <div
                 key={img.id}
-                className={`relative group cursor-pointer rounded-lg overflow-hidden border ${
+                className={`relative group cursor-pointer rounded-xl overflow-hidden border shadow-sm transition-all duration-200 hover:shadow-md ${
+                  images.length === 1 
+                    ? 'w-full max-h-[300px]' 
+                    : images.length === 2 
+                      ? 'w-[calc(50%-4px)] max-h-[200px]' 
+                      : 'w-[calc(33.333%-6px)] max-h-[150px]'
+                } ${
                   isCinematic || isFocusMode
                     ? 'border-white/20 hover:border-white/40'
                     : isDark
@@ -247,10 +253,14 @@ export default function KaiCommand() {
                 <img
                   src={img.url}
                   alt={img.fileName}
-                  className="w-full h-32 object-cover"
+                  className="w-full h-full object-contain bg-black/5"
+                  style={{ maxHeight: images.length === 1 ? '300px' : images.length === 2 ? '200px' : '150px' }}
                 />
-                <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center`}>
-                  <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className={`absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center`}>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-4 h-4 text-white" />
+                    <span className="text-xs text-white font-medium">View</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -2547,12 +2557,13 @@ export default function KaiCommand() {
               </Button>
             </DialogTitle>
           </DialogHeader>
-          <div className="p-4 flex items-center justify-center max-h-[70vh]">
+          <div className="p-4 flex items-center justify-center bg-black/5 dark:bg-black/20 rounded-lg mx-4 mb-4">
             {lightboxImage && (
               <img
                 src={lightboxImage.url}
                 alt={lightboxImage.filename}
-                className="max-w-full max-h-[65vh] object-contain"
+                className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                style={{ maxWidth: '90vw' }}
               />
             )}
           </div>
