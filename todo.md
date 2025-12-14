@@ -3366,3 +3366,31 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Optimistic update with rollback on failure
 - [x] Test rename functionality
 
+
+## ✨ FEATURE: Summarize & Extract Conversation
+
+### Backend
+- [x] Add summarizeConversation procedure using LLM
+- [x] Add extractConversation procedure using LLM
+- [x] Return structured data (action items, follow-ups, decisions, mentions)
+- [x] Save summary/extraction as Kai message in conversation
+
+### Frontend
+- [x] Wire Summarize button to backend procedure
+- [x] Wire Extract button to backend procedure
+- [x] Show loading state during AI processing
+- [x] Display results immediately in chat UI
+- [x] Show error if no conversation selected
+- [x] Show success toast on completion
+
+### Save to Cards
+- [ ] Allow saving extracted items to student notes
+- [ ] Allow saving extracted items to staff dashboards
+- [ ] Link mentioned students/staff correctly
+
+### Testing
+- [ ] Click Summarize → see Kai-generated summary
+- [ ] Click Extract → see bullets/tasks instantly
+- [ ] Refresh page → data persists
+- [ ] Mention a student → extracted item links correctly
+

@@ -50,7 +50,8 @@ import {
   X,
   Image,
   File,
-  Loader2
+  Loader2,
+  List
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -243,6 +244,10 @@ export default function KaiCommand() {
   const archiveConversationMutation = trpc.kai.archiveConversation.useMutation();
   const unarchiveConversationMutation = trpc.kai.unarchiveConversation.useMutation();
   const renameConversationMutation = trpc.kai.renameConversation.useMutation();
+  const summarizeConversationMutation = trpc.kai.summarizeConversation.useMutation();
+  const extractConversationMutation = trpc.kai.extractConversation.useMutation();
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const utils = trpc.useUtils();
 
   // Handle delete conversation with optimistic update
@@ -356,6 +361,78 @@ export default function KaiCommand() {
       console.error('Failed to rename conversation:', error);
       const errorMessage = error?.message || 'Unknown error';
       toast.error(`Couldn't rename chat. ${errorMessage}`);
+    }
+  };
+
+  // Handle summarize conversation
+  const handleSummarize = async () => {
+    if (!selectedConversationId) {
+      toast.error('Please select a conversation to summarize');
+      return;
+    }
+    
+    setIsSummarizing(true);
+    try {
+      const result = await summarizeConversationMutation.mutateAsync({
+        conversationId: parseInt(selectedConversationId)
+      });
+      
+      // Add the summary message to the chat UI
+      const summaryMessage: Message = {
+        id: `summary-${Date.now()}`,
+        role: 'assistant',
+        content: `## 📋 Conversation Summary\n\n${result.summary}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        avatar: 'Kai'
+      };
+      setMessages(prev => [...prev, summaryMessage]);
+      
+      // Invalidate to refresh conversation list
+      utils.kai.getConversations.invalidate();
+      utils.kai.getMessages.invalidate({ conversationId: parseInt(selectedConversationId) });
+      
+      toast.success('Conversation summarized');
+    } catch (error: any) {
+      console.error('Failed to summarize conversation:', error);
+      toast.error(`Couldn't summarize. ${error?.message || 'Unknown error'}`);
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+  // Handle extract conversation
+  const handleExtract = async () => {
+    if (!selectedConversationId) {
+      toast.error('Please select a conversation to extract from');
+      return;
+    }
+    
+    setIsExtracting(true);
+    try {
+      const result = await extractConversationMutation.mutateAsync({
+        conversationId: parseInt(selectedConversationId)
+      });
+      
+      // Add the extraction message to the chat UI
+      const extractMessage: Message = {
+        id: `extract-${Date.now()}`,
+        role: 'assistant',
+        content: result.formattedContent,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        avatar: 'Kai'
+      };
+      setMessages(prev => [...prev, extractMessage]);
+      
+      // Invalidate to refresh conversation list
+      utils.kai.getConversations.invalidate();
+      utils.kai.getMessages.invalidate({ conversationId: parseInt(selectedConversationId) });
+      
+      toast.success('Data extracted from conversation');
+    } catch (error: any) {
+      console.error('Failed to extract from conversation:', error);
+      toast.error(`Couldn't extract. ${error?.message || 'Unknown error'}`);
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -1303,9 +1380,39 @@ export default function KaiCommand() {
               Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Summarize & Extract">
-                <FileText className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                    title="Summarize & Extract"
+                    disabled={isSummarizing || isExtracting}
+                  >
+                    {(isSummarizing || isExtracting) ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-[#E53935]" />
+                    ) : (
+                      <FileText className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={handleSummarize}
+                    disabled={isSummarizing || !selectedConversationId}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    {isSummarizing ? 'Summarizing...' : 'Summarize Conversation'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleExtract}
+                    disabled={isExtracting || !selectedConversationId}
+                  >
+                    <List className="w-4 h-4 mr-2" />
+                    {isExtracting ? 'Extracting...' : 'Extract Data'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Invite Team Members">
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>

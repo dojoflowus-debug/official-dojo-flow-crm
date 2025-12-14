@@ -1534,6 +1534,345 @@ export const appRouter = router({
         return { success: true, id: input.id, title: input.title.trim() };
       }),
 
+    // Summarize a conversation using AI
+    summarizeConversation: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
+        
+        if (!conversation) {
+          throw new Error("Conversation not found");
+        }
+        
+        // Get all messages in the conversation
+        const messages = await db.select()
+          .from(kaiMessages)
+          .where(eq(kaiMessages.conversationId, input.conversationId))
+          .orderBy(kaiMessages.createdAt);
+        
+        if (messages.length === 0) {
+          throw new Error("No messages to summarize");
+        }
+        
+        // Format messages for LLM
+        const messageHistory = messages.map(m => `${m.role === 'user' ? 'User' : 'Kai'}: ${m.content}`).join('\n\n');
+        
+        // Generate summary using LLM
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: 'system',
+              content: `You are an executive assistant for a martial arts dojo. Generate a concise executive summary of the following conversation. Focus on:
+- Key topics discussed
+- Important decisions or conclusions
+- Action items mentioned
+- Any concerns or issues raised
+
+Format the summary with clear sections and bullet points where appropriate. Keep it professional and actionable.`
+            },
+            {
+              role: 'user',
+              content: `Please summarize this conversation:\n\n${messageHistory}`
+            }
+          ]
+        });
+        
+        const summary = response.choices[0]?.message?.content || 'Unable to generate summary';
+        
+        // Save summary as a Kai message in the conversation
+        const [savedMessage] = await db.insert(kaiMessages).values({
+          conversationId: input.conversationId,
+          role: 'assistant',
+          content: `## 📋 Conversation Summary\n\n${summary}`,
+          metadata: JSON.stringify({ type: 'summary', generatedAt: new Date().toISOString() })
+        });
+        
+        // Update conversation last message
+        await db.update(kaiConversations)
+          .set({ 
+            preview: 'Conversation Summary generated',
+            lastMessageAt: new Date()
+          })
+          .where(eq(kaiConversations.id, input.conversationId));
+        
+        return { 
+          success: true, 
+          summary,
+          messageId: savedMessage.insertId
+        };
+      }),
+
+    // Extract structured data from a conversation using AI
+    extractConversation: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
+        
+        if (!conversation) {
+          throw new Error("Conversation not found");
+        }
+        
+        // Get all messages in the conversation
+        const messages = await db.select()
+          .from(kaiMessages)
+          .where(eq(kaiMessages.conversationId, input.conversationId))
+          .orderBy(kaiMessages.createdAt);
+        
+        if (messages.length === 0) {
+          throw new Error("No messages to extract from");
+        }
+        
+        // Format messages for LLM
+        const messageHistory = messages.map(m => `${m.role === 'user' ? 'User' : 'Kai'}: ${m.content}`).join('\n\n');
+        
+        // Extract structured data using LLM with JSON schema
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: 'system',
+              content: `You are an executive assistant for a martial arts dojo. Extract structured data from the conversation. Identify and categorize:
+
+1. **Action Items**: Tasks that need to be completed
+2. **Follow-ups**: Items that require follow-up communication or checking
+3. **Decisions**: Any decisions that were made during the conversation
+4. **Mentioned Students**: Names of any students mentioned (with context)
+5. **Mentioned Staff**: Names of any staff/instructors mentioned (with context)
+6. **Key Dates/Deadlines**: Any dates or deadlines mentioned
+7. **Financial Items**: Any billing, payment, or financial matters discussed
+
+Return the data as a structured JSON object.`
+            },
+            {
+              role: 'user',
+              content: `Please extract structured data from this conversation:\n\n${messageHistory}`
+            }
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'conversation_extraction',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  actionItems: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        task: { type: 'string' },
+                        priority: { type: 'string', enum: ['high', 'medium', 'low'] },
+                        assignee: { type: 'string' }
+                      },
+                      required: ['task', 'priority', 'assignee'],
+                      additionalProperties: false
+                    }
+                  },
+                  followUps: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        item: { type: 'string' },
+                        deadline: { type: 'string' }
+                      },
+                      required: ['item', 'deadline'],
+                      additionalProperties: false
+                    }
+                  },
+                  decisions: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
+                  mentionedStudents: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        name: { type: 'string' },
+                        context: { type: 'string' }
+                      },
+                      required: ['name', 'context'],
+                      additionalProperties: false
+                    }
+                  },
+                  mentionedStaff: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        name: { type: 'string' },
+                        context: { type: 'string' }
+                      },
+                      required: ['name', 'context'],
+                      additionalProperties: false
+                    }
+                  },
+                  keyDates: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        date: { type: 'string' },
+                        description: { type: 'string' }
+                      },
+                      required: ['date', 'description'],
+                      additionalProperties: false
+                    }
+                  },
+                  financialItems: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  }
+                },
+                required: ['actionItems', 'followUps', 'decisions', 'mentionedStudents', 'mentionedStaff', 'keyDates', 'financialItems'],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+        
+        let extractedData;
+        try {
+          extractedData = JSON.parse(response.choices[0]?.message?.content || '{}');
+        } catch {
+          extractedData = {
+            actionItems: [],
+            followUps: [],
+            decisions: [],
+            mentionedStudents: [],
+            mentionedStaff: [],
+            keyDates: [],
+            financialItems: []
+          };
+        }
+        
+        // Format extracted data as readable message
+        let formattedContent = '## 📊 Conversation Extraction\n\n';
+        
+        if (extractedData.actionItems?.length > 0) {
+          formattedContent += '### ✅ Action Items\n';
+          extractedData.actionItems.forEach((item: any) => {
+            const priorityEmoji = item.priority === 'high' ? '🔴' : item.priority === 'medium' ? '🟡' : '🟢';
+            formattedContent += `- ${priorityEmoji} **${item.task}** (Assigned: ${item.assignee})\n`;
+          });
+          formattedContent += '\n';
+        }
+        
+        if (extractedData.followUps?.length > 0) {
+          formattedContent += '### 📞 Follow-ups\n';
+          extractedData.followUps.forEach((item: any) => {
+            formattedContent += `- ${item.item} (Due: ${item.deadline})\n`;
+          });
+          formattedContent += '\n';
+        }
+        
+        if (extractedData.decisions?.length > 0) {
+          formattedContent += '### 🎯 Decisions\n';
+          extractedData.decisions.forEach((item: string) => {
+            formattedContent += `- ${item}\n`;
+          });
+          formattedContent += '\n';
+        }
+        
+        if (extractedData.mentionedStudents?.length > 0) {
+          formattedContent += '### 👤 Mentioned Students\n';
+          extractedData.mentionedStudents.forEach((item: any) => {
+            formattedContent += `- **${item.name}**: ${item.context}\n`;
+          });
+          formattedContent += '\n';
+        }
+        
+        if (extractedData.mentionedStaff?.length > 0) {
+          formattedContent += '### 👥 Mentioned Staff\n';
+          extractedData.mentionedStaff.forEach((item: any) => {
+            formattedContent += `- **${item.name}**: ${item.context}\n`;
+          });
+          formattedContent += '\n';
+        }
+        
+        if (extractedData.keyDates?.length > 0) {
+          formattedContent += '### 📅 Key Dates\n';
+          extractedData.keyDates.forEach((item: any) => {
+            formattedContent += `- **${item.date}**: ${item.description}\n`;
+          });
+          formattedContent += '\n';
+        }
+        
+        if (extractedData.financialItems?.length > 0) {
+          formattedContent += '### 💰 Financial Items\n';
+          extractedData.financialItems.forEach((item: string) => {
+            formattedContent += `- ${item}\n`;
+          });
+          formattedContent += '\n';
+        }
+        
+        // Check if anything was extracted
+        const hasContent = Object.values(extractedData).some((arr: any) => arr?.length > 0);
+        if (!hasContent) {
+          formattedContent += '_No structured data could be extracted from this conversation._\n';
+        }
+        
+        // Save extraction as a Kai message in the conversation
+        const [savedMessage] = await db.insert(kaiMessages).values({
+          conversationId: input.conversationId,
+          role: 'assistant',
+          content: formattedContent,
+          metadata: JSON.stringify({ 
+            type: 'extraction', 
+            extractedData,
+            generatedAt: new Date().toISOString() 
+          })
+        });
+        
+        // Update conversation last message
+        await db.update(kaiConversations)
+          .set({ 
+            preview: 'Conversation data extracted',
+            lastMessageAt: new Date()
+          })
+          .where(eq(kaiConversations.id, input.conversationId));
+        
+        return { 
+          success: true, 
+          extractedData,
+          formattedContent,
+          messageId: savedMessage.insertId
+        };
+      }),
+
     chat: publicProcedure
       .input(z.object({
         message: z.string(),
