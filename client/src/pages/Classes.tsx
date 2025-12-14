@@ -78,7 +78,7 @@ const ClassForm = ({ formData, handleInputChange, handleSelectChange, instructor
         </SelectTrigger>
         <SelectContent>
           {instructors.length === 0 ? (
-            <SelectItem value="" disabled>No instructors available</SelectItem>
+            <SelectItem value="__no_instructors__" disabled>No instructors available</SelectItem>
           ) : (
             instructors.map((instructor) => (
               <SelectItem key={instructor.id} value={instructor.name}>

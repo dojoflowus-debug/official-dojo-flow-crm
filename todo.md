@@ -3880,3 +3880,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add download link in FileActionCard for schedule imports
 - [x] Added template link in error messages
 - [x] Test download works correctly (HTTP 200)
+
+
+## Fix Select.Item empty value error in Classes page
+- [x] Find Select components with empty string values
+- [x] Replace empty values with placeholder values ("__no_instructors__")
+- [x] Test adding a new class dialog opens without error
