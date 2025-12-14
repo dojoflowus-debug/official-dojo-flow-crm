@@ -156,6 +156,12 @@ export default function KaiCommand() {
     sourceFile: string;
   } | null>(null);
   const [isCreatingClasses, setIsCreatingClasses] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [scheduleDuplicates, setScheduleDuplicates] = useState<Array<{
+    importIndex: number;
+    existingClass: { id: number; name: string; schedule: string };
+    matchType: 'exact' | 'name_only' | 'time_conflict';
+  }>>([]);
   
   // Roster extraction state
   const [rosterPreview, setRosterPreview] = useState<{
@@ -1655,6 +1661,27 @@ export default function KaiCommand() {
                   warnings: result.warnings,
                   sourceFile: attachment.fileName,
                 });
+                setScheduleDuplicates([]);
+                
+                // Check for duplicates
+                setIsCheckingDuplicates(true);
+                try {
+                  const dupResult = await trpc.kai.checkDuplicateClasses.mutate({
+                    classes: result.classes.map(c => ({
+                      name: c.name,
+                      dayOfWeek: c.dayOfWeek,
+                      startTime: c.startTime,
+                      endTime: c.endTime,
+                    })),
+                  });
+                  if (dupResult.hasDuplicates) {
+                    setScheduleDuplicates(dupResult.duplicates);
+                  }
+                } catch (dupErr) {
+                  console.error('Duplicate check error:', dupErr);
+                } finally {
+                  setIsCheckingDuplicates(false);
+                }
                 
                 const successMsg: Message = {
                   id: `schedule-success-${Date.now()}`,
@@ -1782,6 +1809,7 @@ export default function KaiCommand() {
         };
         setMessages(prev => [...prev, successMsg]);
         setSchedulePreview(null);
+        setScheduleDuplicates([]);
       }
     } catch (err) {
       console.error('Class creation error:', err);
@@ -1794,6 +1822,7 @@ export default function KaiCommand() {
   // Cancel schedule preview
   const handleCancelSchedule = () => {
     setSchedulePreview(null);
+    setScheduleDuplicates([]);
     const cancelMsg: Message = {
       id: `schedule-cancel-${Date.now()}`,
       role: 'assistant',
@@ -3080,9 +3109,11 @@ export default function KaiCommand() {
                         classes={schedulePreview.classes}
                         confidence={schedulePreview.confidence}
                         warnings={schedulePreview.warnings}
+                        duplicates={scheduleDuplicates}
                         onConfirm={handleConfirmSchedule}
                         onCancel={handleCancelSchedule}
                         isProcessing={isCreatingClasses}
+                        isCheckingDuplicates={isCheckingDuplicates}
                         isDark={isDark}
                         isCinematic={isCinematic}
                         isFocusMode={isFocusMode}

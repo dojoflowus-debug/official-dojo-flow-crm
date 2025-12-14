@@ -14,6 +14,12 @@ import { z } from "zod";
 import * as bcrypt from "bcryptjs";
 import { getActiveStaffPins, updateStaffPinLastUsed, createStaffPin, getAllStaffPins, updateStaffPin, toggleStaffPinActive, deleteStaffPin } from "./db";
 
+// Helper to convert time string to minutes for comparison
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + (minutes || 0);
+}
+
 // Helper functions for CRM queries
 async function executeCRMFunction(name: string, args: any) {
   const { getDashboardStats, searchStudents, getKioskCheckIns, getKioskVisitors, getKioskWaivers } = await import("./db");
@@ -2884,6 +2890,96 @@ Return the data as a structured JSON object.`
             error: "PDF text extraction coming soon. Please upload an image or Excel file of your schedule.",
           };
         }
+      }),
+    
+    // Check for duplicate classes before import
+    checkDuplicateClasses: protectedProcedure
+      .input(z.object({
+        classes: z.array(z.object({
+          name: z.string(),
+          dayOfWeek: z.string(),
+          startTime: z.string(),
+          endTime: z.string(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { classes } = await import("../drizzle/schema");
+        const { like, or, and, eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Get all existing classes
+        const existingClasses = await db.select().from(classes).where(eq(classes.status, 'active'));
+        
+        const duplicates: Array<{
+          importIndex: number;
+          importClass: { name: string; dayOfWeek: string; startTime: string; endTime: string };
+          existingClass: { id: number; name: string; schedule: string };
+          matchType: 'exact' | 'name_only' | 'time_conflict';
+        }> = [];
+        
+        for (let i = 0; i < input.classes.length; i++) {
+          const importClass = input.classes[i];
+          const importSchedule = `${importClass.dayOfWeek} ${importClass.startTime}-${importClass.endTime}`;
+          
+          for (const existing of existingClasses) {
+            // Check for exact match (same name and schedule)
+            if (existing.name.toLowerCase() === importClass.name.toLowerCase() && 
+                existing.schedule?.toLowerCase() === importSchedule.toLowerCase()) {
+              duplicates.push({
+                importIndex: i,
+                importClass,
+                existingClass: { id: existing.id, name: existing.name, schedule: existing.schedule || '' },
+                matchType: 'exact',
+              });
+              break;
+            }
+            
+            // Check for name-only match (same name, different time)
+            if (existing.name.toLowerCase() === importClass.name.toLowerCase()) {
+              duplicates.push({
+                importIndex: i,
+                importClass,
+                existingClass: { id: existing.id, name: existing.name, schedule: existing.schedule || '' },
+                matchType: 'name_only',
+              });
+              break;
+            }
+            
+            // Check for time conflict (same day and overlapping time)
+            if (existing.schedule) {
+              const scheduleMatch = existing.schedule.match(/^(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+              if (scheduleMatch) {
+                const [, existingDay, existingStart, existingEnd] = scheduleMatch;
+                if (existingDay.toLowerCase() === importClass.dayOfWeek.toLowerCase()) {
+                  // Check for time overlap
+                  const importStartMins = timeToMinutes(importClass.startTime);
+                  const importEndMins = timeToMinutes(importClass.endTime);
+                  const existingStartMins = timeToMinutes(existingStart);
+                  const existingEndMins = timeToMinutes(existingEnd);
+                  
+                  if (importStartMins < existingEndMins && importEndMins > existingStartMins) {
+                    duplicates.push({
+                      importIndex: i,
+                      importClass,
+                      existingClass: { id: existing.id, name: existing.name, schedule: existing.schedule },
+                      matchType: 'time_conflict',
+                    });
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        return {
+          hasDuplicates: duplicates.length > 0,
+          duplicates,
+          totalChecked: input.classes.length,
+        };
       }),
     
     // Create classes from extracted schedule data

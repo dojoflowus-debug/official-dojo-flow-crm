@@ -3832,3 +3832,18 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Fix the schedule extraction procedure to handle xlsx properly - added xlsx parsing with sheet_to_csv
 - [x] Ensure classes are created in the Classes page after import - uses extractScheduleFromText with LLM
 - [x] All 10 schedule extraction tests passing
+
+## Schedule Preview Before Import
+- [x] Review existing SchedulePreviewCard component - already exists with full functionality
+- [x] Integrate schedule preview into Kai Command flow for xlsx imports - already integrated
+- [x] Show editable preview table before creating classes - SchedulePreviewCard has inline editing
+- [x] Add confirm/cancel actions to schedule preview - handleConfirmSchedule/handleCancelSchedule exist
+- [x] The schedule preview flow was already implemented, just needed xlsx parsing fix from previous checkpoint
+
+## Duplicate Detection for Class Schedule Import
+- [x] Add server procedure to check for duplicate classes (kai.checkDuplicateClasses)
+- [x] Check by class name + day + time combination (exact, name_only, time_conflict)
+- [x] Return list of potential duplicates with existing class IDs
+- [x] Update SchedulePreviewCard to show duplicate warnings (orange warning box)
+- [x] Allow user to skip duplicates or import anyway (can remove classes before import)
+- [x] All 10 schedule extraction tests passing
