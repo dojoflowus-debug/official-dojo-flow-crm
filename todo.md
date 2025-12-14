@@ -3416,3 +3416,74 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] On click, save the context as a note to the student's profile
 - [x] Show success/error toast
 - [x] Test saving notes from extraction results
+
+
+## 🚀 NEW: Fix Group Conversations - Kai Rules, Summarize, Add Staff, @Student Routing
+
+### A) Kai Speaking Rules by Thread Type
+- [ ] Add threadType field ('kai_direct' | 'group') to conversations
+- [ ] Update message pipeline: Kai responds automatically in kai_direct threads
+- [ ] Update message pipeline: Kai only responds when @Kai mentioned in group threads
+- [ ] Add "Ask Kai" button in group thread UI
+- [ ] Test Kai behavior in both thread types
+
+### B) Fix Summarize Conversation Icon
+- [ ] Verify summarize icon onClick handler is properly wired
+- [ ] Ensure summarize works for both kai_direct and group threads
+- [ ] Fetch thread messages and call backend summarize endpoint
+- [ ] Render summary as message authored by "Kai (Summary)"
+- [ ] Add loading state (spinner) and success/failure toasts
+- [ ] Handle errors: "No conversation selected" if threadId missing
+
+### C) Add Staff Members to Conversation
+- [ ] Create Add Staff modal with search bar and multi-select
+- [ ] Add ThreadParticipants model (threadId, userId, role, addedBy, addedAt)
+- [ ] Implement permission checks (Owner/Admin/Manager can add staff)
+- [ ] Send in-app notification to newly added staff
+- [ ] Update conversation UI to show participants
+
+### D) Fix @Student Mention Routing
+- [ ] Ensure @Student mentions appear in Student Portal Messages/Inbox
+- [ ] Create InboxEvent for each mentioned student
+- [ ] Add message to Student Card Notes with type='message'
+- [ ] Show unread badge in Student Portal
+- [ ] Test end-to-end: @StudentName -> send -> student sees in portal
+
+
+## ✅ COMPLETED: Fix Group Conversations - Kai Speaking Rules & Mentions
+
+### Kai Speaking Rules Based on Thread Type
+- [x] Added threadType field to kaiConversations table (kai_direct or group)
+- [x] Created threadParticipants table for group conversation members
+- [x] Updated createConversation to support threadType parameter
+- [x] Implemented Kai response logic:
+  - kai_direct threads: Kai always responds (no @Kai needed)
+  - group threads: Kai only responds when @Kai is mentioned
+- [x] Updated handleSendMessage with threadType detection
+
+### Summarize Conversation Icon
+- [x] Verified summarize functionality exists in backend (summarizeConversation procedure)
+- [x] Fixed timestamp type in summaryMessage (was string, now Date)
+- [x] Summarize icon properly wired to handleSummarize function
+- [x] Dropdown menu shows "Summarize Conversation" and "Extract Data" options
+
+### Add Staff to Conversation Modal
+- [x] Added isAddStaffModalOpen state and related state variables
+- [x] Added addParticipant and removeParticipant mutations
+- [x] Added participantsQuery for fetching conversation participants
+- [x] Created handleAddStaffToConversation function
+- [x] Built Add Staff modal with:
+  - Staff search input
+  - Scrollable staff list with checkboxes
+  - Selected count display
+  - Add/Cancel buttons
+- [x] Wired Users icon button to open modal
+
+### @Student Mention Routing
+- [x] Added studentsData query for student mention lookup
+- [x] Updated parseMentions to detect student mentions
+- [x] Added student mention routing in handleSendMessage:
+  - Sends message to student's portal inbox via sendDirectedMessage
+  - Adds note to student's card via addStudentNote mutation
+- [x] Toast notifications for successful student message delivery
+

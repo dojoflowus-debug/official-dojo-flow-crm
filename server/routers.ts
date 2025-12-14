@@ -1380,20 +1380,174 @@ export const appRouter = router({
     createConversation: protectedProcedure
       .input(z.object({
         title: z.string().optional(),
+        threadType: z.enum(["kai_direct", "group"]).optional(),
       }).optional())
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { kaiConversations } = await import("../drizzle/schema");
+        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
+        const threadType = input?.threadType || "kai_direct";
+        
         const [result] = await db.insert(kaiConversations).values({
           userId: ctx.user.id,
           title: input?.title || "New Conversation",
+          threadType,
         });
         
-        return { id: result.insertId };
+        // For group conversations, add the creator as owner participant
+        if (threadType === "group") {
+          await db.insert(threadParticipants).values({
+            conversationId: result.insertId,
+            participantType: "staff",
+            participantId: ctx.user.id,
+            participantName: ctx.user.name || "Unknown",
+            role: "owner",
+            addedById: ctx.user.id,
+            addedByName: ctx.user.name || "Unknown",
+          });
+        }
+        
+        return { id: result.insertId, threadType };
+      }),
+
+    // Get conversation participants
+    getParticipants: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user has access to this conversation
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id)
+          ))
+          .limit(1);
+        
+        if (!conversation) throw new Error("Conversation not found");
+        
+        const participants = await db.select()
+          .from(threadParticipants)
+          .where(and(
+            eq(threadParticipants.conversationId, input.conversationId),
+            eq(threadParticipants.isActive, 1)
+          ));
+        
+        return participants;
+      }),
+
+    // Add participant to conversation
+    addParticipant: protectedProcedure
+      .input(z.object({
+        conversationId: z.number(),
+        participantType: z.enum(["staff", "student", "system"]),
+        participantId: z.number().optional(),
+        participantName: z.string(),
+        role: z.enum(["owner", "member", "viewer"]).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id)
+          ))
+          .limit(1);
+        
+        if (!conversation) throw new Error("Conversation not found");
+        
+        // Check if participant already exists
+        const [existing] = await db.select()
+          .from(threadParticipants)
+          .where(and(
+            eq(threadParticipants.conversationId, input.conversationId),
+            eq(threadParticipants.participantType, input.participantType),
+            eq(threadParticipants.participantId, input.participantId || 0)
+          ))
+          .limit(1);
+        
+        if (existing) {
+          // Reactivate if previously removed
+          if (!existing.isActive) {
+            await db.update(threadParticipants)
+              .set({ isActive: 1 })
+              .where(eq(threadParticipants.id, existing.id));
+          }
+          return { id: existing.id, reactivated: !existing.isActive };
+        }
+        
+        // Insert new participant
+        const [result] = await db.insert(threadParticipants).values({
+          conversationId: input.conversationId,
+          participantType: input.participantType,
+          participantId: input.participantId,
+          participantName: input.participantName,
+          role: input.role || "member",
+          addedById: ctx.user.id,
+          addedByName: ctx.user.name || "Unknown",
+        });
+        
+        // If adding to a kai_direct conversation, convert to group
+        if (conversation.threadType === "kai_direct") {
+          await db.update(kaiConversations)
+            .set({ threadType: "group" })
+            .where(eq(kaiConversations.id, input.conversationId));
+        }
+        
+        return { id: result.insertId, reactivated: false };
+      }),
+
+    // Remove participant from conversation
+    removeParticipant: protectedProcedure
+      .input(z.object({
+        conversationId: z.number(),
+        participantId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, threadParticipants } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id)
+          ))
+          .limit(1);
+        
+        if (!conversation) throw new Error("Conversation not found");
+        
+        // Soft-remove participant (set isActive = 0)
+        await db.update(threadParticipants)
+          .set({ isActive: 0 })
+          .where(and(
+            eq(threadParticipants.conversationId, input.conversationId),
+            eq(threadParticipants.id, input.participantId)
+          ));
+        
+        return { success: true };
       }),
 
     // Add a message to a conversation

@@ -70,6 +70,7 @@ interface Conversation {
   status: 'neutral' | 'attention' | 'urgent';
   category: 'kai' | 'growth' | 'billing';
   date: 'today' | 'yesterday' | 'older';
+  threadType?: 'kai_direct' | 'group';
 }
 
 // Message type
@@ -116,6 +117,12 @@ export default function KaiCommand() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   
+  // Add Staff modal state
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [staffSearchQuery, setStaffSearchQuery] = useState('');
+  const [selectedStaffIds, setSelectedStaffIds] = useState<Set<number>>(new Set());
+  const [isAddingParticipants, setIsAddingParticipants] = useState(false);
+  
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -142,6 +149,9 @@ export default function KaiCommand() {
 
   // Staff data for mention rendering
   const { data: staffData } = trpc.staff.getAll.useQuery({ limit: 50 });
+  
+  // Student data for mention rendering
+  const { data: studentsData } = trpc.students.getAll.useQuery({ limit: 100 });
   
   // Render message content with styled @mentions
   // Add note to student mutation
@@ -322,6 +332,12 @@ export default function KaiCommand() {
   const renameConversationMutation = trpc.kai.renameConversation.useMutation();
   const summarizeConversationMutation = trpc.kai.summarizeConversation.useMutation();
   const extractConversationMutation = trpc.kai.extractConversation.useMutation();
+  const addParticipantMutation = trpc.kai.addParticipant.useMutation();
+  const removeParticipantMutation = trpc.kai.removeParticipant.useMutation();
+  const participantsQuery = trpc.kai.getParticipants.useQuery(
+    { conversationId: selectedConversationId ? parseInt(selectedConversationId) : 0 },
+    { enabled: !!selectedConversationId && !selectedConversationId.startsWith('new-') }
+  );
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const utils = trpc.useUtils();
@@ -458,8 +474,7 @@ export default function KaiCommand() {
         id: `summary-${Date.now()}`,
         role: 'assistant',
         content: `## 📋 Conversation Summary\n\n${result.summary}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        avatar: 'Kai'
+        timestamp: new Date()
       };
       setMessages(prev => [...prev, summaryMessage]);
       
@@ -512,6 +527,44 @@ export default function KaiCommand() {
     }
   };
 
+  // Handle adding staff to conversation
+  const handleAddStaffToConversation = async () => {
+    if (!selectedConversationId || selectedStaffIds.size === 0) {
+      toast.error('Please select staff members to add');
+      return;
+    }
+    
+    setIsAddingParticipants(true);
+    const staffToAdd = staffData?.staff?.filter((s: any) => selectedStaffIds.has(s.id)) || [];
+    let addedCount = 0;
+    
+    try {
+      for (const staff of staffToAdd) {
+        await addParticipantMutation.mutateAsync({
+          conversationId: parseInt(selectedConversationId),
+          participantType: 'staff',
+          participantId: staff.id,
+          participantName: staff.name || staff.fullName || 'Staff Member',
+          role: 'member'
+        });
+        addedCount++;
+      }
+      
+      // Refresh participants
+      utils.kai.getParticipants.invalidate({ conversationId: parseInt(selectedConversationId) });
+      
+      toast.success(`Added ${addedCount} staff member${addedCount > 1 ? 's' : ''} to conversation`);
+      setIsAddStaffModalOpen(false);
+      setSelectedStaffIds(new Set());
+      setStaffSearchQuery('');
+    } catch (error: any) {
+      console.error('Failed to add staff:', error);
+      toast.error(`Couldn't add staff. ${error?.message || 'Unknown error'}`);
+    } finally {
+      setIsAddingParticipants(false);
+    }
+  };
+
   // Handle starting a new chat
   const handleNewChat = async () => {
     try {
@@ -554,7 +607,8 @@ export default function KaiCommand() {
       tags: [c.category, c.priority],
       status: c.priority as 'neutral' | 'attention' | 'urgent',
       category: c.category as 'kai' | 'growth' | 'billing',
-      date: dateCategory
+      date: dateCategory,
+      threadType: (c as any).threadType || 'kai_direct'
     };
   });
 
@@ -894,12 +948,28 @@ export default function KaiCommand() {
       
       // Check if it's a staff member
       const staffMember = staffData?.staff?.find(
-        (s: any) => s.name.toLowerCase() === mentionName.toLowerCase() ||
+        (s: any) => s.name?.toLowerCase() === mentionName.toLowerCase() ||
                     s.fullName?.toLowerCase() === mentionName.toLowerCase()
       );
       
       if (staffMember) {
         mentions.push({ type: 'staff', name: staffMember.name, id: staffMember.id });
+        continue;
+      }
+      
+      // Check if it's a student
+      const student = studentsData?.students?.find(
+        (s: any) => {
+          const fullName = `${s.firstName || ''} ${s.lastName || ''}`.trim().toLowerCase();
+          return fullName === mentionName.toLowerCase() ||
+                 s.firstName?.toLowerCase() === mentionName.toLowerCase() ||
+                 s.lastName?.toLowerCase() === mentionName.toLowerCase();
+        }
+      );
+      
+      if (student) {
+        const studentName = `${student.firstName || ''} ${student.lastName || ''}`.trim();
+        mentions.push({ type: 'student', name: studentName, id: student.id });
       }
     }
     
@@ -930,6 +1000,50 @@ export default function KaiCommand() {
     const mentions = parseMentions(messageContent);
     const kaiMentioned = mentions.some(m => m.type === 'kai');
     const staffMentions = mentions.filter(m => m.type === 'staff' && m.id);
+    const studentMentions = mentions.filter(m => m.type === 'student' && m.id);
+    
+    // Route messages to student portal inboxes and add notes to student cards
+    for (const studentMention of studentMentions) {
+      if (studentMention.id) {
+        try {
+          // Send to student's portal inbox
+          await sendDirectedMessageMutation.mutateAsync({
+            recipientType: 'student',
+            recipientId: studentMention.id,
+            content: messageContent,
+            kaiMentioned,
+            attachments: attachments.map(att => ({
+              url: att.url || '',
+              name: att.fileName,
+              type: att.fileType,
+              size: att.fileSize,
+            })),
+          });
+          toast.success(`Message sent to ${studentMention.name}'s portal inbox`);
+          
+          // Also add a note to the student's card
+          await addStudentNoteMutation.mutateAsync({
+            studentId: studentMention.id,
+            content: `Mentioned in Kai Command: ${messageContent.substring(0, 200)}${messageContent.length > 200 ? '...' : ''}`,
+            noteType: 'communication',
+            priority: 'low',
+            sourceConversationId: selectedConversationId ? parseInt(selectedConversationId) : undefined,
+          });
+        } catch (error) {
+          console.error('Failed to send message to student:', error);
+          toast.error(`Couldn't send message to ${studentMention.name}`);
+        }
+      }
+    }
+    
+    // Get current conversation's threadType
+    const currentConversation = conversations.find(c => c.id === selectedConversationId);
+    const threadType = currentConversation?.threadType || 'kai_direct';
+    
+    // Determine if Kai should respond:
+    // - kai_direct threads: Kai always responds
+    // - group threads: Kai only responds if @Kai is mentioned
+    const kaiShouldRespond = threadType === 'kai_direct' || kaiMentioned;
     
     // Route messages to staff inboxes
     for (const staffMention of staffMentions) {
@@ -985,8 +1099,10 @@ export default function KaiCommand() {
       }
     }
 
-    // Only get Kai response if @Kai was mentioned
-    if (kaiMentioned) {
+    // Kai response logic based on thread type
+    // - kai_direct: Kai always responds (no @Kai needed)
+    // - group: Kai only responds when @Kai is mentioned
+    if (kaiShouldRespond) {
       try {
         const stats = statsQuery.data;
         const response = await kaiChatMutation.mutateAsync({
@@ -1033,10 +1149,13 @@ export default function KaiCommand() {
         setIsLoading(false);
       }
     } else {
-      // No @Kai mention - just show message was sent
+      // Kai not responding - either group thread without @Kai or no mentions
       setIsLoading(false);
-      if (staffMentions.length === 0) {
-        // No mentions at all - show hint
+      if (threadType === 'group' && !kaiMentioned && staffMentions.length === 0) {
+        // Group thread with no mentions - just human message
+        toast.info('Message sent. Use @Kai to get AI assistance or @Staff to notify team members');
+      } else if (staffMentions.length === 0 && !kaiMentioned) {
+        // No mentions at all in kai_direct - this shouldn't happen but handle it
         toast.info('Tip: Use @Kai to get AI assistance or @Staff to message team members');
       }
     }
@@ -1489,7 +1608,19 @@ export default function KaiCommand() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Invite Team Members">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Add Staff to Conversation"
+                onClick={() => {
+                  if (!selectedConversationId) {
+                    toast.error('Please select a conversation first');
+                    return;
+                  }
+                  setIsAddStaffModalOpen(true);
+                }}
+              >
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
               <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Enable Voice Replies">
@@ -2018,6 +2149,118 @@ export default function KaiCommand() {
           </div>
         </button>
       </div>
+      
+      {/* Add Staff Modal */}
+      <AlertDialog open={isAddStaffModalOpen} onOpenChange={setIsAddStaffModalOpen}>
+        <AlertDialogContent className={`max-w-md ${isDark ? 'bg-[#1F1F22] border-[rgba(255,255,255,0.1)]' : 'bg-white'}`}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className={isDark ? 'text-white' : ''}>Add Staff to Conversation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Select staff members to add to this conversation. They will be able to see and participate in the thread.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`} />
+              <Input
+                placeholder="Search staff..."
+                value={staffSearchQuery}
+                onChange={(e) => setStaffSearchQuery(e.target.value)}
+                className={`pl-9 ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] text-white placeholder:text-[rgba(255,255,255,0.45)]' : ''}`}
+              />
+            </div>
+            
+            {/* Staff List */}
+            <div className={`max-h-64 overflow-y-auto rounded-lg border ${isDark ? 'border-[rgba(255,255,255,0.1)]' : 'border-slate-200'}`}>
+              {staffData?.staff?.filter((s: any) => 
+                staffSearchQuery === '' || 
+                s.name?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                s.fullName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                s.role?.toLowerCase().includes(staffSearchQuery.toLowerCase())
+              ).map((staff: any) => (
+                <div 
+                  key={staff.id}
+                  onClick={() => {
+                    const newSet = new Set(selectedStaffIds);
+                    if (newSet.has(staff.id)) {
+                      newSet.delete(staff.id);
+                    } else {
+                      newSet.add(staff.id);
+                    }
+                    setSelectedStaffIds(newSet);
+                  }}
+                  className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
+                    selectedStaffIds.has(staff.id)
+                      ? isDark ? 'bg-[#E53935]/20' : 'bg-red-50'
+                      : isDark ? 'hover:bg-[rgba(255,255,255,0.05)]' : 'hover:bg-slate-50'
+                  } ${isDark ? 'border-b border-[rgba(255,255,255,0.05)]' : 'border-b border-slate-100'} last:border-b-0`}
+                >
+                  {/* Avatar */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                    isDark ? 'bg-[#2A2A2E] text-white' : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {staff.name?.substring(0, 2).toUpperCase() || 'ST'}
+                  </div>
+                  
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {staff.name || staff.fullName || 'Staff Member'}
+                    </p>
+                    <p className={`text-xs truncate ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>
+                      {staff.role || 'Staff'}
+                    </p>
+                  </div>
+                  
+                  {/* Checkbox */}
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    selectedStaffIds.has(staff.id)
+                      ? 'bg-[#E53935] border-[#E53935]'
+                      : isDark ? 'border-[rgba(255,255,255,0.3)]' : 'border-slate-300'
+                  }`}>
+                    {selectedStaffIds.has(staff.id) && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {(!staffData?.staff || staffData.staff.length === 0) && (
+                <div className={`p-4 text-center ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>
+                  No staff members found
+                </div>
+              )}
+            </div>
+            
+            {/* Selected Count */}
+            {selectedStaffIds.size > 0 && (
+              <p className={`text-sm ${isDark ? 'text-[rgba(255,255,255,0.7)]' : 'text-slate-600'}`}>
+                {selectedStaffIds.size} staff member{selectedStaffIds.size > 1 ? 's' : ''} selected
+              </p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setSelectedStaffIds(new Set());
+              setStaffSearchQuery('');
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={selectedStaffIds.size === 0 || isAddingParticipants}
+              onClick={handleAddStaffToConversation}
+              className="bg-[#E53935] hover:bg-[#D32F2F]"
+            >
+              {isAddingParticipants ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Adding...</>
+              ) : (
+                `Add ${selectedStaffIds.size > 0 ? selectedStaffIds.size : ''} Staff`
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </BottomNavLayout>
   );
 }

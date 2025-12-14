@@ -961,6 +961,8 @@ export const kaiConversations = mysqlTable("kai_conversations", {
   title: varchar("title", { length: 500 }).default("New Conversation").notNull(),
   /** Preview of last message */
   preview: text("preview"),
+  /** Thread type: kai_direct (1:1 with Kai) or group (humans + optional Kai) */
+  threadType: mysqlEnum("threadType", ["kai_direct", "group"]).default("kai_direct").notNull(),
   /** Conversation status */
   status: mysqlEnum("status", ["active", "archived"]).default("active").notNull(),
   /** Category tag for organization */
@@ -997,6 +999,39 @@ export const kaiMessages = mysqlTable("kai_messages", {
 
 export type KaiMessage = typeof kaiMessages.$inferSelect;
 export type InsertKaiMessage = typeof kaiMessages.$inferInsert;
+
+/**
+ * Thread Participants table - Tracks who is part of a conversation
+ * Enables group conversations with multiple staff members
+ */
+export const threadParticipants = mysqlTable("thread_participants", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to kai_conversations */
+  conversationId: int("conversationId").notNull(),
+  /** Participant type: staff, student, or system (Kai) */
+  participantType: mysqlEnum("participantType", ["staff", "student", "system"]).notNull(),
+  /** Participant ID - staffId (team_members.id), studentId, or null for system */
+  participantId: int("participantId"),
+  /** Participant name for display */
+  participantName: varchar("participantName", { length: 255 }).notNull(),
+  /** Role in the conversation: owner, member, viewer */
+  role: mysqlEnum("role", ["owner", "member", "viewer"]).default("member").notNull(),
+  /** User ID who added this participant */
+  addedById: int("addedById"),
+  /** Name of user who added this participant */
+  addedByName: varchar("addedByName", { length: 255 }),
+  /** Whether participant has left the conversation */
+  isActive: int("isActive").default(1).notNull(),
+  /** Last read message ID for unread tracking */
+  lastReadMessageId: int("lastReadMessageId"),
+  /** Last read timestamp */
+  lastReadAt: timestamp("lastReadAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ThreadParticipant = typeof threadParticipants.$inferSelect;
+export type InsertThreadParticipant = typeof threadParticipants.$inferInsert;
 
 /**
  * Class Enrollments table - Links students to classes they're enrolled in
