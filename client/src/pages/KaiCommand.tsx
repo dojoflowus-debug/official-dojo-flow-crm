@@ -1062,6 +1062,9 @@ export default function KaiCommand() {
       'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
       'application/pdf', 'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv',
       'text/plain'
     ];
 
@@ -1181,17 +1184,44 @@ export default function KaiCommand() {
             console.error('File analysis failed:', analysisError);
             // Continue without analysis - file is still uploaded
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Upload failed:', error);
-          // Mark attachment as failed
+          clearInterval(progressInterval);
+          
+          // Extract specific error message
+          let errorMessage = 'Upload failed';
+          if (error?.message) {
+            if (error.message.includes('File type not supported')) {
+              errorMessage = 'File type not supported';
+            } else if (error.message.includes('File size exceeds')) {
+              errorMessage = 'File too large (max 10MB)';
+            } else if (error.message.includes('Invalid file data')) {
+              errorMessage = 'Invalid file format';
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
+          // Mark attachment as failed with specific error
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, uploading: false, error: 'Upload failed' }
+              ? { ...att, uploading: false, progress: 0, error: errorMessage }
               : att
           ));
-          toast.error(`Failed to upload ${file.name}`);
+          toast.error(`${file.name}: ${errorMessage}`);
         }
       };
+      
+      reader.onerror = () => {
+        console.error('FileReader error');
+        setAttachments(prev => prev.map(att => 
+          att.id === tempId 
+            ? { ...att, uploading: false, progress: 0, error: 'Failed to read file' }
+            : att
+        ));
+        toast.error(`Failed to read ${file.name}`);
+      };
+      
       reader.readAsDataURL(file);
     }
 
@@ -1366,17 +1396,44 @@ export default function KaiCommand() {
             console.error('File analysis failed:', analysisError);
             // Continue without analysis - file is still uploaded
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Upload failed:', error);
-          // Mark attachment as failed
+          clearInterval(progressInterval);
+          
+          // Extract specific error message
+          let errorMessage = 'Upload failed';
+          if (error?.message) {
+            if (error.message.includes('File type not supported')) {
+              errorMessage = 'File type not supported';
+            } else if (error.message.includes('File size exceeds')) {
+              errorMessage = 'File too large (max 10MB)';
+            } else if (error.message.includes('Invalid file data')) {
+              errorMessage = 'Invalid file format';
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
+          // Mark attachment as failed with specific error
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, uploading: false, error: 'Upload failed' }
+              ? { ...att, uploading: false, progress: 0, error: errorMessage }
               : att
           ));
-          toast.error(`Failed to upload ${file.name}`);
+          toast.error(`${file.name}: ${errorMessage}`);
         }
       };
+      
+      reader.onerror = () => {
+        console.error('FileReader error');
+        setAttachments(prev => prev.map(att => 
+          att.id === tempId 
+            ? { ...att, uploading: false, progress: 0, error: 'Failed to read file' }
+            : att
+        ));
+        toast.error(`Failed to read ${file.name}`);
+      };
+      
       reader.readAsDataURL(file);
     }
   };

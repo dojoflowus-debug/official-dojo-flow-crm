@@ -3809,3 +3809,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show percentage text alongside progress bar (0-100%)
 - [x] Animate progress bar smoothly (transition-all duration-150 ease-out)
 - [x] Works for both drag-and-drop and paperclip uploads
+
+## Fix Drag-and-Drop Upload Failure
+- [x] Debug why drag-drop uploads fail while paperclip works - root cause: xlsx not in server allowedTypes
+- [x] Ensure drag-drop uses exact same upload pipeline as paperclip - both use uploadMutation.mutateAsync
+- [x] Auth/session headers included via tRPC protectedProcedure
+- [x] Added xlsx/xls/csv to server-side allowedTypes in routers.ts
+- [x] Added xlsx/xls/csv to client-side allowedTypes in handleFileSelect
+- [x] Add proper error logging with specific error extraction
+- [x] Show user-friendly toast with specific error reason (file type, size, format)
+- [x] Added reader.onerror handler for FileReader failures

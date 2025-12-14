@@ -381,11 +381,15 @@ export const appRouter = router({
           'application/pdf', 
           'application/msword', 
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          // Spreadsheets
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+          'application/vnd.ms-excel', // .xls
+          'text/csv',
           'text/plain',
         ];
         
         if (!allowedTypes.includes(input.fileType)) {
-          throw new Error('File type not supported. Allowed: images (jpg, png, gif, webp) and documents (pdf, doc, docx, txt)');
+          throw new Error('File type not supported. Allowed: images (jpg, png, gif, webp), documents (pdf, doc, docx, txt), and spreadsheets (xlsx, xls, csv)');
         }
         
         // Extract base64 data from data URL
