@@ -3872,3 +3872,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Check if published site has the latest code with json_object fix
 - [x] Add better error logging to extractSchedule procedure
 - [x] Test extraction works in dev environment - ready for publish
+
+
+## Add sample class schedule template download
+- [x] Create sample xlsx template with example data (8 sample classes)
+- [x] Added template to client/public/templates/ (served statically)
+- [x] Add download link in FileActionCard for schedule imports
+- [x] Added template link in error messages
+- [x] Test download works correctly (HTTP 200)

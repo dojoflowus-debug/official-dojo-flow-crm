@@ -12,7 +12,8 @@ import {
   X,
   Loader2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Download
 } from 'lucide-react';
 import type { ProposedAction, FileAnalysis } from '@/lib/fileIntelligence';
 
@@ -206,6 +207,22 @@ export function FileActionCard({
                   </Button>
                 );
               })}
+              
+              {/* Template Download Link - show for schedule-related files */}
+              {analysis.category === 'class_schedule' && (
+                <a
+                  href="/templates/class-schedule-template.xlsx"
+                  download="DojoFlow-Class-Schedule-Template.xlsx"
+                  className={`flex items-center gap-2 w-full px-4 py-2 text-sm rounded-md transition-colors ${
+                    isCinematic || isFocusMode || isDark
+                      ? 'text-white/70 hover:text-white hover:bg-white/5'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Download className="w-4 h-4" />
+                  Download sample template
+                </a>
+              )}
               
               {/* Cancel Button */}
               <Button

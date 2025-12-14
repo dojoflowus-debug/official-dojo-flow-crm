@@ -1700,7 +1700,7 @@ export default function KaiCommand() {
                 const errorMsg: Message = {
                   id: `schedule-error-${Date.now()}`,
                   role: 'assistant',
-                  content: result.error || `I couldn't extract any classes from this image. Please make sure it's a clear photo of a class schedule, or try uploading a different image.`,
+                  content: result.error || `I couldn't extract any classes from this file. Please make sure it's a clear schedule image or properly formatted spreadsheet. You can [download our sample template](/templates/class-schedule-template.xlsx) to see the expected format.`,
                   timestamp: new Date(),
                 };
                 setMessages(prev => [...prev, errorMsg]);
@@ -1710,7 +1710,7 @@ export default function KaiCommand() {
               const errorMsg: Message = {
                 id: `schedule-error-${Date.now()}`,
                 role: 'assistant',
-                content: `Sorry, I encountered an error while analyzing the schedule. Please try again or add classes manually in the Classes section.`,
+                content: `Sorry, I encountered an error while analyzing the schedule. Please try again, [download our sample template](/templates/class-schedule-template.xlsx) for the correct format, or add classes manually in the Classes section.`,
                 timestamp: new Date(),
               };
               setMessages(prev => [...prev, errorMsg]);
