@@ -2886,6 +2886,120 @@ Return the data as a structured JSON object.`
           classes: createdClasses,
         };
       }),
+    
+    // Extract roster from uploaded file using LLM
+    extractRoster: protectedProcedure
+      .input(z.object({
+        fileUrl: z.string(),
+        fileType: z.string(),
+        fileName: z.string(),
+        additionalContext: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { extractRosterFromImage, extractRosterFromText, parseCSVToText } = await import("./rosterExtraction");
+        
+        const isImage = input.fileType.startsWith('image/');
+        const isCSV = input.fileType === 'text/csv' || input.fileName.endsWith('.csv');
+        
+        if (isImage) {
+          // Use vision model for images
+          return await extractRosterFromImage(input.fileUrl, input.additionalContext);
+        } else if (isCSV) {
+          // For CSV files, fetch and parse the content
+          try {
+            const response = await fetch(input.fileUrl);
+            const csvContent = await response.text();
+            const parsedText = parseCSVToText(csvContent);
+            return await extractRosterFromText(parsedText, input.additionalContext);
+          } catch (error) {
+            return {
+              success: false,
+              students: [],
+              confidence: 0,
+              totalFound: 0,
+              error: "Failed to read CSV file: " + (error instanceof Error ? error.message : "Unknown error"),
+            };
+          }
+        } else {
+          // For PDFs and other documents
+          return {
+            success: false,
+            students: [],
+            confidence: 0,
+            totalFound: 0,
+            error: "PDF text extraction coming soon. Please upload an image or CSV file for now.",
+          };
+        }
+      }),
+    
+    // Create students from extracted roster data
+    createStudentsFromRoster: protectedProcedure
+      .input(z.object({
+        students: z.array(z.object({
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string().optional(),
+          phone: z.string().optional(),
+          dateOfBirth: z.string().optional(),
+          beltRank: z.string().optional(),
+          program: z.string().optional(),
+          guardianName: z.string().optional(),
+          guardianPhone: z.string().optional(),
+          guardianEmail: z.string().optional(),
+          address: z.string().optional(),
+          city: z.string().optional(),
+          state: z.string().optional(),
+          zipCode: z.string().optional(),
+          notes: z.string().optional(),
+          membershipStatus: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        const createdStudents = [];
+        const errors: string[] = [];
+        
+        for (const studentData of input.students) {
+          try {
+            const [newStudent] = await db.insert(students).values({
+              firstName: studentData.firstName,
+              lastName: studentData.lastName,
+              email: studentData.email || null,
+              phone: studentData.phone || null,
+              dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
+              beltRank: studentData.beltRank || 'White',
+              program: studentData.program || 'Adults',
+              guardianName: studentData.guardianName || null,
+              guardianPhone: studentData.guardianPhone || null,
+              guardianEmail: studentData.guardianEmail || null,
+              address: studentData.address || null,
+              city: studentData.city || null,
+              state: studentData.state || null,
+              zipCode: studentData.zipCode || null,
+              notes: studentData.notes || null,
+              status: studentData.membershipStatus === 'Inactive' ? 'inactive' : 'active',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }).returning();
+            
+            createdStudents.push(newStudent);
+          } catch (error) {
+            errors.push(`Failed to create ${studentData.firstName} ${studentData.lastName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
+        }
+        
+        return {
+          success: createdStudents.length > 0,
+          createdCount: createdStudents.length,
+          students: createdStudents,
+          errors: errors.length > 0 ? errors : undefined,
+        };
+      }),
   }),
 
   // Subscription and credits management

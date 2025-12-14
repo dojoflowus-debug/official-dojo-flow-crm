@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { analyzeFile, generateKaiFileResponse, getImageDimensions, type FileAnalysis, type ProposedAction } from '@/lib/fileIntelligence';
 import { FileActionCard } from '@/components/FileActionCard';
 import { SchedulePreviewCard, type ExtractedClass } from '@/components/SchedulePreviewCard';
+import { RosterPreviewCard, type ExtractedStudent } from '@/components/RosterPreviewCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -149,6 +150,15 @@ export default function KaiCommand() {
     sourceFile: string;
   } | null>(null);
   const [isCreatingClasses, setIsCreatingClasses] = useState(false);
+  
+  // Roster extraction state
+  const [rosterPreview, setRosterPreview] = useState<{
+    students: ExtractedStudent[];
+    confidence: number;
+    warnings?: string[];
+    sourceFile: string;
+  } | null>(null);
+  const [isCreatingStudents, setIsCreatingStudents] = useState(false);
   
   // Add Staff modal state
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
@@ -1262,14 +1272,59 @@ export default function KaiCommand() {
           break;
           
         case 'import_roster':
-          // Placeholder for roster import
-          const rosterMsg: Message = {
-            id: `roster-${Date.now()}`,
-            role: 'assistant',
-            content: `I'll analyze **${attachment.fileName}** to extract student information. This feature is coming soon - for now, you can manually add students in the Students section.`,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, rosterMsg]);
+          // Use LLM to extract roster from file
+          if (attachment.url) {
+            const extractingRosterMsg: Message = {
+              id: `extracting-roster-${Date.now()}`,
+              role: 'assistant',
+              content: `I'm analyzing **${attachment.fileName}** to extract student information. This may take a moment...`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, extractingRosterMsg]);
+            
+            try {
+              const result = await trpc.kai.extractRoster.mutate({
+                fileUrl: attachment.url,
+                fileType: attachment.fileType,
+                fileName: attachment.fileName,
+              });
+              
+              if (result.success && result.students.length > 0) {
+                // Show roster preview card
+                setRosterPreview({
+                  students: result.students,
+                  confidence: result.confidence,
+                  warnings: result.warnings,
+                  sourceFile: attachment.fileName,
+                });
+                
+                const successRosterMsg: Message = {
+                  id: `roster-success-${Date.now()}`,
+                  role: 'assistant',
+                  content: `I found **${result.students.length} students** in your roster! Please review the details below and make any corrections before I add them.`,
+                  timestamp: new Date(),
+                };
+                setMessages(prev => [...prev, successRosterMsg]);
+              } else {
+                const errorRosterMsg: Message = {
+                  id: `roster-error-${Date.now()}`,
+                  role: 'assistant',
+                  content: result.error || `I couldn't extract any students from this file. Please make sure it's a clear roster image or CSV file, or try uploading a different file.`,
+                  timestamp: new Date(),
+                };
+                setMessages(prev => [...prev, errorRosterMsg]);
+              }
+            } catch (err) {
+              console.error('Roster extraction error:', err);
+              const errorRosterMsg: Message = {
+                id: `roster-error-${Date.now()}`,
+                role: 'assistant',
+                content: `Sorry, I encountered an error while analyzing the roster. Please try again or add students manually in the Students section.`,
+                timestamp: new Date(),
+              };
+              setMessages(prev => [...prev, errorRosterMsg]);
+            }
+          }
           break;
           
         default:
@@ -1329,6 +1384,45 @@ export default function KaiCommand() {
       id: `schedule-cancel-${Date.now()}`,
       role: 'assistant',
       content: `No problem! I've cancelled the schedule import. You can upload another schedule image or add classes manually anytime.`,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, cancelMsg]);
+  };
+  
+  // Handle roster preview confirmation - create students
+  const handleConfirmRoster = async (students: ExtractedStudent[]) => {
+    setIsCreatingStudents(true);
+    
+    try {
+      const result = await trpc.kai.createStudentsFromRoster.mutate({ students });
+      
+      if (result.success) {
+        toast.success(`Added ${result.createdCount} students!`);
+        
+        const successMsg: Message = {
+          id: `students-created-${Date.now()}`,
+          role: 'assistant',
+          content: `I've added **${result.createdCount} students** from your roster. You can view and manage them in the Students section.${result.errors && result.errors.length > 0 ? `\n\n⚠️ Some students couldn't be added:\n${result.errors.join('\n')}` : ''}`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, successMsg]);
+        setRosterPreview(null);
+      }
+    } catch (err) {
+      console.error('Student creation error:', err);
+      toast.error('Failed to add students. Please try again.');
+    } finally {
+      setIsCreatingStudents(false);
+    }
+  };
+  
+  // Cancel roster preview
+  const handleCancelRoster = () => {
+    setRosterPreview(null);
+    const cancelMsg: Message = {
+      id: `roster-cancel-${Date.now()}`,
+      role: 'assistant',
+      content: `No problem! I've cancelled the roster import. You can upload another roster file or add students manually anytime.`,
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, cancelMsg]);
@@ -2410,6 +2504,23 @@ export default function KaiCommand() {
                         onConfirm={handleConfirmSchedule}
                         onCancel={handleCancelSchedule}
                         isProcessing={isCreatingClasses}
+                        isDark={isDark}
+                        isCinematic={isCinematic}
+                        isFocusMode={isFocusMode}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Roster Preview Card - shows extracted students for review */}
+                  {rosterPreview && (
+                    <div className="px-4 py-2">
+                      <RosterPreviewCard
+                        students={rosterPreview.students}
+                        confidence={rosterPreview.confidence}
+                        warnings={rosterPreview.warnings}
+                        onConfirm={handleConfirmRoster}
+                        onCancel={handleCancelRoster}
+                        isProcessing={isCreatingStudents}
                         isDark={isDark}
                         isCinematic={isCinematic}
                         isFocusMode={isFocusMode}

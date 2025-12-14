@@ -3750,3 +3750,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Handle image-based schedules (OCR via vision model) - using Gemini 2.5 Flash
 - [x] Handle PDF/document schedules (placeholder - text extraction coming soon)
 - [x] Test with various schedule formats (10 vitest tests passing)
+
+## LLM-Powered Roster Extraction
+- [x] Create server-side LLM service for roster extraction (rosterExtraction.ts)
+- [x] Define structured JSON schema for extracted student data (name, age, belt, contact, guardian)
+- [x] Build roster preview UI component with editable fields (RosterPreviewCard)
+- [x] Add confirmation flow before creating students
+- [x] Integrate with existing student creation tRPC procedures (kai.createStudentsFromRoster)
+- [x] Handle image-based rosters (OCR via vision model) - using Gemini 2.5 Flash
+- [x] Handle spreadsheet rosters (CSV parsing with delimiter detection)
+- [x] File intelligence already detects roster files (existing implementation)
+- [x] Test with various roster formats (21 vitest tests passing)
