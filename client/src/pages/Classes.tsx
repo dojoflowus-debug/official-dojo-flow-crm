@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -116,7 +116,24 @@ const ClassPreview = ({ formData, programs, isDark }: { formData: any; programs:
   );
 };
 
-// State for age rules visibility
+// Helper to check if two time ranges overlap
+const timeRangesOverlap = (start1: string, end1: string, start2: string, end2: string): boolean => {
+  if (!start1 || !end1 || !start2 || !end2) return false;
+  // Convert to minutes for comparison
+  const toMinutes = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const s1 = toMinutes(start1), e1 = toMinutes(end1);
+  const s2 = toMinutes(start2), e2 = toMinutes(end2);
+  return s1 < e2 && s2 < e1;
+};
+
+// Helper to check if days overlap
+const daysOverlap = (days1: string[], days2: string[]): boolean => {
+  return days1.some(d => days2.includes(d));
+};
+
 const ClassForm = ({ 
   formData, 
   handleInputChange, 
@@ -124,6 +141,8 @@ const ClassForm = ({
   handleDayToggle,
   instructors, 
   programs,
+  existingClasses,
+  editingClassId,
   onProgramChange,
   onSubmit, 
   submitText, 
@@ -139,6 +158,8 @@ const ClassForm = ({
   handleDayToggle: (day: string) => void;
   instructors: any[];
   programs: any[];
+  existingClasses: any[];
+  editingClassId?: number | null;
   onProgramChange: (programId: string) => void;
   onSubmit: (e: any) => void;
   submitText: string;
@@ -150,6 +171,41 @@ const ClassForm = ({
 }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const [showAgeRules, setShowAgeRules] = useState(false);
+  
+  // Check for instructor conflicts
+  const instructorConflict = useMemo(() => {
+    if (!formData.instructor || !formData.startTime || !formData.endTime || formData.days.length === 0) {
+      return null;
+    }
+    
+    // Find conflicting classes
+    const conflicts = existingClasses.filter(cls => {
+      // Skip the class being edited
+      if (editingClassId && cls.id === editingClassId) return false;
+      // Check if same instructor
+      if (cls.instructor !== formData.instructor) return false;
+      // Parse class days from schedule (e.g., "Mon, Wed" or "Mon/Wed")
+      const classDays = cls.schedule ? cls.schedule.split(/[,\/]/).map((d: string) => d.trim()) : [];
+      // Check if days overlap
+      if (!daysOverlap(formData.days, classDays)) return false;
+      // Parse class times (e.g., "4:30 PM - 5:15 PM" or stored as startTime/endTime)
+      const classStart = cls.startTime || '';
+      const classEnd = cls.endTime || '';
+      // Check if times overlap
+      return timeRangesOverlap(formData.startTime, formData.endTime, classStart, classEnd);
+    });
+    
+    if (conflicts.length === 0) return null;
+    
+    // Format conflict message
+    const conflict = conflicts[0];
+    const conflictDays = conflict.schedule || '';
+    const conflictTime = conflict.time || `${conflict.startTime} - ${conflict.endTime}`;
+    return {
+      className: conflict.name || conflict.type || 'Another class',
+      schedule: `${conflictDays} ${conflictTime}`.trim()
+    };
+  }, [formData.instructor, formData.days, formData.startTime, formData.endTime, existingClasses, editingClassId]);
   
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -181,7 +237,7 @@ const ClassForm = ({
         <div>
           <Label htmlFor="instructor" className="text-xs font-medium mb-1.5 block">Instructor</Label>
           <Select value={formData.instructor} onValueChange={(value) => handleSelectChange('instructor', value)}>
-            <SelectTrigger className="h-10">
+            <SelectTrigger className={`h-10 ${instructorConflict ? 'border-amber-500' : ''}`}>
               <SelectValue placeholder="Select instructor" />
             </SelectTrigger>
             <SelectContent>
@@ -198,6 +254,23 @@ const ClassForm = ({
           </Select>
         </div>
       </div>
+      
+      {/* Instructor Conflict Warning */}
+      {instructorConflict && (
+        <div className={`flex items-start gap-2 p-3 rounded-lg text-sm ${
+          isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'
+        }`}>
+          <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className={`font-medium ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+              Schedule conflict
+            </p>
+            <p className={`text-xs mt-0.5 ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>
+              {formData.instructor} is already teaching {instructorConflict.className} ({instructorConflict.schedule})
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Row 2: Level & Room */}
       <div className="grid grid-cols-2 gap-3">
@@ -835,6 +908,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 handleDayToggle={handleDayToggle}
                 instructors={instructors}
                 programs={programs}
+                existingClasses={classes}
+                editingClassId={null}
                 onProgramChange={handleProgramChange}
                 onSubmit={handleAddClass}
                 submitText="Add Class Time"
@@ -1037,6 +1112,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               handleDayToggle={handleDayToggle}
               instructors={instructors}
               programs={programs}
+              existingClasses={classes}
+              editingClassId={editingClass?.id}
               onProgramChange={handleProgramChange}
               onSubmit={handleUpdateClass}
               submitText="Update Class Time"

@@ -3486,3 +3486,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Make Enrollment Rules partially collapsible (Capacity visible, ages hidden)
 - [x] Reduce visual noise with subtle helper text
 - [x] Test modal feels like 30-second task
+
+
+## Instructor Availability Check
+- [x] Pass existing classes data to ClassForm component
+- [x] Add conflict detection logic to check instructor schedule
+- [x] Display warning when instructor has overlapping class times
+- [x] Test validation with conflicting schedules
