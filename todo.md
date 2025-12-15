@@ -3580,4 +3580,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add "View Class" button to success modal with navigation
 - [x] Test class appears immediately in list after creation
 - [x] Verify totals update (Total Classes, Avg Class Size, Active Instructors)
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+
+## 🐛 BUG: Class Edit Modal Opens But Update Doesn't Save
+- [x] Investigate handleUpdateClass function in Classes.tsx
+- [x] Check PUT /api/classes/:id endpoint
+- [x] Verify form data is being sent correctly
+- [x] Fix the update functionality (was already working - tested via curl and UI)
+- [x] Test class updates work correctly
+- [x] Save checkpoint
