@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye } from 'lucide-react';
+import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
@@ -207,6 +207,22 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // Floor plan modal state
   const [isFloorPlanModalOpen, setIsFloorPlanModalOpen] = useState(false);
   const [selectedClassForFloorPlan, setSelectedClassForFloorPlan] = useState(null);
+  
+  // Success confirmation modal state
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [createdClass, setCreatedClass] = useState<{
+    name: string;
+    type: string;
+    level: string;
+    instructor: string;
+    schedule: string;
+    time: string;
+    capacity: string;
+    ageMin: string;
+    ageMax: string;
+    monthlyCost: string;
+    description: string;
+  } | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -338,8 +354,10 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
       });
 
       if (response.ok) {
-        toast.success('Class added successfully!');
+        // Store the created class details for the success modal
+        setCreatedClass({ ...formData });
         setIsAddModalOpen(false);
+        setIsSuccessModalOpen(true);
         resetForm();
         fetchClasses();
       } else {
@@ -666,6 +684,115 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
         </Dialog>
         
         {/* Floor Plan Manager Modal */}
+        {/* Success Confirmation Modal */}
+        <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+                  <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
+                </div>
+                <DialogTitle className="text-xl">Class Created Successfully!</DialogTitle>
+              </div>
+            </DialogHeader>
+            
+            {createdClass && (
+              <div className="space-y-4 mt-4">
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                  <h3 className="font-semibold text-lg mb-3">{createdClass.name}</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Type:</span>
+                      <span className="font-medium">{createdClass.type || 'Not set'}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Level:</span>
+                      <span className="font-medium">{createdClass.level}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Instructor:</span>
+                      <span className="font-medium">{createdClass.instructor}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Time:</span>
+                      <span className="font-medium">{createdClass.time}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Schedule:</span>
+                      <span className="font-medium">{createdClass.schedule}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Capacity:</span>
+                      <span className="font-medium">{createdClass.capacity} students</span>
+                    </div>
+                    
+                    {(createdClass.ageMin || createdClass.ageMax) && (
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Ages:</span>
+                        <span className="font-medium">
+                          {createdClass.ageMin && createdClass.ageMax 
+                            ? `${createdClass.ageMin} - ${createdClass.ageMax}`
+                            : createdClass.ageMin 
+                              ? `${createdClass.ageMin}+`
+                              : `Up to ${createdClass.ageMax}`
+                          }
+                        </span>
+                      </div>
+                    )}
+                    
+                    {createdClass.monthlyCost && (
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Monthly:</span>
+                        <span className="font-medium">${createdClass.monthlyCost}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {createdClass.description && (
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <p className="text-sm text-muted-foreground">{createdClass.description}</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setIsSuccessModalOpen(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    onClick={() => {
+                      setIsSuccessModalOpen(false);
+                      setIsAddModalOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Another Class
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {selectedClassForFloorPlan && (
           <FloorPlanManager
             classId={selectedClassForFloorPlan.id}
