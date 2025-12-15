@@ -2911,17 +2911,21 @@ Return the data as a structured JSON object.`
           return h.toLowerCase().replace(/[^a-z0-9]/g, '');
         };
         
-        // Column name variations for auto-detection
+        // Column name variations for auto-detection (ordered by specificity - most specific first)
+        // Use exact match patterns to avoid false positives (e.g., 'classid' matching 'class')
         const columnPatterns = {
-          name: ['classname', 'class', 'name', 'program', 'programname', 'title', 'course'],
-          day: ['day', 'dayofweek', 'days', 'weekday', 'schedule'],
-          startTime: ['starttime', 'start', 'begin', 'begintime', 'from', 'timefrom'],
-          endTime: ['endtime', 'end', 'finish', 'finishtime', 'to', 'timeto'],
+          name: ['classname', 'programname', 'coursename', 'title', 'program', 'course', 'class', 'name'],
+          day: ['dayofweek', 'weekday', 'days', 'day', 'schedule'],
+          startTime: ['starttime', 'begintime', 'timefrom', 'start', 'begin', 'from'],
+          endTime: ['endtime', 'finishtime', 'timeto', 'end', 'finish', 'to'],
           instructor: ['instructor', 'teacher', 'coach', 'staff', 'sensei', 'professor'],
           room: ['room', 'location', 'mat', 'studio', 'area', 'place'],
-          level: ['level', 'difficulty', 'skill', 'skilllevel', 'grade'],
-          capacity: ['capacity', 'max', 'maxstudents', 'maxcapacity', 'spots', 'size'],
+          level: ['level', 'difficulty', 'skilllevel', 'skill', 'grade', 'agerange'],
+          capacity: ['maxcapacity', 'maxstudents', 'capacity', 'max', 'spots', 'size'],
         };
+        
+        // Columns to exclude from name detection (IDs, codes, etc.)
+        const excludeFromName = ['classid', 'id', 'code', 'number', 'agerange'];
         
         // Helper to parse time strings
         const parseTime = (timeStr: string): string | null => {
@@ -3057,8 +3061,29 @@ Return the data as a structured JSON object.`
               continue;
             }
             
-            // Try to auto-detect
-            const idx = normalizedHeaders.findIndex(h => patterns.some(p => h.includes(p)));
+            // Try to auto-detect - first try exact match, then partial match
+            let idx = -1;
+            
+            // First pass: exact match
+            for (const pattern of patterns) {
+              idx = normalizedHeaders.findIndex(h => h === pattern);
+              if (idx !== -1) break;
+            }
+            
+            // Second pass: partial match (but exclude ID columns for name field)
+            if (idx === -1) {
+              for (const pattern of patterns) {
+                idx = normalizedHeaders.findIndex((h, i) => {
+                  // Skip if already mapped to another field
+                  if (Object.values(detectedMapping).includes(i)) return false;
+                  // For name field, exclude ID-like columns
+                  if (field === 'name' && excludeFromName.some(ex => h.includes(ex))) return false;
+                  return h.includes(pattern);
+                });
+                if (idx !== -1) break;
+              }
+            }
+            
             if (idx !== -1) {
               detectedMapping[field] = idx;
             } else if (['name', 'day', 'startTime', 'endTime'].includes(field)) {
@@ -3261,16 +3286,14 @@ Return the data as a structured JSON object.`
             
             console.log('[CreateClasses] Creating:', classData.name, classData.dayOfWeek, timeDisplay);
             
+            // Only use fields that exist in the schema
             const result = await db.insert(classes).values({
               name: classData.name,
               dayOfWeek: classData.dayOfWeek,
               time: timeDisplay,
               instructor: classData.instructor || null,
-              room: classData.location || null,
-              level: classData.level || 'All Levels',
               capacity: classData.maxCapacity || 20,
-              description: classData.notes || null,
-              isActive: true,
+              isActive: 1,
               enrolled: 0,
             });
             

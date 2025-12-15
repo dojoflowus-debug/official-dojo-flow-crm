@@ -3600,4 +3600,27 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add import results display with row-level errors
 - [x] Improve error handling with specific failure reasons
 - [x] Test end-to-end schedule import
+- [x] Save checkpoint
+
+
+## 🐛 BUG: Create Classes Button Not Persisting to Database
+- [ ] Investigate Create Classes data flow (button click -> API -> DB)
+- [ ] Check payload mapping matches backend schema
+- [ ] Fix days format (Mon/Wed -> proper format)
+- [ ] Fix time format (4:30 PM -> proper format)
+- [ ] Ensure records created in same tenant scope
+- [ ] Add query invalidation after create
+- [ ] Add row-level error visibility
+- [ ] Test classes appear immediately in Classes list
 - [ ] Save checkpoint
+
+
+## ✅ COMPLETED: Create Classes Button Not Persisting to Database
+- [x] Investigate handleCreateClasses function in KaiCommand.tsx
+- [x] Check createClassesFromSchedule tRPC mutation
+- [x] Verify payload mapping matches backend schema
+- [x] Fix column detection to avoid false positives (classid matching class)
+- [x] Ensure classes are created in correct tenant scope
+- [x] Add query invalidation after class creation
+- [x] Test end-to-end schedule import and class creation
+- [x] Save checkpoint
