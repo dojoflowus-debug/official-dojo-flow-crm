@@ -3476,3 +3476,13 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add/Edit program modal with fields (name, description, default pricing, age range, belt requirements)
 - [x] Connect class form to use programs with inherited pricing
 - [x] Test programs page and class form integration
+
+
+## Add Class Time Modal UX Refinement
+- [x] Implement 2-column layout (Program|Instructor, Level|helper, Start|End Time, Capacity|Min Age|Max Age)
+- [x] Improve visual hierarchy - Program, Days, Time should dominate
+- [x] Soften section headers (no all-caps)
+- [x] Add live Class Preview component with dynamic updates
+- [x] Make Enrollment Rules partially collapsible (Capacity visible, ages hidden)
+- [x] Reduce visual noise with subtle helper text
+- [x] Test modal feels like 30-second task

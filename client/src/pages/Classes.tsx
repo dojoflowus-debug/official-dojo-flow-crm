@@ -22,34 +22,101 @@ const useDarkMode = () => {
   return theme === 'dark' || theme === 'cinematic'
 }
 
-// ClassForm component - moved outside to prevent re-creation on every render
-// Day selector chips component
+// Day selector chips - compact Apple-style
 const DayChip = ({ day, selected, onClick, isDark }: { day: string; selected: boolean; onClick: () => void; isDark: boolean }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+    className={`w-10 h-10 rounded-full text-sm font-medium transition-all duration-150 ${
       selected
-        ? 'bg-primary text-primary-foreground shadow-sm'
+        ? 'bg-primary text-primary-foreground shadow-sm scale-105'
         : isDark
-          ? 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+          ? 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
     }`}
   >
     {day}
   </button>
 );
 
-// Section header component
-const SectionHeader = ({ icon: Icon, title, isDark }: { icon: any; title: string; isDark: boolean }) => (
-  <div className={`flex items-center gap-2 pb-3 mb-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-    <Icon className={`w-4 h-4 ${isDark ? 'text-primary' : 'text-primary'}`} />
-    <span className={`text-sm font-semibold uppercase tracking-wide ${isDark ? 'text-white/80' : 'text-gray-700'}`}>
-      {title}
-    </span>
-  </div>
-);
+// Live class preview component
+const ClassPreview = ({ formData, programs, isDark }: { formData: any; programs: any[]; isDark: boolean }) => {
+  // Format time for display
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
 
+  // Format days for display
+  const formatDays = (days: string[]) => {
+    if (days.length === 0) return '';
+    if (days.length === 1) return days[0];
+    if (days.length === 2) return `${days[0]} & ${days[1]}`;
+    return days.slice(0, -1).join(', ') + ' & ' + days[days.length - 1];
+  };
+
+  // Get program info
+  const selectedProgram = programs.find(p => p.name === formData.program);
+  
+  // Build class name
+  const className = formData.name || 
+    (formData.program && formData.level ? `${formData.program} ${formData.level}` : formData.program) || 
+    'New Class';
+
+  // Build schedule line
+  const hasSchedule = formData.days.length > 0 && formData.startTime && formData.endTime;
+  const scheduleLine = hasSchedule 
+    ? `${formatDays(formData.days)} • ${formatTime(formData.startTime)}–${formatTime(formData.endTime)}`
+    : 'Select days and times';
+
+  // Build details line
+  const details: string[] = [];
+  if (formData.instructor) details.push(`Instructor: ${formData.instructor}`);
+  if (formData.capacity) details.push(`Capacity: ${formData.capacity}`);
+  if (formData.ageMin || formData.ageMax) {
+    const ageRange = formData.ageMin && formData.ageMax 
+      ? `Ages ${formData.ageMin}–${formData.ageMax}`
+      : formData.ageMin ? `Ages ${formData.ageMin}+` : `Ages up to ${formData.ageMax}`;
+    details.push(ageRange);
+  }
+
+  const isComplete = formData.program && formData.days.length > 0 && formData.startTime && formData.endTime;
+
+  return (
+    <div className={`rounded-xl p-4 transition-all duration-200 ${
+      isComplete
+        ? isDark ? 'bg-primary/10 border border-primary/20' : 'bg-primary/5 border border-primary/10'
+        : isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+    }`}>
+      <div className="flex items-start gap-3">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          isComplete ? 'bg-primary/20' : isDark ? 'bg-white/10' : 'bg-gray-200'
+        }`}>
+          <Calendar className={`w-5 h-5 ${isComplete ? 'text-primary' : isDark ? 'text-white/40' : 'text-gray-400'}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            {className}
+          </h4>
+          <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+            {scheduleLine}
+          </p>
+          {details.length > 0 && (
+            <p className={`text-xs mt-1 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
+              {details.join(' • ')}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// State for age rules visibility
 const ClassForm = ({ 
   formData, 
   handleInputChange, 
@@ -82,251 +149,263 @@ const ClassForm = ({
   isDark: boolean;
 }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const [showAgeRules, setShowAgeRules] = useState(false);
   
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      {/* SECTION A: Program */}
-      <div>
-        <SectionHeader icon={Calendar} title="Program" isDark={isDark} />
-        
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="program">Program *</Label>
-            <Select value={formData.program} onValueChange={(value) => onProgramChange(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select program" />
-              </SelectTrigger>
-              <SelectContent>
-                {programs.length === 0 ? (
-                  <SelectItem value="__no_programs__" disabled>No programs available - create one first</SelectItem>
-                ) : (
-                  programs.map((program) => (
-                    <SelectItem key={program.id} value={program.name}>
-                      {program.name} {program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-              <a href="/programs" className="text-primary hover:underline">Manage programs</a> to add or edit pricing
-            </p>
-          </div>
+    <form onSubmit={onSubmit} className="space-y-5">
+      {/* Live Preview - Always visible at top */}
+      <ClassPreview formData={formData} programs={programs} isDark={isDark} />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="level">Level</Label>
-              <Select value={formData.level} onValueChange={(value) => handleSelectChange('level', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
-                  <SelectItem value="All Levels">All Levels</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Row 1: Program & Instructor */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor="program" className="text-xs font-medium mb-1.5 block">Program</Label>
+          <Select value={formData.program} onValueChange={(value) => onProgramChange(value)}>
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Select program" />
+            </SelectTrigger>
+            <SelectContent>
+              {programs.length === 0 ? (
+                <SelectItem value="__no_programs__" disabled>No programs yet</SelectItem>
+              ) : (
+                programs.map((program) => (
+                  <SelectItem key={program.id} value={program.name}>
+                    {program.name} {program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
 
-            <div>
-              <Label htmlFor="instructor">Instructor *</Label>
-              <Select value={formData.instructor} onValueChange={(value) => handleSelectChange('instructor', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select instructor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructors.length === 0 ? (
-                    <SelectItem value="__no_instructors__" disabled>No instructors available</SelectItem>
-                  ) : (
-                    instructors.map((instructor) => (
-                      <SelectItem key={instructor.id} value={instructor.name}>
-                        {instructor.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="name">Class Display Name</Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="e.g., Kids Beginner – Mon/Wed"
-            />
-            <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-              Optional label shown on schedules
-            </p>
-          </div>
+        <div>
+          <Label htmlFor="instructor" className="text-xs font-medium mb-1.5 block">Instructor</Label>
+          <Select value={formData.instructor} onValueChange={(value) => handleSelectChange('instructor', value)}>
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Select instructor" />
+            </SelectTrigger>
+            <SelectContent>
+              {instructors.length === 0 ? (
+                <SelectItem value="__no_instructors__" disabled>No instructors</SelectItem>
+              ) : (
+                instructors.map((instructor) => (
+                  <SelectItem key={instructor.id} value={instructor.name}>
+                    {instructor.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* SECTION B: Schedule */}
-      <div>
-        <SectionHeader icon={Clock} title="Schedule" isDark={isDark} />
-        
-        <div className="space-y-4">
-          <div>
-            <Label>Days *</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {days.map((day) => (
-                <DayChip
-                  key={day}
-                  day={day}
-                  selected={formData.days.includes(day)}
-                  onClick={() => handleDayToggle(day)}
-                  isDark={isDark}
-                />
-              ))}
-            </div>
-          </div>
+      {/* Row 2: Level & Room */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor="level" className="text-xs font-medium mb-1.5 block">Level</Label>
+          <Select value={formData.level} onValueChange={(value) => handleSelectChange('level', value)}>
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="All Levels" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Beginner">Beginner</SelectItem>
+              <SelectItem value="Intermediate">Intermediate</SelectItem>
+              <SelectItem value="Advanced">Advanced</SelectItem>
+              <SelectItem value="All Levels">All Levels</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="startTime">Start Time *</Label>
-              <Input
-                id="startTime"
-                name="startTime"
-                type="time"
-                value={formData.startTime}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="endTime">End Time *</Label>
-              <Input
-                id="endTime"
-                name="endTime"
-                type="time"
-                value={formData.endTime}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-          </div>
-          
-          {timeError && (
-            <div className="flex items-center gap-2 text-red-500 text-sm">
-              <AlertCircle className="w-4 h-4" />
-              {timeError}
-            </div>
-          )}
-
-          <div>
-            <Label htmlFor="room">Room / Mat</Label>
-            <Input
-              id="room"
-              name="room"
-              value={formData.room}
-              onChange={handleInputChange}
-              placeholder="e.g., Mat A, Room 2"
-            />
-          </div>
+        <div>
+          <Label htmlFor="room" className="text-xs font-medium mb-1.5 block">Room / Mat</Label>
+          <Input
+            id="room"
+            name="room"
+            value={formData.room}
+            onChange={handleInputChange}
+            placeholder="Mat A"
+            className="h-10"
+          />
         </div>
       </div>
 
-      {/* SECTION C: Enrollment Rules */}
+      {/* Days - Prominent */}
       <div>
-        <SectionHeader icon={Users} title="Enrollment Rules" isDark={isDark} />
-        
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="capacity">Capacity *</Label>
-            <Input
-              id="capacity"
-              name="capacity"
-              type="number"
-              value={formData.capacity}
-              onChange={handleInputChange}
-              placeholder="15"
-              required
+        <Label className="text-xs font-medium mb-2 block">Days</Label>
+        <div className="flex gap-1.5 justify-between">
+          {days.map((day) => (
+            <DayChip
+              key={day}
+              day={day}
+              selected={formData.days.includes(day)}
+              onClick={() => handleDayToggle(day)}
+              isDark={isDark}
             />
-          </div>
-
-          <div>
-            <Label htmlFor="ageMin">Min Age</Label>
-            <Input
-              id="ageMin"
-              name="ageMin"
-              type="number"
-              value={formData.ageMin}
-              onChange={handleInputChange}
-              placeholder="5"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="ageMax">Max Age</Label>
-            <Input
-              id="ageMax"
-              name="ageMax"
-              type="number"
-              value={formData.ageMax}
-              onChange={handleInputChange}
-              placeholder="12"
-            />
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Advanced Section (Collapsed by default) */}
-      <div className={`rounded-lg border ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
+      {/* Row 3: Time */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor="startTime" className="text-xs font-medium mb-1.5 block">Start</Label>
+          <Input
+            id="startTime"
+            name="startTime"
+            type="time"
+            value={formData.startTime}
+            onChange={handleInputChange}
+            className="h-10"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="endTime" className="text-xs font-medium mb-1.5 block">End</Label>
+          <Input
+            id="endTime"
+            name="endTime"
+            type="time"
+            value={formData.endTime}
+            onChange={handleInputChange}
+            className="h-10"
+            required
+          />
+        </div>
+      </div>
+      
+      {timeError && (
+        <div className="flex items-center gap-2 text-red-500 text-xs">
+          <AlertCircle className="w-3.5 h-3.5" />
+          {timeError}
+        </div>
+      )}
+
+      {/* Capacity - Always visible */}
+      <div>
+        <Label htmlFor="capacity" className="text-xs font-medium mb-1.5 block">Capacity</Label>
+        <Input
+          id="capacity"
+          name="capacity"
+          type="number"
+          value={formData.capacity}
+          onChange={handleInputChange}
+          placeholder="15"
+          className="h-10 w-24"
+          required
+        />
+      </div>
+
+      {/* Age Rules - Collapsible */}
+      <div>
         <button
           type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className={`w-full flex items-center justify-between p-3 text-sm font-medium ${
-            isDark ? 'text-white/70 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+          onClick={() => setShowAgeRules(!showAgeRules)}
+          className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+            isDark ? 'text-white/50 hover:text-white/70' : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          <span>Advanced Options</span>
-          {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {showAgeRules ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          Age restrictions
         </button>
         
-        {showAdvanced && (
-          <div className={`px-3 pb-3 pt-0 space-y-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-            <div className="pt-3">
-              <Label htmlFor="monthlyCost">Pricing Override ($)</Label>
+        {showAgeRules && (
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <div>
+              <Label htmlFor="ageMin" className="text-xs font-medium mb-1.5 block">Min Age</Label>
               <Input
-                id="monthlyCost"
-                name="monthlyCost"
+                id="ageMin"
+                name="ageMin"
                 type="number"
-                step="0.01"
-                value={formData.monthlyCost}
+                value={formData.ageMin}
                 onChange={handleInputChange}
-                placeholder="Override program pricing"
+                placeholder="5"
+                className="h-10"
               />
-              <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-                Leave empty to use program default pricing
-              </p>
             </div>
 
             <div>
-              <Label htmlFor="description">Notes</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
+              <Label htmlFor="ageMax" className="text-xs font-medium mb-1.5 block">Max Age</Label>
+              <Input
+                id="ageMax"
+                name="ageMax"
+                type="number"
+                value={formData.ageMax}
                 onChange={handleInputChange}
-                placeholder="Internal notes about this class time..."
-                rows={2}
+                placeholder="12"
+                className="h-10"
               />
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      {/* Advanced Options - Collapsed */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+            isDark ? 'text-white/50 hover:text-white/70' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          More options
+        </button>
+        
+        {showAdvanced && (
+          <div className="space-y-3 mt-3">
+            <div>
+              <Label htmlFor="name" className="text-xs font-medium mb-1.5 block">Display Name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Custom name for schedule"
+                className="h-10"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="monthlyCost" className="text-xs font-medium mb-1.5 block">Price Override</Label>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${isDark ? 'text-white/40' : 'text-gray-400'}`}>$</span>
+                <Input
+                  id="monthlyCost"
+                  name="monthlyCost"
+                  type="number"
+                  step="0.01"
+                  value={formData.monthlyCost}
+                  onChange={handleInputChange}
+                  placeholder="Use program price"
+                  className="h-10 w-32"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description" className="text-xs font-medium mb-1.5 block">Notes</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Internal notes..."
+                rows={2}
+                className="resize-none"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="ghost" onClick={onCancel} className="h-9 px-4">
           Cancel
         </Button>
-        <Button type="submit" disabled={formData.days.length === 0}>
+        <Button type="submit" disabled={formData.days.length === 0 || !formData.program} className="h-9 px-5">
           {submitText}
         </Button>
       </div>
