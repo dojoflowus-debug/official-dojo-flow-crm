@@ -3445,3 +3445,25 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Create success confirmation modal with class details
 - [x] Update class creation handler to show modal on success
 - [x] Test the confirmation modal displays correctly
+
+
+## Redesign Add New Class modal to dojo-native structure
+- [ ] Rename modal to "Add Class Time" with helper text
+- [ ] Create Section A: Program (Program dropdown, Level, Instructor, Display Name)
+- [ ] Create Section B: Schedule (Day chips, Time pickers, Room)
+- [ ] Create Section C: Enrollment Rules (Capacity, Age range)
+- [ ] Move pricing to Advanced accordion (collapsed by default)
+- [ ] Add validation (end time after start, instructor double-booking warning)
+- [ ] Update data model for AI/Kai compatibility
+- [ ] Test in Light/Dark/Cinematic modes
+
+
+## ✅ COMPLETED: Redesign Add New Class modal to dojo-native structure
+- [x] Rename modal to "Add Class Time" with helper text
+- [x] Split form into 3 sections: Program, Schedule, Enrollment Rules
+- [x] Replace text inputs with day selector chips (Mon-Sun)
+- [x] Add time pickers for start/end time
+- [x] Add time validation (end > start)
+- [x] Move pricing to Advanced accordion
+- [x] Update success modal with new field names
+- [x] Test the form - all sections visible and working
