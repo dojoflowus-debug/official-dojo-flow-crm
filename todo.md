@@ -3570,3 +3570,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Test schedule extraction with Mock_Class_Schedule.xlsx
 - [ ] Save checkpoint
 
+
+## 🐛 BUG: Class Creation Shows Success But List Shows 0 Classes
+- [x] Investigate class creation mutation - verify it writes to database
+- [x] Check Classes page query - ensure it reads from same table
+- [x] Verify orgId/locationId scope matches between create and list
+- [x] Add cache invalidation after successful class creation
+- [x] Check if status filter is excluding created classes
+- [x] Add "View Class" button to success modal with navigation
+- [x] Test class appears immediately in list after creation
+- [x] Verify totals update (Total Classes, Avg Class Size, Active Instructors)
+- [ ] Save checkpoint

@@ -660,6 +660,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // Success confirmation modal state
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdClass, setCreatedClass] = useState<{
+    id?: number;
     name: string;
     type: string;
     level: string;
@@ -879,8 +880,15 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
       });
 
       if (response.ok) {
-        // Store the created class details for the success modal
-        setCreatedClass({ ...formData });
+        const result = await response.json();
+        // Store the created class details for the success modal including the ID
+        setCreatedClass({ 
+          ...formData, 
+          id: result.id,
+          type: formData.program,
+          schedule: schedule,
+          time: time
+        });
         setIsAddModalOpen(false);
         setIsSuccessModalOpen(true);
         resetForm();
@@ -1154,7 +1162,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {classes.map((classItem) => (
-              <div key={classItem.id} className={`p-6 rounded-lg border hover:border-primary transition-colors ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
+              <div key={classItem.id} id={`class-${classItem.id}`} className={`p-6 rounded-lg border hover:border-primary transition-all duration-300 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold mb-1">{classItem.name}</h3>
@@ -1401,6 +1409,25 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                   >
                     Close
                   </Button>
+                  {createdClass.id && (
+                    <Button 
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setIsSuccessModalOpen(false);
+                        // Scroll to the class in the list
+                        const classElement = document.getElementById(`class-${createdClass.id}`);
+                        if (classElement) {
+                          classElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          classElement.classList.add('ring-2', 'ring-primary');
+                          setTimeout(() => classElement.classList.remove('ring-2', 'ring-primary'), 2000);
+                        }
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Class
+                    </Button>
+                  )}
                   <Button 
                     className="flex-1"
                     onClick={() => {
@@ -1409,7 +1436,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                     }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Another Class
+                    Add Another
                   </Button>
                 </div>
               </div>

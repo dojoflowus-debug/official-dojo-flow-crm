@@ -315,6 +315,144 @@ async function startServer() {
     }
   });
   
+  // Classes REST API endpoints
+  app.get("/api/classes", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { classes } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const allClasses = await db.select().from(classes).where(eq(classes.isActive, 1));
+      
+      // Transform to match expected format
+      const transformedClasses = allClasses.map(c => ({
+        id: c.id,
+        name: c.name,
+        time: c.time,
+        enrolled: c.enrolled,
+        capacity: c.capacity,
+        instructor: c.instructor,
+        instructorId: c.instructorId,
+        day_of_week: c.dayOfWeek,
+        schedule: c.dayOfWeek,
+        isActive: c.isActive,
+        createdAt: c.createdAt,
+      }));
+      
+      console.log(`[Classes API] Fetched ${transformedClasses.length} classes`);
+      res.json(transformedClasses);
+    } catch (error) {
+      console.error("Classes endpoint error:", error);
+      res.status(500).json({ error: "Failed to fetch classes" });
+    }
+  });
+  
+  app.post("/api/classes", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { classes } = await import("../../drizzle/schema");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const { name, type, level, instructor, instructorId, schedule, time, room, capacity, ageMin, ageMax, monthlyCost, description, enrolled } = req.body;
+      
+      console.log(`[Classes API] Creating class:`, { name, type, level, instructor, schedule, time });
+      
+      const result = await db.insert(classes).values({
+        name: name || 'New Class',
+        time: time || '',
+        enrolled: enrolled || 0,
+        capacity: capacity || 15,
+        instructor: instructor || null,
+        instructorId: instructorId || null,
+        dayOfWeek: schedule || null,
+        isActive: 1,
+      });
+      
+      const insertedId = result[0].insertId;
+      console.log(`[Classes API] Created class with ID: ${insertedId}`);
+      
+      res.status(201).json({ 
+        success: true, 
+        id: insertedId,
+        message: 'Class created successfully' 
+      });
+    } catch (error) {
+      console.error("Create class endpoint error:", error);
+      res.status(500).json({ error: "Failed to create class" });
+    }
+  });
+  
+  app.put("/api/classes/:id", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { classes } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const classId = parseInt(req.params.id);
+      const { name, type, level, instructor, instructorId, schedule, time, room, capacity, ageMin, ageMax, monthlyCost, description, enrolled } = req.body;
+      
+      console.log(`[Classes API] Updating class ${classId}:`, { name, time, schedule });
+      
+      await db.update(classes)
+        .set({
+          name: name || undefined,
+          time: time || undefined,
+          enrolled: enrolled !== undefined ? enrolled : undefined,
+          capacity: capacity || undefined,
+          instructor: instructor || undefined,
+          instructorId: instructorId || undefined,
+          dayOfWeek: schedule || undefined,
+        })
+        .where(eq(classes.id, classId));
+      
+      console.log(`[Classes API] Updated class ${classId}`);
+      res.json({ success: true, message: 'Class updated successfully' });
+    } catch (error) {
+      console.error("Update class endpoint error:", error);
+      res.status(500).json({ error: "Failed to update class" });
+    }
+  });
+  
+  app.delete("/api/classes/:id", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { classes } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const classId = parseInt(req.params.id);
+      
+      // Soft delete by setting isActive to 0
+      await db.update(classes)
+        .set({ isActive: 0 })
+        .where(eq(classes.id, classId));
+      
+      console.log(`[Classes API] Deleted class ${classId}`);
+      res.json({ success: true, message: 'Class deleted successfully' });
+    } catch (error) {
+      console.error("Delete class endpoint error:", error);
+      res.status(500).json({ error: "Failed to delete class" });
+    }
+  });
+  
   // Staff stats REST API endpoint
   app.get("/api/staff/stats", async (req, res) => {
     try {
