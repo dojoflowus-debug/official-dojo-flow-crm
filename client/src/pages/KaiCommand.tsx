@@ -54,7 +54,8 @@ import {
   Loader2,
   List,
   Save,
-  Upload
+  Upload,
+  RefreshCw
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -92,6 +93,7 @@ interface Attachment {
   url: string;
   uploading?: boolean;
   error?: string;
+  originalFile?: File; // Store original file for retry
 }
 
 export default function KaiCommand() {
@@ -874,15 +876,17 @@ export default function KaiCommand() {
             // Auto-extract schedule from the file
             handleScheduleExtraction(result.url, file.type, file.name);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Upload failed:', error);
-          // Mark attachment as failed
+          // Extract meaningful error message
+          const errorMessage = error?.message || error?.data?.message || 'Upload failed';
+          // Mark attachment as failed with detailed error
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, uploading: false, error: 'Upload failed' }
+              ? { ...att, uploading: false, error: errorMessage, originalFile: file }
               : att
           ));
-          toast.error(`Failed to upload ${file.name}`);
+          toast.error(`Failed to upload ${file.name}: ${errorMessage}`);
         }
       };
       reader.readAsDataURL(file);
@@ -897,6 +901,72 @@ export default function KaiCommand() {
   // Remove attachment
   const removeAttachment = (id: string) => {
     setAttachments(prev => prev.filter(att => att.id !== id));
+  };
+
+  // Retry failed upload
+  const retryUpload = async (attachmentId: string) => {
+    const attachment = attachments.find(att => att.id === attachmentId);
+    if (!attachment || !attachment.originalFile) {
+      toast.error('Cannot retry: original file not available');
+      return;
+    }
+
+    const file = attachment.originalFile;
+    
+    // Mark as uploading again
+    setAttachments(prev => prev.map(att => 
+      att.id === attachmentId 
+        ? { ...att, uploading: true, error: undefined }
+        : att
+    ));
+
+    // Read file as base64
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const base64Data = event.target?.result as string;
+        
+        const result = await uploadMutation.mutateAsync({
+          fileName: file.name,
+          fileData: base64Data,
+          fileType: file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          fileSize: file.size,
+          context: 'kai-command'
+        });
+
+        // Update attachment with uploaded URL
+        setAttachments(prev => prev.map(att => 
+          att.id === attachmentId 
+            ? { ...att, url: result.url, uploading: false, error: undefined }
+            : att
+        ));
+        
+        toast.success(`Successfully uploaded ${file.name}`);
+        
+        // Check if this is a schedule file
+        const isScheduleFile = 
+          file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+          file.type === 'application/vnd.ms-excel' ||
+          file.type === 'text/csv' ||
+          file.name.endsWith('.xlsx') ||
+          file.name.endsWith('.xls') ||
+          file.name.endsWith('.csv');
+        
+        if (isScheduleFile) {
+          handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
+        }
+      } catch (error: any) {
+        console.error('Retry upload failed:', error);
+        const errorMessage = error?.message || error?.data?.message || 'Upload failed';
+        setAttachments(prev => prev.map(att => 
+          att.id === attachmentId 
+            ? { ...att, uploading: false, error: errorMessage }
+            : att
+        ));
+        toast.error(`Retry failed: ${errorMessage}`);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Drag-and-drop handlers
@@ -1008,15 +1078,17 @@ export default function KaiCommand() {
             // Auto-extract schedule from the file
             handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Upload failed:', error);
-          // Mark attachment as failed
+          // Extract meaningful error message
+          const errorMessage = error?.message || error?.data?.message || 'Upload failed';
+          // Mark attachment as failed with detailed error
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, uploading: false, error: 'Upload failed' }
+              ? { ...att, uploading: false, error: errorMessage, originalFile: file }
               : att
           ));
-          toast.error(`Failed to upload ${file.name}`);
+          toast.error(`Failed to upload ${file.name}: ${errorMessage}`);
         }
       };
       reader.readAsDataURL(file);
@@ -2128,7 +2200,23 @@ export default function KaiCommand() {
                       {attachment.uploading ? (
                         <Loader2 className={`w-4 h-4 animate-spin ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
                       ) : attachment.error ? (
-                        <span className="text-xs text-red-400">Failed</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => retryUpload(attachment.id)}
+                            className="flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                            title={attachment.error}
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Retry
+                          </button>
+                          <button
+                            onClick={() => removeAttachment(attachment.id)}
+                            className="p-0.5 rounded hover:bg-red-500/20 text-red-400"
+                            title="Remove"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => removeAttachment(attachment.id)}

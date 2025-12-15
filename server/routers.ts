@@ -167,10 +167,21 @@ export const appRouter = router({
           'application/msword', 
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'text/plain',
+          // Spreadsheets
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+          'application/vnd.ms-excel', // xls
+          'text/csv', // csv
+          'application/octet-stream', // fallback for xlsx when browser doesn't detect type
         ];
         
-        if (!allowedTypes.includes(input.fileType)) {
-          throw new Error('File type not supported. Allowed: images (jpg, png, gif, webp) and documents (pdf, doc, docx, txt)');
+        // Also check by file extension for xlsx files that may have wrong MIME type
+        const isSpreadsheetByExtension = 
+          input.fileName.toLowerCase().endsWith('.xlsx') ||
+          input.fileName.toLowerCase().endsWith('.xls') ||
+          input.fileName.toLowerCase().endsWith('.csv');
+        
+        if (!allowedTypes.includes(input.fileType) && !isSpreadsheetByExtension) {
+          throw new Error(`File type not supported: ${input.fileType}. Allowed: images (jpg, png, gif, webp), documents (pdf, doc, docx, txt), and spreadsheets (xlsx, xls, csv)`);
         }
         
         // Extract base64 data from data URL
@@ -207,6 +218,7 @@ export const appRouter = router({
         return {
           images: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
           documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
+          spreadsheets: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/csv'],
           maxSize: 10 * 1024 * 1024, // 10MB
           maxSizeLabel: '10MB',
         };

@@ -3532,3 +3532,22 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test instructor selection and preview display
 - [x] Save checkpoint
 
+
+
+## 🚨 URGENT: Fix File Attachment Upload Failure for .xlsx Files
+
+### Issue
+- Mock_Class_Schedule.xlsx shows "Failed" state on attachment chip
+- Upload/storage step is failing BEFORE Kai parsing
+- File URL may not be accessible from client
+
+### Tasks
+- [x] Analyze current file upload implementation (drag/drop and paperclip)
+- [x] Check backend endpoint accepts .xlsx mime type
+- [x] Ensure upload returns usable file object (fileId, filename, mimeType, url)
+- [x] Verify returned URL is accessible (no 403/signed URL expiry)
+- [x] Add proper error handling with toast showing real error reason
+- [x] Add retry button on failed attachment chip
+- [x] Test upload works reliably via drag/drop AND paperclip
+- [ ] Save checkpoint
+
