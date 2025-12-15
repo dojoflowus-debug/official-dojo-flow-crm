@@ -3432,3 +3432,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Create visual drop zone indicator with overlay
 - [x] Handle file drops and trigger upload
 - [x] Test drag-and-drop with xlsx files
+
+
+## Fix Select.Item empty value error (still occurring)
+- [x] Find all Select.Item components with empty values in Classes.tsx
+- [x] Fix all empty value issues (changed value="" to value="__no_instructors__")
+- [x] Test adding a new class dialog opens without error
