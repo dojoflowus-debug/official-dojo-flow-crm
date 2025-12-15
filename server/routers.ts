@@ -455,6 +455,41 @@ export const appRouter = router({
           isActive: staff.isActive,
         };
       }),
+
+    // Get active instructors for class assignment dropdown
+    getInstructors: publicProcedure
+      .query(async () => {
+        const { getDb } = await import("./db");
+        const { teamMembers } = await import("../drizzle/schema");
+        const { eq, and, or, sql } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return { instructors: [] };
+        
+        // Get active team members who are instructors, coaches, trainers, or assistants
+        const instructorRoles = ['instructor', 'coach', 'trainer', 'assistant', 'owner', 'manager'];
+        const instructors = await db.select({
+          id: teamMembers.id,
+          name: teamMembers.name,
+          addressAs: teamMembers.addressAs,
+          role: teamMembers.role,
+          photoUrl: teamMembers.photoUrl,
+          email: teamMembers.email,
+        }).from(teamMembers).where(
+          sql`${teamMembers.isActive} = 1 AND ${teamMembers.role} IN ('instructor', 'coach', 'trainer', 'assistant', 'owner', 'manager')`
+        );
+        
+        return {
+          instructors: instructors.map(i => ({
+            id: i.id,
+            name: i.addressAs || i.name,
+            fullName: i.name,
+            role: i.role.charAt(0).toUpperCase() + i.role.slice(1).replace('_', ' '),
+            photoUrl: i.photoUrl || null,
+            email: i.email,
+          }))
+        };
+      }),
   }),
 
   // Messaging router for @mentions and directed messages

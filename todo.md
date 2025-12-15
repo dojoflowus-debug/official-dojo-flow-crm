@@ -3501,3 +3501,34 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Show live-updating class details (name, days, time, instructor, room, capacity, level)
 - [x] Hide/collapse preview on mobile into summary chip
 - [x] Test preview updates in real-time
+
+
+## Instructor Profile Connection to Classes
+- [ ] Update instructor dropdown to fetch from instructor profiles (active only)
+- [ ] Store instructorId in class times instead of instructor name
+- [ ] Update preview card to show instructor avatar and name
+- [ ] Show "Instructor not assigned" state when no instructor selected
+- [ ] Update conflict detection to use instructorId
+- [ ] Add clickable instructor name/avatar linking to profile
+- [ ] Test bidirectional relationship between classes and instructors
+
+
+## ✅ COMPLETED: Instructor Profile Connection to Classes
+
+### Issue
+- Instructor dropdown was not connected to real instructor profiles
+- Class preview card did not show instructor avatar
+- Conflict detection used instructor name instead of ID
+
+### Tasks
+- [x] Add getInstructors endpoint to staff router (fetches active instructors from teamMembers)
+- [x] Add instructorId field to classes table schema
+- [x] Update Classes page to fetch instructors via tRPC
+- [x] Update instructor dropdown to show avatars and roles
+- [x] Update LandscapePreviewCard to show instructor avatar
+- [x] Update conflict detection to use instructorId for reliable matching
+- [x] Update form state to include instructorId
+- [x] Update handleAddClass and handleUpdateClass to send instructorId
+- [x] Test instructor selection and preview display
+- [x] Save checkpoint
+

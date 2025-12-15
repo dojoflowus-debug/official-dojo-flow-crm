@@ -101,7 +101,8 @@ export const classes = mysqlTable("classes", {
   time: varchar("time", { length: 50 }).notNull(),
   enrolled: int("enrolled").default(0).notNull(),
   capacity: int("capacity").default(20).notNull(),
-  instructor: varchar("instructor", { length: 255 }),
+  instructor: varchar("instructor", { length: 255 }), // Deprecated - kept for backward compatibility
+  instructorId: int("instructorId"), // Foreign key to teamMembers table
   dayOfWeek: varchar("dayOfWeek", { length: 20 }),
   isActive: int("isActive").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

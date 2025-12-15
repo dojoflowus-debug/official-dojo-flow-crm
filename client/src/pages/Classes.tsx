@@ -57,7 +57,12 @@ const formatDaysDisplay = (days: string[]) => {
 };
 
 // Landscape Preview Card - Shows on right side of modal (desktop/tablet)
-const LandscapePreviewCard = ({ formData, programs, isDark }: { formData: any; programs: any[]; isDark: boolean }) => {
+const LandscapePreviewCard = ({ formData, programs, instructors, isDark }: { 
+  formData: any; 
+  programs: any[]; 
+  instructors: { id: number; name: string; fullName: string; role: string; photoUrl: string | null; email: string | null; }[];
+  isDark: boolean 
+}) => {
   const className = formData.name || 
     (formData.program && formData.level && formData.level !== 'All Levels' ? `${formData.program} ${formData.level}` : formData.program) || 
     'New Class';
@@ -66,16 +71,23 @@ const LandscapePreviewCard = ({ formData, programs, isDark }: { formData: any; p
     ? `${formatDaysDisplay(formData.days)} • ${formatTimeDisplay(formData.startTime)}–${formatTimeDisplay(formData.endTime)}`
     : null;
   const isComplete = formData.program && formData.days.length > 0 && formData.startTime && formData.endTime;
+  
+  // Get selected instructor details
+  const selectedInstructor = formData.instructorId 
+    ? instructors.find(i => i.id === formData.instructorId) 
+    : null;
 
   // Preview row component
-  const PreviewRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null }) => (
+  const PreviewRow = ({ icon: Icon, label, value, customContent }: { icon: any; label: string; value?: string | null; customContent?: React.ReactNode }) => (
     <div className="flex items-center gap-3 py-1.5">
-      <Icon className={`w-4 h-4 flex-shrink-0 ${!value ? (isDark ? 'text-white/20' : 'text-gray-300') : (isDark ? 'text-white/40' : 'text-gray-400')}`} />
+      <Icon className={`w-4 h-4 flex-shrink-0 ${!value && !customContent ? (isDark ? 'text-white/20' : 'text-gray-300') : (isDark ? 'text-white/40' : 'text-gray-400')}`} />
       <div className="flex-1 min-w-0">
         <span className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-white/30' : 'text-gray-400'}`}>{label}</span>
-        <p className={`text-sm font-medium truncate -mt-0.5 ${!value ? (isDark ? 'text-white/20' : 'text-gray-300') : (isDark ? 'text-white' : 'text-gray-900')}`}>
-          {value || '—'}
-        </p>
+        {customContent || (
+          <p className={`text-sm font-medium truncate -mt-0.5 ${!value ? (isDark ? 'text-white/20' : 'text-gray-300') : (isDark ? 'text-white' : 'text-gray-900')}`}>
+            {value || '—'}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -107,7 +119,36 @@ const LandscapePreviewCard = ({ formData, programs, isDark }: { formData: any; p
       {/* Details */}
       <div className="space-y-0">
         <PreviewRow icon={Calendar} label="Schedule" value={scheduleLine} />
-        <PreviewRow icon={User} label="Instructor" value={formData.instructor} />
+        <PreviewRow 
+          icon={User} 
+          label="Instructor" 
+          customContent={
+            selectedInstructor ? (
+              <div className="flex items-center gap-2 -mt-0.5">
+                {selectedInstructor.photoUrl ? (
+                  <img 
+                    src={selectedInstructor.photoUrl} 
+                    alt="" 
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                    isDark ? 'bg-primary/30 text-primary' : 'bg-primary/10 text-primary'
+                  }`}>
+                    {selectedInstructor.name?.charAt(0) || '?'}
+                  </div>
+                )}
+                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {selectedInstructor.name}
+                </span>
+              </div>
+            ) : (
+              <p className={`text-sm font-medium -mt-0.5 ${isDark ? 'text-white/20' : 'text-gray-300'}`}>
+                Not assigned
+              </p>
+            )
+          }
+        />
         <PreviewRow icon={MapPin} label="Room" value={formData.room} />
         <PreviewRow icon={Users} label="Capacity" value={formData.capacity ? `${formData.capacity} students` : null} />
         <PreviewRow icon={GraduationCap} label="Level" value={formData.level || 'All Levels'} />
@@ -215,9 +256,11 @@ const ClassForm = ({
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const [showAgeRules, setShowAgeRules] = useState(false);
   
-  // Check for instructor conflicts
+  // Check for instructor conflicts - now uses instructorId for more reliable matching
   const instructorConflict = useMemo(() => {
-    if (!formData.instructor || !formData.startTime || !formData.endTime || formData.days.length === 0) {
+    // Check using instructorId if available, otherwise fall back to instructor name
+    const hasInstructor = formData.instructorId || formData.instructor;
+    if (!hasInstructor || !formData.startTime || !formData.endTime || formData.days.length === 0) {
       return null;
     }
     
@@ -225,8 +268,16 @@ const ClassForm = ({
     const conflicts = existingClasses.filter(cls => {
       // Skip the class being edited
       if (editingClassId && cls.id === editingClassId) return false;
-      // Check if same instructor
-      if (cls.instructor !== formData.instructor) return false;
+      
+      // Check if same instructor - prefer instructorId matching, fall back to name
+      let sameInstructor = false;
+      if (formData.instructorId && cls.instructorId) {
+        sameInstructor = cls.instructorId === formData.instructorId;
+      } else if (formData.instructor && cls.instructor) {
+        sameInstructor = cls.instructor === formData.instructor;
+      }
+      if (!sameInstructor) return false;
+      
       // Parse class days from schedule (e.g., "Mon, Wed" or "Mon/Wed")
       const classDays = cls.schedule ? cls.schedule.split(/[,\/]/).map((d: string) => d.trim()) : [];
       // Check if days overlap
@@ -244,11 +295,18 @@ const ClassForm = ({
     const conflict = conflicts[0];
     const conflictDays = conflict.schedule || '';
     const conflictTime = conflict.time || `${conflict.startTime} - ${conflict.endTime}`;
+    
+    // Get instructor name for display
+    const instructorName = formData.instructor || 
+      instructors.find(i => i.id === formData.instructorId)?.name || 
+      'This instructor';
+    
     return {
       className: conflict.name || conflict.type || 'Another class',
-      schedule: `${conflictDays} ${conflictTime}`.trim()
+      schedule: `${conflictDays} ${conflictTime}`.trim(),
+      instructorName
     };
-  }, [formData.instructor, formData.days, formData.startTime, formData.endTime, existingClasses, editingClassId]);
+  }, [formData.instructorId, formData.instructor, formData.days, formData.startTime, formData.endTime, existingClasses, editingClassId, instructors]);
   
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -281,17 +339,56 @@ const ClassForm = ({
 
         <div>
           <Label htmlFor="instructor" className="text-xs font-medium mb-1.5 block">Instructor</Label>
-          <Select value={formData.instructor} onValueChange={(value) => handleSelectChange('instructor', value)}>
+          <Select 
+            value={formData.instructorId?.toString() || ''} 
+            onValueChange={(value) => {
+              const id = parseInt(value);
+              const instructor = instructors.find(i => i.id === id);
+              handleSelectChange('instructorId', value);
+              handleSelectChange('instructor', instructor?.name || '');
+            }}
+          >
             <SelectTrigger className={`h-10 ${instructorConflict ? 'border-amber-500' : ''}`}>
-              <SelectValue placeholder="Select instructor" />
+              <SelectValue placeholder="Select instructor">
+                {formData.instructorId && instructors.find(i => i.id === formData.instructorId) && (
+                  <div className="flex items-center gap-2">
+                    {instructors.find(i => i.id === formData.instructorId)?.photoUrl ? (
+                      <img 
+                        src={instructors.find(i => i.id === formData.instructorId)?.photoUrl || ''} 
+                        alt="" 
+                        className="w-5 h-5 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium ${
+                        isDark ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {instructors.find(i => i.id === formData.instructorId)?.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                    <span>{instructors.find(i => i.id === formData.instructorId)?.name}</span>
+                  </div>
+                )}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {instructors.length === 0 ? (
-                <SelectItem value="__no_instructors__" disabled>No instructors</SelectItem>
+                <SelectItem value="__no_instructors__" disabled>No instructors available</SelectItem>
               ) : (
                 instructors.map((instructor) => (
-                  <SelectItem key={instructor.id} value={instructor.name}>
-                    {instructor.name}
+                  <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                    <div className="flex items-center gap-2">
+                      {instructor.photoUrl ? (
+                        <img src={instructor.photoUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                      ) : (
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium ${
+                          isDark ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          {instructor.name?.charAt(0) || '?'}
+                        </div>
+                      )}
+                      <span>{instructor.name}</span>
+                      <span className="text-xs text-muted-foreground">({instructor.role})</span>
+                    </div>
                   </SelectItem>
                 ))
               )}
@@ -311,7 +408,7 @@ const ClassForm = ({
               Schedule conflict
             </p>
             <p className={`text-xs mt-0.5 ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>
-              {formData.instructor} is already teaching {instructorConflict.className} ({instructorConflict.schedule})
+              {instructorConflict.instructorName} is already teaching {instructorConflict.className} ({instructorConflict.schedule})
             </p>
           </div>
         </div>
@@ -547,7 +644,14 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [instructors, setInstructors] = useState([]);
+  const [instructors, setInstructors] = useState<{
+    id: number;
+    name: string;
+    fullName: string;
+    role: string;
+    photoUrl: string | null;
+    email: string | null;
+  }[]>([]);
   
   // Floor plan modal state
   const [isFloorPlanModalOpen, setIsFloorPlanModalOpen] = useState(false);
@@ -575,6 +679,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     program: '',
     level: '',
     instructor: '',
+    instructorId: null as number | null,
     days: [] as string[],
     startTime: '',
     endTime: '',
@@ -607,24 +712,20 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     }
   };
 
-  // Fetch classes and instructors on component mount
+  // Fetch classes on component mount
   useEffect(() => {
     fetchClasses();
-    fetchInstructors();
   }, []);
 
-  const fetchInstructors = async () => {
-    try {
-      const response = await fetch(`${API_URL}/staff/instructors`);
-      const data = await response.json();
-      
-      if (Array.isArray(data)) {
-        setInstructors(data);
-      }
-    } catch (error) {
-      console.error('Error fetching instructors:', error);
+  // Fetch instructors using tRPC
+  const { data: instructorsData } = trpc.staff.getInstructors.useQuery();
+  
+  // Update instructors state when data changes
+  useEffect(() => {
+    if (instructorsData?.instructors) {
+      setInstructors(instructorsData.instructors);
     }
-  };
+  }, [instructorsData]);
 
   const fetchClasses = async () => {
     try {
@@ -712,6 +813,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
       program: '',
       level: '',
       instructor: '',
+      instructorId: null,
       days: [],
       startTime: '',
       endTime: '',
@@ -763,6 +865,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
           type: formData.program,
           level: formData.level || 'All Levels',
           instructor: formData.instructor,
+          instructorId: formData.instructorId,
           schedule: schedule,
           time: time,
           room: formData.room,
@@ -822,6 +925,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
       program: classItem.type || '',
       level: classItem.level || '',
       instructor: classItem.instructor || '',
+      instructorId: classItem.instructorId || null,
       days: daysArray,
       startTime: startTime,
       endTime: endTime,
@@ -862,6 +966,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
           type: formData.program,
           level: formData.level || 'All Levels',
           instructor: formData.instructor,
+          instructorId: formData.instructorId,
           schedule: schedule,
           time: time,
           room: formData.room,
@@ -973,7 +1078,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 </div>
                 {/* Preview - Right side (40%) - Hidden on mobile */}
                 <div className="hidden md:block flex-[2] min-w-0">
-                  <LandscapePreviewCard formData={formData} programs={programs} isDark={isDarkMode} />
+                  <LandscapePreviewCard formData={formData} programs={programs} instructors={instructors} isDark={isDarkMode} />
                 </div>
               </div>
             </DialogContent>
@@ -1187,7 +1292,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               </div>
               {/* Preview - Right side (40%) - Hidden on mobile */}
               <div className="hidden md:block flex-[2] min-w-0">
-                <LandscapePreviewCard formData={formData} programs={programs} isDark={isDarkMode} />
+                <LandscapePreviewCard formData={formData} programs={programs} instructors={instructors} isDark={isDarkMode} />
               </div>
             </div>
           </DialogContent>
