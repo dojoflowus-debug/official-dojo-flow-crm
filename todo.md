@@ -3493,3 +3493,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add conflict detection logic to check instructor schedule
 - [x] Display warning when instructor has overlapping class times
 - [x] Test validation with conflicting schedules
+
+
+## Landscape Class Preview Card
+- [x] Create two-column layout (60% form, 40% preview) for desktop/tablet
+- [x] Build landscape preview card with glass/blur effect
+- [x] Show live-updating class details (name, days, time, instructor, room, capacity, level)
+- [x] Hide/collapse preview on mobile into summary chip
+- [x] Test preview updates in real-time

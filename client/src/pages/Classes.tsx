@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign, ChevronDown, ChevronUp, AlertCircle, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
@@ -39,79 +39,122 @@ const DayChip = ({ day, selected, onClick, isDark }: { day: string; selected: bo
   </button>
 );
 
-// Live class preview component
-const ClassPreview = ({ formData, programs, isDark }: { formData: any; programs: any[]; isDark: boolean }) => {
-  // Format time for display
-  const formatTime = (time: string) => {
-    if (!time) return '';
-    const [hours, minutes] = time.split(':');
-    const h = parseInt(hours);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const hour12 = h % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-  };
+// Helper functions for formatting
+const formatTimeDisplay = (time: string) => {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':');
+  const h = parseInt(hours);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
+};
 
-  // Format days for display
-  const formatDays = (days: string[]) => {
-    if (days.length === 0) return '';
-    if (days.length === 1) return days[0];
-    if (days.length === 2) return `${days[0]} & ${days[1]}`;
-    return days.slice(0, -1).join(', ') + ' & ' + days[days.length - 1];
-  };
+const formatDaysDisplay = (days: string[]) => {
+  if (days.length === 0) return '';
+  if (days.length === 1) return days[0];
+  if (days.length === 2) return `${days[0]} & ${days[1]}`;
+  return days.slice(0, -1).join(', ') + ' & ' + days[days.length - 1];
+};
 
-  // Get program info
-  const selectedProgram = programs.find(p => p.name === formData.program);
-  
-  // Build class name
+// Landscape Preview Card - Shows on right side of modal (desktop/tablet)
+const LandscapePreviewCard = ({ formData, programs, isDark }: { formData: any; programs: any[]; isDark: boolean }) => {
   const className = formData.name || 
-    (formData.program && formData.level ? `${formData.program} ${formData.level}` : formData.program) || 
+    (formData.program && formData.level && formData.level !== 'All Levels' ? `${formData.program} ${formData.level}` : formData.program) || 
     'New Class';
-
-  // Build schedule line
   const hasSchedule = formData.days.length > 0 && formData.startTime && formData.endTime;
   const scheduleLine = hasSchedule 
-    ? `${formatDays(formData.days)} • ${formatTime(formData.startTime)}–${formatTime(formData.endTime)}`
-    : 'Select days and times';
+    ? `${formatDaysDisplay(formData.days)} • ${formatTimeDisplay(formData.startTime)}–${formatTimeDisplay(formData.endTime)}`
+    : null;
+  const isComplete = formData.program && formData.days.length > 0 && formData.startTime && formData.endTime;
 
-  // Build details line
-  const details: string[] = [];
-  if (formData.instructor) details.push(`Instructor: ${formData.instructor}`);
-  if (formData.capacity) details.push(`Capacity: ${formData.capacity}`);
-  if (formData.ageMin || formData.ageMax) {
-    const ageRange = formData.ageMin && formData.ageMax 
-      ? `Ages ${formData.ageMin}–${formData.ageMax}`
-      : formData.ageMin ? `Ages ${formData.ageMin}+` : `Ages up to ${formData.ageMax}`;
-    details.push(ageRange);
-  }
+  // Preview row component
+  const PreviewRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null }) => (
+    <div className="flex items-center gap-3 py-1.5">
+      <Icon className={`w-4 h-4 flex-shrink-0 ${!value ? (isDark ? 'text-white/20' : 'text-gray-300') : (isDark ? 'text-white/40' : 'text-gray-400')}`} />
+      <div className="flex-1 min-w-0">
+        <span className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-white/30' : 'text-gray-400'}`}>{label}</span>
+        <p className={`text-sm font-medium truncate -mt-0.5 ${!value ? (isDark ? 'text-white/20' : 'text-gray-300') : (isDark ? 'text-white' : 'text-gray-900')}`}>
+          {value || '—'}
+        </p>
+      </div>
+    </div>
+  );
 
+  return (
+    <div className={`rounded-2xl p-5 h-full transition-all duration-300 ${
+      isDark 
+        ? 'bg-white/[0.03] backdrop-blur-xl border border-white/[0.06]' 
+        : 'bg-white/80 backdrop-blur-xl border border-gray-200/60 shadow-sm'
+    }`}>
+      {/* Header */}
+      <div className="mb-4 pb-3 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`w-2 h-2 rounded-full transition-colors ${isComplete ? 'bg-green-500' : 'bg-amber-500'}`} />
+          <span className={`text-[11px] font-medium uppercase tracking-wide ${isComplete ? 'text-green-500' : 'text-amber-500'}`}>
+            {isComplete ? 'Ready to create' : 'Complete the form'}
+          </span>
+        </div>
+        <h3 className={`text-xl font-semibold leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {className}
+        </h3>
+        {scheduleLine && (
+          <p className={`text-sm mt-1 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
+            {scheduleLine}
+          </p>
+        )}
+      </div>
+
+      {/* Details */}
+      <div className="space-y-0">
+        <PreviewRow icon={Calendar} label="Schedule" value={scheduleLine} />
+        <PreviewRow icon={User} label="Instructor" value={formData.instructor} />
+        <PreviewRow icon={MapPin} label="Room" value={formData.room} />
+        <PreviewRow icon={Users} label="Capacity" value={formData.capacity ? `${formData.capacity} students` : null} />
+        <PreviewRow icon={GraduationCap} label="Level" value={formData.level || 'All Levels'} />
+        {(formData.ageMin || formData.ageMax) && (
+          <PreviewRow 
+            icon={Users} 
+            label="Ages" 
+            value={formData.ageMin && formData.ageMax 
+              ? `${formData.ageMin}–${formData.ageMax} years`
+              : formData.ageMin ? `${formData.ageMin}+ years` : `Up to ${formData.ageMax} years`
+            } 
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Mobile Summary Chip - Shows on mobile instead of full preview
+const MobileSummaryChip = ({ formData, isDark }: { formData: any; isDark: boolean }) => {
+  const className = formData.program || 'New Class';
+  const hasSchedule = formData.days.length > 0 && formData.startTime && formData.endTime;
   const isComplete = formData.program && formData.days.length > 0 && formData.startTime && formData.endTime;
 
   return (
-    <div className={`rounded-xl p-4 transition-all duration-200 ${
+    <div className={`rounded-xl px-4 py-3 flex items-center gap-3 ${
       isComplete
-        ? isDark ? 'bg-primary/10 border border-primary/20' : 'bg-primary/5 border border-primary/10'
+        ? isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-200'
         : isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
     }`}>
-      <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-          isComplete ? 'bg-primary/20' : isDark ? 'bg-white/10' : 'bg-gray-200'
-        }`}>
-          <Calendar className={`w-5 h-5 ${isComplete ? 'text-primary' : isDark ? 'text-white/40' : 'text-gray-400'}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {className}
-          </h4>
-          <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-            {scheduleLine}
-          </p>
-          {details.length > 0 && (
-            <p className={`text-xs mt-1 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
-              {details.join(' • ')}
-            </p>
-          )}
-        </div>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+        isComplete ? 'bg-green-500/20' : isDark ? 'bg-white/10' : 'bg-gray-200'
+      }`}>
+        <Calendar className={`w-4 h-4 ${isComplete ? 'text-green-500' : isDark ? 'text-white/40' : 'text-gray-400'}`} />
       </div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {className}
+        </p>
+        <p className={`text-xs truncate ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
+          {hasSchedule 
+            ? `${formatDaysDisplay(formData.days)} • ${formatTimeDisplay(formData.startTime)}–${formatTimeDisplay(formData.endTime)}`
+            : 'Select days and times'
+          }
+        </p>
+      </div>
+      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isComplete ? 'bg-green-500' : 'bg-amber-500'}`} />
     </div>
   );
 };
@@ -209,8 +252,10 @@ const ClassForm = ({
   
   return (
     <form onSubmit={onSubmit} className="space-y-5">
-      {/* Live Preview - Always visible at top */}
-      <ClassPreview formData={formData} programs={programs} isDark={isDark} />
+      {/* Mobile Summary Chip - Only visible on mobile */}
+      <div className="md:hidden">
+        <MobileSummaryChip formData={formData} isDark={isDark} />
+      </div>
 
       {/* Row 1: Program & Instructor */}
       <div className="grid grid-cols-2 gap-3">
@@ -894,34 +939,43 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 Add New Class
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Class Time</DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   Create a recurring class time under an existing program.
                 </p>
               </DialogHeader>
-              <ClassForm 
-                formData={formData}
-                handleInputChange={handleInputChange}
-                handleSelectChange={handleSelectChange}
-                handleDayToggle={handleDayToggle}
-                instructors={instructors}
-                programs={programs}
-                existingClasses={classes}
-                editingClassId={null}
-                onProgramChange={handleProgramChange}
-                onSubmit={handleAddClass}
-                submitText="Add Class Time"
-                onCancel={() => {
-                  setIsAddModalOpen(false);
-                  resetForm();
-                }}
-                showAdvanced={showAdvanced}
-                setShowAdvanced={setShowAdvanced}
-                timeError={timeError}
-                isDark={isDarkMode}
-              />
+              <div className="flex gap-6">
+                {/* Form - Left side (60%) */}
+                <div className="flex-[3] min-w-0">
+                  <ClassForm 
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                    handleSelectChange={handleSelectChange}
+                    handleDayToggle={handleDayToggle}
+                    instructors={instructors}
+                    programs={programs}
+                    existingClasses={classes}
+                    editingClassId={null}
+                    onProgramChange={handleProgramChange}
+                    onSubmit={handleAddClass}
+                    submitText="Add Class Time"
+                    onCancel={() => {
+                      setIsAddModalOpen(false);
+                      resetForm();
+                    }}
+                    showAdvanced={showAdvanced}
+                    setShowAdvanced={setShowAdvanced}
+                    timeError={timeError}
+                    isDark={isDarkMode}
+                  />
+                </div>
+                {/* Preview - Right side (40%) - Hidden on mobile */}
+                <div className="hidden md:block flex-[2] min-w-0">
+                  <LandscapePreviewCard formData={formData} programs={programs} isDark={isDarkMode} />
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -1098,35 +1152,44 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
         {/* Edit Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Class Time</DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 Update the class time details.
               </p>
             </DialogHeader>
-            <ClassForm 
-              formData={formData}
-              handleInputChange={handleInputChange}
-              handleSelectChange={handleSelectChange}
-              handleDayToggle={handleDayToggle}
-              instructors={instructors}
-              programs={programs}
-              existingClasses={classes}
-              editingClassId={editingClass?.id}
-              onProgramChange={handleProgramChange}
-              onSubmit={handleUpdateClass}
-              submitText="Update Class Time"
-              onCancel={() => {
-                setIsEditModalOpen(false);
-                setEditingClass(null);
-                resetForm();
-              }}
-              showAdvanced={showAdvanced}
-              setShowAdvanced={setShowAdvanced}
-              timeError={timeError}
-              isDark={isDarkMode}
-            />
+            <div className="flex gap-6">
+              {/* Form - Left side (60%) */}
+              <div className="flex-[3] min-w-0">
+                <ClassForm 
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  handleSelectChange={handleSelectChange}
+                  handleDayToggle={handleDayToggle}
+                  instructors={instructors}
+                  programs={programs}
+                  existingClasses={classes}
+                  editingClassId={editingClass?.id}
+                  onProgramChange={handleProgramChange}
+                  onSubmit={handleUpdateClass}
+                  submitText="Update Class Time"
+                  onCancel={() => {
+                    setIsEditModalOpen(false);
+                    setEditingClass(null);
+                    resetForm();
+                  }}
+                  showAdvanced={showAdvanced}
+                  setShowAdvanced={setShowAdvanced}
+                  timeError={timeError}
+                  isDark={isDarkMode}
+                />
+              </div>
+              {/* Preview - Right side (40%) - Hidden on mobile */}
+              <div className="hidden md:block flex-[2] min-w-0">
+                <LandscapePreviewCard formData={formData} programs={programs} isDark={isDarkMode} />
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
         
