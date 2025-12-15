@@ -55,7 +55,8 @@ import {
   List,
   Save,
   Upload,
-  RefreshCw
+  RefreshCw,
+  FileSpreadsheet
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -183,7 +184,21 @@ export default function KaiCommand() {
     }
   };
   
+  // Helper to extract xlsx/csv attachment links from message content
+  const extractScheduleLinks = (content: string): { fileName: string; url: string }[] => {
+    const linkRegex = /\[([^\]]+\.(xlsx|xls|csv))\]\(([^)]+)\)/gi;
+    const links: { fileName: string; url: string }[] = [];
+    let match;
+    while ((match = linkRegex.exec(content)) !== null) {
+      links.push({ fileName: match[1], url: match[3] });
+    }
+    return links;
+  };
+
   const renderMessageWithMentions = (content: string) => {
+    // First check for xlsx/csv attachment links and render them as actionable cards
+    const scheduleLinks = extractScheduleLinks(content);
+    
     // First, handle [STUDENT_ID:X] markers for Save to Card functionality
     const studentIdRegex = /\*\*([^*]+)\*\*\s*\[STUDENT_ID:(\d+)\]:\s*([^\n]+)/g;
     const hasStudentIds = studentIdRegex.test(content);
@@ -320,6 +335,52 @@ export default function KaiCommand() {
     // Add remaining text
     if (lastIndex < content.length) {
       parts.push(content.slice(lastIndex));
+    }
+    
+    // If there are schedule links, append actionable cards
+    if (scheduleLinks.length > 0) {
+      const textContent = parts.length > 0 ? parts : content;
+      // Remove the markdown links from the displayed text
+      const cleanedContent = typeof textContent === 'string' 
+        ? textContent.replace(/Attachments:\s*\[([^\]]+\.(xlsx|xls|csv))\]\([^)]+\)/gi, '')
+        : textContent;
+      
+      return (
+        <div>
+          <div>{cleanedContent}</div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {scheduleLinks.map((link, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isCinematic || isFocusMode ? 'bg-white/10 border border-white/20' : isDark ? 'bg-white/5 border border-white/10' : 'bg-slate-100 border border-slate-200'}`}
+              >
+                <div className={`w-8 h-8 rounded flex items-center justify-center ${isCinematic || isFocusMode ? 'bg-green-500/20' : isDark ? 'bg-green-500/10' : 'bg-green-100'}`}>
+                  <FileSpreadsheet className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-green-400' : isDark ? 'text-green-400' : 'text-green-600'}`} />
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-xs font-medium truncate max-w-[150px] ${isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-700'}`}>
+                    {link.fileName}
+                  </p>
+                  <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                    Schedule file
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleScheduleExtraction(link.url, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', link.fileName)}
+                  disabled={isExtractingSchedule}
+                  className={`ml-2 px-3 py-1.5 text-xs rounded font-medium transition-colors flex items-center gap-1.5 ${isExtractingSchedule ? 'opacity-50 cursor-not-allowed' : ''} bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white`}
+                >
+                  {isExtractingSchedule ? (
+                    <><Loader2 className="w-3 h-3 animate-spin" /> Analyzing...</>
+                  ) : (
+                    <><Upload className="w-3 h-3" /> Import Schedule</>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
     }
     
     return parts.length > 0 ? parts : content;
@@ -2159,24 +2220,36 @@ export default function KaiCommand() {
                             {/* Render attachment cards for user messages */}
                             {message.attachments && message.attachments.length > 0 && (
                               <div className="flex flex-wrap gap-2 mt-2">
-                                {message.attachments.map((att) => (
-                                  <div
-                                    key={att.id}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isCinematic || isFocusMode ? 'bg-white/10 border border-white/20' : isDark ? 'bg-white/5 border border-white/10' : 'bg-slate-100 border border-slate-200'}`}
-                                  >
-                                    <div className={`w-8 h-8 rounded flex items-center justify-center ${isCinematic || isFocusMode ? 'bg-white/10' : isDark ? 'bg-white/5' : 'bg-white'}`}>
-                                      <File className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
+                                {message.attachments.map((att) => {
+                                  const isScheduleFile = att.fileName?.endsWith('.xlsx') || att.fileName?.endsWith('.xls') || att.fileName?.endsWith('.csv');
+                                  return (
+                                    <div
+                                      key={att.id}
+                                      className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isCinematic || isFocusMode ? 'bg-white/10 border border-white/20' : isDark ? 'bg-white/5 border border-white/10' : 'bg-slate-100 border border-slate-200'}`}
+                                    >
+                                      <div className={`w-8 h-8 rounded flex items-center justify-center ${isCinematic || isFocusMode ? 'bg-white/10' : isDark ? 'bg-white/5' : 'bg-white'}`}>
+                                        <File className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className={`text-xs font-medium truncate max-w-[150px] ${isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-700'}`}>
+                                          {att.fileName}
+                                        </p>
+                                        <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                                          {formatFileSize(att.fileSize)}
+                                        </p>
+                                      </div>
+                                      {isScheduleFile && att.url && (
+                                        <button
+                                          onClick={() => handleScheduleExtraction(att.url!, att.fileType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', att.fileName, att.storageKey)}
+                                          disabled={isExtractingSchedule}
+                                          className={`ml-2 px-2 py-1 text-xs rounded font-medium transition-colors ${isExtractingSchedule ? 'opacity-50 cursor-not-allowed' : ''} ${isCinematic || isFocusMode ? 'bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white' : isDark ? 'bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white' : 'bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white'}`}
+                                        >
+                                          {isExtractingSchedule ? 'Analyzing...' : 'Import Schedule'}
+                                        </button>
+                                      )}
                                     </div>
-                                    <div className="min-w-0">
-                                      <p className={`text-xs font-medium truncate max-w-[150px] ${isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-700'}`}>
-                                        {att.fileName}
-                                      </p>
-                                      <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
-                                        {formatFileSize(att.fileSize)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             )}
                           </div>

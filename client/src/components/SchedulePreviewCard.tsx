@@ -270,11 +270,21 @@ export function SchedulePreviewCard({
             </div>
           </ScrollArea>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-4 mt-4 border-t border-inherit">
+        </div>
+      )}
+
+      {/* Action Buttons - Outside ScrollArea for better click handling */}
+      {isExpanded && (
+        <div className="flex gap-2 p-4 border-t border-inherit relative z-50" onClick={(e) => e.stopPropagation()}>
             <Button
+              type="button"
               className="flex-1 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white"
-              onClick={handleConfirm}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[SchedulePreviewCard] Button clicked!');
+                handleConfirm();
+              }}
               disabled={isProcessing || selectedIndices.size === 0}
             >
               {isProcessing ? (
@@ -297,7 +307,6 @@ export function SchedulePreviewCard({
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
-          </div>
         </div>
       )}
     </Card>

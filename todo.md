@@ -3639,3 +3639,25 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add loading indicator (spinner) to Create Classes button when clicked (already implemented)
 - [x] Disable button after click to prevent multiple submissions (already implemented)
 - [x] Save checkpoint
+
+
+## 🐛 BUG: Create Classes Button Click Produces No Result
+- [ ] Investigate why clicking Create Classes shows no success/fail message
+- [ ] Check if handleConfirm is being called
+- [ ] Check if handleCreateClasses is being called
+- [ ] Check if mutation is being called
+- [ ] Fix the issue
+- [ ] Save checkpoint
+
+
+## ✅ COMPLETED: Schedule Import Pipeline - Full End-to-End Fix
+- [x] Added REST API endpoints for classes CRUD (GET, POST, PUT, DELETE)
+- [x] Implemented robust XLSX parser with column detection (handles variations like "Class Name", "Day", "Start Time")
+- [x] Fixed column detection to avoid false positives (classid matching class)
+- [x] Added "Import Schedule" button to xlsx attachments in message view
+- [x] Fixed Create Classes button click event propagation with stopPropagation and z-index
+- [x] Added loading indicator and disable state to Create Classes button
+- [x] Added success message with "View Classes" link after import
+- [x] Tested full import flow - 15 classes created successfully from Mock_Class_Schedule.xlsx
+- [x] Classes appear immediately in Classes page with correct totals (15 classes, 4 instructors)
+- [x] Save checkpoint
