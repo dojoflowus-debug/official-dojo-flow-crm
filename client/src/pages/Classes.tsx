@@ -12,6 +12,7 @@ import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, E
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
+import { trpc } from '@/lib/trpc';
 
 const API_URL = '/api';  // Use relative path to work from any device
 
@@ -55,6 +56,8 @@ const ClassForm = ({
   handleSelectChange, 
   handleDayToggle,
   instructors, 
+  programs,
+  onProgramChange,
   onSubmit, 
   submitText, 
   onCancel,
@@ -68,6 +71,8 @@ const ClassForm = ({
   handleSelectChange: (field: string, value: string) => void;
   handleDayToggle: (day: string) => void;
   instructors: any[];
+  programs: any[];
+  onProgramChange: (programId: string) => void;
   onSubmit: (e: any) => void;
   submitText: string;
   onCancel: () => void;
@@ -87,21 +92,25 @@ const ClassForm = ({
         <div className="space-y-4">
           <div>
             <Label htmlFor="program">Program *</Label>
-            <Select value={formData.program} onValueChange={(value) => handleSelectChange('program', value)}>
+            <Select value={formData.program} onValueChange={(value) => onProgramChange(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select program" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Little Ninjas">Little Ninjas</SelectItem>
-                <SelectItem value="Kids Martial Arts">Kids Martial Arts</SelectItem>
-                <SelectItem value="Teens">Teens</SelectItem>
-                <SelectItem value="Adults">Adults</SelectItem>
-                <SelectItem value="Kickboxing">Kickboxing</SelectItem>
-                <SelectItem value="Jiu-Jitsu">Jiu-Jitsu</SelectItem>
-                <SelectItem value="MMA">MMA</SelectItem>
-                <SelectItem value="Private Lessons">Private Lessons</SelectItem>
+                {programs.length === 0 ? (
+                  <SelectItem value="__no_programs__" disabled>No programs available - create one first</SelectItem>
+                ) : (
+                  programs.map((program) => (
+                    <SelectItem key={program.id} value={program.name}>
+                      {program.name} {program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
+            <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
+              <a href="/programs" className="text-primary hover:underline">Manage programs</a> to add or edit pricing
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -328,6 +337,9 @@ const ClassForm = ({
 export default function Classes({ onLogout, theme, toggleTheme }) {
   const isDarkMode = useDarkMode()
   const [classes, setClasses] = useState([]);
+  
+  // Fetch programs from database
+  const { data: programs = [] } = trpc.programs.list.useQuery();
   const [stats, setStats] = useState({
     totalClasses: 0,
     totalStudents: 0,
@@ -382,6 +394,21 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   
   // Time validation error
   const [timeError, setTimeError] = useState('');
+  
+  // Handle program selection - auto-fill pricing from program defaults
+  const handleProgramChange = (programName: string) => {
+    setFormData(prev => ({ ...prev, program: programName }));
+    
+    // Find the selected program and auto-fill pricing if not already set
+    const selectedProgram = programs.find(p => p.name === programName);
+    if (selectedProgram && selectedProgram.price && !formData.monthlyCost) {
+      setFormData(prev => ({
+        ...prev,
+        program: programName,
+        monthlyCost: (selectedProgram.price / 100).toString()
+      }));
+    }
+  };
 
   // Fetch classes and instructors on component mount
   useEffect(() => {
@@ -728,6 +755,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 handleSelectChange={handleSelectChange}
                 handleDayToggle={handleDayToggle}
                 instructors={instructors}
+                programs={programs}
+                onProgramChange={handleProgramChange}
                 onSubmit={handleAddClass}
                 submitText="Add Class Time"
                 onCancel={() => {
@@ -928,6 +957,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               handleSelectChange={handleSelectChange}
               handleDayToggle={handleDayToggle}
               instructors={instructors}
+              programs={programs}
+              onProgramChange={handleProgramChange}
               onSubmit={handleUpdateClass}
               submitText="Update Class Time"
               onCancel={() => {

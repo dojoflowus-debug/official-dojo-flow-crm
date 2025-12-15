@@ -2998,6 +2998,134 @@ Rules:
         };
       }),
   }),
+
+  // Programs management router
+  programs: router({
+    // Get all programs
+    list: publicProcedure.query(async () => {
+      const { getDb } = await import("./db");
+      const { programs } = await import("../drizzle/schema");
+      const { desc } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      const result = await db.select().from(programs).orderBy(desc(programs.createdAt));
+      return result;
+    }),
+
+    // Get a single program by ID
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { programs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const result = await db.select().from(programs).where(eq(programs.id, input.id));
+        return result[0] || null;
+      }),
+
+    // Create a new program
+    create: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        type: z.enum(["membership", "class_pack", "drop_in", "private"]),
+        ageRange: z.string().optional(),
+        billing: z.enum(["monthly", "weekly", "per_session", "one_time"]).optional(),
+        price: z.number().optional(),
+        contractLength: z.string().optional(),
+        maxSize: z.number().optional(),
+        isCoreProgram: z.boolean().optional(),
+        showOnKiosk: z.boolean().optional(),
+        allowAutopilot: z.boolean().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { programs } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const result = await db.insert(programs).values({
+          name: input.name,
+          type: input.type,
+          ageRange: input.ageRange,
+          billing: input.billing,
+          price: input.price,
+          contractLength: input.contractLength,
+          maxSize: input.maxSize || 20,
+          isCoreProgram: input.isCoreProgram ? 1 : 0,
+          showOnKiosk: input.showOnKiosk !== false ? 1 : 0,
+          allowAutopilot: input.allowAutopilot ? 1 : 0,
+          description: input.description,
+          isActive: 1,
+        });
+        
+        return { success: true, id: Number(result.insertId) };
+      }),
+
+    // Update an existing program
+    update: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        type: z.enum(["membership", "class_pack", "drop_in", "private"]).optional(),
+        ageRange: z.string().optional(),
+        billing: z.enum(["monthly", "weekly", "per_session", "one_time"]).optional(),
+        price: z.number().optional(),
+        contractLength: z.string().optional(),
+        maxSize: z.number().optional(),
+        isCoreProgram: z.boolean().optional(),
+        showOnKiosk: z.boolean().optional(),
+        allowAutopilot: z.boolean().optional(),
+        description: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { programs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const { id, ...updates } = input;
+        
+        // Convert boolean fields to int
+        const dbUpdates: any = { ...updates };
+        if (typeof updates.isCoreProgram === 'boolean') dbUpdates.isCoreProgram = updates.isCoreProgram ? 1 : 0;
+        if (typeof updates.showOnKiosk === 'boolean') dbUpdates.showOnKiosk = updates.showOnKiosk ? 1 : 0;
+        if (typeof updates.allowAutopilot === 'boolean') dbUpdates.allowAutopilot = updates.allowAutopilot ? 1 : 0;
+        if (typeof updates.isActive === 'boolean') dbUpdates.isActive = updates.isActive ? 1 : 0;
+        
+        await db.update(programs)
+          .set(dbUpdates)
+          .where(eq(programs.id, id));
+        
+        return { success: true };
+      }),
+
+    // Delete a program
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { programs } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        await db.delete(programs).where(eq(programs.id, input.id));
+        
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

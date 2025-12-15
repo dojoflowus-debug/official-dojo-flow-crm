@@ -24,7 +24,8 @@ import {
   Zap,
   MessageSquare,
   Shield,
-  Wrench
+  Wrench,
+  BookOpen
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
 import { useAuth } from '@/hooks/useAuth'
@@ -44,6 +45,7 @@ const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: 'students', name: 'Students', href: '/students', icon: 'Users' },
   { id: 'leads', name: 'Leads', href: '/leads', icon: 'UserPlus' },
   { id: 'classes', name: 'Classes', href: '/classes', icon: 'Calendar' },
+  { id: 'programs', name: 'Programs', href: '/programs', icon: 'BookOpen' },
   { id: 'kiosk', name: 'Kiosk', href: '/kiosk', icon: 'Tablet' },
   { id: 'receptionist', name: 'Receptionist', href: '/receptionist', icon: 'Headphones' },
   { id: 'staff', name: 'Staff', href: '/staff', icon: 'UserCog' },
@@ -84,7 +86,8 @@ const ICON_MAP = {
   Zap,
   MessageSquare,
   Shield,
-  Wrench
+  Wrench,
+  BookOpen
 }
 
 // Logout Button Component

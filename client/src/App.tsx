@@ -39,6 +39,7 @@ import DataDashboard from "./pages/DataDashboard";
 import MinimalDashboard from "./pages/MinimalDashboard";
 // Kiosk removed - Kai Command is the central focus
 import Classes from "./pages/Classes";
+import Programs from "./pages/Programs";
 import Staff from "./pages/Staff";
 import Billing from "./pages/Billing";
 import BillingSetup from "./pages/BillingSetup";
@@ -117,6 +118,7 @@ function Router() {
       <Route path="/test-data" element={<TestData />} />
       {/* Kiosk removed - Kai Command is the central focus */}
       <Route path="/classes" element={<Classes />} />
+      <Route path="/programs" element={<Programs />} />
       <Route path="/staff" element={<Staff />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/billing/setup" element={<BillingSetup />} />
