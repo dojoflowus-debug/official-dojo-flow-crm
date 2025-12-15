@@ -3551,3 +3551,22 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test upload works reliably via drag/drop AND paperclip
 - [ ] Save checkpoint
 
+
+
+## 🚨 URGENT: Fix Attachment-to-Analyzer Pipeline
+
+### Issues
+- Kai schedule analysis fails with generic error message
+- Chat posts raw markdown link instead of proper attachment card
+- Analyzer may not be able to fetch CloudFront URL server-side
+
+### Tasks
+- [ ] Analyze current attachment handling and schedule extraction code
+- [ ] Fix attachment payload to send typed object (fileId, filename, mimeType, size) instead of markdown link
+- [ ] Fix server-side file reading to use storage key instead of URL fetch
+- [ ] Improve error reporting with specific failure reasons (missing columns, invalid format, fetch errors)
+- [ ] Add column-mapping fallback UI for unrecognized spreadsheet formats
+- [ ] Render attachments as proper cards in chat, not markdown links
+- [ ] Test schedule extraction with Mock_Class_Schedule.xlsx
+- [ ] Save checkpoint
+

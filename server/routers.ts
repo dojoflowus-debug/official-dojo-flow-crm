@@ -2887,21 +2887,45 @@ Return the data as a structured JSON object.`
     // Extract schedule from uploaded file
     extractSchedule: protectedProcedure
       .input(z.object({
-        fileUrl: z.string(),
+        fileUrl: z.string().optional(),
+        storageKey: z.string().optional(),
         fileType: z.string(),
         fileName: z.string(),
       }))
       .mutation(async ({ input }) => {
         const xlsx = await import('xlsx');
+        const { storageGetBuffer } = await import('./storage');
         
         try {
-          // Fetch the file
-          const response = await fetch(input.fileUrl);
-          if (!response.ok) {
-            return { success: false, classes: [], confidence: 0, error: 'Failed to fetch file' };
-          }
+          let arrayBuffer: ArrayBuffer;
           
-          const arrayBuffer = await response.arrayBuffer();
+          // Try to read from storage key first (more reliable), then fall back to URL
+          if (input.storageKey) {
+            try {
+              arrayBuffer = await storageGetBuffer(input.storageKey);
+            } catch (storageError: any) {
+              console.error('Storage read failed, trying URL:', storageError);
+              // Fall back to URL if storage key fails
+              if (input.fileUrl) {
+                const response = await fetch(input.fileUrl);
+                if (!response.ok) {
+                  return { success: false, classes: [], confidence: 0, error: `Failed to fetch file: ${response.status} ${response.statusText}` };
+                }
+                arrayBuffer = await response.arrayBuffer();
+              } else {
+                return { success: false, classes: [], confidence: 0, error: `Storage read failed: ${storageError.message}` };
+              }
+            }
+          } else if (input.fileUrl) {
+            // Fetch from URL
+            const response = await fetch(input.fileUrl);
+            if (!response.ok) {
+              return { success: false, classes: [], confidence: 0, error: `Failed to fetch file: ${response.status} ${response.statusText}` };
+            }
+            arrayBuffer = await response.arrayBuffer();
+          } else {
+            return { success: false, classes: [], confidence: 0, error: 'No file URL or storage key provided' };
+          }
           const workbook = xlsx.read(arrayBuffer, { type: 'array' });
           
           // Get the first sheet
@@ -2912,8 +2936,11 @@ Return the data as a structured JSON object.`
           const data = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
           
           if (data.length < 2) {
-            return { success: false, classes: [], confidence: 0, error: 'File appears to be empty or has no data rows' };
+            return { success: false, classes: [], confidence: 0, error: 'File appears to be empty or has no data rows', rawHeaders: data[0] || [] };
           }
+          
+          // Extract headers for potential column mapping
+          const rawHeaders = (data[0] || []).map(h => String(h || '').trim()).filter(Boolean);
           
           // Convert to text for LLM
           const textContent = data.map(row => row.join(' | ')).join('\n');
@@ -2972,15 +2999,40 @@ Rules:
             success: true,
             classes: parsed.classes || [],
             confidence: parsed.confidence || 0.8,
-            warnings: parsed.warnings || []
+            warnings: parsed.warnings || [],
+            rawHeaders
           };
         } catch (error: any) {
           console.error('Schedule extraction error:', error);
+          
+          // Provide specific error messages based on error type
+          let errorMessage = 'Failed to extract schedule';
+          let errorType = 'unknown';
+          
+          if (error.message?.includes('fetch') || error.message?.includes('storage')) {
+            errorMessage = `Could not read the file: ${error.message}`;
+            errorType = 'file_access';
+          } else if (error.message?.includes('sheet') || error.message?.includes('workbook')) {
+            errorMessage = 'Could not parse the spreadsheet. Please ensure it\'s a valid Excel or CSV file.';
+            errorType = 'parse_error';
+          } else if (error.message?.includes('JSON')) {
+            errorMessage = 'Could not process the extracted data. The file format may not be recognized.';
+            errorType = 'format_error';
+          } else if (error.message?.includes('LLM') || error.message?.includes('AI')) {
+            errorMessage = 'AI analysis failed. Please try again.';
+            errorType = 'ai_error';
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
           return {
             success: false,
             classes: [],
             confidence: 0,
-            error: error.message || 'Failed to extract schedule'
+            error: errorMessage,
+            errorType,
+            rawHeaders: [], // Will be populated if we can read headers
+            suggestColumnMapping: errorType === 'format_error'
           };
         }
       }),

@@ -100,3 +100,13 @@ export async function storageGet(relKey: string): Promise<{ key: string; url: st
     url: await buildDownloadUrl(baseUrl, key, apiKey),
   };
 }
+
+// Get file contents as ArrayBuffer directly from storage
+export async function storageGetBuffer(relKey: string): Promise<ArrayBuffer> {
+  const { url } = await storageGet(relKey);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file from storage: ${response.status} ${response.statusText}`);
+  }
+  return response.arrayBuffer();
+}

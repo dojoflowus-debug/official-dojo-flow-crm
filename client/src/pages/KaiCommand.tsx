@@ -91,6 +91,7 @@ interface Attachment {
   fileType: string;
   fileSize: number;
   url: string;
+  storageKey?: string; // Storage key for server-side file reading
   uploading?: boolean;
   error?: string;
   originalFile?: File; // Store original file for retry
@@ -856,10 +857,10 @@ export default function KaiCommand() {
             context: 'kai-command'
           });
 
-          // Update attachment with uploaded URL
+          // Update attachment with uploaded URL and storage key
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, url: result.url, uploading: false }
+              ? { ...att, url: result.url, storageKey: result.key, uploading: false }
               : att
           ));
           
@@ -873,8 +874,8 @@ export default function KaiCommand() {
             file.name.endsWith('.csv');
           
           if (isScheduleFile) {
-            // Auto-extract schedule from the file
-            handleScheduleExtraction(result.url, file.type, file.name);
+            // Auto-extract schedule from the file using storage key for reliable server-side reading
+            handleScheduleExtraction(result.url, file.type, file.name, result.key);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -934,10 +935,10 @@ export default function KaiCommand() {
           context: 'kai-command'
         });
 
-        // Update attachment with uploaded URL
+        // Update attachment with uploaded URL and storage key
         setAttachments(prev => prev.map(att => 
           att.id === attachmentId 
-            ? { ...att, url: result.url, uploading: false, error: undefined }
+            ? { ...att, url: result.url, storageKey: result.key, uploading: false, error: undefined }
             : att
         ));
         
@@ -953,7 +954,7 @@ export default function KaiCommand() {
           file.name.endsWith('.csv');
         
         if (isScheduleFile) {
-          handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
+          handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name, result.key);
         }
       } catch (error: any) {
         console.error('Retry upload failed:', error);
@@ -1058,10 +1059,10 @@ export default function KaiCommand() {
             context: 'kai-command'
           });
 
-          // Update attachment with uploaded URL
+          // Update attachment with uploaded URL and storage key
           setAttachments(prev => prev.map(att => 
             att.id === tempId 
-              ? { ...att, url: result.url, uploading: false }
+              ? { ...att, url: result.url, storageKey: result.key, uploading: false }
               : att
           ));
           
@@ -1075,8 +1076,8 @@ export default function KaiCommand() {
             file.name.endsWith('.csv');
           
           if (isScheduleFile) {
-            // Auto-extract schedule from the file
-            handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
+            // Auto-extract schedule from the file using storage key for reliable server-side reading
+            handleScheduleExtraction(result.url, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name, result.key);
           }
         } catch (error: any) {
           console.error('Upload failed:', error);
@@ -1108,7 +1109,7 @@ export default function KaiCommand() {
   };
 
   // Handle schedule extraction from uploaded file
-  const handleScheduleExtraction = async (fileUrl: string, fileType: string, fileName: string) => {
+  const handleScheduleExtraction = async (fileUrl: string, fileType: string, fileName: string, storageKey?: string) => {
     setIsExtractingSchedule(true);
     
     // Add Kai message about analyzing
@@ -1123,6 +1124,7 @@ export default function KaiCommand() {
     try {
       const result = await extractScheduleMutation.mutateAsync({
         fileUrl,
+        storageKey,
         fileType,
         fileName
       });
@@ -1145,11 +1147,21 @@ export default function KaiCommand() {
         };
         setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), successMessage]);
       } else {
-        // Show error message
+        // Show error message with detected headers if available
+        let errorContent = `Sorry, I couldn't extract any classes from **${fileName}**. ${result.error || 'Please make sure the file contains class schedule data with columns like Class Name, Day, Start Time, End Time, etc.'}`;
+        
+        // If we have headers, show them to help user understand what was detected
+        if (result.rawHeaders && result.rawHeaders.length > 0) {
+          errorContent += `\n\n**Detected columns:** ${result.rawHeaders.join(', ')}`;
+          errorContent += `\n\nI need columns for: Class Name, Day of Week, Start Time, End Time. Optional: Instructor, Room, Level, Capacity.`;
+        }
+        
+        errorContent += `\n\nYou can [download our sample template](/templates/class-schedule-template.xlsx) for the correct format.`;
+        
         const errorMessage: Message = {
           id: `error-${Date.now()}`,
           role: 'assistant',
-          content: `Sorry, I couldn't extract any classes from **${fileName}**. ${result.error || 'Please make sure the file contains class schedule data with columns like Class Name, Day, Start Time, End Time, etc.'}\n\nYou can [download our sample template](/templates/class-schedule-template.xlsx) for the correct format.`,
+          content: errorContent,
           timestamp: new Date()
         };
         setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
@@ -1253,16 +1265,9 @@ export default function KaiCommand() {
       return;
     }
 
-    // Build message content with attachments
+    // Build message content - attachments are stored separately, not as markdown links
     let messageContent = messageInput;
-    if (attachments.length > 0) {
-      const attachmentUrls = attachments.map(att => `[${att.fileName}](${att.url})`).join('\n');
-      if (messageContent) {
-        messageContent += '\n\nAttachments:\n' + attachmentUrls;
-      } else {
-        messageContent = 'Attachments:\n' + attachmentUrls;
-      }
-    }
+    // Don't append attachment URLs to message content - they'll be rendered as attachment cards
     
     // Parse mentions from the message
     const mentions = parseMentions(messageContent);
@@ -2050,14 +2055,39 @@ export default function KaiCommand() {
                               className={`font-medium mb-1`}
                               style={(isCinematic || isFocusMode) ? { color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : isDark ? { color: 'white' } : { color: '#0f172a' }}
                             >{user?.name || 'You'}</div>
-                            <p 
-                              className="relative"
-                              style={(isCinematic || isFocusMode) ? { 
-                                color: 'rgba(255,255,255,0.92)', 
-                                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                                zIndex: 30
-                              } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
-                            >{renderMessageWithMentions(message.content)}</p>
+                            {message.content && (
+                              <p 
+                                className="relative"
+                                style={(isCinematic || isFocusMode) ? { 
+                                  color: 'rgba(255,255,255,0.92)', 
+                                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                                  zIndex: 30
+                                } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
+                              >{renderMessageWithMentions(message.content)}</p>
+                            )}
+                            {/* Render attachment cards for user messages */}
+                            {message.attachments && message.attachments.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {message.attachments.map((att) => (
+                                  <div
+                                    key={att.id}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isCinematic || isFocusMode ? 'bg-white/10 border border-white/20' : isDark ? 'bg-white/5 border border-white/10' : 'bg-slate-100 border border-slate-200'}`}
+                                  >
+                                    <div className={`w-8 h-8 rounded flex items-center justify-center ${isCinematic || isFocusMode ? 'bg-white/10' : isDark ? 'bg-white/5' : 'bg-white'}`}>
+                                      <File className={`w-4 h-4 ${isCinematic || isFocusMode ? 'text-white/70' : isDark ? 'text-white/50' : 'text-slate-400'}`} />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className={`text-xs font-medium truncate max-w-[150px] ${isCinematic || isFocusMode ? 'text-white' : isDark ? 'text-white' : 'text-slate-700'}`}>
+                                        {att.fileName}
+                                      </p>
+                                      <p className={`text-[10px] ${isCinematic || isFocusMode ? 'text-white/50' : isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                                        {formatFileSize(att.fileSize)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </>
                       ) : (
