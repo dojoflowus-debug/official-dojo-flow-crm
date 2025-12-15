@@ -2884,17 +2884,103 @@ Return the data as a structured JSON object.`
 
   // Classes router for schedule extraction and class management
   classes: router({
-    // Extract schedule from uploaded file
+    // Extract schedule from uploaded file - robust parser with column detection
     extractSchedule: protectedProcedure
       .input(z.object({
         fileUrl: z.string().optional(),
         storageKey: z.string().optional(),
         fileType: z.string(),
         fileName: z.string(),
+        columnMapping: z.object({
+          name: z.number().optional(),
+          day: z.number().optional(),
+          startTime: z.number().optional(),
+          endTime: z.number().optional(),
+          instructor: z.number().optional(),
+          room: z.number().optional(),
+          level: z.number().optional(),
+          capacity: z.number().optional(),
+        }).optional(),
       }))
       .mutation(async ({ input }) => {
         const xlsx = await import('xlsx');
         const { storageGetBuffer } = await import('./storage');
+        
+        // Helper function to normalize column names for matching
+        const normalizeHeader = (h: string): string => {
+          return h.toLowerCase().replace(/[^a-z0-9]/g, '');
+        };
+        
+        // Column name variations for auto-detection
+        const columnPatterns = {
+          name: ['classname', 'class', 'name', 'program', 'programname', 'title', 'course'],
+          day: ['day', 'dayofweek', 'days', 'weekday', 'schedule'],
+          startTime: ['starttime', 'start', 'begin', 'begintime', 'from', 'timefrom'],
+          endTime: ['endtime', 'end', 'finish', 'finishtime', 'to', 'timeto'],
+          instructor: ['instructor', 'teacher', 'coach', 'staff', 'sensei', 'professor'],
+          room: ['room', 'location', 'mat', 'studio', 'area', 'place'],
+          level: ['level', 'difficulty', 'skill', 'skilllevel', 'grade'],
+          capacity: ['capacity', 'max', 'maxstudents', 'maxcapacity', 'spots', 'size'],
+        };
+        
+        // Helper to parse time strings
+        const parseTime = (timeStr: string): string | null => {
+          if (!timeStr) return null;
+          const str = String(timeStr).trim();
+          
+          // Handle Excel time serial numbers (e.g., 0.6666666666666666 = 4:00 PM)
+          if (!isNaN(Number(str)) && Number(str) < 1) {
+            const totalMinutes = Math.round(Number(str) * 24 * 60);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          }
+          
+          // Try various time formats
+          const patterns = [
+            /^(\d{1,2}):(\d{2})\s*(am|pm)?$/i,
+            /^(\d{1,2})(am|pm)$/i,
+            /^(\d{1,2})\s*(am|pm)$/i,
+          ];
+          
+          for (const pattern of patterns) {
+            const match = str.match(pattern);
+            if (match) {
+              let hours = parseInt(match[1]);
+              const minutes = match[2] && !isNaN(parseInt(match[2])) ? parseInt(match[2]) : 0;
+              const ampm = (match[3] || match[2] || '').toLowerCase();
+              
+              if (ampm === 'pm' && hours < 12) hours += 12;
+              if (ampm === 'am' && hours === 12) hours = 0;
+              
+              return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+          }
+          
+          // Try 24-hour format
+          const match24 = str.match(/^(\d{1,2}):(\d{2})$/);
+          if (match24) {
+            return `${match24[1].padStart(2, '0')}:${match24[2]}`;
+          }
+          
+          return null;
+        };
+        
+        // Helper to normalize day names
+        const normalizeDay = (dayStr: string): string | null => {
+          if (!dayStr) return null;
+          const str = String(dayStr).toLowerCase().trim();
+          const dayMap: Record<string, string> = {
+            'mon': 'Mon', 'monday': 'Mon', 'm': 'Mon',
+            'tue': 'Tue', 'tuesday': 'Tue', 'tues': 'Tue', 't': 'Tue',
+            'wed': 'Wed', 'wednesday': 'Wed', 'w': 'Wed',
+            'thu': 'Thu', 'thursday': 'Thu', 'thurs': 'Thu', 'th': 'Thu',
+            'fri': 'Fri', 'friday': 'Fri', 'f': 'Fri',
+            'sat': 'Sat', 'saturday': 'Sat', 's': 'Sat',
+            'sun': 'Sun', 'sunday': 'Sun', 'su': 'Sun',
+          };
+          return dayMap[str] || null;
+        };
         
         try {
           let arrayBuffer: ArrayBuffer;
@@ -2902,108 +2988,210 @@ Return the data as a structured JSON object.`
           // Try to read from storage key first (more reliable), then fall back to URL
           if (input.storageKey) {
             try {
+              console.log('[Schedule Extract] Reading from storage key:', input.storageKey);
               arrayBuffer = await storageGetBuffer(input.storageKey);
+              console.log('[Schedule Extract] Got buffer, size:', arrayBuffer.byteLength);
             } catch (storageError: any) {
-              console.error('Storage read failed, trying URL:', storageError);
+              console.error('[Schedule Extract] Storage read failed, trying URL:', storageError);
               // Fall back to URL if storage key fails
               if (input.fileUrl) {
                 const response = await fetch(input.fileUrl);
                 if (!response.ok) {
-                  return { success: false, classes: [], confidence: 0, error: `Failed to fetch file: ${response.status} ${response.statusText}` };
+                  return { success: false, classes: [], confidence: 0, error: `Failed to fetch file: ${response.status} ${response.statusText}`, errorType: 'file_access' };
                 }
                 arrayBuffer = await response.arrayBuffer();
               } else {
-                return { success: false, classes: [], confidence: 0, error: `Storage read failed: ${storageError.message}` };
+                return { success: false, classes: [], confidence: 0, error: `Storage read failed: ${storageError.message}`, errorType: 'file_access' };
               }
             }
           } else if (input.fileUrl) {
             // Fetch from URL
+            console.log('[Schedule Extract] Fetching from URL:', input.fileUrl);
             const response = await fetch(input.fileUrl);
             if (!response.ok) {
-              return { success: false, classes: [], confidence: 0, error: `Failed to fetch file: ${response.status} ${response.statusText}` };
+              return { success: false, classes: [], confidence: 0, error: `Failed to fetch file: ${response.status} ${response.statusText}`, errorType: 'file_access' };
             }
             arrayBuffer = await response.arrayBuffer();
           } else {
-            return { success: false, classes: [], confidence: 0, error: 'No file URL or storage key provided' };
+            return { success: false, classes: [], confidence: 0, error: 'No file URL or storage key provided', errorType: 'missing_input' };
           }
+          
+          console.log('[Schedule Extract] Parsing workbook...');
           const workbook = xlsx.read(arrayBuffer, { type: 'array' });
           
           // Get the first sheet
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           
-          // Convert to JSON
-          const data = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          // Convert to JSON with raw values
+          const data = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
+          
+          console.log('[Schedule Extract] Sheet:', sheetName, 'Rows:', data.length);
           
           if (data.length < 2) {
-            return { success: false, classes: [], confidence: 0, error: 'File appears to be empty or has no data rows', rawHeaders: data[0] || [] };
+            return { 
+              success: false, 
+              classes: [], 
+              confidence: 0, 
+              error: 'File appears to be empty or has no data rows', 
+              rawHeaders: data[0] || [],
+              errorType: 'empty_file'
+            };
           }
           
-          // Extract headers for potential column mapping
-          const rawHeaders = (data[0] || []).map(h => String(h || '').trim()).filter(Boolean);
+          // Extract and normalize headers
+          const rawHeaders = (data[0] || []).map(h => String(h || '').trim());
+          const normalizedHeaders = rawHeaders.map(normalizeHeader);
           
-          // Convert to text for LLM
-          const textContent = data.map(row => row.join(' | ')).join('\n');
+          console.log('[Schedule Extract] Headers:', rawHeaders);
           
-          // Use LLM to extract structured data
-          const { invokeLLM } = await import('./_core/llm');
+          // Auto-detect column mapping if not provided
+          let mapping = input.columnMapping || {};
+          const detectedMapping: Record<string, number> = {};
+          const unmappedRequired: string[] = [];
           
-          const llmResponse = await invokeLLM({
-            messages: [
-              {
-                role: 'system',
-                content: `You are a schedule parser. Extract class schedule information from the provided text and return it as JSON.
-
-Return a JSON object with this structure:
-{
-  "classes": [
-    {
-      "name": "Class Name",
-      "dayOfWeek": "Monday",
-      "startTime": "16:00",
-      "endTime": "17:00",
-      "instructor": "Instructor Name",
-      "location": "Room/Location",
-      "level": "Beginner/Intermediate/Advanced/All Levels",
-      "maxCapacity": 20,
-      "notes": "Any additional notes"
-    }
-  ],
-  "confidence": 0.95,
-  "warnings": ["Any warnings about ambiguous data"]
-}
-
-Rules:
-- dayOfWeek must be: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, or Sunday
-- Times must be in 24-hour format (HH:MM)
-- If a class runs on multiple days, create separate entries for each day
-- If data is ambiguous, set confidence lower and add warnings
-- Extract as much information as possible from the data`
-              },
-              {
-                role: 'user',
-                content: `Extract class schedule from this data:\n\n${textContent}`
-              }
-            ],
-            response_format: { type: 'json_object' }
-          });
-          
-          const content = llmResponse.choices[0]?.message?.content;
-          if (!content) {
-            return { success: false, classes: [], confidence: 0, error: 'No response from AI' };
+          for (const [field, patterns] of Object.entries(columnPatterns)) {
+            // Use provided mapping if available
+            if (mapping[field as keyof typeof mapping] !== undefined) {
+              detectedMapping[field] = mapping[field as keyof typeof mapping]!;
+              continue;
+            }
+            
+            // Try to auto-detect
+            const idx = normalizedHeaders.findIndex(h => patterns.some(p => h.includes(p)));
+            if (idx !== -1) {
+              detectedMapping[field] = idx;
+            } else if (['name', 'day', 'startTime', 'endTime'].includes(field)) {
+              unmappedRequired.push(field);
+            }
           }
           
-          const parsed = JSON.parse(content);
+          console.log('[Schedule Extract] Detected mapping:', detectedMapping);
+          console.log('[Schedule Extract] Unmapped required:', unmappedRequired);
+          
+          // If we can't detect required columns, return with headers for manual mapping
+          if (unmappedRequired.length > 0) {
+            return {
+              success: false,
+              classes: [],
+              confidence: 0,
+              error: `Could not auto-detect columns: ${unmappedRequired.join(', ')}. Please map the columns manually.`,
+              errorType: 'mapping_required',
+              rawHeaders,
+              detectedMapping,
+              suggestColumnMapping: true,
+              previewRows: data.slice(1, 6).map(row => row.map(cell => String(cell || '')))
+            };
+          }
+          
+          // Parse rows into classes
+          const classes: any[] = [];
+          const warnings: string[] = [];
+          const rowErrors: { row: number; error: string }[] = [];
+          
+          for (let i = 1; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row.every(cell => !cell)) continue; // Skip empty rows
+            
+            const getValue = (field: string) => {
+              const idx = detectedMapping[field];
+              return idx !== undefined && row[idx] !== undefined ? String(row[idx]).trim() : '';
+            };
+            
+            const name = getValue('name');
+            const dayRaw = getValue('day');
+            const startTimeRaw = getValue('startTime');
+            const endTimeRaw = getValue('endTime');
+            
+            // Validate required fields
+            if (!name) {
+              rowErrors.push({ row: i + 1, error: 'Missing class name' });
+              continue;
+            }
+            
+            // Parse day - handle multiple days separated by comma or slash
+            const dayParts = dayRaw.split(/[,\/&]/).map(d => d.trim()).filter(Boolean);
+            const days = dayParts.map(normalizeDay).filter(Boolean) as string[];
+            
+            if (days.length === 0) {
+              rowErrors.push({ row: i + 1, error: `Invalid day format: "${dayRaw}"` });
+              continue;
+            }
+            
+            // Parse times
+            const startTime = parseTime(startTimeRaw);
+            const endTime = parseTime(endTimeRaw);
+            
+            if (!startTime) {
+              rowErrors.push({ row: i + 1, error: `Invalid start time: "${startTimeRaw}"` });
+              continue;
+            }
+            
+            if (!endTime) {
+              rowErrors.push({ row: i + 1, error: `Invalid end time: "${endTimeRaw}"` });
+              continue;
+            }
+            
+            // Get optional fields
+            const instructor = getValue('instructor') || undefined;
+            const room = getValue('room') || undefined;
+            const level = getValue('level') || 'All Levels';
+            const capacityStr = getValue('capacity');
+            const capacity = capacityStr ? parseInt(capacityStr) : undefined;
+            
+            // Create class entry for each day
+            for (const day of days) {
+              classes.push({
+                name,
+                dayOfWeek: day,
+                startTime,
+                endTime,
+                instructor,
+                location: room,
+                level,
+                maxCapacity: capacity || 20,
+              });
+            }
+          }
+          
+          console.log('[Schedule Extract] Parsed', classes.length, 'classes,', rowErrors.length, 'errors');
+          
+          // Calculate confidence based on success rate
+          const totalRows = data.length - 1;
+          const successRate = totalRows > 0 ? (totalRows - rowErrors.length) / totalRows : 0;
+          const confidence = Math.round(successRate * 100) / 100;
+          
+          if (classes.length === 0) {
+            return {
+              success: false,
+              classes: [],
+              confidence: 0,
+              error: rowErrors.length > 0 
+                ? `Could not parse any classes. Errors: ${rowErrors.slice(0, 3).map(e => `Row ${e.row}: ${e.error}`).join('; ')}` 
+                : 'No valid class data found in the file.',
+              errorType: 'parse_error',
+              rawHeaders,
+              detectedMapping,
+              rowErrors: rowErrors.slice(0, 10),
+            };
+          }
+          
+          // Add warnings for row errors
+          if (rowErrors.length > 0) {
+            warnings.push(`${rowErrors.length} row(s) had errors and were skipped`);
+          }
           
           return {
             success: true,
-            classes: parsed.classes || [],
-            confidence: parsed.confidence || 0.8,
-            warnings: parsed.warnings || [],
-            rawHeaders
+            classes,
+            confidence,
+            warnings,
+            rawHeaders,
+            detectedMapping,
+            rowErrors: rowErrors.slice(0, 10),
           };
         } catch (error: any) {
-          console.error('Schedule extraction error:', error);
+          console.error('[Schedule Extract] Error:', error);
           
           // Provide specific error messages based on error type
           let errorMessage = 'Failed to extract schedule';
@@ -3012,15 +3200,9 @@ Rules:
           if (error.message?.includes('fetch') || error.message?.includes('storage')) {
             errorMessage = `Could not read the file: ${error.message}`;
             errorType = 'file_access';
-          } else if (error.message?.includes('sheet') || error.message?.includes('workbook')) {
+          } else if (error.message?.includes('sheet') || error.message?.includes('workbook') || error.message?.includes('xlsx')) {
             errorMessage = 'Could not parse the spreadsheet. Please ensure it\'s a valid Excel or CSV file.';
             errorType = 'parse_error';
-          } else if (error.message?.includes('JSON')) {
-            errorMessage = 'Could not process the extracted data. The file format may not be recognized.';
-            errorType = 'format_error';
-          } else if (error.message?.includes('LLM') || error.message?.includes('AI')) {
-            errorMessage = 'AI analysis failed. Please try again.';
-            errorType = 'ai_error';
           } else if (error.message) {
             errorMessage = error.message;
           }
@@ -3031,8 +3213,7 @@ Rules:
             confidence: 0,
             error: errorMessage,
             errorType,
-            rawHeaders: [], // Will be populated if we can read headers
-            suggestColumnMapping: errorType === 'format_error'
+            rawHeaders: [],
           };
         }
       }),
@@ -3061,38 +3242,56 @@ Rules:
           return { success: false, createdCount: 0, error: 'Database not available' };
         }
         
+        // Helper to format 24h time to 12h display format
+        const formatTime = (time24: string): string => {
+          const [hours, minutes] = time24.split(':').map(Number);
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          const h12 = hours % 12 || 12;
+          return `${h12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+        };
+        
         let createdCount = 0;
         const errors: string[] = [];
+        const createdIds: number[] = [];
         
         for (const classData of input.classes) {
           try {
-            // Create schedule string
-            const schedule = `${classData.dayOfWeek} ${classData.startTime}-${classData.endTime}`;
+            // Format time for display (e.g., "4:00 PM - 5:00 PM")
+            const timeDisplay = `${formatTime(classData.startTime)} - ${formatTime(classData.endTime)}`;
             
-            await db.insert(classes).values({
+            console.log('[CreateClasses] Creating:', classData.name, classData.dayOfWeek, timeDisplay);
+            
+            const result = await db.insert(classes).values({
               name: classData.name,
-              schedule: schedule,
               dayOfWeek: classData.dayOfWeek,
-              time: classData.startTime,
-              endTime: classData.endTime,
+              time: timeDisplay,
               instructor: classData.instructor || null,
               room: classData.location || null,
               level: classData.level || 'All Levels',
-              maxCapacity: classData.maxCapacity || 20,
+              capacity: classData.maxCapacity || 20,
               description: classData.notes || null,
               isActive: true,
+              enrolled: 0,
             });
+            
+            // Get the inserted ID
+            if (result.insertId) {
+              createdIds.push(Number(result.insertId));
+            }
             
             createdCount++;
           } catch (error: any) {
-            console.error(`Failed to create class ${classData.name}:`, error);
+            console.error(`[CreateClasses] Failed to create class ${classData.name}:`, error);
             errors.push(`Failed to create ${classData.name}: ${error.message}`);
           }
         }
         
+        console.log('[CreateClasses] Created', createdCount, 'classes, IDs:', createdIds);
+        
         return {
           success: createdCount > 0,
           createdCount,
+          createdIds,
           errors: errors.length > 0 ? errors : undefined
         };
       }),

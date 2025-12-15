@@ -1116,18 +1116,22 @@ export default function KaiCommand() {
     const analyzingMessage: Message = {
       id: `analyzing-${Date.now()}`,
       role: 'assistant',
-      content: `I'm analyzing **${fileName}** to extract class schedule information. This may take a moment...`,
+      content: `I'm analyzing **${fileName}** to extract class schedule information...`,
       timestamp: new Date()
     };
     setMessages(prev => [...prev, analyzingMessage]);
     
     try {
+      console.log('[KaiCommand] Extracting schedule from:', { fileUrl, storageKey, fileType, fileName });
+      
       const result = await extractScheduleMutation.mutateAsync({
         fileUrl,
         storageKey,
         fileType,
         fileName
       });
+      
+      console.log('[KaiCommand] Extraction result:', result);
       
       if (result.success && result.classes.length > 0) {
         // Show preview card
@@ -1138,25 +1142,68 @@ export default function KaiCommand() {
           warnings: result.warnings
         });
         
-        // Update Kai message
+        // Update Kai message with details
+        let successContent = `I found **${result.classes.length} classes** in your schedule!`;
+        
+        // Show detected columns
+        if (result.detectedMapping) {
+          const mappedCols = Object.entries(result.detectedMapping)
+            .filter(([_, idx]) => idx !== undefined)
+            .map(([field]) => field);
+          if (mappedCols.length > 0) {
+            successContent += `\n\n**Detected fields:** ${mappedCols.join(', ')}`;
+          }
+        }
+        
+        // Show any warnings
+        if (result.warnings && result.warnings.length > 0) {
+          successContent += `\n\n⚠️ **Warnings:**\n${result.warnings.map(w => `- ${w}`).join('\n')}`;
+        }
+        
+        // Show row errors if any
+        if (result.rowErrors && result.rowErrors.length > 0) {
+          successContent += `\n\n**Skipped rows:**\n${result.rowErrors.slice(0, 5).map((e: any) => `- Row ${e.row}: ${e.error}`).join('\n')}`;
+          if (result.rowErrors.length > 5) {
+            successContent += `\n- ...and ${result.rowErrors.length - 5} more`;
+          }
+        }
+        
+        successContent += `\n\nPlease review the classes below and click "Create Classes" to add them to your dojo.`;
+        
         const successMessage: Message = {
           id: `extracted-${Date.now()}`,
           role: 'assistant',
-          content: `I found **${result.classes.length} classes** in your schedule. Please review them below and click "Create Classes" to add them to your dojo.`,
+          content: successContent,
           timestamp: new Date()
         };
         setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), successMessage]);
       } else {
-        // Show error message with detected headers if available
-        let errorContent = `Sorry, I couldn't extract any classes from **${fileName}**. ${result.error || 'Please make sure the file contains class schedule data with columns like Class Name, Day, Start Time, End Time, etc.'}`;
+        // Show detailed error message
+        let errorContent = `I couldn't extract classes from **${fileName}**.`;
         
-        // If we have headers, show them to help user understand what was detected
-        if (result.rawHeaders && result.rawHeaders.length > 0) {
-          errorContent += `\n\n**Detected columns:** ${result.rawHeaders.join(', ')}`;
-          errorContent += `\n\nI need columns for: Class Name, Day of Week, Start Time, End Time. Optional: Instructor, Room, Level, Capacity.`;
+        // Add specific error reason
+        if (result.error) {
+          errorContent += `\n\n**Reason:** ${result.error}`;
         }
         
-        errorContent += `\n\nYou can [download our sample template](/templates/class-schedule-template.xlsx) for the correct format.`;
+        // Show detected headers to help user understand what was found
+        if (result.rawHeaders && result.rawHeaders.length > 0) {
+          errorContent += `\n\n**Columns found in your file:** ${result.rawHeaders.join(', ')}`;
+        }
+        
+        // Show what columns are needed
+        errorContent += `\n\n**Required columns:** Class Name, Day, Start Time, End Time`;
+        errorContent += `\n**Optional columns:** Instructor, Room, Level, Capacity`;
+        
+        // Show row-level errors if available
+        if (result.rowErrors && result.rowErrors.length > 0) {
+          errorContent += `\n\n**Row errors:**\n${result.rowErrors.slice(0, 5).map((e: any) => `- Row ${e.row}: ${e.error}`).join('\n')}`;
+        }
+        
+        // Don't always suggest template - only if truly needed
+        if (result.errorType === 'mapping_required' || result.errorType === 'empty_file') {
+          errorContent += `\n\nTip: Make sure your file has a header row with column names.`;
+        }
         
         const errorMessage: Message = {
           id: `error-${Date.now()}`,
@@ -1167,11 +1214,15 @@ export default function KaiCommand() {
         setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
       }
     } catch (error: any) {
-      console.error('Schedule extraction failed:', error);
+      console.error('[KaiCommand] Schedule extraction failed:', error);
+      
+      // Extract meaningful error message
+      const errorMsg = error?.message || error?.data?.message || 'Unknown error';
+      
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: `Sorry, I encountered an error while analyzing the schedule. Please try again or [download our sample template](/templates/class-schedule-template.xlsx) for the correct format.`,
+        content: `Sorry, I encountered an error while analyzing the schedule:\n\n**Error:** ${errorMsg}\n\nPlease make sure the file is a valid Excel (.xlsx) or CSV file and try again.`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), errorMessage]);
@@ -1185,28 +1236,61 @@ export default function KaiCommand() {
     setIsCreatingClasses(true);
     
     try {
+      console.log('[KaiCommand] Creating', selectedClasses.length, 'classes');
+      
       const result = await createClassesMutation.mutateAsync({
         classes: selectedClasses
       });
+      
+      console.log('[KaiCommand] Create result:', result);
       
       if (result.success) {
         toast.success(`Successfully created ${result.createdCount} classes!`);
         setSchedulePreview(null);
         
-        // Add success message
+        // Build success message
+        let successContent = `✅ **Created ${result.createdCount} classes** successfully!`;
+        
+        // Show any errors for classes that failed
+        if (result.errors && result.errors.length > 0) {
+          successContent += `\n\n⚠️ **${result.errors.length} classes failed:**\n${result.errors.slice(0, 5).map(e => `- ${e}`).join('\n')}`;
+          if (result.errors.length > 5) {
+            successContent += `\n- ...and ${result.errors.length - 5} more`;
+          }
+        }
+        
+        successContent += `\n\nYou can view and manage them in the [Classes](/classes) section.`;
+        
         const successMessage: Message = {
           id: `created-${Date.now()}`,
           role: 'assistant',
-          content: `I've created **${result.createdCount} classes** in your dojo. You can view and manage them in the [Classes](/classes) section.`,
+          content: successContent,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, successMessage]);
       } else {
-        toast.error('Failed to create classes');
+        toast.error('Failed to create classes: ' + (result.error || 'Unknown error'));
+        
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: `Failed to create classes: ${result.error || 'Unknown error'}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
       }
     } catch (error: any) {
-      console.error('Failed to create classes:', error);
-      toast.error('Failed to create classes: ' + (error.message || 'Unknown error'));
+      console.error('[KaiCommand] Failed to create classes:', error);
+      const errorMsg = error?.message || error?.data?.message || 'Unknown error';
+      toast.error('Failed to create classes: ' + errorMsg);
+      
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: `Failed to create classes: ${errorMsg}`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsCreatingClasses(false);
     }

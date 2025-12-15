@@ -3590,3 +3590,14 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Fix the update functionality (was already working - tested via curl and UI)
 - [x] Test class updates work correctly
 - [x] Save checkpoint
+
+
+## 📋 FEATURE: XLSX Schedule Import Pipeline
+- [x] Investigate current schedule import implementation
+- [x] Implement robust XLSX parser with column detection
+- [x] Add Preview + Column Mapping UI component
+- [x] Create classes from parsed rows via backend
+- [x] Add import results display with row-level errors
+- [x] Improve error handling with specific failure reasons
+- [x] Test end-to-end schedule import
+- [ ] Save checkpoint
