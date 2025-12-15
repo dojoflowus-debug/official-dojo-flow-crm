@@ -1233,10 +1233,13 @@ export default function KaiCommand() {
 
   // Handle creating classes from extracted schedule
   const handleCreateClasses = async (selectedClasses: ExtractedClass[]) => {
+    console.log('[KaiCommand] handleCreateClasses CALLED with', selectedClasses.length, 'classes');
     setIsCreatingClasses(true);
     
     try {
       console.log('[KaiCommand] Creating', selectedClasses.length, 'classes');
+      console.log('[KaiCommand] Payload:', JSON.stringify(selectedClasses.slice(0, 2), null, 2));
+      console.log('[KaiCommand] Calling createClassesMutation.mutateAsync...');
       
       const result = await createClassesMutation.mutateAsync({
         classes: selectedClasses
@@ -1247,6 +1250,10 @@ export default function KaiCommand() {
       if (result.success) {
         toast.success(`Successfully created ${result.createdCount} classes!`);
         setSchedulePreview(null);
+        
+        // Note: Classes page uses REST API (/api/classes), not tRPC
+        // The page will refresh when user navigates to it
+        console.log('[KaiCommand] Classes created successfully, IDs:', result.createdIds);
         
         // Build success message
         let successContent = `✅ **Created ${result.createdCount} classes** successfully!`;

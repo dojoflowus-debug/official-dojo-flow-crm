@@ -3624,3 +3624,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add query invalidation after class creation
 - [x] Test end-to-end schedule import and class creation
 - [x] Save checkpoint
+
+
+## 🚨 PRIORITY: Fix Schedule Import Commit Step
+- [ ] Add console logging to trace Create Classes button click
+- [ ] Verify API call fires when clicking Create Classes
+- [ ] Check payload mapping matches backend schema (dayOfWeek, startTime, endTime format)
+- [ ] Add tRPC query invalidation for immediate Classes list refresh
+- [ ] Test classes appear immediately after import without page refresh
+- [ ] Save checkpoint

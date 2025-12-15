@@ -114,6 +114,8 @@ export function SchedulePreviewCard({
 
   const handleConfirm = () => {
     const selectedClasses = classes.filter((_, i) => selectedIndices.has(i));
+    console.log('[SchedulePreviewCard] handleConfirm called with', selectedClasses.length, 'classes');
+    console.log('[SchedulePreviewCard] First class:', JSON.stringify(selectedClasses[0]));
     onConfirm(selectedClasses);
   };
 
