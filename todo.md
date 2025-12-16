@@ -3907,3 +3907,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Apple-level polish, calm/disciplined/premium design
 - [x] Preserve all existing functionality
 - [ ] Test and save checkpoint
+
+
+## 🐛 FIX: Student Login Page Icon and Colors
+- [x] Use correct DojoFlow swirl logo (red circle with white swirl) next to "Welcome Back"
+- [x] Match colors to Kai Command dark theme (already using slate-950 dark theme)
+- [ ] Test and save checkpoint
