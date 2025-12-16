@@ -2415,6 +2415,53 @@ Return the data as a structured JSON object.`
 
   // Student Portal Router
   studentPortal: router({
+    // Self-registration for new students
+    register: publicProcedure
+      .input(z.object({
+        firstName: z.string().min(1, "First name is required"),
+        lastName: z.string().min(1, "Last name is required"),
+        email: z.string().email("Valid email is required"),
+        phone: z.string().min(1, "Phone number is required"),
+        dateOfBirth: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        zipCode: z.string().optional(),
+        programs: z.array(z.string()).optional(),
+        experienceLevel: z.string().optional(),
+        howDidYouHear: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { createStudent, getStudentByEmail } = await import("./db");
+        
+        // Check if email already exists
+        const existing = await getStudentByEmail(input.email);
+        if (existing?.student) {
+          throw new Error("An account with this email already exists. Please login instead.");
+        }
+        
+        // Create the new student
+        const newStudent = await createStudent({
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          dateOfBirth: input.dateOfBirth || null,
+          address: input.address || null,
+          city: input.city || null,
+          state: input.state || null,
+          zipCode: input.zipCode || null,
+          status: "trial",
+          notes: `Self-registered. Programs: ${input.programs?.join(", ") || "None selected"}. Experience: ${input.experienceLevel || "Not specified"}. Source: ${input.howDidYouHear || "Not specified"}`,
+        });
+        
+        return {
+          success: true,
+          student: newStudent,
+          message: "Registration successful! We will contact you shortly to schedule your first class.",
+        };
+      }),
+
     // Request password reset
     requestPasswordReset: publicProcedure
       .input(z.object({
