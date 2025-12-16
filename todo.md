@@ -3777,3 +3777,26 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Remove Dashboard from bottom navigation (BottomNavLayout.tsx)
 - [x] Root URL (/) already routes to KaiCommand
 - [x] Test Kai Command loads as primary page
+
+
+## 🚀 NEW: Add Printable Master Schedule to Classes Page
+- [ ] Create OverallSchedule component with weekly grid (Mon-Sun columns, time rows)
+- [ ] Display class blocks with name, instructor, room, capacity
+- [ ] Implement color coding by program (Kids, Teens, Adults, etc.)
+- [ ] Add hover tooltip with full class details
+- [ ] Implement click-to-edit: open edit modal with prefilled data
+- [ ] Handle overlapping classes with stacking or "+N more" expander
+- [ ] Add Print Schedule button with landscape print layout
+- [ ] Add CSS print rules (hide sidebar/nav, white background, clean grid)
+- [ ] Test schedule display, editing, and printing
+
+
+## ✅ COMPLETED: Add Printable Master Schedule to Classes Page
+- [x] Create OverallSchedule component with weekly grid layout
+- [x] Display all classes in a visual grid (Mon-Sun, time slots 8AM-8PM)
+- [x] Color-code classes by program type (Kids Karate, Little Dragons, Teen, Adult, etc.)
+- [x] Click on class block to open edit modal - working!
+- [x] Add Print Schedule button with landscape CSS print rules
+- [x] Show instructor name and time on each class block
+- [x] Parse time field format ("4:30 PM - 5:00 PM") to display in grid
+- [x] Program legend at bottom of schedule

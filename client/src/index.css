@@ -718,3 +718,95 @@ body {
     transform: translateY(0);
   }
 }
+
+
+/* ============================================
+   PRINT STYLES - Master Schedule
+   ============================================ */
+@media print {
+  /* Force landscape orientation */
+  @page {
+    size: landscape;
+    margin: 0.5in;
+  }
+  
+  /* Hide all non-essential UI elements */
+  body > *:not(.print-schedule),
+  header,
+  nav,
+  footer,
+  aside,
+  .bottom-nav,
+  .sidebar,
+  [data-radix-popper-content-wrapper],
+  .toast,
+  .dialog-overlay,
+  button:not(.print-schedule button) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Show only the schedule */
+  .print-schedule {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+    padding: 0.5in !important;
+  }
+  
+  .print-schedule * {
+    visibility: visible !important;
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Clean print styling for schedule blocks */
+  .print-schedule button {
+    background: white !important;
+    border: 1px solid #d1d5db !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+    cursor: default !important;
+  }
+  
+  /* Ensure grid lines are visible */
+  .print-schedule [class*="border"] {
+    border-color: #e5e7eb !important;
+  }
+  
+  /* Hide interactive elements */
+  .print-schedule button:hover {
+    transform: none !important;
+  }
+  
+  /* Hide the header controls on print */
+  .print-schedule > div:first-child {
+    display: none !important;
+  }
+  
+  /* Hide legend on print */
+  .print-schedule > div:last-child {
+    display: none !important;
+  }
+  
+  /* Ensure readable fonts */
+  .print-schedule .text-xs {
+    font-size: 10px !important;
+  }
+  
+  .print-schedule .text-sm {
+    font-size: 12px !important;
+  }
+  
+  /* Remove shadows and effects */
+  .print-schedule * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}

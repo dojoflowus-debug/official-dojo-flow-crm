@@ -12,6 +12,7 @@ import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, E
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
+import OverallSchedule from '@/components/OverallSchedule';
 import { trpc } from '@/lib/trpc';
 
 const API_URL = '/api';  // Use relative path to work from any device
@@ -1251,6 +1252,16 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             </div>
           </div>
         </div>
+
+        {/* Overall Schedule - Master Grid */}
+        {!loading && classes.length > 0 && (
+          <OverallSchedule
+            classes={classes}
+            isDark={isDarkMode}
+            onClassClick={handleEditClass}
+            dojoName="DojoFlow"
+          />
+        )}
 
         {/* Classes Grid */}
         {loading ? (
