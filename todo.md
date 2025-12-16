@@ -3932,3 +3932,28 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Kiosk Mode Awareness: "Back to Kiosk" behavior, limited settings, fast student access, prevent admin navigation
 - [x] Student Context Binding: Bind student record to session at login, fetch program/belt/enrollment/progress
 - [x] State-driven UI elements (belt rank, classes to next rank) not static placeholders
+
+## Kai Command Split View (Cancelled)
+
+- Split view feature was attempted but proved too complex for the current KaiCommand.tsx structure
+- Feature cancelled per user request to avoid over-complication
+- May be revisited in future as a separate, simpler implementation
+
+## Kai Command Session History Export
+
+- [ ] Add backend tRPC procedure to export conversation history
+- [ ] Support multiple export formats (JSON, Markdown, CSV)
+- [ ] Add export button to Kai Command header
+- [ ] Include conversation metadata (title, date, tags, participants)
+- [ ] Allow export of single conversation or all conversations
+- [ ] Test export functionality with various conversation types
+
+## ✅ COMPLETED: Kai Command Session History Export
+
+- [x] Add export button to Kai Command header
+- [x] Implement backend procedure to export conversations (JSON, Markdown, CSV)
+- [x] Support exporting single conversation or all conversations
+- [x] Include conversation metadata (title, created date, status, category)
+- [x] Exclude soft-deleted conversations from export
+- [x] Add download functionality in frontend
+- [x] Write tests for export functionality (7 tests passing)

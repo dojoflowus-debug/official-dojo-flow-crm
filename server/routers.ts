@@ -2229,6 +2229,118 @@ Return the data as a structured JSON object.`
         };
         }
       }),
+
+    // Export conversation history
+    exportConversations: protectedProcedure
+      .input(z.object({
+        conversationId: z.number().optional(), // If provided, export single conversation; otherwise export all
+        format: z.enum(["json", "markdown", "csv"]).default("json"),
+      }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, desc, and, isNull } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Get conversations
+        let conversations;
+        if (input.conversationId) {
+          // Export single conversation
+          conversations = await db.select()
+            .from(kaiConversations)
+            .where(and(
+              eq(kaiConversations.id, input.conversationId),
+              eq(kaiConversations.userId, ctx.user.id),
+              isNull(kaiConversations.deletedAt)
+            ))
+            .limit(1);
+        } else {
+          // Export all conversations
+          conversations = await db.select()
+            .from(kaiConversations)
+            .where(and(
+              eq(kaiConversations.userId, ctx.user.id),
+              isNull(kaiConversations.deletedAt)
+            ))
+            .orderBy(desc(kaiConversations.lastMessageAt));
+        }
+        
+        if (conversations.length === 0) {
+          throw new Error("No conversations found");
+        }
+        
+        // Get messages for each conversation
+        const exportData = [];
+        for (const conversation of conversations) {
+          const messages = await db.select()
+            .from(kaiMessages)
+            .where(eq(kaiMessages.conversationId, conversation.id))
+            .orderBy(kaiMessages.createdAt);
+          
+          exportData.push({
+            conversation,
+            messages,
+          });
+        }
+        
+        // Format based on requested format
+        let content: string;
+        let filename: string;
+        let mimeType: string;
+        
+        if (input.format === "json") {
+          content = JSON.stringify(exportData, null, 2);
+          filename = input.conversationId 
+            ? `kai-conversation-${input.conversationId}.json`
+            : `kai-conversations-${new Date().toISOString().split('T')[0]}.json`;
+          mimeType = "application/json";
+        } else if (input.format === "markdown") {
+          content = exportData.map(({ conversation, messages }) => {
+            let md = `# ${conversation.title}\n\n`;
+            md += `**Created:** ${new Date(conversation.createdAt).toLocaleString()}\n`;
+            md += `**Last Message:** ${new Date(conversation.lastMessageAt).toLocaleString()}\n`;
+            md += `**Status:** ${conversation.status}\n`;
+            md += `**Category:** ${conversation.category}\n\n`;
+            md += `---\n\n`;
+            
+            messages.forEach(msg => {
+              md += `### ${msg.role === 'user' ? '👤 User' : '🤖 Kai'}\n`;
+              md += `*${new Date(msg.createdAt).toLocaleString()}*\n\n`;
+              md += `${msg.content}\n\n`;
+            });
+            
+            return md;
+          }).join('\n\n---\n\n');
+          
+          filename = input.conversationId
+            ? `kai-conversation-${input.conversationId}.md`
+            : `kai-conversations-${new Date().toISOString().split('T')[0]}.md`;
+          mimeType = "text/markdown";
+        } else {
+          // CSV format
+          content = "Conversation ID,Conversation Title,Message Role,Message Content,Created At\n";
+          exportData.forEach(({ conversation, messages }) => {
+            messages.forEach(msg => {
+              const escapedContent = msg.content.replace(/"/g, '""').replace(/\n/g, ' ');
+              content += `${conversation.id},"${conversation.title}",${msg.role},"${escapedContent}",${new Date(msg.createdAt).toISOString()}\n`;
+            });
+          });
+          
+          filename = input.conversationId
+            ? `kai-conversation-${input.conversationId}.csv`
+            : `kai-conversations-${new Date().toISOString().split('T')[0]}.csv`;
+          mimeType = "text/csv";
+        }
+        
+        return {
+          content,
+          filename,
+          mimeType,
+          count: exportData.length,
+        };
+      }),
   }),
 
   // Subscription and credits management

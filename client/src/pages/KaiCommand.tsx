@@ -56,7 +56,8 @@ import {
   Save,
   Upload,
   RefreshCw,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Download
 } from 'lucide-react';
 
 // Kai Logo for center panel - uses actual logo image
@@ -553,6 +554,62 @@ export default function KaiCommand() {
       toast.error(`Couldn't summarize. ${error?.message || 'Unknown error'}`);
     } finally {
       setIsSummarizing(false);
+    }
+  };
+
+  // Handle export conversation
+  const handleExport = async (format: 'json' | 'markdown' | 'csv') => {
+    if (!selectedConversationId) {
+      toast.error('Please select a conversation to export');
+      return;
+    }
+    
+    try {
+      const result = await trpc.kai.exportConversations.query({
+        conversationId: parseInt(selectedConversationId),
+        format,
+      });
+      
+      // Create a download link
+      const blob = new Blob([result.content], { type: result.mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = result.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Exported conversation as ${format.toUpperCase()}`);
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unknown error';
+      toast.error(`Export failed: ${errorMessage}`);
+    }
+  };
+
+  // Handle export all conversations
+  const handleExportAll = async (format: 'json' | 'markdown' | 'csv') => {
+    try {
+      const result = await trpc.kai.exportConversations.query({
+        format,
+      });
+      
+      // Create a download link
+      const blob = new Blob([result.content], { type: result.mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = result.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Exported ${result.count} conversation(s) as ${format.toUpperCase()}`);
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unknown error';
+      toast.error(`Export failed: ${errorMessage}`);
     }
   };
 
@@ -2010,6 +2067,53 @@ export default function KaiCommand() {
                   >
                     <List className="w-4 h-4 mr-2" />
                     {isExtracting ? 'Extracting...' : 'Extract Data'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                    title="Export Conversations"
+                  >
+                    <Download className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={() => handleExport('json')}
+                    disabled={!selectedConversationId}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleExport('markdown')}
+                    disabled={!selectedConversationId}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as Markdown
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleExport('csv')}
+                    disabled={!selectedConversationId}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleExportAll('json')}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export All (JSON)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleExportAll('markdown')}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export All (Markdown)
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
