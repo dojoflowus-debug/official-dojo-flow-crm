@@ -3714,3 +3714,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Display creation date/time on each class card in the Classes page
 - [x] Format timestamp in user-friendly format (e.g., "Created Dec 15, 2025 at 5:53 PM")
 - [x] Test timestamp displays correctly
+
+
+## ✅ COMPLETED: Class Sorting Options
+- [x] Add sorting dropdown/buttons to Classes page header
+- [x] Implement sort by creation date (newest/oldest first)
+- [x] Implement sort by class name (A-Z / Z-A)
+- [x] Implement sort by day of the week (Mon-Sun)
+- [x] Test all sorting options work correctly

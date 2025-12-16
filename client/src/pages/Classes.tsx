@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign, ChevronDown, ChevronUp, AlertCircle, GraduationCap } from 'lucide-react';
+import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign, ChevronDown, ChevronUp, AlertCircle, GraduationCap, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
@@ -644,6 +644,10 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Sorting state
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'dayOfWeek'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [instructors, setInstructors] = useState<{
     id: number;
     name: string;
@@ -1078,13 +1082,38 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
       <div className={`p-6 max-w-7xl mx-auto ${isDarkMode ? 'bg-[#0F1115]' : ''}`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Class Schedule</h1>
             <p className="text-muted-foreground">Manage your dojo's class schedule and enrollment</p>
           </div>
           
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <div className="flex items-center gap-3">
+            {/* Sorting Controls */}
+            <div className="flex items-center gap-2">
+              <Select value={sortBy} onValueChange={(value: 'name' | 'createdAt' | 'dayOfWeek') => setSortBy(value)}>
+                <SelectTrigger className="w-[140px] h-9">
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt">Date Created</SelectItem>
+                  <SelectItem value="name">Class Name</SelectItem>
+                  <SelectItem value="dayOfWeek">Day of Week</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+              >
+                {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+              </Button>
+            </div>
+            
+            <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-5 w-5" />
@@ -1130,6 +1159,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -1200,7 +1230,28 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {classes.map((classItem) => (
+            {[...classes].sort((a, b) => {
+              // Day of week order mapping
+              const dayOrder = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6, 'Sun': 7 };
+              
+              let comparison = 0;
+              
+              if (sortBy === 'name') {
+                comparison = (a.name || '').localeCompare(b.name || '');
+              } else if (sortBy === 'createdAt') {
+                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                comparison = dateA - dateB;
+              } else if (sortBy === 'dayOfWeek') {
+                const dayA = a.day_of_week || a.schedule || '';
+                const dayB = b.day_of_week || b.schedule || '';
+                const orderA = dayOrder[dayA] || 8;
+                const orderB = dayOrder[dayB] || 8;
+                comparison = orderA - orderB;
+              }
+              
+              return sortOrder === 'asc' ? comparison : -comparison;
+            }).map((classItem) => (
               <div key={classItem.id} id={`class-${classItem.id}`} className={`p-6 rounded-lg border hover:border-primary transition-all duration-300 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
