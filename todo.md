@@ -3770,3 +3770,10 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Fix Membership dropdown - expanded options to include all database values
 - [x] Added REST API endpoints for students in server/_core/index.ts
 - [x] Test that changes save correctly to the database - all fields now editable and persist
+
+
+## ✅ COMPLETED: Remove Dashboard - Make Kai Command Primary Page
+- [x] Remove Dashboard from sidebar navigation (SimpleLayout.tsx)
+- [x] Remove Dashboard from bottom navigation (BottomNavLayout.tsx)
+- [x] Root URL (/) already routes to KaiCommand
+- [x] Test Kai Command loads as primary page

@@ -41,7 +41,6 @@ type NavigationItem = {
 }
 
 const DEFAULT_NAVIGATION: NavigationItem[] = [
-  { id: 'dashboard', name: 'Dashboard', href: '/crm-dashboard', icon: 'LayoutDashboard' },
   { id: 'students', name: 'Students', href: '/students', icon: 'Users' },
   { id: 'leads', name: 'Leads', href: '/leads', icon: 'UserPlus' },
   { id: 'classes', name: 'Classes', href: '/classes', icon: 'Calendar' },
@@ -179,9 +178,6 @@ export default function SimpleLayout({ children }) {
   // Navigation is only saved when explicitly modified by drag-and-drop or move actions.
 
   const isActive = (path: string) => {
-    if (path === '/crm-dashboard') {
-      return location.pathname === '/crm-dashboard' || location.pathname === '/dashboard'
-    }
     return location.pathname.startsWith(path)
   }
 
