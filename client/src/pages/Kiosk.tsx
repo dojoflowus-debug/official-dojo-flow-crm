@@ -134,10 +134,10 @@ export default function Kiosk() {
 
         {/* Primary Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Check In Button */}
+          {/* Member Login Button */}
           <Card 
             className="border-slate-700 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-800/50 transition-all cursor-pointer group p-8"
-            onClick={() => setLocation('/kiosk/checkin')}
+            onClick={() => setLocation('/kiosk/member-login')}
           >
             <div className="text-center space-y-4">
               <div className="flex justify-center">
@@ -147,10 +147,10 @@ export default function Kiosk() {
               </div>
               <div>
                 <h3 className="text-3xl font-bold text-white mb-2">
-                  Check In
+                  Member Login
                 </h3>
                 <p className="text-lg text-slate-300">
-                  Returning students
+                  Returning members
                 </p>
               </div>
             </div>

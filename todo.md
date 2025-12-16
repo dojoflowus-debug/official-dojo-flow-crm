@@ -4017,3 +4017,53 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test check-in flow
 - [x] Test new student intake
 - [x] Test idle timeout
+
+
+## ✅ COMPLETED: Kiosk Member Login Screen (Returning Members)
+
+### Layout & Structure
+- [x] Centered login card with rounded corners and glassmorphism
+- [x] Top header shows DojoFlow logo and locked school name
+- [x] Title: "Member Login" with subtext "Sign in to check in or manage your training."
+- [x] Clean, premium Apple-like aesthetic
+
+### Login Methods
+- [x] Primary: Phone number input (formatted as (XXX) XXX-XXXX)
+- [x] Secondary: Email toggle (simple text link to switch)
+- [x] QR code scan placeholder (future-ready)
+- [x] "Sign In" primary CTA button
+
+### Authentication & Backend
+- [x] Backend procedure for phone/email authentication (lookupByEmail added to routers.ts)
+- [x] Verify member belongs to locked school
+- [x] Auto check-in on successful login
+- [x] Error handling with friendly, non-technical messages
+- [x] No password reset flow in kiosk mode
+
+### Footer & Navigation
+- [x] "New here?" link → routes to New Student flow
+- [x] "Staff Login" link → staff authentication only
+- [x] Small, subtle styling for footer links
+
+### Behavior Rules
+- [x] School context locked and hidden
+- [x] No navigation menu or back button
+- [x] No exposure to other schools or global data
+- [x] Success confirmation: "You're checked in!"
+- [x] Auto-return to Welcome Screen after timeout (5 seconds)
+- [x] Idle timeout resets to Kiosk Welcome Screen (30 seconds)
+
+### Design Constraints
+- [x] Touch-friendly input fields (large tap targets - h-14)
+- [x] High contrast for readability
+- [x] Clean spacing matching kiosk welcome screen
+- [x] Calm, premium aesthetic safe for instructors and parents
+- [x] Consistent with DojoFlow branding
+
+### Testing
+- [x] Write vitest tests for member login (15 tests passing)
+- [x] Test phone number authentication
+- [x] Test email authentication
+- [x] Test school verification
+- [x] Test auto check-in
+- [x] Test idle timeout

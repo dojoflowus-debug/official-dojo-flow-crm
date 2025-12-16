@@ -1196,6 +1196,33 @@ export const appRouter = router({
         };
       }),
       
+    lookupByEmail: publicProcedure
+      .input(z.object({
+        email: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        const { eq, like } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Search for student by email
+        const result = await db.select().from(students).where(like(students.email, `%${input.email}%`)).limit(1);
+        
+        if (result.length > 0) {
+          return {
+            student: result[0]
+          };
+        }
+        
+        return {
+          student: null,
+          message: 'Student not found'
+        };
+      }),
+      
     searchStudents: publicProcedure
       .input(z.object({
         query: z.string(),
