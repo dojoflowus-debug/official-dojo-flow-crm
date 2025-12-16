@@ -2,22 +2,24 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Eye, EyeOff, Loader2, MessageCircle, Mail, CheckCircle2, X } from "lucide-react";
+import { Eye, EyeOff, Loader2, MessageCircle, Mail, CheckCircle2, X, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
-// Carousel images for the right panel - stacked view
+// Carousel images for the right panel - visual storytelling
 const carouselImages = [
   { src: "/carousel/kids-martial-arts.jpg", alt: "Kids martial arts class" },
-  { src: "/carousel/teens-training.jpg", alt: "Teens training with focus" },
+  { src: "/carousel/teens-training.jpg", alt: "Adult martial arts training" },
   { src: "/carousel/adult-martial-arts.jpg", alt: "Adult martial arts class" },
   { src: "/carousel/kickboxing-class.jpg", alt: "High energy kickboxing" },
-  { src: "/carousel/yoga-wellness.jpg", alt: "Yoga and wellness session" },
+  { src: "/carousel/yoga-wellness.jpg", alt: "Yoga and recovery session" },
 ];
 
 /**
- * Student Login - Premium Cinematic Split-Screen Design
- * With Forgot Password modal popup
+ * DojoFlow Grand Entrance Login Page
+ * Premium "command console" style with Apple-level polish
+ * Left: Login + New Student actions
+ * Right: Visual storytelling with rotational images
  */
 export default function StudentLogin() {
   const navigate = useNavigate();
@@ -34,11 +36,11 @@ export default function StudentLogin() {
   const [resetError, setResetError] = useState("");
   const [isSubmittingReset, setIsSubmittingReset] = useState(false);
 
-  // Auto-rotate carousel images
+  // Auto-rotate carousel images with slow fade
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
-    }, 6000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -65,7 +67,6 @@ export default function StudentLogin() {
     { enabled: false }
   );
 
-  // Password reset mutation
   const resetPasswordMutation = trpc.studentPortal.requestPasswordReset.useMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +98,6 @@ export default function StudentLogin() {
     setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login coming soon`);
   };
 
-  // Handle forgot password submission
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetError("");
@@ -107,7 +107,6 @@ export default function StudentLogin() {
       return;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(resetEmail)) {
       setResetError("Please enter a valid email address");
@@ -116,21 +115,18 @@ export default function StudentLogin() {
 
     setIsSubmittingReset(true);
     
-    // Call the backend password reset endpoint
     try {
       await resetPasswordMutation.mutateAsync({ email: resetEmail });
       setIsSubmittingReset(false);
       setResetEmailSent(true);
-    } catch (err) {
+    } catch {
       setIsSubmittingReset(false);
       setResetError("Failed to send reset email. Please try again.");
     }
   };
 
-  // Close and reset forgot password modal
   const closeForgotPasswordModal = () => {
     setShowForgotPassword(false);
-    // Reset state after animation
     setTimeout(() => {
       setResetEmail("");
       setResetEmailSent(false);
@@ -138,37 +134,21 @@ export default function StudentLogin() {
     }, 300);
   };
 
-  // Get visible images for stacked carousel (current + next 2)
-  const getVisibleImages = () => {
-    const images = [];
-    for (let i = 0; i < 3; i++) {
-      const index = (currentImageIndex + i) % carouselImages.length;
-      images.push({ ...carouselImages[index], index });
-    }
-    return images;
-  };
-
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Login Form with Warm Dojo Background */}
-      <div 
-        className="w-full lg:w-1/2 flex flex-col justify-center relative overflow-hidden"
-        style={{
-          backgroundImage: `url('/login-hero-dojoflow.jpg')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Warm gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/70 via-amber-800/60 to-stone-900/80" />
+    <div className="min-h-screen flex bg-slate-950">
+      {/* LEFT PANEL - Command Login */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-20 py-12 relative">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-black" />
         
         {/* Content */}
-        <div className="relative z-10 px-8 sm:px-12 lg:px-16 xl:px-20 py-12">
-          <div className="max-w-md w-full mx-auto">
-            {/* Header with DojoFlow Icon */}
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
+        <div className="relative z-10 max-w-md w-full mx-auto">
+          {/* Header with DojoFlow Icon before Welcome */}
+          <div className="mb-10">
+            <div className="flex items-center gap-3 mb-3">
+              {/* DojoFlow Red Swirl Icon */}
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20 flex-shrink-0">
+                <svg viewBox="0 0 24 24" className="w-7 h-7 text-white" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                 </svg>
               </div>
@@ -176,90 +156,90 @@ export default function StudentLogin() {
                 Welcome Back
               </h1>
             </div>
-
-            {/* Subheading */}
-            <p className="text-xl text-white/80 font-medium mb-10 ml-[4.5rem]">
+            <p className="text-lg text-slate-400 font-medium ml-[3.75rem]">
               Train. Progress. Advance.
             </p>
+          </div>
 
-            {/* Login Form Card */}
-            <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Email Field */}
-                <div>
-                  <Input
-                    type="email"
-                    placeholder="Email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-14 px-5 text-base bg-white/20 border-white/30 rounded-2xl text-white placeholder:text-white/60 focus:border-white focus:ring-white/30"
-                  />
-                </div>
+          {/* Login Card - Command Console Style */}
+          <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl p-8 border border-slate-800/50 shadow-2xl shadow-black/50 mb-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email Field */}
+              <div>
+                <Input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 px-5 text-base bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
+                />
+              </div>
 
-                {/* Password Field */}
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-14 px-5 pr-12 text-base bg-white/20 border-white/30 rounded-2xl text-white placeholder:text-white/60 focus:border-white focus:ring-white/30"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-
-                {/* Error Message */}
-                {error && (
-                  <p className="text-sm text-red-300 font-medium">{error}</p>
-                )}
-
-                {/* Enter the Dojo Button */}
-                <Button
-                  type="submit"
-                  disabled={loginMutation.isPending || findStudentMutation.isFetching}
-                  className="w-full h-14 text-base font-semibold bg-slate-800 hover:bg-slate-700 text-white rounded-2xl shadow-lg transition-all"
+              {/* Password Field */}
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-14 px-5 pr-12 text-base bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                 >
-                  {(loginMutation.isPending || findStudentMutation.isFetching) ? (
-                    <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    "Enter the Dojo"
-                  )}
-                </Button>
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
 
-                {/* Forgot Password Link */}
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-white/60 hover:text-white transition-colors underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </button>
-                </div>
+              {/* Error Message */}
+              {error && (
+                <p className="text-sm text-red-400 font-medium">{error}</p>
+              )}
 
-                {/* Divider */}
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 h-px bg-white/20" />
-                  <span className="text-white/40 text-sm">Or continue with</span>
-                  <div className="flex-1 h-px bg-white/20" />
-                </div>
-              </form>
+              {/* Enter the Dojo Button */}
+              <Button
+                type="submit"
+                disabled={loginMutation.isPending || findStudentMutation.isFetching}
+                className="w-full h-14 text-base font-semibold bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all border border-slate-700/50"
+              >
+                {(loginMutation.isPending || findStudentMutation.isFetching) ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Enter the Dojo"
+                )}
+              </Button>
 
+              {/* Forgot Password */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            </form>
+
+            {/* Secure Sign-In Section */}
+            <div className="mt-8 pt-6 border-t border-slate-800/50">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Shield className="h-4 w-4 text-slate-500" />
+                <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">Secure sign-in</span>
+              </div>
+              
               {/* Social Login Buttons */}
-              <div className="flex justify-center gap-4 mt-6">
+              <div className="flex justify-center gap-4">
+                {/* Google */}
                 <button
                   type="button"
                   onClick={() => handleSocialLogin("google")}
-                  className="w-14 h-14 flex items-center justify-center rounded-full bg-white hover:bg-gray-100 transition-colors shadow-lg"
+                  className="w-14 h-14 flex items-center justify-center rounded-xl bg-white hover:bg-gray-100 transition-colors shadow-lg"
                 >
                   <svg className="h-6 w-6" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -269,10 +249,11 @@ export default function StudentLogin() {
                   </svg>
                 </button>
 
+                {/* Apple */}
                 <button
                   type="button"
                   onClick={() => handleSocialLogin("apple")}
-                  className="w-14 h-14 flex items-center justify-center rounded-full bg-slate-900 hover:bg-slate-800 transition-colors shadow-lg"
+                  className="w-14 h-14 flex items-center justify-center rounded-xl bg-black hover:bg-gray-900 transition-colors shadow-lg border border-slate-700"
                 >
                   <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
@@ -280,99 +261,122 @@ export default function StudentLogin() {
                 </button>
               </div>
             </div>
+          </div>
 
-            {/* Need help signing in? Ask Kai */}
+          {/* Ask Kai Button */}
+          <button
+            type="button"
+            onClick={() => navigate("/kai")}
+            className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all mb-6"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Need help signing in? Ask Kai
+          </button>
+
+          {/* NEW STUDENT SECTION - Separate Card */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-800/50 shadow-xl">
+            <h3 className="text-xl font-bold text-white mb-2">New Student?</h3>
+            <p className="text-slate-400 text-sm mb-5">
+              Create your profile and get started in minutes.
+            </p>
+            <Button
+              onClick={() => navigate("/student-register")}
+              className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-500/20 transition-all"
+            >
+              Start Free Trial
+            </Button>
+            <p className="text-center text-slate-500 text-xs mt-3">No experience required</p>
+          </div>
+
+          {/* Back to Home */}
+          <div className="mt-8 text-center">
             <button
               type="button"
-              onClick={() => navigate("/kai")}
-              className="w-full mt-6 flex items-center justify-center gap-2 py-4 px-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 text-white/80 hover:bg-white/20 transition-all"
+              onClick={() => navigate("/")}
+              className="text-sm text-slate-600 hover:text-slate-400 transition-colors"
             >
-              <MessageCircle className="h-5 w-5" />
-              Need help signing in? Ask Kai
+              ← Back to Home
             </button>
-
-            {/* New Student Section */}
-            <div className="mt-8 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15">
-              <h3 className="text-lg font-semibold text-white mb-2">New Student?</h3>
-              <p className="text-white/60 text-sm mb-4">
-                Create your profile and get started in minutes.
-              </p>
-              <Button
-                onClick={() => navigate("/student-register")}
-                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl"
-              >
-                Start Free Trial
-              </Button>
-              <p className="text-center text-white/40 text-xs mt-3">No experience required</p>
-            </div>
-
-            {/* Back to Home Link */}
-            <div className="mt-8 text-center">
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-                className="text-sm text-white/50 hover:text-white transition-colors"
-              >
-                ← Back to Home
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Stacked Image Carousel */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 flex-col justify-between p-8 overflow-hidden">
-        {/* Quote overlay */}
-        <div className="text-right z-10">
-          <p className="text-lg font-medium text-white/90 italic">
+      {/* RIGHT PANEL - Visual Storytelling */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        {/* Static Dojo Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('/login-hero-dojoflow.jpg')`,
+          }}
+        />
+        
+        {/* Warm cinematic overlay */}
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+
+        {/* Quote - Top Right */}
+        <div className="absolute top-12 right-12 z-10">
+          <p className="text-lg font-medium text-white/90 italic text-right max-w-xs">
             "Every master was once a beginner."
           </p>
         </div>
 
-        {/* Stacked Images */}
-        <div className="flex-1 flex flex-col justify-center gap-4 py-8">
-          {getVisibleImages().map((image, idx) => (
-            <div
-              key={image.index}
-              className={`relative rounded-2xl overflow-hidden shadow-xl transition-all duration-500 ${
-                idx === 0 ? 'h-48 opacity-100' : idx === 1 ? 'h-40 opacity-80' : 'h-32 opacity-60'
-              }`}
-            >
-              <img
-                src={image.src}
-                alt={image.alt}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-3 right-3 flex gap-1.5">
-                {carouselImages.map((_, dotIdx) => (
-                  <button
-                    key={dotIdx}
-                    onClick={() => setCurrentImageIndex(dotIdx)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      dotIdx === (image.index) ? 'bg-white w-4' : 'bg-white/40'
-                    }`}
+        {/* Rotational Image Strip */}
+        <div className="absolute bottom-12 left-12 right-12 z-10">
+          {/* Image carousel with stacked cards effect */}
+          <div className="relative h-48">
+            {carouselImages.map((image, index) => {
+              const isActive = index === currentImageIndex;
+              const isPrev = index === (currentImageIndex - 1 + carouselImages.length) % carouselImages.length;
+              const isNext = index === (currentImageIndex + 1) % carouselImages.length;
+              
+              return (
+                <div
+                  key={index}
+                  className={`absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transition-all duration-700 ease-out ${
+                    isActive 
+                      ? 'opacity-100 scale-100 z-30' 
+                      : isPrev 
+                        ? 'opacity-40 scale-95 -translate-x-8 z-20' 
+                        : isNext 
+                          ? 'opacity-40 scale-95 translate-x-8 z-20' 
+                          : 'opacity-0 scale-90 z-10'
+                  }`}
+                >
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover"
                   />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                </div>
+              );
+            })}
+          </div>
 
-        {/* Yellow Belt Progress Badge */}
-        <div className="z-10">
-          <div className="inline-flex items-center gap-3 px-5 py-3 bg-white/95 backdrop-blur-sm rounded-full shadow-lg">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 shadow-inner" />
-            <span className="text-sm font-semibold text-slate-700">Yellow Belt</span>
-            <span className="text-xs text-slate-400">|</span>
-            <span className="text-xs text-slate-500">2 classes to next rank</span>
+          {/* Carousel Indicators */}
+          <div className="flex justify-center gap-2 mt-4">
+            {carouselImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === currentImageIndex 
+                    ? 'w-8 bg-white' 
+                    : 'w-1.5 bg-white/30 hover:bg-white/50'
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
 
       {/* Forgot Password Modal */}
       <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
-        <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-0 shadow-2xl rounded-3xl p-0 overflow-hidden">
-          {/* Modal Header with gradient */}
+        <DialogContent className="sm:max-w-md bg-slate-900 border-slate-800 shadow-2xl rounded-2xl p-0 overflow-hidden">
+          {/* Modal Header */}
           <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
             <button
               onClick={closeForgotPasswordModal}
@@ -400,19 +404,18 @@ export default function StudentLogin() {
           {/* Modal Content */}
           <div className="p-6">
             {resetEmailSent ? (
-              // Success State
               <div className="text-center py-4">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="h-8 w-8 text-green-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   Email Sent Successfully!
                 </h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">
-                  We've sent password reset instructions to <strong className="text-slate-900 dark:text-white">{resetEmail}</strong>. 
+                <p className="text-slate-400 text-sm mb-6">
+                  We've sent password reset instructions to <strong className="text-white">{resetEmail}</strong>. 
                   Please check your inbox and follow the link to reset your password.
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-500 mb-6">
+                <p className="text-xs text-slate-500 mb-6">
                   Didn't receive the email? Check your spam folder or try again in a few minutes.
                 </p>
                 <Button
@@ -423,10 +426,9 @@ export default function StudentLogin() {
                 </Button>
               </div>
             ) : (
-              // Email Entry Form
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Email Address
                   </label>
                   <Input
@@ -434,15 +436,15 @@ export default function StudentLogin() {
                     placeholder="Enter your email address"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    className="h-12 px-4 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="h-12 px-4 rounded-xl bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
                     autoFocus
                   />
                   {resetError && (
-                    <p className="text-sm text-red-500 mt-2">{resetError}</p>
+                    <p className="text-sm text-red-400 mt-2">{resetError}</p>
                   )}
                 </div>
 
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500">
                   Enter the email address associated with your student account and we'll send you a link to reset your password.
                 </p>
 
@@ -451,7 +453,7 @@ export default function StudentLogin() {
                     type="button"
                     variant="outline"
                     onClick={closeForgotPasswordModal}
-                    className="flex-1 h-12 rounded-xl border-slate-200 dark:border-slate-700"
+                    className="flex-1 h-12 rounded-xl border-slate-700 text-slate-300 hover:bg-slate-800"
                   >
                     Cancel
                   </Button>

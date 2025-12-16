@@ -3891,3 +3891,19 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add confirmation message after email submission
 - [x] Backend endpoint already exists (studentPortal.requestPasswordReset)
 - [ ] Test and save checkpoint
+
+
+## 🚀 REDESIGN: DojoFlow Grand Entrance Login Page
+- [x] Split layout 50/50 - Left: Login + New Student, Right: Visual storytelling
+- [x] Left panel: DojoFlow icon before "W" in "Welcome Back"
+- [x] Left panel: Dark premium "command console" style with glassmorphism
+- [x] Left panel: "Enter the Dojo" button, "Secure sign-in" label
+- [x] Left panel: Google + Apple buttons below login
+- [x] Left panel: "Need help signing in? Ask Kai" button
+- [x] Left panel: Separate "New Student?" card with "Start Free Trial" CTA
+- [x] Right panel: Static dojo background with warm cinematic lighting
+- [x] Right panel: Rotational image strip (5 images)
+- [x] Right panel: Quote "Every master was once a beginner."
+- [x] Apple-level polish, calm/disciplined/premium design
+- [x] Preserve all existing functionality
+- [ ] Test and save checkpoint
