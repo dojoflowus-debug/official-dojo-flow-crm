@@ -3853,3 +3853,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Student enrollments connected to classes
 - [ ] Enrollment count updates when students added/removed
 - [ ] "Manage Enrollments" panel lists enrolled students
+
+
+## 🐛 FIX: Student Login Page Image
+- [x] Update StudentLogin.tsx to use local martial arts image instead of Unsplash
+- [x] Verify the login page displays correctly with the new image
+- [ ] Save checkpoint
