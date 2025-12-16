@@ -730,49 +730,60 @@ body {
     margin: 0.5in;
   }
   
-  /* Hide all non-essential UI elements */
-  body > *:not(.print-schedule),
-  header,
-  nav,
-  footer,
-  aside,
-  .bottom-nav,
-  .sidebar,
-  [data-radix-popper-content-wrapper],
-  .toast,
-  .dialog-overlay,
-  button:not(.print-schedule button) {
-    display: none !important;
+  /* Reset body for print */
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Hide everything by default */
+  body * {
     visibility: hidden !important;
   }
   
-  /* Show only the schedule */
-  .print-schedule {
-    display: block !important;
+  /* Show the print-schedule container and all its children */
+  .print-schedule,
+  .print-schedule * {
     visibility: visible !important;
-    position: absolute !important;
+  }
+  
+  /* Position the schedule at the top of the page */
+  .print-schedule {
+    position: fixed !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
+    height: auto !important;
     background: white !important;
     color: black !important;
-    padding: 0.5in !important;
+    padding: 20px !important;
+    z-index: 999999 !important;
+    overflow: visible !important;
   }
   
+  /* Ensure color printing */
+  .print-schedule,
   .print-schedule * {
-    visibility: visible !important;
     color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* Clean print styling for schedule blocks */
+  /* Style the schedule grid for print */
+  .print-schedule .grid {
+    display: grid !important;
+  }
+  
+  /* Clean print styling for schedule blocks (class buttons) */
   .print-schedule button {
-    background: white !important;
+    background: #f3f4f6 !important;
     border: 1px solid #d1d5db !important;
     color: #1f2937 !important;
     box-shadow: none !important;
     cursor: default !important;
+    visibility: visible !important;
   }
   
   /* Ensure grid lines are visible */
@@ -780,19 +791,29 @@ body {
     border-color: #e5e7eb !important;
   }
   
-  /* Hide interactive elements */
-  .print-schedule button:hover {
-    transform: none !important;
-  }
-  
-  /* Hide the header controls on print */
+  /* Hide the header controls on print (the "Print Schedule" button row) */
   .print-schedule > div:first-child {
     display: none !important;
   }
   
-  /* Hide legend on print */
+  /* Show the print header */
+  .print-schedule .print\:block {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  /* Show the legend on print */
   .print-schedule > div:last-child {
-    display: none !important;
+    display: flex !important;
+    visibility: visible !important;
+    margin-top: 20px !important;
+    padding-top: 10px !important;
+    border-top: 1px solid #e5e7eb !important;
+  }
+  
+  .print-schedule > div:last-child * {
+    visibility: visible !important;
+    color: #374151 !important;
   }
   
   /* Ensure readable fonts */
@@ -808,5 +829,15 @@ body {
   .print-schedule * {
     box-shadow: none !important;
     text-shadow: none !important;
+  }
+  
+  /* Ensure the grid container is visible */
+  .print-schedule .overflow-x-auto {
+    overflow: visible !important;
+  }
+  
+  .print-schedule .min-w-\[900px\] {
+    min-width: auto !important;
+    width: 100% !important;
   }
 }

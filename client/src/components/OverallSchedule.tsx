@@ -384,63 +384,7 @@ export default function OverallSchedule({
         </div>
       </div>
 
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          /* Hide everything except the schedule */
-          body * {
-            visibility: hidden;
-          }
-          
-          .print-schedule,
-          .print-schedule * {
-            visibility: visible;
-          }
-          
-          .print-schedule {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            background: white !important;
-            padding: 20px;
-          }
-          
-          /* Force landscape orientation */
-          @page {
-            size: landscape;
-            margin: 0.5in;
-          }
-          
-          /* Clean print styling */
-          .print-schedule button {
-            background: white !important;
-            border: 1px solid #e5e7eb !important;
-            color: #1f2937 !important;
-            box-shadow: none !important;
-          }
-          
-          /* Hide interactive elements */
-          .print-schedule button:hover {
-            transform: none !important;
-          }
-          
-          /* Ensure grid lines are visible */
-          .print-schedule [class*="border"] {
-            border-color: #e5e7eb !important;
-          }
-          
-          /* Hide the header controls on print */
-          .print-schedule > div:first-child {
-            display: none !important;
-          }
-          
-          /* Show print header */
-          .print-schedule .print\\:block {
-            display: block !important;
-          }
-        }
-      `}</style>
+      {/* Print styles are in index.css */}
     </TooltipProvider>
   );
 }
