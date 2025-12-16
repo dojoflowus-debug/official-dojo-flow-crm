@@ -3708,3 +3708,9 @@ Note: The logo was already correctly implemented. The navigation uses:
 ### Note
 - Instructor field may still show "Select instructor" if the instructor name from the imported schedule doesn't exist in the staff database
 - This is expected behavior - the imported schedule has instructors like "Sensei Alex" but the staff database has different names
+
+
+## ✅ COMPLETED: Add Creation Timestamp to Class Schedule
+- [x] Display creation date/time on each class card in the Classes page
+- [x] Format timestamp in user-friendly format (e.g., "Created Dec 15, 2025 at 5:53 PM")
+- [x] Test timestamp displays correctly

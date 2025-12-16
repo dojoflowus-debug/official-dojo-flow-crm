@@ -1297,6 +1297,23 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                     <span className="text-sm text-muted-foreground">/month</span>
                   </div>
                 )}
+
+                {/* Creation timestamp */}
+                {classItem.createdAt && (
+                  <div className="mt-3 pt-3 border-t border-dashed border-muted-foreground/20">
+                    <p className="text-xs text-muted-foreground/60 text-center">
+                      Created {new Date(classItem.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })} at {new Date(classItem.createdAt).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
