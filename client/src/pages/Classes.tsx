@@ -928,17 +928,56 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     const startTime = timeParts[0] ? parseTimeTo24h(timeParts[0]) : '';
     const endTime = timeParts[1] ? parseTimeTo24h(timeParts[1]) : '';
     
+    // Try to find matching program from the class name
+    // e.g., "Little Ninjas Basics" should match "Little Ninjas" program
+    let programName = classItem.type || classItem.program || '';
+    if (!programName && classItem.name && programs.length > 0) {
+      // Find the best matching program by checking if class name starts with or contains program name
+      const matchedProgram = programs.find(p => 
+        classItem.name.toLowerCase().startsWith(p.name.toLowerCase()) ||
+        classItem.name.toLowerCase().includes(p.name.toLowerCase())
+      );
+      if (matchedProgram) {
+        programName = matchedProgram.name;
+      }
+    }
+    
+    // Try to extract level from the name (e.g., "Kids Beginner" -> level: "Beginner")
+    let levelName = classItem.level || '';
+    if (!levelName && classItem.name) {
+      const levelPatterns = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
+      for (const pattern of levelPatterns) {
+        if (classItem.name.toLowerCase().includes(pattern.toLowerCase())) {
+          levelName = pattern;
+          break;
+        }
+      }
+    }
+    
+    // Find instructor ID from instructor name if not set
+    let instructorIdValue = classItem.instructorId || null;
+    if (!instructorIdValue && classItem.instructor && instructors.length > 0) {
+      const foundInstructor = instructors.find(i => 
+        i.name === classItem.instructor || 
+        i.fullName === classItem.instructor ||
+        classItem.instructor.includes(i.name)
+      );
+      if (foundInstructor) {
+        instructorIdValue = foundInstructor.id;
+      }
+    }
+    
     setFormData({
       name: classItem.name || '',
-      program: classItem.type || '',
-      level: classItem.level || '',
+      program: programName,
+      level: levelName || 'All Levels',
       instructor: classItem.instructor || '',
-      instructorId: classItem.instructorId || null,
+      instructorId: instructorIdValue,
       days: daysArray,
       startTime: startTime,
       endTime: endTime,
-      room: classItem.room || '',
-      capacity: classItem.capacity?.toString() || '',
+      room: classItem.room || 'Main Dojo',
+      capacity: classItem.capacity?.toString() || '20',
       ageMin: classItem.age_min?.toString() || '',
       ageMax: classItem.age_max?.toString() || '',
       monthlyCost: classItem.monthly_cost?.toString() || '',

@@ -1,0 +1,170 @@
+{
+  "query": "SELECT id, name, dayOfWeek, time, instructor, capacity FROM classes ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, dayOfWeek, time, instructor, capacity FROM classes ORDER BY id DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "30033",
+      "name": "Family Class",
+      "dayOfWeek": "Sat",
+      "time": "10:00 AM - 10:45 AM",
+      "instructor": "Sensei Alex",
+      "capacity": "30"
+    },
+    {
+      "id": "30032",
+      "name": "Open Sparring",
+      "dayOfWeek": "Sat",
+      "time": "12:30 PM - 1:30 PM",
+      "instructor": "Sensei John",
+      "capacity": "20"
+    },
+    {
+      "id": "30031",
+      "name": "Bo Staff Training",
+      "dayOfWeek": "Sat",
+      "time": "11:00 AM - 12:00 PM",
+      "instructor": "Sensei Maria",
+      "capacity": "15"
+    },
+    {
+      "id": "30030",
+      "name": "Leadership Training",
+      "dayOfWeek": "Fri",
+      "time": "5:30 PM - 6:30 PM",
+      "instructor": "Master Lee",
+      "capacity": "20"
+    },
+    {
+      "id": "30029",
+      "name": "Cardio Kickboxing",
+      "dayOfWeek": "Wed",
+      "time": "7:00 PM - 7:45 PM",
+      "instructor": "Coach Emma",
+      "capacity": "35"
+    },
+    {
+      "id": "30028",
+      "name": "Cardio Kickboxing",
+      "dayOfWeek": "Mon",
+      "time": "7:00 PM - 7:45 PM",
+      "instructor": "Coach Emma",
+      "capacity": "35"
+    },
+    {
+      "id": "30027",
+      "name": "Adult Martial Arts",
+      "dayOfWeek": "Thu",
+      "time": "7:00 PM - 8:00 PM",
+      "instructor": "Sensei John",
+      "capacity": "30"
+    },
+    {
+      "id": "30026",
+      "name": "Adult Martial Arts",
+      "dayOfWeek": "Tue",
+      "time": "7:00 PM - 8:00 PM",
+      "instructor": "Sensei John",
+      "capacity": "30"
+    },
+    {
+      "id": "30025",
+      "name": "Teen Martial Arts",
+      "dayOfWeek": "Wed",
+      "time": "6:00 PM - 6:45 PM",
+      "instructor": "Sensei John",
+      "capacity": "30"
+    },
+    {
+      "id": "30024",
+      "name": "Teen Martial Arts",
+      "dayOfWeek": "Mon",
+      "time": "6:00 PM - 6:45 PM",
+      "instructor": "Sensei John",
+      "capacity": "30"
+    },
+    {
+      "id": "30023",
+      "name": "Kids Intermediate",
+      "dayOfWeek": "Thu",
+      "time": "5:30 PM - 6:15 PM",
+      "instructor": "Sensei Maria",
+      "capacity": "25"
+    },
+    {
+      "id": "30022",
+      "name": "Kids Intermediate",
+      "dayOfWeek": "Tue",
+      "time": "5:30 PM - 6:15 PM",
+      "instructor": "Sensei Maria",
+      "capacity": "25"
+    },
+    {
+      "id": "30021",
+      "name": "Kids Beginner",
+      "dayOfWeek": "Wed",
+      "time": "5:00 PM - 5:45 PM",
+      "instructor": "Sensei Alex",
+      "capacity": "25"
+    },
+    {
+      "id": "30020",
+      "name": "Kids Beginner",
+      "dayOfWeek": "Mon",
+      "time": "5:00 PM - 5:45 PM",
+      "instructor": "Sensei Alex",
+      "capacity": "25"
+    },
+    {
+      "id": "30019",
+      "name": "Little Ninjas Basics",
+      "dayOfWeek": "Wed",
+      "time": "4:30 PM - 5:00 PM",
+      "instructor": "Sensei Alex",
+      "capacity": "20"
+    },
+    {
+      "id": "30018",
+      "name": "Little Ninjas Basics",
+      "dayOfWeek": "Mon",
+      "time": "4:30 PM - 5:00 PM",
+      "instructor": "Sensei Alex",
+      "capacity": "20"
+    },
+    {
+      "id": "30017",
+      "name": "Family Class",
+      "dayOfWeek": "Sat",
+      "time": "10:00 AM - 10:45 AM",
+      "instructor": "Sensei Alex",
+      "capacity": "30"
+    },
+    {
+      "id": "30016",
+      "name": "Open Sparring",
+      "dayOfWeek": "Sat",
+      "time": "12:30 PM - 1:30 PM",
+      "instructor": "Sensei John",
+      "capacity": "20"
+    },
+    {
+      "id": "30015",
+      "name": "Bo Staff Training",
+      "dayOfWeek": "Sat",
+      "time": "11:00 AM - 12:00 PM",
+      "instructor": "Sensei Maria",
+      "capacity": "15"
+    },
+    {
+      "id": "30014",
+      "name": "Leadership Training",
+      "dayOfWeek": "Fri",
+      "time": "5:30 PM - 6:30 PM",
+      "instructor": "Master Lee",
+      "capacity": "20"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayOfWeek\ttime\tinstructor\tcapacity\n30033\tFamily Class\tSat\t10:00 AM - 10:45 AM\tSensei Alex\t30\n30032\tOpen Sparring\tSat\t12:30 PM - 1:30 PM\tSensei John\t20\n30031\tBo Staff Training\tSat\t11:00 AM - 12:00 PM\tSensei Maria\t15\n30030\tLeadership Training\tFri\t5:30 PM - 6:30 PM\tMaster Lee\t20\n30029\tCardio Kickboxing\tWed\t7:00 PM - 7:45 PM\tCoach Emma\t35\n30028\tCardio Kickboxing\tMon\t7:00 PM - 7:45 PM\tCoach Emma\t35\n30027\tAdult Martial Arts\tThu\t7:00 PM - 8:00 PM\tSensei John\t30\n30026\tAdult Martial Arts\tTue\t7:00 PM - 8:00 PM\tSensei John\t30\n30025\tTeen Martial Arts\tWed\t6:00 PM - 6:45 PM\tSensei John\t30\n30024\tTeen Martial Arts\tMon\t6:00 PM - 6:45 PM\tSensei John\t30\n30023\tKids Intermediate\tThu\t5:30 PM - 6:15 PM\tSensei Maria\t25\n30022\tKids Intermediate\tTue\t5:30 PM - 6:15 PM\tSensei Maria\t25\n30021\tKids Beginner\tWed\t5:00 PM - 5:45 PM\tSensei Alex\t25\n30020\tKids Beginner\tMon\t5:00 PM - 5:45 PM\tSensei Alex\t25\n30019\tLittle Ninjas Basics\tWed\t4:30 PM - 5:00 PM\tSensei Alex\t20\n30018\tLittle Ninjas Basics\tMon\t4:30 PM - 5:00 PM\tSensei Alex\t20\n30017\tFamily Class\tSat\t10:00 AM - 10:45 AM\tSensei Alex\t30\n30016\tOpen Sparring\tSat\t12:30 PM - 1:30 PM\tSensei John\t20\n30015\tBo Staff Training\tSat\t11:00 AM - 12:00 PM\tSensei Maria\t15\n30014\tLeadership Training\tFri\t5:30 PM - 6:30 PM\tMaster Lee\t20\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

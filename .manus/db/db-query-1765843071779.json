@@ -1,0 +1,150 @@
+{
+  "query": "SELECT COUNT(*) as total, name, dayOfWeek, time, instructor FROM classes GROUP BY name, dayOfWeek, time, instructor ORDER BY name LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COUNT(*) as total, name, dayOfWeek, time, instructor FROM classes GROUP BY name, dayOfWeek, time, instructor ORDER BY name LIMIT 20;",
+  "rows": [
+    {
+      "total": "2",
+      "name": "Adult Martial Arts",
+      "dayOfWeek": "Tue",
+      "time": "7:00 PM - 8:00 PM",
+      "instructor": "Sensei John"
+    },
+    {
+      "total": "2",
+      "name": "Adult Martial Arts",
+      "dayOfWeek": "Thu",
+      "time": "7:00 PM - 8:00 PM",
+      "instructor": "Sensei John"
+    },
+    {
+      "total": "2",
+      "name": "Bo Staff Training",
+      "dayOfWeek": "Sat",
+      "time": "11:00 AM - 12:00 PM",
+      "instructor": "Sensei Maria"
+    },
+    {
+      "total": "2",
+      "name": "Cardio Kickboxing",
+      "dayOfWeek": "Wed",
+      "time": "7:00 PM - 7:45 PM",
+      "instructor": "Coach Emma"
+    },
+    {
+      "total": "2",
+      "name": "Cardio Kickboxing",
+      "dayOfWeek": "Mon",
+      "time": "7:00 PM - 7:45 PM",
+      "instructor": "Coach Emma"
+    },
+    {
+      "total": "2",
+      "name": "Family Class",
+      "dayOfWeek": "Sat",
+      "time": "10:00 AM - 10:45 AM",
+      "instructor": "Sensei Alex"
+    },
+    {
+      "total": "2",
+      "name": "Kids Beginner",
+      "dayOfWeek": "Mon",
+      "time": "5:00 PM - 5:45 PM",
+      "instructor": "Sensei Alex"
+    },
+    {
+      "total": "2",
+      "name": "Kids Beginner",
+      "dayOfWeek": "Wed",
+      "time": "5:00 PM - 5:45 PM",
+      "instructor": "Sensei Alex"
+    },
+    {
+      "total": "2",
+      "name": "Kids Intermediate",
+      "dayOfWeek": "Tue",
+      "time": "5:30 PM - 6:15 PM",
+      "instructor": "Sensei Maria"
+    },
+    {
+      "total": "1",
+      "name": "Kids Intermediate",
+      "dayOfWeek": "Thu",
+      "time": "5:30 PM - 6:15 PM",
+      "instructor": "Sensei Maria"
+    },
+    {
+      "total": "1",
+      "name": "Kids Karate",
+      "dayOfWeek": "Mon, Wed",
+      "time": "4:00 PM - 5:00 PM",
+      "instructor": "Coach Sarah"
+    },
+    {
+      "total": "2",
+      "name": "Leadership Training",
+      "dayOfWeek": "Fri",
+      "time": "5:30 PM - 6:30 PM",
+      "instructor": "Master Lee"
+    },
+    {
+      "total": "2",
+      "name": "Little Ninjas Basics",
+      "dayOfWeek": "Mon",
+      "time": "4:30 PM - 5:00 PM",
+      "instructor": "Sensei Alex"
+    },
+    {
+      "total": "2",
+      "name": "Little Ninjas Basics",
+      "dayOfWeek": "Wed",
+      "time": "4:30 PM - 5:00 PM",
+      "instructor": "Sensei Alex"
+    },
+    {
+      "total": "2",
+      "name": "Open Sparring",
+      "dayOfWeek": "Sat",
+      "time": "12:30 PM - 1:30 PM",
+      "instructor": "Sensei John"
+    },
+    {
+      "total": "2",
+      "name": "Teen Martial Arts",
+      "dayOfWeek": "Wed",
+      "time": "6:00 PM - 6:45 PM",
+      "instructor": "Sensei John"
+    },
+    {
+      "total": "2",
+      "name": "Teen Martial Arts",
+      "dayOfWeek": "Mon",
+      "time": "6:00 PM - 6:45 PM",
+      "instructor": "Sensei John"
+    },
+    {
+      "total": "1",
+      "name": "Teen Martial Arts Updated",
+      "dayOfWeek": "Mon, Wed, Fri",
+      "time": "6:00 PM - 7:00 PM",
+      "instructor": "Professor Maria"
+    },
+    {
+      "total": "1",
+      "name": "Test Import Class",
+      "dayOfWeek": "NULL",
+      "time": "10:00 AM - 11:00 AM",
+      "instructor": "NULL"
+    },
+    {
+      "total": "1",
+      "name": "Test Import Class",
+      "dayOfWeek": "NULL",
+      "time": "",
+      "instructor": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tname\tdayOfWeek\ttime\tinstructor\n2\tAdult Martial Arts\tTue\t7:00 PM - 8:00 PM\tSensei John\n2\tAdult Martial Arts\tThu\t7:00 PM - 8:00 PM\tSensei John\n2\tBo Staff Training\tSat\t11:00 AM - 12:00 PM\tSensei Maria\n2\tCardio Kickboxing\tWed\t7:00 PM - 7:45 PM\tCoach Emma\n2\tCardio Kickboxing\tMon\t7:00 PM - 7:45 PM\tCoach Emma\n2\tFamily Class\tSat\t10:00 AM - 10:45 AM\tSensei Alex\n2\tKids Beginner\tMon\t5:00 PM - 5:45 PM\tSensei Alex\n2\tKids Beginner\tWed\t5:00 PM - 5:45 PM\tSensei Alex\n2\tKids Intermediate\tTue\t5:30 PM - 6:15 PM\tSensei Maria\n1\tKids Intermediate\tThu\t5:30 PM - 6:15 PM\tSensei Maria\n1\tKids Karate\tMon, Wed\t4:00 PM - 5:00 PM\tCoach Sarah\n2\tLeadership Training\tFri\t5:30 PM - 6:30 PM\tMaster Lee\n2\tLittle Ninjas Basics\tMon\t4:30 PM - 5:00 PM\tSensei Alex\n2\tLittle Ninjas Basics\tWed\t4:30 PM - 5:00 PM\tSensei Alex\n2\tOpen Sparring\tSat\t12:30 PM - 1:30 PM\tSensei John\n2\tTeen Martial Arts\tWed\t6:00 PM - 6:45 PM\tSensei John\n2\tTeen Martial Arts\tMon\t6:00 PM - 6:45 PM\tSensei John\n1\tTeen Martial Arts Updated\tMon, Wed, Fri\t6:00 PM - 7:00 PM\tProfessor Maria\n1\tTest Import Class\tNULL\t10:00 AM - 11:00 AM\tNULL\n1\tTest Import Class\tNULL\t\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 163
+}

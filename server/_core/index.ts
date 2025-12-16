@@ -340,6 +340,10 @@ async function startServer() {
         instructorId: c.instructorId,
         day_of_week: c.dayOfWeek,
         schedule: c.dayOfWeek,
+        type: c.program, // Program/type of class
+        program: c.program,
+        level: c.level,
+        room: c.room,
         isActive: c.isActive,
         createdAt: c.createdAt,
       }));

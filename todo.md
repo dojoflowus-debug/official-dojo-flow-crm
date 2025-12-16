@@ -3661,3 +3661,50 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Tested full import flow - 15 classes created successfully from Mock_Class_Schedule.xlsx
 - [x] Classes appear immediately in Classes page with correct totals (15 classes, 4 instructors)
 - [x] Save checkpoint
+
+
+## 🚨 CRITICAL: Create Classes Button Not Persisting to Database (User Report Dec 15)
+- [ ] Trace Create Classes button click flow and identify failure point
+- [ ] Fix backend createClassesFromSchedule procedure to properly insert records
+- [ ] Fix payload mapping (days format Mon/Wed -> ["MON","WED"], time format, instructor lookup)
+- [ ] Ensure tenant scoping (orgId, locationId) matches session context
+- [ ] Add query invalidation for immediate Classes page refresh
+- [ ] Add row-level error visibility instead of silent failures
+- [ ] Show loading state and disable button during processing
+- [ ] Show success message with "Created X classes" + "View in Classes" link
+- [ ] Test end-to-end: click Create Classes -> records appear in Classes page
+- [ ] Save checkpoint
+
+
+## 🐛 BUG: Edit Class Dialog Shows Empty Form Fields
+- [ ] Locate Edit Class dialog component in Classes.tsx
+- [ ] Fix form fields to populate with existing class data (program, instructor, level, room)
+- [ ] Ensure dropdowns show current values instead of "Select program", "Select instructor"
+- [ ] Test edit dialog displays correct values
+- [ ] Save checkpoint
+
+
+## ✅ COMPLETED: Edit Class Dialog Shows Empty Fields
+
+### Issue
+- When editing a class, form fields showed empty/default values instead of the class's actual data
+- Program dropdown showed "Select program" instead of the class's program
+- Level dropdown showed empty instead of the class's level
+- Instructor dropdown showed "Select instructor" 
+- Room field was empty
+
+### Root Cause
+- The handleEditClass function was trying to read `classItem.type` and `classItem.level` but these fields weren't returned by the API
+- No logic to match class names to programs in the database
+- No logic to extract level from class names
+
+### Fix Applied
+- [x] Updated handleEditClass to find matching program from class name (e.g., "Little Ninjas Basics" matches "Little Ninjas" program)
+- [x] Added logic to extract level from class name (Beginner, Intermediate, Advanced, All Levels)
+- [x] Added logic to find instructor ID from instructor name
+- [x] Set default values for room ("Main Dojo") and capacity ("20")
+- [x] Tested edit dialog now shows: Program, Level, Room, Days, Times, Capacity correctly
+
+### Note
+- Instructor field may still show "Select instructor" if the instructor name from the imported schedule doesn't exist in the staff database
+- This is expected behavior - the imported schedule has instructors like "Sensei Alex" but the staff database has different names

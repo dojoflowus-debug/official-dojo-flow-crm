@@ -28,14 +28,15 @@ interface ReminderResult {
  * Get the next occurrence of a class based on day of week and time
  */
 function getNextClassDate(dayOfWeek: string, timeStr: string): Date {
+  // Support both short (Mon, Tue) and full (Monday, Tuesday) day names
   const daysMap: Record<string, number> = {
-    'Sunday': 0,
-    'Monday': 1,
-    'Tuesday': 2,
-    'Wednesday': 3,
-    'Thursday': 4,
-    'Friday': 5,
-    'Saturday': 6
+    'Sunday': 0, 'Sun': 0,
+    'Monday': 1, 'Mon': 1,
+    'Tuesday': 2, 'Tue': 2,
+    'Wednesday': 3, 'Wed': 3,
+    'Thursday': 4, 'Thu': 4,
+    'Friday': 5, 'Fri': 5,
+    'Saturday': 6, 'Sat': 6
   };
 
   const targetDay = daysMap[dayOfWeek];
