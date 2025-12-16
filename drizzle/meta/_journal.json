@@ -274,6 +274,13 @@
       "when": 1765844068229,
       "tag": "0038_round_amazoness",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "5",
+      "when": 1765854495229,
+      "tag": "0039_slippery_bucky",
+      "breakpoints": true
     }
   ]
 }

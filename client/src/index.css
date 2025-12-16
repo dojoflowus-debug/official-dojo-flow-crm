@@ -721,13 +721,13 @@ body {
 
 
 /* ============================================
-   PRINT STYLES - Master Schedule
+   PRINT STYLES - Master Schedule (Single Page)
    ============================================ */
 @media print {
-  /* Force landscape orientation */
+  /* Force landscape orientation, single page */
   @page {
     size: landscape;
-    margin: 0.5in;
+    margin: 0.35in;
   }
   
   /* Reset body for print */
@@ -758,9 +758,19 @@ body {
     height: auto !important;
     background: white !important;
     color: black !important;
-    padding: 20px !important;
+    padding: 0.35in !important;
     z-index: 999999 !important;
     overflow: visible !important;
+    /* Scale to fit on one page if needed */
+    transform: scale(0.92);
+    transform-origin: top left;
+  }
+  
+  /* Prevent page breaks inside schedule */
+  .print-schedule,
+  .print-schedule * {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   
   /* Ensure color printing */
@@ -776,14 +786,26 @@ body {
     display: grid !important;
   }
   
+  /* Show the print header with branding */
+  .print-schedule .print\:flex {
+    display: flex !important;
+    visibility: visible !important;
+  }
+  
+  .print-schedule .print\:flex * {
+    visibility: visible !important;
+  }
+  
   /* Clean print styling for schedule blocks (class buttons) */
   .print-schedule button {
-    background: #f3f4f6 !important;
+    background: var(--print-bg, #f3f4f6) !important;
     border: 1px solid #d1d5db !important;
     color: #1f2937 !important;
     box-shadow: none !important;
     cursor: default !important;
     visibility: visible !important;
+    font-size: 9px !important;
+    padding: 4px !important;
   }
   
   /* Ensure grid lines are visible */
@@ -791,24 +813,18 @@ body {
     border-color: #e5e7eb !important;
   }
   
-  /* Hide the header controls on print (the "Print Schedule" button row) */
-  .print-schedule > div:first-child {
+  /* Hide the screen header controls on print */
+  .print-schedule > .print\:hidden {
     display: none !important;
-  }
-  
-  /* Show the print header */
-  .print-schedule .print\:block {
-    display: block !important;
-    visibility: visible !important;
   }
   
   /* Show the legend on print */
   .print-schedule > div:last-child {
     display: flex !important;
     visibility: visible !important;
-    margin-top: 20px !important;
-    padding-top: 10px !important;
-    border-top: 1px solid #e5e7eb !important;
+    margin-top: 10px !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #d1d5db !important;
   }
   
   .print-schedule > div:last-child * {
@@ -816,13 +832,17 @@ body {
     color: #374151 !important;
   }
   
-  /* Ensure readable fonts */
+  /* Compact fonts for single page */
   .print-schedule .text-xs {
-    font-size: 10px !important;
+    font-size: 9px !important;
   }
   
   .print-schedule .text-sm {
-    font-size: 12px !important;
+    font-size: 10px !important;
+  }
+  
+  .print-schedule .text-2xl {
+    font-size: 18px !important;
   }
   
   /* Remove shadows and effects */
@@ -839,5 +859,15 @@ body {
   .print-schedule .min-w-\[900px\] {
     min-width: auto !important;
     width: 100% !important;
+  }
+  
+  /* Compact row heights for single page */
+  .print-schedule .grid > div {
+    min-height: 40px !important;
+  }
+  
+  /* Hide tooltips on print */
+  [data-radix-popper-content-wrapper] {
+    display: none !important;
   }
 }

@@ -635,6 +635,9 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   
   // Fetch programs from database
   const { data: programs = [] } = trpc.programs.list.useQuery();
+  
+  // Fetch dojo settings for schedule branding
+  const { data: dojoSettings } = trpc.settings.getSettings.useQuery();
   const [stats, setStats] = useState({
     totalClasses: 0,
     totalStudents: 0,
@@ -1259,7 +1262,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             classes={classes}
             isDark={isDarkMode}
             onClassClick={handleEditClass}
-            dojoName="DojoFlow"
+            dojoSettings={dojoSettings}
           />
         )}
 

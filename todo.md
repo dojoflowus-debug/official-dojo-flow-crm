@@ -3808,3 +3808,48 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Ensure class blocks, times, and legend are all printed
 - [ ] User to test print preview shows full schedule
 - [ ] Save checkpoint after user confirms fix works
+
+
+## 🚀 ENHANCE: Printable Weekly Schedule
+- [x] Add school branding header (logo, name, address, phone, website, QR code placeholder)
+- [x] Fix print CSS for single-page landscape output
+- [x] Verify click-to-edit functionality and modal population
+- [x] Add updatedAt timestamp to classes table
+- [x] Verify instructor dropdown connects to Staff database with avatars
+- [x] Verify student enrollments connect to classes with manage enrollments panel
+- [ ] Test print preview and save checkpoint
+
+## 🚀 ENHANCE: Printable Weekly Schedule with Branding & Data Connections
+
+### Feature 1 - Printable Weekly Schedule Header
+- [ ] Add header band with dojo logo (left)
+- [ ] Add dojo name (center) with address, phone, website below
+- [ ] Add optional QR code to website (right)
+- [ ] Add "Schedule Effective: [date range]" text
+- [ ] Clean grid with light grey lines and alternating time bands
+
+### Feature 2 - Click Block to Edit
+- [ ] Verify clicking schedule block opens Edit Class modal
+- [ ] Ensure modal is fully populated from saved data (no blank defaults)
+- [ ] Save updates immediately reflect in schedule block and class cards
+
+### Feature 3 - One-Page Print/Export
+- [ ] Fix print CSS for single landscape page
+- [ ] Hide non-print elements (sidebar, nav, buttons)
+- [ ] Use page-break-inside: avoid to prevent splitting
+- [ ] Scale to fit if needed (transform: scale)
+- [ ] Printed result includes logo, address, phone, website
+
+### Feature 4 - Timestamps & Audit Fields
+- [ ] Add createdAt timestamp to class records
+- [ ] Display createdAt on class cards
+- [ ] Show createdAt in Edit modal (read-only)
+- [ ] Add updatedAt and updatedBy fields
+
+### Feature 5 - Data Connections
+- [ ] Connect instructor dropdown to Staff database
+- [ ] Show instructor avatar in schedule block and class card
+- [ ] Clicking instructor opens profile quick view
+- [ ] Student enrollments connected to classes
+- [ ] Enrollment count updates when students added/removed
+- [ ] "Manage Enrollments" panel lists enrolled students

@@ -1,0 +1,1 @@
+ALTER TABLE `classes` ADD `updatedAt` timestamp DEFAULT (now()) NOT NULL ON UPDATE CURRENT_TIMESTAMP;

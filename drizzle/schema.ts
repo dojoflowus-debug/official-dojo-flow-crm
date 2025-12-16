@@ -106,6 +106,7 @@ export const classes = mysqlTable("classes", {
   dayOfWeek: varchar("dayOfWeek", { length: 20 }),
   isActive: int("isActive").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Class = typeof classes.$inferSelect;
