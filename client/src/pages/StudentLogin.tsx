@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Loader2, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Eye, EyeOff, Loader2, MessageCircle, Mail, CheckCircle2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
@@ -16,9 +17,7 @@ const carouselImages = [
 
 /**
  * Student Login - Premium Cinematic Split-Screen Design
- * Matching the exact design mockup provided
- * Left: Warm dojo background with login form overlay
- * Right: Stacked rotating image carousel
+ * With Forgot Password modal popup
  */
 export default function StudentLogin() {
   const navigate = useNavigate();
@@ -27,6 +26,13 @@ export default function StudentLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Forgot Password modal state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [isSubmittingReset, setIsSubmittingReset] = useState(false);
 
   // Auto-rotate carousel images
   useEffect(() => {
@@ -59,6 +65,9 @@ export default function StudentLogin() {
     { enabled: false }
   );
 
+  // Password reset mutation
+  const resetPasswordMutation = trpc.studentPortal.requestPasswordReset.useMutation();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -88,6 +97,47 @@ export default function StudentLogin() {
     setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login coming soon`);
   };
 
+  // Handle forgot password submission
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+    
+    if (!resetEmail.trim()) {
+      setResetError("Please enter your email address");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
+      setResetError("Please enter a valid email address");
+      return;
+    }
+
+    setIsSubmittingReset(true);
+    
+    // Call the backend password reset endpoint
+    try {
+      await resetPasswordMutation.mutateAsync({ email: resetEmail });
+      setIsSubmittingReset(false);
+      setResetEmailSent(true);
+    } catch (err) {
+      setIsSubmittingReset(false);
+      setResetError("Failed to send reset email. Please try again.");
+    }
+  };
+
+  // Close and reset forgot password modal
+  const closeForgotPasswordModal = () => {
+    setShowForgotPassword(false);
+    // Reset state after animation
+    setTimeout(() => {
+      setResetEmail("");
+      setResetEmailSent(false);
+      setResetError("");
+    }, 300);
+  };
+
   // Get visible images for stacked carousel (current + next 2)
   const getVisibleImages = () => {
     const images = [];
@@ -109,15 +159,14 @@ export default function StudentLogin() {
           backgroundPosition: 'center',
         }}
       >
-        {/* Warm gradient overlay - matching the mockup's amber/brown tones */}
+        {/* Warm gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-amber-900/70 via-amber-800/60 to-stone-900/80" />
         
         {/* Content */}
         <div className="relative z-10 px-8 sm:px-12 lg:px-16 xl:px-20 py-12">
           <div className="max-w-md w-full mx-auto">
-            {/* Header with DojoFlow Icon next to Welcome Back */}
+            {/* Header with DojoFlow Icon */}
             <div className="flex items-center gap-4 mb-4">
-              {/* DojoFlow Red Swirl Icon */}
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg flex-shrink-0">
                 <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
@@ -133,7 +182,7 @@ export default function StudentLogin() {
               Train. Progress. Advance.
             </p>
 
-            {/* Login Form Card - Glassmorphic */}
+            {/* Login Form Card */}
             <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email Field */}
@@ -147,7 +196,7 @@ export default function StudentLogin() {
                   />
                 </div>
 
-                {/* Password Field with Eye Toggle */}
+                {/* Password Field */}
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -170,7 +219,7 @@ export default function StudentLogin() {
                   <p className="text-sm text-red-300 font-medium">{error}</p>
                 )}
 
-                {/* Enter the Dojo Button - Dark slate like mockup */}
+                {/* Enter the Dojo Button */}
                 <Button
                   type="submit"
                   disabled={loginMutation.isPending || findStudentMutation.isFetching}
@@ -186,13 +235,27 @@ export default function StudentLogin() {
                   )}
                 </Button>
 
-                {/* Secure sign-in text */}
-                <p className="text-center text-white/50 text-sm">• Secure sign-in •</p>
+                {/* Forgot Password Link */}
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-white/60 hover:text-white transition-colors underline-offset-4 hover:underline"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px bg-white/20" />
+                  <span className="text-white/40 text-sm">Or continue with</span>
+                  <div className="flex-1 h-px bg-white/20" />
+                </div>
               </form>
 
               {/* Social Login Buttons */}
               <div className="flex justify-center gap-4 mt-6">
-                {/* Google */}
                 <button
                   type="button"
                   onClick={() => handleSocialLogin("google")}
@@ -206,7 +269,6 @@ export default function StudentLogin() {
                   </svg>
                 </button>
 
-                {/* Apple */}
                 <button
                   type="button"
                   onClick={() => handleSocialLogin("apple")}
@@ -260,14 +322,14 @@ export default function StudentLogin() {
 
       {/* Right Panel - Stacked Image Carousel */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 flex-col justify-between p-8 overflow-hidden">
-        {/* Quote overlay - top right */}
+        {/* Quote overlay */}
         <div className="text-right z-10">
           <p className="text-lg font-medium text-white/90 italic">
             "Every master was once a beginner."
           </p>
         </div>
 
-        {/* Stacked Images - 3 visible at once */}
+        {/* Stacked Images */}
         <div className="flex-1 flex flex-col justify-center gap-4 py-8">
           {getVisibleImages().map((image, idx) => (
             <div
@@ -281,7 +343,6 @@ export default function StudentLogin() {
                 alt={image.alt}
                 className="w-full h-full object-cover"
               />
-              {/* Carousel dots on each image */}
               <div className="absolute bottom-3 right-3 flex gap-1.5">
                 {carouselImages.map((_, dotIdx) => (
                   <button
@@ -297,7 +358,7 @@ export default function StudentLogin() {
           ))}
         </div>
 
-        {/* Yellow Belt Progress Badge - bottom */}
+        {/* Yellow Belt Progress Badge */}
         <div className="z-10">
           <div className="inline-flex items-center gap-3 px-5 py-3 bg-white/95 backdrop-blur-sm rounded-full shadow-lg">
             <div className="w-5 h-5 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 shadow-inner" />
@@ -307,6 +368,113 @@ export default function StudentLogin() {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-0 shadow-2xl rounded-3xl p-0 overflow-hidden">
+          {/* Modal Header with gradient */}
+          <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+            <button
+              onClick={closeForgotPasswordModal}
+              className="absolute right-4 top-4 text-white/80 hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                <Mail className="h-6 w-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-white">
+                  {resetEmailSent ? "Check Your Email" : "Reset Password"}
+                </DialogTitle>
+                <DialogDescription className="text-white/80 mt-1">
+                  {resetEmailSent 
+                    ? "We've sent you instructions" 
+                    : "Enter your email to receive reset instructions"}
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Content */}
+          <div className="p-6">
+            {resetEmailSent ? (
+              // Success State
+              <div className="text-center py-4">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                  Email Sent Successfully!
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">
+                  We've sent password reset instructions to <strong className="text-slate-900 dark:text-white">{resetEmail}</strong>. 
+                  Please check your inbox and follow the link to reset your password.
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-500 mb-6">
+                  Didn't receive the email? Check your spam folder or try again in a few minutes.
+                </p>
+                <Button
+                  onClick={closeForgotPasswordModal}
+                  className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl"
+                >
+                  Back to Login
+                </Button>
+              </div>
+            ) : (
+              // Email Entry Form
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Email Address
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="h-12 px-4 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    autoFocus
+                  />
+                  {resetError && (
+                    <p className="text-sm text-red-500 mt-2">{resetError}</p>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Enter the email address associated with your student account and we'll send you a link to reset your password.
+                </p>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeForgotPasswordModal}
+                    className="flex-1 h-12 rounded-xl border-slate-200 dark:border-slate-700"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmittingReset}
+                    className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                  >
+                    {isSubmittingReset ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Reset Link"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

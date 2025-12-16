@@ -3883,3 +3883,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Add "Need help signing in? Ask Kai" button
 - [ ] Right panel should show stacked carousel images (3 visible at once)
 - [ ] Yellow Belt badge should show "2 classes to next rank"
+
+
+## 🚀 FEATURE: Forgot Password Modal
+- [x] Add "Forgot your password?" link to login form
+- [x] Create modal popup with email input field
+- [x] Add confirmation message after email submission
+- [x] Backend endpoint already exists (studentPortal.requestPasswordReset)
+- [ ] Test and save checkpoint
