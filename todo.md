@@ -3722,3 +3722,23 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Implement sort by class name (A-Z / Z-A)
 - [x] Implement sort by day of the week (Mon-Sun)
 - [x] Test all sorting options work correctly
+
+
+## 🐛 BUG: Student Enrollment Not Syncing with Classes
+- [ ] Students aren't registering in programs
+- [ ] Student cards not syncing with Classes page
+- [ ] Enrollment counts showing 0 on class cards
+- [ ] Investigate student-class relationship in database
+- [ ] Fix enrollment sync between Students and Classes pages
+
+
+## ✅ FIXED: Student Enrollment Sync with Classes Page
+- [x] Students not registering in programs - FIXED: Added Manage Enrollments modal to enroll/unenroll students
+- [x] Classes page not showing enrolled students - FIXED: Enrollment counts now calculated dynamically from class_enrollments table
+- [x] Enrollment counts not updating - FIXED: Real-time updates when students are enrolled/unenrolled
+- [x] Added "Manage Enrollments" button to each class card
+- [x] Created enrollment modal with student list, search, and enroll/unenroll buttons
+- [x] Fixed API path from students.enrollInClass to studentPortal.enrollInClass
+- [x] Total Students stat now reflects actual enrollments
+- [x] Tested successfully: Marcus Johnson and Sophia Williams enrolled in Little Ninjas Basics (2/20)
+

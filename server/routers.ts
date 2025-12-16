@@ -504,6 +504,42 @@ export const appRouter = router({
       }),
   }),
 
+  // Classes router for class-related operations
+  classes: router({
+    // Get students enrolled in a specific class
+    getEnrolledStudents: publicProcedure
+      .input(z.object({
+        classId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { classEnrollments, students } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return [];
+        
+        const enrollments = await db.select({
+          studentId: classEnrollments.studentId,
+          student: students
+        })
+          .from(classEnrollments)
+          .leftJoin(students, eq(classEnrollments.studentId, students.id))
+          .where(and(
+            eq(classEnrollments.classId, input.classId),
+            eq(classEnrollments.status, 'active')
+          ));
+        
+        return enrollments.map(e => ({
+          id: e.student?.id,
+          firstName: e.student?.firstName,
+          lastName: e.student?.lastName,
+          program: e.student?.program,
+          photoUrl: e.student?.photoUrl
+        })).filter(s => s.id);
+      }),
+  }),
+
   // Messaging router for @mentions and directed messages
   messaging: router({
     // Get classes for mention dropdown (bulk messaging)
@@ -2526,6 +2562,71 @@ Return the data as a structured JSON object.`
           instructor: e.class?.instructor,
           enrollmentId: e.enrollment.id
         })).filter(c => c.id);
+      }),
+
+    // Enroll student in a class
+    enrollInClass: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        classId: z.number(),
+        smsRemindersEnabled: z.boolean().optional().default(true),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { classEnrollments, classes, students } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Check if already enrolled
+        const existing = await db.select()
+          .from(classEnrollments)
+          .where(and(
+            eq(classEnrollments.studentId, input.studentId),
+            eq(classEnrollments.classId, input.classId),
+            eq(classEnrollments.status, 'active')
+          ))
+          .limit(1);
+        
+        if (existing.length > 0) {
+          return { success: false, message: 'Student is already enrolled in this class' };
+        }
+        
+        // Create enrollment
+        await db.insert(classEnrollments).values({
+          studentId: input.studentId,
+          classId: input.classId,
+          smsRemindersEnabled: input.smsRemindersEnabled ? 1 : 0,
+          status: 'active',
+        });
+        
+        return { success: true, message: 'Student enrolled successfully' };
+      }),
+
+    // Unenroll student from a class
+    unenrollFromClass: publicProcedure
+      .input(z.object({
+        studentId: z.number(),
+        classId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { classEnrollments } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Update enrollment status to cancelled
+        await db.update(classEnrollments)
+          .set({ status: 'cancelled' })
+          .where(and(
+            eq(classEnrollments.studentId, input.studentId),
+            eq(classEnrollments.classId, input.classId)
+          ));
+        
+        return { success: true, message: 'Student unenrolled successfully' };
       }),
 
     // Record check-in and update belt progress

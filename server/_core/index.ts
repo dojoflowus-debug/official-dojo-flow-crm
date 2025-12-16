@@ -319,8 +319,8 @@ async function startServer() {
   app.get("/api/classes", async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { classes } = await import("../../drizzle/schema");
-      const { eq } = await import("drizzle-orm");
+      const { classes, classEnrollments } = await import("../../drizzle/schema");
+      const { eq, sql } = await import("drizzle-orm");
       
       const db = await getDb();
       if (!db) {
@@ -329,12 +329,25 @@ async function startServer() {
       
       const allClasses = await db.select().from(classes).where(eq(classes.isActive, 1));
       
-      // Transform to match expected format
+      // Get enrollment counts for all classes from class_enrollments table
+      const enrollmentCounts = await db
+        .select({
+          classId: classEnrollments.classId,
+          count: sql<number>`COUNT(*)`
+        })
+        .from(classEnrollments)
+        .where(eq(classEnrollments.status, 'active'))
+        .groupBy(classEnrollments.classId);
+      
+      // Create a map of classId -> enrollment count
+      const enrollmentMap = new Map(enrollmentCounts.map(e => [e.classId, e.count]));
+      
+      // Transform to match expected format with dynamic enrollment counts
       const transformedClasses = allClasses.map(c => ({
         id: c.id,
         name: c.name,
         time: c.time,
-        enrolled: c.enrolled,
+        enrolled: enrollmentMap.get(c.id) || 0, // Use dynamic count from class_enrollments
         capacity: c.capacity,
         instructor: c.instructor,
         instructorId: c.instructorId,

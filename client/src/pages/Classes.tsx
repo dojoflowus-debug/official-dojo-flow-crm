@@ -661,6 +661,14 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const [isFloorPlanModalOpen, setIsFloorPlanModalOpen] = useState(false);
   const [selectedClassForFloorPlan, setSelectedClassForFloorPlan] = useState(null);
   
+  // Enrollment modal state
+  const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
+  const [selectedClassForEnrollment, setSelectedClassForEnrollment] = useState<any>(null);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [enrolledStudentIds, setEnrolledStudentIds] = useState<number[]>([]);
+  const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState('');
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false);
+  
   // Success confirmation modal state
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdClass, setCreatedClass] = useState<{
@@ -721,6 +729,37 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   useEffect(() => {
     fetchClasses();
   }, []);
+
+  // Fetch students and enrollments when enrollment modal opens
+  useEffect(() => {
+    if (isEnrollmentModalOpen && selectedClassForEnrollment) {
+      // Fetch all students using tRPC endpoint
+      fetch('/api/trpc/students.list')
+        .then(res => res.json())
+        .then(data => {
+          if (data.result?.data?.json) {
+            setAllStudents(data.result.data.json.map((s: any) => ({
+              id: s.id,
+              firstName: s.firstName,
+              lastName: s.lastName,
+              program: s.program,
+              photoUrl: s.photoUrl
+            })));
+          }
+        })
+        .catch(err => console.error('Failed to fetch students:', err));
+
+      // Fetch enrolled students for this class
+      fetch(`/api/trpc/classes.getEnrolledStudents?input=${encodeURIComponent(JSON.stringify({ json: { classId: selectedClassForEnrollment.id } }))}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.result?.data?.json) {
+            setEnrolledStudentIds(data.result.data.json.map((s: any) => s.id));
+          }
+        })
+        .catch(err => console.error('Failed to fetch enrollments:', err));
+    }
+  }, [isEnrollmentModalOpen, selectedClassForEnrollment]);
 
   // Fetch instructors using tRPC
   const { data: instructorsData } = trpc.staff.getInstructors.useQuery();
@@ -1338,6 +1377,18 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                       }}
                     />
                   </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={() => {
+                      setSelectedClassForEnrollment(classItem);
+                      setIsEnrollmentModalOpen(true);
+                    }}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Enrollments
+                  </Button>
                 </div>
 
                 {classItem.monthly_cost && (
@@ -1562,6 +1613,136 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             }}
           />
         )}
+
+        {/* Enrollment Management Modal */}
+        <Dialog open={isEnrollmentModalOpen} onOpenChange={(open) => {
+          setIsEnrollmentModalOpen(open);
+          if (!open) {
+            setSelectedClassForEnrollment(null);
+            setEnrollmentSearchQuery('');
+          }
+        }}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Manage Enrollments - {selectedClassForEnrollment?.name}
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                {selectedClassForEnrollment?.day_of_week} • {selectedClassForEnrollment?.time}
+              </p>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Search */}
+              <Input
+                placeholder="Search students..."
+                value={enrollmentSearchQuery}
+                onChange={(e) => setEnrollmentSearchQuery(e.target.value)}
+              />
+
+              {/* Student List */}
+              <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
+                {allStudents
+                  .filter(s => 
+                    `${s.firstName} ${s.lastName}`.toLowerCase().includes(enrollmentSearchQuery.toLowerCase())
+                  )
+                  .map(student => {
+                    const isEnrolled = enrolledStudentIds.includes(student.id);
+                    return (
+                      <div
+                        key={student.id}
+                        className="flex items-center justify-between p-3 hover:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          {student.photoUrl ? (
+                            <img
+                              src={student.photoUrl}
+                              alt={student.firstName}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <User className="h-5 w-5 text-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium">{student.firstName} {student.lastName}</p>
+                            <p className="text-sm text-muted-foreground">{student.program || 'No program'}</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={isEnrolled ? 'destructive' : 'default'}
+                          disabled={enrollmentLoading}
+                          onClick={async () => {
+                            setEnrollmentLoading(true);
+                            try {
+                              if (isEnrolled) {
+                                // Unenroll
+                                const response = await fetch('/api/trpc/studentPortal.unenrollFromClass', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    json: {
+                                      studentId: student.id,
+                                      classId: selectedClassForEnrollment.id
+                                    }
+                                  })
+                                });
+                                if (response.ok) {
+                                  setEnrolledStudentIds(prev => prev.filter(id => id !== student.id));
+                                  toast.success(`${student.firstName} unenrolled from class`);
+                                  fetchClasses(); // Refresh enrollment counts
+                                }
+                              } else {
+                                // Enroll
+                                const response = await fetch('/api/trpc/studentPortal.enrollInClass', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    json: {
+                                      studentId: student.id,
+                                      classId: selectedClassForEnrollment.id
+                                    }
+                                  })
+                                });
+                                if (response.ok) {
+                                  setEnrolledStudentIds(prev => [...prev, student.id]);
+                                  toast.success(`${student.firstName} enrolled in class`);
+                                  fetchClasses(); // Refresh enrollment counts
+                                }
+                              }
+                            } catch (error) {
+                              toast.error('Failed to update enrollment');
+                            } finally {
+                              setEnrollmentLoading(false);
+                            }
+                          }}
+                        >
+                          {isEnrolled ? 'Remove' : 'Enroll'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                {allStudents.length === 0 && (
+                  <div className="p-8 text-center text-muted-foreground">
+                    No students found. Add students first.
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center pt-2 border-t">
+                <p className="text-sm text-muted-foreground">
+                  {enrolledStudentIds.length} student{enrolledStudentIds.length !== 1 ? 's' : ''} enrolled
+                </p>
+                <Button variant="outline" onClick={() => setIsEnrollmentModalOpen(false)}>
+                  Done
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </BottomNavLayout>
   );

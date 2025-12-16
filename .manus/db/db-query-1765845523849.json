@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, firstName, lastName, program FROM students LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, program FROM students LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "program": "General"
+    },
+    {
+      "id": "30001",
+      "firstName": "Marcus",
+      "lastName": "Johnson",
+      "program": "Kids Karate"
+    },
+    {
+      "id": "30002",
+      "firstName": "Sophia",
+      "lastName": "Williams",
+      "program": "Kids Karate"
+    },
+    {
+      "id": "30003",
+      "firstName": "Ethan",
+      "lastName": "Brown",
+      "program": "Little Dragons"
+    },
+    {
+      "id": "30004",
+      "firstName": "Olivia",
+      "lastName": "Davis",
+      "program": "Kids Karate"
+    },
+    {
+      "id": "30005",
+      "firstName": "Liam",
+      "lastName": "Garcia",
+      "program": "Adult Jiu-Jitsu"
+    },
+    {
+      "id": "30006",
+      "firstName": "Emma",
+      "lastName": "Martinez",
+      "program": "Kids Karate"
+    },
+    {
+      "id": "30007",
+      "firstName": "Noah",
+      "lastName": "Rodriguez",
+      "program": "Adult Muay Thai"
+    },
+    {
+      "id": "30008",
+      "firstName": "Ava",
+      "lastName": "Wilson",
+      "program": "Little Dragons"
+    },
+    {
+      "id": "30009",
+      "firstName": "James",
+      "lastName": "Anderson",
+      "program": "Adult Jiu-Jitsu"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tprogram\n1\tJohn\tSmith\tGeneral\n30001\tMarcus\tJohnson\tKids Karate\n30002\tSophia\tWilliams\tKids Karate\n30003\tEthan\tBrown\tLittle Dragons\n30004\tOlivia\tDavis\tKids Karate\n30005\tLiam\tGarcia\tAdult Jiu-Jitsu\n30006\tEmma\tMartinez\tKids Karate\n30007\tNoah\tRodriguez\tAdult Muay Thai\n30008\tAva\tWilson\tLittle Dragons\n30009\tJames\tAnderson\tAdult Jiu-Jitsu\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
