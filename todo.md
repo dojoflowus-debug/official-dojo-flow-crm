@@ -3871,3 +3871,15 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add Yellow Belt progress badge at bottom
 - [x] Implement mobile responsive design
 - [ ] Test and save checkpoint
+
+
+## 🐛 FIX: Student Login Page Not Matching Design Mockup
+- [ ] The published version shows old design - need to match the mockup exactly
+- [ ] Left panel should have warm dojo background (not dark overlay)
+- [ ] DojoFlow red icon should be next to "Welcome Back"
+- [ ] Button should say "Enter the Dojo" not "Continue"
+- [ ] Add "Secure sign-in" text below button
+- [ ] Add "New Student?" section with "Start Free Trial" button
+- [ ] Add "Need help signing in? Ask Kai" button
+- [ ] Right panel should show stacked carousel images (3 visible at once)
+- [ ] Yellow Belt badge should show "2 classes to next rank"
