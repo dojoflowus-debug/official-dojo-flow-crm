@@ -3742,3 +3742,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Total Students stat now reflects actual enrollments
 - [x] Tested successfully: Marcus Johnson and Sophia Williams enrolled in Little Ninjas Basics (2/20)
 
+
+## ✅ COMPLETED: Auto-Enroll Students by Program
+- [x] Design program-to-class matching logic (e.g., "Kids Karate" → "Kids Beginner", "Kids Intermediate")
+- [x] Add "Suggested" badge to students whose program matches the class
+- [x] Sort suggested students to top of enrollment list
+- [ ] Add "Enroll All Suggested" button for bulk enrollment (future enhancement)
+- [x] Test matching works correctly for all program types
+

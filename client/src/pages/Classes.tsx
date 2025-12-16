@@ -1647,12 +1647,54 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                   .filter(s => 
                     `${s.firstName} ${s.lastName}`.toLowerCase().includes(enrollmentSearchQuery.toLowerCase())
                   )
+                  .sort((a, b) => {
+                    // Sort: Enrolled first, then Suggested, then others
+                    const aEnrolled = enrolledStudentIds.includes(a.id);
+                    const bEnrolled = enrolledStudentIds.includes(b.id);
+                    if (aEnrolled !== bEnrolled) return aEnrolled ? -1 : 1;
+                    
+                    const className = selectedClassForEnrollment?.name?.toLowerCase() || '';
+                    const aProgram = (a.program || '').toLowerCase();
+                    const bProgram = (b.program || '').toLowerCase();
+                    const aSuggested = (
+                      (aProgram.includes('little') && className.includes('little ninja')) ||
+                      (aProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
+                      (aProgram.includes('teen') && className.includes('teen')) ||
+                      (aProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
+                      (aProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
+                      (aProgram.includes('karate') && (className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
+                    );
+                    const bSuggested = (
+                      (bProgram.includes('little') && className.includes('little ninja')) ||
+                      (bProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
+                      (bProgram.includes('teen') && className.includes('teen')) ||
+                      (bProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
+                      (bProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
+                      (bProgram.includes('karate') && (className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
+                    );
+                    if (aSuggested !== bSuggested) return aSuggested ? -1 : 1;
+                    return 0;
+                  })
                   .map(student => {
                     const isEnrolled = enrolledStudentIds.includes(student.id);
+                    // Program-to-class matching logic
+                    const className = selectedClassForEnrollment?.name?.toLowerCase() || '';
+                    const studentProgram = (student.program || '').toLowerCase();
+                    const isSuggested = (
+                      (studentProgram.includes('little') && className.includes('little ninja')) ||
+                      (studentProgram.includes('kids') && (className.includes('kids') || className.includes('family'))) ||
+                      (studentProgram.includes('teen') && className.includes('teen')) ||
+                      (studentProgram.includes('adult') && (className.includes('adult') || className.includes('cardio') || className.includes('sparring'))) ||
+                      (studentProgram.includes('dragon') && (className.includes('little ninja') || className.includes('kids'))) ||
+                      (studentProgram.includes('competition') && (className.includes('sparring') || className.includes('leadership'))) ||
+                      (studentProgram.includes('jiu-jitsu') && (className.includes('adult') || className.includes('sparring'))) ||
+                      (studentProgram.includes('muay thai') && (className.includes('adult') || className.includes('cardio') || className.includes('kickboxing'))) ||
+                      (studentProgram.includes('karate') && (className.includes('adult') || className.includes('kids') || className.includes('beginner') || className.includes('intermediate')))
+                    );
                     return (
                       <div
                         key={student.id}
-                        className="flex items-center justify-between p-3 hover:bg-muted/50"
+                        className={`flex items-center justify-between p-3 hover:bg-muted/50 ${isSuggested && !isEnrolled ? 'bg-green-500/10 border-l-2 border-l-green-500' : ''}`}
                       >
                         <div className="flex items-center gap-3">
                           {student.photoUrl ? (
@@ -1667,7 +1709,14 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                             </div>
                           )}
                           <div>
-                            <p className="font-medium">{student.firstName} {student.lastName}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{student.firstName} {student.lastName}</p>
+                              {isSuggested && !isEnrolled && (
+                                <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full font-medium">
+                                  Suggested
+                                </span>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground">{student.program || 'No program'}</p>
                           </div>
                         </div>
