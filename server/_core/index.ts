@@ -498,6 +498,196 @@ async function startServer() {
     }
   });
   
+  // Students REST API endpoints
+  app.get("/api/students", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { students } = await import("../../drizzle/schema");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const allStudents = await db.select().from(students);
+      
+      // Transform to snake_case for frontend compatibility
+      const transformedStudents = allStudents.map(s => ({
+        id: s.id,
+        first_name: s.firstName,
+        last_name: s.lastName,
+        email: s.email || '',
+        phone: s.phone || '',
+        date_of_birth: s.dateOfBirth,
+        age: s.age,
+        belt_rank: s.beltRank || 'White',
+        status: s.status || 'Active',
+        membership_status: s.membershipStatus || 'Standard',
+        photo_url: s.photoUrl || '',
+        program: s.program || '',
+        street_address: s.streetAddress || '',
+        city: s.city || '',
+        state: s.state || '',
+        zip_code: s.zipCode || '',
+        latitude: s.latitude || '',
+        longitude: s.longitude || '',
+        guardian_name: s.guardianName || '',
+        guardian_relationship: s.guardianRelationship || '',
+        guardian_phone: s.guardianPhone || '',
+        guardian_email: s.guardianEmail || '',
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      }));
+      
+      res.json(transformedStudents);
+    } catch (error) {
+      console.error("Students endpoint error:", error);
+      res.status(500).json({ error: "Failed to fetch students" });
+    }
+  });
+  
+  app.get("/api/students/stats", async (req, res) => {
+    try {
+      const { getDashboardStats } = await import("../db");
+      const stats = await getDashboardStats();
+      res.json({
+        total_students: stats?.total_students || 0,
+        active_students: stats?.total_students || 0,
+        overdue_payments: 0,
+        new_this_month: 0
+      });
+    } catch (error) {
+      console.error("Students stats endpoint error:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+  
+  app.post("/api/students", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { students } = await import("../../drizzle/schema");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const { name, email, phone, date_of_birth, belt_rank, status, membership_status, street_address, city, state, zip_code } = req.body;
+      
+      // Parse name into firstName and lastName
+      const nameParts = (name || '').trim().split(/\s+/);
+      const firstName = nameParts[0] || 'Unknown';
+      const lastName = nameParts.slice(1).join(' ') || firstName;
+      
+      const result = await db.insert(students).values({
+        firstName,
+        lastName,
+        email: email || null,
+        phone: phone || null,
+        dateOfBirth: date_of_birth ? new Date(date_of_birth) : null,
+        beltRank: belt_rank || 'White',
+        status: status || 'Active',
+        membershipStatus: membership_status || 'Standard',
+        streetAddress: street_address || null,
+        city: city || null,
+        state: state || null,
+        zipCode: zip_code || null,
+      });
+      
+      res.status(201).json({ success: true, id: result[0].insertId });
+    } catch (error) {
+      console.error("Create student endpoint error:", error);
+      res.status(500).json({ error: "Failed to create student" });
+    }
+  });
+  
+  app.put("/api/students/:id", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { students } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const { geocodeAddress } = await import("../geocoding");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const studentId = parseInt(req.params.id);
+      const { name, email, phone, date_of_birth, belt_rank, status, membership_status, street_address, city, state, zip_code, program } = req.body;
+      
+      // Build update data - only include fields that are provided
+      const updateData: Record<string, any> = {};
+      
+      if (name !== undefined) {
+        const nameParts = (name || '').trim().split(/\s+/);
+        updateData.firstName = nameParts[0] || 'Unknown';
+        updateData.lastName = nameParts.slice(1).join(' ') || updateData.firstName;
+      }
+      if (email !== undefined) updateData.email = email || null;
+      if (phone !== undefined) updateData.phone = phone || null;
+      if (date_of_birth !== undefined) updateData.dateOfBirth = date_of_birth ? new Date(date_of_birth) : null;
+      if (belt_rank !== undefined) updateData.beltRank = belt_rank || null;
+      if (status !== undefined) updateData.status = status || 'Active';
+      if (membership_status !== undefined) updateData.membershipStatus = membership_status || null;
+      if (street_address !== undefined) updateData.streetAddress = street_address || null;
+      if (city !== undefined) updateData.city = city || null;
+      if (state !== undefined) updateData.state = state || null;
+      if (zip_code !== undefined) updateData.zipCode = zip_code || null;
+      if (program !== undefined) updateData.program = program || null;
+      
+      // Geocode if address changed
+      const hasAddressUpdate = street_address !== undefined || city !== undefined || state !== undefined || zip_code !== undefined;
+      if (hasAddressUpdate) {
+        const [currentStudent] = await db.select().from(students).where(eq(students.id, studentId));
+        if (currentStudent) {
+          const addressToGeocode = {
+            streetAddress: street_address ?? currentStudent.streetAddress ?? undefined,
+            city: city ?? currentStudent.city ?? undefined,
+            state: state ?? currentStudent.state ?? undefined,
+            zipCode: zip_code ?? currentStudent.zipCode ?? undefined,
+          };
+          
+          if (addressToGeocode.city || addressToGeocode.zipCode) {
+            const geocodeResult = await geocodeAddress(addressToGeocode);
+            if (geocodeResult) {
+              updateData.latitude = geocodeResult.latitude;
+              updateData.longitude = geocodeResult.longitude;
+            }
+          }
+        }
+      }
+      
+      await db.update(students).set(updateData).where(eq(students.id, studentId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Update student endpoint error:", error);
+      res.status(500).json({ error: "Failed to update student" });
+    }
+  });
+  
+  app.delete("/api/students/:id", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { students } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const studentId = parseInt(req.params.id);
+      await db.delete(students).where(eq(students.id, studentId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete student endpoint error:", error);
+      res.status(500).json({ error: "Failed to delete student" });
+    }
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

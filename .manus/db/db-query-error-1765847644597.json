@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, first_name, last_name, program, belt_rank, membership_status, status FROM students WHERE first_name = 'John' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, first_name, last_name, program, belt_rank, membership_status, status FROM students WHERE first_name = 'John' LIMIT 1;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'first_name' in 'where clause'"
+  ]
+}

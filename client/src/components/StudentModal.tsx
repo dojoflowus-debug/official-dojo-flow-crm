@@ -145,17 +145,29 @@ function AcmeLogo() {
   )
 }
 
-// Belt options
+// Belt options - match database values
 const BELT_OPTIONS = [
-  'White Belt', 'Yellow Belt', 'Orange Belt', 'Green Belt', 
-  'Blue Belt', 'Purple Belt', 'Brown Belt', 'Black Belt'
+  'White', 'Yellow', 'Orange', 'Green', 
+  'Blue', 'Purple', 'Brown', 'Black'
 ]
+
+// Belt display labels for UI
+const BELT_DISPLAY_LABELS: Record<string, string> = {
+  'White': 'White Belt',
+  'Yellow': 'Yellow Belt',
+  'Orange': 'Orange Belt',
+  'Green': 'Green Belt',
+  'Blue': 'Blue Belt',
+  'Purple': 'Purple Belt',
+  'Brown': 'Brown Belt',
+  'Black': 'Black Belt',
+}
 
 // Status options
 const STATUS_OPTIONS = ['Active', 'Inactive', 'On Hold']
 
-// Membership options
-const MEMBERSHIP_OPTIONS = ['Standard', 'Premium', 'Trial', 'Family', 'Student']
+// Membership options - match database values
+const MEMBERSHIP_OPTIONS = ['Standard', 'Premium', 'Trial', 'Family', 'Student', 'Expired', 'Paid', 'Overdue', 'Cancelled']
 
 // Program options
 const PROGRAM_OPTIONS = ['Kids Karate', 'Adult Karate', 'BJJ', 'MMA', 'Kickboxing', 'General']
@@ -877,7 +889,7 @@ export default function StudentModal({
                           </SelectTrigger>
                           <SelectContent>
                             {BELT_OPTIONS.map(opt => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                              <SelectItem key={opt} value={opt}>{BELT_DISPLAY_LABELS[opt] || opt}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

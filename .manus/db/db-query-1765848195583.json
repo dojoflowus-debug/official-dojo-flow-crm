@@ -1,0 +1,36 @@
+{
+  "query": "SELECT * FROM students WHERE firstName = 'John' AND lastName = 'Smith' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM students WHERE firstName = 'John' AND lastName = 'Smith' LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john.smith@dojo.com",
+      "phone": "(555) 987-6543",
+      "dateOfBirth": "NULL",
+      "age": "NULL",
+      "beltRank": "White",
+      "status": "Active",
+      "membershipStatus": "Active",
+      "createdAt": "2025-12-10 05:28:39",
+      "updatedAt": "2025-12-16 01:02:35",
+      "photoUrl": "NULL",
+      "program": "Kids Karate",
+      "streetAddress": "1600 Pennsylvania Avenue NW",
+      "city": "Washington",
+      "state": "DC",
+      "zipCode": "20500",
+      "latitude": "38.8975862",
+      "longitude": "-77.0366871",
+      "guardianName": "NULL",
+      "guardianRelationship": "NULL",
+      "guardianPhone": "NULL",
+      "guardianEmail": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tdateOfBirth\tage\tbeltRank\tstatus\tmembershipStatus\tcreatedAt\tupdatedAt\tphotoUrl\tprogram\tstreetAddress\tcity\tstate\tzipCode\tlatitude\tlongitude\tguardianName\tguardianRelationship\tguardianPhone\tguardianEmail\n1\tJohn\tSmith\tjohn.smith@dojo.com\t(555) 987-6543\tNULL\tNULL\tWhite\tActive\tActive\t2025-12-10 05:28:39\t2025-12-16 01:02:35\tNULL\tKids Karate\t1600 Pennsylvania Avenue NW\tWashington\tDC\t20500\t38.8975862\t-77.0366871\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
