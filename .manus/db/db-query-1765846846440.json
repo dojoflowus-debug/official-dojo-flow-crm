@@ -1,0 +1,164 @@
+{
+  "query": "SELECT id, firstName, lastName, program, status FROM students ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, program, status FROM students ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "program": "General",
+      "status": "Active"
+    },
+    {
+      "id": "30001",
+      "firstName": "Marcus",
+      "lastName": "Johnson",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30002",
+      "firstName": "Sophia",
+      "lastName": "Williams",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30003",
+      "firstName": "Ethan",
+      "lastName": "Brown",
+      "program": "Little Dragons",
+      "status": "Active"
+    },
+    {
+      "id": "30004",
+      "firstName": "Olivia",
+      "lastName": "Davis",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30005",
+      "firstName": "Liam",
+      "lastName": "Garcia",
+      "program": "Adult Jiu-Jitsu",
+      "status": "Active"
+    },
+    {
+      "id": "30006",
+      "firstName": "Emma",
+      "lastName": "Martinez",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30007",
+      "firstName": "Noah",
+      "lastName": "Rodriguez",
+      "program": "Adult Muay Thai",
+      "status": "Active"
+    },
+    {
+      "id": "30008",
+      "firstName": "Ava",
+      "lastName": "Wilson",
+      "program": "Little Dragons",
+      "status": "Active"
+    },
+    {
+      "id": "30009",
+      "firstName": "James",
+      "lastName": "Anderson",
+      "program": "Adult Jiu-Jitsu",
+      "status": "Active"
+    },
+    {
+      "id": "30010",
+      "firstName": "Isabella",
+      "lastName": "Thomas",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30011",
+      "firstName": "Benjamin",
+      "lastName": "Taylor",
+      "program": "Teen Kickboxing",
+      "status": "On Hold"
+    },
+    {
+      "id": "30012",
+      "firstName": "Mia",
+      "lastName": "Moore",
+      "program": "Adult Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30013",
+      "firstName": "Lucas",
+      "lastName": "Jackson",
+      "program": "Little Dragons",
+      "status": "Active"
+    },
+    {
+      "id": "30014",
+      "firstName": "Charlotte",
+      "lastName": "White",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30015",
+      "firstName": "Alexander",
+      "lastName": "Harris",
+      "program": "Adult Jiu-Jitsu",
+      "status": "Inactive"
+    },
+    {
+      "id": "30016",
+      "firstName": "Amelia",
+      "lastName": "Clark",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30017",
+      "firstName": "Daniel",
+      "lastName": "Lewis",
+      "program": "Adult Muay Thai",
+      "status": "Active"
+    },
+    {
+      "id": "30018",
+      "firstName": "Harper",
+      "lastName": "Walker",
+      "program": "Little Dragons",
+      "status": "Active"
+    },
+    {
+      "id": "30019",
+      "firstName": "Michael",
+      "lastName": "Hall",
+      "program": "Adult Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30020",
+      "firstName": "Evelyn",
+      "lastName": "Young",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30021",
+      "firstName": "Test",
+      "lastName": "Student",
+      "program": "NULL",
+      "status": "Active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tprogram\tstatus\n1\tJohn\tSmith\tGeneral\tActive\n30001\tMarcus\tJohnson\tKids Karate\tActive\n30002\tSophia\tWilliams\tKids Karate\tActive\n30003\tEthan\tBrown\tLittle Dragons\tActive\n30004\tOlivia\tDavis\tKids Karate\tActive\n30005\tLiam\tGarcia\tAdult Jiu-Jitsu\tActive\n30006\tEmma\tMartinez\tKids Karate\tActive\n30007\tNoah\tRodriguez\tAdult Muay Thai\tActive\n30008\tAva\tWilson\tLittle Dragons\tActive\n30009\tJames\tAnderson\tAdult Jiu-Jitsu\tActive\n30010\tIsabella\tThomas\tKids Karate\tActive\n30011\tBenjamin\tTaylor\tTeen Kickboxing\tOn Hold\n30012\tMia\tMoore\tAdult Karate\tActive\n30013\tLucas\tJackson\tLittle Dragons\tActive\n30014\tCharlotte\tWhite\tKids Karate\tActive\n30015\tAlexander\tHarris\tAdult Jiu-Jitsu\tInactive\n30016\tAmelia\tClark\tKids Karate\tActive\n30017\tDaniel\tLewis\tAdult Muay Thai\tActive\n30018\tHarper\tWalker\tLittle Dragons\tActive\n30019\tMichael\tHall\tAdult Karate\tActive\n30020\tEvelyn\tYoung\tKids Karate\tActive\n30021\tTest\tStudent\tNULL\tActive\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}
