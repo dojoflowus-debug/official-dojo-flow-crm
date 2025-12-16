@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,12 +7,18 @@ import { ArrowLeft, ArrowRight, Check, Loader2, User, Mail, Phone, Calendar, Shi
 import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
-// Registration steps
+// Registration steps - includes guardian info for minors
 const STEPS = [
   { id: 1, title: "Personal Info", description: "Tell us about yourself" },
   { id: 2, title: "Contact Details", description: "How can we reach you?" },
-  { id: 3, title: "Program Selection", description: "Choose your training path" },
+  { id: 3, title: "Guardian Info", description: "Parent/Guardian details (if under 18)" },
+  { id: 4, title: "Program Selection", description: "Choose your training path" },
 ];
+
+// Storage keys
+const STORAGE_KEYS = {
+  KIOSK_MODE: 'kiosk_mode',
+};
 
 // Available programs
 const PROGRAMS = [
@@ -28,12 +34,28 @@ const PROGRAMS = [
  * DojoFlow Student Registration Page
  * Premium multi-step registration form matching the Grand Entrance design
  */
+/**
+ * DojoFlow Student Registration / Onboarding Page
+ * 
+ * NEW STUDENT ONBOARDING FLOW:
+ * 1. Creates a provisional student profile
+ * 2. Collects personal info, contact details, guardian info (if minor)
+ * 3. Program selection and trial class scheduling
+ * 4. NOT a generic signup form - this is the start of the student journey
+ * 
+ * KIOSK MODE AWARENESS:
+ * - Detects kiosk context from URL params or localStorage
+ * - Provides "Back to Kiosk" navigation
+ * - Limits exposure to admin areas
+ */
 export default function StudentRegister() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [error, setError] = useState("");
+  const [isKioskMode, setIsKioskMode] = useState(false);
+  const [isMinor, setIsMinor] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -49,12 +71,45 @@ export default function StudentRegister() {
     city: "",
     state: "",
     zipCode: "",
-    // Step 3: Program Selection
+    // Step 3: Guardian Info (for minors)
+    guardianFirstName: "",
+    guardianLastName: "",
+    guardianEmail: "",
+    guardianPhone: "",
+    guardianRelationship: "",
+    // Step 4: Program Selection
     selectedPrograms: [] as string[],
     experienceLevel: "",
     howDidYouHear: "",
     agreeToTerms: false,
   });
+
+  // Check for kiosk mode from URL params or localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const kioskParam = params.get('kiosk');
+    const storedKioskMode = localStorage.getItem(STORAGE_KEYS.KIOSK_MODE) === 'true';
+    
+    if (kioskParam === 'true' || storedKioskMode) {
+      setIsKioskMode(true);
+    }
+  }, []);
+
+  // Check if student is a minor based on date of birth
+  useEffect(() => {
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+        ? age - 1 
+        : age;
+      setIsMinor(actualAge < 18);
+    } else {
+      setIsMinor(false);
+    }
+  }, [formData.dateOfBirth]);
 
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -109,7 +164,13 @@ export default function StudentRegister() {
       if (!formData.phone.trim()) errors.phone = "Phone number is required";
     }
 
-    if (step === 3) {
+    if (step === 3 && isMinor) {
+      if (!formData.guardianFirstName.trim()) errors.guardianFirstName = "Guardian first name is required";
+      if (!formData.guardianLastName.trim()) errors.guardianLastName = "Guardian last name is required";
+      if (!formData.guardianPhone.trim()) errors.guardianPhone = "Guardian phone is required";
+    }
+
+    if (step === 4 || (step === 3 && !isMinor)) {
       if (formData.selectedPrograms.length === 0) {
         errors.selectedPrograms = "Please select at least one program";
       }
@@ -124,12 +185,29 @@ export default function StudentRegister() {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+      // Skip guardian step if not a minor
+      if (currentStep === 2 && !isMinor) {
+        setCurrentStep(4); // Skip to program selection
+      } else {
+        setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+      }
     }
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    // Skip guardian step when going back if not a minor
+    if (currentStep === 4 && !isMinor) {
+      setCurrentStep(2); // Skip back to contact details
+    } else {
+      setCurrentStep((prev) => Math.max(prev - 1, 1));
+    }
+  };
+
+  // Get the actual step count (excluding guardian step for adults)
+  const getEffectiveStepCount = () => isMinor ? STEPS.length : STEPS.length - 1;
+  const getEffectiveCurrentStep = () => {
+    if (!isMinor && currentStep >= 4) return currentStep - 1;
+    return currentStep;
   };
 
   const handleSubmit = async () => {
@@ -407,8 +485,97 @@ export default function StudentRegister() {
               </div>
             )}
 
-            {/* Step 3: Program Selection */}
-            {currentStep === 3 && (
+            {/* Step 3: Guardian Info (for minors only) */}
+            {currentStep === 3 && isMinor && (
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+                    <User className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Parent/Guardian Information</h2>
+                    <p className="text-sm text-slate-400">Required for students under 18</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Input
+                      placeholder="Guardian First Name *"
+                      value={formData.guardianFirstName}
+                      onChange={(e) => updateFormData("guardianFirstName", e.target.value)}
+                      className={`h-14 px-5 text-base bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-red-500/50 focus:ring-red-500/20 ${
+                        validationErrors.guardianFirstName ? "border-red-500" : ""
+                      }`}
+                    />
+                    {validationErrors.guardianFirstName && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.guardianFirstName}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="Guardian Last Name *"
+                      value={formData.guardianLastName}
+                      onChange={(e) => updateFormData("guardianLastName", e.target.value)}
+                      className={`h-14 px-5 text-base bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-red-500/50 focus:ring-red-500/20 ${
+                        validationErrors.guardianLastName ? "border-red-500" : ""
+                      }`}
+                    />
+                    {validationErrors.guardianLastName && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.guardianLastName}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Input
+                    type="tel"
+                    placeholder="Guardian Phone Number *"
+                    value={formData.guardianPhone}
+                    onChange={(e) => updateFormData("guardianPhone", e.target.value)}
+                    className={`h-14 px-5 text-base bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-red-500/50 focus:ring-red-500/20 ${
+                      validationErrors.guardianPhone ? "border-red-500" : ""
+                    }`}
+                  />
+                  {validationErrors.guardianPhone && (
+                    <p className="text-red-400 text-xs mt-1">{validationErrors.guardianPhone}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Input
+                    type="email"
+                    placeholder="Guardian Email (optional)"
+                    value={formData.guardianEmail}
+                    onChange={(e) => updateFormData("guardianEmail", e.target.value)}
+                    className="h-14 px-5 text-base bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-red-500/50 focus:ring-red-500/20"
+                  />
+                </div>
+
+                <div>
+                  <Select value={formData.guardianRelationship} onValueChange={(v) => updateFormData("guardianRelationship", v)}>
+                    <SelectTrigger className="h-14 px-5 text-base bg-slate-800/50 border-slate-700/50 rounded-xl text-white focus:border-red-500/50 focus:ring-red-500/20">
+                      <SelectValue placeholder="Relationship to Student" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectItem value="parent">Parent</SelectItem>
+                      <SelectItem value="guardian">Legal Guardian</SelectItem>
+                      <SelectItem value="grandparent">Grandparent</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                  <p className="text-sm text-slate-400">
+                    <span className="text-amber-400 font-medium">Note:</span> As a parent/guardian, you will receive all communications regarding your child's training, including class schedules, belt test notifications, and account updates.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Program Selection (or Step 3 for adults) */}
+            {(currentStep === 4 || (currentStep === 3 && !isMinor)) && (
               <div className="space-y-5">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
@@ -512,7 +679,9 @@ export default function StudentRegister() {
                 </Button>
               )}
 
-              {currentStep < STEPS.length ? (
+              {/* Show Continue button if not on final step */}
+              {/* For adults: final step is 3 (program selection), for minors: final step is 4 */}
+              {(isMinor ? currentStep < 4 : (currentStep < 3 || (currentStep === 3 && isMinor))) ? (
                 <Button
                   type="button"
                   onClick={handleNext}

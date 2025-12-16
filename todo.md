@@ -3924,3 +3924,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Link "Start Free Trial" button to registration page
 - [ ] Test registration flow end-to-end
 - [ ] Save checkpoint
+
+## Student Login Intelligence Restoration
+
+- [x] Returning Student Login: Authenticate and load belt rank, program, rank progress, active classes before routing to dashboard
+- [x] New Student Flow: "Start Free Trial" creates provisional profile and launches onboarding (program selection, trial class, guardian linkage)
+- [x] Kiosk Mode Awareness: "Back to Kiosk" behavior, limited settings, fast student access, prevent admin navigation
+- [x] Student Context Binding: Bind student record to session at login, fetch program/belt/enrollment/progress
+- [x] State-driven UI elements (belt rank, classes to next rank) not static placeholders

@@ -164,15 +164,40 @@ function WeeklyTrainingBar({ day, attended, isToday }: { day: string; attended: 
  * Student Dashboard - WOW Version
  * Apple-inspired light theme with real data from backend
  */
+// Storage keys
+const STORAGE_KEYS = {
+  KIOSK_MODE: 'kiosk_mode',
+  STUDENT_SESSION: 'student_session',
+};
+
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [studentId, setStudentId] = useState<number | null>(null);
+  const [isKioskMode, setIsKioskMode] = useState(false);
 
-  // Check login status and get student ID
+  // Check login status, kiosk mode, and get student ID
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("student_logged_in");
     const storedStudentId = localStorage.getItem("student_id");
+    const kioskMode = localStorage.getItem(STORAGE_KEYS.KIOSK_MODE) === 'true';
+    
+    // Also check session data for kiosk mode
+    try {
+      const sessionData = localStorage.getItem(STORAGE_KEYS.STUDENT_SESSION);
+      if (sessionData) {
+        const session = JSON.parse(sessionData);
+        if (session.isKioskMode) {
+          setIsKioskMode(true);
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+    
+    if (kioskMode) {
+      setIsKioskMode(true);
+    }
     
     if (!isLoggedIn) {
       navigate("/student-login");
@@ -204,7 +229,23 @@ export default function StudentDashboard() {
     localStorage.removeItem("student_logged_in");
     localStorage.removeItem("student_email");
     localStorage.removeItem("student_id");
-    navigate("/student-login");
+    localStorage.removeItem(STORAGE_KEYS.STUDENT_SESSION);
+    // In kiosk mode, go back to kiosk check-in instead of login
+    if (isKioskMode) {
+      navigate("/checkin");
+    } else {
+      navigate("/student-login");
+    }
+  };
+
+  // Handle back to kiosk (for kiosk mode)
+  const handleBackToKiosk = () => {
+    // Clear student session but keep kiosk mode
+    localStorage.removeItem("student_logged_in");
+    localStorage.removeItem("student_email");
+    localStorage.removeItem("student_id");
+    localStorage.removeItem(STORAGE_KEYS.STUDENT_SESSION);
+    navigate("/checkin");
   };
 
   const handleCheckIn = () => {
@@ -286,15 +327,40 @@ export default function StudentDashboard() {
               <img src={APP_LOGO} alt={APP_TITLE} className="h-8 w-auto" />
             )}
             <span className="text-lg font-semibold text-gray-900">Student Portal</span>
+            {isKioskMode && (
+              <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+                Kiosk Mode
+              </span>
+            )}
           </div>
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* In kiosk mode, show Back to Kiosk button instead of settings access */}
+            {isKioskMode ? (
+              <Button
+                variant="outline"
+                onClick={handleBackToKiosk}
+                className="text-gray-600 hover:text-gray-900 border-gray-300"
+              >
+                Back to Kiosk
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/student-settings')}
+                className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {isKioskMode ? 'Done' : 'Logout'}
+            </Button>
+          </div>
         </div>
       </header>
 

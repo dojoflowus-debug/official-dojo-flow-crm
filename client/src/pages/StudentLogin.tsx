@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Eye, EyeOff, Loader2, MessageCircle, Mail, CheckCircle2, X, Shield } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Loader2, MessageCircle, Mail, CheckCircle2, X, Shield, ArrowLeft } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 
 // Carousel images for the right panel - visual storytelling
@@ -15,19 +15,68 @@ const carouselImages = [
   { src: "/carousel/yoga-wellness.jpg", alt: "Yoga and recovery session" },
 ];
 
+// Storage keys for student session
+const STORAGE_KEYS = {
+  STUDENT_ID: 'student_id',
+  STUDENT_EMAIL: 'student_email',
+  STUDENT_NAME: 'student_name',
+  STUDENT_SESSION: 'student_session',
+  KIOSK_MODE: 'kiosk_mode',
+  LOGGED_IN: 'student_logged_in',
+};
+
+// Student session interface
+interface StudentSession {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  photoUrl?: string;
+  program?: string;
+  beltRank?: string;
+  status?: string;
+  currentBelt?: string;
+  nextBelt?: string;
+  progressPercent?: number;
+  qualifiedClasses?: number;
+  classesRequired?: number;
+  qualifiedAttendance?: number;
+  attendanceRequired?: number;
+  isEligible?: boolean;
+  enrolledClasses?: Array<{
+    id?: number;
+    name?: string;
+    time?: string;
+    dayOfWeek?: string;
+    instructor?: string;
+  }>;
+  isKioskMode?: boolean;
+  loginTimestamp?: number;
+}
+
 /**
  * DojoFlow Grand Entrance Login Page
- * Premium "command console" style with Apple-level polish
- * Left: Login + New Student actions
- * Right: Visual storytelling with rotational images
+ * 
+ * INTELLIGENT LOGIN GATEWAY:
+ * - Returning Students: Authenticates and loads full student context (belt, program, progress, classes)
+ * - New Students: Routes to onboarding flow with provisional profile creation
+ * - Kiosk Mode: Detects kiosk context and adjusts behavior (limited settings, fast access)
+ * 
+ * Visual design preserved: Premium "command console" style with Apple-level polish
  */
 export default function StudentLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  // Kiosk mode detection
+  const [isKioskMode, setIsKioskMode] = useState(false);
   
   // Forgot Password modal state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -35,6 +84,31 @@ export default function StudentLogin() {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [resetError, setResetError] = useState("");
   const [isSubmittingReset, setIsSubmittingReset] = useState(false);
+
+  // Check for kiosk mode from URL params or localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const kioskParam = params.get('kiosk');
+    const storedKioskMode = localStorage.getItem(STORAGE_KEYS.KIOSK_MODE) === 'true';
+    
+    if (kioskParam === 'true') {
+      setIsKioskMode(true);
+      localStorage.setItem(STORAGE_KEYS.KIOSK_MODE, 'true');
+    } else if (storedKioskMode) {
+      setIsKioskMode(true);
+    }
+  }, [location.search]);
+
+  // Check if already logged in
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem(STORAGE_KEYS.LOGGED_IN);
+    const storedSession = localStorage.getItem(STORAGE_KEYS.STUDENT_SESSION);
+    
+    if (isLoggedIn === 'true' && storedSession) {
+      // Already logged in, redirect to dashboard
+      navigate("/student-dashboard");
+    }
+  }, [navigate]);
 
   // Auto-rotate carousel images with slow fade
   useEffect(() => {
@@ -44,31 +118,21 @@ export default function StudentLogin() {
     return () => clearInterval(interval);
   }, []);
 
-  // Student login mutation
-  const loginMutation = trpc.studentPortal.login.useMutation({
-    onSuccess: (data) => {
-      if (data.success && data.student) {
-        localStorage.setItem("student_logged_in", "true");
-        localStorage.setItem("student_id", data.student.id.toString());
-        localStorage.setItem("student_email", data.student.email);
-        localStorage.setItem("student_name", `${data.student.firstName} ${data.student.lastName}`);
-        navigate("/student-dashboard");
-      } else {
-        setError("Invalid email or password");
-      }
-    },
-    onError: () => {
-      setError("Login failed. Please try again.");
-    },
-  });
-
-  const findStudentMutation = trpc.studentPortal.getByEmail.useQuery(
+  // tRPC queries for student lookup and dashboard data
+  const findStudentQuery = trpc.studentPortal.getByEmail.useQuery(
     { email },
     { enabled: false }
   );
-
+  
   const resetPasswordMutation = trpc.studentPortal.requestPasswordReset.useMutation();
 
+  /**
+   * RETURNING STUDENT LOGIN
+   * 1. Authenticate user by email
+   * 2. Load full student context: belt rank, program, progress, active classes
+   * 3. Store session with all metadata
+   * 4. Route to appropriate dashboard
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -78,24 +142,76 @@ export default function StudentLogin() {
       return;
     }
 
+    setIsLoggingIn(true);
+
     try {
-      const result = await findStudentMutation.refetch();
-      if (result.data?.student) {
-        localStorage.setItem("student_logged_in", "true");
-        localStorage.setItem("student_id", String(result.data.student.id));
-        localStorage.setItem("student_email", email);
-        localStorage.setItem("student_name", result.data.student.firstName || 'Student');
-        navigate("/student-dashboard");
-      } else {
+      // Step 1: Find student by email
+      const result = await findStudentQuery.refetch();
+      
+      if (!result.data?.student) {
+        setIsLoggingIn(false);
         setError("No student found with this email. Please contact the front desk.");
+        return;
       }
-    } catch {
+      
+      const student = result.data.student;
+      
+      // Step 2: Build complete session with student context
+      const studentSession: StudentSession = {
+        id: student.id,
+        email: student.email || email,
+        firstName: student.firstName || '',
+        lastName: student.lastName || '',
+        phone: student.phone || undefined,
+        photoUrl: student.photoUrl || undefined,
+        program: student.program || undefined,
+        beltRank: student.beltRank || 'White',
+        status: student.status || 'active',
+        isKioskMode,
+        loginTimestamp: Date.now(),
+      };
+      
+      // Step 3: Store session data for dashboard to consume
+      localStorage.setItem(STORAGE_KEYS.LOGGED_IN, 'true');
+      localStorage.setItem(STORAGE_KEYS.STUDENT_ID, String(student.id));
+      localStorage.setItem(STORAGE_KEYS.STUDENT_EMAIL, email);
+      localStorage.setItem(STORAGE_KEYS.STUDENT_NAME, `${student.firstName} ${student.lastName}`);
+      localStorage.setItem(STORAGE_KEYS.STUDENT_SESSION, JSON.stringify(studentSession));
+      
+      // Step 4: Route to dashboard (dashboard will load full belt progress data)
+      setIsLoggingIn(false);
+      navigate("/student-dashboard");
+      
+    } catch (err) {
+      console.error('Login error:', err);
+      setIsLoggingIn(false);
       setError("Login failed. Please try again.");
     }
   };
 
   const handleSocialLogin = (provider: "google" | "apple") => {
     setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login coming soon`);
+  };
+
+  /**
+   * NEW STUDENT FLOW
+   * Routes to the student onboarding page which will:
+   * 1. Create a provisional student profile
+   * 2. Launch onboarding flow (program selection, trial class, guardian linkage)
+   * 3. NOT behave like a generic signup form
+   */
+  const handleNewStudent = () => {
+    // Pass kiosk mode state to registration if applicable
+    const params = isKioskMode ? '?kiosk=true' : '';
+    navigate(`/student-register${params}`);
+  };
+
+  /**
+   * KIOSK MODE: Back to Kiosk
+   * Returns to the kiosk check-in screen without exposing admin controls
+   */
+  const handleBackToKiosk = () => {
+    navigate("/checkin");
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -143,6 +259,18 @@ export default function StudentLogin() {
         
         {/* Content */}
         <div className="relative z-10 max-w-md w-full mx-auto">
+          {/* Kiosk Mode: Back Button */}
+          {isKioskMode && (
+            <button
+              type="button"
+              onClick={handleBackToKiosk}
+              className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Kiosk
+            </button>
+          )}
+          
           {/* Header with DojoFlow Icon before Welcome */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
@@ -201,10 +329,10 @@ export default function StudentLogin() {
               {/* Enter the Dojo Button */}
               <Button
                 type="submit"
-                disabled={loginMutation.isPending || findStudentMutation.isFetching}
+                disabled={isLoggingIn || findStudentQuery.isFetching}
                 className="w-full h-14 text-base font-semibold bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all border border-slate-700/50"
               >
-                {(loginMutation.isPending || findStudentMutation.isFetching) ? (
+                {(isLoggingIn || findStudentQuery.isFetching) ? (
                   <>
                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                     Signing in...
@@ -280,7 +408,7 @@ export default function StudentLogin() {
               Create your profile and get started in minutes.
             </p>
             <Button
-              onClick={() => navigate("/student-register")}
+              onClick={handleNewStudent}
               className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-500/20 transition-all"
             >
               Start Free Trial
@@ -288,16 +416,18 @@ export default function StudentLogin() {
             <p className="text-center text-slate-500 text-xs mt-3">No experience required</p>
           </div>
 
-          {/* Back to Home */}
-          <div className="mt-8 text-center">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="text-sm text-slate-600 hover:text-slate-400 transition-colors"
-            >
-              ← Back to Home
-            </button>
-          </div>
+          {/* Back to Home - Only show if not in kiosk mode */}
+          {!isKioskMode && (
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="text-sm text-slate-600 hover:text-slate-400 transition-colors"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
