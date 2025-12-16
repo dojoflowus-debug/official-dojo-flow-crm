@@ -6,8 +6,12 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
 import { EnvironmentProvider } from "./contexts/EnvironmentContext";
+import { KioskProvider } from "./contexts/KioskContext";
 import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
+import Kiosk from "./pages/Kiosk";
+import KioskCheckIn from "./pages/KioskCheckIn";
+import KioskNewStudent from "./pages/KioskNewStudent";
 import NewVisitor from "./pages/NewVisitor";
 import Waiver from "./pages/Waiver";
 import Payment from "./pages/Payment";
@@ -87,6 +91,9 @@ function Router() {
       <Route path="/" element={<KaiCommand />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
+      <Route path="/kiosk" element={<Kiosk />} />
+      <Route path="/kiosk/checkin" element={<KioskCheckIn />} />
+      <Route path="/kiosk/new-student" element={<KioskNewStudent />} />
       <Route path="/new-visitor" element={<NewVisitor />} />
       <Route path="/waiver" element={<Waiver />} />
       <Route path="/payment" element={<Payment />} />
@@ -174,14 +181,16 @@ function App() {
         switchable
       >
         <EnvironmentProvider>
-          <FocusModeProvider>
-            <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Router />
-            </BrowserRouter>
-          </TooltipProvider>
-          </FocusModeProvider>
+          <KioskProvider>
+            <FocusModeProvider>
+              <TooltipProvider>
+                <Toaster />
+                <BrowserRouter>
+                  <Router />
+                </BrowserRouter>
+              </TooltipProvider>
+            </FocusModeProvider>
+          </KioskProvider>
         </EnvironmentProvider>
       </ThemeProvider>
     </ErrorBoundary>

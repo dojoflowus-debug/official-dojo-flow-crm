@@ -3957,3 +3957,63 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Exclude soft-deleted conversations from export
 - [x] Add download functionality in frontend
 - [x] Write tests for export functionality (7 tests passing)
+
+## ✅ COMPLETED: Dojo Kiosk Mode (Locked School, Check-In & New Student Intake)
+
+### Core Principles
+- [x] Kiosk Mode tied to ONE specific school/location
+- [x] Students NEVER see list of other schools
+- [x] No zip code search, no school selector, no discovery flows
+- [x] Selected school treated as identity, not a choice
+
+### Access & Context
+- [x] Kiosk Mode accessed via dedicated URL (/kiosk)
+- [x] School context pre-locked by URL parameter or localStorage
+- [x] School cannot be changed by user once loaded
+- [x] School lock persists across refreshes
+
+### Welcome Screen
+- [x] Display school logo prominently
+- [x] Display school name (e.g., "Welcome to MyDojo")
+- [x] Optional background image of dojo (subtle, professional)
+- [x] Large touch-friendly buttons: "✅ Check In" and "🆕 New Student"
+- [x] Optional small "Staff Login" link
+
+### Check-In Flow (Returning Students)
+- [x] Fast, distraction-free check-in
+- [x] Support name search, phone number, QR code
+- [x] Student never sees other students' details
+- [x] Confirmation screen ("You're checked in!")
+- [x] Auto-return to Welcome Screen after timeout (30s)
+
+### New Student Flow (Minimal Intake)
+- [x] Lightweight intake: First Name, Last Name, DOB, Parent/Guardian, Phone, Email (optional)
+- [x] NO waivers, NO payment, NO program selection (only optional interest checkboxes)
+- [x] Clear message: "Thanks! Our staff will finish your enrollment."
+- [x] Create lead/student record assigned to locked school
+- [x] Flag as "Kiosk Intake"
+
+### Behavior & UX Rules
+- [x] No back-navigation to school selection
+- [x] No top-level navigation menu
+- [x] No exposure to dashboards, maps, or other locations
+- [x] Idle timeout resets to Welcome Screen (30s check-in, 60s form)
+- [x] Large typography, high contrast, touch-optimized UI
+
+### Instructor Confidence
+- [x] Logged-in members using kiosk never see other schools, global search, or cross-location data
+- [x] Visually reinforce "You are in THIS dojo"
+
+### Safety & Error Handling
+- [x] Show error if school context cannot be verified: "Kiosk not configured. Please see staff."
+
+### Design Constraints
+- [x] Premium Apple-like UI: clean spacing, rounded cards, subtle shadows
+- [x] No clutter, no hamburger menus
+
+### Testing
+- [x] Write vitest tests for kiosk mode functionality (7 tests passing)
+- [x] Test school lock persistence
+- [x] Test check-in flow
+- [x] Test new student intake
+- [x] Test idle timeout

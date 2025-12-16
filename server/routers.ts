@@ -1116,6 +1116,43 @@ export const appRouter = router({
           message: `Welcome, ${fullName}!`
         };
       }),
+
+    createNewStudentIntake: publicProcedure
+      .input(z.object({
+        schoolId: z.string(),
+        firstName: z.string(),
+        lastName: z.string(),
+        dateOfBirth: z.string(),
+        parentGuardianName: z.string(),
+        phoneNumber: z.string(),
+        email: z.string().optional(),
+        interests: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { leads } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Create a new lead/student record flagged as "Kiosk Intake"
+        const [newLead] = await db.insert(leads).values({
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email || '',
+          phone: input.phoneNumber,
+          status: 'New Lead',
+          source: 'Kiosk Intake',
+          notes: `Date of Birth: ${input.dateOfBirth}\nParent/Guardian: ${input.parentGuardianName}${input.interests && input.interests.length > 0 ? `\nInterests: ${input.interests.join(', ')}` : ''}`,
+          createdAt: new Date(),
+        }).returning();
+        
+        return {
+          success: true,
+          leadId: newLead.id,
+          message: 'Thank you! Our staff will finish your enrollment.'
+        };
+      }),
   }),
   
   students: router({
