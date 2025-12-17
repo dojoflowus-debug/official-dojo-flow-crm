@@ -4443,3 +4443,73 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test navigation from Billing to Billing Structure page
 - [x] Ensure button is clearly labeled and visible
 - [x] Save checkpoint after fix
+
+
+## 🚀 NEW: Implement Full CRUD for Billing Structure
+
+### Goal
+Allow users to Create, Edit, and Delete items in all 6 billing sections
+
+### Backend Tasks
+- [ ] Add createProgram mutation
+- [ ] Add updateProgram mutation
+- [ ] Add deleteProgram mutation
+- [ ] Add createMembershipPlan mutation
+- [ ] Add updateMembershipPlan mutation
+- [ ] Add deleteMembershipPlan mutation
+- [ ] Add createEntitlement mutation
+- [ ] Add updateEntitlement mutation
+- [ ] Add deleteEntitlement mutation
+- [ ] Add createFee mutation
+- [ ] Add updateFee mutation
+- [ ] Add deleteFee mutation
+- [ ] Add createDiscount mutation
+- [ ] Add updateDiscount mutation
+- [ ] Add deleteDiscount mutation
+- [ ] Add createAddOn mutation
+- [ ] Add updateAddOn mutation
+- [ ] Add deleteAddOn mutation
+
+### Frontend Tasks
+- [ ] Create ProgramModal component for create/edit
+- [ ] Create MembershipPlanModal component for create/edit
+- [ ] Create EntitlementModal component for create/edit
+- [ ] Create FeeModal component for create/edit
+- [ ] Create DiscountModal component for create/edit
+- [ ] Create AddOnModal component for create/edit
+- [ ] Wire up "Add Program" button to open modal
+- [ ] Wire up "Edit" buttons to open modals with data
+- [ ] Add delete confirmation dialogs
+- [ ] Add form validation
+- [ ] Add success/error toasts
+
+### Testing
+- [ ] Test creating new program
+- [ ] Test editing existing program
+- [ ] Test deleting program
+- [ ] Test all operations for Plans, Entitlements, Fees, Discounts, Add-ons
+- [ ] Save checkpoint
+
+
+## ✅ COMPLETED: Programs CRUD Functionality
+
+### Backend
+- [x] createProgram mutation
+- [x] updateProgram mutation
+- [x] deleteProgram mutation
+- [x] getPrograms query
+
+### Frontend
+- [x] ProgramModal component with form validation
+- [x] Add Program button with modal trigger
+- [x] Edit button (pencil icon) for each program
+- [x] Delete button (trash icon) with confirmation
+- [x] Toast notifications for success/error
+- [x] Form fields: name, description, termLength, ageRange, eligibility, showOnKiosk
+
+### Testing
+- [x] Create new program ("Women's Self Defense")
+- [x] Edit existing program (Little Ninjas)
+- [x] Delete program (wired up with confirmation)
+- [x] Data persists to database
+- [x] UI updates automatically after mutations

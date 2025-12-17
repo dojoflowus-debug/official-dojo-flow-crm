@@ -4,8 +4,10 @@ import BottomNavLayout from '@/components/BottomNavLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, DollarSign, Users, Calendar, Tag, ShoppingBag, Settings } from 'lucide-react';
+import { Plus, DollarSign, Users, Calendar, Tag, ShoppingBag, Settings, Pencil, Trash2 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { ProgramModal } from '@/components/ProgramModal';
+import { toast } from 'sonner';
 
 /**
  * Billing Structure Page
@@ -17,9 +19,28 @@ type TabValue = 'programs' | 'plans' | 'entitlements' | 'fees' | 'discounts' | '
 export default function BillingStructure() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabValue>('programs');
+  const [programModalOpen, setProgramModalOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<any>(null);
 
   // Fetch data for all sections
   const { data: programs } = trpc.billing.getPrograms.useQuery();
+  const utils = trpc.useUtils();
+  
+  const deleteProgramMutation = trpc.billing.deleteProgram.useMutation({
+    onSuccess: () => {
+      toast.success('Program deleted successfully');
+      utils.billing.getPrograms.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete program: ${error.message}`);
+    },
+  });
+
+  const handleDeleteProgram = (id: number) => {
+    if (window.confirm('Are you sure you want to delete this program?')) {
+      deleteProgramMutation.mutate({ id });
+    }
+  };
   const { data: membershipPlans } = trpc.membershipPlans.getAll.useQuery();
   const { data: classEntitlements } = trpc.classEntitlements.getAll.useQuery();
   const { data: oneTimeFees } = trpc.oneTimeFees.getAll.useQuery();
@@ -99,7 +120,7 @@ export default function BillingStructure() {
                       Membership tracks like Free Trial, Black Belt Club, Leadership Team
                     </CardDescription>
                   </div>
-                  <Button>
+                  <Button onClick={() => { setSelectedProgram(null); setProgramModalOpen(true); }}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Program
                   </Button>
@@ -137,9 +158,22 @@ export default function BillingStructure() {
                             )}
                           </div>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => { setSelectedProgram(program); setProgramModalOpen(true); }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteProgram(program.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -510,6 +544,17 @@ export default function BillingStructure() {
           )}
         </div>
       </div>
+      
+      {/* Modals */}
+      <ProgramModal 
+        open={programModalOpen} 
+        onOpenChange={setProgramModalOpen}
+        program={selectedProgram}
+        onSuccess={() => {
+          setProgramModalOpen(false);
+          setSelectedProgram(null);
+        }}
+      />
     </BottomNavLayout>
   );
 }
