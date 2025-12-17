@@ -4067,3 +4067,205 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Test school verification
 - [x] Test auto check-in
 - [x] Test idle timeout
+
+
+## Kiosk Theme & Personalization System
+
+### Admin Interface (Settings → Kiosk)
+- [ ] Create new Settings → Kiosk menu section
+- [ ] Theme selector with live preview
+- [ ] Brand customization panel (accent color, logo upload)
+- [ ] Copy customization (welcome headline, subtext)
+- [ ] Holiday/event theme scheduler
+- [ ] Save and apply theme changes
+
+### Database Schema
+- [ ] Create kiosk_themes table (id, name, type, config JSON)
+- [ ] Create kiosk_settings table (school_id, active_theme_id, custom_config)
+- [ ] Add theme scheduling fields (start_date, end_date, auto_revert)
+- [ ] Store brand assets (logo_light, logo_dark, accent_color)
+
+### Theme System Architecture
+- [ ] Theme-based system (not free-form layout editing)
+- [ ] Themes change visuals only (background, accent, logo, effects)
+- [ ] Themes must NOT alter layout, button placement, navigation, flow
+- [ ] Automatic contrast handling for accessibility
+- [ ] Theme config stored as JSON with typed schema
+
+### Preset Themes
+- [ ] Default (Clean Dark) - current dark gradient theme
+- [ ] Light Minimal - light background with subtle shadows
+- [ ] Dojo Interior - photo background with blur overlay
+- [ ] Winter Holiday - snow/blue theme
+- [ ] Halloween - orange/purple theme
+- [ ] Summer - bright/warm theme
+- [ ] Tournament Mode - high-energy red/gold theme
+- [ ] Test Day - calm blue/green theme
+
+### Brand Customization
+- [ ] Accent color picker with preview
+- [ ] Logo upload (light variant for dark backgrounds)
+- [ ] Logo upload (dark variant for light backgrounds)
+- [ ] Background blur/opacity slider
+- [ ] Automatic contrast validation
+- [ ] Preview changes before applying
+
+### Copy Customization
+- [ ] Welcome headline editor (character limit: 50)
+- [ ] Optional subtext editor (character limit: 100)
+- [ ] Typography consistency enforcement
+- [ ] Preview text changes in real-time
+
+### Holiday/Event Theme Scheduling
+- [ ] Manual theme enable/disable
+- [ ] Optional start date picker
+- [ ] Optional end date picker
+- [ ] Auto-revert to default theme after end date
+- [ ] Active theme indicator
+- [ ] Schedule conflict detection
+
+### Behavior Rules
+- [ ] Visual changes apply instantly to Kiosk Mode only
+- [ ] Kiosk flow and logic unchanged regardless of theme
+- [ ] No exposure to other schools or global data
+- [ ] Theme changes do not affect admin dashboard
+- [ ] Theme persists across kiosk sessions
+
+### Design Constraints
+- [ ] Apple-like aesthetic (clean, subtle, premium, calm)
+- [ ] No visual clutter or gimmicks
+- [ ] High contrast for readability
+- [ ] Touch-friendly controls in admin interface
+- [ ] Consistent spacing and typography
+
+### Backend API
+- [ ] GET /api/kiosk/themes - list all preset themes
+- [ ] GET /api/kiosk/settings - get current kiosk settings
+- [ ] POST /api/kiosk/settings - update kiosk settings
+- [ ] POST /api/kiosk/theme/apply - apply theme to kiosk
+- [ ] POST /api/kiosk/brand/upload - upload logo assets
+- [ ] GET /api/kiosk/theme/active - get active theme for kiosk
+
+### Frontend Integration
+- [ ] KioskThemeProvider context to manage theme state
+- [ ] Apply theme to Kiosk welcome screen
+- [ ] Apply theme to KioskMemberLogin screen
+- [ ] Apply theme to KioskCheckIn screen
+- [ ] Apply theme to KioskNewStudent screen
+- [ ] Theme transitions with smooth animations
+
+### Testing
+- [ ] Write vitest tests for theme API
+- [ ] Test theme application to kiosk screens
+- [ ] Test brand customization
+- [ ] Test holiday scheduling
+- [ ] Test auto-revert logic
+- [ ] Test contrast validation
+- [ ] Test character limits for copy customization
+
+
+## ✅ Smart Enrollment - MVP COMPLETE (Typeform-Style with Kai-Ready Architecture)
+
+**MVP SCOPE:** Typeform-style enrollment flow with Kai-readiness architecture ✅
+**DEFERRED:** Kai conversational UI (next phase)
+
+### Core Architecture
+- [x] Unified enrollment data model (same for both modes)
+- [x] Enrollment source tracking (Kai vs Form)
+- [x] Mode switching capability (Kai → Form, Form → Kai)
+- [x] Progress persistence (save partial enrollments)
+- [x] Review & Submit screen (same for both modes)
+
+### Enrollment Start Screen
+- [x] Two mode selection cards: "Enroll with Kai (Fast)" and "Standard Enrollment Form"
+- [x] Clear description of each mode
+- [x] Touch-friendly card design
+- [x] School logo and name at top (locked context)
+- [x] No school selector in kiosk mode
+
+### Standard Enrollment (Typeform Style)
+- [x] One question per screen with progress indicator
+- [x] Large touch-friendly controls
+- [x] Smooth transitions between steps
+- [x] Back button to previous question
+- [x] Skip optional questions
+- [x] Field validation before proceeding
+- [x] Review & Submit at the end
+
+### Enrollment Form Steps
+- [x] Step 1: Student Information (first name, last name, date of birth)
+- [x] Step 2: Contact Information (phone, email, address)
+- [x] Step 3: Parent/Guardian Information (if student is under 18)
+- [x] Step 4: Program Interest (martial arts style, class type, experience level)
+- [x] Step 5: Goals & Motivation (why joining, fitness goals)
+- [x] Step 6: Medical Information (allergies, conditions, emergency contact)
+- [x] Step 7: Pricing & Membership (optional, dojo-configurable)
+- [x] Step 8: Waiver & Consent (required signature)
+- [x] Step 9: Review & Submit
+
+### Kai-Guided Enrollment (DEFERRED TO NEXT PHASE)
+- [ ] Conversational UI on left, form preview on right
+- [ ] Kai asks only required questions
+- [ ] Kai adapts based on answers (skip irrelevant questions)
+- [ ] Kai fills form fields automatically
+- [ ] Real-time form preview updates as Kai collects info
+- [ ] Switch to Standard Form button always visible
+- [ ] Review screen before submit
+- [ ] Natural language processing for answers
+
+### Kai-Readiness Requirements (NON-NEGOTIABLE FOR MVP)
+- [x] Each enrollment step has unique step ID
+- [x] All fields writable via API (no UI-only state)
+- [x] Enrollment state machine allows external control
+- [x] Validation rules reusable by Kai later
+- [x] No hard-coupling between UI and data writes
+- [x] API supports partial updates (step-by-step)
+- [x] Resume capability for incomplete enrollments
+
+### Review & Submit Screen
+- [x] Summary of all collected information
+- [x] Edit buttons for each section (via Back button)
+- [x] Waiver text with signature pad
+- [x] Terms & conditions checkbox
+- [x] Submit button (disabled until all required fields complete)
+- [x] Success confirmation after submission
+
+### Backend API
+- [x] POST /api/enrollment/create - create new enrollment record
+- [x] POST /api/enrollment/update - update partial enrollment
+- [x] GET /api/enrollment/:id - retrieve enrollment by ID
+- [x] POST /api/enrollment/submit - finalize and submit enrollment
+- [x] Enrollment data validation
+- [x] Duplicate detection (phone/email check)
+
+### Data Model
+- [x] enrollments table (id, source, status, student_data, parent_data, program_data, medical_data, waiver_signed, created_at, submitted_at)
+- [x] enrollment_source enum (kai, form, staff)
+- [x] enrollment_status enum (draft, submitted, approved, rejected)
+- [x] Store partial enrollments for resume capability
+
+### Guardrails & Rules
+- [ ] No school list shown in kiosk mode (school context locked)
+- [ ] Pricing and offers are dojo-configurable and optional
+- [ ] Staff override capability (edit any field manually)
+- [ ] Consent/waiver step required where applicable
+- [ ] Age verification for parent/guardian requirement
+- [ ] COPPA compliance for students under 13
+
+### Design Constraints
+- [ ] Apple-like aesthetic (clean, minimal, premium)
+- [ ] Touch-friendly controls (minimum 44px tap targets)
+- [ ] High contrast for readability
+- [ ] Smooth animations between steps
+- [ ] Loading states for AI responses
+- [ ] Error handling with friendly messages
+
+### Testing
+- [ ] Write vitest tests for enrollment API
+- [ ] Test Typeform-style flow (all steps)
+- [ ] Test Kai-guided flow (conversation + form filling)
+- [ ] Test mode switching (Kai → Form, Form → Kai)
+- [ ] Test review & submit
+- [ ] Test partial enrollment save/resume
+- [ ] Test duplicate detection
+- [ ] Test waiver signature capture

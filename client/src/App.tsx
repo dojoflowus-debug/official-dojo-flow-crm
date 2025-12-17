@@ -13,6 +13,8 @@ import Kiosk from "./pages/Kiosk";
 import KioskCheckIn from "./pages/KioskCheckIn";
 import KioskNewStudent from "./pages/KioskNewStudent";
 import KioskMemberLogin from "./pages/KioskMemberLogin";
+import EnrollmentStart from "./pages/EnrollmentStart";
+import EnrollmentForm from "./pages/EnrollmentForm";
 import NewVisitor from "./pages/NewVisitor";
 import Waiver from "./pages/Waiver";
 import Payment from "./pages/Payment";
@@ -96,6 +98,8 @@ function Router() {
       <Route path="/kiosk/checkin" element={<KioskCheckIn />} />
       <Route path="/kiosk/member-login" element={<KioskMemberLogin />} />
       <Route path="/kiosk/new-student" element={<KioskNewStudent />} />
+      <Route path="/enrollment" element={<EnrollmentStart />} />
+      <Route path="/enrollment/form" element={<EnrollmentForm />} />
       <Route path="/new-visitor" element={<NewVisitor />} />
       <Route path="/waiver" element={<Waiver />} />
       <Route path="/payment" element={<Payment />} />

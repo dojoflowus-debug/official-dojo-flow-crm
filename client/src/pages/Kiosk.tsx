@@ -159,7 +159,7 @@ export default function Kiosk() {
           {/* New Student Button */}
           <Card 
             className="border-slate-700 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-800/50 transition-all cursor-pointer group p-8"
-            onClick={() => setLocation('/kiosk/new-student')}
+            onClick={() => setLocation('/enrollment')}
           >
             <div className="text-center space-y-4">
               <div className="flex justify-center">

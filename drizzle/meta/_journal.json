@@ -281,6 +281,20 @@
       "when": 1765854495229,
       "tag": "0039_slippery_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1765941202637,
+      "tag": "0040_glamorous_mordo",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1765941921360,
+      "tag": "0041_stiff_cerebro",
+      "breakpoints": true
     }
   ]
 }

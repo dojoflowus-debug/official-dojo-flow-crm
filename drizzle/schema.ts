@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -316,6 +316,19 @@ export const dojoSettings = mysqlTable("dojo_settings", {
   autoSendEmailToLead: int("autoSendEmailToLead").default(1),
   autoUpdatePipelineStage: int("autoUpdatePipelineStage").default(1),
   bookingLink: varchar("bookingLink", { length: 500 }),
+  
+  // Kiosk Theme & Personalization
+  kioskTheme: varchar("kioskTheme", { length: 50 }).default("default"),
+  kioskAccentColor: varchar("kioskAccentColor", { length: 7 }),
+  kioskLogoLight: varchar("kioskLogoLight", { length: 500 }),
+  kioskLogoDark: varchar("kioskLogoDark", { length: 500 }),
+  kioskWelcomeHeadline: varchar("kioskWelcomeHeadline", { length: 50 }),
+  kioskWelcomeSubtext: varchar("kioskWelcomeSubtext", { length: 100 }),
+  kioskBackgroundBlur: int("kioskBackgroundBlur").default(5),
+  kioskBackgroundOpacity: int("kioskBackgroundOpacity").default(80),
+  kioskScheduledThemeStartDate: timestamp("kioskScheduledThemeStartDate"),
+  kioskScheduledThemeEndDate: timestamp("kioskScheduledThemeEndDate"),
+  kioskRevertToTheme: varchar("kioskRevertToTheme", { length: 50 }),
   
   // Setup Completion
   setupCompleted: int("setupCompleted").default(0).notNull(),
@@ -1517,3 +1530,134 @@ export const studentNotes = mysqlTable("student_notes", {
 
 export type StudentNote = typeof studentNotes.$inferSelect;
 export type InsertStudentNote = typeof studentNotes.$inferInsert;
+
+/**
+ * Kiosk Theme Presets - Built-in themes that schools can apply
+ */
+export const kioskThemePresets = mysqlTable("kiosk_theme_presets", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Theme name (e.g., "Default", "Light Minimal", "Winter Holiday") */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** Theme type (preset, custom, holiday, event) */
+  type: mysqlEnum("type", ["preset", "custom", "holiday", "event"]).default("preset").notNull(),
+  /** Theme description */
+  description: text("description"),
+  /** Theme configuration as JSON */
+  config: json("config").notNull(),
+  /** Preview image URL */
+  previewUrl: varchar("previewUrl", { length: 500 }),
+  /** Whether this theme is active/available */
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type KioskThemePreset = typeof kioskThemePresets.$inferSelect;
+export type InsertKioskThemePreset = typeof kioskThemePresets.$inferInsert;
+
+/**
+ * Kiosk Settings - Per-school kiosk configuration and active theme
+ */
+export const kioskSettings = mysqlTable("kiosk_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  /** School/location ID (default 1 for single-location) */
+  schoolId: int("schoolId").default(1).notNull(),
+  /** Active theme preset ID */
+  activeThemeId: int("activeThemeId"),
+  /** Custom theme configuration (overrides preset) */
+  customConfig: json("customConfig"),
+  /** Custom welcome headline */
+  welcomeHeadline: varchar("welcomeHeadline", { length: 50 }),
+  /** Custom welcome subtext */
+  welcomeSubtext: varchar("welcomeSubtext", { length: 100 }),
+  /** Custom accent color (hex) */
+  accentColor: varchar("accentColor", { length: 7 }),
+  /** Logo URL for light backgrounds */
+  logoLight: varchar("logoLight", { length: 500 }),
+  /** Logo URL for dark backgrounds */
+  logoDark: varchar("logoDark", { length: 500 }),
+  /** Background blur amount (0-100) */
+  backgroundBlur: int("backgroundBlur").default(5),
+  /** Background opacity (0-100) */
+  backgroundOpacity: int("backgroundOpacity").default(80),
+  /** Scheduled theme start date */
+  scheduledThemeStartDate: timestamp("scheduledThemeStartDate"),
+  /** Scheduled theme end date */
+  scheduledThemeEndDate: timestamp("scheduledThemeEndDate"),
+  /** Theme to revert to after scheduled theme ends */
+  revertToThemeId: int("revertToThemeId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type KioskSetting = typeof kioskSettings.$inferSelect;
+export type InsertKioskSetting = typeof kioskSettings.$inferInsert;
+
+/**
+ * Enrollments table - Tracks student enrollment submissions from kiosk
+ * Supports both Typeform-style and Kai-guided enrollment modes
+ */
+export const enrollments = mysqlTable("enrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Enrollment source: kai, form, staff */
+  source: mysqlEnum("source", ["kai", "form", "staff"]).default("form").notNull(),
+  /** Enrollment status: draft, submitted, approved, rejected */
+  status: mysqlEnum("status", ["draft", "submitted", "approved", "rejected"]).default("draft").notNull(),
+  
+  // Student Information
+  firstName: varchar("firstName", { length: 255 }).notNull(),
+  lastName: varchar("lastName", { length: 255 }).notNull(),
+  dateOfBirth: timestamp("dateOfBirth"),
+  age: int("age"),
+  
+  // Contact Information
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  streetAddress: varchar("streetAddress", { length: 255 }),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zipCode", { length: 20 }),
+  
+  // Parent/Guardian Information (if under 18)
+  guardianName: varchar("guardianName", { length: 255 }),
+  guardianRelationship: varchar("guardianRelationship", { length: 50 }),
+  guardianPhone: varchar("guardianPhone", { length: 20 }),
+  guardianEmail: varchar("guardianEmail", { length: 320 }),
+  
+  // Program Interest
+  programInterest: varchar("programInterest", { length: 100 }),
+  experienceLevel: mysqlEnum("experienceLevel", ["beginner", "intermediate", "advanced"]).default("beginner"),
+  classType: varchar("classType", { length: 100 }),
+  
+  // Goals & Motivation
+  goals: text("goals"),
+  motivation: text("motivation"),
+  
+  // Medical Information
+  allergies: text("allergies"),
+  medicalConditions: text("medicalConditions"),
+  emergencyContactName: varchar("emergencyContactName", { length: 255 }),
+  emergencyContactPhone: varchar("emergencyContactPhone", { length: 20 }),
+  
+  // Pricing & Membership (optional)
+  selectedMembershipPlan: varchar("selectedMembershipPlan", { length: 100 }),
+  pricingNotes: text("pricingNotes"),
+  
+  // Waiver & Consent
+  waiverSigned: int("waiverSigned").default(0).notNull(),
+  waiverSignature: text("waiverSignature"), // Base64 signature image
+  waiverSignedAt: timestamp("waiverSignedAt"),
+  consentGiven: int("consentGiven").default(0).notNull(),
+  
+  // Kai Conversation Data (for Kai-guided enrollments)
+  conversationId: int("conversationId"),
+  conversationTranscript: text("conversationTranscript"),
+  
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  submittedAt: timestamp("submittedAt"),
+});
+
+export type Enrollment = typeof enrollments.$inferSelect;
+export type InsertEnrollment = typeof enrollments.$inferInsert;

@@ -1153,6 +1153,147 @@ export const appRouter = router({
           message: 'Thank you! Our staff will finish your enrollment.'
         };
       }),
+      
+    // Theme Management
+    getThemePresets: publicProcedure.query(async () => {
+      const { getDb } = await import("./db");
+      const { kioskThemePresets } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      const presets = await db.select().from(kioskThemePresets).where(eq(kioskThemePresets.isActive, 1));
+      return { presets };
+    }),
+    
+    getSettings: publicProcedure.query(async () => {
+      const { getDb } = await import("./db");
+      const { kioskSettings } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      // Get settings for default school (id=1)
+      const settings = await db.select().from(kioskSettings).where(eq(kioskSettings.schoolId, 1)).limit(1);
+      
+      if (settings.length === 0) {
+        // Create default settings if none exist
+        const [newSettings] = await db.insert(kioskSettings).values({
+          schoolId: 1,
+          activeThemeId: 1, // Default theme
+          backgroundBlur: 5,
+          backgroundOpacity: 80,
+        }).returning();
+        return { settings: newSettings };
+      }
+      
+      return { settings: settings[0] };
+    }),
+    
+    updateSettings: publicProcedure
+      .input(z.object({
+        activeThemeId: z.number().optional(),
+        customConfig: z.any().optional(),
+        welcomeHeadline: z.string().max(50).optional(),
+        welcomeSubtext: z.string().max(100).optional(),
+        accentColor: z.string().max(7).optional(),
+        logoLight: z.string().optional(),
+        logoDark: z.string().optional(),
+        backgroundBlur: z.number().min(0).max(100).optional(),
+        backgroundOpacity: z.number().min(0).max(100).optional(),
+        scheduledThemeStartDate: z.string().optional(),
+        scheduledThemeEndDate: z.string().optional(),
+        revertToThemeId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { kioskSettings } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Check if settings exist
+        const existing = await db.select().from(kioskSettings).where(eq(kioskSettings.schoolId, 1)).limit(1);
+        
+        const updateData: any = {};
+        if (input.activeThemeId !== undefined) updateData.activeThemeId = input.activeThemeId;
+        if (input.customConfig !== undefined) updateData.customConfig = input.customConfig;
+        if (input.welcomeHeadline !== undefined) updateData.welcomeHeadline = input.welcomeHeadline;
+        if (input.welcomeSubtext !== undefined) updateData.welcomeSubtext = input.welcomeSubtext;
+        if (input.accentColor !== undefined) updateData.accentColor = input.accentColor;
+        if (input.logoLight !== undefined) updateData.logoLight = input.logoLight;
+        if (input.logoDark !== undefined) updateData.logoDark = input.logoDark;
+        if (input.backgroundBlur !== undefined) updateData.backgroundBlur = input.backgroundBlur;
+        if (input.backgroundOpacity !== undefined) updateData.backgroundOpacity = input.backgroundOpacity;
+        if (input.scheduledThemeStartDate) updateData.scheduledThemeStartDate = new Date(input.scheduledThemeStartDate);
+        if (input.scheduledThemeEndDate) updateData.scheduledThemeEndDate = new Date(input.scheduledThemeEndDate);
+        if (input.revertToThemeId !== undefined) updateData.revertToThemeId = input.revertToThemeId;
+        
+        if (existing.length > 0) {
+          // Update existing settings
+          await db.update(kioskSettings).set(updateData).where(eq(kioskSettings.schoolId, 1));
+        } else {
+          // Create new settings
+          await db.insert(kioskSettings).values({
+            schoolId: 1,
+            ...updateData,
+          });
+        }
+        
+        return { success: true, message: 'Kiosk settings updated successfully' };
+      }),
+      
+    getActiveTheme: publicProcedure.query(async () => {
+      const { getDb } = await import("./db");
+      const { kioskSettings, kioskThemePresets } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      // Get current settings
+      const settings = await db.select().from(kioskSettings).where(eq(kioskSettings.schoolId, 1)).limit(1);
+      
+      if (settings.length === 0 || !settings[0].activeThemeId) {
+        // Return default theme
+        const defaultTheme = await db.select().from(kioskThemePresets).where(eq(kioskThemePresets.id, 1)).limit(1);
+        return { theme: defaultTheme[0] || null, settings: null };
+      }
+      
+      // Check if scheduled theme should be active
+      const now = new Date();
+      const setting = settings[0];
+      
+      if (setting.scheduledThemeStartDate && setting.scheduledThemeEndDate) {
+        const startDate = new Date(setting.scheduledThemeStartDate);
+        const endDate = new Date(setting.scheduledThemeEndDate);
+        
+        if (now >= startDate && now <= endDate) {
+          // Scheduled theme is active
+          const theme = await db.select().from(kioskThemePresets).where(eq(kioskThemePresets.id, setting.activeThemeId)).limit(1);
+          return { theme: theme[0] || null, settings: setting };
+        } else if (now > endDate && setting.revertToThemeId) {
+          // Scheduled theme expired, revert to default
+          await db.update(kioskSettings)
+            .set({ 
+              activeThemeId: setting.revertToThemeId,
+              scheduledThemeStartDate: null,
+              scheduledThemeEndDate: null,
+            })
+            .where(eq(kioskSettings.schoolId, 1));
+          
+          const theme = await db.select().from(kioskThemePresets).where(eq(kioskThemePresets.id, setting.revertToThemeId)).limit(1);
+          return { theme: theme[0] || null, settings: setting };
+        }
+      }
+      
+      // Return active theme
+      const theme = await db.select().from(kioskThemePresets).where(eq(kioskThemePresets.id, setting.activeThemeId)).limit(1);
+      return { theme: theme[0] || null, settings: setting };
+    }),
   }),
   
   students: router({
@@ -3769,6 +3910,235 @@ Return the data as a structured JSON object.`
         await db.delete(programs).where(eq(programs.id, input.id));
         
         return { success: true };
+      }),
+  }),
+  
+  // Smart Enrollment (Typeform-style + Kai-ready architecture)
+  enrollment: router({    
+    // Create new enrollment (draft)
+    create: publicProcedure
+      .input(z.object({
+        source: z.enum(['kai', 'form', 'staff']).default('form'),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { enrollments } = await import("../drizzle/schema");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const [enrollment] = await db.insert(enrollments).values({
+          source: input.source,
+          status: 'draft',
+          firstName: '',
+          lastName: '',
+        }).returning();
+        
+        return { success: true, enrollmentId: enrollment.id, enrollment };
+      }),
+    
+    // Update enrollment step-by-step (Kai-ready: external control)
+    updateStep: publicProcedure
+      .input(z.object({
+        enrollmentId: z.number(),
+        stepId: z.string(), // e.g., 'student_info', 'contact_info', 'parent_info'
+        data: z.any(), // Step-specific data
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { enrollments } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Map stepId to database fields
+        const updateData: any = {};
+        
+        switch (input.stepId) {
+          case 'student_info':
+            if (input.data.firstName) updateData.firstName = input.data.firstName;
+            if (input.data.lastName) updateData.lastName = input.data.lastName;
+            if (input.data.dateOfBirth) updateData.dateOfBirth = new Date(input.data.dateOfBirth);
+            if (input.data.age) updateData.age = input.data.age;
+            break;
+          
+          case 'contact_info':
+            if (input.data.phone) updateData.phone = input.data.phone;
+            if (input.data.email) updateData.email = input.data.email;
+            if (input.data.streetAddress) updateData.streetAddress = input.data.streetAddress;
+            if (input.data.city) updateData.city = input.data.city;
+            if (input.data.state) updateData.state = input.data.state;
+            if (input.data.zipCode) updateData.zipCode = input.data.zipCode;
+            break;
+          
+          case 'parent_info':
+            if (input.data.guardianName) updateData.guardianName = input.data.guardianName;
+            if (input.data.guardianRelationship) updateData.guardianRelationship = input.data.guardianRelationship;
+            if (input.data.guardianPhone) updateData.guardianPhone = input.data.guardianPhone;
+            if (input.data.guardianEmail) updateData.guardianEmail = input.data.guardianEmail;
+            break;
+          
+          case 'program_interest':
+            if (input.data.programInterest) updateData.programInterest = input.data.programInterest;
+            if (input.data.experienceLevel) updateData.experienceLevel = input.data.experienceLevel;
+            if (input.data.classType) updateData.classType = input.data.classType;
+            break;
+          
+          case 'goals_motivation':
+            if (input.data.goals) updateData.goals = input.data.goals;
+            if (input.data.motivation) updateData.motivation = input.data.motivation;
+            break;
+          
+          case 'medical_info':
+            if (input.data.allergies) updateData.allergies = input.data.allergies;
+            if (input.data.medicalConditions) updateData.medicalConditions = input.data.medicalConditions;
+            if (input.data.emergencyContactName) updateData.emergencyContactName = input.data.emergencyContactName;
+            if (input.data.emergencyContactPhone) updateData.emergencyContactPhone = input.data.emergencyContactPhone;
+            break;
+          
+          case 'pricing':
+            if (input.data.selectedMembershipPlan) updateData.selectedMembershipPlan = input.data.selectedMembershipPlan;
+            if (input.data.pricingNotes) updateData.pricingNotes = input.data.pricingNotes;
+            break;
+          
+          case 'waiver':
+            if (input.data.waiverSigned !== undefined) updateData.waiverSigned = input.data.waiverSigned;
+            if (input.data.waiverSignature) updateData.waiverSignature = input.data.waiverSignature;
+            if (input.data.waiverSignedAt) updateData.waiverSignedAt = new Date(input.data.waiverSignedAt);
+            if (input.data.consentGiven !== undefined) updateData.consentGiven = input.data.consentGiven;
+            break;
+        }
+        
+        updateData.updatedAt = new Date();
+        
+        await db.update(enrollments)
+          .set(updateData)
+          .where(eq(enrollments.id, input.enrollmentId));
+        
+        return { success: true };
+      }),
+    
+    // Get enrollment by ID (for resume capability)
+    get: publicProcedure
+      .input(z.object({
+        enrollmentId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { enrollments } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const enrollment = await db.select().from(enrollments).where(eq(enrollments.id, input.enrollmentId)).limit(1);
+        
+        if (enrollment.length === 0) {
+          throw new Error('Enrollment not found');
+        }
+        
+        return { enrollment: enrollment[0] };
+      }),
+    
+    // Submit enrollment (finalize)
+    submit: publicProcedure
+      .input(z.object({
+        enrollmentId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { enrollments, leads, students } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Get enrollment
+        const enrollment = await db.select().from(enrollments).where(eq(enrollments.id, input.enrollmentId)).limit(1);
+        
+        if (enrollment.length === 0) {
+          throw new Error('Enrollment not found');
+        }
+        
+        const enroll = enrollment[0];
+        
+        // Validate required fields
+        if (!enroll.firstName || !enroll.lastName) {
+          throw new Error('Student name is required');
+        }
+        
+        if (!enroll.waiverSigned) {
+          throw new Error('Waiver must be signed');
+        }
+        
+        // Create lead record
+        const [lead] = await db.insert(leads).values({
+          firstName: enroll.firstName,
+          lastName: enroll.lastName,
+          email: enroll.email || '',
+          phone: enroll.phone || '',
+          status: 'New Lead',
+          source: enroll.source === 'kai' ? 'Kai Enrollment' : 'Kiosk Enrollment',
+          notes: `Program Interest: ${enroll.programInterest || 'Not specified'}\nExperience: ${enroll.experienceLevel || 'Not specified'}\nGoals: ${enroll.goals || 'Not specified'}`,
+          createdAt: new Date(),
+        }).returning();
+        
+        // Update enrollment status
+        await db.update(enrollments)
+          .set({ 
+            status: 'submitted',
+            submittedAt: new Date(),
+          })
+          .where(eq(enrollments.id, input.enrollmentId));
+        
+        return { 
+          success: true, 
+          leadId: lead.id,
+          message: 'Enrollment submitted successfully! Our staff will contact you soon.'
+        };
+      }),
+    
+    // Validate step data (reusable by Kai)
+    validateStep: publicProcedure
+      .input(z.object({
+        stepId: z.string(),
+        data: z.any(),
+      }))
+      .query(({ input }) => {
+        const errors: string[] = [];
+        
+        switch (input.stepId) {
+          case 'student_info':
+            if (!input.data.firstName) errors.push('First name is required');
+            if (!input.data.lastName) errors.push('Last name is required');
+            if (!input.data.dateOfBirth && !input.data.age) errors.push('Date of birth or age is required');
+            break;
+          
+          case 'contact_info':
+            if (!input.data.phone && !input.data.email) errors.push('Phone or email is required');
+            if (input.data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.data.email)) {
+              errors.push('Invalid email format');
+            }
+            break;
+          
+          case 'parent_info':
+            // Only required if student is under 18
+            if (input.data.requiresGuardian) {
+              if (!input.data.guardianName) errors.push('Guardian name is required for students under 18');
+              if (!input.data.guardianPhone && !input.data.guardianEmail) {
+                errors.push('Guardian contact information is required');
+              }
+            }
+            break;
+          
+          case 'waiver':
+            if (!input.data.waiverSigned) errors.push('Waiver must be signed');
+            if (!input.data.consentGiven) errors.push('Consent must be given');
+            break;
+        }
+        
+        return { valid: errors.length === 0, errors };
       }),
   }),
 });
