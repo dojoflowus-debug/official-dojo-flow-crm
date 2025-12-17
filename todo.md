@@ -4651,3 +4651,32 @@ Extended Billing → Plans to support non-monthly billing for programs like Summ
 - ✅ Support for weekly/daily/drop-in plan creation/editing
 - ✅ No regressions to monthly billing plans
 - ✅ Database verified: billingFrequency field working correctly
+
+
+## ✅ COMPLETED: Kiosk Welcome Screen Redesign
+
+### Objective
+Redesign the default Kiosk Welcome screen to feel more inviting, energetic, and premium while remaining simple and instructor-safe.
+
+### Design Requirements
+- [x] Replace dark background with warm dojo interior image with blur
+- [x] Add subtle vignette and depth
+- [x] Top-center header with DojoFlow logo and school name
+- [x] Headline: "Welcome to Training"
+- [x] Subtext: "Sign in or get started below"
+- [x] Two large centered action cards (Member Login, New Student)
+- [x] Cards with soft rounded corners, gradients, and shadows
+- [x] Larger icons with subtle glow
+- [x] DojoFlow red accent color
+- [x] Soft fade-in animation on page load
+- [x] Gentle hover lift on cards
+- [x] Keep Staff Login subtle in footer
+- [x] Maintain existing kiosk flow logic
+
+### Implementation Tasks
+- [x] Update Kiosk.tsx component with new layout
+- [x] Add warm dojo background image
+- [x] Style action cards with gradients and shadows
+- [x] Add fade-in and hover animations
+- [x] Test on kiosk display
+- [x] Save checkpoint
