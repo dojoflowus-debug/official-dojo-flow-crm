@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, DollarSign, Users, Calendar, Tag, ShoppingBag, Settings, Pencil, Trash2 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { ProgramModal } from '@/components/ProgramModal';
+import { PlanModal } from '@/components/billing/PlanModal';
 import { toast } from 'sonner';
 
 /**
@@ -21,6 +22,8 @@ export default function BillingStructure() {
   const [activeTab, setActiveTab] = useState<TabValue>('programs');
   const [programModalOpen, setProgramModalOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
   // Fetch data for all sections
   const { data: programs } = trpc.billing.getPrograms.useQuery();
@@ -39,6 +42,22 @@ export default function BillingStructure() {
   const handleDeleteProgram = (id: number) => {
     if (window.confirm('Are you sure you want to delete this program?')) {
       deleteProgramMutation.mutate({ id });
+    }
+  };
+
+  const deletePlanMutation = trpc.billing.deletePlan.useMutation({
+    onSuccess: () => {
+      toast.success('Plan deleted successfully');
+      utils.billing.getPlans.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete plan: ${error.message}`);
+    },
+  });
+
+  const handleDeletePlan = (id: number) => {
+    if (window.confirm('Are you sure you want to delete this plan?')) {
+      deletePlanMutation.mutate({ id });
     }
   };
   const { data: membershipPlans } = trpc.membershipPlans.getAll.useQuery();
@@ -199,7 +218,7 @@ export default function BillingStructure() {
                       Pricing tiers: $149/mo, $199/mo, $249/mo with different terms
                     </CardDescription>
                   </div>
-                  <Button>
+                  <Button onClick={() => { setSelectedPlan(null); setPlanModalOpen(true); }}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Plan
                   </Button>
@@ -208,7 +227,7 @@ export default function BillingStructure() {
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {membershipPlans && membershipPlans.length > 0 ? (
-                    membershipPlans.slice(0, 6).map((plan) => (
+                    membershipPlans.map((plan) => (
                       <Card key={plan.id} className="relative">
                         {plan.isPopular === 1 && (
                           <div className="absolute top-2 right-2">
@@ -254,9 +273,24 @@ export default function BillingStructure() {
                               </div>
                             )}
                           </div>
-                          <Button variant="outline" size="sm" className="w-full mt-4">
-                            Edit Plan
-                          </Button>
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => { setSelectedPlan(plan); setPlanModalOpen(true); }}
+                            >
+                              <Pencil className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeletePlan(plan.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))
@@ -554,6 +588,14 @@ export default function BillingStructure() {
           setProgramModalOpen(false);
           setSelectedProgram(null);
         }}
+      />
+      <PlanModal
+        open={planModalOpen}
+        onClose={() => {
+          setPlanModalOpen(false);
+          setSelectedPlan(null);
+        }}
+        planId={selectedPlan?.id}
       />
     </BottomNavLayout>
   );

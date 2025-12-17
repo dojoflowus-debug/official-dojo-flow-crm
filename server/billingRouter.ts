@@ -150,6 +150,19 @@ export const billingRouter = router({
 
   // ========== MEMBERSHIP PLANS CRUD ==========
   
+  // Alias for getPlans
+  getPlans: publicProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      
+      const { membershipPlans } = await import("../drizzle/schema");
+      const { desc } = await import("drizzle-orm");
+      
+      const result = await db.select().from(membershipPlans).orderBy(desc(membershipPlans.createdAt));
+      return result;
+    }),
+  
   createMembershipPlan: publicProcedure
     .input(z.object({
       name: z.string().min(1),
@@ -198,6 +211,82 @@ export const billingRouter = router({
     }),
 
   deleteMembershipPlan: publicProcedure
+    .input(z.object({
+      id: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const { membershipPlans } = await import("../drizzle/schema");
+      
+      await db.delete(membershipPlans).where(eq(membershipPlans.id, input.id));
+      return { success: true };
+    }),
+
+  // Shorter aliases for Plans
+  createPlan: publicProcedure
+    .input(z.object({
+      name: z.string().min(1),
+      description: z.string().optional().nullable(),
+      monthlyPrice: z.number(),
+      termLength: z.number().default(12),
+      billingCycle: z.string().default("monthly"),
+      registrationFee: z.number().optional().nullable(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const { membershipPlans } = await import("../drizzle/schema");
+      
+      const [plan] = await db.insert(membershipPlans).values({
+        name: input.name,
+        description: input.description,
+        monthlyAmount: Math.round(input.monthlyPrice * 100), // Convert to cents
+        termLength: input.termLength,
+        billingCycle: input.billingCycle,
+        registrationFee: input.registrationFee ? Math.round(input.registrationFee * 100) : 0,
+        showOnKiosk: 1,
+        isPopular: 0,
+      });
+      return plan;
+    }),
+
+  updatePlan: publicProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().min(1).optional(),
+      description: z.string().optional().nullable(),
+      monthlyPrice: z.number().optional(),
+      termLength: z.number().optional(),
+      billingCycle: z.string().optional(),
+      registrationFee: z.number().optional().nullable(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const { membershipPlans } = await import("../drizzle/schema");
+      
+      const { id, monthlyPrice, registrationFee, ...rest } = input;
+      const updates: any = { ...rest };
+      
+      if (monthlyPrice !== undefined) {
+        updates.monthlyAmount = Math.round(monthlyPrice * 100);
+      }
+      if (registrationFee !== undefined) {
+        updates.registrationFee = registrationFee ? Math.round(registrationFee * 100) : 0;
+      }
+      
+      await db.update(membershipPlans)
+        .set(updates)
+        .where(eq(membershipPlans.id, id));
+      
+      return { success: true };
+    }),
+
+  deletePlan: publicProcedure
     .input(z.object({
       id: z.number(),
     }))
