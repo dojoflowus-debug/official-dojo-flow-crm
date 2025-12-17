@@ -3927,12 +3927,21 @@ Return the data as a structured JSON object.`
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         
-        const [enrollment] = await db.insert(enrollments).values({
+        const result = await db.insert(enrollments).values({
           source: input.source,
           status: 'draft',
           firstName: '',
           lastName: '',
-        }).returning();
+        });
+        
+        // MySQL returns insertId in different formats depending on driver
+        const enrollmentId = Number(result[0]?.insertId || result.insertId);
+        
+        // Fetch the created enrollment
+        const { eq } = await import("drizzle-orm");
+        const [enrollment] = await db.select().from(enrollments)
+          .where(eq(enrollments.id, enrollmentId))
+          .limit(1);
         
         return { success: true, enrollmentId: enrollment.id, enrollment };
       }),

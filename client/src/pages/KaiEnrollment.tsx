@@ -41,21 +41,32 @@ export default function KaiEnrollment() {
   
   // Create enrollment on mount
   useEffect(() => {
+    if (enrollmentId) return; // Already initialized
+    
     const initEnrollment = async () => {
-      const result = await createEnrollment.mutateAsync({ source: 'kai' });
-      if (result.success && result.enrollmentId) {
-        setEnrollmentId(result.enrollmentId);
+      try {
+        console.log('[Kai] Creating enrollment...');
+        const result = await createEnrollment.mutateAsync({ source: 'kai' });
+        console.log('[Kai] Enrollment created:', result);
+        if (result.success && result.enrollmentId) {
+          setEnrollmentId(result.enrollmentId);
+        }
+      } catch (error) {
+        console.error('[Kai] Failed to create enrollment:', error);
       }
     };
     initEnrollment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSendMessage = (content: string) => {
     if (!enrollmentId) {
-      console.error('Enrollment not initialized');
+      console.error('[Kai] Enrollment not initialized');
       return;
     }
 
+    console.log('[Kai] Sending message:', content);
+    
     // Add user message to chat
     setMessages(prev => [...prev, {
       role: 'user',
@@ -63,6 +74,7 @@ export default function KaiEnrollment() {
     }]);
 
     // Send to backend
+    console.log('[Kai] Calling kaiConverse mutation...');
     kaiConverse.mutate({
       enrollmentId,
       userMessage: content,
