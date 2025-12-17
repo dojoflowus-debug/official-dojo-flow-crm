@@ -4269,3 +4269,11 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Test partial enrollment save/resume
 - [ ] Test duplicate detection
 - [ ] Test waiver signature capture
+
+
+## Kiosk Navigation & Access
+
+- [x] Add Kiosk to bottom navigation menu
+- [x] Add Kiosk icon (Monitor icon)
+- [x] Provide kiosk URL for dedicated display (/kiosk route)
+- [x] Document kiosk access instructions for staff

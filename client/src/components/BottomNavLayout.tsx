@@ -16,7 +16,8 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-  Palette
+  Palette,
+  Monitor
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
 import { useAuth } from '@/hooks/useAuth'
@@ -41,6 +42,7 @@ const NAVIGATION = [
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
   { id: 'kai-command', name: 'Kai', href: '/kai-command', icon: Sparkles, isCenter: true },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
+  { id: 'kiosk', name: 'Kiosk', href: '/kiosk', icon: Monitor },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'billing', name: 'Billing', href: '/billing', icon: CreditCard },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
@@ -55,6 +57,11 @@ const PAGE_TITLES: Record<string, string> = {
   '/kai-command': 'Kai Command',
   '/kai-chat': 'Kai Command',
   '/classes': 'Classes',
+  '/kiosk': 'Kiosk Mode',
+  '/kiosk/member-login': 'Member Check-In',
+  '/kiosk/new-student': 'New Student',
+  '/enrollment': 'Enrollment',
+  '/enrollment/form': 'Enrollment Form',
   '/receptionist': 'Receptionist',
   '/staff': 'Staff',
   '/billing': 'Billing',
