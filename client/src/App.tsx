@@ -52,6 +52,7 @@ import Classes from "./pages/Classes";
 import Programs from "./pages/Programs";
 import Staff from "./pages/Staff";
 import Billing from "./pages/Billing";
+import BillingNew from "./pages/BillingNew";
 import BillingSetup from "./pages/BillingSetup";
 import PCBancardApplication from "./pages/PCBancardApplication";
 import StripeSetup from "./pages/StripeSetup";
@@ -141,6 +142,7 @@ function Router() {
       <Route path="/programs" element={<Programs />} />
       <Route path="/staff" element={<Staff />} />
       <Route path="/billing" element={<Billing />} />
+      <Route path="/billing/structure" element={<BillingNew />} />
       <Route path="/billing/setup" element={<BillingSetup />} />
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />
       <Route path="/billing/stripe-setup" element={<StripeSetup />} />

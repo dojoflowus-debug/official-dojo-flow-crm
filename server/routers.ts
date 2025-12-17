@@ -11,6 +11,11 @@ import { authRouter } from "./authRouter";
 import { smsReminderRouter } from "./smsReminderRouter";
 import { kioskDirectRouter } from "./kioskDirectRouter";
 import { kioskSettingsRouter } from "./kioskSettingsRouter";
+import { membershipPlansRouter } from "./membershipPlansRouter";
+import { classEntitlementsRouter } from "./classEntitlementsRouter";
+import { oneTimeFeesRouter } from "./oneTimeFeesRouter";
+import { discountsRouter } from "./discountsRouter";
+import { addOnsRouter } from "./addOnsRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -230,6 +235,11 @@ export const appRouter = router({
   kioskDirect: kioskDirectRouter,
   kioskSettings: kioskSettingsRouter,
   billing: billingRouter,
+  membershipPlans: membershipPlansRouter,
+  classEntitlements: classEntitlementsRouter,
+  oneTimeFees: oneTimeFeesRouter,
+  discounts: discountsRouter,
+  addOns: addOnsRouter,
   webhook: webhookRouter,
   campaigns: campaignsRouter,
   automation: automationRouter,

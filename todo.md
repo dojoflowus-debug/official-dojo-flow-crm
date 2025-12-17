@@ -4383,3 +4383,48 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Save checkpoint
 
 **Known Issue:** Route showing 404 despite being properly configured. This appears to be an aggressive browser/gateway caching issue. The component exists, backend API is ready, and route is registered correctly. Issue should resolve after deployment or cache expiration.
+
+
+## 🆕 NEW: Billing Page Refactor - Programs vs Plans vs Classes vs Fees
+
+### Database Schema Design
+- [x] Create `programs` table (membership tracks: Free Trial, Black Belt Club, etc.)
+- [x] Create `membership_plans` table (billing structure: $149/mo, $199/mo, etc.)
+- [x] Create `class_entitlements` table (what classes members can attend)
+- [x] Create `one_time_fees` table (registration, down payment, certification)
+- [x] Create `discounts` table (rule-based: LA Fitness match, family discount, paid-in-full)
+- [x] Create `add_ons` table (seminars, tournaments, merch, camps)
+- [x] Create junction tables for relationships (program_plans, plan_entitlements, etc.)
+- [x] Run database migrations
+
+### Backend API
+- [x] Create programsRouter with CRUD operations (existing billingRouter)
+- [x] Create membershipPlansRouter with CRUD operations
+- [x] Create classEntitlementsRouter with CRUD operations
+- [x] Create oneTimeFeesRouter with CRUD operations
+- [x] Create discountsRouter with CRUD operations
+- [x] Create addOnsRouter with CRUD operations
+- [ ] Add enrollment selection endpoint (get available programs + plans + entitlements + fees)
+
+### Frontend - Billing Page Refactor
+- [x] Section A: Programs (membership tracks)
+- [x] Section B: Membership Plans (pricing tiers)
+- [x] Section C: Included Classes / Entitlements
+- [x] Section D: One-time Fees
+- [x] Section E: Discounts & Offers
+- [x] Section F: Add-ons
+- [x] Update navigation and page structure (created BillingNew.tsx at /billing/structure)
+- [ ] Add create/edit modals for each section
+
+### Kiosk + Enrollment Integration
+- [ ] Update Enrollment flow to use new billing structure
+- [ ] Update Kiosk to select Program + Plan + Entitlements + Fees
+- [ ] Add Free Trial program with $0 plan
+- [ ] Test enrollment with different program/plan combinations
+
+### Testing & Delivery
+- [ ] Test creating programs, plans, entitlements, fees, discounts, add-ons
+- [ ] Test enrollment flow with new structure
+- [ ] Test kiosk flow with new structure
+- [ ] Verify data relationships are correct
+- [ ] Save checkpoint
