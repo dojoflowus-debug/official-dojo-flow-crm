@@ -62,6 +62,7 @@ import Marketing from "./pages/MarketingUnified";
 import MarketingTest from "./pages/MarketingTest";
 import SubscriptionDashboard from "./pages/SubscriptionDashboard";
 import SetupWizard from "./pages/SetupWizard";
+import SettingsHub from "./pages/SettingsHub";
 import VirtualReceptionist from "./pages/VirtualReceptionist";
 import Themes from "./pages/Themes";
 import ThemesTest from "./pages/ThemesTest";
@@ -167,7 +168,7 @@ function Router() {
       <Route path="/automation/:id" element={<AutomationBuilder />} />
       <Route path="/conversations" element={<Conversations />} />
       <Route path="/setup-wizard" element={<ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>} />
-      <Route path="/setup" element={<ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>} />
+      <Route path="/setup" element={<SettingsHub />} />
       <Route path="/ai-setup" element={<AISetup />} />
       {/* KioskSetup removed */}
       <Route path="/security" element={<Security />} />

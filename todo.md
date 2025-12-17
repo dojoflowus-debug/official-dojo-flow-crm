@@ -4925,3 +4925,39 @@ Test location created:
 - Added `/settings/kiosk` to PAGE_TITLES mapping
 - Users now access kiosk via Settings → Kiosk Setup or direct URLs
 
+
+
+## ✅ COMPLETED: Settings Hub Page
+
+### Goal
+Create a comprehensive Settings hub page that serves as a central dashboard for all administrative sections, making navigation more intuitive.
+
+### Design Requirements
+- [x] Card-based layout with visual icons for each settings section
+- [x] Organized into logical categories (General, Appearance, Business, Security, Integrations)
+- [x] Quick stats or status indicators where relevant
+- [x] Responsive design for mobile and desktop
+- [ ] Search/filter functionality for settings sections (future enhancement)
+
+### Settings Sections to Include
+- [x] General Settings (business info, locations, hours)
+- [x] Locations (manage dojo locations and facilities)
+- [x] Themes & Appearance (color schemes, branding)
+- [x] Kiosk Setup (per-location kiosk configuration)
+- [x] AI/Kai Setup (Kai configuration and training)
+- [x] Subscription & Billing (plan management, payment methods)
+- [x] Security & Roles (user permissions, access control)
+- [x] Integrations (third-party services, webhooks)
+- [x] Notifications (email, SMS, push settings)
+
+### Implementation Tasks
+- [x] Create SettingsHub.tsx component
+- [x] Design card components for each settings section
+- [x] Add navigation links to all settings pages
+- [x] Update /setup route to show Settings hub
+- [x] Add category headers with icons
+- [x] Add quick stats cards (Setup Progress, Active Locations, Integrations)
+- [x] Add help section with "Ask Kai" link
+- [x] Test all navigation links
+- [x] Save checkpoint
+
