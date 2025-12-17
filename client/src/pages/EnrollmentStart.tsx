@@ -34,48 +34,46 @@ export default function EnrollmentStart() {
 
         {/* Mode Selection Cards */}
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Kai-Guided Enrollment (Coming Soon) */}
+          {/* Kai-Guided Enrollment */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all" />
-            <div className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 hover:border-purple-500/50 transition-all">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                  <Sparkles className="w-10 h-10 text-white" />
-                </div>
-                
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    Enroll with Kai
-                  </h3>
-                  <p className="text-slate-400 mb-1">AI-guided enrollment</p>
-                  <span className="inline-block px-3 py-1 bg-purple-600/20 text-purple-400 text-sm rounded-full">
-                    Coming Soon
-                  </span>
-                </div>
+            <Link to="/enrollment/kai">
+              <div className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 hover:border-purple-500/50 transition-all cursor-pointer">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+                    <Sparkles className="w-10 h-10 text-white" />
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      Enroll with Kai
+                    </h3>
+                    <p className="text-slate-400">AI-guided enrollment</p>
+                  </div>
 
-                <ul className="text-left text-slate-300 space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">✓</span>
-                    <span>Conversational experience</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">✓</span>
-                    <span>Smart questions based on your answers</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">✓</span>
-                    <span>Fastest enrollment (3-5 minutes)</span>
-                  </li>
-                </ul>
+                  <ul className="text-left text-slate-300 space-y-2 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-400 mt-1">✓</span>
+                      <span>Conversational experience</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-400 mt-1">✓</span>
+                      <span>Smart questions based on your answers</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-400 mt-1">✓</span>
+                      <span>Fastest enrollment (3-5 minutes)</span>
+                    </li>
+                  </ul>
 
-                <Button 
-                  className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
-                  disabled
-                >
-                  Coming Soon
-                </Button>
+                  <Button 
+                    className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold"
+                  >
+                    Start with Kai
+                  </Button>
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Standard Form Enrollment */}

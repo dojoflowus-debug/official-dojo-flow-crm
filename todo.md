@@ -4303,3 +4303,44 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Changed Link href to 'to' prop for react-router-dom compatibility
 - [x] Test enrollment button navigation
 - [x] Verify enrollment flow works end-to-end
+
+
+## 🤖 Implement "Enroll with Kai" AI-Guided Enrollment
+
+### Core Requirements
+- [x] Create KaiEnrollment.tsx page with chat interface
+- [x] Map all Standard Enrollment fields to Kai conversation steps
+- [x] Implement structured conversation flow (not open-ended chatbot)
+- [x] Use AIChatBox component for chat UI
+- [x] Create backend tRPC procedure for Kai enrollment conversation
+- [x] Integrate LLM with structured JSON schema for field extraction
+- [x] Validate required fields before completion
+- [x] Save enrollment data to same database model as Standard Enrollment
+- [x] Handle adaptive questioning based on prior answers (e.g., skip parent info if adult)
+- [x] Implement progress tracking and resume capability (via conversationTranscript)
+- [x] Add "Switch to Standard Form" escape hatch
+- [x] Enable Kai mode in EnrollmentStart.tsx (remove "Coming Soon")
+- [ ] Debug and test LLM response integration
+- [ ] Test full enrollment flow end-to-end with real data
+
+### Conversation Flow Design
+- [ ] Design greeting and introduction
+- [ ] Map student info questions (name, DOB)
+- [ ] Map contact info questions (phone, email, address)
+- [ ] Map parent/guardian questions (conditional on age)
+- [ ] Map program interest questions
+- [ ] Map goals and motivation questions
+- [ ] Map medical information questions
+- [ ] Map membership selection
+- [ ] Map waiver and consent (signature required)
+- [ ] Design review and confirmation step
+- [ ] Design completion and next steps message
+
+### Technical Implementation
+- [ ] Create enrollment.kaiConverse tRPC mutation
+- [ ] Design conversation state management
+- [ ] Implement field extraction with JSON schema
+- [ ] Add conversation history persistence
+- [ ] Implement error handling and retry logic
+- [ ] Add typing indicators and loading states
+- [ ] Test LLM response quality and field accuracy

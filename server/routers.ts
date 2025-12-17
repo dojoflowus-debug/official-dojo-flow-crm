@@ -4099,6 +4099,249 @@ Return the data as a structured JSON object.`
         };
       }),
     
+    // Kai-guided conversation
+    kaiConverse: publicProcedure
+      .input(z.object({
+        enrollmentId: z.number(),
+        userMessage: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const { enrollments } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        // Get current enrollment state
+        const enrollment = await db.select().from(enrollments)
+          .where(eq(enrollments.id, input.enrollmentId))
+          .limit(1);
+        
+        if (enrollment.length === 0) {
+          throw new Error('Enrollment not found');
+        }
+        
+        const currentData = enrollment[0];
+        
+        // Build conversation context
+        const conversationHistory = currentData.conversationTranscript 
+          ? JSON.parse(currentData.conversationTranscript as string)
+          : [];
+        
+        // Determine what fields are still needed
+        const missingFields = [];
+        if (!currentData.firstName || !currentData.lastName) missingFields.push('student_name');
+        if (!currentData.dateOfBirth && !currentData.age) missingFields.push('date_of_birth_or_age');
+        if (!currentData.phone && !currentData.email) missingFields.push('contact_info');
+        if (!currentData.streetAddress) missingFields.push('address');
+        
+        // Check if guardian info needed (if under 18)
+        const needsGuardian = currentData.age && currentData.age < 18;
+        if (needsGuardian && !currentData.guardianName) missingFields.push('guardian_info');
+        
+        if (!currentData.programInterest) missingFields.push('program_interest');
+        if (!currentData.experienceLevel) missingFields.push('experience_level');
+        if (!currentData.goals) missingFields.push('goals_motivation');
+        if (!currentData.emergencyContactName) missingFields.push('emergency_contact');
+        if (!currentData.selectedMembershipPlan) missingFields.push('membership_plan');
+        if (!currentData.waiverSigned) missingFields.push('waiver_signature');
+        
+        const isComplete = missingFields.length === 0;
+        
+        // Build system prompt for Kai
+        const systemPrompt = `You are Kai, a friendly enrollment assistant for DojoFlow martial arts school.
+
+Your role:
+- Guide the user through enrollment by asking ONE question at a time
+- Extract information from user responses using the provided JSON schema
+- Be conversational but efficient
+- Adapt questions based on previous answers (e.g., skip parent info if adult)
+- Never ask for information already collected
+
+Current enrollment progress:
+${JSON.stringify({
+  firstName: currentData.firstName,
+  lastName: currentData.lastName,
+  age: currentData.age,
+  dateOfBirth: currentData.dateOfBirth,
+  phone: currentData.phone,
+  email: currentData.email,
+  address: currentData.streetAddress ? 'collected' : 'missing',
+  guardianInfo: needsGuardian ? (currentData.guardianName ? 'collected' : 'missing') : 'not needed',
+  programInterest: currentData.programInterest,
+  experienceLevel: currentData.experienceLevel,
+  goals: currentData.goals ? 'collected' : 'missing',
+  emergencyContact: currentData.emergencyContactName ? 'collected' : 'missing',
+  membershipPlan: currentData.selectedMembershipPlan,
+  waiverSigned: currentData.waiverSigned,
+}, null, 2)}
+
+Missing fields: ${missingFields.join(', ')}
+
+Instructions:
+1. If user just provided information, acknowledge it warmly
+2. Ask for the NEXT missing field using natural language
+3. Extract any information from the user's message into the JSON response
+4. Keep responses brief (2-3 sentences max)
+5. For waiver, explain it's required and ask for digital signature confirmation
+6. When all fields collected, congratulate them and confirm submission
+
+Membership plans available:
+- Kids (Ages 6-12): $99/month
+- Teens (Ages 13-17): $119/month  
+- Adults (18+): $139/month
+- Family (2+ members): $249/month`;
+        
+        // Call LLM with structured output
+        const response = await invokeLLM({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...conversationHistory,
+            { role: 'user', content: input.userMessage },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'enrollment_extraction',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  kai_response: { type: 'string', description: 'Kai\'s conversational response to the user' },
+                  extracted_data: {
+                    type: 'object',
+                    properties: {
+                      firstName: { type: 'string' },
+                      lastName: { type: 'string' },
+                      dateOfBirth: { type: 'string' },
+                      age: { type: 'number' },
+                      phone: { type: 'string' },
+                      email: { type: 'string' },
+                      streetAddress: { type: 'string' },
+                      city: { type: 'string' },
+                      state: { type: 'string' },
+                      zipCode: { type: 'string' },
+                      guardianName: { type: 'string' },
+                      guardianRelationship: { type: 'string' },
+                      guardianPhone: { type: 'string' },
+                      guardianEmail: { type: 'string' },
+                      programInterest: { type: 'string' },
+                      experienceLevel: { type: 'string' },
+                      classType: { type: 'string' },
+                      goals: { type: 'string' },
+                      motivation: { type: 'string' },
+                      allergies: { type: 'string' },
+                      medicalConditions: { type: 'string' },
+                      emergencyContactName: { type: 'string' },
+                      emergencyContactPhone: { type: 'string' },
+                      selectedMembershipPlan: { type: 'string' },
+                      waiverSigned: { type: 'boolean' },
+                      consentGiven: { type: 'boolean' },
+                    },
+                    required: [],
+                    additionalProperties: false,
+                  },
+                  is_complete: { type: 'boolean', description: 'True if all required fields are now collected' },
+                },
+                required: ['kai_response', 'extracted_data', 'is_complete'],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        
+        const result = JSON.parse(response.choices[0].message.content || '{}');
+        
+        // Update enrollment with extracted data
+        const updateData: any = {};
+        const extracted = result.extracted_data || {};
+        
+        if (extracted.firstName) updateData.firstName = extracted.firstName;
+        if (extracted.lastName) updateData.lastName = extracted.lastName;
+        if (extracted.dateOfBirth) updateData.dateOfBirth = new Date(extracted.dateOfBirth);
+        if (extracted.age) updateData.age = extracted.age;
+        if (extracted.phone) updateData.phone = extracted.phone;
+        if (extracted.email) updateData.email = extracted.email;
+        if (extracted.streetAddress) updateData.streetAddress = extracted.streetAddress;
+        if (extracted.city) updateData.city = extracted.city;
+        if (extracted.state) updateData.state = extracted.state;
+        if (extracted.zipCode) updateData.zipCode = extracted.zipCode;
+        if (extracted.guardianName) updateData.guardianName = extracted.guardianName;
+        if (extracted.guardianRelationship) updateData.guardianRelationship = extracted.guardianRelationship;
+        if (extracted.guardianPhone) updateData.guardianPhone = extracted.guardianPhone;
+        if (extracted.guardianEmail) updateData.guardianEmail = extracted.guardianEmail;
+        if (extracted.programInterest) updateData.programInterest = extracted.programInterest;
+        if (extracted.experienceLevel) updateData.experienceLevel = extracted.experienceLevel;
+        if (extracted.classType) updateData.classType = extracted.classType;
+        if (extracted.goals) updateData.goals = extracted.goals;
+        if (extracted.motivation) updateData.motivation = extracted.motivation;
+        if (extracted.allergies) updateData.allergies = extracted.allergies;
+        if (extracted.medicalConditions) updateData.medicalConditions = extracted.medicalConditions;
+        if (extracted.emergencyContactName) updateData.emergencyContactName = extracted.emergencyContactName;
+        if (extracted.emergencyContactPhone) updateData.emergencyContactPhone = extracted.emergencyContactPhone;
+        if (extracted.selectedMembershipPlan) updateData.selectedMembershipPlan = extracted.selectedMembershipPlan;
+        if (extracted.waiverSigned !== undefined) {
+          updateData.waiverSigned = extracted.waiverSigned ? 1 : 0;
+          if (extracted.waiverSigned) {
+            updateData.waiverSignedAt = new Date();
+          }
+        }
+        if (extracted.consentGiven !== undefined) updateData.consentGiven = extracted.consentGiven ? 1 : 0;
+        
+        // Update conversation history
+        conversationHistory.push(
+          { role: 'user', content: input.userMessage },
+          { role: 'assistant', content: result.kai_response }
+        );
+        updateData.conversationTranscript = JSON.stringify(conversationHistory);
+        
+        // Save to database
+        await db.update(enrollments)
+          .set(updateData)
+          .where(eq(enrollments.id, input.enrollmentId));
+        
+        // If complete, submit enrollment
+        if (result.is_complete) {
+          // Auto-submit
+          const updatedEnrollment = await db.select().from(enrollments)
+            .where(eq(enrollments.id, input.enrollmentId))
+            .limit(1);
+          
+          if (updatedEnrollment.length > 0 && updatedEnrollment[0].waiverSigned) {
+            const { leads } = await import("../drizzle/schema");
+            const enroll = updatedEnrollment[0];
+            
+            // Create lead
+            await db.insert(leads).values({
+              firstName: enroll.firstName,
+              lastName: enroll.lastName,
+              email: enroll.email || '',
+              phone: enroll.phone || '',
+              status: 'New Lead',
+              source: 'Kai Enrollment',
+              notes: `Program Interest: ${enroll.programInterest || 'Not specified'}\nExperience: ${enroll.experienceLevel || 'Not specified'}\nGoals: ${enroll.goals || 'Not specified'}`,
+              createdAt: new Date(),
+            });
+            
+            // Update enrollment status
+            await db.update(enrollments)
+              .set({ 
+                status: 'submitted',
+                submittedAt: new Date(),
+              })
+              .where(eq(enrollments.id, input.enrollmentId));
+          }
+        }
+        
+        return {
+          kaiResponse: result.kai_response,
+          extractedData: extracted,
+          isComplete: result.is_complete || false,
+        };
+      }),
+    
     // Validate step data (reusable by Kai)
     validateStep: publicProcedure
       .input(z.object({
