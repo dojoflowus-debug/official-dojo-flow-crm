@@ -3,7 +3,7 @@ import BottomNavLayout from '@/components/BottomNavLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DollarSign, CreditCard, AlertCircle, TrendingUp, Plus, Download, Settings, FileText, CheckCircle } from 'lucide-react';
+import { DollarSign, CreditCard, AlertCircle, TrendingUp, Plus, Download, Settings, FileText, CheckCircle, Sliders } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 
 export default function Billing() {
@@ -33,6 +33,10 @@ export default function Billing() {
             <p className="text-muted-foreground">Manage memberships, payments, and invoices</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/billing/structure')}>
+              <Sliders className="h-4 w-4 mr-2" />
+              Programs & Plans
+            </Button>
             <Button variant="outline" onClick={() => navigate('/billing/applications')}>
               <FileText className="h-4 w-4 mr-2" />
               Applications

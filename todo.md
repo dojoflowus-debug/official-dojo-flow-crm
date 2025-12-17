@@ -4428,3 +4428,18 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Test kiosk flow with new structure
 - [ ] Verify data relationships are correct
 - [ ] Save checkpoint
+
+
+## ✅ COMPLETED: Add Navigation to Billing Structure Page
+
+### Issue
+- User cannot find how to access Billing Structure page from main Billing page
+- No visible button or link to navigate to /billing/structure
+- User has to manually type URL to access Programs/Plans/Entitlements configuration
+
+### Tasks
+- [x] Add "Configure Programs & Plans" button to main Billing page header
+- [x] Position button next to "Applications", "Export", "New Invoice" buttons
+- [x] Test navigation from Billing to Billing Structure page
+- [x] Ensure button is clearly labeled and visible
+- [x] Save checkpoint after fix
