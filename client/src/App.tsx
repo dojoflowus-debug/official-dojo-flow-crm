@@ -10,6 +10,7 @@ import { KioskProvider } from "./contexts/KioskContext";
 import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
 import Kiosk from "./pages/Kiosk";
+import TestBrand from "./pages/TestBrand";
 import KioskCheckIn from "./pages/KioskCheckIn";
 import KioskNewStudent from "./pages/KioskNewStudent";
 import KioskMemberLogin from "./pages/KioskMemberLogin";
@@ -96,6 +97,7 @@ function Router() {
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
       <Route path="/kiosk" element={<Kiosk />} />
+      <Route path="/test-brand" element={<TestBrand />} />
       <Route path="/kiosk/checkin" element={<KioskCheckIn />} />
       <Route path="/kiosk/member-login" element={<KioskMemberLogin />} />
       <Route path="/kiosk/new-student" element={<KioskNewStudent />} />

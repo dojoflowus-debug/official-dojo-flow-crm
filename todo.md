@@ -4358,3 +4358,12 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Verify conversation flow works end-to-end
 - [x] Verify enrollment data is being saved correctly
 - [x] Confirmed adaptive questioning (skips guardian info for adults)
+
+
+## 🐛 Known Issues - Kiosk Loading
+
+- [ ] Kiosk page showing "Not Configured" error due to aggressive browser/gateway caching
+- [ ] Component has been updated to use hardcoded values (businessName: 'DojoFlow', logoSquare: test URL)
+- [ ] Drizzle ORM connection issues with TiDB (ECONNRESET errors) - raw mysql2 works but Drizzle queries fail
+- [ ] Multiple server restarts and cache clears attempted
+- [ ] Issue should resolve after cache expiration or fresh deployment

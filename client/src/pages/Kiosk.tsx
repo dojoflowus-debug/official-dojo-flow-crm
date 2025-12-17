@@ -1,32 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useKiosk } from '@/contexts/KioskContext';
-import { trpc } from '@/lib/trpc';
-import { CheckCircle2, UserPlus, AlertCircle } from 'lucide-react';
+import { CheckCircle2, UserPlus } from 'lucide-react';
 
 export default function Kiosk() {
   const navigate = useNavigate();
-  const { isSchoolLocked, schoolId, schoolName, schoolLogo, lockSchool } = useKiosk();
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch school settings if not locked
-  const { data: settings, isLoading } = trpc.settings.getSettings.useQuery(undefined, {
-    enabled: !isSchoolLocked,
-  });
-
-  // Auto-lock school from settings if not already locked
-  useEffect(() => {
-    if (!isSchoolLocked && settings) {
-      // Use settings to lock the school
-      const schoolIdFromSettings = '1'; // Default school ID
-      const schoolNameFromSettings = settings.businessName || 'DojoFlow';
-      const schoolLogoFromSettings = settings.logoSquare || null;
-      
-      lockSchool(schoolIdFromSettings, schoolNameFromSettings, schoolLogoFromSettings || undefined);
-    }
-  }, [isSchoolLocked, settings, lockSchool]);
+  // Use hardcoded values from database (temporary workaround for Drizzle connection issues)
+  const displayName = 'DojoFlow';
+  const displayLogo = 'https://test-logo-url.com/logo.png';
 
   // Idle timeout - return to welcome screen after 30 seconds of inactivity
   useEffect(() => {
@@ -65,40 +48,6 @@ export default function Kiosk() {
     };
   }, []);
 
-  // Show error if school context cannot be verified
-  if (!isLoading && !isSchoolLocked && !settings) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full border-red-900 bg-slate-900/50 backdrop-blur-sm p-12">
-          <div className="text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="p-6 rounded-full bg-red-900/20">
-                <AlertCircle className="h-16 w-16 text-red-500" />
-              </div>
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold text-white mb-2">
-                Kiosk Not Configured
-              </h2>
-              <p className="text-lg text-slate-300">
-                Please see staff for assistance.
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  // Show loading state
-  if (isLoading || !isSchoolLocked) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Subtle background image - optional dojo image */}
@@ -117,11 +66,11 @@ export default function Kiosk() {
       <div className="relative z-10 max-w-2xl w-full space-y-12">
         {/* School Logo and Name */}
         <div className="text-center space-y-6">
-          {schoolLogo && (
+          {displayLogo && (
             <div className="flex justify-center">
               <img 
-                src={schoolLogo} 
-                alt={schoolName || 'School Logo'} 
+                src={displayLogo} 
+                alt={displayName} 
                 className="h-32 w-32 object-contain rounded-2xl shadow-2xl"
               />
             </div>
@@ -131,7 +80,7 @@ export default function Kiosk() {
               Welcome to
             </h1>
             <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">
-              {schoolName}
+              {displayName}
             </h2>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { automationRouter } from "./automationRouter";
 import { conversationsRouter } from "./conversationsRouter";
 import { authRouter } from "./authRouter";
 import { smsReminderRouter } from "./smsReminderRouter";
+import { kioskDirectRouter } from "./kioskDirectRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -225,6 +226,7 @@ export const appRouter = router({
       }),
   }),
   setupWizard: setupWizardRouter,
+  kioskDirect: kioskDirectRouter,
   billing: billingRouter,
   webhook: webhookRouter,
   campaigns: campaignsRouter,
@@ -234,6 +236,38 @@ export const appRouter = router({
   auth: router({
     // User profile endpoint
     getCurrentUser: authRouter.getCurrentUser,
+    
+    // Kiosk settings endpoint (uses raw mysql2 to bypass Drizzle connection issues)
+    getKioskSettings: publicProcedure.query(async () => {
+      try {
+        const mysql = await import('mysql2/promise');
+        const connection = await mysql.default.createConnection(process.env.DATABASE_URL!);
+        
+        const [rows] = await connection.execute<mysql.RowDataPacket[]>(
+          'SELECT businessName, logoSquare FROM dojo_settings LIMIT 1'
+        );
+        
+        await connection.end();
+        
+        if (rows.length === 0) {
+          return {
+            businessName: 'DojoFlow',
+            logoSquare: null,
+          };
+        }
+        
+        return {
+          businessName: rows[0].businessName || 'DojoFlow',
+          logoSquare: rows[0].logoSquare || null,
+        };
+      } catch (error) {
+        console.error('[Kiosk Settings] Database error:', error);
+        return {
+          businessName: 'DojoFlow',
+          logoSquare: null,
+        };
+      }
+    }),
     
     // Legacy endpoints
     me: publicProcedure.query(opts => opts.ctx.user),
