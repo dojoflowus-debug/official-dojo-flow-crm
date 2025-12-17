@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useKiosk } from '@/contexts/KioskContext';
@@ -7,10 +7,9 @@ import { trpc } from '@/lib/trpc';
 import { CheckCircle2, UserPlus, AlertCircle } from 'lucide-react';
 
 export default function Kiosk() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { isSchoolLocked, schoolId, schoolName, schoolLogo, lockSchool } = useKiosk();
   const [error, setError] = useState<string | null>(null);
-  const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Fetch school settings if not locked
   const { data: settings, isLoading } = trpc.settings.getSettings.useQuery(undefined, {
@@ -31,33 +30,38 @@ export default function Kiosk() {
 
   // Idle timeout - return to welcome screen after 30 seconds of inactivity
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
     const resetIdleTimer = () => {
-      if (idleTimer) {
-        clearTimeout(idleTimer);
+      if (timer) {
+        clearTimeout(timer);
       }
       
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         // Return to welcome screen (reload page)
         window.location.reload();
       }, 30000); // 30 seconds
-      
-      setIdleTimer(timer);
     };
 
     // Reset timer on any user interaction
-    window.addEventListener('click', resetIdleTimer);
-    window.addEventListener('keypress', resetIdleTimer);
-    window.addEventListener('touchstart', resetIdleTimer);
+    const handleInteraction = () => {
+      resetIdleTimer();
+    };
 
+    window.addEventListener('click', handleInteraction, { passive: true });
+    window.addEventListener('keypress', handleInteraction, { passive: true });
+    window.addEventListener('touchstart', handleInteraction, { passive: true });
+
+    // Start initial timer
     resetIdleTimer();
 
     return () => {
-      if (idleTimer) {
-        clearTimeout(idleTimer);
+      if (timer) {
+        clearTimeout(timer);
       }
-      window.removeEventListener('click', resetIdleTimer);
-      window.removeEventListener('keypress', resetIdleTimer);
-      window.removeEventListener('touchstart', resetIdleTimer);
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keypress', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
     };
   }, []);
 
@@ -137,7 +141,7 @@ export default function Kiosk() {
           {/* Member Login Button */}
           <Card 
             className="border-slate-700 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-800/50 transition-all cursor-pointer group p-8"
-            onClick={() => setLocation('/kiosk/member-login')}
+            onClick={() => navigate('/kiosk/member-login')}
           >
             <div className="text-center space-y-4">
               <div className="flex justify-center">
@@ -159,7 +163,7 @@ export default function Kiosk() {
           {/* New Student Button */}
           <Card 
             className="border-slate-700 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-800/50 transition-all cursor-pointer group p-8"
-            onClick={() => setLocation('/enrollment')}
+            onClick={() => navigate('/enrollment')}
           >
             <div className="text-center space-y-4">
               <div className="flex justify-center">
@@ -184,7 +188,7 @@ export default function Kiosk() {
           <Button
             variant="ghost"
             className="text-slate-400 hover:text-white text-sm"
-            onClick={() => setLocation('/login')}
+            onClick={() => navigate('/login')}
           >
             Staff Login
           </Button>

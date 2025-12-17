@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,14 +16,13 @@ import {
 } from 'lucide-react';
 
 export default function KioskMemberLogin() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { isSchoolLocked, schoolName, schoolLogo } = useKiosk();
   const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [checkedIn, setCheckedIn] = useState(false);
   const [studentData, setStudentData] = useState<any>(null);
-  const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
 
   // TRPC mutations
   const lookupByPhoneMutation = trpc.students.lookupByPhone.useMutation();
@@ -33,50 +32,55 @@ export default function KioskMemberLogin() {
   // Redirect if not in kiosk mode
   useEffect(() => {
     if (!isSchoolLocked) {
-      setLocation('/kiosk');
+      navigate('/kiosk');
     }
-  }, [isSchoolLocked, setLocation]);
+  }, [isSchoolLocked, navigate]);
 
   // Idle timeout - return to welcome screen after 30 seconds of inactivity
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
     const resetIdleTimer = () => {
-      if (idleTimer) {
-        clearTimeout(idleTimer);
+      if (timer) {
+        clearTimeout(timer);
       }
       
-      const timer = setTimeout(() => {
-        setLocation('/kiosk');
+      timer = setTimeout(() => {
+        navigate('/kiosk');
       }, 30000); // 30 seconds
-      
-      setIdleTimer(timer);
     };
 
-    window.addEventListener('click', resetIdleTimer);
-    window.addEventListener('keypress', resetIdleTimer);
-    window.addEventListener('touchstart', resetIdleTimer);
+    const handleInteraction = () => {
+      resetIdleTimer();
+    };
 
+    window.addEventListener('click', handleInteraction, { passive: true });
+    window.addEventListener('keypress', handleInteraction, { passive: true });
+    window.addEventListener('touchstart', handleInteraction, { passive: true });
+
+    // Start initial timer
     resetIdleTimer();
 
     return () => {
-      if (idleTimer) {
-        clearTimeout(idleTimer);
+      if (timer) {
+        clearTimeout(timer);
       }
-      window.removeEventListener('click', resetIdleTimer);
-      window.removeEventListener('keypress', resetIdleTimer);
-      window.removeEventListener('touchstart', resetIdleTimer);
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keypress', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
     };
-  }, [setLocation]);
+  }, [navigate]);
 
   // Auto-return to welcome screen after successful check-in
   useEffect(() => {
     if (checkedIn) {
       const timer = setTimeout(() => {
-        setLocation('/kiosk');
+        navigate('/kiosk');
       }, 5000); // 5 seconds
 
       return () => clearTimeout(timer);
     }
-  }, [checkedIn, setLocation]);
+  }, [checkedIn, navigate]);
 
   // Format phone number as user types
   const formatPhoneNumber = (value: string) => {
@@ -220,7 +224,7 @@ export default function KioskMemberLogin() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setLocation('/kiosk')}
+                onClick={() => navigate('/kiosk')}
                 className="text-slate-400 hover:text-white h-10 w-10"
               >
                 <ArrowLeft className="h-6 w-6" />

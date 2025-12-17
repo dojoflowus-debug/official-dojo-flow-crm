@@ -4277,3 +4277,18 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [x] Add Kiosk icon (Monitor icon)
 - [x] Provide kiosk URL for dedicated display (/kiosk route)
 - [x] Document kiosk access instructions for staff
+
+
+## 🐛 Fix Kiosk Button Responsiveness Issues
+
+- [x] Diagnose slow/sluggish button behavior on kiosk pages
+- [x] Check for CSS hover/active state conflicts
+- [x] Check for event handler performance issues
+- [x] Check for unnecessary re-renders or state updates
+- [x] Remove any blocking operations on button clicks
+- [x] Fixed idle timeout event listener leak (was adding listeners on every click)
+- [x] Fixed routing library mismatch (wouter → react-router-dom)
+- [x] Added passive event listeners for better performance
+- [x] Removed unused state variables
+- [x] Test button responsiveness on all kiosk screens
+- [x] Verify touch events work properly on tablets
