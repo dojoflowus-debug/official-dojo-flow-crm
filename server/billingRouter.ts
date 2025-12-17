@@ -224,6 +224,27 @@ export const billingRouter = router({
       return { success: true };
     }),
 
+  // Bulk delete membership plans
+  bulkDeleteMembershipPlans: publicProcedure
+    .input(z.object({
+      ids: z.array(z.number()),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const { membershipPlans } = await import("../drizzle/schema");
+      const { inArray } = await import("drizzle-orm");
+      
+      // Delete all plans with the given IDs
+      await db.delete(membershipPlans).where(inArray(membershipPlans.id, input.ids));
+      
+      return { 
+        success: true, 
+        deletedCount: input.ids.length 
+      };
+    }),
+
   // Shorter aliases for Plans
   createPlan: publicProcedure
     .input(z.object({
@@ -298,6 +319,27 @@ export const billingRouter = router({
       
       await db.delete(membershipPlans).where(eq(membershipPlans.id, input.id));
       return { success: true };
+    }),
+
+  // Bulk delete plans (alias)
+  bulkDeletePlans: publicProcedure
+    .input(z.object({
+      ids: z.array(z.number()),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const { membershipPlans } = await import("../drizzle/schema");
+      const { inArray } = await import("drizzle-orm");
+      
+      // Delete all plans with the given IDs
+      await db.delete(membershipPlans).where(inArray(membershipPlans.id, input.ids));
+      
+      return { 
+        success: true, 
+        deletedCount: input.ids.length 
+      };
     }),
 
   // ========== ENTITLEMENTS CRUD ==========

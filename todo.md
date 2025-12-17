@@ -4537,3 +4537,18 @@ Allow users to Create, Edit, and Delete items in all 6 billing sections
 - [x] Delete functionality wired up with trash icon
 - [x] Toast notifications working for all operations
 - [x] Data persists to database correctly
+
+
+## ✅ COMPLETED: Bulk Deletion for Membership Plans
+
+### Implementation
+- [x] Add selection state management (useState for selectedPlanIds)
+- [x] Add checkbox to each plan card (top-left corner)
+- [x] Add "Select All" checkbox in header
+- [x] Add "Delete Selected" button that appears when plans are selected
+- [x] Implement bulk delete mutation in backend (bulkDeletePlans)
+- [x] Add confirmation dialog for bulk deletion
+- [x] Test selecting/deselecting individual plans
+- [x] Test Select All functionality (all 31 plans)
+- [x] Test bulk deletion with multiple plans (4 vitest tests passing)
+- [x] Save checkpoint

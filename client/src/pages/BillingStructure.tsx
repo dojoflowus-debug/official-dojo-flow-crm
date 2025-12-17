@@ -24,6 +24,7 @@ export default function BillingStructure() {
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedPlanIds, setSelectedPlanIds] = useState<number[]>([]);
 
   // Fetch data for all sections
   const { data: programs } = trpc.billing.getPrograms.useQuery();
@@ -58,6 +59,44 @@ export default function BillingStructure() {
   const handleDeletePlan = (id: number) => {
     if (window.confirm('Are you sure you want to delete this plan?')) {
       deletePlanMutation.mutate({ id });
+    }
+  };
+
+  const bulkDeletePlansMutation = trpc.billing.bulkDeletePlans.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Successfully deleted ${data.deletedCount} plan(s)`);
+      setSelectedPlanIds([]);
+      utils.billing.getPlans.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete plans: ${error.message}`);
+    },
+  });
+
+  const handleBulkDeletePlans = () => {
+    if (selectedPlanIds.length === 0) return;
+    
+    const confirmMessage = `Are you sure you want to delete ${selectedPlanIds.length} plan(s)? This action cannot be undone.`;
+    if (window.confirm(confirmMessage)) {
+      bulkDeletePlansMutation.mutate({ ids: selectedPlanIds });
+    }
+  };
+
+  const togglePlanSelection = (planId: number) => {
+    setSelectedPlanIds(prev => 
+      prev.includes(planId) 
+        ? prev.filter(id => id !== planId)
+        : [...prev, planId]
+    );
+  };
+
+  const toggleSelectAllPlans = () => {
+    if (!membershipPlans) return;
+    
+    if (selectedPlanIds.length === membershipPlans.length) {
+      setSelectedPlanIds([]);
+    } else {
+      setSelectedPlanIds(membershipPlans.map(plan => plan.id));
     }
   };
   const { data: membershipPlans } = trpc.membershipPlans.getAll.useQuery();
@@ -212,16 +251,41 @@ export default function BillingStructure() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Membership Plans</CardTitle>
-                    <CardDescription>
-                      Pricing tiers: $149/mo, $199/mo, $249/mo with different terms
-                    </CardDescription>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <CardTitle>Membership Plans</CardTitle>
+                      <CardDescription>
+                        Pricing tiers: $149/mo, $199/mo, $249/mo with different terms
+                      </CardDescription>
+                    </div>
+                    {membershipPlans && membershipPlans.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedPlanIds.length === membershipPlans.length && membershipPlans.length > 0}
+                          onChange={toggleSelectAllPlans}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label className="text-sm text-muted-foreground">Select All</label>
+                      </div>
+                    )}
                   </div>
-                  <Button onClick={() => { setSelectedPlan(null); setPlanModalOpen(true); }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Plan
-                  </Button>
+                  <div className="flex gap-2">
+                    {selectedPlanIds.length > 0 && (
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleBulkDeletePlans}
+                        disabled={bulkDeletePlansMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Selected ({selectedPlanIds.length})
+                      </Button>
+                    )}
+                    <Button onClick={() => { setSelectedPlan(null); setPlanModalOpen(true); }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Plan
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -229,6 +293,15 @@ export default function BillingStructure() {
                   {membershipPlans && membershipPlans.length > 0 ? (
                     membershipPlans.map((plan) => (
                       <Card key={plan.id} className="relative">
+                        <div className="absolute top-2 left-2 z-10">
+                          <input
+                            type="checkbox"
+                            checked={selectedPlanIds.includes(plan.id)}
+                            onChange={() => togglePlanSelection(plan.id)}
+                            className="h-4 w-4 rounded border-gray-300"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
                         {plan.isPopular === 1 && (
                           <div className="absolute top-2 right-2">
                             <Badge className="bg-primary">Popular</Badge>
