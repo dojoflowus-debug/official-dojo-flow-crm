@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { Sparkles, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -81,7 +81,7 @@ export default function EnrollmentStart() {
           {/* Standard Form Enrollment */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-orange-600/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all" />
-            <Link href="/enrollment/form">
+            <Link to="/enrollment/form">
               <div className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 hover:border-red-500/50 transition-all cursor-pointer">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center">
@@ -123,7 +123,7 @@ export default function EnrollmentStart() {
 
         {/* Footer */}
         <div className="text-center mt-12">
-          <Link href="/kiosk">
+          <Link to="/kiosk">
             <button className="text-slate-400 hover:text-white transition-colors text-sm">
               ← Back to Welcome
             </button>

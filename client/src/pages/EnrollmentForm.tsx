@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ const STEPS = [
 ];
 
 export default function EnrollmentForm() {
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [enrollmentId, setEnrollmentId] = useState<number | null>(null);
   const [enrollmentData, setEnrollmentData] = useState<any>({});
