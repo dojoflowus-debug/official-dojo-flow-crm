@@ -166,13 +166,36 @@ export const billingRouter = router({
   createMembershipPlan: publicProcedure
     .input(z.object({
       name: z.string().min(1),
-      monthlyPrice: z.number(),
-      termLength: z.number().default(12),
-      billingCycle: z.enum(["monthly", "quarterly", "annually"]).default("monthly"),
+      description: z.string().optional(),
+      
+      // Billing frequency
+      billingFrequency: z.enum(["monthly", "weekly", "daily", "drop_in"]).optional(),
+      
+      // Pricing (unified)
+      priceAmount: z.number(), // In cents - base price for the frequency
+      monthlyPrice: z.number().optional(), // DEPRECATED - for backward compatibility
+      
+      // Billing interval and anchor
+      billingInterval: z.number().default(1).optional(),
+      billingAnchorDayOfWeek: z.number().min(0).max(6).optional(), // 0-6 for weekly
+      
+      // Term length (flexible units)
+      termLength: z.number().optional(), // DEPRECATED - months
+      termLengthUnits: z.enum(["months", "weeks", "days", "visits"]).optional(),
+      termLengthValue: z.number().optional(),
+      
+      // Drop-in / Visit pack options
+      perVisitPrice: z.number().optional(),
+      visitPackSize: z.number().optional(),
+      visitPackExpiryDays: z.number().optional(),
+      chargeOnAttendance: z.number().default(0).optional(),
+      
+      // Legacy fields
+      billingCycle: z.enum(["monthly", "quarterly", "annually"]).default("monthly").optional(),
       registrationFee: z.number().optional(),
       downPayment: z.number().optional(),
-      showOnKiosk: z.number().default(1),
-      isPopular: z.number().default(0),
+      showOnKiosk: z.number().default(1).optional(),
+      isPopular: z.number().default(0).optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -180,7 +203,30 @@ export const billingRouter = router({
       
       const { membershipPlans } = await import("../drizzle/schema");
       
-      const [plan] = await db.insert(membershipPlans).values(input);
+      // Convert monthlyPrice to priceAmount and monthlyAmount for backward compatibility
+      const values: any = {
+        name: input.name,
+        description: input.description,
+        billingFrequency: input.billingFrequency || "monthly",
+        priceAmount: input.priceAmount,
+        monthlyAmount: input.monthlyPrice || input.priceAmount,
+        billingInterval: input.billingInterval,
+        billingAnchorDayOfWeek: input.billingAnchorDayOfWeek,
+        termLength: input.termLength,
+        termLengthUnits: input.termLengthUnits,
+        termLengthValue: input.termLengthValue,
+        perVisitPrice: input.perVisitPrice,
+        visitPackSize: input.visitPackSize,
+        visitPackExpiryDays: input.visitPackExpiryDays,
+        chargeOnAttendance: input.chargeOnAttendance,
+        billingCycle: input.billingCycle,
+        registrationFee: input.registrationFee,
+        downPayment: input.downPayment,
+        showOnKiosk: input.showOnKiosk,
+        isPopular: input.isPopular,
+      };
+      
+      const [plan] = await db.insert(membershipPlans).values(values);
       return plan;
     }),
 
@@ -188,8 +234,31 @@ export const billingRouter = router({
     .input(z.object({
       id: z.number(),
       name: z.string().min(1).optional(),
-      monthlyPrice: z.number().optional(),
+      description: z.string().optional(),
+      
+      // Billing frequency
+      billingFrequency: z.enum(["monthly", "weekly", "daily", "drop_in"]).optional(),
+      
+      // Pricing
+      priceAmount: z.number().optional(),
+      monthlyPrice: z.number().optional(), // DEPRECATED
+      
+      // Billing interval and anchor
+      billingInterval: z.number().optional(),
+      billingAnchorDayOfWeek: z.number().min(0).max(6).optional(),
+      
+      // Term length
       termLength: z.number().optional(),
+      termLengthUnits: z.enum(["months", "weeks", "days", "visits"]).optional(),
+      termLengthValue: z.number().optional(),
+      
+      // Drop-in options
+      perVisitPrice: z.number().optional(),
+      visitPackSize: z.number().optional(),
+      visitPackExpiryDays: z.number().optional(),
+      chargeOnAttendance: z.number().optional(),
+      
+      // Legacy fields
       billingCycle: z.enum(["monthly", "quarterly", "annually"]).optional(),
       registrationFee: z.number().optional(),
       downPayment: z.number().optional(),
@@ -203,8 +272,18 @@ export const billingRouter = router({
       const { membershipPlans } = await import("../drizzle/schema");
       
       const { id, ...updates } = input;
+      
+      // Handle backward compatibility
+      const values: any = { ...updates };
+      if (updates.monthlyPrice !== undefined) {
+        values.monthlyAmount = updates.monthlyPrice;
+        if (!values.priceAmount) {
+          values.priceAmount = updates.monthlyPrice;
+        }
+      }
+      
       await db.update(membershipPlans)
-        .set(updates)
+        .set(values)
         .where(eq(membershipPlans.id, id));
       
       return { success: true };
@@ -246,14 +325,40 @@ export const billingRouter = router({
     }),
 
   // Shorter aliases for Plans
+  // Alias for createMembershipPlan with multi-frequency support
   createPlan: publicProcedure
     .input(z.object({
       name: z.string().min(1),
-      description: z.string().optional().nullable(),
-      monthlyPrice: z.number(),
-      termLength: z.number().default(12),
-      billingCycle: z.string().default("monthly"),
-      registrationFee: z.number().optional().nullable(),
+      description: z.string().optional(),
+      
+      // Billing frequency
+      billingFrequency: z.enum(["monthly", "weekly", "daily", "drop_in"]).optional(),
+      
+      // Pricing (unified)
+      priceAmount: z.number(), // In cents - base price for the frequency
+      monthlyPrice: z.number().optional(), // DEPRECATED - for backward compatibility
+      
+      // Billing interval and anchor
+      billingInterval: z.number().default(1).optional(),
+      billingAnchorDayOfWeek: z.number().min(0).max(6).optional(), // 0-6 for weekly
+      
+      // Term length (flexible units)
+      termLength: z.number().optional(), // DEPRECATED - months
+      termLengthUnits: z.enum(["months", "weeks", "days", "visits"]).optional(),
+      termLengthValue: z.number().optional(),
+      
+      // Drop-in / Visit pack options
+      perVisitPrice: z.number().optional(),
+      visitPackSize: z.number().optional(),
+      visitPackExpiryDays: z.number().optional(),
+      chargeOnAttendance: z.number().default(0).optional(),
+      
+      // Legacy fields
+      billingCycle: z.enum(["monthly", "quarterly", "annually"]).default("monthly").optional(),
+      registrationFee: z.number().optional(),
+      downPayment: z.number().optional(),
+      showOnKiosk: z.number().default(1).optional(),
+      isPopular: z.number().default(0).optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -261,28 +366,102 @@ export const billingRouter = router({
       
       const { membershipPlans } = await import("../drizzle/schema");
       
-      const [plan] = await db.insert(membershipPlans).values({
+      // Build values object, filtering out undefined to prevent Drizzle from omitting fields
+      const rawValues: any = {
         name: input.name,
         description: input.description,
-        monthlyAmount: Math.round(input.monthlyPrice * 100), // Convert to cents
+        billingFrequency: input.billingFrequency || "monthly",
+        priceAmount: input.priceAmount,
+        monthlyAmount: input.monthlyPrice || input.priceAmount,
+        billingInterval: input.billingInterval,
+        billingAnchorDayOfWeek: input.billingAnchorDayOfWeek,
         termLength: input.termLength,
+        termLengthUnits: input.termLengthUnits,
+        termLengthValue: input.termLengthValue,
+        perVisitPrice: input.perVisitPrice,
+        visitPackSize: input.visitPackSize,
+        visitPackExpiryDays: input.visitPackExpiryDays,
+        chargeOnAttendance: input.chargeOnAttendance,
         billingCycle: input.billingCycle,
-        registrationFee: input.registrationFee ? Math.round(input.registrationFee * 100) : 0,
-        showOnKiosk: 1,
-        isPopular: 0,
-      });
+        registrationFee: input.registrationFee,
+        downPayment: input.downPayment,
+        showOnKiosk: input.showOnKiosk,
+        isPopular: input.isPopular,
+      };
+      
+      // Filter out undefined values
+      const values = Object.fromEntries(
+        Object.entries(rawValues).filter(([_, v]) => v !== undefined)
+      );
+      
+      // Use raw SQL to bypass Drizzle ORM issue with ENUM fields
+      const { sql } = await import("drizzle-orm");
+      
+      const result: any = await db.execute(
+        sql`INSERT INTO membership_plans SET 
+          name = ${values.name},
+          description = ${values.description},
+          billingFrequency = ${values.billingFrequency},
+          priceAmount = ${values.priceAmount},
+          monthlyAmount = ${values.monthlyAmount},
+          ${values.billingInterval !== undefined ? sql`billingInterval = ${values.billingInterval},` : sql``}
+          ${values.billingAnchorDayOfWeek !== undefined ? sql`billingAnchorDayOfWeek = ${values.billingAnchorDayOfWeek},` : sql``}
+          ${values.termLength !== undefined ? sql`termLength = ${values.termLength},` : sql``}
+          ${values.termLengthUnits !== undefined ? sql`termLengthUnits = ${values.termLengthUnits},` : sql``}
+          ${values.termLengthValue !== undefined ? sql`termLengthValue = ${values.termLengthValue},` : sql``}
+          ${values.perVisitPrice !== undefined ? sql`perVisitPrice = ${values.perVisitPrice},` : sql``}
+          ${values.visitPackSize !== undefined ? sql`visitPackSize = ${values.visitPackSize},` : sql``}
+          ${values.visitPackExpiryDays !== undefined ? sql`visitPackExpiryDays = ${values.visitPackExpiryDays},` : sql``}
+          ${values.chargeOnAttendance !== undefined ? sql`chargeOnAttendance = ${values.chargeOnAttendance},` : sql``}
+          ${values.billingCycle !== undefined ? sql`billingCycle = ${values.billingCycle},` : sql``}
+          ${values.registrationFee !== undefined ? sql`registrationFee = ${values.registrationFee},` : sql``}
+          ${values.downPayment !== undefined ? sql`downPayment = ${values.downPayment},` : sql``}
+          isPopular = ${values.isPopular || 0}
+        `
+      );
+      
+      // Fetch the inserted plan
+      const { eq } = await import("drizzle-orm");
+      const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.id, Number(result[0].insertId)));
+      
       return plan;
     }),
 
+  // Alias for updateMembershipPlan with multi-frequency support
   updatePlan: publicProcedure
     .input(z.object({
       id: z.number(),
       name: z.string().min(1).optional(),
-      description: z.string().optional().nullable(),
-      monthlyPrice: z.number().optional(),
+      description: z.string().optional(),
+      
+      // Billing frequency
+      billingFrequency: z.enum(["monthly", "weekly", "daily", "drop_in"]).optional(),
+      
+      // Pricing
+      priceAmount: z.number().optional(),
+      monthlyPrice: z.number().optional(), // DEPRECATED
+      
+      // Billing interval and anchor
+      billingInterval: z.number().optional(),
+      billingAnchorDayOfWeek: z.number().min(0).max(6).optional(),
+      
+      // Term length
       termLength: z.number().optional(),
-      billingCycle: z.string().optional(),
-      registrationFee: z.number().optional().nullable(),
+      termLengthUnits: z.enum(["months", "weeks", "days", "visits"]).optional(),
+      termLengthValue: z.number().optional(),
+      
+      // Drop-in options
+      perVisitPrice: z.number().optional(),
+      visitPackSize: z.number().optional(),
+      visitPackExpiryDays: z.number().optional(),
+      chargeOnAttendance: z.number().optional(),
+      
+      // Legacy fields
+      billingCycle: z.enum(["monthly", "quarterly", "annually"]).optional(),
+      registrationFee: z.number().optional(),
+      downPayment: z.number().optional(),
+      showOnKiosk: z.number().optional(),
+      isPopular: z.number().optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -290,18 +469,19 @@ export const billingRouter = router({
       
       const { membershipPlans } = await import("../drizzle/schema");
       
-      const { id, monthlyPrice, registrationFee, ...rest } = input;
-      const updates: any = { ...rest };
+      const { id, ...updates } = input;
       
-      if (monthlyPrice !== undefined) {
-        updates.monthlyAmount = Math.round(monthlyPrice * 100);
-      }
-      if (registrationFee !== undefined) {
-        updates.registrationFee = registrationFee ? Math.round(registrationFee * 100) : 0;
+      // Handle backward compatibility
+      const values: any = { ...updates };
+      if (updates.monthlyPrice !== undefined) {
+        values.monthlyAmount = updates.monthlyPrice;
+        if (!values.priceAmount) {
+          values.priceAmount = updates.monthlyPrice;
+        }
       }
       
       await db.update(membershipPlans)
-        .set(updates)
+        .set(values)
         .where(eq(membershipPlans.id, id));
       
       return { success: true };

@@ -310,9 +310,12 @@ export default function BillingStructure() {
                         <CardHeader>
                           <CardTitle className="text-lg">{plan.name}</CardTitle>
                           <div className="text-3xl font-bold text-primary">
-                            {formatCurrency(plan.monthlyAmount)}
+                            {formatCurrency(plan.priceAmount || plan.monthlyAmount)}
                             <span className="text-sm font-normal text-muted-foreground">
-                              /{plan.billingCycle}
+                              /{plan.billingFrequency === 'drop_in' ? 'visit' : 
+                                plan.billingFrequency === 'daily' ? 'day' : 
+                                plan.billingFrequency === 'weekly' ? 'week' : 
+                                plan.billingCycle || 'monthly'}
                             </span>
                           </div>
                         </CardHeader>

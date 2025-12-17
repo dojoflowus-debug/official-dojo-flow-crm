@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, billingFrequency, priceAmount FROM membership_plans WHERE name = 'Test Weekly Plan' ORDER BY id DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, billingFrequency, priceAmount FROM membership_plans WHERE name = 'Test Weekly Plan' ORDER BY id DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "85",
+      "name": "Test Weekly Plan",
+      "billingFrequency": "weekly",
+      "priceAmount": "7900"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tbillingFrequency\tpriceAmount\n85\tTest Weekly Plan\tweekly\t7900\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

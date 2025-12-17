@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM membership_plans LIKE 'billingFrequency';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SHOW COLUMNS FROM membership_plans LIKE 'billingFrequency';",
+  "rows": [
+    {
+      "Field": "billingFrequency",
+      "Type": "enum('monthly','weekly','daily','drop_in')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "monthly",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nbillingFrequency\tenum('monthly','weekly','daily','drop_in')\tNO\t\tmonthly\t\n",
+  "stderr": "",
+  "execution_time_ms": 48
+}

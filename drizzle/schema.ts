@@ -1688,11 +1688,29 @@ export const membershipPlans = mysqlTable("membership_plans", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   
-  // Pricing
-  monthlyAmount: int("monthlyAmount").notNull(), // In cents
-  termLength: int("termLength"), // In months (null for month-to-month)
+  // Billing Frequency (new multi-frequency support)
+  billingFrequency: mysqlEnum("billingFrequency", ["monthly", "weekly", "daily", "drop_in"]).default("monthly").notNull(),
   
-  // Billing cycle
+  // Pricing (unified field for all frequencies)
+  priceAmount: int("priceAmount").notNull(), // In cents - base price for the frequency
+  monthlyAmount: int("monthlyAmount").notNull(), // In cents - DEPRECATED but kept for backward compatibility
+  
+  // Billing interval and anchor
+  billingInterval: int("billingInterval").default(1), // 1 = every interval (weekly/daily)
+  billingAnchorDayOfWeek: int("billingAnchorDayOfWeek"), // 0-6 for weekly billing (0=Sunday)
+  
+  // Term length (flexible units)
+  termLength: int("termLength"), // DEPRECATED - kept for backward compatibility (months)
+  termLengthUnits: mysqlEnum("termLengthUnits", ["months", "weeks", "days", "visits"]),
+  termLengthValue: int("termLengthValue"),
+  
+  // Drop-in / Visit pack options
+  perVisitPrice: int("perVisitPrice"), // In cents - for drop-in pricing
+  visitPackSize: int("visitPackSize"), // e.g., 1, 5, 10, 20 visits
+  visitPackExpiryDays: int("visitPackExpiryDays"), // Days until visit pack expires
+  chargeOnAttendance: int("chargeOnAttendance").default(0), // Boolean - charge when student checks in
+  
+  // Billing cycle (legacy field for monthly plans)
   billingCycle: mysqlEnum("billingCycle", ["monthly", "biweekly", "weekly", "annual"]).default("monthly").notNull(),
   billingDays: varchar("billingDays", { length: 50 }), // "10,25" for 10th and 25th
   
