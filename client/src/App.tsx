@@ -68,6 +68,7 @@ import ThemesMinimal from "./pages/ThemesMinimal";
 import SettingsTest from "./pages/SettingsTest";
 import CommunicationSettings from "./pages/CommunicationSettings";
 import WebhookSettings from "./pages/WebhookSettings";
+import KioskSettings from "./pages/KioskSettings";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -155,6 +156,7 @@ function Router() {
       <Route path="/settings-test" element={<SettingsTest />} />
       <Route path="/settings/communication" element={<CommunicationSettings />} />
       <Route path="/settings/webhooks" element={<WebhookSettings />} />
+      <Route path="/settings/kiosk" element={<KioskSettings />} />
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/campaigns/create" element={<CampaignCreate />} />
       <Route path="/campaigns/:id" element={<CampaignDetail />} />

@@ -10,6 +10,7 @@ import { conversationsRouter } from "./conversationsRouter";
 import { authRouter } from "./authRouter";
 import { smsReminderRouter } from "./smsReminderRouter";
 import { kioskDirectRouter } from "./kioskDirectRouter";
+import { kioskSettingsRouter } from "./kioskSettingsRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -227,6 +228,7 @@ export const appRouter = router({
   }),
   setupWizard: setupWizardRouter,
   kioskDirect: kioskDirectRouter,
+  kioskSettings: kioskSettingsRouter,
   billing: billingRouter,
   webhook: webhookRouter,
   campaigns: campaignsRouter,

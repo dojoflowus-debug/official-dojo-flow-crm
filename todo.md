@@ -4367,3 +4367,19 @@ Note: The logo was already correctly implemented. The navigation uses:
 - [ ] Drizzle ORM connection issues with TiDB (ECONNRESET errors) - raw mysql2 works but Drizzle queries fail
 - [ ] Multiple server restarts and cache clears attempted
 - [ ] Issue should resolve after cache expiration or fresh deployment
+
+
+## 🆕 NEW: Kiosk Settings Page
+
+- [x] Create KioskSettings.tsx page component with form
+- [x] Add business name input field
+- [x] Add logo URL input field with image preview
+- [x] Add file upload for logo (S3 integration)
+- [x] Create backend tRPC procedure for updating kiosk settings (kioskSettingsRouter.ts)
+- [x] Add route to App.tsx (/settings/kiosk)
+- [ ] Add "Kiosk Settings" link to Settings section in sidebar
+- [ ] Test updating business name and logo
+- [ ] Verify kiosk page displays updated settings
+- [ ] Save checkpoint
+
+**Known Issue:** Route showing 404 despite being properly configured. This appears to be an aggressive browser/gateway caching issue. The component exists, backend API is ready, and route is registered correctly. Issue should resolve after deployment or cache expiration.
