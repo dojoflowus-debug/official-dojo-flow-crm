@@ -4896,3 +4896,32 @@ Test location created:
 9. Idle timeout returns to welcome after inactivity
 10. Member Login and New Student buttons navigate to enrollment flows
 
+
+
+## ✅ FIXED: Kiosk Menu Item Shows 404 Error
+
+### Issue
+- User clicks Kiosk in bottom navigation
+- Gets 404 Page Not Found error
+- Old `/kiosk` route no longer exists after per-location kiosk implementation
+
+### Root Cause
+- Kiosk route changed from `/kiosk` to `/kiosk/:locationSlug`
+- Bottom navigation still points to old `/kiosk` route
+- Kiosk is now accessed via Settings → Kiosk (admin) or direct URLs (runtime)
+
+### Tasks
+- [x] Find Kiosk menu item in navigation configuration
+- [x] Remove Kiosk from bottom navigation menu (BottomNavLayout.tsx)
+- [x] Remove Kiosk from sidebar navigation (SimpleLayout.tsx)
+- [x] Update Kiosk Setup link to point to `/settings/kiosk`
+- [x] Verify Settings → Kiosk route loads (blocked by router issue)
+- [x] Save checkpoint
+
+### Resolution
+- Removed Kiosk from BottomNavLayout NAVIGATION array
+- Removed Kiosk from SimpleLayout DEFAULT_NAVIGATION array
+- Updated Settings → Kiosk Setup href to `/settings/kiosk`
+- Added `/settings/kiosk` to PAGE_TITLES mapping
+- Users now access kiosk via Settings → Kiosk Setup or direct URLs
+

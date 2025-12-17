@@ -45,7 +45,6 @@ const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: 'leads', name: 'Leads', href: '/leads', icon: 'UserPlus' },
   { id: 'classes', name: 'Classes', href: '/classes', icon: 'Calendar' },
   { id: 'programs', name: 'Programs', href: '/programs', icon: 'BookOpen' },
-  { id: 'kiosk', name: 'Kiosk', href: '/kiosk', icon: 'Tablet' },
   { id: 'receptionist', name: 'Receptionist', href: '/receptionist', icon: 'Headphones' },
   { id: 'staff', name: 'Staff', href: '/staff', icon: 'UserCog' },
   { id: 'billing', name: 'Billing', href: '/billing', icon: 'CreditCard' },
@@ -61,7 +60,7 @@ const DEFAULT_NAVIGATION: NavigationItem[] = [
       { id: 'themes', name: 'Themes', href: '/themes', icon: 'Palette' },
       { id: 'subscription', name: 'Subscription', href: '/subscription', icon: 'CreditCard' },
       { id: 'ai-setup', name: 'AI/Kai Setup', href: '/ai-setup', icon: 'Sparkles' },
-      { id: 'kiosk-setup', name: 'Kiosk Setup', href: '/kiosk-setup', icon: 'Tablet' },
+      { id: 'kiosk-setup', name: 'Kiosk Setup', href: '/settings/kiosk', icon: 'Tablet' },
       { id: 'security', name: 'Security & Roles', href: '/security', icon: 'Shield' }
     ]
   }
