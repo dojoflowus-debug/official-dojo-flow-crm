@@ -11,6 +11,7 @@ import { authRouter } from "./authRouter";
 import { smsReminderRouter } from "./smsReminderRouter";
 import { kioskDirectRouter } from "./kioskDirectRouter";
 import { kioskSettingsRouter } from "./kioskSettingsRouter";
+import { kioskRouter } from "./kioskRouter";
 import { membershipPlansRouter } from "./membershipPlansRouter";
 import { classEntitlementsRouter } from "./classEntitlementsRouter";
 import { oneTimeFeesRouter } from "./oneTimeFeesRouter";
@@ -234,6 +235,7 @@ export const appRouter = router({
   setupWizard: setupWizardRouter,
   kioskDirect: kioskDirectRouter,
   kioskSettings: kioskSettingsRouter,
+  kiosk: kioskRouter,
   billing: billingRouter,
   membershipPlans: membershipPlansRouter,
   classEntitlements: classEntitlementsRouter,

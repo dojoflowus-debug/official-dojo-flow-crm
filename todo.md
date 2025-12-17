@@ -4680,3 +4680,219 @@ Redesign the default Kiosk Welcome screen to feel more inviting, energetic, and 
 - [x] Add fade-in and hover animations
 - [x] Test on kiosk display
 - [x] Save checkpoint
+
+
+## 🚀 IN PROGRESS: Per-Location Kiosk System with Configuration & Themes
+
+### Objective
+Implement a full Kiosk system where each location has its own configurable kiosk instance, appearance, behavior, and URL.
+
+### Architecture Requirements
+- [ ] Kiosk is per-location, not a generic page
+- [ ] Each location has: kiosk_enabled, kiosk_settings, kiosk_url
+- [ ] Remove Kiosk from main navigation
+- [ ] Add entry point at Settings → Kiosk
+
+### Database Schema
+- [ ] Add kiosk_enabled boolean to locations table
+- [ ] Add kiosk_settings JSON field to locations table
+- [ ] Add kiosk_slug field to locations table
+- [ ] Run database migration
+
+### Backend API
+- [ ] Create kiosk router with procedures:
+  - [ ] getKioskSettings (by location ID, admin-only)
+  - [ ] updateKioskSettings (admin-only)
+  - [ ] getKioskRuntime (by location slug, public)
+  - [ ] generateKioskUrl (admin-only)
+- [ ] Add kiosk settings validation schema
+- [ ] Add theme preset definitions
+
+### Settings → Kiosk Admin Panel
+- [ ] Create KioskSettings.tsx page component
+- [ ] Section A: Kiosk Status
+  - [ ] Enable/Disable toggle
+  - [ ] Display kiosk URL (copyable)
+  - [ ] Preview button
+- [ ] Section B: Appearance
+  - [ ] Theme preset selector (Default, Modern, Minimal, Bold)
+  - [ ] Accent color picker
+  - [ ] Logo upload (light/dark variants)
+  - [ ] Headline + subtext customization
+  - [ ] Background intensity/blur sliders
+- [ ] Section C: Behavior
+  - [ ] Show Member Login toggle
+  - [ ] Show New Student toggle
+  - [ ] Idle timeout input
+  - [ ] Auto-return to welcome toggle
+  - [ ] Kai enrollment toggle
+  - [ ] Facial recognition toggle (future placeholder)
+- [ ] Section D: Preview & Reset
+  - [ ] Preview button
+  - [ ] Reset to default theme button
+
+### Kiosk Runtime Updates
+- [ ] Update Kiosk.tsx to accept location slug from URL
+- [ ] Load kiosk config from API by slug
+- [ ] Apply theme settings dynamically
+- [ ] Apply behavior settings (show/hide buttons, timeout)
+- [ ] Show friendly error if kiosk disabled or not found
+- [ ] Remove navigation and admin controls from runtime
+
+### URL & Routing
+- [ ] Update App.tsx routing for /kiosk/:locationSlug
+- [ ] Generate stable kiosk URLs per location
+- [ ] Make URLs shareable and fullscreen-friendly
+
+### Theme System
+- [ ] Define theme presets (colors, fonts, spacing)
+- [ ] Apply themes only to kiosk runtime
+- [ ] Ensure defaults look polished without customization
+
+### Testing
+- [ ] Write vitest tests for kiosk settings API
+- [ ] Test kiosk runtime with different themes
+- [ ] Test behavior toggles (show/hide buttons, timeout)
+- [ ] Test error states (disabled, not found)
+
+### Deliverables
+- [ ] Settings → Kiosk admin panel working
+- [ ] Per-location kiosk URLs functional
+- [ ] Theme + behavior application working
+- [ ] Clean separation of admin vs runtime
+- [ ] Save checkpoint
+
+
+## ⚠️ IN PROGRESS: Per-Location Kiosk System (Router Loading Issue)
+
+### Implementation Status
+**Architecture Complete - Runtime Registration Blocked**
+
+### ✅ Completed Components
+
+#### Database Schema
+- [x] Added kiosk fields to locations table (kioskEnabled, kioskSlug, kioskSettings)
+- [x] Created unique index on kioskSlug
+- [x] Updated Drizzle schema to match database
+- [x] Test location created with kiosk enabled
+
+#### Backend API (`server/kioskRouter.ts`)
+- [x] Created complete kiosk router with all procedures:
+  - [x] `listLocations` - List all locations with kiosk status (admin)
+  - [x] `getKioskSettings` - Get configuration for a location (admin)
+  - [x] `updateKioskSettings` - Update kiosk configuration (admin)
+  - [x] `getKioskRuntime` - Load configuration by slug (public)
+- [x] Implemented theme system with 4 presets (default, modern, minimal, bold)
+- [x] Added appearance settings (colors, text, background intensity/blur)
+- [x] Added behavior settings (toggles, timeouts, Kai enrollment, facial recognition)
+- [x] Slug generation and uniqueness validation
+- [x] JSON settings storage and parsing
+
+#### Admin UI (`client/src/pages/KioskSettings.tsx`)
+- [x] Created comprehensive Settings → Kiosk admin panel
+- [x] Location selector dropdown
+- [x] Kiosk Status section (enable/disable toggle, URL display with copy, preview button)
+- [x] Tabbed interface (Appearance, Behavior, Preview)
+- [x] Appearance tab:
+  - [x] Theme preset selector (4 options)
+  - [x] Accent color picker
+  - [x] Headline and subtext customization
+  - [x] Background intensity slider (0-100%)
+  - [x] Background blur slider (0-10px)
+- [x] Behavior tab:
+  - [x] Show Member Login toggle
+  - [x] Show New Student toggle
+  - [x] Idle timeout configuration (10-300 seconds)
+  - [x] Auto-return to welcome toggle
+  - [x] Kai enrollment toggle
+  - [x] Facial recognition toggle (disabled, coming soon)
+- [x] Preview & Reset tab
+- [x] Save settings functionality with toast notifications
+
+#### Kiosk Runtime (`client/src/pages/Kiosk.tsx`)
+- [x] Updated to accept `:locationSlug` URL parameter
+- [x] Loads configuration from API by slug
+- [x] Applies theme and appearance settings dynamically:
+  - [x] Custom accent colors
+  - [x] Dynamic headline and subtext
+  - [x] Configurable background blur
+  - [x] Configurable background intensity (vignette)
+- [x] Implements behavior settings:
+  - [x] Idle timeout with activity detection
+  - [x] Auto-return to welcome screen
+  - [x] Conditional button display (Member Login, New Student)
+- [x] Error state handling (kiosk not found/disabled)
+- [x] Premium visual design maintained from previous iteration
+
+#### Routing
+- [x] Updated App.tsx route from `/kiosk` to `/kiosk/:locationSlug`
+- [x] Added `/settings/kiosk` route for admin panel
+
+### 🚨 Blocking Issue: Router Not Loading at Runtime
+
+**Problem**: The `kioskRouter` is properly defined and registered in `server/routers.ts` but tRPC cannot find the procedures at runtime.
+
+**Error**: `No procedure found on path "kiosk.getKioskRuntime"`
+
+**What We Know**:
+- Router file exists at `server/kioskRouter.ts`
+- Router is imported in `server/routers.ts`: `import { kioskRouter } from "./kioskRouter";`
+- Router is registered: `kiosk: kioskRouter,`
+- Missing `z` import was added (fixed)
+- Server restarts don't resolve the issue
+- Other routers (kioskDirect, kioskSettings) work fine
+- cURL tests confirm procedure is not available
+
+**Possible Causes**:
+1. Module loading/circular dependency issue
+2. TypeScript compilation error preventing router load
+3. Router export format mismatch
+4. tRPC router registration timing issue
+
+**Impact**:
+- Admin UI cannot load locations (auth required, but API unavailable)
+- Kiosk runtime cannot load configuration (shows "Kiosk Not Available" error)
+- All UI components are ready but cannot function without API
+
+### 🔧 Next Steps to Resolve
+
+1. **Verify router export format** matches other working routers
+2. **Check for circular dependencies** in kioskRouter.ts imports
+3. **Simplify router** by removing complex logic temporarily
+4. **Test with minimal procedure** to isolate issue
+5. **Compare with working router** (e.g., kioskDirectRouter) line-by-line
+6. **Check tRPC version compatibility** with router structure
+
+### 📝 Files Modified
+
+- `drizzle/schema.ts` - Added kiosk fields to locations table
+- `server/kioskRouter.ts` - Complete kiosk router implementation (NEW)
+- `server/routers.ts` - Registered kiosk router
+- `client/src/pages/KioskSettings.tsx` - Admin panel (NEW)
+- `client/src/pages/Kiosk.tsx` - Runtime with per-location config
+- `client/src/App.tsx` - Updated kiosk route with slug parameter
+- `todo.md` - This file
+
+### 🗄️ Database State
+
+Test location created:
+- ID: 1
+- Name: "Main Dojo"
+- Address: "123 Martial Arts Way, Training City, TX 75001"
+- kioskEnabled: 1
+- kioskSlug: "main-dojo"
+- kioskSettings: JSON with default theme configuration
+
+### 🎯 Expected Behavior Once Fixed
+
+1. Admin navigates to Settings → Kiosk
+2. Sees "Main Dojo" in location dropdown
+3. Can enable/disable kiosk and see generated URL
+4. Can customize appearance (theme, colors, text, background)
+5. Can configure behavior (buttons, timeouts, features)
+6. Clicks Preview → opens `/kiosk/main-dojo` in new tab
+7. Kiosk runtime loads with custom configuration
+8. Welcome screen displays with configured theme
+9. Idle timeout returns to welcome after inactivity
+10. Member Login and New Student buttons navigate to enrollment flows
+

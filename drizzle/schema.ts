@@ -352,6 +352,10 @@ export const locations = mysqlTable("locations", {
   facilityName: varchar("facilityName", { length: 255 }),
   operatingHours: text("operatingHours"), // JSON: {monday: {open: "09:00", close: "21:00"}, ...}
   timeBlocks: text("timeBlocks"), // JSON: [{name: "Kids Classes", start: "16:00", end: "18:00"}, ...]
+  // Kiosk configuration
+  kioskEnabled: int("kioskEnabled").default(0).notNull(),
+  kioskSlug: varchar("kioskSlug", { length: 255 }),
+  kioskSettings: text("kioskSettings"), // JSON: {theme, appearance, behavior}
   isActive: int("isActive").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

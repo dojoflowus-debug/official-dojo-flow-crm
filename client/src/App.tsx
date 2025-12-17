@@ -98,7 +98,7 @@ function Router() {
       <Route path="/" element={<KaiCommand />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
-      <Route path="/kiosk" element={<Kiosk />} />
+      <Route path="/kiosk/:locationSlug" element={<Kiosk />} />
       <Route path="/test-brand" element={<TestBrand />} />
       <Route path="/kiosk/checkin" element={<KioskCheckIn />} />
       <Route path="/kiosk/member-login" element={<KioskMemberLogin />} />
