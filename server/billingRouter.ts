@@ -11,6 +11,18 @@ import { eq, desc } from "drizzle-orm";
 import { storagePut } from "./_core/storage";
 
 export const billingRouter = router({
+  // Get all programs for billing structure
+  getPrograms: publicProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      
+      const { programs } = await import("../drizzle/schema");
+      const { desc } = await import("drizzle-orm");
+      
+      const result = await db.select().from(programs).orderBy(desc(programs.createdAt));
+      return result;
+    }),
   // Create PC Bancard application
   createPCBancardApplication: publicProcedure
     .input(z.object({
