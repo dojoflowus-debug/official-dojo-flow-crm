@@ -381,4 +381,92 @@ export const merchandiseRouter = router({
 
     return stats;
   }),
+
+  /**
+   * Bulk assign merchandise to students by program and/or belt level
+   */
+  bulkAssignToStudents: protectedProcedure
+    .input(z.object({
+      itemId: z.number(),
+      program: z.string().optional(),
+      beltRank: z.string().optional(),
+      sizeMappings: z.array(z.object({
+        studentId: z.number(),
+        size: z.string().optional(),
+      })),
+      pricePaid: z.number().int().min(0).optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+
+      // Verify item exists
+      const [item] = await db.select().from(merchandiseItems).where(eq(merchandiseItems.id, input.itemId));
+      if (!item) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Merchandise item not found" });
+      }
+
+      const successfulAssignments: number[] = [];
+      const failedAssignments: Array<{ studentId: number; error: string }> = [];
+
+      // Process each size mapping
+      for (const mapping of input.sizeMappings) {
+        try {
+          // Verify student exists
+          const [student] = await db.select().from(students).where(eq(students.id, mapping.studentId));
+          if (!student) {
+            failedAssignments.push({ studentId: mapping.studentId, error: "Student not found" });
+            continue;
+          }
+
+          // Check if size is required
+          if (item.requiresSize && !mapping.size) {
+            failedAssignments.push({ studentId: mapping.studentId, error: "Size is required for this item" });
+            continue;
+          }
+
+          // Check if already assigned
+          const existing = await db.select()
+            .from(studentMerchandise)
+            .where(
+              and(
+                eq(studentMerchandise.studentId, mapping.studentId),
+                eq(studentMerchandise.itemId, input.itemId)
+              )
+            );
+
+          if (existing.length > 0) {
+            failedAssignments.push({ studentId: mapping.studentId, error: "Item already assigned to this student" });
+            continue;
+          }
+
+          // Create assignment
+          await db.insert(studentMerchandise).values({
+            studentId: mapping.studentId,
+            itemId: input.itemId,
+            size: mapping.size || null,
+            pricePaid: input.pricePaid || item.defaultPrice,
+            fulfillmentStatus: "pending",
+            notes: input.notes || null,
+            confirmationToken: crypto.randomBytes(32).toString("hex"),
+          });
+
+          successfulAssignments.push(mapping.studentId);
+        } catch (error) {
+          failedAssignments.push({
+            studentId: mapping.studentId,
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
+
+      return {
+        success: true,
+        successCount: successfulAssignments.length,
+        failedCount: failedAssignments.length,
+        successfulAssignments,
+        failedAssignments,
+      };
+    }),
 });

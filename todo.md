@@ -5339,4 +5339,35 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [ ] Manual test: Full fulfillment lifecycle (attach → hand out → confirm)
 - [ ] Manual test: Dispute flow (attach → hand out → dispute)
 - [ ] Manual test: Printable sheet rendering
+- [x] Save checkpoint (version: e6ff6944)
+
+
+## 📦 BULK MERCHANDISE ASSIGNMENT
+
+### Backend API
+- [x] Add bulkAssignToStudents procedure to merchandiseRouter
+- [x] Support filtering by program and/or belt level
+- [x] Accept size mapping (studentId -> size)
+- [x] Return success count and any failures
+- [x] Add vitest tests for bulk assignment (5 tests passing)
+
+### Bulk Assignment UI
+- [x] Add "Bulk Assign" button to MerchandiseManagement page
+- [x] Create BulkAssignDialog component
+- [x] Add item selector
+- [x] Add program filter dropdown
+- [x] Add belt level filter dropdown
+- [x] Show preview of matching students
+- [x] Add size mapping interface (student list with size dropdowns)
+- [x] Show progress during bulk assignment
+- [x] Display success/failure summary
+
+### Testing & Polish
+- [x] Test bulk assignment with program filter (vitest)
+- [x] Test bulk assignment with belt filter (vitest)
+- [x] Test bulk assignment with both filters (vitest)
+- [x] Test size mapping for multiple students (vitest)
+- [x] Verify all students get pending status (vitest)
+- [x] Test duplicate assignment handling (vitest)
+- [x] Test missing size validation (vitest)
 - [ ] Save checkpoint

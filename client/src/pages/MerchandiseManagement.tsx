@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, User } from "lucide-react";
+import { Package, Plus, User, Users } from "lucide-react";
+import BulkAssignDialog from "@/components/BulkAssignDialog";
 import { toast } from "sonner";
 import {
   Select,
@@ -50,6 +51,7 @@ export default function MerchandiseManagement() {
 
   // State for attaching items to students
   const [showAttachDialog, setShowAttachDialog] = useState(false);
+  const [showBulkAssignDialog, setShowBulkAssignDialog] = useState(false);
   const [attachData, setAttachData] = useState({
     studentId: "",
     itemId: "",
@@ -136,6 +138,11 @@ export default function MerchandiseManagement() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowBulkAssignDialog(true)}>
+            <Users className="w-4 h-4 mr-2" />
+            Bulk Assign
+          </Button>
+
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button>
@@ -361,6 +368,16 @@ export default function MerchandiseManagement() {
           )}
         </CardContent>
       </Card>
+
+      <BulkAssignDialog
+        open={showBulkAssignDialog}
+        onOpenChange={setShowBulkAssignDialog}
+        items={items || []}
+        onSuccess={() => {
+          utils.merchandise.getPendingFulfillments.invalidate();
+          utils.merchandise.getStatistics.invalidate();
+        }}
+      />
     </div>
   );
 }
