@@ -5114,3 +5114,29 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Style with Apple-like design system
 - [x] Test enrollment flow end-to-end
 - [x] Save checkpoint
+
+
+## 🎤 NEW FEATURE: Voice Input for Kai Enrollment
+
+### Requirements
+- [x] Add microphone button next to send button
+- [x] Use Web Speech API for speech-to-text
+- [x] Show recording state (pulsing animation)
+- [x] Auto-populate input field with transcribed text
+- [x] Handle browser compatibility (fallback message)
+- [x] Stop recording on click or after silence
+- [x] Visual feedback during recording (red pulse)
+
+### Implementation
+- [x] Add useState for recording state and recognition instance
+- [x] Implement Web Speech API (SpeechRecognition/webkitSpeechRecognition)
+- [x] Add microphone button with Mic/MicOff icons
+- [x] Add recording animation (red pulse effect with shadow)
+- [x] Handle start/stop recording with toggleVoiceInput function
+- [x] Populate input field with transcription automatically
+- [x] Add error handling for unsupported browsers (alert message)
+- [x] Update input placeholder to show "Listening..." during recording
+- [x] Add red ring border during recording
+- [x] Adjust input padding (pr-28) to fit both buttons
+- [x] Test voice input functionality
+- [x] Save checkpoint

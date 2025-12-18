@@ -4,7 +4,7 @@ import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, FileText, Sparkles, Send, Check, User, Mail, Phone, Calendar, Award } from 'lucide-react';
+import { ArrowLeft, FileText, Sparkles, Send, Check, User, Mail, Phone, Calendar, Award, Mic, MicOff } from 'lucide-react';
 
 interface Message {
   role: 'assistant' | 'user';
@@ -36,6 +36,8 @@ export default function KaiEnrollment() {
   const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>({});
   const [inputValue, setInputValue] = useState('');
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<Message[]>([
@@ -74,6 +76,34 @@ export default function KaiEnrollment() {
     }
   });
   
+  // Initialize Web Speech API
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(transcript);
+        setIsRecording(false);
+      };
+
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsRecording(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+  }, []);
+
   // Create enrollment on mount
   useEffect(() => {
     if (enrollmentId) return;
@@ -161,6 +191,22 @@ export default function KaiEnrollment() {
   const handleSwitchToForm = () => {
     if (confirm('Switch to standard form? Your progress will be saved.')) {
       navigate('/enrollment/form');
+    }
+  };
+
+  const toggleVoiceInput = () => {
+    if (!recognition) {
+      alert('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (isRecording) {
+      recognition.stop();
+      setIsRecording(false);
+    } else {
+      setInputValue('');
+      recognition.start();
+      setIsRecording(true);
     }
   };
 
@@ -306,22 +352,42 @@ export default function KaiEnrollment() {
                       onChange={(e) => setInputValue(e.target.value)}
                       onFocus={() => setIsInputFocused(true)}
                       onBlur={() => setIsInputFocused(false)}
-                      placeholder="Type your response..."
-                      disabled={kaiConverse.isPending}
-                      className={`h-14 pr-14 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-base transition-all duration-200 ${
+                      placeholder={isRecording ? 'Listening...' : 'Type or speak your response...'}
+                      disabled={kaiConverse.isPending || isRecording}
+                      className={`h-14 pr-28 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-base transition-all duration-200 ${
                         isInputFocused 
                           ? 'ring-2 ring-purple-500/50 border-purple-500/50 shadow-lg shadow-purple-500/20' 
+                          : isRecording
+                          ? 'ring-2 ring-red-500/50 border-red-500/50 shadow-lg shadow-red-500/20'
                           : ''
                       }`}
                     />
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={!inputValue.trim() || kaiConverse.isPending}
-                      className="absolute right-2 top-2 h-10 w-10 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 shadow-lg"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
+                    <div className="absolute right-2 top-2 flex gap-2">
+                      {/* Voice Input Button */}
+                      <Button
+                        type="button"
+                        size="icon"
+                        onClick={toggleVoiceInput}
+                        disabled={kaiConverse.isPending}
+                        className={`h-10 w-10 transition-all duration-200 ${
+                          isRecording
+                            ? 'bg-red-600 hover:bg-red-700 animate-pulse shadow-lg shadow-red-500/50'
+                            : 'bg-slate-700 hover:bg-slate-600 shadow-lg'
+                        }`}
+                      >
+                        {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                      </Button>
+
+                      {/* Send Button */}
+                      <Button
+                        type="submit"
+                        size="icon"
+                        disabled={!inputValue.trim() || kaiConverse.isPending}
+                        className="h-10 w-10 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 shadow-lg"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </div>
