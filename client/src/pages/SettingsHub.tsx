@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
 import {
@@ -19,10 +20,13 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
-  Info
+  Info,
+  Search,
+  X
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
 interface SettingCard {
   id: string
@@ -135,6 +139,7 @@ const CATEGORIES = [
 export default function SettingsHub() {
   const { theme } = useTheme()
   const isDark = theme === 'dark' || theme === 'cinematic'
+  const [searchQuery, setSearchQuery] = useState('')
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
@@ -153,15 +158,50 @@ export default function SettingsHub() {
     return SETTINGS_CARDS.filter(card => card.category === categoryId)
   }
 
+  const filterCards = (cards: SettingCard[]) => {
+    if (!searchQuery.trim()) return cards
+    
+    const query = searchQuery.toLowerCase()
+    return cards.filter(card => 
+      card.title.toLowerCase().includes(query) ||
+      card.description.toLowerCase().includes(query)
+    )
+  }
+
+  const allFilteredCards = filterCards(SETTINGS_CARDS)
+  const hasResults = allFilteredCards.length > 0
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground text-lg">
-            Manage your dojo's configuration, appearance, and integrations
-          </p>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
+            <p className="text-muted-foreground text-lg">
+              Manage your dojo's configuration, appearance, and integrations
+            </p>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search settings..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -204,9 +244,24 @@ export default function SettingsHub() {
         </div>
 
         {/* Settings Categories */}
-        {CATEGORIES.map(category => {
-          const cards = getCardsByCategory(category.id)
-          if (cards.length === 0) return null
+        {!hasResults ? (
+          <Card className="p-12">
+            <div className="text-center space-y-3">
+              <div className="flex justify-center">
+                <div className={`p-4 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                  <Search className="h-8 w-8 text-muted-foreground" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold">No settings found</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                No settings match "{searchQuery}". Try a different search term.
+              </p>
+            </div>
+          </Card>
+        ) : (
+          CATEGORIES.map(category => {
+            const cards = filterCards(getCardsByCategory(category.id))
+            if (cards.length === 0) return null
 
           const CategoryIcon = category.icon
 
@@ -253,7 +308,8 @@ export default function SettingsHub() {
               </div>
             </div>
           )
-        })}
+        })
+        )}
 
         {/* Help Section */}
         <Card className={`border-2 ${isDark ? 'border-blue-500/20 bg-blue-500/5' : 'border-blue-200 bg-blue-50'}`}>
