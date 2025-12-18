@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'merchandise_items' AND COLUMN_NAME IN ('stockQuantity', 'stock_quantity', 'lowStockThreshold', 'low_stock_threshold');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'merchandise_items' AND COLUMN_NAME IN ('stockQuantity', 'stock_quantity', 'lowStockThreshold', 'low_stock_threshold');",
+  "rows": [
+    {
+      "COLUMN_NAME": "stockQuantity"
+    },
+    {
+      "COLUMN_NAME": "lowStockThreshold"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nstockQuantity\nlowStockThreshold\n",
+  "stderr": "",
+  "execution_time_ms": 105
+}

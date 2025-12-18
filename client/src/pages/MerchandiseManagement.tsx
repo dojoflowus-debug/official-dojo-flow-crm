@@ -113,6 +113,8 @@ export default function MerchandiseManagement() {
       requiresSize: newItem.requiresSize,
       sizeOptions: newItem.requiresSize ? SIZE_OPTIONS : undefined,
       description: newItem.description,
+      stockQuantity: newItem.stockQuantity,
+      lowStockThreshold: newItem.lowStockThreshold,
     });
   };
 

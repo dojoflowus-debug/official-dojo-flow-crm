@@ -5410,3 +5410,26 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [ ] **BUG**: Stock showing as "Unlimited" in UI despite correct data in database
 - [ ] Debug and fix stock display issue
 - [ ] Save checkpoint
+
+
+## ✅ FIXED: Stock Display Bug - Stock Showing "Unlimited" Despite Correct Database Values
+
+### Root Cause Identified
+- [x] handleCreateItem function wasn't passing stockQuantity and lowStockThreshold to backend mutation
+- [x] Form had the fields and state stored the values, but mutation call excluded them
+- [x] Database columns exist and are correct (camelCase: stockQuantity, lowStockThreshold)
+- [x] Backend API accepts and saves the fields correctly
+- [x] Frontend rendering logic was correct
+
+### Investigation Tasks
+- [x] Checked database column names (camelCase confirmed)
+- [x] Verified database has correct structure
+- [x] Created test script to query database directly
+- [x] Found that Sparring Gloves had null values (not saved during creation)
+- [x] Traced issue to handleCreateItem mutation call
+
+### Fix Applied
+- [x] Added stockQuantity and lowStockThreshold to createItem.mutate() call
+- [x] Tested with new item "Training Pads" (stock=15, threshold=3)
+- [x] Verified stock quantity displays correctly (shows "15" instead of "Unlimited")
+- [x] Save checkpoint
