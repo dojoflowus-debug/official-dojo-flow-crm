@@ -136,10 +136,24 @@ const CATEGORIES = [
   { id: 'integrations', name: 'Integrations', icon: Plug }
 ] as const
 
+const POPULAR_SEARCHES = [
+  { label: 'Themes', query: 'themes', icon: Palette },
+  { label: 'Billing', query: 'billing', icon: CreditCard },
+  { label: 'Kiosk', query: 'kiosk', icon: Monitor },
+  { label: 'Security', query: 'security', icon: Shield },
+  { label: 'AI Setup', query: 'ai', icon: Sparkles },
+  { label: 'Notifications', query: 'notifications', icon: Bell },
+  { label: 'Locations', query: 'locations', icon: MapPin },
+  { label: 'Integrations', query: 'integrations', icon: Plug }
+]
+
 export default function SettingsHub() {
   const { theme } = useTheme()
   const isDark = theme === 'dark' || theme === 'cinematic'
   const [searchQuery, setSearchQuery] = useState('')
+  const [isFocused, setIsFocused] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
@@ -191,6 +205,37 @@ export default function SettingsHub() {
               placeholder="Search settings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                setIsFocused(true)
+                setShowSuggestions(true)
+                setSelectedIndex(-1)
+              }}
+              onBlur={() => {
+                setIsFocused(false)
+                // Delay hiding to allow click on suggestions
+                setTimeout(() => setShowSuggestions(false), 200)
+              }}
+              onKeyDown={(e) => {
+                if (!showSuggestions || searchQuery) return
+                
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  setSelectedIndex(prev => 
+                    prev < POPULAR_SEARCHES.length - 1 ? prev + 1 : prev
+                  )
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  setSelectedIndex(prev => prev > 0 ? prev - 1 : -1)
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                  e.preventDefault()
+                  setSearchQuery(POPULAR_SEARCHES[selectedIndex].query)
+                  setShowSuggestions(false)
+                  setSelectedIndex(-1)
+                } else if (e.key === 'Escape') {
+                  setShowSuggestions(false)
+                  setSelectedIndex(-1)
+                }
+              }}
               className="pl-10 pr-10"
             />
             {searchQuery && (
@@ -200,6 +245,54 @@ export default function SettingsHub() {
               >
                 <X className="h-4 w-4" />
               </button>
+            )}
+
+            {/* Search Suggestions Dropdown */}
+            {showSuggestions && !searchQuery && (
+              <div className={`absolute top-full left-0 right-0 mt-2 rounded-lg border shadow-lg z-50 overflow-hidden ${
+                isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
+              }`}>
+                <div className="p-3 border-b ${
+                  isDark ? 'border-gray-800' : 'border-gray-200'
+                }">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Popular Searches
+                  </p>
+                </div>
+                <div className="py-1">
+                  {POPULAR_SEARCHES.map((suggestion, index) => {
+                    const Icon = suggestion.icon
+                    const isSelected = index === selectedIndex
+                    return (
+                      <button
+                        key={suggestion.query}
+                        onClick={() => {
+                          setSearchQuery(suggestion.query)
+                          setShowSuggestions(false)
+                          setSelectedIndex(-1)
+                        }}
+                        onMouseEnter={() => setSelectedIndex(index)}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                          isSelected
+                            ? isDark
+                              ? 'bg-white/10 text-gray-100'
+                              : 'bg-gray-200 text-gray-900'
+                            : isDark 
+                              ? 'hover:bg-white/5 text-gray-200' 
+                              : 'hover:bg-gray-100 text-gray-900'
+                        }`}
+                      >
+                        <div className={`p-1.5 rounded ${
+                          isDark ? 'bg-white/5' : 'bg-gray-100'
+                        }`}>
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <span>{suggestion.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             )}
           </div>
         </div>
