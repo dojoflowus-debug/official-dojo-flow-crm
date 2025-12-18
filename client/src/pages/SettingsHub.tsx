@@ -198,7 +198,8 @@ export default function SettingsHub() {
           </div>
 
           {/* Search Bar */}
-          <div className="relative max-w-md">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
@@ -293,6 +294,14 @@ export default function SettingsHub() {
                   })}
                 </div>
               </div>
+            )}
+            </div>
+
+            {/* Results Count Badge */}
+            {searchQuery && (
+              <Badge variant="secondary" className="shrink-0">
+                {allFilteredCards.length} {allFilteredCards.length === 1 ? 'result' : 'results'}
+              </Badge>
             )}
           </div>
         </div>
