@@ -4,7 +4,8 @@ import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, FileText, Sparkles, Send, Check, User, Mail, Phone, Calendar, Award, Mic, MicOff } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, FileText, Sparkles, Send, Check, User, Mail, Phone, Calendar, Award, Mic, MicOff, Globe } from 'lucide-react';
 
 interface Message {
   role: 'assistant' | 'user';
@@ -28,6 +29,21 @@ const ENROLLMENT_STEPS = [
   { id: 'review', label: 'Review', icon: Check }
 ];
 
+const LANGUAGES = [
+  { code: 'en-US', label: 'English (US)', flag: '🇺🇸' },
+  { code: 'es-ES', label: 'Spanish', flag: '🇪🇸' },
+  { code: 'fr-FR', label: 'French', flag: '🇫🇷' },
+  { code: 'de-DE', label: 'German', flag: '🇩🇪' },
+  { code: 'it-IT', label: 'Italian', flag: '🇮🇹' },
+  { code: 'pt-BR', label: 'Portuguese', flag: '🇧🇷' },
+  { code: 'zh-CN', label: 'Chinese', flag: '🇨🇳' },
+  { code: 'ja-JP', label: 'Japanese', flag: '🇯🇵' },
+  { code: 'ko-KR', label: 'Korean', flag: '🇰🇷' },
+  { code: 'ar-SA', label: 'Arabic', flag: '🇸🇦' },
+  { code: 'hi-IN', label: 'Hindi', flag: '🇮🇳' },
+  { code: 'ru-RU', label: 'Russian', flag: '🇷🇺' }
+];
+
 export default function KaiEnrollment() {
   const navigate = useNavigate();
   const [enrollmentId, setEnrollmentId] = useState<number | null>(null);
@@ -38,6 +54,9 @@ export default function KaiEnrollment() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    return localStorage.getItem('kai-voice-language') || 'en-US';
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<Message[]>([
@@ -83,7 +102,7 @@ export default function KaiEnrollment() {
       const recognitionInstance = new SpeechRecognition();
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
-      recognitionInstance.lang = 'en-US';
+      recognitionInstance.lang = selectedLanguage;
 
       recognitionInstance.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
@@ -102,7 +121,7 @@ export default function KaiEnrollment() {
 
       setRecognition(recognitionInstance);
     }
-  }, []);
+  }, [selectedLanguage]);
 
   // Create enrollment on mount
   useEffect(() => {
@@ -192,6 +211,11 @@ export default function KaiEnrollment() {
     if (confirm('Switch to standard form? Your progress will be saved.')) {
       navigate('/enrollment/form');
     }
+  };
+
+  const handleLanguageChange = (languageCode: string) => {
+    setSelectedLanguage(languageCode);
+    localStorage.setItem('kai-voice-language', languageCode);
   };
 
   const toggleVoiceInput = () => {
@@ -342,7 +366,33 @@ export default function KaiEnrollment() {
               </div>
 
               {/* Input Area */}
-              <div className="border-t border-slate-800 bg-slate-900/80 p-4">
+              <div className="border-t border-slate-800 bg-slate-900/80 p-4 space-y-3">
+                {/* Language Selector */}
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-slate-400" />
+                  <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
+                    <SelectTrigger className="w-48 h-9 bg-slate-800 border-slate-700 text-white text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      {LANGUAGES.map((lang) => (
+                        <SelectItem 
+                          key={lang.code} 
+                          value={lang.code}
+                          className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                        >
+                          <span className="flex items-center gap-2">
+                            <span>{lang.flag}</span>
+                            <span>{lang.label}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-slate-500">Voice input language</span>
+                </div>
+
+                {/* Input Form */}
                 <form onSubmit={handleSendMessage} className="relative">
                   <div className={`relative transition-all duration-200 ${
                     isInputFocused ? 'scale-[1.01]' : ''

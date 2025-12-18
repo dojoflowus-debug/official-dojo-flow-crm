@@ -5140,3 +5140,26 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Adjust input padding (pr-28) to fit both buttons
 - [x] Test voice input functionality
 - [x] Save checkpoint
+
+
+## 🌐 NEW FEATURE: Multilingual Voice Input
+
+### Requirements
+- [x] Add language selection dropdown
+- [x] Support common languages (English, Spanish, French, German, Chinese, Japanese, etc.)
+- [x] Update speech recognition language dynamically
+- [x] Show language flag or code in dropdown
+- [x] Remember selected language (localStorage)
+- [x] Position dropdown above input field
+
+### Implementation
+- [x] Create language options array with codes, labels, and flags (12 languages)
+- [x] Add Select component for language selection
+- [x] Add useState for selected language with localStorage initialization
+- [x] Update recognition.lang when language changes (useEffect dependency)
+- [x] Store/retrieve language preference in localStorage
+- [x] Position dropdown above input field with Globe icon
+- [x] Add flag emojis to dropdown items
+- [x] Add helper text "Voice input language"
+- [x] Test multilingual transcription
+- [x] Save checkpoint
