@@ -5370,4 +5370,14 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Verify all students get pending status (vitest)
 - [x] Test duplicate assignment handling (vitest)
 - [x] Test missing size validation (vitest)
+- [x] Save checkpoint (version: b2a22615)
+
+
+## 🔧 NAVIGATION FIX
+
+- [x] Investigate why Operations menu is not visible in sidebar (localStorage menuOrder issue)
+- [x] Check SimpleLayout navigation configuration
+- [x] Add migration logic to inject Operations menu into saved navigation
+- [x] Initialize expandedSections with operations
+- [ ] Test navigation visibility
 - [ ] Save checkpoint

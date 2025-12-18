@@ -127,7 +127,7 @@ export default function SimpleLayout({ children }) {
   // Track expanded sections
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
     const saved = localStorage.getItem('expandedSections')
-    return saved ? JSON.parse(saved) : { marketing: false, settings: false }
+    return saved ? JSON.parse(saved) : { operations: false, marketing: false, settings: false }
   })
 
   // Load menu order from localStorage - use DEFAULT_NAVIGATION if not found or invalid
@@ -154,10 +154,51 @@ export default function SimpleLayout({ children }) {
           !['campaigns', 'automations', 'conversations'].includes(item.id)
         )
         
+        // Migration: Add Operations menu if it doesn't exist
+        const hasOperations = cleanedNav.some(item => item.id === 'operations')
+        let finalNav = cleanedNav
+        
+        if (!hasOperations) {
+          // Find the position after Reports to insert Operations
+          const reportsIndex = cleanedNav.findIndex(item => item.id === 'reports')
+          const operationsMenu = {
+            id: 'operations',
+            name: 'Operations',
+            href: '/operations/merchandise',
+            icon: 'Package',
+            children: [
+              { id: 'merchandise', name: 'Fulfillment', href: '/operations/merchandise', icon: 'Package' },
+              { id: 'merchandise-manage', name: 'Manage Items', href: '/operations/merchandise/manage', icon: 'Settings' }
+            ]
+          }
+          
+          if (reportsIndex >= 0) {
+            // Insert after Reports
+            finalNav = [
+              ...cleanedNav.slice(0, reportsIndex + 1),
+              operationsMenu,
+              ...cleanedNav.slice(reportsIndex + 1)
+            ]
+          } else {
+            // Fallback: add before Marketing
+            const marketingIndex = cleanedNav.findIndex(item => item.id === 'marketing')
+            if (marketingIndex >= 0) {
+              finalNav = [
+                ...cleanedNav.slice(0, marketingIndex),
+                operationsMenu,
+                ...cleanedNav.slice(marketingIndex)
+              ]
+            } else {
+              // Last resort: append to end
+              finalNav = [...cleanedNav, operationsMenu]
+            }
+          }
+        }
+        
         // If migration changed the structure, save it back
-        if (JSON.stringify(cleanedNav) !== JSON.stringify(savedNav)) {
-          localStorage.setItem('menuOrder', JSON.stringify(cleanedNav))
-          return cleanedNav
+        if (JSON.stringify(finalNav) !== JSON.stringify(savedNav)) {
+          localStorage.setItem('menuOrder', JSON.stringify(finalNav))
+          return finalNav
         }
         
         return savedNav
