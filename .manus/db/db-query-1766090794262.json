@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE merchandise_items \nADD COLUMN stockQuantity INT NULL COMMENT 'Current stock quantity (null = unlimited/not tracked)',\nADD COLUMN lowStockThreshold INT NULL COMMENT 'Low stock alert threshold (null = no alerts)';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE merchandise_items \nADD COLUMN stockQuantity INT NULL COMMENT 'Current stock quantity (null = unlimited/not tracked)',\nADD COLUMN lowStockThreshold INT NULL COMMENT 'Low stock alert threshold (null = no alerts)';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 943
+}

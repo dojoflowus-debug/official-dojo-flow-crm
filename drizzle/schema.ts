@@ -1963,6 +1963,10 @@ export const merchandiseItems = mysqlTable("merchandise_items", {
   sizeOptions: text("sizeOptions"),
   /** Item description */
   description: text("description"),
+  /** Current stock quantity (null = unlimited/not tracked) */
+  stockQuantity: int("stockQuantity"),
+  /** Low stock alert threshold (null = no alerts) */
+  lowStockThreshold: int("lowStockThreshold"),
   /** Whether this item is currently available */
   isActive: int("isActive").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

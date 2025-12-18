@@ -20,7 +20,20 @@ export const merchandiseRouter = router({
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
     
-    const items = await db.select().from(merchandiseItems).where(eq(merchandiseItems.isActive, 1));
+    const items = await db.select({
+      id: merchandiseItems.id,
+      name: merchandiseItems.name,
+      type: merchandiseItems.type,
+      defaultPrice: merchandiseItems.defaultPrice,
+      requiresSize: merchandiseItems.requiresSize,
+      sizeOptions: merchandiseItems.sizeOptions,
+      description: merchandiseItems.description,
+      stockQuantity: merchandiseItems.stockQuantity,
+      lowStockThreshold: merchandiseItems.lowStockThreshold,
+      isActive: merchandiseItems.isActive,
+      createdAt: merchandiseItems.createdAt,
+      updatedAt: merchandiseItems.updatedAt,
+    }).from(merchandiseItems).where(eq(merchandiseItems.isActive, 1));
     
     return items.map(item => ({
       ...item,
@@ -39,6 +52,8 @@ export const merchandiseRouter = router({
       requiresSize: z.boolean(),
       sizeOptions: z.array(z.string()).optional(),
       description: z.string().optional(),
+      stockQuantity: z.number().int().min(0).optional(),
+      lowStockThreshold: z.number().int().min(0).optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -51,6 +66,8 @@ export const merchandiseRouter = router({
         requiresSize: input.requiresSize ? 1 : 0,
         sizeOptions: input.sizeOptions ? JSON.stringify(input.sizeOptions) : null,
         description: input.description,
+        stockQuantity: input.stockQuantity ?? null,
+        lowStockThreshold: input.lowStockThreshold ?? null,
         isActive: 1,
       });
 
@@ -381,6 +398,57 @@ export const merchandiseRouter = router({
 
     return stats;
   }),
+
+  /**
+   * Get inventory status with low stock alerts
+   */
+  getInventoryStatus: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+
+    const items = await db.select().from(merchandiseItems).where(eq(merchandiseItems.isActive, 1));
+
+    return items.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      stockQuantity: item.stockQuantity,
+      lowStockThreshold: item.lowStockThreshold,
+      isLowStock: item.stockQuantity !== null && item.lowStockThreshold !== null && item.stockQuantity <= item.lowStockThreshold,
+      isOutOfStock: item.stockQuantity !== null && item.stockQuantity === 0,
+      isTracked: item.stockQuantity !== null,
+    }));
+  }),
+
+  /**
+   * Update stock quantity for an item
+   */
+  updateStock: protectedProcedure
+    .input(z.object({
+      itemId: z.number().int(),
+      stockQuantity: z.number().int().min(0).optional(),
+      lowStockThreshold: z.number().int().min(0).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+
+      // Verify item exists
+      const [item] = await db.select().from(merchandiseItems).where(eq(merchandiseItems.id, input.itemId));
+      if (!item) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Merchandise item not found" });
+      }
+
+      await db
+        .update(merchandiseItems)
+        .set({
+          stockQuantity: input.stockQuantity ?? item.stockQuantity,
+          lowStockThreshold: input.lowStockThreshold ?? item.lowStockThreshold,
+        })
+        .where(eq(merchandiseItems.id, input.itemId));
+
+      return { success: true };
+    }),
 
   /**
    * Bulk assign merchandise to students by program and/or belt level

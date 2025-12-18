@@ -47,6 +47,8 @@ export default function MerchandiseManagement() {
     defaultPrice: 0,
     requiresSize: true,
     description: "",
+    stockQuantity: undefined as number | undefined,
+    lowStockThreshold: undefined as number | undefined,
   });
 
   // State for attaching items to students
@@ -76,6 +78,8 @@ export default function MerchandiseManagement() {
         defaultPrice: 0,
         requiresSize: true,
         description: "",
+        stockQuantity: undefined,
+        lowStockThreshold: undefined,
       });
     },
     onError: (error) => {
@@ -213,6 +217,28 @@ export default function MerchandiseManagement() {
                     rows={3}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="stockQuantity">Stock Quantity (Optional)</Label>
+                  <Input
+                    id="stockQuantity"
+                    type="number"
+                    min="0"
+                    placeholder="Leave empty for unlimited"
+                    value={newItem.stockQuantity ?? ""}
+                    onChange={(e) => setNewItem({ ...newItem, stockQuantity: e.target.value ? parseInt(e.target.value) : undefined })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lowStockThreshold">Low Stock Alert Threshold (Optional)</Label>
+                  <Input
+                    id="lowStockThreshold"
+                    type="number"
+                    min="0"
+                    placeholder="Alert when stock is low"
+                    value={newItem.lowStockThreshold ?? ""}
+                    onChange={(e) => setNewItem({ ...newItem, lowStockThreshold: e.target.value ? parseInt(e.target.value) : undefined })}
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
@@ -345,6 +371,7 @@ export default function MerchandiseManagement() {
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
                   <TableHead>Requires Size</TableHead>
                   <TableHead>Description</TableHead>
                 </TableRow>
@@ -357,6 +384,19 @@ export default function MerchandiseManagement() {
                       <Badge variant="outline">{item.type}</Badge>
                     </TableCell>
                     <TableCell>${(item.defaultPrice / 100).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {item.stockQuantity !== null && item.stockQuantity !== undefined ? (
+                        <div className="flex items-center gap-2">
+                          <span className={item.stockQuantity === 0 ? "text-red-600 font-semibold" : item.lowStockThreshold !== null && item.stockQuantity <= item.lowStockThreshold ? "text-orange-600 font-semibold" : ""}>
+                            {item.stockQuantity}
+                          </span>
+                          {item.stockQuantity === 0 && <Badge variant="destructive" className="text-xs">Out of Stock</Badge>}
+                          {item.lowStockThreshold !== null && item.stockQuantity > 0 && item.stockQuantity <= item.lowStockThreshold && <Badge variant="outline" className="text-xs text-orange-600 border-orange-600">Low Stock</Badge>}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Unlimited</span>
+                      )}
+                    </TableCell>
                     <TableCell>{item.requiresSize ? "Yes" : "No"}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {item.description || "—"}

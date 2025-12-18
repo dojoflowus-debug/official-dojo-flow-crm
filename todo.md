@@ -5394,3 +5394,19 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Test clicking Operations navigates to Merchandise Fulfillment page (SUCCESS)
 - [x] Verify page loads with stats cards and fulfillment list (SUCCESS)
 - [x] Save checkpoint
+
+
+## 📦 INVENTORY TRACKING FOR MERCHANDISE
+
+- [x] Add stock quantity fields to merchandise_items table (stockQuantity, lowStockThreshold)
+- [x] Create database migration for new inventory columns (via SQL)
+- [x] Update createItem API to accept stock quantity and threshold
+- [x] Add getInventoryStatus and updateStock APIs
+- [x] Update MerchandiseManagement UI to show stock levels
+- [x] Add stock quantity input fields to create/edit item forms
+- [x] Add low stock warning badges to item cards (red for out of stock, orange for low stock)
+- [x] Update getItems API to explicitly select stock fields
+- [x] Test creating item with inventory tracking (Sparring Gloves: stock=25, threshold=5)
+- [ ] **BUG**: Stock showing as "Unlimited" in UI despite correct data in database
+- [ ] Debug and fix stock display issue
+- [ ] Save checkpoint
