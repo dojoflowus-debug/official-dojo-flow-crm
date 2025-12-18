@@ -69,14 +69,33 @@ export default function KaiEnrollment() {
   const createEnrollment = trpc.enrollment.create.useMutation();
   const kaiConverse = trpc.enrollment.kaiConverse.useMutation({
     onSuccess: (response) => {
+      // Check if this is the first response (name collection)
+      const isFirstResponse = messages.length === 1;
+      
       // Add Kai's response to messages
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: response.kaiResponse
       }]);
       
-      // Update enrollment data (mock extraction - in real app, backend would provide this)
+      // Update enrollment data (extract name from user input)
       updateEnrollmentDataFromResponse(response.kaiResponse);
+      
+      // Add personalized greeting after name is collected
+      if (isFirstResponse) {
+        // Extract name from the user's first input
+        const nameParts = inputValue.trim().split(' ');
+        const firstName = nameParts[0];
+        
+        if (firstName) {
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: `Thanks, ${firstName}! I'm here to make this easy for you.`
+            }]);
+          }, 800);
+        }
+      }
       
       // Update step progress
       updateStepProgress();
@@ -151,6 +170,24 @@ export default function KaiEnrollment() {
     // In production, backend should return structured data
     const lowerResponse = response.toLowerCase();
     
+    // Extract name from first message
+    if (messages.length === 1 && inputValue.trim()) {
+      const nameParts = inputValue.trim().split(' ');
+      if (nameParts.length >= 2) {
+        setEnrollmentData(prev => ({
+          ...prev,
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(' ')
+        }));
+      } else if (nameParts.length === 1) {
+        // Handle single name
+        setEnrollmentData(prev => ({
+          ...prev,
+          firstName: nameParts[0]
+        }));
+      }
+    }
+    
     if (lowerResponse.includes('email') || lowerResponse.includes('@')) {
       const emailMatch = inputValue.match(/[\w.-]+@[\w.-]+\.\w+/);
       if (emailMatch) {
@@ -162,18 +199,6 @@ export default function KaiEnrollment() {
       const phoneMatch = inputValue.match(/[\d-()+ ]{10,}/);
       if (phoneMatch) {
         setEnrollmentData(prev => ({ ...prev, phone: phoneMatch[0] }));
-      }
-    }
-    
-    // Extract name from first message
-    if (messages.length === 1 && inputValue.trim()) {
-      const nameParts = inputValue.trim().split(' ');
-      if (nameParts.length >= 2) {
-        setEnrollmentData(prev => ({
-          ...prev,
-          firstName: nameParts[0],
-          lastName: nameParts.slice(1).join(' ')
-        }));
       }
     }
   };
