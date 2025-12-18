@@ -236,9 +236,9 @@ export default function KaiEnrollment() {
 
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0F141A] flex items-center justify-center p-4">
         <div className="max-w-2xl w-full text-center space-y-6">
-          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-green-600 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/50">
+          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-red-700 to-red-500 flex items-center justify-center shadow-xl shadow-red-500/50">
             <Check className="w-10 h-10 text-white" />
           </div>
           
@@ -246,13 +246,13 @@ export default function KaiEnrollment() {
             Enrollment Complete!
           </h2>
           
-          <p className="text-xl text-slate-300">
+          <p className="text-xl text-slate-300 leading-relaxed">
             Thank you for enrolling with DojoFlow. We'll review your application and contact you soon.
           </p>
           
           <Button
             onClick={() => navigate('/kiosk')}
-            className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg"
+            className="h-12 px-8 bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600 text-white font-semibold shadow-lg"
           >
             Return to Welcome
           </Button>
@@ -262,9 +262,9 @@ export default function KaiEnrollment() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-[#0F141A]">
       {/* Header with Progress */}
-      <div className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md">
+      <div className="border-b border-slate-800 bg-[#161C23]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
@@ -303,26 +303,26 @@ export default function KaiEnrollment() {
               return (
                 <div key={step.id} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
                       isActive 
-                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg shadow-purple-500/50' 
+                        ? 'bg-gradient-to-r from-red-700 to-red-500 shadow-lg shadow-red-500/40' 
                         : isCompleted
-                        ? 'bg-green-600 shadow-lg shadow-green-500/30'
+                        ? 'bg-red-600 shadow-lg shadow-red-500/30'
                         : 'bg-slate-800 border border-slate-700'
                     }`}>
                       <StepIcon className={`h-5 w-5 ${
                         isActive || isCompleted ? 'text-white' : 'text-slate-500'
                       }`} />
                     </div>
-                    <p className={`text-xs mt-2 font-medium transition-colors ${
-                      isActive ? 'text-white' : isCompleted ? 'text-green-400' : 'text-slate-500'
+                    <p className={`text-xs mt-2 font-semibold transition-colors ${
+                      isActive ? 'text-white' : isCompleted ? 'text-red-400' : 'text-slate-500'
                     }`}>
                       {step.label}
                     </p>
                   </div>
                   {index < ENROLLMENT_STEPS.length - 1 && (
-                    <div className={`h-0.5 flex-1 transition-all duration-300 ${
-                      index < currentStep ? 'bg-green-600' : 'bg-slate-800'
+                    <div className={`h-0.5 flex-1 transition-all duration-500 ${
+                      index < currentStep ? 'bg-red-600' : 'bg-slate-800'
                     }`} />
                   )}
                 </div>
@@ -337,28 +337,28 @@ export default function KaiEnrollment() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
           {/* Left Panel: Kai Conversation */}
           <div className="lg:col-span-2 flex flex-col">
-            <Card className="flex-1 bg-slate-900/50 border-slate-800 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">
+            <Card className="flex-1 bg-[#161C23] border-slate-800 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`flex gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
+                    className={`flex gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
                       message.role === 'user' ? 'justify-end' : 'justify-start'
                     }`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {message.role === 'assistant' && (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/30 animate-pulse">
-                        <Sparkles className="h-5 w-5 text-white" />
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-700 to-red-500 flex items-center justify-center shadow-xl shadow-red-500/40 animate-pulse">
+                        <Sparkles className="h-6 w-6 text-white" />
                       </div>
                     )}
-                    <div className={`max-w-[80%] rounded-2xl px-5 py-3 shadow-lg ${
+                    <div className={`max-w-[80%] rounded-2xl px-5 py-4 shadow-lg ${
                       message.role === 'user'
-                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
-                        : 'bg-slate-800/80 text-slate-100 border border-slate-700'
+                        ? 'bg-gradient-to-r from-red-700 to-red-500 text-white'
+                        : 'bg-[#1E2530] text-slate-100 border border-slate-700/50'
                     }`}>
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      <p className="text-base leading-relaxed whitespace-pre-wrap font-medium">{message.content}</p>
                     </div>
                   </div>
                 ))}
@@ -366,7 +366,7 @@ export default function KaiEnrollment() {
               </div>
 
               {/* Input Area */}
-              <div className="border-t border-slate-800 bg-slate-900/80 p-4 space-y-3">
+              <div className="border-t border-slate-800 bg-[#161C23]/80 p-4 space-y-3">
                 {/* Language Selector */}
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-slate-400" />
@@ -404,9 +404,9 @@ export default function KaiEnrollment() {
                       onBlur={() => setIsInputFocused(false)}
                       placeholder={isRecording ? 'Listening...' : 'Type or speak your response...'}
                       disabled={kaiConverse.isPending || isRecording}
-                      className={`h-14 pr-28 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 text-base transition-all duration-200 ${
+                      className={`h-14 pr-28 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 text-base font-medium transition-all duration-200 ${
                         isInputFocused 
-                          ? 'ring-2 ring-purple-500/50 border-purple-500/50 shadow-lg shadow-purple-500/20' 
+                          ? 'ring-2 ring-red-500/50 border-red-500/50 shadow-lg shadow-red-500/20' 
                           : isRecording
                           ? 'ring-2 ring-red-500/50 border-red-500/50 shadow-lg shadow-red-500/20'
                           : ''
@@ -433,7 +433,7 @@ export default function KaiEnrollment() {
                         type="submit"
                         size="icon"
                         disabled={!inputValue.trim() || kaiConverse.isPending}
-                        className="h-10 w-10 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 shadow-lg"
+                        className="h-10 w-10 bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600 disabled:opacity-50 shadow-lg"
                       >
                         <Send className="h-4 w-4" />
                       </Button>
@@ -446,86 +446,86 @@ export default function KaiEnrollment() {
 
           {/* Right Panel: Live Summary */}
           <div className="lg:col-span-1">
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm shadow-2xl p-6 h-full">
+            <Card className="bg-[#1A2028] border-slate-700/50 backdrop-blur-sm shadow-2xl p-6 h-full">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-700 to-red-500 flex items-center justify-center shadow-lg shadow-red-500/30">
                   <Check className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Enrollment Summary</h3>
-                  <p className="text-xs text-slate-400">Live updates</p>
+                  <h3 className="text-lg font-bold text-white">Your Enrollment So Far</h3>
+                  <p className="text-xs text-slate-400">We'll add this together</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 {/* Name */}
-                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                <div className="p-4 rounded-lg bg-[#161C23] border border-slate-700/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <User className="h-4 w-4 text-purple-400" />
+                    <User className="h-4 w-4 text-red-400" />
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Name</p>
                   </div>
-                  <p className="text-white font-medium">
+                  <p className="text-white font-semibold leading-relaxed">
                     {enrollmentData.firstName && enrollmentData.lastName
                       ? `${enrollmentData.firstName} ${enrollmentData.lastName}`
-                      : <span className="text-slate-500 italic">Not provided yet</span>
+                      : <span className="text-slate-400 italic font-normal">We'll add this together</span>
                     }
                   </p>
                 </div>
 
                 {/* Email */}
-                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                <div className="p-4 rounded-lg bg-[#161C23] border border-slate-700/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Mail className="h-4 w-4 text-blue-400" />
+                    <Mail className="h-4 w-4 text-red-400" />
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Email</p>
                   </div>
-                  <p className="text-white font-medium">
-                    {enrollmentData.email || <span className="text-slate-500 italic">Not provided yet</span>}
+                  <p className="text-white font-semibold leading-relaxed">
+                    {enrollmentData.email || <span className="text-slate-400 italic font-normal">We'll add this together</span>}
                   </p>
                 </div>
 
                 {/* Phone */}
-                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                <div className="p-4 rounded-lg bg-[#161C23] border border-slate-700/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Phone className="h-4 w-4 text-green-400" />
+                    <Phone className="h-4 w-4 text-red-400" />
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Phone</p>
                   </div>
-                  <p className="text-white font-medium">
-                    {enrollmentData.phone || <span className="text-slate-500 italic">Not provided yet</span>}
+                  <p className="text-white font-semibold leading-relaxed">
+                    {enrollmentData.phone || <span className="text-slate-400 italic font-normal">We'll add this together</span>}
                   </p>
                 </div>
 
                 {/* Student Type */}
-                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                <div className="p-4 rounded-lg bg-[#161C23] border border-slate-700/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="h-4 w-4 text-yellow-400" />
+                    <Calendar className="h-4 w-4 text-red-400" />
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Student Type</p>
                   </div>
-                  <p className="text-white font-medium">
-                    {enrollmentData.studentType || <span className="text-slate-500 italic">Not provided yet</span>}
+                  <p className="text-white font-semibold leading-relaxed">
+                    {enrollmentData.studentType || <span className="text-slate-400 italic font-normal">We'll add this together</span>}
                   </p>
                 </div>
 
                 {/* Program */}
-                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                <div className="p-4 rounded-lg bg-[#161C23] border border-slate-700/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Award className="h-4 w-4 text-orange-400" />
+                    <Award className="h-4 w-4 text-red-400" />
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Program</p>
                   </div>
-                  <p className="text-white font-medium">
-                    {enrollmentData.program || <span className="text-slate-500 italic">Not provided yet</span>}
+                  <p className="text-white font-semibold leading-relaxed">
+                    {enrollmentData.program || <span className="text-slate-400 italic font-normal">We'll add this together</span>}
                   </p>
                 </div>
               </div>
 
               {/* Progress Indicator */}
-              <div className="mt-6 pt-6 border-t border-slate-700">
+              <div className="mt-6 pt-6 border-t border-slate-700/50">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-400">Progress</p>
+                  <p className="text-sm font-semibold text-slate-400">Progress</p>
                   <p className="text-sm font-bold text-white">{Math.round((currentStep / (ENROLLMENT_STEPS.length - 1)) * 100)}%</p>
                 </div>
-                <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-500 ease-out"
+                    className="h-full bg-gradient-to-r from-red-700 to-red-500 transition-all duration-700 ease-out shadow-lg shadow-red-500/30"
                     style={{ width: `${(currentStep / (ENROLLMENT_STEPS.length - 1)) * 100}%` }}
                   />
                 </div>

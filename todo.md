@@ -5163,3 +5163,50 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Add helper text "Voice input language"
 - [x] Test multilingual transcription
 - [x] Save checkpoint
+
+
+## 🎨 REDESIGN: Warm & Reassuring Kai Enrollment (DojoFlow Red)
+
+### Color System Changes
+- [x] Replace blue/purple gradients with warm DojoFlow red (burgundy → red)
+- [x] Deep charcoal background (#0F141A)
+- [x] Content cards lighter charcoal (#161C23, #1A2028, #1E2530)
+- [x] Remove all cold navy/blue tones
+- [x] Avoid blue-gray text
+
+### Kai Presence Enhancement
+- [x] Larger Kai avatar (12x12 w-12 h-12)
+- [x] Slow, subtle warm red glow animation (animate-pulse with shadow-red-500/40)
+- [x] Warm gradient accents on message bubbles (from-red-700 to-red-500)
+- [x] Calm, reassuring visual presence
+
+### Enrollment Summary Panel
+- [x] Rename to "Your Enrollment So Far"
+- [x] Friendly empty states ("We'll add this together")
+- [x] Lighter card styling (bg-[#1A2028])
+- [x] Softer borders (border-slate-700/30)
+- [x] Warmer icon colors (text-red-400)
+
+### Typography Improvements
+- [x] Increase font weight slightly (font-semibold, font-medium)
+- [x] Improve line height for readability (leading-relaxed)
+- [x] Reduce harsh contrast (text-slate-400 instead of text-slate-500)
+- [x] More readable, friendly text
+
+### Progress Indicators
+- [x] Use warm red for progress bars (from-red-700 to-red-500)
+- [x] Warm red for active/completed steps (bg-red-600, text-red-400)
+- [x] Smooth animations (duration-500, duration-700)
+- [x] No abrupt changes (ease-out transitions)
+
+### Implementation
+- [x] Update all gradient classes from purple/blue to red
+- [x] Update background colors to charcoal (#0F141A, #161C23, #1A2028, #1E2530)
+- [x] Increase Kai avatar size (w-12 h-12)
+- [x] Add warm glow animation to avatar (shadow-xl shadow-red-500/40 animate-pulse)
+- [x] Update summary panel title and empty states
+- [x] Update progress step colors (red-600, red-400, red-500)
+- [x] Improve typography (font-weight, line-height, leading-relaxed)
+- [x] Update completion screen to match warm theme
+- [x] Test warm enrollment experience
+- [x] Save checkpoint
