@@ -1944,3 +1944,71 @@ export const studentEnrollments = mysqlTable("student_enrollments", {
 
 export type StudentEnrollment = typeof studentEnrollments.$inferSelect;
 export type InsertStudentEnrollment = typeof studentEnrollments.$inferInsert;
+
+/**
+ * Merchandise Items table - Uniforms, gear, and other merchandise
+ * Tracks available merchandise items that can be issued to students
+ */
+export const merchandiseItems = mysqlTable("merchandise_items", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Item name (e.g., "White Uniform", "Sparring Gloves") */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Item type/category */
+  type: mysqlEnum("type", ["uniform", "gear", "belt", "equipment", "other"]).notNull(),
+  /** Default price in cents (0 for free items) */
+  defaultPrice: int("defaultPrice").default(0).notNull(),
+  /** Whether this item requires size selection */
+  requiresSize: int("requiresSize").default(0).notNull(),
+  /** Available sizes (JSON array: ["XS", "S", "M", "L", "XL", "XXL"]) */
+  sizeOptions: text("sizeOptions"),
+  /** Item description */
+  description: text("description"),
+  /** Whether this item is currently available */
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MerchandiseItem = typeof merchandiseItems.$inferSelect;
+export type InsertMerchandiseItem = typeof merchandiseItems.$inferInsert;
+
+/**
+ * Student Merchandise table - Tracks merchandise issued to students
+ * Manages fulfillment lifecycle from pending to confirmed/disputed
+ */
+export const studentMerchandise = mysqlTable("student_merchandise", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student receiving the item */
+  studentId: int("studentId").notNull(),
+  /** Merchandise item being issued */
+  itemId: int("itemId").notNull(),
+  /** Selected size (if applicable) */
+  size: varchar("size", { length: 20 }),
+  /** Price paid in cents (may differ from default) */
+  pricePaid: int("pricePaid").default(0).notNull(),
+  /** Current fulfillment status */
+  fulfillmentStatus: mysqlEnum("fulfillmentStatus", ["pending", "handed_out", "confirmed", "disputed"]).default("pending").notNull(),
+  /** When item was marked as handed out */
+  handedOutAt: timestamp("handedOutAt"),
+  /** Staff member who handed out the item */
+  handedOutBy: int("handedOutBy"),
+  /** When parent confirmed receipt */
+  confirmedAt: timestamp("confirmedAt"),
+  /** How parent confirmed (sms, email, in_person) */
+  confirmationMethod: mysqlEnum("confirmationMethod", ["sms", "email", "in_person"]),
+  /** Confirmation token for public link */
+  confirmationToken: varchar("confirmationToken", { length: 255 }),
+  /** Token expiry timestamp */
+  confirmationTokenExpiry: timestamp("confirmationTokenExpiry"),
+  /** Reason if disputed */
+  disputeReason: text("disputeReason"),
+  /** When dispute was filed */
+  disputedAt: timestamp("disputedAt"),
+  /** Notes from staff */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudentMerchandise = typeof studentMerchandise.$inferSelect;
+export type InsertStudentMerchandise = typeof studentMerchandise.$inferInsert;

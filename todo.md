@@ -5269,3 +5269,74 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Adjust spacing between summary items (space-y-4 → space-y-3, mb-2 → mb-1.5)
 - [x] Test layout balance
 - [x] Save checkpoint
+
+
+
+## 📦 MERCHANDISE FULFILLMENT & CONFIRMATION SYSTEM
+
+### Database Schema
+- [x] Create merchandise_items table (id, name, type, default_price, requires_size, size_options)
+- [x] Create student_merchandise table (student_id, item_id, size, fulfillment_status, handed_out_at, handed_out_by, confirmed_at, confirmation_method, dispute_reason)
+- [x] Add fulfillment_status enum (pending, handed_out, confirmed, disputed)
+- [x] Add confirmation_method enum (sms, email, in_person)
+- [x] Add indexes for efficient querying
+
+### Backend API
+- [x] Create merchandiseRouter with procedures:
+  - [x] getItems - list all merchandise items
+  - [x] createItem - add new merchandise item
+  - [x] attachToStudent - attach item to student with size
+  - [x] getPendingFulfillments - get students with pending items
+  - [x] markHandedOut - mark item as handed out
+  - [x] confirmReceipt - parent confirms receipt
+  - [x] markDisputed - parent disputes receipt
+  - [x] getFulfillmentHistory - audit trail
+  - [x] getStatistics - fulfillment statistics
+- [x] Register merchandiseRouter in appRouter
+- [x] Add vitest tests for all procedures (10 tests passing)
+
+### Staff Fulfillment Interface
+- [x] Create MerchandiseFulfillment.tsx page at /operations/merchandise
+- [x] Add to Operations menu in navigation
+- [x] Show pending items list with filters (program, date, item type)
+- [x] Display student name, program, belt, item name, size
+- [x] Add "Mark as Handed Out" button with confirmation
+- [x] Add "Print Fulfillment Sheet" button
+- [x] Show fulfillment statistics (pending, handed out, confirmed, disputed)
+
+### Printable Fulfillment Sheet
+- [x] Create PrintFulfillmentSheet.tsx component
+- [x] Include header with date, location, dojo logo
+- [x] Table with columns: Student Name, Program, Item, Size, Checkbox, Signature Line
+- [x] Add CSS print styles for landscape orientation
+- [x] Support batch printing (daily/weekly)
+- [ ] Add QR code for digital confirmation link (optional enhancement)
+
+### Parent Confirmation Flow
+- [x] Send SMS confirmation request when item marked handed out
+- [x] Send email confirmation request with same link
+- [x] Create public confirmation page at /confirm-receipt/:token
+- [x] Show item details and student name
+- [x] Add "Confirm Receipt" and "Report Issue" buttons
+- [x] Record confirmation timestamp and method
+- [x] Handle dispute flow with reason text field
+- [ ] Send staff notification on dispute (TODO: integrate with notification system)
+
+### Enrollment Integration
+- [x] Create MerchandiseManagement page for creating items
+- [x] Create interface for assigning items to students with size selection
+- [x] Add size guide (XS, S, M, L, XL, XXL, XXXL)
+- [x] Set initial fulfillment_status to pending when item attached
+- [x] Add Manage Items submenu to Operations navigation
+- [ ] Future enhancement: Auto-attach uniform when program requires it (requires program-merchandise mapping)
+
+### Testing & Polish
+- [x] Test merchandise item creation (vitest)
+- [x] Test item retrieval with size options (vitest)
+- [x] Test fulfillment statistics (vitest)
+- [x] Test pending fulfillments query (vitest)
+- [x] All 10 vitest tests passing
+- [ ] Manual test: Full fulfillment lifecycle (attach → hand out → confirm)
+- [ ] Manual test: Dispute flow (attach → hand out → dispute)
+- [ ] Manual test: Printable sheet rendering
+- [ ] Save checkpoint

@@ -25,7 +25,8 @@ import {
   MessageSquare,
   Shield,
   Wrench,
-  BookOpen
+  BookOpen,
+  Package
 } from 'lucide-react'
 import { APP_LOGO } from '@/const'
 import { useAuth } from '@/hooks/useAuth'
@@ -49,6 +50,16 @@ const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: 'staff', name: 'Staff', href: '/staff', icon: 'UserCog' },
   { id: 'billing', name: 'Billing', href: '/billing', icon: 'CreditCard' },
   { id: 'reports', name: 'Reports', href: '/reports', icon: 'BarChart3' },
+  {
+    id: 'operations',
+    name: 'Operations',
+    href: '/operations/merchandise',
+    icon: 'Package',
+    children: [
+      { id: 'merchandise', name: 'Fulfillment', href: '/operations/merchandise', icon: 'Package' },
+      { id: 'merchandise-manage', name: 'Manage Items', href: '/operations/merchandise/manage', icon: 'Settings' }
+    ]
+  },
   { id: 'marketing', name: 'Marketing', href: '/marketing', icon: 'TrendingUp' },
   { 
     id: 'settings', 
@@ -85,7 +96,8 @@ const ICON_MAP = {
   MessageSquare,
   Shield,
   Wrench,
-  BookOpen
+  BookOpen,
+  Package
 }
 
 // Logout Button Component

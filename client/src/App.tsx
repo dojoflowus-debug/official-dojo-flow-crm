@@ -78,6 +78,10 @@ import Automation from "./pages/Automation";
 import AutomationCreate from "./pages/AutomationCreate";
 import AutomationBuilder from "./pages/AutomationBuilder";
 import Conversations from "./pages/Conversations";
+import MerchandiseFulfillment from "./pages/MerchandiseFulfillment";
+import PrintFulfillmentSheet from "./pages/PrintFulfillmentSheet";
+import ConfirmReceipt from "./pages/ConfirmReceipt";
+import MerchandiseManagement from "./pages/MerchandiseManagement";
 import AISetup from "./pages/AISetup";
 // KioskSetup removed
 import Security from "./pages/Security";
@@ -148,6 +152,10 @@ function Router() {
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />
       <Route path="/billing/stripe-setup" element={<StripeSetup />} />
       <Route path="/billing/applications" element={<BillingApplications />} />
+      <Route path="/operations/merchandise" element={<MerchandiseFulfillment />} />
+      <Route path="/operations/merchandise/manage" element={<MerchandiseManagement />} />
+      <Route path="/print-fulfillment-sheet" element={<PrintFulfillmentSheet />} />
+      <Route path="/confirm-receipt/:token" element={<ConfirmReceipt />} />
       <Route path="/reports" element={<Reports />} />
       <Route path="/marketing" element={<Marketing />} />
       <Route path="/marketing-test" element={<MarketingTest />} />
