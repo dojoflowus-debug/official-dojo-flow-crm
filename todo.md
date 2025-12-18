@@ -5229,3 +5229,43 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Handle single name and multiple name cases
 - [x] Test name extraction and personalization
 - [x] Save checkpoint
+
+
+## 🎨 REFINEMENT: Layout Balance & Visual Harmony
+
+### Layout Refinements
+- [x] Add internal max-width container (~720-760px / max-w-3xl) to left conversation panel
+- [x] Center conversation content horizontally within left panel
+- [x] Group Kai message and input as one interaction unit
+- [x] Reduce excessive vertical emptiness on left
+
+### Panel Balance
+- [x] Ensure left and right panels feel balanced in visual height
+- [x] Reduce visual density on right panel:
+  - [x] Slightly reduce padding between summary items (space-y-4 → space-y-3)
+  - [x] Slightly reduce icon size (h-4 w-4 → h-3.5 w-3.5)
+  - [x] Reduce card padding (p-4 → p-3)
+  - [x] Reduce margin between label and content (mb-2 → mb-1.5)
+  - [x] Keep cards calm and light
+
+### Visual Divider
+- [x] Add subtle vertical divider between left and right panels
+- [x] 1px line with low opacity (w-px)
+- [x] Warm tone gradient (from-transparent via-red-900/20 to-transparent)
+
+### Alignment
+- [x] Align start of Kai messages with "Your Enrollment So Far" header baseline (max-w-3xl centering)
+- [x] Ensure consistent corner radii across both panels (rounded-lg, rounded-2xl)
+- [x] Ensure consistent spacing across both panels
+
+### Implementation
+- [x] Add max-w-3xl container to messages area
+- [x] Center messages with mx-auto
+- [x] Add max-w-3xl container to input area
+- [x] Center input with mx-auto
+- [x] Add vertical divider border to right panel (absolute positioned gradient)
+- [x] Reduce padding in summary cards (p-4 → p-3)
+- [x] Reduce icon sizes (h-4 w-4 → h-3.5 w-3.5)
+- [x] Adjust spacing between summary items (space-y-4 → space-y-3, mb-2 → mb-1.5)
+- [x] Test layout balance
+- [x] Save checkpoint
