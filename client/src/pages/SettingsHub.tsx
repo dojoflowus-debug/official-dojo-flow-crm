@@ -42,7 +42,7 @@ const SETTINGS_CARDS: SettingCard[] = [
     title: 'General Settings',
     description: 'Business information, locations, and operating hours',
     icon: Wrench,
-    href: '/setup',
+    href: '/setup-wizard',
     category: 'general',
     status: 'incomplete'
   },
@@ -51,8 +51,9 @@ const SETTINGS_CARDS: SettingCard[] = [
     title: 'Locations',
     description: 'Manage your dojo locations and facilities',
     icon: MapPin,
-    href: '/locations',
-    category: 'general'
+    href: '/setup-wizard',
+    category: 'general',
+    badge: 'Coming Soon'
   },
   
   // Appearance
@@ -110,7 +111,7 @@ const SETTINGS_CARDS: SettingCard[] = [
     title: 'Integrations',
     description: 'Connect third-party services and webhooks',
     icon: Plug,
-    href: '/integrations',
+    href: '/settings/webhooks',
     category: 'integrations'
   },
   {
@@ -118,7 +119,7 @@ const SETTINGS_CARDS: SettingCard[] = [
     title: 'Notifications',
     description: 'Email, SMS, and push notification preferences',
     icon: Bell,
-    href: '/notifications',
+    href: '/settings/communication',
     category: 'integrations'
   }
 ]

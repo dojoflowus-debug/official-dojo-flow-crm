@@ -4961,3 +4961,30 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Test all navigation links
 - [x] Save checkpoint
 
+
+
+## 🐛 BUG FIX: Settings Hub Navigation 404 Errors
+
+### Issue
+- [x] Clicking "Locations" in Settings hub shows 404 error
+- [x] Clicking "General" in Settings hub shows 404 error
+
+### Investigation Tasks
+- [x] Check App.tsx routes for /settings/locations
+- [x] Check App.tsx routes for /settings/general
+- [x] Verify which settings pages exist vs which are missing
+- [x] Create missing pages or update navigation links
+
+### Root Cause
+- General Settings was linking to /setup (circular link to Settings Hub itself)
+- Locations was linking to /locations (route doesn't exist)
+- Integrations was linking to /integrations (route doesn't exist)
+- Notifications was linking to /notifications (route doesn't exist)
+
+### Fix Tasks
+- [x] Fixed General Settings to link to /setup-wizard (existing route)
+- [x] Fixed Locations to link to /setup-wizard with "Coming Soon" badge
+- [x] Fixed Integrations to link to /settings/webhooks (existing route)
+- [x] Fixed Notifications to link to /settings/communication (existing route)
+- [x] Test all Settings hub navigation links
+- [x] Save checkpoint
