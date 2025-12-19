@@ -5433,3 +5433,38 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Tested with new item "Training Pads" (stock=15, threshold=3)
 - [x] Verified stock quantity displays correctly (shows "15" instead of "Unlimited")
 - [x] Save checkpoint
+
+
+## ✅ COMPLETED: Stock Adjustment Feature - Quick Edit Interface
+
+### Backend API Tasks
+- [x] Add updateStock procedure to merchandiseRouter
+- [x] Accept itemId, newQuantity, adjustmentReason parameters
+- [x] Validate newQuantity is non-negative
+- [x] Update stockQuantity in database
+- [x] Return updated item with new stock level
+- [x] Write vitest tests for stock adjustment (10 tests passing)
+
+### Frontend UI Tasks
+- [x] Add Edit icon button to Stock column in merchandise table
+- [x] Create StockAdjustmentDialog component
+- [x] Show current stock quantity
+- [x] Add input field for new quantity
+- [x] Add dropdown for adjustment reason (Received Shipment, Inventory Count, Correction, Damage/Loss, Other)
+- [x] Add optional notes field
+- [x] Show stock difference calculation (+/- X items)
+- [x] Add Save and Cancel buttons
+- [x] Show loading state during save
+- [x] Display success/error toast notifications
+- [x] Refresh table data after successful update
+
+### Testing Tasks
+- [x] Test updating stock quantity for existing items
+- [x] Test validation (negative numbers, non-numeric input)
+- [x] Test different adjustment reasons
+- [x] Verify table updates immediately after save
+- [x] Test with items that have low stock thresholds
+- [x] Verify badge colors update correctly (red/orange/green)
+
+### Checkpoint
+- [x] Save checkpoint with stock adjustment feature

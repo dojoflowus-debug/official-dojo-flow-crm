@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, User, Users } from "lucide-react";
+import { Package, Plus, User, Users, Edit } from "lucide-react";
 import BulkAssignDialog from "@/components/BulkAssignDialog";
 import { toast } from "sonner";
 import {
@@ -62,6 +62,17 @@ export default function MerchandiseManagement() {
     notes: "",
   });
 
+  // State for stock adjustment
+  const [showStockDialog, setShowStockDialog] = useState(false);
+  const [stockAdjustment, setStockAdjustment] = useState({
+    itemId: 0,
+    itemName: "",
+    currentStock: 0,
+    newQuantity: 0,
+    adjustmentReason: "" as "received_shipment" | "inventory_count" | "correction" | "damage_loss" | "other" | "",
+    notes: "",
+  });
+
   // Queries
   const { data: items, isLoading: itemsLoading } = trpc.merchandise.getItems.useQuery();
   const { data: students } = trpc.students.getAll.useQuery();
@@ -105,6 +116,20 @@ export default function MerchandiseManagement() {
     },
   });
 
+  const updateStock = trpc.merchandise.updateStock.useMutation({
+    onSuccess: (data) => {
+      const diff = data.difference;
+      const sign = diff > 0 ? "+" : "";
+      toast.success(`Stock updated successfully (${sign}${diff} items)`);
+      utils.merchandise.getItems.invalidate();
+      utils.merchandise.getInventoryStatus.invalidate();
+      setShowStockDialog(false);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleCreateItem = () => {
     createItem.mutate({
       name: newItem.name,
@@ -131,6 +156,32 @@ export default function MerchandiseManagement() {
       size: attachData.size || undefined,
       pricePaid: attachData.pricePaid * 100, // Convert to cents
       notes: attachData.notes || undefined,
+    });
+  };
+
+  const openStockDialog = (item: any) => {
+    setStockAdjustment({
+      itemId: item.id,
+      itemName: item.name,
+      currentStock: item.stockQuantity ?? 0,
+      newQuantity: item.stockQuantity ?? 0,
+      adjustmentReason: "",
+      notes: "",
+    });
+    setShowStockDialog(true);
+  };
+
+  const handleStockAdjustment = () => {
+    if (!stockAdjustment.adjustmentReason) {
+      toast.error("Please select an adjustment reason");
+      return;
+    }
+
+    updateStock.mutate({
+      itemId: stockAdjustment.itemId,
+      newQuantity: stockAdjustment.newQuantity,
+      adjustmentReason: stockAdjustment.adjustmentReason,
+      notes: stockAdjustment.notes || undefined,
     });
   };
 
@@ -376,6 +427,7 @@ export default function MerchandiseManagement() {
                   <TableHead>Stock</TableHead>
                   <TableHead>Requires Size</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -403,6 +455,18 @@ export default function MerchandiseManagement() {
                     <TableCell className="text-muted-foreground text-sm">
                       {item.description || "—"}
                     </TableCell>
+                    <TableCell className="text-right">
+                      {item.stockQuantity !== null && item.stockQuantity !== undefined && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openStockDialog(item)}
+                          title="Adjust stock quantity"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -410,6 +474,95 @@ export default function MerchandiseManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Stock Adjustment Dialog */}
+      <Dialog open={showStockDialog} onOpenChange={setShowStockDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adjust Stock Quantity</DialogTitle>
+            <DialogDescription>
+              Update the stock quantity for {stockAdjustment.itemName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Current Stock */}
+            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <span className="text-sm font-medium">Current Stock</span>
+              <span className="text-lg font-bold">{stockAdjustment.currentStock}</span>
+            </div>
+
+            {/* New Quantity */}
+            <div className="space-y-2">
+              <Label htmlFor="newQuantity">New Quantity</Label>
+              <Input
+                id="newQuantity"
+                type="number"
+                min="0"
+                value={stockAdjustment.newQuantity}
+                onChange={(e) => setStockAdjustment({ ...stockAdjustment, newQuantity: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+
+            {/* Stock Difference */}
+            {stockAdjustment.newQuantity !== stockAdjustment.currentStock && (
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="text-sm font-medium">Change</span>
+                <span className={`text-lg font-bold ${
+                  stockAdjustment.newQuantity > stockAdjustment.currentStock
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}>
+                  {stockAdjustment.newQuantity > stockAdjustment.currentStock ? "+" : ""}
+                  {stockAdjustment.newQuantity - stockAdjustment.currentStock}
+                </span>
+              </div>
+            )}
+
+            {/* Adjustment Reason */}
+            <div className="space-y-2">
+              <Label htmlFor="adjustmentReason">Reason for Adjustment *</Label>
+              <Select
+                value={stockAdjustment.adjustmentReason}
+                onValueChange={(value: any) => setStockAdjustment({ ...stockAdjustment, adjustmentReason: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="received_shipment">Received Shipment</SelectItem>
+                  <SelectItem value="inventory_count">Inventory Count</SelectItem>
+                  <SelectItem value="correction">Correction</SelectItem>
+                  <SelectItem value="damage_loss">Damage/Loss</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add any additional details about this adjustment..."
+                value={stockAdjustment.notes}
+                onChange={(e) => setStockAdjustment({ ...stockAdjustment, notes: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowStockDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStockAdjustment}
+              disabled={updateStock.isPending}
+            >
+              {updateStock.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <BulkAssignDialog
         open={showBulkAssignDialog}

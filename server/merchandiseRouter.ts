@@ -426,8 +426,9 @@ export const merchandiseRouter = router({
   updateStock: protectedProcedure
     .input(z.object({
       itemId: z.number().int(),
-      stockQuantity: z.number().int().min(0).optional(),
-      lowStockThreshold: z.number().int().min(0).optional(),
+      newQuantity: z.number().int().min(0),
+      adjustmentReason: z.enum(["received_shipment", "inventory_count", "correction", "damage_loss", "other"]).optional(),
+      notes: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -439,15 +440,35 @@ export const merchandiseRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Merchandise item not found" });
       }
 
+      // Calculate difference for audit trail
+      const oldQuantity = item.stockQuantity ?? 0;
+      const difference = input.newQuantity - oldQuantity;
+
+      // Update stock quantity
       await db
         .update(merchandiseItems)
         .set({
-          stockQuantity: input.stockQuantity ?? item.stockQuantity,
-          lowStockThreshold: input.lowStockThreshold ?? item.lowStockThreshold,
+          stockQuantity: input.newQuantity,
+          updatedAt: new Date(),
         })
         .where(eq(merchandiseItems.id, input.itemId));
 
-      return { success: true };
+      // TODO: Log stock adjustment to audit table (future enhancement)
+      // await db.insert(stockAdjustments).values({
+      //   itemId: input.itemId,
+      //   oldQuantity,
+      //   newQuantity: input.newQuantity,
+      //   difference,
+      //   reason: input.adjustmentReason,
+      //   notes: input.notes,
+      // });
+
+      return { 
+        success: true, 
+        oldQuantity,
+        newQuantity: input.newQuantity,
+        difference,
+      };
     }),
 
   /**
