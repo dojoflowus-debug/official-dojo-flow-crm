@@ -2,7 +2,9 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
-import { merchandiseItems, studentMerchandise, students } from "../drizzle/schema";
+import { merchandiseItems, studentMerchandise, students, alertSettings } from "../drizzle/schema";
+import { getActiveAlerts, getAlertHistory, resolveAlert } from "./stockAlertEngine";
+import { triggerStockAlertProcessing } from "./services/scheduler";
 import { eq, and, inArray } from "drizzle-orm";
 import { sendSMS } from "./_core/twilio";
 import { sendEmail } from "./_core/sendgrid";
@@ -558,4 +560,114 @@ export const merchandiseRouter = router({
         failedAssignments,
       };
     }),
+
+  /**
+   * Get active stock alerts (unresolved)
+   */
+  getActiveAlerts: protectedProcedure.query(async () => {
+    return getActiveAlerts();
+  }),
+
+  /**
+   * Get stock alert history (all alerts)
+   */
+  getAlertHistory: protectedProcedure
+    .input(z.object({
+      limit: z.number().int().min(1).max(100).optional().default(50),
+    }))
+    .query(async ({ input }) => {
+      return getAlertHistory(input.limit);
+    }),
+
+  /**
+   * Resolve a stock alert
+   */
+  resolveAlert: protectedProcedure
+    .input(z.object({
+      alertId: z.number(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      return resolveAlert(input.alertId, ctx.user.id, input.notes);
+    }),
+
+  /**
+   * Get alert settings
+   */
+  getAlertSettings: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+
+    const [settings] = await db.select().from(alertSettings).limit(1);
+    
+    if (!settings) {
+      // Return default settings if none exist
+      return {
+        id: 0,
+        isEnabled: 1,
+        notifyEmail: 1,
+        notifySMS: 0,
+        checkIntervalMinutes: 360,
+        recipientEmails: null,
+        recipientPhones: null,
+        alertCooldownHours: 24,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+
+    return settings;
+  }),
+
+  /**
+   * Update alert settings
+   */
+  updateAlertSettings: protectedProcedure
+    .input(z.object({
+      isEnabled: z.number().int().min(0).max(1).optional(),
+      notifyEmail: z.number().int().min(0).max(1).optional(),
+      notifySMS: z.number().int().min(0).max(1).optional(),
+      checkIntervalMinutes: z.number().int().min(60).max(1440).optional(),
+      recipientEmails: z.string().optional(),
+      recipientPhones: z.string().optional(),
+      alertCooldownHours: z.number().int().min(1).max(168).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+
+      // Check if settings exist
+      const [existing] = await db.select().from(alertSettings).limit(1);
+
+      if (existing) {
+        // Update existing settings
+        await db.update(alertSettings)
+          .set({
+            ...input,
+            updatedAt: new Date(),
+          })
+          .where(eq(alertSettings.id, existing.id));
+      } else {
+        // Create new settings
+        await db.insert(alertSettings).values({
+          isEnabled: input.isEnabled ?? 1,
+          notifyEmail: input.notifyEmail ?? 1,
+          notifySMS: input.notifySMS ?? 0,
+          checkIntervalMinutes: input.checkIntervalMinutes ?? 360,
+          recipientEmails: input.recipientEmails ?? null,
+          recipientPhones: input.recipientPhones ?? null,
+          alertCooldownHours: input.alertCooldownHours ?? 24,
+        });
+      }
+
+      return { success: true };
+    }),
+
+  /**
+   * Manually trigger stock alert check (for testing)
+   */
+  triggerStockAlertCheck: protectedProcedure.mutation(async () => {
+    const result = await triggerStockAlertProcessing();
+    return result;
+  }),
 });

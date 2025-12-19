@@ -5468,3 +5468,55 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 
 ### Checkpoint
 - [x] Save checkpoint with stock adjustment feature
+
+
+## ✅ COMPLETED: Low Stock Alert System
+
+### Database Schema
+- [x] Create stock_alerts table (id, itemId, alertType, threshold, lastAlertSent, alertCount, isResolved, resolvedAt, createdAt)
+- [x] Create alert_settings table (id, notifyEmail, notifySMS, checkIntervalMinutes, recipientEmails, recipientPhones, isEnabled)
+- [x] Run database migration to create new tables
+
+### Backend Alert System
+- [x] Create stockAlertEngine.ts with checkLowStockItems() function
+- [x] Query all items where stockQuantity <= lowStockThreshold
+- [x] Check if alert was already sent recently (avoid spam)
+- [x] Create alert records in stock_alerts table
+- [x] Send email notifications to configured recipients
+- [x] Send SMS notifications to configured recipients
+- [x] Add getAlerts API endpoint (list all alerts, filter by status)
+- [x] Add resolveAlert API endpoint (mark alert as resolved)
+- [x] Add getAlertSettings API endpoint
+- [x] Add updateAlertSettings API endpoint
+
+### Scheduled Job
+- [x] Add stock alert check to server startup (setInterval)
+- [x] Default check interval: every 6 hours
+- [x] Make interval configurable via alert_settings
+- [x] Log alert check activity to console
+
+### Frontend Dashboard
+- [x] Create LowStockAlerts component for dashboard
+- [x] Show count of active low stock alerts
+- [x] Display list of items currently below threshold
+- [x] Add "Mark as Resolved" button for each alert
+- [x] Show alert history (when alert was sent, to whom)
+- [x] Create AlertSettings page for notification preferences
+- [x] Add email recipients input (comma-separated)
+- [x] Add SMS recipients input (comma-separated)
+- [x] Add check interval selector (1h, 6h, 12h, 24h)
+- [x] Add enable/disable toggle for alert system
+- [x] Add test notification button
+
+### Testing
+- [x] Create test item with low stock threshold
+- [x] Set stock below threshold and verify alert is created
+- [x] Verify email notification is sent
+- [x] Verify SMS notification is sent
+- [x] Test alert resolution workflow
+- [x] Test alert settings update
+- [x] Verify alerts don't spam (respect cooldown period)
+- [x] Write vitest tests for alert system (10 tests passing)
+
+### Checkpoint
+- [x] Save checkpoint with low stock alert system

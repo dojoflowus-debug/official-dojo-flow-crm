@@ -1,5 +1,5 @@
-import { processAutomations } from "./automationEngine";
 import { processClassReminders } from "../classReminderService";
+import { checkLowStockItems } from "../stockAlertEngine";
 
 /**
  * Background Job Scheduler
@@ -8,6 +8,7 @@ import { processClassReminders } from "../classReminderService";
 
 let schedulerInterval: NodeJS.Timeout | null = null;
 let reminderInterval: NodeJS.Timeout | null = null;
+let stockAlertInterval: NodeJS.Timeout | null = null;
 
 /**
  * Start the automation scheduler
@@ -19,24 +20,13 @@ export function startScheduler() {
     return;
   }
 
-  console.log("Starting automation scheduler...");
-
-  // Run automations immediately on start
-  processAutomations().catch(error => {
-    console.error("Error in initial automation processing:", error);
-  });
-
-  // Then run automations every minute
-  schedulerInterval = setInterval(() => {
-    processAutomations().catch(error => {
-      console.error("Error in scheduled automation processing:", error);
-    });
-  }, 60 * 1000); // 60 seconds
-
-  console.log("Automation scheduler started - running every 60 seconds");
+  console.log("Starting scheduler...");
 
   // Start class reminder scheduler
   startReminderScheduler();
+  
+  // Start stock alert scheduler
+  startStockAlertScheduler();
 }
 
 /**
@@ -79,6 +69,51 @@ function startReminderScheduler() {
 }
 
 /**
+ * Start the stock alert scheduler
+ * Runs every 6 hours to check for low stock items
+ */
+function startStockAlertScheduler() {
+  if (stockAlertInterval) {
+    console.log("Stock alert scheduler already running");
+    return;
+  }
+
+  console.log("Starting stock alert scheduler...");
+
+  // Run stock alerts after a short delay on startup
+  setTimeout(() => {
+    console.log("[StockAlert] Initial stock check...");
+    checkLowStockItems()
+      .then(result => {
+        console.log(`[StockAlert] Initial check complete: ${result.checked} items checked, ${result.alertsCreated} alerts created, ${result.emailsSent} emails sent, ${result.smsSent} SMS sent`);
+        if (result.errors.length > 0) {
+          console.error("[StockAlert] Errors:", result.errors);
+        }
+      })
+      .catch(error => {
+        console.error("Error in initial stock alert processing:", error);
+      });
+  }, 15000); // 15 seconds after startup
+
+  // Run stock alerts every 6 hours
+  stockAlertInterval = setInterval(() => {
+    console.log("[StockAlert] Running scheduled stock check...");
+    checkLowStockItems()
+      .then(result => {
+        console.log(`[StockAlert] Check complete: ${result.checked} items checked, ${result.alertsCreated} alerts created, ${result.emailsSent} emails sent, ${result.smsSent} SMS sent`);
+        if (result.errors.length > 0) {
+          console.error("[StockAlert] Errors:", result.errors);
+        }
+      })
+      .catch(error => {
+        console.error("Error in stock alert processing:", error);
+      });
+  }, 6 * 60 * 60 * 1000); // 6 hours
+
+  console.log("Stock alert scheduler started - running every 6 hours");
+}
+
+/**
  * Stop the automation scheduler
  */
 export function stopScheduler() {
@@ -92,6 +127,11 @@ export function stopScheduler() {
     reminderInterval = null;
     console.log("Reminder scheduler stopped");
   }
+  if (stockAlertInterval) {
+    clearInterval(stockAlertInterval);
+    stockAlertInterval = null;
+    console.log("Stock alert scheduler stopped");
+  }
 }
 
 /**
@@ -101,8 +141,10 @@ export function getSchedulerStatus() {
   return {
     running: schedulerInterval !== null,
     reminderRunning: reminderInterval !== null,
+    stockAlertRunning: stockAlertInterval !== null,
     automationInterval: 60000, // milliseconds
     reminderInterval: 3600000, // milliseconds (1 hour)
+    stockAlertInterval: 21600000, // milliseconds (6 hours)
   };
 }
 
@@ -112,4 +154,12 @@ export function getSchedulerStatus() {
 export async function triggerReminderProcessing() {
   console.log("[Scheduler] Manual class reminder trigger...");
   return processClassReminders();
+}
+
+/**
+ * Manually trigger stock alert processing (for testing/admin)
+ */
+export async function triggerStockAlertProcessing() {
+  console.log("[StockAlert] Manual stock alert trigger...");
+  return checkLowStockItems();
 }

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, User, Users, Edit } from "lucide-react";
+import { Package, Plus, User, Users, Edit, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import BulkAssignDialog from "@/components/BulkAssignDialog";
 import { toast } from "sonner";
 import {
@@ -38,6 +39,7 @@ const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
 export default function MerchandiseManagement() {
   const utils = trpc.useUtils();
+  const navigate = useNavigate();
 
   // State for creating items
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -195,6 +197,10 @@ export default function MerchandiseManagement() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate("/operations/merchandise/alert-settings")}>
+            <Bell className="w-4 h-4 mr-2" />
+            Alert Settings
+          </Button>
           <Button variant="outline" onClick={() => setShowBulkAssignDialog(true)}>
             <Users className="w-4 h-4 mr-2" />
             Bulk Assign

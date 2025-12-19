@@ -3,6 +3,7 @@ import { trpc } from '@/lib/trpc'
 import BottomNavLayout from '@/components/BottomNavLayout';
 import RedVortexKai from '../components/RedVortexKai'
 import VoiceInput from '../components/VoiceInput'
+import { LowStockAlerts } from '../components/LowStockAlerts'
 import { getAvatarName } from '@/../../shared/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -1151,6 +1152,11 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Low Stock Alerts */}
+          <div className="mt-4">
+            <LowStockAlerts />
+          </div>
         </div>
 
         {/* Right Sidebar - History & Agenda */}

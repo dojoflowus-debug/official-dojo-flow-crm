@@ -82,6 +82,7 @@ import MerchandiseFulfillment from "./pages/MerchandiseFulfillment";
 import PrintFulfillmentSheet from "./pages/PrintFulfillmentSheet";
 import ConfirmReceipt from "./pages/ConfirmReceipt";
 import MerchandiseManagement from "./pages/MerchandiseManagement";
+import AlertSettings from "./pages/AlertSettings";
 import AISetup from "./pages/AISetup";
 // KioskSetup removed
 import Security from "./pages/Security";
@@ -154,6 +155,7 @@ function Router() {
       <Route path="/billing/applications" element={<BillingApplications />} />
       <Route path="/operations/merchandise" element={<MerchandiseFulfillment />} />
       <Route path="/operations/merchandise/manage" element={<MerchandiseManagement />} />
+      <Route path="/operations/merchandise/alert-settings" element={<AlertSettings />} />
       <Route path="/print-fulfillment-sheet" element={<PrintFulfillmentSheet />} />
       <Route path="/confirm-receipt/:token" element={<ConfirmReceipt />} />
       <Route path="/reports" element={<Reports />} />

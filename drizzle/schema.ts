@@ -2016,3 +2016,61 @@ export const studentMerchandise = mysqlTable("student_merchandise", {
 
 export type StudentMerchandise = typeof studentMerchandise.$inferSelect;
 export type InsertStudentMerchandise = typeof studentMerchandise.$inferInsert;
+
+/**
+ * Stock Alerts table - Tracks low stock alerts for merchandise items
+ */
+export const stockAlerts = mysqlTable("stock_alerts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to merchandise item */
+  itemId: int("itemId").notNull(),
+  /** Type of alert */
+  alertType: mysqlEnum("alertType", ["low_stock", "out_of_stock"]).default("low_stock").notNull(),
+  /** Stock quantity when alert was triggered */
+  quantityAtAlert: int("quantityAtAlert").notNull(),
+  /** Threshold that triggered the alert */
+  threshold: int("threshold").notNull(),
+  /** When the alert was last sent */
+  lastAlertSent: timestamp("lastAlertSent").defaultNow().notNull(),
+  /** Number of times this alert has been sent */
+  alertCount: int("alertCount").default(1).notNull(),
+  /** Whether the alert has been resolved (stock replenished) */
+  isResolved: int("isResolved").default(0).notNull(),
+  /** When the alert was resolved */
+  resolvedAt: timestamp("resolvedAt"),
+  /** Who resolved the alert */
+  resolvedBy: int("resolvedBy"),
+  /** Resolution notes */
+  resolutionNotes: text("resolutionNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StockAlert = typeof stockAlerts.$inferSelect;
+export type InsertStockAlert = typeof stockAlerts.$inferInsert;
+
+/**
+ * Alert Settings table - Configuration for stock alert notifications
+ */
+export const alertSettings = mysqlTable("alert_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Whether the alert system is enabled */
+  isEnabled: int("isEnabled").default(1).notNull(),
+  /** Whether to send email notifications */
+  notifyEmail: int("notifyEmail").default(1).notNull(),
+  /** Whether to send SMS notifications */
+  notifySMS: int("notifySMS").default(0).notNull(),
+  /** How often to check stock levels (in minutes) */
+  checkIntervalMinutes: int("checkIntervalMinutes").default(360).notNull(), // Default: 6 hours
+  /** Comma-separated list of email addresses to notify */
+  recipientEmails: text("recipientEmails"),
+  /** Comma-separated list of phone numbers to notify */
+  recipientPhones: text("recipientPhones"),
+  /** Minimum hours between repeat alerts for same item */
+  alertCooldownHours: int("alertCooldownHours").default(24).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AlertSettings = typeof alertSettings.$inferSelect;
+export type InsertAlertSettings = typeof alertSettings.$inferInsert;

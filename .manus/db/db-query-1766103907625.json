@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `stock_alerts` (\n  `id` INT AUTO_INCREMENT PRIMARY KEY,\n  `itemId` INT NOT NULL,\n  `alertType` ENUM('low_stock', 'out_of_stock') DEFAULT 'low_stock' NOT NULL,\n  `quantityAtAlert` INT NOT NULL,\n  `threshold` INT NOT NULL,\n  `lastAlertSent` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `alertCount` INT DEFAULT 1 NOT NULL,\n  `isResolved` INT DEFAULT 0 NOT NULL,\n  `resolvedAt` TIMESTAMP NULL,\n  `resolvedBy` INT NULL,\n  `resolutionNotes` TEXT NULL,\n  `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS `stock_alerts` (\n  `id` INT AUTO_INCREMENT PRIMARY KEY,\n  `itemId` INT NOT NULL,\n  `alertType` ENUM('low_stock', 'out_of_stock') DEFAULT 'low_stock' NOT NULL,\n  `quantityAtAlert` INT NOT NULL,\n  `threshold` INT NOT NULL,\n  `lastAlertSent` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `alertCount` INT DEFAULT 1 NOT NULL,\n  `isResolved` INT DEFAULT 0 NOT NULL,\n  `resolvedAt` TIMESTAMP NULL,\n  `resolvedBy` INT NULL,\n  `resolutionNotes` TEXT NULL,\n  `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 730
+}
