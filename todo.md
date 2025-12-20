@@ -5581,3 +5581,12 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 
 ### Checkpoint
 - [x] Save checkpoint with predictive reorder suggestions feature
+
+
+## 🐛 Bug Fix: Missing Menu Bar on Operations Page
+
+- [x] Investigate MerchandiseManagement page layout structure
+- [x] Check if DashboardLayout wrapper is missing
+- [x] Restore proper navigation wrapper (used SimpleLayout)
+- [x] Test navigation on operations page
+- [x] Save checkpoint with fix

@@ -10,6 +10,7 @@ import { Package, Plus, User, Users, Edit, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BulkAssignDialog from "@/components/BulkAssignDialog";
 import { ReorderSuggestions } from "@/components/ReorderSuggestions";
+import SimpleLayout from "@/components/SimpleLayout";
 import { toast } from "sonner";
 import {
   Select,
@@ -189,11 +190,12 @@ export default function MerchandiseManagement() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      {/* Reorder Suggestions Section */}
-      <ReorderSuggestions />
+    <SimpleLayout>
+      <div className="container mx-auto py-8 space-y-6">
+        {/* Reorder Suggestions Section */}
+        <ReorderSuggestions />
 
-      <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Merchandise Management</h1>
           <p className="text-muted-foreground mt-1">
@@ -412,10 +414,10 @@ export default function MerchandiseManagement() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
+        </div>
 
-      {/* Items List */}
-      <Card>
+        {/* Items List */}
+        <Card>
         <CardHeader>
           <CardTitle>Merchandise Items</CardTitle>
           <CardDescription>All available merchandise items in your inventory</CardDescription>
@@ -483,10 +485,10 @@ export default function MerchandiseManagement() {
             </Table>
           )}
         </CardContent>
-      </Card>
+        </Card>
 
-      {/* Stock Adjustment Dialog */}
-      <Dialog open={showStockDialog} onOpenChange={setShowStockDialog}>
+        {/* Stock Adjustment Dialog */}
+        <Dialog open={showStockDialog} onOpenChange={setShowStockDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Adjust Stock Quantity</DialogTitle>
@@ -572,9 +574,9 @@ export default function MerchandiseManagement() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+        </Dialog>
 
-      <BulkAssignDialog
+        <BulkAssignDialog
         open={showBulkAssignDialog}
         onOpenChange={setShowBulkAssignDialog}
         items={items || []}
@@ -582,7 +584,8 @@ export default function MerchandiseManagement() {
           utils.merchandise.getPendingFulfillments.invalidate();
           utils.merchandise.getStatistics.invalidate();
         }}
-      />
-    </div>
+        />
+      </div>
+    </SimpleLayout>
   );
 }
