@@ -2,8 +2,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
 
 // Default DojoFlow logos with proper contrast
-const DEFAULT_DARK_LOGO = "https://placehold.co/128x128/1F2937/FFFFFF?text=DojoFlow"; // Dark logo for light mode
-const DEFAULT_LIGHT_LOGO = "https://placehold.co/128x128/FFFFFF/1F2937?text=DojoFlow"; // Light logo for dark mode
+const DEFAULT_DARK_LOGO = "/logo-light.png"; // Dark text logo for light mode
+const DEFAULT_LIGHT_LOGO = "/logo-dark.png"; // Light text logo for dark mode
 
 /**
  * Hook to get the appropriate logo based on current theme

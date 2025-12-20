@@ -60,4 +60,13 @@
 - [x] Test logo contrast in dark mode
 - [x] Test logo on Kai Command page
 - [x] Test logo on all pages with header
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 597f4083)
+
+## Update Light Mode Logo with User-Provided Dark Text Version
+- [x] Copy Darkdojoflow.png to /client/public/logo-light.png
+- [x] Update useThemeAwareLogo hook to use local logo files
+- [x] Verify logo displays in light mode with dark text
+- [x] Verify logo switches correctly when toggling themes
+- [x] Test logo on Kai Command page
+- [x] Test logo on Students page
+- [ ] Save checkpoint with updated logo
