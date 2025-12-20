@@ -109,3 +109,43 @@
 - [x] Verify behavior in Focus Mode
 - [x] Verify behavior in standard Kai Command mode
 - [x] Save checkpoint
+
+## Kai Command Data Integration (Student/Lead Cards)
+
+### Backend API Tools
+- [x] Implement search_students procedure with location/permission filtering
+- [x] Implement get_student procedure with full card payload
+- [x] Implement list_at_risk_students procedure
+- [x] Implement list_late_payments procedure
+- [x] Implement search_leads procedure
+- [x] Implement get_lead procedure
+- [x] Add vitest tests for all API procedures
+
+### Structured UI Blocks
+- [x] Design UI block response format (student_card, student_list, lead_list, chip)
+- [x] Create student_card_payload shape matching existing Student Card UI
+- [x] Create lead_card_payload shape
+- [x] Implement UI block parser in frontend
+
+### Results Panel Component
+- [x] Create ResultsPanel component (right-side drawer)
+- [x] Add student card rendering in Results Panel
+- [x] Add student list rendering in Results Panel
+- [x] Add lead list rendering in Results Panel
+- [x] Add close/minimize functionality
+- [x] Ensure panel doesn't lose chat context when closed
+
+### Kai Message Rendering Integration
+- [x] Update message renderer to detect UI blocks
+- [x] Render clickable chips for student/lead references
+- [x] Wire chip clicks to open Results Panel
+- [x] Add summary text in chat with "View Details" action
+- [x] Ensure PII is limited in chat, full details only in panel
+
+### Testing & Polish
+- [x] Test "Show me who is late on payments" query (via vitest)
+- [x] Test "Find students at risk" query (via vitest)
+- [x] Test "Show me John Smith's card" query (via vitest)
+- [x] Test permission filtering (role-based access)
+- [x] Test location context filtering
+- [ ] Save checkpoint

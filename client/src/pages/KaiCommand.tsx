@@ -16,6 +16,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePreviewCard';
+import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
+import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
 import { 
   Search, 
   Plus, 
@@ -139,6 +141,9 @@ export default function KaiCommand() {
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
+  
+  // Results Panel state
+  const [resultsPanelData, setResultsPanelData] = useState<ResultsPanelData>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef(false);
@@ -196,7 +201,23 @@ export default function KaiCommand() {
     return links;
   };
 
-  const renderMessageWithMentions = (content: string) => {
+  const renderMessageWithMentions = (content: string, isKaiMessage: boolean = false) => {
+    // Parse Kai UI blocks if this is a Kai message
+    if (isKaiMessage) {
+      const parsed = parseKaiMessage(content);
+      if (parsed.blocks.length > 0) {
+        return renderParsedMessage(
+          parsed,
+          (studentId) => setResultsPanelData({ type: "student", studentId }),
+          (leadId) => setResultsPanelData({ type: "lead", leadId }),
+          (studentIds) => setResultsPanelData({ type: "student_list", studentIds }),
+          (leadIds) => setResultsPanelData({ type: "lead_list", leadIds }),
+          isDark,
+          isCinematic
+        );
+      }
+    }
+    
     // First check for xlsx/csv attachment links and render them as actionable cards
     const scheduleLinks = extractScheduleLinks(content);
     
@@ -2397,7 +2418,7 @@ export default function KaiCommand() {
                                 zIndex: 30
                               } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
                             >
-                              {renderMessageWithMentions(message.content)}
+                              {renderMessageWithMentions(message.content, true)}
                             </div>
                           </div>
                         </>
@@ -2739,6 +2760,12 @@ export default function KaiCommand() {
           </div>
         </button>
       </div>
+      
+      {/* Results Panel - Right Side Drawer */}
+      <ResultsPanel 
+        data={resultsPanelData} 
+        onClose={() => setResultsPanelData(null)} 
+      />
     </BottomNavLayout>
   );
 }

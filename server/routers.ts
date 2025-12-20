@@ -18,6 +18,7 @@ import { oneTimeFeesRouter } from "./oneTimeFeesRouter";
 import { discountsRouter } from "./discountsRouter";
 import { addOnsRouter } from "./addOnsRouter";
 import { merchandiseRouter } from "./merchandiseRouter";
+import { kaiDataRouter } from "./kaiDataRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -244,6 +245,7 @@ export const appRouter = router({
   discounts: discountsRouter,
   addOns: addOnsRouter,
   merchandise: merchandiseRouter,
+  kaiData: kaiDataRouter,
   webhook: webhookRouter,
   campaigns: campaignsRouter,
   automation: automationRouter,
