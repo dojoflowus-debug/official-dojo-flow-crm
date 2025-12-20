@@ -5621,4 +5621,9 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Integrate Manage Items content into second view
 - [x] Update routing to use single /operations route
 - [x] Test view switching and functionality (both directions work perfectly)
+- [x] Save checkpoint (version: 315567f5)
+
+## Operations Page - Bottom Navigation Fix
+- [x] Wrap Operations page with BottomNavLayout component
+- [x] Test that bottom menu appears on all operations views (verified: bottom nav visible on both Fulfillment and Manage Items)
 - [ ] Save checkpoint
