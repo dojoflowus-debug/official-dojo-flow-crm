@@ -5609,4 +5609,16 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Set Operations menu to expanded by default in SimpleLayout
 - [x] Wrap MerchandiseFulfillment page in SimpleLayout for consistent navigation
 - [x] Test navigation from menu to merchandise page (both Fulfillment and Manage Items links work)
-- [ ] Save checkpoint with fix
+- [x] Save checkpoint with fix
+
+
+## 🔧 Redesign Operations Pages - Remove Sidebar, Add Tabs
+
+- [x] Remove SimpleLayout wrapper from MerchandiseFulfillment page
+- [x] Remove SimpleLayout wrapper from MerchandiseManagement page
+- [x] Create unified Operations page with button-based view switching (Fulfillment, Manage Items)
+- [x] Integrate Fulfillment content into first view
+- [x] Integrate Manage Items content into second view
+- [x] Update routing to use single /operations route
+- [x] Test view switching and functionality (both directions work perfectly)
+- [ ] Save checkpoint
