@@ -1537,8 +1537,29 @@ export default function KaiCommand() {
       }
     }
 
-    // Only get Kai response if @Kai was mentioned
-    if (kaiMentioned) {
+    // Determine if this is a solo conversation (1 human + Kai)
+    // Get conversation data to check participant count
+    const currentConversation = conversationsQuery.data?.find(
+      c => c.id.toString() === selectedConversationId
+    );
+    
+    let isSoloConversation = true; // Default to solo for new conversations
+    if (currentConversation && currentConversation.participantIds) {
+      try {
+        const participantIds = JSON.parse(currentConversation.participantIds);
+        // Solo = 1 human participant (Kai is implicit)
+        isSoloConversation = participantIds.length === 1;
+      } catch (e) {
+        console.error('Failed to parse participantIds:', e);
+      }
+    }
+    
+    // Get Kai response if:
+    // 1. @Kai was mentioned explicitly, OR
+    // 2. This is a solo conversation (auto-respond)
+    const shouldKaiRespond = kaiMentioned || isSoloConversation;
+    
+    if (shouldKaiRespond) {
       try {
         const stats = statsQuery.data;
         const response = await kaiChatMutation.mutateAsync({
@@ -1585,11 +1606,11 @@ export default function KaiCommand() {
         setIsLoading(false);
       }
     } else {
-      // No @Kai mention - just show message was sent
+      // No Kai response in group conversation without @Kai mention
       setIsLoading(false);
       if (staffMentions.length === 0) {
-        // No mentions at all - show hint
-        toast.info('Tip: Use @Kai to get AI assistance or @Staff to message team members');
+        // No mentions at all in group conversation - show hint
+        toast.info('In group conversations, use @Kai to get AI assistance or @Staff to message team members');
       }
     }
   };

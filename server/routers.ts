@@ -1729,6 +1729,7 @@ export const appRouter = router({
         const [result] = await db.insert(kaiConversations).values({
           userId: ctx.user.id,
           title: input?.title || "New Conversation",
+          participantIds: JSON.stringify([ctx.user.id]),
         });
         
         return { id: result.insertId };

@@ -994,6 +994,8 @@ export const kaiConversations = mysqlTable("kai_conversations", {
   priority: mysqlEnum("priority", ["neutral", "attention", "urgent"]).default("neutral").notNull(),
   /** Last message timestamp */
   lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
+  /** JSON array of participant user IDs (for determining solo vs group conversations) */
+  participantIds: text("participantIds"),
   /** Soft delete timestamp - null means not deleted */
   deletedAt: timestamp("deletedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

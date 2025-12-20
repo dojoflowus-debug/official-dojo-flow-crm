@@ -96,4 +96,16 @@
 - [x] Test Cinematic mode on Kai Command page
 - [x] Test Cinematic mode on other pages (Students, Leads, Classes, etc.)
 - [x] Ensure theme selection persists after refresh and navigation
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+## Fix Kai Conversation Logic - Solo vs Group
+- [x] Investigate current Kai response logic in backend
+- [x] Check kai_conversations table schema for participant tracking
+- [x] Find where @kai mention requirement is enforced (line 1541 in KaiCommand.tsx)
+- [x] Implement participant counting logic (solo vs group)
+- [x] Update Kai response logic: auto-respond in solo, require @kai in group
+- [x] Test solo conversation (1 human + Kai) - Kai should respond automatically
+- [ ] Test group conversation (2+ humans + Kai) - Kai should require @kai mention
+- [x] Verify behavior in Focus Mode
+- [x] Verify behavior in standard Kai Command mode
+- [x] Save checkpoint
