@@ -1967,6 +1967,18 @@ export const merchandiseItems = mysqlTable("merchandise_items", {
   stockQuantity: int("stockQuantity"),
   /** Low stock alert threshold (null = no alerts) */
   lowStockThreshold: int("lowStockThreshold"),
+  /** Reorder point - when to reorder (calculated from velocity × lead time + safety stock) */
+  reorderPoint: int("reorderPoint"),
+  /** Suggested reorder quantity (calculated from usage patterns) */
+  reorderQuantity: int("reorderQuantity"),
+  /** Average daily usage rate (items per day) */
+  averageDailyUsage: varchar("averageDailyUsage", { length: 20 }),
+  /** When reorder analytics were last calculated */
+  lastCalculatedAt: timestamp("lastCalculatedAt"),
+  /** Lead time in days (time from order to delivery) */
+  leadTimeDays: int("leadTimeDays").default(7),
+  /** Safety stock multiplier (1.5 = 150% of expected usage during lead time) */
+  safetyStockMultiplier: varchar("safetyStockMultiplier", { length: 10 }).default("1.5"),
   /** Whether this item is currently available */
   isActive: int("isActive").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -2074,3 +2086,37 @@ export const alertSettings = mysqlTable("alert_settings", {
 
 export type AlertSettings = typeof alertSettings.$inferSelect;
 export type InsertAlertSettings = typeof alertSettings.$inferInsert;
+
+/**
+ * Stock Usage History table - Tracks all stock changes for analytics
+ * Used to calculate consumption velocity and predict reorder needs
+ */
+export const stockUsageHistory = mysqlTable("stock_usage_history", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to merchandise item */
+  itemId: int("itemId").notNull(),
+  /** Quantity change (positive for additions, negative for usage) */
+  quantityChange: int("quantityChange").notNull(),
+  /** Type of change */
+  changeType: mysqlEnum("changeType", [
+    "fulfillment",      // Item handed out to student
+    "bulk_assignment",  // Bulk assignment to multiple students
+    "adjustment",       // Manual stock adjustment
+    "received_shipment",// New inventory received
+    "inventory_count",  // Physical inventory count correction
+    "damage",           // Damaged/lost items
+    "return",           // Item returned
+    "other"             // Other changes
+  ]).notNull(),
+  /** Stock quantity after this change */
+  quantityAfter: int("quantityAfter").notNull(),
+  /** Optional notes about the change */
+  notes: text("notes"),
+  /** Who made the change (staff member ID) */
+  changedBy: int("changedBy"),
+  /** When the change occurred */
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type StockUsageHistory = typeof stockUsageHistory.$inferSelect;
+export type InsertStockUsageHistory = typeof stockUsageHistory.$inferInsert;

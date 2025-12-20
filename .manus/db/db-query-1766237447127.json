@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE merchandise_items \nADD COLUMN reorderPoint INT NULL,\nADD COLUMN reorderQuantity INT NULL,\nADD COLUMN averageDailyUsage VARCHAR(20) NULL,\nADD COLUMN lastCalculatedAt TIMESTAMP NULL,\nADD COLUMN leadTimeDays INT DEFAULT 7,\nADD COLUMN safetyStockMultiplier VARCHAR(10) DEFAULT '1.5'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE merchandise_items \nADD COLUMN reorderPoint INT NULL,\nADD COLUMN reorderQuantity INT NULL,\nADD COLUMN averageDailyUsage VARCHAR(20) NULL,\nADD COLUMN lastCalculatedAt TIMESTAMP NULL,\nADD COLUMN leadTimeDays INT DEFAULT 7,\nADD COLUMN safetyStockMultiplier VARCHAR(10) DEFAULT '1.5'",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1674
+}

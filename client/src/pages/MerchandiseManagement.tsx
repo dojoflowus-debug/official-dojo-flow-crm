@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Package, Plus, User, Users, Edit, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BulkAssignDialog from "@/components/BulkAssignDialog";
+import { ReorderSuggestions } from "@/components/ReorderSuggestions";
 import { toast } from "sonner";
 import {
   Select,
@@ -189,6 +190,9 @@ export default function MerchandiseManagement() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
+      {/* Reorder Suggestions Section */}
+      <ReorderSuggestions />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Merchandise Management</h1>

@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS stock_usage_history (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  itemId INT NOT NULL,\n  quantityChange INT NOT NULL,\n  changeType ENUM('fulfillment', 'bulk_assignment', 'adjustment', 'received_shipment', 'inventory_count', 'damage', 'return', 'other') NOT NULL,\n  quantityAfter INT NOT NULL,\n  notes TEXT,\n  changedBy INT,\n  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_itemId (itemId),\n  INDEX idx_timestamp (timestamp)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS stock_usage_history (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  itemId INT NOT NULL,\n  quantityChange INT NOT NULL,\n  changeType ENUM('fulfillment', 'bulk_assignment', 'adjustment', 'received_shipment', 'inventory_count', 'damage', 'return', 'other') NOT NULL,\n  quantityAfter INT NOT NULL,\n  notes TEXT,\n  changedBy INT,\n  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_itemId (itemId),\n  INDEX idx_timestamp (timestamp)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 163
+}

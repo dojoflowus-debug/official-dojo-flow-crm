@@ -5,6 +5,7 @@ import { getDb } from "./db";
 import { merchandiseItems, studentMerchandise, students, alertSettings } from "../drizzle/schema";
 import { getActiveAlerts, getAlertHistory, resolveAlert } from "./stockAlertEngine";
 import { triggerStockAlertProcessing } from "./services/scheduler";
+import { trackUsage, getReorderSuggestions, updateReorderAnalytics, recalculateAllReorderPoints, getUsageHistory, calculateConsumptionVelocity } from "./lib/reorder-analytics";
 import { eq, and, inArray } from "drizzle-orm";
 import { sendSMS } from "./_core/twilio";
 import { sendEmail } from "./_core/sendgrid";
@@ -455,15 +456,22 @@ export const merchandiseRouter = router({
         })
         .where(eq(merchandiseItems.id, input.itemId));
 
-      // TODO: Log stock adjustment to audit table (future enhancement)
-      // await db.insert(stockAdjustments).values({
-      //   itemId: input.itemId,
-      //   oldQuantity,
-      //   newQuantity: input.newQuantity,
-      //   difference,
-      //   reason: input.adjustmentReason,
-      //   notes: input.notes,
-      // });
+      // Track usage in history for analytics
+      const changeTypeMap: Record<string, "adjustment" | "received_shipment" | "inventory_count" | "damage" | "other"> = {
+        received_shipment: "received_shipment",
+        inventory_count: "inventory_count",
+        correction: "adjustment",
+        damage_loss: "damage",
+        other: "other",
+      };
+
+      await trackUsage({
+        itemId: input.itemId,
+        quantityChange: difference,
+        changeType: changeTypeMap[input.adjustmentReason || "other"],
+        quantityAfter: input.newQuantity,
+        notes: input.notes,
+      });
 
       return { 
         success: true, 
@@ -670,4 +678,96 @@ export const merchandiseRouter = router({
     const result = await triggerStockAlertProcessing();
     return result;
   }),
+
+  /**
+   * Get reorder suggestions (items below reorder point)
+   */
+  getReorderSuggestions: protectedProcedure.query(async () => {
+    const suggestions = await getReorderSuggestions();
+    return suggestions;
+  }),
+
+  /**
+   * Update reorder analytics for a specific item
+   */
+  updateReorderAnalytics: protectedProcedure
+    .input(z.object({
+      itemId: z.number().int(),
+    }))
+    .mutation(async ({ input }) => {
+      const result = await updateReorderAnalytics(input.itemId);
+      return result;
+    }),
+
+  /**
+   * Recalculate reorder points for all items
+   */
+  recalculateAllReorderPoints: protectedProcedure.mutation(async () => {
+    const results = await recalculateAllReorderPoints();
+    return { success: true, itemsUpdated: results.length, results };
+  }),
+
+  /**
+   * Get usage history for an item
+   */
+  getUsageHistory: protectedProcedure
+    .input(z.object({
+      itemId: z.number().int(),
+      days: z.number().int().min(1).max(365).optional(),
+    }))
+    .query(async ({ input }) => {
+      const history = await getUsageHistory(input.itemId, input.days);
+      return history;
+    }),
+
+  /**
+   * Get consumption velocity for an item
+   */
+  getConsumptionVelocity: protectedProcedure
+    .input(z.object({
+      itemId: z.number().int(),
+      days: z.number().int().optional(),
+    }))
+    .query(async ({ input }) => {
+      const velocity30 = await calculateConsumptionVelocity(input.itemId, 30);
+      const velocity60 = await calculateConsumptionVelocity(input.itemId, 60);
+      const velocity90 = await calculateConsumptionVelocity(input.itemId, 90);
+      return {
+        velocity30,
+        velocity60,
+        velocity90,
+      };
+    }),
+
+  /**
+   * Update reorder settings for an item (lead time, safety stock multiplier)
+   */
+  updateReorderSettings: protectedProcedure
+    .input(z.object({
+      itemId: z.number().int(),
+      leadTimeDays: z.number().int().min(1).max(90).optional(),
+      safetyStockMultiplier: z.number().min(1).max(5).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not initialized" });
+
+      const updateData: any = {};
+      if (input.leadTimeDays !== undefined) {
+        updateData.leadTimeDays = input.leadTimeDays;
+      }
+      if (input.safetyStockMultiplier !== undefined) {
+        updateData.safetyStockMultiplier = input.safetyStockMultiplier.toString();
+      }
+
+      await db
+        .update(merchandiseItems)
+        .set(updateData)
+        .where(eq(merchandiseItems.id, input.itemId));
+
+      // Recalculate reorder point with new settings
+      const result = await updateReorderAnalytics(input.itemId);
+
+      return { success: true, ...result };
+    }),
 });

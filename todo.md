@@ -5520,3 +5520,64 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 
 ### Checkpoint
 - [x] Save checkpoint with low stock alert system
+
+
+## 📊 Predictive Reorder Suggestions
+
+### Database Schema
+- [x] Create stock_usage_history table (id, itemId, quantityChange, changeType, timestamp, notes)
+- [x] Add reorderPoint and reorderQuantity columns to merchandise_items table
+- [x] Add averageDailyUsage and lastCalculatedAt columns to merchandise_items table
+- [x] Run database migration to create new tables and columns
+
+### Backend Analytics Engine
+- [x] Create reorderAnalytics.ts service file
+- [x] Implement trackUsage() function to log stock changes
+- [x] Implement calculateConsumptionVelocity() function (average daily usage over 30/60/90 days)
+- [x] Implement calculateReorderPoint() function (velocity × lead time + safety stock)
+- [x] Implement calculateReorderQuantity() function (optimal order quantity based on usage)
+- [x] Implement getReorderSuggestions() function (items below reorder point)
+- [x] Add updateReorderSettings API endpoint (set lead time, safety stock multiplier)
+- [x] Add getUsageHistory API endpoint (historical usage data for charts)
+- [x] Add getReorderSuggestions API endpoint (list items needing reorder)
+- [x] Add calculateAllReorderPoints API endpoint (bulk recalculation)
+
+### Usage Tracking Integration
+- [x] Hook into stock adjustment system to log usage history
+- [x] Track fulfillment events (items handed out to students)
+- [ ] Track bulk assignment events
+- [x] Differentiate between usage types (fulfillment, damage, correction, etc.)
+- [ ] Automatically trigger reorder point recalculation after stock changes
+
+### Predictive Algorithm
+- [x] Implement 30-day rolling average for consumption velocity
+- [x] Implement 60-day and 90-day averages for comparison
+- [ ] Add seasonal adjustment factors (optional)
+- [x] Calculate confidence scores based on data consistency
+- [x] Handle edge cases (new items, low usage items, high variability)
+- [x] Add configurable lead time (default 7 days)
+- [x] Add configurable safety stock multiplier (default 1.5x)
+
+### Frontend UI
+- [x] Create ReorderSuggestions component for Operations page
+- [x] Show list of items below reorder point
+- [x] Display consumption velocity (items/day)
+- [x] Display suggested reorder quantity
+- [x] Display days until stockout (estimated)
+- [ ] Add usage trend chart (30/60/90 day comparison)
+- [x] Add "Create Purchase Order" button for each suggestion (placeholder)
+- [x] Create ReorderSettings modal for configuring lead time and safety stock
+- [x] Add "Recalculate All" button to refresh reorder points
+- [x] Show confidence score indicator for each suggestion
+
+### Testing
+- [x] Create test items with usage history
+- [x] Simulate 30 days of usage data
+- [x] Verify consumption velocity calculations
+- [x] Verify reorder point calculations
+- [x] Test with different lead times and safety stock multipliers
+- [x] Test edge cases (no usage, sporadic usage, high variability)
+- [x] Write vitest tests for analytics engine (20 tests passed)
+
+### Checkpoint
+- [x] Save checkpoint with predictive reorder suggestions feature
