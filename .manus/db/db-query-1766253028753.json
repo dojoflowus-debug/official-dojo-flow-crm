@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, firstName, lastName, beltRank, program, status FROM students LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, beltRank, program, status FROM students LIMIT 5",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "beltRank": "Orange",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30001",
+      "firstName": "Marcus",
+      "lastName": "Johnson",
+      "beltRank": "Blue Belt",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30002",
+      "firstName": "Sophia",
+      "lastName": "Williams",
+      "beltRank": "Green Belt",
+      "program": "Kids Karate",
+      "status": "Active"
+    },
+    {
+      "id": "30003",
+      "firstName": "Ethan",
+      "lastName": "Brown",
+      "beltRank": "White Belt",
+      "program": "Little Dragons",
+      "status": "Active"
+    },
+    {
+      "id": "30004",
+      "firstName": "Olivia",
+      "lastName": "Davis",
+      "beltRank": "Orange Belt",
+      "program": "Kids Karate",
+      "status": "Active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tbeltRank\tprogram\tstatus\n1\tJohn\tSmith\tOrange\tKids Karate\tActive\n30001\tMarcus\tJohnson\tBlue Belt\tKids Karate\tActive\n30002\tSophia\tWilliams\tGreen Belt\tKids Karate\tActive\n30003\tEthan\tBrown\tWhite Belt\tLittle Dragons\tActive\n30004\tOlivia\tDavis\tOrange Belt\tKids Karate\tActive\n",
+  "stderr": "",
+  "execution_time_ms": 134
+}

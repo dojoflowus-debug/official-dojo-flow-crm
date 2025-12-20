@@ -132,7 +132,7 @@ function Router() {
       <Route path="/student-profile" element={<StudentProfile />} />
       <Route path="/student-settings" element={<StudentSettings />} />
       <Route path="/kai-dashboard" element={<KaiDashboard />} />
-      <Route path="/kai" element={<KaiDashboard />} />
+      <Route path="/kai" element={<KaiCommand />} />
       <Route path="/kai-command" element={<KaiCommand />} />
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
       <Route path="/dashboard" element={<ProtectedRoute><MinimalDashboard /></ProtectedRoute>} />

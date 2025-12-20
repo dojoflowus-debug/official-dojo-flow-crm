@@ -148,4 +148,35 @@
 - [x] Test "Show me John Smith's card" query (via vitest)
 - [x] Test permission filtering (role-based access)
 - [x] Test location context filtering
+- [x] Save checkpoint
+
+## 🐛 FIX: Kai Cannot Find Students or Pull Cards
+
+### Diagnosis
+- [x] Check if Kai's system prompt includes instructions for using kaiData API
+- [x] Verify kaiData router is registered in appRouter
+- [x] Test kaiData.searchStudents endpoint directly via tRPC
+- [x] Check if Kai has access to tool/function calling for data queries
+- [x] Verify students exist in database
+
+### Fix Implementation
+- [x] Update Kai system prompt with data query instructions
+- [x] Add tool definitions for student/lead search functions
+- [x] Configure LLM to use function calling for data queries
+- [x] Update formatFunctionResults to format responses with UI block markers
+
+### Verification
+- [x] Test "Show me all students" query - LLM responds conversationally, no function call
+- [x] Test "Find Emma" query - LLM starts response but doesn't complete/call function
+- [ ] Debug why LLM is not calling functions
+- [ ] Check server logs for function call errors
+- [ ] Test with tool_choice: 'required' to force function calls
+- [ ] Verify UI blocks render correctly
+- [ ] Verify Results Panel opens with student cards
 - [ ] Save checkpoint
+
+### Current Issue
+**LLM is not calling the search functions** - it's responding conversationally instead of using the tools we defined. Need to investigate:
+1. Are function calls being attempted but failing?
+2. Is the system prompt clear enough about when to use tools?
+3. Should we use `tool_choice: 'required'` instead of `'auto'`?

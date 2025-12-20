@@ -70,6 +70,96 @@ const crmTools = [
       },
     },
   },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'search_students',
+      description: 'Search for students by name, email, or phone number. Returns a list of matching students with their IDs.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'Search query (name, email, or phone)',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_student',
+      description: 'Get full details for a specific student by ID',
+      parameters: {
+        type: 'object',
+        properties: {
+          studentId: {
+            type: 'number',
+            description: 'Student ID',
+          },
+        },
+        required: ['studentId'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'list_at_risk_students',
+      description: 'Find students who are inactive or on hold. Returns a list of at-risk students.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'list_late_payments',
+      description: 'Find students with overdue payments. Returns a list of students with late payments.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'search_leads',
+      description: 'Search for leads by name, email, or phone number. Returns a list of matching leads with their IDs.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'Search query (name, email, or phone)',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_lead',
+      description: 'Get full details for a specific lead by ID',
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: {
+            type: 'number',
+            description: 'Lead ID',
+          },
+        },
+        required: ['leadId'],
+      },
+    },
+  },
 ];
 
 export interface KaiConversationMessage {
@@ -100,11 +190,39 @@ export async function chatWithKai(
 - Class schedules and attendance patterns
 - Revenue insights and financial health
 - Lead nurturing and conversion strategies
+- Search and retrieve detailed student/lead information
+
+**Data Query Tools Available:**
+You have access to these functions for querying data:
+- search_students: Search for students by name, email, or phone
+- get_student: Get full details for a specific student by ID
+- list_at_risk_students: Find students who are inactive or on hold
+- list_late_payments: Find students with overdue payments
+- search_leads: Search for leads by name, email, or phone
+- get_lead: Get full details for a specific lead by ID
+
+**UI Block Format for Data Display:**
+When you retrieve student or lead data, you MUST format your response using these special markers:
+
+1. For a single student: [STUDENT:123:John Smith]
+   Example: "I found [STUDENT:42:Sarah Johnson]. She's a blue belt in the Kids program."
+
+2. For multiple students: [STUDENT_LIST:1,2,3:3 students found]
+   Example: "Here are the students at risk: [STUDENT_LIST:15,23,47:3 students at risk]"
+
+3. For a single lead: [LEAD:456:Jane Doe]
+   Example: "I found [LEAD:89:Mike Chen]. He inquired about adult classes last week."
+
+4. For multiple leads: [LEAD_LIST:4,5,6:3 new leads]
+   Example: "You have [LEAD_LIST:12,15,18:3 new leads] from this week."
+
+**IMPORTANT:** Always use these markers when displaying student/lead data. The UI will render them as interactive cards.
 
 **Response Guidelines:**
 - Keep responses concise but warm (2-4 sentences typically)
 - Always format numbers clearly ("$1,234" for money, "42 students")
 - When sharing data, add brief context or insight
+- Use UI block markers for all student/lead references
 - Be encouraging and positive
 
 Remember: You're not just a tool - you're a trusted companion in building a thriving business.`;

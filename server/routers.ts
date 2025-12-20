@@ -61,6 +61,135 @@ async function executeCRMFunction(name: string, args: any) {
       const leadStats = await getDashboardStats();
       return { count: leadStats?.total_leads || 0, status: args.status || 'all' };
     
+    case 'search_students':
+      const searchedStudents = await searchStudents(args.query);
+      return {
+        students: searchedStudents.map(s => ({
+          id: s.id,
+          name: `${s.firstName} ${s.lastName}`,
+          beltRank: s.beltRank,
+          program: s.program,
+          status: s.status
+        }))
+      };
+    
+    case 'get_student':
+      const { getDb: getDbForStudent } = await import("./db");
+      const { students: studentsTable } = await import("../drizzle/schema");
+      const { eq: eqStudent } = await import("drizzle-orm");
+      
+      const dbStudent = await getDbForStudent();
+      if (!dbStudent) return { error: 'Database not available' };
+      
+      const studentResult = await dbStudent.select().from(studentsTable)
+        .where(eqStudent(studentsTable.id, args.studentId))
+        .limit(1);
+      
+      if (studentResult.length > 0) {
+        const s = studentResult[0];
+        return {
+          id: s.id,
+          name: `${s.firstName} ${s.lastName}`,
+          email: s.email,
+          phone: s.phone,
+          beltRank: s.beltRank,
+          program: s.program,
+          status: s.status,
+          membershipStatus: s.membershipStatus,
+          guardianName: s.guardianName,
+          guardianPhone: s.guardianPhone
+        };
+      }
+      return { error: 'Student not found' };
+    
+    case 'list_at_risk_students':
+      const { getDb: getDbForAtRisk } = await import("./db");
+      const { students: studentsAtRisk } = await import("../drizzle/schema");
+      const { or: orAtRisk, eq: eqAtRisk } = await import("drizzle-orm");
+      
+      const dbAtRisk = await getDbForAtRisk();
+      if (!dbAtRisk) return { error: 'Database not available' };
+      
+      const atRiskStudents = await dbAtRisk.select().from(studentsAtRisk)
+        .where(
+          orAtRisk(
+            eqAtRisk(studentsAtRisk.status, 'inactive'),
+            eqAtRisk(studentsAtRisk.status, 'on_hold')
+          )
+        )
+        .limit(50);
+      
+      return {
+        students: atRiskStudents.map(s => ({
+          id: s.id,
+          name: `${s.firstName} ${s.lastName}`,
+          status: s.status,
+          beltRank: s.beltRank,
+          program: s.program
+        }))
+      };
+    
+    case 'list_late_payments':
+      // For now, return empty list - payment tracking to be implemented
+      return { students: [] };
+    
+    case 'search_leads':
+      const { getDb: getDbForLeads } = await import("./db");
+      const { leads: leadsTable } = await import("../drizzle/schema");
+      const { like: likeLeads, or: orLeads } = await import("drizzle-orm");
+      
+      const dbLeads = await getDbForLeads();
+      if (!dbLeads) return { error: 'Database not available' };
+      
+      const searchedLeads = await dbLeads.select().from(leadsTable)
+        .where(
+          orLeads(
+            likeLeads(leadsTable.firstName, `%${args.query}%`),
+            likeLeads(leadsTable.lastName, `%${args.query}%`),
+            likeLeads(leadsTable.email, `%${args.query}%`),
+            likeLeads(leadsTable.phone, `%${args.query}%`)
+          )
+        )
+        .limit(20);
+      
+      return {
+        leads: searchedLeads.map(l => ({
+          id: l.id,
+          name: `${l.firstName} ${l.lastName}`,
+          email: l.email,
+          phone: l.phone,
+          status: l.status,
+          source: l.source
+        }))
+      };
+    
+    case 'get_lead':
+      const { getDb: getDbForLead } = await import("./db");
+      const { leads: leadsTableSingle } = await import("../drizzle/schema");
+      const { eq: eqLead } = await import("drizzle-orm");
+      
+      const dbLead = await getDbForLead();
+      if (!dbLead) return { error: 'Database not available' };
+      
+      const leadResult = await dbLead.select().from(leadsTableSingle)
+        .where(eqLead(leadsTableSingle.id, args.leadId))
+        .limit(1);
+      
+      if (leadResult.length > 0) {
+        const l = leadResult[0];
+        return {
+          id: l.id,
+          name: `${l.firstName} ${l.lastName}`,
+          email: l.email,
+          phone: l.phone,
+          status: l.status,
+          source: l.source,
+          message: l.message,
+          notes: l.notes
+        };
+      }
+      return { error: 'Lead not found' };
+    
     case 'find_lead':
       const { getDb } = await import("./db");
       const { leads } = await import("../drizzle/schema");
@@ -126,6 +255,39 @@ function formatFunctionResults(results: any[]): string {
   
   if (result.error) {
     return `I couldn't find that information: ${result.error}`;
+  }
+  
+  // Handle search_students results
+  if (result.students && Array.isArray(result.students)) {
+    if (result.students.length === 0) {
+      return "I couldn't find any students matching that search.";
+    }
+    if (result.students.length === 1) {
+      const s = result.students[0];
+      return `I found [STUDENT:${s.id}:${s.name}]. They're a ${s.beltRank} in the ${s.program} program.`;
+    }
+    const ids = result.students.map((s: any) => s.id).join(',');
+    const count = result.students.length;
+    return `I found [STUDENT_LIST:${ids}:${count} students]. Click to view their details.`;
+  }
+  
+  // Handle get_student result
+  if (result.id && result.name && result.beltRank) {
+    return `Here's [STUDENT:${result.id}:${result.name}]. They're a ${result.beltRank} in the ${result.program} program.`;
+  }
+  
+  // Handle search_leads results
+  if (result.leads && Array.isArray(result.leads)) {
+    if (result.leads.length === 0) {
+      return "I couldn't find any leads matching that search.";
+    }
+    if (result.leads.length === 1) {
+      const l = result.leads[0];
+      return `I found [LEAD:${l.id}:${l.name}]. Status: ${l.status}.`;
+    }
+    const ids = result.leads.map((l: any) => l.id).join(',');
+    const count = result.leads.length;
+    return `I found [LEAD_LIST:${ids}:${count} leads]. Click to view their details.`;
   }
   
   if (result.type === 'student_lookup') {
