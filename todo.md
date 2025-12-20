@@ -47,4 +47,17 @@
 - [x] Upload images to S3 storage
 - [x] Update merchandise items with real product photos
 - [x] Verify images display correctly in card view
+- [x] Save checkpoint (version: 91d13afb)
+
+## Theme-Aware Logo Rendering
+- [x] Update dojo_settings schema to support logo_dark_url and logo_light_url
+- [x] Push database schema changes
+- [x] Find and update logo component to be theme-aware
+- [x] Implement logo switching logic (light mode → dark logo, dark mode → light logo)
+- [x] Add fallback to DojoFlow default logos when custom logos missing
+- [x] Ensure logo updates immediately on theme toggle
+- [x] Test logo contrast in light mode
+- [x] Test logo contrast in dark mode
+- [x] Test logo on Kai Command page
+- [x] Test logo on all pages with header
 - [ ] Save checkpoint

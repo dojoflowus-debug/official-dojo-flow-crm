@@ -20,7 +20,7 @@ import {
   Monitor,
   Package
 } from 'lucide-react'
-import { APP_LOGO } from '@/const'
+import { useThemeAwareLogo } from '@/hooks/useThemeAwareLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useFocusMode } from '@/contexts/FocusModeContext'
@@ -88,6 +88,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   const { theme } = useTheme()
   const { isFocusMode, isAnimating, showOverlay, toggleFocusMode } = useFocusMode()
   const { currentEnvironment, isTransitioning, openModal, isPresentationMode, presentationProgress } = useEnvironment()
+  const logo = useThemeAwareLogo()
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
@@ -276,7 +277,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-2">
                 <img 
-                  src={isDark || isCinematic ? '/logo-dark.png' : '/logo-light.png'} 
+                  src={logo} 
                   alt="DojoFlow" 
                   className="h-9 object-contain opacity-95"
                 />

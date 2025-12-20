@@ -243,6 +243,9 @@ export const dojoSettings = mysqlTable("dojo_settings", {
   secondaryColor: varchar("secondaryColor", { length: 20 }),
   logoSquare: varchar("logoSquare", { length: 500 }),
   logoHorizontal: varchar("logoHorizontal", { length: 500 }),
+  // Theme-aware logos
+  logoDarkUrl: varchar("logoDarkUrl", { length: 500 }), // For light mode (dark logo on light bg)
+  logoLightUrl: varchar("logoLightUrl", { length: 500 }), // For dark mode (light logo on dark bg)
   
   // Step 5: Money, Targets & Constraints
   monthlyRent: int("monthlyRent"),
