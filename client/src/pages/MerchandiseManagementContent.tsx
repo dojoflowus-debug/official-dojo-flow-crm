@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, User, Users, Edit, Bell } from "lucide-react";
+import { Package, Plus, User, Users, Edit, Bell, LayoutGrid, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BulkAssignDialog from "@/components/BulkAssignDialog";
 import { ReorderSuggestions } from "@/components/ReorderSuggestions";
@@ -68,6 +68,9 @@ export default function MerchandiseManagementContent() {
 
   // State for stock adjustment
   const [showStockDialog, setShowStockDialog] = useState(false);
+  
+  // State for view mode (list or card)
+  const [viewMode, setViewMode] = useState<"list" | "card">("list");
   const [stockAdjustment, setStockAdjustment] = useState({
     itemId: 0,
     itemName: "",
@@ -202,6 +205,24 @@ export default function MerchandiseManagementContent() {
           </p>
         </div>
         <div className="flex gap-2">
+          <div className="flex gap-1 border rounded-md">
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-r-none"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === "card" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("card")}
+              className="rounded-l-none"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+          </div>
           <Button variant="outline" onClick={() => navigate("/operations/merchandise/alert-settings")}>
             <Bell className="w-4 h-4 mr-2" />
             Alert Settings
@@ -428,7 +449,7 @@ export default function MerchandiseManagementContent() {
             <div className="text-center py-8 text-muted-foreground">
               No items yet. Create your first merchandise item to get started.
             </div>
-          ) : (
+          ) : viewMode === "list" ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -482,6 +503,72 @@ export default function MerchandiseManagementContent() {
                 ))}
               </TableBody>
             </Table>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {items.map((item) => (
+                <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-square relative bg-muted">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-16 h-16 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary">{item.type}</Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Price:</span>
+                        <span className="font-medium">${(item.defaultPrice / 100).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Stock:</span>
+                        {item.stockQuantity !== null && item.stockQuantity !== undefined ? (
+                          <div className="flex items-center gap-2">
+                            <span className={item.stockQuantity === 0 ? "text-red-600 font-semibold" : item.lowStockThreshold !== null && item.stockQuantity <= item.lowStockThreshold ? "text-orange-600 font-semibold" : "font-medium"}>
+                              {item.stockQuantity}
+                            </span>
+                            {item.stockQuantity === 0 && <Badge variant="destructive" className="text-xs">Out</Badge>}
+                            {item.lowStockThreshold !== null && item.stockQuantity > 0 && item.stockQuantity <= item.lowStockThreshold && <Badge variant="outline" className="text-xs text-orange-600 border-orange-600">Low</Badge>}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Unlimited</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Size:</span>
+                        <span className="font-medium">{item.requiresSize ? "Required" : "N/A"}</span>
+                      </div>
+                      {item.description && (
+                        <p className="text-muted-foreground text-xs mt-2 line-clamp-2">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                    {item.stockQuantity !== null && item.stockQuantity !== undefined && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-3"
+                        onClick={() => openStockDialog(item)}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Adjust Stock
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
         </Card>

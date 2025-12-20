@@ -1963,6 +1963,8 @@ export const merchandiseItems = mysqlTable("merchandise_items", {
   sizeOptions: text("sizeOptions"),
   /** Item description */
   description: text("description"),
+  /** Product image URL */
+  imageUrl: varchar("imageUrl", { length: 500 }),
   /** Current stock quantity (null = unlimited/not tracked) */
   stockQuantity: int("stockQuantity"),
   /** Low stock alert threshold (null = no alerts) */

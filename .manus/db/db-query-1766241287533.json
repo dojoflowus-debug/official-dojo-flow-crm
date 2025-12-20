@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE merchandise_items SET imageUrl = CASE \n  WHEN type = 'uniform' THEN 'https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop'\n  WHEN type = 'belt' THEN 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop'\n  WHEN type = 'gear' THEN 'https://images.unsplash.com/photo-1517438322307-e67111335449?w=400&h=400&fit=crop'\n  ELSE 'https://images.unsplash.com/photo-1517438322307-e67111335449?w=400&h=400&fit=crop'\nEND\nWHERE imageUrl IS NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute UPDATE merchandise_items SET imageUrl = CASE \n  WHEN type = 'uniform' THEN 'https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop'\n  WHEN type = 'belt' THEN 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop'\n  WHEN type = 'gear' THEN 'https://images.unsplash.com/photo-1517438322307-e67111335449?w=400&h=400&fit=crop'\n  ELSE 'https://images.unsplash.com/photo-1517438322307-e67111335449?w=400&h=400&fit=crop'\nEND\nWHERE imageUrl IS NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 65
+}
