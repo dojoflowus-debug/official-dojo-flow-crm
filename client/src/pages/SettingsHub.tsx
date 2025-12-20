@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
+import BottomNavLayout from '@/components/BottomNavLayout'
 import {
   Settings,
   Palette,
@@ -186,6 +187,7 @@ export default function SettingsHub() {
   const hasResults = allFilteredCards.length > 0
 
   return (
+    <BottomNavLayout>
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
@@ -440,5 +442,6 @@ export default function SettingsHub() {
         </Card>
       </div>
     </div>
+    </BottomNavLayout>
   )
 }

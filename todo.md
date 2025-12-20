@@ -69,4 +69,26 @@
 - [x] Verify logo switches correctly when toggling themes
 - [x] Test logo on Kai Command page
 - [x] Test logo on Students page
-- [ ] Save checkpoint with updated logo
+- [x] Save checkpoint with updated logo
+
+## Fix Logo Display Issue in Light Mode
+- [x] Investigate why logo shows only red swirl icon instead of full DojoFlow logo
+- [x] Check which component is rendering the logo in BottomNavLayout
+- [x] Verify logo file path and image source
+- [x] Logo works correctly in dev environment
+- [ ] Investigate why logo not reflecting on published site after publish
+- [ ] Check if logo file is being deployed correctly
+- [ ] Implement cache-busting solution if needed
+- [ ] Verify logo displays on published site
+- [ ] Save checkpoint with fix
+
+## Add Bottom Navigation to Reports Page
+- [x] Check current Reports page layout
+- [x] Reports page already has BottomNavLayout
+- [x] Bottom navigation working on Reports page
+
+## Add Bottom Navigation to Settings Page
+- [x] Check Settings page layout
+- [x] Add BottomNavLayout wrapper to Settings page
+- [x] Test navigation on Settings page
+- [ ] Save checkpoint
