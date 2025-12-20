@@ -12,24 +12,6 @@
 - [x] Test both views display correctly
 - [x] Save checkpoint (version: 9b8c7b2a)
 
-## Merchandise Visual Photos & View Toggle
-- [x] Add imageUrl field to merchandise_items table schema
-- [x] Extract product images from Century Martial Arts website  
-- [x] Update existing merchandise items with product photos (placeholder images added)
-- [x] Create card view component with product images
-- [x] Add list/card view toggle button in Manage Items header
-- [x] Implement view state management (list vs card)
-- [x] Test both views display correctly
-- [x] Save checkpoint (version: 9b8c7b2a)
-
-## Image Upload Feature for Create Item Dialog
-- [ ] Add image upload UI component to Create Item dialog
-- [ ] Implement file selection and preview
-- [ ] Add S3 upload functionality for merchandise images
-- [ ] Update createItem mutation to accept imageUrl
-- [ ] Test image upload with real files
-- [ ] Save checkpoint
-
 ## Image Upload Feature for Create Item Dialog
 - [x] Add image upload UI component to Create Item dialog
 - [x] Implement file selection and preview
@@ -91,4 +73,9 @@
 - [x] Check Settings page layout
 - [x] Add BottomNavLayout wrapper to Settings page
 - [x] Test navigation on Settings page
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+## Add /settings Route Alias
+- [x] Add redirect route from /settings to /setup in App.tsx
+- [x] Test both /settings and /setup URLs work
+- [x] Save checkpoint

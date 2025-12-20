@@ -179,6 +179,7 @@ function Router() {
       <Route path="/conversations" element={<Conversations />} />
       <Route path="/setup-wizard" element={<ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>} />
       <Route path="/setup" element={<SettingsHub />} />
+      <Route path="/settings" element={<SettingsHub />} />
       <Route path="/ai-setup" element={<AISetup />} />
       {/* KioskSetup removed */}
       <Route path="/security" element={<Security />} />
