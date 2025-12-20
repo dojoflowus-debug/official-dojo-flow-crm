@@ -47,7 +47,7 @@ const NAVIGATION = [
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'billing', name: 'Billing', href: '/billing', icon: CreditCard },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
-  { id: 'settings', name: 'Settings', href: '/setup', icon: Settings },
+  { id: 'settings', name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 // Page titles mapping
@@ -70,7 +70,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/billing': 'Billing',
   '/reports': 'Reports',
   '/marketing': 'Marketing',
-  '/setup': 'Settings',
+  '/settings': 'Settings',
   '/': 'Kai Command',
 }
 
@@ -516,7 +516,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
         <button
           onClick={toggleFocusMode}
           className={`
-            absolute right-4 top-1/2 -translate-y-1/2
+            absolute left-4 top-1/2 -translate-y-1/2
             flex items-center justify-center
             w-10 h-10 rounded-full
             transition-all duration-300

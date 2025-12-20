@@ -79,3 +79,10 @@
 - [x] Add redirect route from /settings to /setup in App.tsx
 - [x] Test both /settings and /setup URLs work
 - [x] Save checkpoint
+
+## Update Bottom Navigation Settings Link
+- [x] Find Settings link in BottomNavLayout component
+- [x] Change route from /setup to /settings
+- [x] Fix Focus Mode button overlap with Settings button
+- [x] Test Settings navigation from bottom menu
+- [x] Save checkpoint
