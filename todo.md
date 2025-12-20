@@ -86,3 +86,14 @@
 - [x] Fix Focus Mode button overlap with Settings button
 - [x] Test Settings navigation from bottom menu
 - [x] Save checkpoint
+
+## Restore Cinematic Mode to Kai Command
+- [x] Investigate why Cinematic mode disappeared from theme toggle
+- [x] Check for route-specific theme restrictions in BottomNavLayout
+- [x] Check ThemeContext and ThemeProvider implementation
+- [x] Restore Cinematic option to theme toggle on all pages
+- [x] Verify theme persistence in localStorage
+- [x] Test Cinematic mode on Kai Command page
+- [x] Test Cinematic mode on other pages (Students, Leads, Classes, etc.)
+- [x] Ensure theme selection persists after refresh and navigation
+- [ ] Save checkpoint

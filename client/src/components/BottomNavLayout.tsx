@@ -318,7 +318,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
 
               {/* Theme Toggle */}
               <div className="hidden md:block">
-                <ThemeToggle showCinematic={location.pathname === '/' || location.pathname === '/kai'} />
+                <ThemeToggle showCinematic={true} />
               </div>
 
               {/* Environment Selector (only in Cinematic mode) */}
