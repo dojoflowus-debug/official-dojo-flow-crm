@@ -31,6 +31,7 @@ export const merchandiseRouter = router({
       requiresSize: merchandiseItems.requiresSize,
       sizeOptions: merchandiseItems.sizeOptions,
       description: merchandiseItems.description,
+      imageUrl: merchandiseItems.imageUrl,
       stockQuantity: merchandiseItems.stockQuantity,
       lowStockThreshold: merchandiseItems.lowStockThreshold,
       isActive: merchandiseItems.isActive,

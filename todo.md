@@ -38,4 +38,13 @@
 - [x] Install multer dependency for file uploads
 - [x] Create upload router with S3 integration
 - [x] Test Create Item dialog displays image upload UI
+- [x] Save checkpoint (version: e87f3c20)
+
+## Extract Real Product Images from Century Martial Arts
+- [x] Browse Century Martial Arts uniform catalog
+- [x] Extract product image URLs
+- [x] Download high-quality product images
+- [x] Upload images to S3 storage
+- [x] Update merchandise items with real product photos
+- [x] Verify images display correctly in card view
 - [ ] Save checkpoint
