@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, User, Users, Edit, Bell, LayoutGrid, List } from "lucide-react";
+import { Package, Plus, User, Users, Edit, Bell, LayoutGrid, List, Upload, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BulkAssignDialog from "@/components/BulkAssignDialog";
 import { ReorderSuggestions } from "@/components/ReorderSuggestions";
@@ -53,7 +53,11 @@ export default function MerchandiseManagementContent() {
     description: "",
     stockQuantity: undefined as number | undefined,
     lowStockThreshold: undefined as number | undefined,
+    imageUrl: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
   // State for attaching items to students
   const [showAttachDialog, setShowAttachDialog] = useState(false);
@@ -98,7 +102,10 @@ export default function MerchandiseManagementContent() {
         description: "",
         stockQuantity: undefined,
         lowStockThreshold: undefined,
+        imageUrl: "",
       });
+      setImageFile(null);
+      setImagePreview("");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -137,7 +144,44 @@ export default function MerchandiseManagementContent() {
     },
   });
 
-  const handleCreateItem = () => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreateItem = async () => {
+    let imageUrl = newItem.imageUrl;
+    
+    // Upload image if file is selected
+    if (imageFile) {
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        
+        const response = await fetch('/api/upload-merchandise-image', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) throw new Error('Failed to upload image');
+        const data = await response.json();
+        imageUrl = data.url;
+      } catch (error) {
+        toast.error('Failed to upload image');
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+    
     createItem.mutate({
       name: newItem.name,
       type: newItem.type,
@@ -147,6 +191,7 @@ export default function MerchandiseManagementContent() {
       description: newItem.description,
       stockQuantity: newItem.stockQuantity,
       lowStockThreshold: newItem.lowStockThreshold,
+      imageUrl: imageUrl || undefined,
     });
   };
 
@@ -293,6 +338,49 @@ export default function MerchandiseManagementContent() {
                   <Label htmlFor="requiresSize">Requires Size Selection</Label>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="image">Product Image (Optional)</Label>
+                  {imagePreview ? (
+                    <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => {
+                          setImageFile(null);
+                          setImagePreview("");
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+                      <Label
+                        htmlFor="image"
+                        className="flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="text-center">
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">Click to upload image</p>
+                          <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
+                        </div>
+                      </Label>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="description">Description (Optional)</Label>
                   <Textarea
                     id="description"
@@ -329,8 +417,8 @@ export default function MerchandiseManagementContent() {
                 <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateItem} disabled={!newItem.name || createItem.isPending}>
-                  {createItem.isPending ? "Creating..." : "Create Item"}
+                <Button onClick={handleCreateItem} disabled={!newItem.name || createItem.isPending || isUploading}>
+                  {isUploading ? "Uploading..." : createItem.isPending ? "Creating..." : "Create Item"}
                 </Button>
               </DialogFooter>
             </DialogContent>

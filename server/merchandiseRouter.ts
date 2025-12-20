@@ -57,6 +57,7 @@ export const merchandiseRouter = router({
       description: z.string().optional(),
       stockQuantity: z.number().int().min(0).optional(),
       lowStockThreshold: z.number().int().min(0).optional(),
+      imageUrl: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -69,6 +70,7 @@ export const merchandiseRouter = router({
         requiresSize: input.requiresSize ? 1 : 0,
         sizeOptions: input.sizeOptions ? JSON.stringify(input.sizeOptions) : null,
         description: input.description,
+        imageUrl: input.imageUrl ?? null,
         stockQuantity: input.stockQuantity ?? null,
         lowStockThreshold: input.lowStockThreshold ?? null,
         isActive: 1,

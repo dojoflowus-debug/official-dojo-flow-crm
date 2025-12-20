@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import session from "express-session";
 import passport from "./auth/passport";
 import socialAuthRouter from "./auth/socialAuthRouter";
+import uploadRouter from "./uploadRouter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +38,9 @@ async function startServer() {
 
   // Mount social auth routes
   app.use("/api/auth", socialAuthRouter);
+  
+  // Mount upload routes
+  app.use("/api", uploadRouter);
 
   // Serve static files from dist/public in production
   const staticPath =
