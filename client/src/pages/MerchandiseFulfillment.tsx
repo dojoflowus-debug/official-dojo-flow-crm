@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import SimpleLayout from "@/components/SimpleLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -92,7 +93,8 @@ export default function MerchandiseFulfillment() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <SimpleLayout>
+      <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Merchandise Fulfillment</h1>
@@ -264,5 +266,6 @@ export default function MerchandiseFulfillment() {
         </DialogContent>
       </Dialog>
     </div>
+    </SimpleLayout>
   );
 }

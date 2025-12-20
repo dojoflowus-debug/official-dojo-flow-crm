@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, name, type, defaultPrice, stockQuantity, lowStockThreshold FROM merchandise_items LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, type, defaultPrice, stockQuantity, lowStockThreshold FROM merchandise_items LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Test White Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "2",
+      "name": "Test Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "3",
+      "name": "Test White Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "4",
+      "name": "Test Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "5",
+      "name": "White Karate Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "6",
+      "name": "Black Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "7",
+      "name": "Trial Uniform",
+      "type": "uniform",
+      "defaultPrice": "0",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "8",
+      "name": "Bulk Test Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "9",
+      "name": "Bulk Test Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    },
+    {
+      "id": "10",
+      "name": "Bulk Test Gear",
+      "type": "gear",
+      "defaultPrice": "2500",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttype\tdefaultPrice\tstockQuantity\tlowStockThreshold\n1\tTest White Uniform\tuniform\t5000\tNULL\tNULL\n2\tTest Belt\tbelt\t1500\tNULL\tNULL\n3\tTest White Uniform\tuniform\t5000\tNULL\tNULL\n4\tTest Belt\tbelt\t1500\tNULL\tNULL\n5\tWhite Karate Uniform\tuniform\t5000\tNULL\tNULL\n6\tBlack Belt\tbelt\t1500\tNULL\tNULL\n7\tTrial Uniform\tuniform\t0\tNULL\tNULL\n8\tBulk Test Uniform\tuniform\t5000\tNULL\tNULL\n9\tBulk Test Belt\tbelt\t1500\tNULL\tNULL\n10\tBulk Test Gear\tgear\t2500\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 241
+}

@@ -5590,3 +5590,23 @@ Create a comprehensive Settings hub page that serves as a central dashboard for 
 - [x] Restore proper navigation wrapper (used SimpleLayout)
 - [x] Test navigation on operations page
 - [x] Save checkpoint with fix
+
+
+## 🐛 Bug: Missing Merchandise Items Display
+
+- [ ] Check database for existing merchandise items
+- [ ] Verify merchandise API is returning data correctly
+- [ ] Check if frontend is filtering or hiding items
+- [ ] Test merchandise display on the page
+- [ ] Save checkpoint with fix
+
+
+## 🐛 Bug: Navigation to Merchandise Management Missing
+
+- [x] Confirmed merchandise items exist in database (10 items)
+- [x] Confirmed page loads correctly at /operations/merchandise/manage
+- [x] Check Operations menu navigation structure in sidebar
+- [x] Set Operations menu to expanded by default in SimpleLayout
+- [x] Wrap MerchandiseFulfillment page in SimpleLayout for consistent navigation
+- [x] Test navigation from menu to merchandise page (both Fulfillment and Manage Items links work)
+- [ ] Save checkpoint with fix

@@ -127,7 +127,7 @@ export default function SimpleLayout({ children }) {
   // Track expanded sections
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
     const saved = localStorage.getItem('expandedSections')
-    return saved ? JSON.parse(saved) : { operations: false, marketing: false, settings: false }
+    return saved ? JSON.parse(saved) : { operations: true, marketing: false, settings: false }
   })
 
   // Load menu order from localStorage - use DEFAULT_NAVIGATION if not found or invalid
