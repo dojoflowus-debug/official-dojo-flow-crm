@@ -180,3 +180,10 @@
 1. Are function calls being attempted but failing?
 2. Is the system prompt clear enough about when to use tools?
 3. Should we use `tool_choice: 'required'` instead of `'auto'`?
+
+## 🐛 FIX: Conversation List Not Displaying Older Conversations
+- [x] Add "Older" section to conversation list (currently only shows Today/Yesterday)
+- [x] Add olderConversations filter for conversations older than yesterday
+- [x] Render "Older" section in sidebar after Yesterday section
+- [x] Test that all conversations display correctly regardless of age
+- [ ] Save checkpoint

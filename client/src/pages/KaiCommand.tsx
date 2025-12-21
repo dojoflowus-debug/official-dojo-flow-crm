@@ -1669,6 +1669,7 @@ export default function KaiCommand() {
 
   const todayConversations = conversations.filter(c => c.date === 'today');
   const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
+  const olderConversations = conversations.filter(c => c.date === 'older');
 
   // Cinematic mode taglines that rotate
   const cinematicTaglines = [
@@ -1905,8 +1906,33 @@ export default function KaiCommand() {
               {/* Yesterday */}
               {yesterdayConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-xs font-medium text-slate-400 uppercase mb-2">Yesterday</h4>
+                  <h4 className={`text-xs font-medium uppercase mb-2 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>Yesterday</h4>
                   {yesterdayConversations.map((conv) => (
+                    <ConversationCard 
+                      key={conv.id} 
+                      conversation={conv} 
+                      getCategoryColor={getCategoryColor}
+                      getStatusColor={getStatusColor}
+                      isSelected={selectedConversationId === conv.id}
+                      onClick={() => {
+                        setSelectedConversationId(conv.id);
+                        setMessages([]);
+                      }}
+                      onDelete={handleDeleteConversation}
+                      onArchive={handleArchiveConversation}
+                      onUnarchive={handleUnarchiveConversation}
+                      onRename={handleRenameConversation}
+                      isDark={isDark}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Older */}
+              {olderConversations.length > 0 && (
+                <div className="mb-4">
+                  <h4 className={`text-xs font-medium uppercase mb-2 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>Older</h4>
+                  {olderConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
                       conversation={conv} 
