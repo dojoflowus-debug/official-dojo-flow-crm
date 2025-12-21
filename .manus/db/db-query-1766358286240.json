@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS floor_plans (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  roomName VARCHAR(255) NOT NULL,\n  locationId INT,\n  lengthFeet INT,\n  widthFeet INT,\n  squareFeet INT,\n  safetySpacingFeet INT DEFAULT 3 NOT NULL,\n  templateType ENUM('kickboxing_bags', 'yoga_grid', 'karate_lines') NOT NULL,\n  maxCapacity INT NOT NULL,\n  isActive INT DEFAULT 1 NOT NULL,\n  notes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS floor_plans (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  roomName VARCHAR(255) NOT NULL,\n  locationId INT,\n  lengthFeet INT,\n  widthFeet INT,\n  squareFeet INT,\n  safetySpacingFeet INT DEFAULT 3 NOT NULL,\n  templateType ENUM('kickboxing_bags', 'yoga_grid', 'karate_lines') NOT NULL,\n  maxCapacity INT NOT NULL,\n  isActive INT DEFAULT 1 NOT NULL,\n  notes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 227
+}

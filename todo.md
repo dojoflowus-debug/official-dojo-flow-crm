@@ -295,3 +295,68 @@
 - [x] Test photo display on map markers
 - [x] Verify photos load correctly for all students
 - [x] Save checkpoint
+
+
+## 🏢 FLOOR PLAN + CLASS SPOT ASSIGNMENTS (MVP)
+
+### Phase 1: Database Schema
+- [x] Create floor_plans table (room_name, dimensions, safety_spacing, template_type)
+- [x] Create floor_plan_spots table (spot_number, spot_label, position_x, position_y)
+- [x] Create class_sessions table (class_id, date, time, floor_plan_id)
+- [x] Create session_spot_assignments table (session_id, student_id, spot_id, assigned_at)
+- [x] Add floor_plan_id to classes table
+- [x] Run database migration
+
+### Phase 2: Backend API
+- [x] Create floorPlansRouter with CRUD operations
+- [x] Implement generateSpots function for kickboxing template
+- [x] Implement generateSpots function for yoga grid template
+- [x] Implement generateSpots function for karate lines template
+- [x] Create assignSpot procedure for check-in
+- [x] Create getSessionRoster procedure with spot assignments
+- [x] Create swapSpots procedure for instructor adjustments
+- [ ] Add belt rank sorting logic for karate template (deferred to check-in phase)
+- [x] Write vitest tests for all procedures
+
+### Phase 3: Floor Plan Builder UI
+- [x] Create FloorPlanBuilder page at /settings/floor-plans
+- [x] Add room creation form (name, dimensions, template type)
+- [x] Implement template preview for kickboxing bags
+- [x] Implement template preview for yoga grid
+- [x] Implement template preview for karate lines
+- [x] Add spot visualization with numbers/labels
+- [x] Add edit and delete functionality
+- [x] Add navigation link in Settings hub
+
+### Phase 4: Class Integration
+- [x] Add floor plan dropdown to Add Class Time modal
+- [x] Show max capacity based on floor plan spots
+- [x] Update class creation to link floor plan
+- [ ] Display floor plan info on class cards (deferred)
+- [ ] Add floor plan filter to Classes page (deferred)
+
+### Phase 5: Check-in Integration
+- [ ] Update kiosk check-in flow to assign spots
+- [ ] Display assigned spot on check-in confirmation screen
+- [ ] Implement next available spot logic
+- [ ] Add belt rank sorting for karate classes
+- [ ] Show spot assignment in student dashboard
+- [ ] Handle spot reassignment if student checks in again
+
+### Phase 6: Instructor Roster View
+- [ ] Create InstructorRoster page at /classes/:id/roster
+- [ ] Display student list with assigned spots
+- [ ] Add mini floor plan visualization
+- [ ] Implement drag-and-drop spot swapping
+- [ ] Add manual spot assignment for late arrivals
+- [ ] Show empty spots vs filled spots
+- [ ] Add print roster with spot assignments
+
+### Phase 7: Testing & Polish
+- [ ] Test kickboxing bag assignments
+- [ ] Test yoga mat grid assignments
+- [ ] Test karate lineup with belt rank sorting
+- [ ] Test spot swapping functionality
+- [ ] Test check-in flow end-to-end
+- [ ] Verify instructor roster view
+- [ ] Save checkpoint

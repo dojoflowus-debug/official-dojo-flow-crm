@@ -104,6 +104,7 @@ export const classes = mysqlTable("classes", {
   instructor: varchar("instructor", { length: 255 }), // Deprecated - kept for backward compatibility
   instructorId: int("instructorId"), // Foreign key to teamMembers table
   dayOfWeek: varchar("dayOfWeek", { length: 20 }),
+  floorPlanId: int("floorPlanId"), // Foreign key to floorPlans table
   isActive: int("isActive").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -2129,3 +2130,132 @@ export const stockUsageHistory = mysqlTable("stock_usage_history", {
 
 export type StockUsageHistory = typeof stockUsageHistory.$inferSelect;
 export type InsertStockUsageHistory = typeof stockUsageHistory.$inferInsert;
+
+/**
+ * Floor Plans table - Room layouts for class capacity planning
+ * Template-based approach: kickboxing bags, yoga grids, karate lines
+ */
+export const floorPlans = mysqlTable("floor_plans", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Room name (e.g., "Main Dojo", "Studio A", "Kickboxing Room") */
+  roomName: varchar("roomName", { length: 255 }).notNull(),
+  /** Location/facility identifier (for multi-location support) */
+  locationId: int("locationId"),
+  /** Room dimensions - length in feet */
+  lengthFeet: int("lengthFeet"),
+  /** Room dimensions - width in feet */
+  widthFeet: int("widthFeet"),
+  /** Total square footage (can be used instead of length/width) */
+  squareFeet: int("squareFeet"),
+  /** Safety spacing between spots in feet */
+  safetySpacingFeet: int("safetySpacingFeet").default(3).notNull(),
+  /** Template type determines spot layout algorithm */
+  templateType: mysqlEnum("templateType", [
+    "kickboxing_bags",  // Heavy bags in rows
+    "yoga_grid",        // Mat grid (A1, A2, B1, B2, etc.)
+    "karate_lines"      // Traditional lineup by rank
+  ]).notNull(),
+  /** Maximum capacity (auto-calculated from spots but can be overridden) */
+  maxCapacity: int("maxCapacity").notNull(),
+  /** Whether this floor plan is currently active */
+  isActive: int("isActive").default(1).notNull(),
+  /** Optional notes about the room or layout */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FloorPlan = typeof floorPlans.$inferSelect;
+export type InsertFloorPlan = typeof floorPlans.$inferInsert;
+
+/**
+ * Floor Plan Spots table - Individual spots within a floor plan
+ * Generated automatically based on template type
+ */
+export const floorPlanSpots = mysqlTable("floor_plan_spots", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to parent floor plan */
+  floorPlanId: int("floorPlanId").notNull(),
+  /** Numeric spot number (1, 2, 3...) */
+  spotNumber: int("spotNumber").notNull(),
+  /** Display label (e.g., "Bag 12", "Mat B4", "Line 2 Spot 3") */
+  spotLabel: varchar("spotLabel", { length: 50 }).notNull(),
+  /** X coordinate for visualization (0-100 scale) */
+  positionX: int("positionX"),
+  /** Y coordinate for visualization (0-100 scale) */
+  positionY: int("positionY"),
+  /** Optional row identifier (for grid layouts) */
+  rowIdentifier: varchar("rowIdentifier", { length: 10 }),
+  /** Optional column identifier (for grid layouts) */
+  columnIdentifier: varchar("columnIdentifier", { length: 10 }),
+  /** Whether this spot is currently available for use */
+  isAvailable: int("isAvailable").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FloorPlanSpot = typeof floorPlanSpots.$inferSelect;
+export type InsertFloorPlanSpot = typeof floorPlanSpots.$inferInsert;
+
+/**
+ * Class Sessions table - Individual class occurrences with date/time
+ * Links classes to floor plans for spot assignment
+ */
+export const classSessions = mysqlTable("class_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to recurring class */
+  classId: int("classId").notNull(),
+  /** Specific date of this session */
+  sessionDate: timestamp("sessionDate").notNull(),
+  /** Session start time */
+  startTime: varchar("startTime", { length: 20 }).notNull(),
+  /** Session end time */
+  endTime: varchar("endTime", { length: 20 }),
+  /** Floor plan used for this session */
+  floorPlanId: int("floorPlanId"),
+  /** Instructor for this specific session (can override class instructor) */
+  instructorId: int("instructorId"),
+  /** Session status */
+  status: mysqlEnum("status", [
+    "scheduled",
+    "in_progress",
+    "completed",
+    "cancelled"
+  ]).default("scheduled").notNull(),
+  /** Optional notes for this session */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ClassSession = typeof classSessions.$inferSelect;
+export type InsertClassSession = typeof classSessions.$inferInsert;
+
+/**
+ * Session Spot Assignments table - Student assignments to specific spots
+ * Created during check-in process
+ */
+export const sessionSpotAssignments = mysqlTable("session_spot_assignments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to class session */
+  sessionId: int("sessionId").notNull(),
+  /** Reference to student */
+  studentId: int("studentId").notNull(),
+  /** Reference to assigned spot */
+  spotId: int("spotId").notNull(),
+  /** When the student was assigned this spot */
+  assignedAt: timestamp("assignedAt").defaultNow().notNull(),
+  /** How the assignment was made */
+  assignmentMethod: mysqlEnum("assignmentMethod", [
+    "auto",           // Automatically assigned during check-in
+    "manual",         // Manually assigned by instructor
+    "student_choice"  // Student selected their own spot
+  ]).default("auto").notNull(),
+  /** Whether student actually attended (checked in) */
+  attended: int("attended").default(1).notNull(),
+  /** Optional notes about this assignment */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SessionSpotAssignment = typeof sessionSpotAssignments.$inferSelect;
+export type InsertSessionSpotAssignment = typeof sessionSpotAssignments.$inferInsert;

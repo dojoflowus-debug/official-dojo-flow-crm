@@ -78,6 +78,7 @@ import Automation from "./pages/Automation";
 import AutomationCreate from "./pages/AutomationCreate";
 import AutomationBuilder from "./pages/AutomationBuilder";
 import Conversations from "./pages/Conversations";
+import FloorPlanBuilder from "./pages/FloorPlanBuilder";
 import Operations from "./pages/Operations";
 import PrintFulfillmentSheet from "./pages/PrintFulfillmentSheet";
 import ConfirmReceipt from "./pages/ConfirmReceipt";
@@ -170,6 +171,7 @@ function Router() {
       <Route path="/settings/communication" element={<CommunicationSettings />} />
       <Route path="/settings/webhooks" element={<WebhookSettings />} />
       <Route path="/settings/kiosk" element={<KioskSettings />} />
+      <Route path="/settings/floor-plans" element={<FloorPlanBuilder />} />
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/campaigns/create" element={<CampaignCreate />} />
       <Route path="/campaigns/:id" element={<CampaignDetail />} />

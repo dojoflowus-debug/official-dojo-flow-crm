@@ -14,6 +14,7 @@ import {
   MapPin,
   Clock,
   Building2,
+  LayoutGrid,
   Users,
   Mail,
   Smartphone,
@@ -80,6 +81,14 @@ const SETTINGS_CARDS: SettingCard[] = [
     href: '/settings/kiosk',
     category: 'business',
     badge: 'Per-Location'
+  },
+  {
+    id: 'floor-plans',
+    title: 'Floor Plans',
+    description: 'Manage room layouts and spot assignments for classes',
+    icon: LayoutGrid,
+    href: '/settings/floor-plans',
+    category: 'business'
   },
   {
     id: 'ai-setup',

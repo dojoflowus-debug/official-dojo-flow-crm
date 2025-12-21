@@ -497,6 +497,35 @@ const ClassForm = ({
         </div>
       )}
 
+      {/* Floor Plan - Optional */}
+      <div>
+        <Label htmlFor="floorPlan" className="text-xs font-medium mb-1.5 block">Floor Plan (Optional)</Label>
+        <Select
+          value={formData.floorPlanId?.toString() || ""}
+          onValueChange={(value) => {
+            const floorPlanId = value ? parseInt(value) : null;
+            const selectedPlan = floorPlansData?.find(p => p.id === floorPlanId);
+            setFormData(prev => ({
+              ...prev,
+              floorPlanId,
+              capacity: selectedPlan ? selectedPlan.maxCapacity.toString() : prev.capacity
+            }));
+          }}
+        >
+          <SelectTrigger className="h-10">
+            <SelectValue placeholder="Select floor plan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">No floor plan</SelectItem>
+            {floorPlansData?.map((plan) => (
+              <SelectItem key={plan.id} value={plan.id.toString()}>
+                {plan.roomName} ({plan.maxCapacity} spots)
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Capacity - Always visible */}
       <div>
         <Label htmlFor="capacity" className="text-xs font-medium mb-1.5 block">Capacity</Label>
@@ -510,6 +539,11 @@ const ClassForm = ({
           className="h-10 w-24"
           required
         />
+        {formData.floorPlanId && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Floor plan capacity: {floorPlansData?.find(p => p.id === formData.floorPlanId)?.maxCapacity}
+          </p>
+        )}
       </div>
 
       {/* Age Rules - Collapsible */}
@@ -636,6 +670,9 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // Fetch programs from database
   const { data: programs = [] } = trpc.programs.list.useQuery();
   
+  // Fetch floor plans
+  const { data: floorPlansData } = trpc.floorPlans.list.useQuery();
+  
   // Fetch dojo settings for schedule branding
   const { data: dojoSettings } = trpc.settings.getSettings.useQuery();
   const [stats, setStats] = useState({
@@ -702,6 +739,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     endTime: '',
     room: '',
     capacity: '',
+    floorPlanId: null as number | null,
     ageMin: '',
     ageMax: '',
     monthlyCost: '',
