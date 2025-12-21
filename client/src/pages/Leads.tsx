@@ -314,7 +314,14 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 px-4 md:px-6 py-4 max-w-7xl mx-auto">
             {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-32 rounded-2xl" />
+              <div key={i} className={`rounded-2xl p-5 ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-white shadow-sm'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <Skeleton className="h-5 w-5 rounded" />
+                </div>
+                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="h-4 w-24" />
+              </div>
             ))}
           </div>
         ) : (
@@ -336,7 +343,17 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
         <div className={`${isDarkMode ? 'bg-[#18181A]/50' : 'bg-white/50'} backdrop-blur-sm`}>
           {isLoading ? (
             <div className="py-6 px-6">
-              <Skeleton className="h-20 max-w-4xl mx-auto rounded-xl" />
+              <div className="flex items-center gap-3 max-w-7xl mx-auto overflow-x-auto pb-2">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <div key={i} className="flex-shrink-0">
+                    <div className={`rounded-xl p-4 min-w-[140px] ${isDarkMode ? 'bg-[#18181A]' : 'bg-white'}`}>
+                      <Skeleton className="h-6 w-6 mx-auto mb-2 rounded" />
+                      <Skeleton className="h-4 w-24 mx-auto mb-1" />
+                      <Skeleton className="h-6 w-8 mx-auto" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="max-w-7xl mx-auto">
@@ -390,8 +407,37 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
 
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {[1, 2, 3, 4].map(i => (
-                <Skeleton key={i} className="h-64 rounded-2xl" />
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                <div key={i} className={`rounded-2xl p-5 ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-white shadow-sm'}`}>
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <Skeleton className="h-6 w-32 mb-2" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                  </div>
+                  
+                  {/* Source */}
+                  <Skeleton className="h-4 w-24 mb-3" />
+                  
+                  {/* Contact Info */}
+                  <div className="space-y-2 mb-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Skeleton className="h-9 flex-1 rounded-lg" />
+                    <Skeleton className="h-9 flex-1 rounded-lg" />
+                    <Skeleton className="h-9 flex-1 rounded-lg" />
+                  </div>
+                  
+                  {/* Move Button */}
+                  <Skeleton className="h-10 w-full rounded-lg mt-3" />
+                </div>
               ))}
             </div>
           ) : stageLeads.length === 0 ? (
