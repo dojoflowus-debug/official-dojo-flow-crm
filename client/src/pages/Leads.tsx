@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -24,16 +25,31 @@ import {
 import LeadSourceSettings from '../components/LeadSourceSettings'
 
 export default function Leads({ onLogout, theme, toggleTheme }) {
+  const [searchParams] = useSearchParams()
   const { theme: currentTheme } = useTheme()
   const isDarkMode = currentTheme === 'dark' || currentTheme === 'cinematic'
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedStage, setSelectedStage] = useState('new_lead')
+  const [selectedStage, setSelectedStage] = useState(() => {
+    // Check URL params for filter preset
+    const filter = searchParams.get('filter')
+    if (filter === 'needs-followup') {
+      return 'new_lead' // Will activate the 'new' filter
+    }
+    return 'new_lead'
+  })
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isResolveMode, setIsResolveMode] = useState(false)
-  const [activeFilter, setActiveFilter] = useState<'new' | 'aging' | 'value' | 'kai' | null>(null)
+  const [activeFilter, setActiveFilter] = useState<'new' | 'aging' | 'value' | 'kai' | null>(() => {
+    // Check URL params for filter preset
+    const filter = searchParams.get('filter')
+    if (filter === 'needs-followup') {
+      return 'new' // Activate the 'new' filter to show recent leads
+    }
+    return null
+  })
   const [newLead, setNewLead] = useState({
     first_name: '',
     last_name: '',

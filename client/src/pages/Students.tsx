@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import SimpleLayout from '../components/SimpleLayout'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
@@ -51,9 +52,17 @@ import {
 } from 'lucide-react'
 
 export default function Students({ onLogout, theme, toggleTheme }) {
+  const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilterMenu, setShowFilterMenu] = useState(false)
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(() => {
+    // Check URL params for filter preset
+    const filter = searchParams.get('filter')
+    if (filter === 'needs-attention') {
+      return 'on_hold' // Will show on_hold and inactive students
+    }
+    return 'all'
+  })
   const [membershipFilter, setMembershipFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -441,7 +450,18 @@ export default function Students({ onLogout, theme, toggleTheme }) {
     const matchesSearch = fullName.includes(query) ||
            student.email.toLowerCase().includes(query) ||
            student.belt_rank.toLowerCase().includes(query)
-    const matchesStatus = statusFilter === 'all' || student.status === statusFilter
+    
+    // Handle needs-attention filter (shows on_hold and inactive)
+    let matchesStatus = false
+    if (statusFilter === 'all') {
+      matchesStatus = true
+    } else if (statusFilter === 'on_hold') {
+      // For needs-attention filter, show both on_hold and inactive
+      matchesStatus = student.status === 'on_hold' || student.status === 'Inactive'
+    } else {
+      matchesStatus = student.status === statusFilter
+    }
+    
     const matchesMembership = membershipFilter === 'all' || student.membership_status === membershipFilter
     return matchesSearch && matchesStatus && matchesMembership
   })

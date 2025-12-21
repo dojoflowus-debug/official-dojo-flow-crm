@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import ThemeToggle from '@/components/ThemeToggle'
+import { BadgeCount } from '@/components/ui/badge-count'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -92,6 +93,15 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
+  
+  // Fetch badge counts with polling (every 90 seconds)
+  const { data: badgeCounts } = trpc.navBadges.getActionableCounts.useQuery(
+    {},
+    {
+      refetchInterval: 90000, // Poll every 90 seconds
+      refetchOnWindowFocus: true,
+    }
+  )
   
   // Scroll detection for collapsible bottom nav
   const [isNavVisible, setIsNavVisible] = useState(true)
@@ -440,7 +450,19 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
             return (
               <Link
                 key={item.id}
-                to={item.href}
+                to={() => {
+                  // Add filter params when clicking badged items
+                  if (badgeCounts && badgeCounts[item.id]) {
+                    if (item.id === 'students') {
+                      return `${item.href}?filter=needs-attention`
+                    } else if (item.id === 'leads') {
+                      return `${item.href}?filter=needs-followup`
+                    } else if (item.id === 'billing') {
+                      return `${item.href}?filter=overdue`
+                    }
+                  }
+                  return item.href
+                }}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`
@@ -481,16 +503,25 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                       `}
                     />
                   ) : (
-                    <Icon 
-                      className="transition-all duration-200 h-[18px] w-[18px]"
-                      style={{
-                        color: active 
-                          ? '#E53935' 
-                          : hoveredIndex === index 
-                            ? '#FFFFFF' 
-                            : 'rgba(255,255,255,0.72)'
-                      }}
-                    />
+                    <>
+                      <Icon 
+                        className="transition-all duration-200 h-[18px] w-[18px]"
+                        style={{
+                          color: active 
+                            ? '#E53935' 
+                            : hoveredIndex === index 
+                              ? '#FFFFFF' 
+                              : 'rgba(255,255,255,0.72)'
+                        }}
+                      />
+                      {/* Badge count */}
+                      {badgeCounts && badgeCounts[item.id] && (
+                        <BadgeCount 
+                          count={badgeCounts[item.id]} 
+                          position="top-right"
+                        />
+                      )}
+                    </>
                   )}
                 </div>
 

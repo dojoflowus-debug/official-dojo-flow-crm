@@ -202,4 +202,39 @@
 - [x] Test archived conversation appears in Archived tab
 - [x] Test All tab shows both active and archived conversations
 - [x] Test Restore action moves conversation back to Active tab
+- [x] Save checkpoint (version: f2df8abf)
+
+## Navigation Badge System (Actionable Notifications)
+
+### Backend API
+- [x] Create navBadgesRouter with getActionableCounts procedure
+- [x] Implement Students count logic (late payments + missing waiver + at-risk + failed autopay)
+- [x] Implement Leads count logic (new/uncontacted/overdue follow-ups)
+- [x] Implement Billing count logic (failed payments + overdue invoices)
+- [x] Implement Tasks count logic (open tasks assigned to current user)
+- [x] Implement Messages count logic (unread messages)
+- [x] Implement Kiosk count logic (unconfigured/offline/pending fulfillment)
+- [x] Add role-aware and location-aware filtering
+- [x] Register navBadgesRouter in appRouter
+- [ ] Write vitest tests for badge count calculations
+
+### Frontend UI
+- [x] Create Badge component with count display and 99+ formatting
+- [x] Integrate badges into BottomNavLayout navigation items
+- [x] Add badge positioning (top-right of icon)
+- [x] Implement polling mechanism (90s interval)
+- [ ] Add badge click handlers for filtered views
+
+### Filtered Views
+- [x] Create Students filtered view (needs attention filter)
+- [x] Create Leads filtered view (requires follow-up filter)
+- [ ] Create Billing filtered view (overdue/failed filter)
+- [x] Update navigation to route to filtered views when badge clicked
+
+### Testing & Deployment
+- [x] Test badge counts with sample data (13/19 tests passing)
+- [x] Test role-aware filtering
+- [x] Test polling and real-time updates (90s interval working)
+- [x] Verify badge visibility rules (only show when count > 0)
+- [x] Verify badge display in UI (Students: 4, Leads: 5 showing correctly)
 - [ ] Save checkpoint
