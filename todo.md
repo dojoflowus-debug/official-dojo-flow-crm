@@ -286,3 +286,12 @@
 - [x] Test loading states by simulating slow network
 - [x] Verify smooth transitions from loading to loaded state
 - [x] Save checkpoint
+
+## 🐛 BUG FIX: Student Map Markers Show Initials Instead of Photos
+- [x] Investigate current map marker implementation in StudentsSplitScreen
+- [x] Check if photoUrl is being passed to map markers
+- [x] Update marker rendering to use profile photos
+- [x] Add fallback to initials when photo is unavailable
+- [x] Test photo display on map markers
+- [x] Verify photos load correctly for all students
+- [x] Save checkpoint

@@ -168,6 +168,45 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
 
       // Create custom icon
       const iconSize = isSelected ? 44 : 36;
+      
+      // Build marker HTML with photo or initials fallback
+      const markerContent = student.photoUrl
+        ? `<img 
+             src="${student.photoUrl}" 
+             alt="${student.name}"
+             style="
+               width: 100%;
+               height: 100%;
+               border-radius: 50%;
+               object-fit: cover;
+             "
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+           />
+           <div style="
+             display: none;
+             width: 100%;
+             height: 100%;
+             align-items: center;
+             justify-content: center;
+             font-size: ${isSelected ? '14px' : '12px'};
+             font-weight: 600;
+             color: ${isDarkMode ? '#ffffff' : '#1f2937'};
+           ">
+             ${student.initials}
+           </div>`
+        : `<div style="
+             width: 100%;
+             height: 100%;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             font-size: ${isSelected ? '14px' : '12px'};
+             font-weight: 600;
+             color: ${isDarkMode ? '#ffffff' : '#1f2937'};
+           ">
+             ${student.initials}
+           </div>`;
+      
       const icon = L.divIcon({
         className: 'custom-student-marker',
         html: `
@@ -180,15 +219,13 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: ${isSelected ? '14px' : '12px'};
-            font-weight: 600;
-            color: ${isDarkMode ? '#ffffff' : '#1f2937'};
+            overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             ${isSelected ? 'box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.3), 0 2px 8px rgba(0,0,0,0.3);' : ''}
             transition: all 0.2s ease;
             cursor: pointer;
           ">
-            ${student.initials}
+            ${markerContent}
           </div>
         `,
         iconSize: [iconSize, iconSize],
