@@ -297,6 +297,15 @@
 - [x] Save checkpoint
 
 
+## 🐛 URGENT: Add Class Button Error
+- [x] Investigate error when clicking Add Class Time button
+- [x] Check browser console for error messages
+- [x] Check server logs for backend errors
+- [x] Identify root cause of unexpected error (floorPlansData not passed as prop + empty string in Select.Item)
+- [x] Fix the issue (pass floorPlansData prop + use "none" instead of "")
+- [x] Test Add Class functionality
+- [ ] Save checkpoint
+
 ## 🏢 FLOOR PLAN + CLASS SPOT ASSIGNMENTS (MVP)
 
 ### Phase 1: Database Schema

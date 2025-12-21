@@ -235,7 +235,8 @@ const ClassForm = ({
   showAdvanced,
   setShowAdvanced,
   timeError,
-  isDark
+  isDark,
+  floorPlansData
 }: {
   formData: any;
   handleInputChange: (e: any) => void;
@@ -253,6 +254,7 @@ const ClassForm = ({
   setShowAdvanced: (show: boolean) => void;
   timeError: string;
   isDark: boolean;
+  floorPlansData?: any[];
 }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const [showAgeRules, setShowAgeRules] = useState(false);
@@ -501,9 +503,9 @@ const ClassForm = ({
       <div>
         <Label htmlFor="floorPlan" className="text-xs font-medium mb-1.5 block">Floor Plan (Optional)</Label>
         <Select
-          value={formData.floorPlanId?.toString() || ""}
+          value={formData.floorPlanId?.toString() || "none"}
           onValueChange={(value) => {
-            const floorPlanId = value ? parseInt(value) : null;
+            const floorPlanId = value === "none" ? null : parseInt(value);
             const selectedPlan = floorPlansData?.find(p => p.id === floorPlanId);
             setFormData(prev => ({
               ...prev,
@@ -516,7 +518,7 @@ const ClassForm = ({
             <SelectValue placeholder="Select floor plan" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">No floor plan</SelectItem>
+            <SelectItem value="none">No floor plan</SelectItem>
             {floorPlansData?.map((plan) => (
               <SelectItem key={plan.id} value={plan.id.toString()}>
                 {plan.roomName} ({plan.maxCapacity} spots)
@@ -1227,6 +1229,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                       setIsAddModalOpen(false);
                       resetForm();
                     }}
+                    floorPlansData={floorPlansData}
                     showAdvanced={showAdvanced}
                     setShowAdvanced={setShowAdvanced}
                     timeError={timeError}
@@ -1502,6 +1505,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                     setEditingClass(null);
                     resetForm();
                   }}
+                  floorPlansData={floorPlansData}
                   showAdvanced={showAdvanced}
                   setShowAdvanced={setShowAdvanced}
                   timeError={timeError}
