@@ -37,6 +37,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import ThemeToggle from '@/components/ThemeToggle'
 import { BadgeCount } from '@/components/ui/badge-count'
+import { ScrollableNav } from '@/components/ScrollableNav'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -406,7 +407,6 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
           transition-all duration-300 ease-in-out
           ${hiddenInFocusMode ? 'translate-y-full opacity-0 pointer-events-none' : (isNavVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}
           bottom-0
-          flex items-center justify-around
           ${isCinematic 
             ? 'border-t border-white/[0.06]' 
             : ''
@@ -426,7 +426,12 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
               : '0 -2px 8px rgba(0,0,0,0.35)'
         }}
       >
-        <div className="h-full w-full px-4 flex items-center justify-around">
+        <ScrollableNav 
+          activeItemHref={location.pathname}
+          isDark={isDark}
+          isCinematic={isCinematic}
+          className="px-4"
+        >
           {NAVIGATION.map((item, index) => {
             const active = isActive(item.href)
             const Icon = item.icon
@@ -466,10 +471,11 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`
-                  flex-1 flex flex-col items-center justify-center gap-1
+                  flex flex-col items-center justify-center gap-1
                   pt-1.5 pb-1 text-center
                   transition-all duration-[180ms] ease-out
-                  min-w-0
+                  flex-shrink-0
+                  min-w-[70px]
                 `}
                 style={{ 
                   transform: getHoverTransform(),
@@ -541,7 +547,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
               </Link>
             )
           })}
-        </div>
+        </ScrollableNav>
 
         {/* Focus Mode Toggle Button - Always visible */}
         <button
