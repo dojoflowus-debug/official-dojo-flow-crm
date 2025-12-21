@@ -18,7 +18,8 @@ import {
   EyeOff,
   Palette,
   Monitor,
-  Package
+  Package,
+  Grid3x3
 } from 'lucide-react'
 import { useThemeAwareLogo } from '@/hooks/useThemeAwareLogo'
 import { useAuth } from '@/hooks/useAuth'
@@ -45,6 +46,7 @@ const NAVIGATION = [
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
   { id: 'kai-command', name: 'Kai', href: '/kai-command', icon: Sparkles, isCenter: true },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
+  { id: 'floor-plans', name: 'Floor Plans', href: '/floor-plans', icon: Grid3x3 },
   { id: 'operations', name: 'Operations', href: '/operations/merchandise', icon: Package },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'billing', name: 'Billing', href: '/billing', icon: CreditCard },
@@ -60,6 +62,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/kai-command': 'Kai Command',
   '/kai-chat': 'Kai Command',
   '/classes': 'Classes',
+  '/floor-plans': 'Floor Plans',
   '/operations/merchandise': 'Merchandise Fulfillment',
   '/operations/merchandise/manage': 'Manage Merchandise',
   '/kiosk/member-login': 'Member Check-In',

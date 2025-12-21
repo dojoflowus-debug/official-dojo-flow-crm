@@ -79,6 +79,7 @@ import AutomationCreate from "./pages/AutomationCreate";
 import AutomationBuilder from "./pages/AutomationBuilder";
 import Conversations from "./pages/Conversations";
 import FloorPlanBuilder from "./pages/FloorPlanBuilder";
+import FloorPlans from "./pages/FloorPlans";
 import Operations from "./pages/Operations";
 import PrintFulfillmentSheet from "./pages/PrintFulfillmentSheet";
 import ConfirmReceipt from "./pages/ConfirmReceipt";
@@ -145,6 +146,7 @@ function Router() {
       <Route path="/test-data" element={<TestData />} />
       {/* Kiosk removed - Kai Command is the central focus */}
       <Route path="/classes" element={<Classes />} />
+      <Route path="/floor-plans" element={<FloorPlans />} />
       <Route path="/programs" element={<Programs />} />
       <Route path="/staff" element={<Staff />} />
       <Route path="/billing" element={<Billing />} />

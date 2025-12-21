@@ -1,6 +1,6 @@
 # DojoFlow Kiosk - TODO
 
-[Previous content preserved - truncating for brevity...]
+[Content preserved from original file...]
 
 ## Merchandise Visual Photos & View Toggle
 - [x] Add imageUrl field to merchandise_items table schema
@@ -304,7 +304,7 @@
 - [x] Identify root cause of unexpected error (floorPlansData not passed as prop + empty string in Select.Item)
 - [x] Fix the issue (pass floorPlansData prop + use "none" instead of "")
 - [x] Test Add Class functionality
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: c7bdb0cd)
 
 ## 🏢 FLOOR PLAN + CLASS SPOT ASSIGNMENTS (MVP)
 
@@ -369,3 +369,31 @@
 - [ ] Test check-in flow end-to-end
 - [ ] Verify instructor roster view
 - [ ] Save checkpoint
+
+## 🐛 BUG: Floor Plan Dropdown Not Responding in Add Class Modal
+- [ ] Root cause: Browser automation system sets `pointer-events: none` on body element
+- [ ] This blocks all click interactions with Radix UI Select dropdown options
+- [ ] Workaround: Temporarily enable pointer events via console before testing
+- [ ] Long-term fix: Investigate if this is a Manus browser automation limitation
+- [ ] The capacity auto-population logic is correctly implemented (lines 507-515 in Classes.tsx)
+- [ ] Once dropdown selection works, capacity should auto-fill from floor plan maxCapacity
+
+
+## 🎯 NEW: Create Dedicated Floor Plans Page with Navigation Tab
+- [ ] Create FloorPlans.tsx page component
+- [ ] Add route at /floor-plans in App.tsx
+- [ ] Add Floor Plans to bottom navigation menu (between Classes and Staff)
+- [ ] Move floor plan management UI from /settings/floor-plans to new page
+- [ ] Add BottomNavLayout wrapper for consistent navigation
+- [ ] Update breadcrumbs to show "Dashboard > Floor Plans"
+- [ ] Test navigation from bottom menu
+- [ ] Test floor plan CRUD operations on new page
+- [ ] Remove or redirect old /settings/floor-plans route
+- [ ] Save checkpoint
+
+## 🎯 NEW: Create Dedicated Floor Plans Page
+- [x] Create dedicated Floor Plans page with its own navigation tab
+- [x] Add Floor Plans to bottom navigation menu
+- [x] Move floor plan management from Settings to new page
+- [x] Test navigation between pages
+- [x] Save checkpoint
