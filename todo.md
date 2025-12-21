@@ -186,4 +186,20 @@
 - [x] Add olderConversations filter for conversations older than yesterday
 - [x] Render "Older" section in sidebar after Yesterday section
 - [x] Test that all conversations display correctly regardless of age
+- [x] Save checkpoint (version: d2a79fa7)
+
+## 🎯 IMPLEMENT: Active/Archived Tabs for Conversation List
+- [x] Analyze current tab implementation in KaiCommand.tsx
+- [x] Check if archivedAt column exists in kai_conversations table (added to schema)
+- [x] Add archivedAt column to database via SQL migration
+- [x] Add archive/unarchive mutation to backend (updated to use archivedAt)
+- [x] Implement tab state management (activeTab: 'active' | 'archived' | 'all')
+- [x] Filter conversations based on selected tab
+- [x] Add archive/unarchive action to conversation dropdown menu (already exists)
+- [x] Test tab switching functionality
+- [x] Verify archived conversations don't show in Active tab
+- [x] Test archive action removes conversation from Active tab
+- [x] Test archived conversation appears in Archived tab
+- [x] Test All tab shows both active and archived conversations
+- [x] Test Restore action moves conversation back to Active tab
 - [ ] Save checkpoint

@@ -998,6 +998,8 @@ export const kaiConversations = mysqlTable("kai_conversations", {
   participantIds: text("participantIds"),
   /** Soft delete timestamp - null means not deleted */
   deletedAt: timestamp("deletedAt"),
+  /** Archive timestamp - null means not archived */
+  archivedAt: timestamp("archivedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

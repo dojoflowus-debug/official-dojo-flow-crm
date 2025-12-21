@@ -77,6 +77,7 @@ interface Conversation {
   status: 'neutral' | 'attention' | 'urgent';
   category: 'kai' | 'growth' | 'billing';
   date: 'today' | 'yesterday' | 'older';
+  archivedAt?: Date | null;
 }
 
 // Message type
@@ -463,11 +464,11 @@ export default function KaiCommand() {
     // Store previous data for rollback
     const previousConversations = utils.kai.getConversations.getData();
     
-    // Optimistically update status in list
+    // Optimistically update archivedAt timestamp in list
     utils.kai.getConversations.setData(undefined, (old) => 
       old?.map(conv => 
         conv.id.toString() === conversationId 
-          ? { ...conv, status: 'archived' as const }
+          ? { ...conv, archivedAt: new Date() }
           : conv
       ) ?? []
     );
@@ -491,11 +492,11 @@ export default function KaiCommand() {
     // Store previous data for rollback
     const previousConversations = utils.kai.getConversations.getData();
     
-    // Optimistically update status in list
+    // Optimistically clear archivedAt timestamp in list
     utils.kai.getConversations.setData(undefined, (old) => 
       old?.map(conv => 
         conv.id.toString() === conversationId 
-          ? { ...conv, status: 'active' as const }
+          ? { ...conv, archivedAt: null }
           : conv
       ) ?? []
     );
@@ -712,7 +713,8 @@ export default function KaiCommand() {
       tags: [c.category, c.priority],
       status: c.priority as 'neutral' | 'attention' | 'urgent',
       category: c.category as 'kai' | 'growth' | 'billing',
-      date: dateCategory
+      date: dateCategory,
+      archivedAt: c.archivedAt
     };
   });
 
@@ -1667,9 +1669,20 @@ export default function KaiCommand() {
     }
   };
 
-  const todayConversations = conversations.filter(c => c.date === 'today');
-  const yesterdayConversations = conversations.filter(c => c.date === 'yesterday');
-  const olderConversations = conversations.filter(c => c.date === 'older');
+  // Filter conversations based on active tab
+  const filteredConversations = conversations.filter(c => {
+    if (activeTab === 'active') {
+      return !c.archivedAt; // Show only non-archived
+    } else if (activeTab === 'archived') {
+      return c.archivedAt; // Show only archived
+    } else {
+      return true; // Show all
+    }
+  });
+
+  const todayConversations = filteredConversations.filter(c => c.date === 'today');
+  const yesterdayConversations = filteredConversations.filter(c => c.date === 'yesterday');
+  const olderConversations = filteredConversations.filter(c => c.date === 'older');
 
   // Cinematic mode taglines that rotate
   const cinematicTaglines = [
@@ -1874,7 +1887,7 @@ export default function KaiCommand() {
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="px-4 pt-4 pb-2 flex items-center justify-between">
               <h3 className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Recent Conversations</h3>
-              <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>{conversations.length}</span>
+              <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>{filteredConversations.length}</span>
             </div>
             
             <div className="flex-1 overflow-y-auto px-4 scrollbar-visible">
@@ -2823,7 +2836,7 @@ function ConversationCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [renameValue, setRenameValue] = useState(conversation.title);
-  const isArchived = conversation.status === 'archived';
+  const isArchived = !!conversation.archivedAt;
   
   return (
     <div 

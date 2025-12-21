@@ -2040,9 +2040,9 @@ export const appRouter = router({
           throw new Error("Conversation not found or deleted");
         }
         
-        // Archive by setting status to 'archived'
+        // Archive by setting archivedAt timestamp
         await db.update(kaiConversations)
-          .set({ status: 'archived' })
+          .set({ archivedAt: new Date() })
           .where(and(
             eq(kaiConversations.id, input.id),
             eq(kaiConversations.userId, ctx.user.id)
@@ -2076,9 +2076,9 @@ export const appRouter = router({
           throw new Error("Conversation not found or deleted");
         }
         
-        // Unarchive by setting status back to 'active'
+        // Unarchive by clearing archivedAt timestamp
         await db.update(kaiConversations)
-          .set({ status: 'active' })
+          .set({ archivedAt: null })
           .where(and(
             eq(kaiConversations.id, input.id),
             eq(kaiConversations.userId, ctx.user.id)
