@@ -142,14 +142,13 @@ export function ScrollableNav({
   }, [showLeftArrow, showRightArrow, scrollTo])
 
   return (
-    <div className="relative h-full w-full pointer-events-none">
+    <div className="relative h-full w-full">
       {/* Left Arrow */}
       {showLeftArrow && (
         <button
           onClick={() => scrollTo('left')}
           className={`
             absolute left-0 top-1/2 -translate-y-1/2 z-10
-            pointer-events-auto
             h-10 w-8 flex items-center justify-center
             transition-all duration-200
             ${isDark || isCinematic 
@@ -174,7 +173,6 @@ export function ScrollableNav({
           flex items-center
           overflow-x-auto overflow-y-hidden
           scrollbar-hide
-          pointer-events-auto
           ${isOverflowing ? 'justify-start gap-2 px-10' : 'justify-around'}
           ${className}
         `}
@@ -192,7 +190,6 @@ export function ScrollableNav({
           onClick={() => scrollTo('right')}
           className={`
             absolute right-0 top-1/2 -translate-y-1/2 z-10
-            pointer-events-auto
             h-10 w-8 flex items-center justify-center
             transition-all duration-200
             ${isDark || isCinematic 

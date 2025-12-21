@@ -263,4 +263,16 @@
 - [x] Fix ScrollableNav component to restore clickability
 - [x] Test navigation clicks on all pages
 - [x] Verify arrow buttons still work
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+## 🐛 BUG FIX: Navigation Menu Still Unclickable (User Report)
+- [x] Test navigation menu in browser to reproduce issue
+- [x] Inspect ScrollableNav component code
+- [x] Identify actual root cause: wrapper had pointer-events-none blocking all clicks
+- [x] Identify secondary issue: Link component using function for `to` prop instead of string
+- [x] Fix ScrollableNav by removing pointer-events-none from wrapper
+- [x] Fix BottomNavLayout by computing targetHref as string before passing to Link
+- [x] Test clicks on Students - works!
+- [x] Test clicks on Classes - works!
+- [x] Test clicks on Settings - works!
+- [x] Save checkpoint

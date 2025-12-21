@@ -452,22 +452,24 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
               return 'translateY(0) scale(1)'
             }
             
+            // Compute target href with optional filter params
+            const targetHref = (() => {
+              if (badgeCounts && badgeCounts[item.id]) {
+                if (item.id === 'students') {
+                  return `${item.href}?filter=needs-attention`
+                } else if (item.id === 'leads') {
+                  return `${item.href}?filter=needs-followup`
+                } else if (item.id === 'billing') {
+                  return `${item.href}?filter=overdue`
+                }
+              }
+              return item.href
+            })()
+
             return (
               <Link
                 key={item.id}
-                to={() => {
-                  // Add filter params when clicking badged items
-                  if (badgeCounts && badgeCounts[item.id]) {
-                    if (item.id === 'students') {
-                      return `${item.href}?filter=needs-attention`
-                    } else if (item.id === 'leads') {
-                      return `${item.href}?filter=needs-followup`
-                    } else if (item.id === 'billing') {
-                      return `${item.href}?filter=overdue`
-                    }
-                  }
-                  return item.href
-                }}
+                to={targetHref}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`
