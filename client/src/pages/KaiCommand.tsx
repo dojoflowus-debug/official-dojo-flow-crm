@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePreviewCard';
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
+import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import { 
   Search, 
   Plus, 
@@ -87,6 +88,14 @@ interface Message {
   content: string;
   timestamp: Date;
   attachments?: Attachment[];
+  ui_blocks?: Array<{
+    type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
+    studentId?: number;
+    studentIds?: number[];
+    leadId?: number;
+    leadIds?: number[];
+    label: string;
+  }>;
 }
 
 // Attachment type
@@ -1657,7 +1666,8 @@ export default function KaiCommand() {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: response.response,
-          timestamp: new Date()
+          timestamp: new Date(),
+          ui_blocks: response.ui_blocks || []
         };
         setMessages(prev => [...prev, aiMessage]);
 
@@ -2574,6 +2584,41 @@ export default function KaiCommand() {
                             >
                               {renderMessageWithMentions(message.content, true)}
                             </div>
+                            {/* Render UI blocks (student cards, lists, etc.) */}
+                            {message.ui_blocks && message.ui_blocks.length > 0 && (
+                              <UIBlockRenderer 
+                                blocks={message.ui_blocks} 
+                                onBlockClick={(block) => {
+                                  // Open Results Panel with student/lead data
+                                  if (block.type === 'student_card' && block.studentId) {
+                                    setResultsPanelData({
+                                      type: 'student_card',
+                                      studentId: block.studentId,
+                                    });
+                                    setIsResultsPanelOpen(true);
+                                  } else if (block.type === 'student_list' && block.studentIds) {
+                                    setResultsPanelData({
+                                      type: 'student_list',
+                                      studentIds: block.studentIds,
+                                    });
+                                    setIsResultsPanelOpen(true);
+                                  } else if (block.type === 'lead_card' && block.leadId) {
+                                    setResultsPanelData({
+                                      type: 'lead_list',
+                                      leadIds: [block.leadId],
+                                    });
+                                    setIsResultsPanelOpen(true);
+                                  } else if (block.type === 'lead_list' && block.leadIds) {
+                                    setResultsPanelData({
+                                      type: 'lead_list',
+                                      leadIds: block.leadIds,
+                                    });
+                                    setIsResultsPanelOpen(true);
+                                  }
+                                }}
+                                theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
+                              />
+                            )}
                           </div>
                         </>
                       )}

@@ -9,9 +9,9 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 
 export type ResultsPanelData = 
-  | { type: "student"; studentId: number }
+  | { type: "student_card"; studentId: number }
   | { type: "student_list"; studentIds: number[] }
-  | { type: "lead"; leadId: number }
+  | { type: "lead_card"; leadId: number }
   | { type: "lead_list"; leadIds: number[] }
   | null;
 
@@ -28,9 +28,9 @@ export function ResultsPanel({ data, onClose }: ResultsPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-          {data.type === "student" && "Student Details"}
+          {data.type === "student_card" && "Student Details"}
           {data.type === "student_list" && `Students (${data.studentIds.length})`}
-          {data.type === "lead" && "Lead Details"}
+          {data.type === "lead_card" && "Lead Details"}
           {data.type === "lead_list" && `Leads (${data.leadIds.length})`}
         </h2>
         <button
@@ -43,9 +43,9 @@ export function ResultsPanel({ data, onClose }: ResultsPanelProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {data.type === "student" && <StudentCard studentId={data.studentId} />}
+        {data.type === "student_card" && <StudentCard studentId={data.studentId} />}
         {data.type === "student_list" && <StudentList studentIds={data.studentIds} />}
-        {data.type === "lead" && <LeadCard leadId={data.leadId} />}
+        {data.type === "lead_card" && <LeadCard leadId={data.leadId} />}
         {data.type === "lead_list" && <LeadList leadIds={data.leadIds} />}
       </div>
     </div>

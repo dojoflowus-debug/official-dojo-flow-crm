@@ -250,62 +250,100 @@ async function executeCRMFunction(name: string, args: any) {
   }
 }
 
-function formatFunctionResults(results: any[]): string {
-  if (results.length === 0) return 'No results found.';
+function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[] } {
+  if (results.length === 0) return { text: 'No results found.', ui_blocks: [] };
   
   const result = results[0];
   
   if (result.error) {
-    return `I couldn't find that information: ${result.error}`;
+    return { text: `I couldn't find that information: ${result.error}`, ui_blocks: [] };
   }
   
   // Handle search_students results
   if (result.students && Array.isArray(result.students)) {
     if (result.students.length === 0) {
-      return "I couldn't find any students matching that search.";
+      return { text: "I couldn't find any students matching that search.", ui_blocks: [] };
     }
     if (result.students.length === 1) {
       const s = result.students[0];
-      return `I found [STUDENT:${s.id}:${s.name}]. They're a ${s.beltRank} in the ${s.program} program.`;
+      return {
+        text: `I found ${s.name}. They're a ${s.beltRank} in the ${s.program} program.`,
+        ui_blocks: [{
+          type: 'student_card',
+          studentId: s.id,
+          label: s.name
+        }]
+      };
     }
-    const ids = result.students.map((s: any) => s.id).join(',');
+    const ids = result.students.map((s: any) => s.id);
     const count = result.students.length;
-    return `I found [STUDENT_LIST:${ids}:${count} students]. Click to view their details.`;
+    return {
+      text: `I found ${count} students. Click to view their details.`,
+      ui_blocks: [{
+        type: 'student_list',
+        studentIds: ids,
+        label: `${count} students`
+      }]
+    };
   }
   
   // Handle get_student result
   if (result.id && result.name && result.beltRank) {
-    return `Here's [STUDENT:${result.id}:${result.name}]. They're a ${result.beltRank} in the ${result.program} program.`;
+    return {
+      text: `Here's ${result.name}. They're a ${result.beltRank} in the ${result.program} program.`,
+      ui_blocks: [{
+        type: 'student_card',
+        studentId: result.id,
+        label: result.name
+      }]
+    };
   }
   
   // Handle search_leads results
   if (result.leads && Array.isArray(result.leads)) {
     if (result.leads.length === 0) {
-      return "I couldn't find any leads matching that search.";
+      return { text: "I couldn't find any leads matching that search.", ui_blocks: [] };
     }
     if (result.leads.length === 1) {
       const l = result.leads[0];
-      return `I found [LEAD:${l.id}:${l.name}]. Status: ${l.status}.`;
+      return {
+        text: `I found ${l.name}. Status: ${l.status}.`,
+        ui_blocks: [{
+          type: 'lead_card',
+          leadId: l.id,
+          label: l.name
+        }]
+      };
     }
-    const ids = result.leads.map((l: any) => l.id).join(',');
+    const ids = result.leads.map((l: any) => l.id);
     const count = result.leads.length;
-    return `I found [LEAD_LIST:${ids}:${count} leads]. Click to view their details.`;
+    return {
+      text: `I found ${count} leads. Click to view their details.`,
+      ui_blocks: [{
+        type: 'lead_list',
+        leadIds: ids,
+        label: `${count} leads`
+      }]
+    };
   }
   
   if (result.type === 'student_lookup') {
     const s = result.student;
-    return `Found ${s.first_name} ${s.last_name}: ${s.belt_rank} belt, ${s.status}, ${s.membership_status} membership.`;
+    return {
+      text: `Found ${s.first_name} ${s.last_name}: ${s.belt_rank} belt, ${s.status}, ${s.membership_status} membership.`,
+      ui_blocks: []
+    };
   }
   
   if (result.count !== undefined) {
-    return `Found ${result.count} results.`;
+    return { text: `Found ${result.count} results.`, ui_blocks: [] };
   }
   
   if (result.revenue !== undefined) {
-    return `Revenue: $${result.revenue}`;
+    return { text: `Revenue: $${result.revenue}`, ui_blocks: [] };
   }
   
-  return JSON.stringify(result);
+  return { text: JSON.stringify(result), ui_blocks: [] };
 }
 
 export const appRouter = router({
@@ -2532,14 +2570,17 @@ Return the data as a structured JSON object.`
             }
             
             // Return the AI response with function results
+            const formatted = formatFunctionResults(functionResults);
             return {
-              response: aiResponse.response || formatFunctionResults(functionResults),
+              response: aiResponse.response || formatted.text,
               action_result: functionResults[0], // For backwards compatibility
+              ui_blocks: formatted.ui_blocks,
             };
           }
           
           return {
             response: aiResponse.response,
+            ui_blocks: aiResponse.ui_blocks || [],
           };
         } catch (error) {
           console.error('[Kai Chat] Error:', error);

@@ -174,6 +174,14 @@ export async function chatWithKai(
 ): Promise<{
   response: string;
   functionCalls?: Array<{ name: string; arguments: any }>;
+  ui_blocks?: Array<{
+    type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
+    studentId?: number;
+    studentIds?: number[];
+    leadId?: number;
+    leadIds?: number[];
+    label: string;
+  }>;
 }> {
   try {
     // Build the system prompt
@@ -201,22 +209,12 @@ You have access to these functions for querying data:
 - search_leads: Search for leads by name, email, or phone
 - get_lead: Get full details for a specific lead by ID
 
-**UI Block Format for Data Display:**
-When you retrieve student or lead data, you MUST format your response using these special markers:
+**Response Format:**
+After using function calls to retrieve data, format your response as conversational text.
+When you retrieve student or lead data via functions, the system will automatically create UI blocks for you.
+Just respond naturally - for example: "I found Emma Johnson. She's a blue belt in the Kids program."
 
-1. For a single student: [STUDENT:123:John Smith]
-   Example: "I found [STUDENT:42:Sarah Johnson]. She's a blue belt in the Kids program."
-
-2. For multiple students: [STUDENT_LIST:1,2,3:3 students found]
-   Example: "Here are the students at risk: [STUDENT_LIST:15,23,47:3 students at risk]"
-
-3. For a single lead: [LEAD:456:Jane Doe]
-   Example: "I found [LEAD:89:Mike Chen]. He inquired about adult classes last week."
-
-4. For multiple leads: [LEAD_LIST:4,5,6:3 new leads]
-   Example: "You have [LEAD_LIST:12,15,18:3 new leads] from this week."
-
-**IMPORTANT:** Always use these markers when displaying student/lead data. The UI will render them as interactive cards.
+**IMPORTANT:** The UI will automatically render interactive cards when you mention students or leads you've retrieved via functions.
 
 **Response Guidelines:**
 - Keep responses concise but warm (2-4 sentences typically)
@@ -268,14 +266,17 @@ Remember: You're not just a tool - you're a trusted companion in building a thri
       };
     }
 
+    // Return conversational response (no function calls)
     return {
       response: assistantMessage.content || 'I apologize, but I couldn\'t process that request.',
+      ui_blocks: [],
     };
   } catch (error) {
     console.error('[Kai] LLM Error:', error);
     // Return a friendly fallback response instead of throwing
     return {
       response: `I'm here to help! You asked: "${userMessage}". Let me check the data for you.`,
+      ui_blocks: [],
     };
   }
 }

@@ -593,4 +593,35 @@
 - [x] Test Pending Tasks filter shows only attention priority conversations (filtering logic verified)
 - [x] Test Kai Insights filter shows only kai category conversations (filtering logic verified)
 - [x] Verify counts update correctly when priorities change (dynamic counts implemented)
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: ccac43e0)
+
+
+## Kai Embedded Student Cards & Lists
+
+### Phase 1: Backend Structured Response Format
+- [x] Update Kai system prompt to return structured JSON (assistant_text + ui_blocks)
+- [x] Define UI block schema (student_card, student_list, lead_card, lead_list)
+- [x] Update kai.sendMessage to parse structured responses
+- [x] Add validation for UI block format
+- [x] Update kai.sendMessage to include student data in ui_blocks payload
+
+### Phase 2: UI Block Renderer Components
+- [x] Create UIBlockRenderer component to handle different block types
+- [x] Create StudentCardBlock component (embedded student card)
+- [x] Create StudentListBlock component (compact list with click-to-expand)
+- [x] Add smooth fade-in animations for UI blocks
+- [x] Style blocks to match Kai Command theme (Light/Dark/Cinematic)
+
+### Phase 3: Results Panel Integration
+- [x] Update Results Panel to show full StudentModal
+- [x] Add click handlers on StudentListBlock items to open Results Panel
+- [x] Ensure StudentModal works in Kai Command context
+- [x] Add close handlers to return to chat view
+- [x] Test student card rendering in all three themes
+
+### Phase 4: Testing & Delivery
+- [x] Test "show me student Emma" → renders embedded student card
+- [x] Test "list all white belts" → renders compact list with click-to-expand
+- [x] Test clicking list items opens full card in Results Panel
+- [x] Test card interactions (edit, view notes, etc.) work correctly
+- [x] Save checkpoint
