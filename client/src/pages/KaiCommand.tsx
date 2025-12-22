@@ -106,6 +106,7 @@ export default function KaiCommand() {
   const [, navigate] = useLocation();
   
   const [activeTab, setActiveTab] = useState('active');
+  const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1669,15 +1670,28 @@ export default function KaiCommand() {
     }
   };
 
-  // Filter conversations based on active tab
+  // Filter conversations based on active tab and smart collection
   const filteredConversations = conversations.filter(c => {
+    // First filter by archive status
+    let passesTabFilter = true;
     if (activeTab === 'active') {
-      return !c.archivedAt; // Show only non-archived
+      passesTabFilter = !c.archivedAt; // Show only non-archived
     } else if (activeTab === 'archived') {
-      return c.archivedAt; // Show only archived
-    } else {
-      return true; // Show all
+      passesTabFilter = c.archivedAt; // Show only archived
     }
+    
+    if (!passesTabFilter) return false;
+    
+    // Then filter by smart collection
+    if (activeCollection === 'urgent') {
+      return c.status === 'urgent';
+    } else if (activeCollection === 'insights') {
+      return c.category === 'kai'; // Kai Insights = conversations with Kai category
+    } else if (activeCollection === 'pending') {
+      return c.status === 'attention'; // Pending tasks = attention status
+    }
+    
+    return true; // No collection filter active
   });
 
   const todayConversations = filteredConversations.filter(c => c.date === 'today');
@@ -1866,10 +1880,24 @@ export default function KaiCommand() {
           <div className={`px-4 py-4 border-b ${isDark ? 'border-[rgba(255,255,255,0.05)]' : 'border-slate-100'}`}>
             <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Smart Collections</h3>
             <div className="space-y-2">
-              {smartCollections.map((collection) => (
+              {smartCollections.map((collection) => {
+                const isActive = activeCollection === collection.id;
+                return (
                 <button
                   key={collection.id}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-50'}`}
+                  onClick={() => {
+                    // Toggle collection filter: if already active, clear it; otherwise set it
+                    setActiveCollection(isActive ? null : collection.id);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
+                    isActive
+                      ? isDark
+                        ? 'bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.15)]'
+                        : 'bg-slate-100 border border-slate-200'
+                      : isDark
+                        ? 'hover:bg-[rgba(255,255,255,0.08)]'
+                        : 'hover:bg-slate-50'
+                  }`}
                 >
                   <div className="flex items-center gap-2">
                     {collection.id === 'insights' ? (
@@ -1883,15 +1911,35 @@ export default function KaiCommand() {
                     {collection.count}
                   </span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           {/* Recent Conversations with visible scrollbar */}
           <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-              <h3 className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Recent Conversations</h3>
-              <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>{filteredConversations.length}</span>
+            <div className="px-4 pt-4 pb-2">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Recent Conversations</h3>
+                <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>{filteredConversations.length}</span>
+              </div>
+              {activeCollection && (
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>
+                    Filtered by: {smartCollections.find(c => c.id === activeCollection)?.label}
+                  </span>
+                  <button
+                    onClick={() => setActiveCollection(null)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                      isDark
+                        ? 'text-[rgba(255,255,255,0.65)] hover:bg-[rgba(255,255,255,0.08)]'
+                        : 'text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
             </div>
             
             <div className="flex-1 overflow-y-auto px-4 scrollbar-visible">
