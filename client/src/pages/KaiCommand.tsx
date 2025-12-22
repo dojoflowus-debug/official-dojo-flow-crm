@@ -75,7 +75,7 @@ interface Conversation {
   timestamp: string;
   tags: string[];
   status: 'neutral' | 'attention' | 'urgent';
-  category: 'kai' | 'growth' | 'billing';
+  category: 'kai' | 'growth' | 'billing' | 'operations' | 'general';
   date: 'today' | 'yesterday' | 'older';
   archivedAt?: Date | null;
 }
@@ -424,6 +424,7 @@ export default function KaiCommand() {
   const archiveConversationMutation = trpc.kai.archiveConversation.useMutation();
   const unarchiveConversationMutation = trpc.kai.unarchiveConversation.useMutation();
   const renameConversationMutation = trpc.kai.renameConversation.useMutation();
+  const updateConversationMutation = trpc.kai.updateConversation.useMutation();
   const summarizeConversationMutation = trpc.kai.summarizeConversation.useMutation();
   const extractConversationMutation = trpc.kai.extractConversation.useMutation();
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -541,6 +542,58 @@ export default function KaiCommand() {
       console.error('Failed to rename conversation:', error);
       const errorMessage = error?.message || 'Unknown error';
       toast.error(`Couldn't rename chat. ${errorMessage}`);
+    }
+  };
+
+  // Handle update conversation priority with optimistic update
+  const handleUpdatePriority = async (conversationId: string, priority: 'neutral' | 'attention' | 'urgent') => {
+    const previousConversations = utils.kai.getConversations.getData();
+    
+    // Optimistically update priority in list
+    utils.kai.getConversations.setData(undefined, (old) => 
+      old?.map(conv => 
+        conv.id.toString() === conversationId 
+          ? { ...conv, priority }
+          : conv
+      ) ?? []
+    );
+    
+    try {
+      await updateConversationMutation.mutateAsync({ id: parseInt(conversationId), priority });
+      const labels = { neutral: 'Normal', attention: 'Needs Attention', urgent: 'Urgent' };
+      toast.success(`Priority set to ${labels[priority]}`);
+    } catch (error: any) {
+      if (previousConversations) {
+        utils.kai.getConversations.setData(undefined, previousConversations);
+      }
+      console.error('Failed to update priority:', error);
+      toast.error(`Couldn't update priority. ${error?.message || 'Unknown error'}`);
+    }
+  };
+
+  // Handle update conversation category with optimistic update
+  const handleUpdateCategory = async (conversationId: string, category: 'kai' | 'growth' | 'billing' | 'operations' | 'general') => {
+    const previousConversations = utils.kai.getConversations.getData();
+    
+    // Optimistically update category in list
+    utils.kai.getConversations.setData(undefined, (old) => 
+      old?.map(conv => 
+        conv.id.toString() === conversationId 
+          ? { ...conv, category }
+          : conv
+      ) ?? []
+    );
+    
+    try {
+      await updateConversationMutation.mutateAsync({ id: parseInt(conversationId), category });
+      const labels = { kai: 'Kai Insights', growth: 'Growth', billing: 'Billing', operations: 'Operations', general: 'General' };
+      toast.success(`Category set to ${labels[category]}`);
+    } catch (error: any) {
+      if (previousConversations) {
+        utils.kai.getConversations.setData(undefined, previousConversations);
+      }
+      console.error('Failed to update category:', error);
+      toast.error(`Couldn't update category. ${error?.message || 'Unknown error'}`);
     }
   };
 
@@ -735,11 +788,15 @@ export default function KaiCommand() {
     }
   }, [messagesQuery.data]);
 
-  // Smart collections counts - matching original
+  // Smart collections with dynamic counts based on actual data
+  const urgentCount = conversations.filter(c => !c.archivedAt && c.status === 'urgent').length;
+  const insightsCount = conversations.filter(c => !c.archivedAt && c.category === 'kai').length;
+  const pendingCount = conversations.filter(c => !c.archivedAt && c.status === 'attention').length;
+  
   const smartCollections = [
-    { id: 'urgent', label: 'Urgent', count: 1, icon: AlertCircle, color: 'text-[#ED393D]' },
-    { id: 'insights', label: 'Kai Insights', count: 6, icon: Sparkles, color: 'text-[#A855F7]' },
-    { id: 'pending', label: 'Pending Tasks', count: 15, icon: CheckSquare, color: 'text-[#14B8A6]' }
+    { id: 'urgent', label: 'Urgent', count: urgentCount, icon: AlertCircle, color: 'text-[#ED393D]' },
+    { id: 'insights', label: 'Kai Insights', count: insightsCount, icon: Sparkles, color: 'text-[#A855F7]' },
+    { id: 'pending', label: 'Pending Tasks', count: pendingCount, icon: CheckSquare, color: 'text-[#14B8A6]' }
   ];
 
   // Quick command prompts - 10 tiles for the carousel
@@ -1962,6 +2019,8 @@ export default function KaiCommand() {
                       onArchive={handleArchiveConversation}
                       onUnarchive={handleUnarchiveConversation}
                       onRename={handleRenameConversation}
+                      onUpdatePriority={handleUpdatePriority}
+                      onUpdateCategory={handleUpdateCategory}
                       isDark={isDark}
                     />
                   ))}
@@ -1987,6 +2046,8 @@ export default function KaiCommand() {
                       onArchive={handleArchiveConversation}
                       onUnarchive={handleUnarchiveConversation}
                       onRename={handleRenameConversation}
+                      onUpdatePriority={handleUpdatePriority}
+                      onUpdateCategory={handleUpdateCategory}
                       isDark={isDark}
                     />
                   ))}
@@ -2012,6 +2073,8 @@ export default function KaiCommand() {
                       onArchive={handleArchiveConversation}
                       onUnarchive={handleUnarchiveConversation}
                       onRename={handleRenameConversation}
+                      onUpdatePriority={handleUpdatePriority}
+                      onUpdateCategory={handleUpdateCategory}
                       isDark={isDark}
                     />
                   ))}
@@ -2872,6 +2935,8 @@ function ConversationCard({
   onArchive,
   onUnarchive,
   onRename,
+  onUpdatePriority,
+  onUpdateCategory,
   isDark
 }: { 
   conversation: Conversation; 
@@ -2883,6 +2948,8 @@ function ConversationCard({
   onArchive?: (id: string) => void;
   onUnarchive?: (id: string) => void;
   onRename?: (id: string, newTitle: string) => void;
+  onUpdatePriority?: (id: string, priority: 'neutral' | 'attention' | 'urgent') => void;
+  onUpdateCategory?: (id: string, category: 'kai' | 'growth' | 'billing' | 'operations' | 'general') => void;
   isDark?: boolean;
 }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -2919,6 +2986,72 @@ function ConversationCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={() => {
+                setRenameValue(conversation.title);
+                setShowRenameDialog(true);
+              }}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Rename
+              </DropdownMenuItem>
+              
+              {/* Priority submenu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    Priority
+                    <ChevronRight className="w-3 h-3 ml-auto" />
+                  </DropdownMenuItem>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start">
+                  <DropdownMenuItem onClick={() => onUpdatePriority?.(conversation.id, 'neutral')}>
+                    {conversation.status === 'neutral' && '✓ '}
+                    Normal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdatePriority?.(conversation.id, 'attention')}>
+                    {conversation.status === 'attention' && '✓ '}
+                    Needs Attention
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdatePriority?.(conversation.id, 'urgent')}>
+                    {conversation.status === 'urgent' && '✓ '}
+                    Urgent
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Category submenu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Category
+                    <ChevronRight className="w-3 h-3 ml-auto" />
+                  </DropdownMenuItem>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start">
+                  <DropdownMenuItem onClick={() => onUpdateCategory?.(conversation.id, 'kai')}>
+                    {conversation.category === 'kai' && '✓ '}
+                    Kai Insights
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateCategory?.(conversation.id, 'growth')}>
+                    {conversation.category === 'growth' && '✓ '}
+                    Growth
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateCategory?.(conversation.id, 'billing')}>
+                    {conversation.category === 'billing' && '✓ '}
+                    Billing
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateCategory?.(conversation.id, 'operations')}>
+                    {conversation.category === 'operations' && '✓ '}
+                    Operations
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateCategory?.(conversation.id, 'general')}>
+                    {conversation.category === 'general' && '✓ '}
+                    General
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               {isArchived ? (
                 <DropdownMenuItem onClick={() => onUnarchive?.(conversation.id)}>
                   <Archive className="w-4 h-4 mr-2" />
@@ -2936,13 +3069,6 @@ function ConversationCard({
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                setRenameValue(conversation.title);
-                setShowRenameDialog(true);
-              }}>
-                <Pencil className="w-4 h-4 mr-2" />
-                Rename
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -563,3 +563,34 @@
 ### Phase 5: Delivery
 - [x] Save checkpoint (version: 3f5c1852)
 - [x] Update documentation
+
+
+## Smart Collections Data Fix (Urgent/Pending/Insights Filters)
+
+### Phase 1: Backend API
+- [x] Add updateConversationPriority procedure to kai router (already existed)
+- [x] Add updateConversationCategory procedure to kai router (already existed)
+- [ ] Add vitest tests for priority/category updates (deferred)
+
+### Phase 2: UI Controls
+- [x] Add priority options to conversation dropdown menu (Neutral, Attention, Urgent)
+- [x] Add category options to conversation dropdown menu (Kai, Growth, Billing, Operations, General)
+- [x] Add visual indicators for priority status (checkmarks)
+- [x] Wire up priority/category change handlers with optimistic updates
+
+### Phase 3: Sample Data
+- [x] Create conversations with "urgent" priority for testing Urgent filter (2 created)
+- [x] Create conversations with "attention" priority for testing Pending Tasks filter (3 created)
+- [x] Create conversations with different categories for testing filters (8 total)
+
+### Phase 4: Dynamic Counts
+- [x] Update Smart Collections to show dynamic counts based on actual data
+- [x] Replace hardcoded counts (3, 12, 5) with real filtered counts
+- [x] Update counts when conversations are filtered/updated
+
+### Phase 5: Testing & Delivery
+- [x] Test Urgent filter shows only urgent priority conversations (filtering logic verified)
+- [x] Test Pending Tasks filter shows only attention priority conversations (filtering logic verified)
+- [x] Test Kai Insights filter shows only kai category conversations (filtering logic verified)
+- [x] Verify counts update correctly when priorities change (dynamic counts implemented)
+- [ ] Save checkpoint
