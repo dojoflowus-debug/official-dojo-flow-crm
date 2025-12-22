@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight, Eye } from "lucide-react";
 import { toast } from "sonner";
 import BottomNavLayout from "@/components/BottomNavLayout";
 import { Link } from "react-router-dom";
+import { FloorPlanViewer } from "@/components/FloorPlanViewer";
 
 type TemplateType = "kickboxing_bags" | "yoga_grid" | "karate_lines";
 
@@ -51,6 +52,8 @@ function FloorPlansContent() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [viewingPlan, setViewingPlan] = useState<FloorPlan | null>(null);
 
   // Form state
   const [roomName, setRoomName] = useState("");
@@ -62,6 +65,10 @@ function FloorPlansContent() {
 
   const utils = trpc.useUtils();
   const { data: floorPlans, isLoading } = trpc.floorPlans.getAll.useQuery();
+  const { data: floorPlanWithSpots, isLoading: isLoadingSpots } = trpc.floorPlans.get.useQuery(
+    { id: viewingPlan?.id || 0 },
+    { enabled: !!viewingPlan }
+  );
   const createMutation = trpc.floorPlans.create.useMutation({
     onSuccess: () => {
       toast.success("Floor plan created successfully");
@@ -335,6 +342,17 @@ function FloorPlansContent() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => {
+                            setViewingPlan(plan);
+                            setIsViewDialogOpen(true);
+                          }}
+                          title="View floor plan"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(plan)}
                         >
                           <Edit className="h-4 w-4" />
@@ -466,6 +484,31 @@ function FloorPlansContent() {
               <Button onClick={handleUpdate} disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? "Updating..." : "Update Floor Plan"}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Floor Plan Viewer</DialogTitle>
+              <DialogDescription>
+                Visual layout showing all spot positions
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              {isLoadingSpots ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Loading floor plan...
+                </div>
+              ) : floorPlanWithSpots ? (
+                <FloorPlanViewer floorPlan={floorPlanWithSpots} />
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  Floor plan not found
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>

@@ -408,3 +408,12 @@
 - [x] Fixed both create and update mutations
 - [ ] Test floor plan creation (requires server restart to apply fix)
 - [ ] Save checkpoint
+
+## 🎨 Floor Plan Viewer Feature
+- [x] Design FloorPlanViewer component layout
+- [x] Implement visual floor plan display with spots positioned on canvas
+- [x] Add spot labels and visual indicators
+- [x] Add View button to floor plan cards
+- [x] Create modal/dialog to display floor plan viewer
+- [x] Test floor plan visualization
+- [ ] Save checkpoint
