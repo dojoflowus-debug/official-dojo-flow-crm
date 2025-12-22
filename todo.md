@@ -397,3 +397,14 @@
 - [x] Move floor plan management from Settings to new page
 - [x] Test navigation between pages
 - [x] Save checkpoint
+
+## 🐛 BUG: Cannot Create Floor Plan - Error Message Appears
+- [x] Investigate floor plan creation error
+- [x] Check browser console for error messages
+- [x] Check server logs for backend errors
+- [x] Identify root cause: Backend validation used falsy check `!input.lengthFeet` instead of null check
+- [x] Fix the issue: Changed to `input.lengthFeet == null` for proper null/undefined checking
+- [x] Updated Zod schema to accept `.nullable().optional()` for dimension fields
+- [x] Fixed both create and update mutations
+- [ ] Test floor plan creation (requires server restart to apply fix)
+- [ ] Save checkpoint

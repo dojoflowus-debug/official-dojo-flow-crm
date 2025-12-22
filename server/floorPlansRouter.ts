@@ -175,6 +175,16 @@ export const floorPlansRouter = router({
   }),
 
   /**
+   * Get all floor plans (alias for list)
+   */
+  getAll: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    const plans = await db.select().from(floorPlans).orderBy(desc(floorPlans.createdAt));
+    return plans;
+  }),
+
+  /**
    * Get a single floor plan with its spots
    */
   get: protectedProcedure
@@ -205,20 +215,21 @@ export const floorPlansRouter = router({
       z.object({
         roomName: z.string().min(1),
         locationId: z.number().optional(),
-        lengthFeet: z.number().optional(),
-        widthFeet: z.number().optional(),
-        squareFeet: z.number().optional(),
+        lengthFeet: z.number().nullable().optional(),
+        widthFeet: z.number().nullable().optional(),
+        squareFeet: z.number().nullable().optional(),
         safetySpacingFeet: z.number().default(3),
         templateType: templateTypeSchema,
-        notes: z.string().optional(),
+        notes: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+      console.log('[FloorPlans Create] Received input:', JSON.stringify(input));
       // Validate dimensions
-      if (!input.lengthFeet || !input.widthFeet) {
-        if (!input.squareFeet) {
+      if (input.lengthFeet == null || input.widthFeet == null) {
+        if (input.squareFeet == null) {
           throw new Error("Must provide either length/width or square footage");
         }
         // Estimate dimensions from square footage (assume square room)
@@ -297,11 +308,11 @@ export const floorPlansRouter = router({
       z.object({
         id: z.number(),
         roomName: z.string().min(1).optional(),
-        lengthFeet: z.number().optional(),
-        widthFeet: z.number().optional(),
-        squareFeet: z.number().optional(),
+        lengthFeet: z.number().nullable().optional(),
+        widthFeet: z.number().nullable().optional(),
+        squareFeet: z.number().nullable().optional(),
         safetySpacingFeet: z.number().optional(),
-        notes: z.string().optional(),
+        notes: z.string().nullable().optional(),
         isActive: z.number().optional(),
       })
     )
