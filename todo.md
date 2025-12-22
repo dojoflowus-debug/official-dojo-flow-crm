@@ -636,3 +636,28 @@
 - [x] Test clicking list items opens full card in Results Panel
 - [x] Test card interactions (edit, view notes, etc.) work correctly
 - [x] Save checkpoint
+
+
+## 🎙️ FEATURE: Kai Voice Pacing System
+
+### Requirements
+- [x] Implement "always type when voice is ON" rule
+- [x] Create voice-synced typewriter component
+- [x] Calculate pacing from TTS audio duration (charsPerSecond = totalChars / audioDurationSeconds)
+- [x] Add fallback to natural speaking cadence with micro-pauses on punctuation
+- [x] Implement voice controls (Pause/Resume/Stop/Show Full Text)
+- [x] Hide speech controls when voiceEnabled=false
+- [x] Stop current speech when user sends new message
+- [x] Keep input responsive at all times
+
+### Implementation Tasks
+- [x] Analyze current Kai chat implementations (KaiCommand, EnrollmentKai)
+- [x] Create VoicePacedMessage component with typewriter effect
+- [x] Add audio duration calculation and pacing logic
+- [x] Implement voice playback controls (pause/resume/stop)
+- [x] Add "Show Full Text" instant reveal button
+- [x] Integrate with Kai Command chat
+- [x] Integrate with Enrollment Kai chat
+- [x] Test voice ON vs voice OFF behavior
+- [x] Test interruption behavior (new message stops speech)
+- [ ] Save checkpoint

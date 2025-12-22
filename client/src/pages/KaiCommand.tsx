@@ -19,6 +19,7 @@ import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePrevie
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
+import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { 
   Search, 
   Plus, 
@@ -155,6 +156,10 @@ export default function KaiCommand() {
   
   // Results Panel state
   const [resultsPanelData, setResultsPanelData] = useState<ResultsPanelData>(null);
+  
+  // Voice state management
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [currentSpeechMessageId, setCurrentSpeechMessageId] = useState<string | null>(null);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef(false);
@@ -1563,6 +1568,11 @@ export default function KaiCommand() {
       toast.error('Please wait for attachments to finish uploading');
       return;
     }
+    
+    // Stop current speech when user sends new message
+    if (voiceEnabled && currentSpeechMessageId) {
+      setCurrentSpeechMessageId(null);
+    }
 
     // Build message content - attachments are stored separately, not as markdown links
     let messageContent = messageInput;
@@ -2341,8 +2351,20 @@ export default function KaiCommand() {
               <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Invite Team Members">
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Enable Voice Replies">
-                <Volume2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''} ${voiceEnabled ? (isCinematic ? 'bg-[rgba(255,255,255,0.2)]' : isDark ? 'bg-[rgba(255,255,255,0.15)]' : 'bg-slate-200') : ''}`}
+                title={voiceEnabled ? "Disable Voice Replies" : "Enable Voice Replies"}
+                onClick={() => {
+                  setVoiceEnabled(!voiceEnabled);
+                  if (voiceEnabled) {
+                    // Stop current speech when disabling
+                    setCurrentSpeechMessageId(null);
+                  }
+                }}
+              >
+                <Volume2 className={`w-4 h-4 ${voiceEnabled ? (isCinematic ? 'text-white' : isDark ? 'text-white' : 'text-slate-900') : (isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500')}`} />
               </Button>
               <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Full Screen">
                 <Maximize2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
@@ -2597,7 +2619,21 @@ export default function KaiCommand() {
                                 zIndex: 30
                               } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#334155' }}
                             >
-                              {renderMessageWithMentions(message.content, true)}
+                              {voiceEnabled ? (
+                                <VoicePacedMessage
+                                  content={message.content}
+                                  voiceEnabled={voiceEnabled}
+                                  theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
+                                  onSpeechEnd={() => {
+                                    setCurrentSpeechMessageId(null);
+                                  }}
+                                  onSpeechInterrupt={() => {
+                                    setCurrentSpeechMessageId(null);
+                                  }}
+                                />
+                              ) : (
+                                renderMessageWithMentions(message.content, true)
+                              )}
                             </div>
                             {/* Render UI blocks (student cards, lists, etc.) */}
                             {message.ui_blocks && message.ui_blocks.length > 0 && (

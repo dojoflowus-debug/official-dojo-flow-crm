@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, FileText, Sparkles, Send, Check, User, Mail, Phone, Calendar, Award, Mic, MicOff, Globe } from 'lucide-react';
+import { ArrowLeft, FileText, Sparkles, Send, Check, User, Mail, Phone, Calendar, Award, Mic, MicOff, Globe, Volume2 } from 'lucide-react';
+import VoicePacedMessage from '@/components/VoicePacedMessage';
 
 interface Message {
   role: 'assistant' | 'user';
@@ -58,6 +59,10 @@ export default function KaiEnrollment() {
     return localStorage.getItem('kai-voice-language') || 'en-US';
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Voice output state
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [currentSpeechMessageIndex, setCurrentSpeechMessageIndex] = useState<number | null>(null);
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -216,6 +221,11 @@ export default function KaiEnrollment() {
     
     if (!enrollmentId || !inputValue.trim()) return;
     
+    // Stop current speech when user sends new message
+    if (voiceEnabled && currentSpeechMessageIndex !== null) {
+      setCurrentSpeechMessageIndex(null);
+    }
+    
     const content = inputValue.trim();
     setInputValue('');
     
@@ -307,15 +317,32 @@ export default function KaiEnrollment() {
               </div>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSwitchToForm}
-              className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Switch to Form
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setVoiceEnabled(!voiceEnabled);
+                  if (voiceEnabled) {
+                    setCurrentSpeechMessageIndex(null);
+                  }
+                }}
+                className={`h-9 w-9 ${voiceEnabled ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                title={voiceEnabled ? "Disable Voice Replies" : "Enable Voice Replies"}
+              >
+                <Volume2 className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSwitchToForm}
+                className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Switch to Form
+              </Button>
+            </div>
           </div>
 
           {/* Progress Steps */}
@@ -384,7 +411,21 @@ export default function KaiEnrollment() {
                         ? 'bg-gradient-to-r from-red-700 to-red-500 text-white'
                         : 'bg-[#1E2530] text-slate-100 border border-slate-700/50'
                     }`}>
-                      <p className="text-base leading-relaxed whitespace-pre-wrap font-medium">{message.content}</p>
+                      {message.role === 'assistant' && voiceEnabled ? (
+                        <VoicePacedMessage
+                          content={message.content}
+                          voiceEnabled={voiceEnabled}
+                          theme="dark"
+                          onSpeechEnd={() => {
+                            setCurrentSpeechMessageIndex(null);
+                          }}
+                          onSpeechInterrupt={() => {
+                            setCurrentSpeechMessageIndex(null);
+                          }}
+                        />
+                      ) : (
+                        <p className="text-base leading-relaxed whitespace-pre-wrap font-medium">{message.content}</p>
+                      )}
                     </div>
                   </div>
                 ))}
