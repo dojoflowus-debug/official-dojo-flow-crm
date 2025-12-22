@@ -1872,7 +1872,11 @@ export default function KaiCommand() {
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-50'}`}
                 >
                   <div className="flex items-center gap-2">
-                    <collection.icon className={`w-4 h-4 ${collection.color}`} />
+                    {collection.id === 'insights' ? (
+                      <img src="/kai-avatar.png" alt="Kai" className="w-4 h-4 rounded-full" />
+                    ) : (
+                      <collection.icon className={`w-4 h-4 ${collection.color}`} />
+                    )}
                     <span className={`text-sm ${isDark ? 'text-white' : 'text-slate-700'}`}>{collection.label}</span>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDark ? 'text-[rgba(255,255,255,0.65)] bg-[#18181A]' : 'text-slate-500 bg-slate-200'}`}>
