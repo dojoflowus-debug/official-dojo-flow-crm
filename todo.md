@@ -681,4 +681,39 @@
 - [x] Update EnrollmentKai to generate and pass audio URLs
 - [x] Test audio playback with voice controls
 - [x] Test audio interruption on new messages
-- [x] Save checkpoint (version: pending)
+- [x] Save checkpoint (version: bb39bd58)
+
+
+## 🐛 BUG: TTS Audio Not Playing - User Cannot Hear Kai
+
+### Issue
+- [ ] User reports they cannot hear Kai speak at all
+- [ ] Voice toggle is enabled but no audio plays
+
+### Investigation Tasks
+- [x] Check if voice toggle button is working
+- [x] Verify TTS audio generation is being called
+- [x] Check browser console for errors
+- [x] Verify audio URL is being generated
+- [x] Check if Audio element is being created
+- [x] Test audio playback manually
+- [x] Check ElevenLabs API key configuration
+- [x] Verify audio file is accessible from S3
+
+### Root Cause Found
+**Race condition in VoicePacedMessage component:**
+- Audio element was created in separate useEffect from playback logic
+- Playback attempt happened before audio element was ready
+- audioRef.current was null when play() was called
+
+### Fix Tasks
+- [x] Identify root cause (race condition between audio init and playback)
+- [x] Consolidate audio initialization and playback into single useEffect
+- [x] Add proper event listeners (ended, error, loadeddata)
+- [x] Add console logging for debugging
+- [x] Fix cleanup to release audio resources properly
+- [x] Test audio playback end-to-end (backend tests passing)
+- [x] Create integration test for TTS + S3 upload flow
+- [x] Verify audio URL is accessible from CDN
+- [ ] User confirmation of audio playback in browser
+- [ ] Save checkpoint

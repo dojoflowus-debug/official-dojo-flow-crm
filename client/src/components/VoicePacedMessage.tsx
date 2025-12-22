@@ -69,30 +69,7 @@ export default function VoicePacedMessage({
     return baseDelay;
   };
 
-  // Initialize audio
-  useEffect(() => {
-    if (audioUrl && voiceEnabled) {
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.addEventListener('ended', () => {
-        console.log('[VoicePacedMessage] Audio playback ended');
-        if (onSpeechEnd) {
-          onSpeechEnd();
-        }
-      });
-      audioRef.current.addEventListener('error', (e) => {
-        console.error('[VoicePacedMessage] Audio playback error:', e);
-      });
-    }
-    
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, [audioUrl, voiceEnabled]);
-
-  // Typewriter effect
+  // Typewriter effect with audio playback
   useEffect(() => {
     if (!voiceEnabled || showFullText) {
       // Voice OFF or full text shown - display immediately
@@ -100,17 +77,38 @@ export default function VoicePacedMessage({
       return;
     }
 
-    // Voice ON - start typewriter effect
+    // Voice ON - initialize audio and start typewriter effect
     currentIndexRef.current = 0;
     setDisplayedText('');
     setIsPlaying(true);
     startTimeRef.current = Date.now();
 
-    // Start audio playback if available
-    if (audioRef.current) {
+    // Initialize and start audio playback if URL is available
+    if (audioUrl) {
+      console.log('[VoicePacedMessage] Initializing audio:', audioUrl);
+      audioRef.current = new Audio(audioUrl);
+      
+      audioRef.current.addEventListener('ended', () => {
+        console.log('[VoicePacedMessage] Audio playback ended');
+        if (onSpeechEnd) {
+          onSpeechEnd();
+        }
+      });
+      
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('[VoicePacedMessage] Audio playback error:', e);
+      });
+      
+      audioRef.current.addEventListener('loadeddata', () => {
+        console.log('[VoicePacedMessage] Audio loaded and ready');
+      });
+      
+      // Start playback
       audioRef.current.play().catch(err => {
         console.error('[VoicePacedMessage] Failed to play audio:', err);
       });
+    } else {
+      console.warn('[VoicePacedMessage] No audioUrl provided for voice-enabled message');
     }
 
     const charsPerSecond = calculatePacing();
@@ -140,6 +138,8 @@ export default function VoicePacedMessage({
       }
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.src = ''; // Release audio resource
+        audioRef.current = null;
       }
     };
   }, [content, voiceEnabled, showFullText, audioDuration, audioUrl]);
