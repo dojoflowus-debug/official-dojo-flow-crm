@@ -2542,6 +2542,56 @@ Return the data as a structured JSON object.`
         };
       }),
 
+    generateSpeech: publicProcedure
+      .input(z.object({
+        text: z.string(),
+        voiceId: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateKaiSpeech } = await import("./_core/elevenlabs");
+        const { storagePut } = await import("./storage");
+        
+        try {
+          // Generate speech using ElevenLabs
+          const result = await generateKaiSpeech(input.text);
+          
+          if (!result.success || !result.audioBuffer) {
+            return {
+              success: false,
+              error: result.error || 'Failed to generate speech'
+            };
+          }
+          
+          // Upload audio to S3
+          const audioKey = `kai-speech/${Date.now()}-${Math.random().toString(36).substring(7)}.mp3`;
+          const { url: audioUrl } = await storagePut(audioKey, result.audioBuffer, 'audio/mpeg');
+          
+          // Calculate audio duration (rough estimate based on text length)
+          // Average speaking rate: ~150 words per minute = 2.5 words per second
+          const wordCount = input.text.split(/\s+/).length;
+          const estimatedDuration = (wordCount / 2.5) * 1000; // in milliseconds
+          
+          console.log('[Kai TTS] Generated speech:', {
+            textLength: input.text.length,
+            wordCount,
+            estimatedDuration: `${estimatedDuration}ms`,
+            audioUrl
+          });
+          
+          return {
+            success: true,
+            audioUrl,
+            audioDuration: estimatedDuration
+          };
+        } catch (error) {
+          console.error('[Kai TTS] Error:', error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+        }
+      }),
+
     chat: publicProcedure
       .input(z.object({
         message: z.string(),

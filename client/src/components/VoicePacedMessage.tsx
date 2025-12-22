@@ -4,7 +4,8 @@ import { Pause, Play, Square, Eye } from 'lucide-react';
 interface VoicePacedMessageProps {
   content: string;
   voiceEnabled: boolean;
-  audioDuration?: number; // in seconds
+  audioUrl?: string; // URL to TTS audio file
+  audioDuration?: number; // in milliseconds
   onSpeechEnd?: () => void;
   onSpeechInterrupt?: () => void;
   theme?: 'light' | 'dark' | 'cinematic';
@@ -22,6 +23,7 @@ interface VoicePacedMessageProps {
 export default function VoicePacedMessage({
   content,
   voiceEnabled,
+  audioUrl,
   audioDuration,
   onSpeechEnd,
   onSpeechInterrupt,
@@ -34,14 +36,16 @@ export default function VoicePacedMessage({
   const currentIndexRef = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Calculate pacing
   const calculatePacing = () => {
     const totalChars = content.length;
     
     if (audioDuration && audioDuration > 0) {
-      // Sync to audio duration
-      const charsPerSecond = totalChars / audioDuration;
+      // Sync to audio duration (audioDuration is in milliseconds)
+      const durationSeconds = audioDuration / 1000;
+      const charsPerSecond = totalChars / durationSeconds;
       // Clamp to reasonable range (5-50 chars/second)
       return Math.max(5, Math.min(50, charsPerSecond));
     }
@@ -65,6 +69,29 @@ export default function VoicePacedMessage({
     return baseDelay;
   };
 
+  // Initialize audio
+  useEffect(() => {
+    if (audioUrl && voiceEnabled) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.addEventListener('ended', () => {
+        console.log('[VoicePacedMessage] Audio playback ended');
+        if (onSpeechEnd) {
+          onSpeechEnd();
+        }
+      });
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('[VoicePacedMessage] Audio playback error:', e);
+      });
+    }
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [audioUrl, voiceEnabled]);
+
   // Typewriter effect
   useEffect(() => {
     if (!voiceEnabled || showFullText) {
@@ -79,6 +106,13 @@ export default function VoicePacedMessage({
     setIsPlaying(true);
     startTimeRef.current = Date.now();
 
+    // Start audio playback if available
+    if (audioRef.current) {
+      audioRef.current.play().catch(err => {
+        console.error('[VoicePacedMessage] Failed to play audio:', err);
+      });
+    }
+
     const charsPerSecond = calculatePacing();
     const baseDelayMs = 1000 / charsPerSecond;
 
@@ -93,10 +127,8 @@ export default function VoicePacedMessage({
         const delay = getCharDelay(currentChar, nextChar, baseDelayMs);
         intervalRef.current = setTimeout(typeNextChar, delay);
       } else {
-        // Typing complete
-        if (onSpeechEnd) {
-          onSpeechEnd();
-        }
+        // Typing complete - audio will trigger onSpeechEnd via 'ended' event
+        console.log('[VoicePacedMessage] Typewriter complete');
       }
     };
 
@@ -106,14 +138,20 @@ export default function VoicePacedMessage({
       if (intervalRef.current) {
         clearTimeout(intervalRef.current);
       }
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     };
-  }, [content, voiceEnabled, showFullText, audioDuration]);
+  }, [content, voiceEnabled, showFullText, audioDuration, audioUrl]);
 
   // Pause/Resume handlers
   const handlePause = () => {
     if (intervalRef.current) {
       clearTimeout(intervalRef.current);
       intervalRef.current = null;
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
     setIsPlaying(false);
   };
@@ -122,6 +160,14 @@ export default function VoicePacedMessage({
     if (currentIndexRef.current >= content.length) return;
     
     setIsPlaying(true);
+    
+    // Resume audio playback
+    if (audioRef.current) {
+      audioRef.current.play().catch(err => {
+        console.error('[VoicePacedMessage] Failed to resume audio:', err);
+      });
+    }
+    
     const charsPerSecond = calculatePacing();
     const baseDelayMs = 1000 / charsPerSecond;
 
@@ -135,10 +181,6 @@ export default function VoicePacedMessage({
 
         const delay = getCharDelay(currentChar, nextChar, baseDelayMs);
         intervalRef.current = setTimeout(typeNextChar, delay);
-      } else {
-        if (onSpeechEnd) {
-          onSpeechEnd();
-        }
       }
     };
 
@@ -150,6 +192,10 @@ export default function VoicePacedMessage({
       clearTimeout(intervalRef.current);
       intervalRef.current = null;
     }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setIsPlaying(false);
     if (onSpeechInterrupt) {
       onSpeechInterrupt();
@@ -160,6 +206,9 @@ export default function VoicePacedMessage({
     if (intervalRef.current) {
       clearTimeout(intervalRef.current);
       intervalRef.current = null;
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
     setShowFullText(true);
     setDisplayedText(content);

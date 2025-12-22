@@ -89,6 +89,8 @@ interface Message {
   content: string;
   timestamp: Date;
   attachments?: Attachment[];
+  audioUrl?: string; // TTS audio URL
+  audioDuration?: number; // Audio duration in milliseconds
   ui_blocks?: Array<{
     type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
     studentId?: number;
@@ -1687,14 +1689,43 @@ export default function KaiCommand() {
           } : undefined
         });
 
+        // Generate TTS audio if voice is enabled
+        let audioUrl: string | undefined;
+        let audioDuration: number | undefined;
+        
+        if (voiceEnabled) {
+          try {
+            const ttsResult = await trpc.kai.generateSpeech.mutate({
+              text: response.response
+            });
+            
+            if (ttsResult.success) {
+              audioUrl = ttsResult.audioUrl;
+              audioDuration = ttsResult.audioDuration;
+              console.log('[KaiCommand] TTS generated:', { audioUrl, audioDuration });
+            } else {
+              console.error('[KaiCommand] TTS generation failed:', ttsResult.error);
+            }
+          } catch (error) {
+            console.error('[KaiCommand] TTS error:', error);
+          }
+        }
+
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: response.response,
           timestamp: new Date(),
-          ui_blocks: response.ui_blocks || []
+          ui_blocks: response.ui_blocks || [],
+          audioUrl,
+          audioDuration
         };
         setMessages(prev => [...prev, aiMessage]);
+        
+        // Set current speech message ID for voice controls
+        if (voiceEnabled && audioUrl) {
+          setCurrentSpeechMessageId(aiMessage.id);
+        }
 
         // Save AI response to database
         if (conversationId) {
@@ -2623,6 +2654,8 @@ export default function KaiCommand() {
                                 <VoicePacedMessage
                                   content={message.content}
                                   voiceEnabled={voiceEnabled}
+                                  audioUrl={message.audioUrl}
+                                  audioDuration={message.audioDuration}
                                   theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
                                   onSpeechEnd={() => {
                                     setCurrentSpeechMessageId(null);

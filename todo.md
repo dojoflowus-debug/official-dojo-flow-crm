@@ -660,4 +660,25 @@
 - [x] Integrate with Enrollment Kai chat
 - [x] Test voice ON vs voice OFF behavior
 - [x] Test interruption behavior (new message stops speech)
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: db227e21)
+
+
+## 🔊 FEATURE: TTS Audio Playback Integration
+
+### Requirements
+- [x] Connect TTS service (ElevenLabs) to generate audio
+- [x] Implement audio playback synchronized with typewriter effect
+- [x] Pass actual audio duration to VoicePacedMessage for perfect sync
+- [x] Handle audio loading states and errors gracefully
+- [x] Ensure pause/resume/stop controls work with audio
+- [x] Audio stops when user sends new message
+
+### Implementation Tasks
+- [x] Review existing ElevenLabs integration in server/_core/
+- [x] Create TTS audio generation endpoint (tRPC procedure)
+- [x] Add audio playback to VoicePacedMessage component
+- [x] Update KaiCommand to generate and pass audio URLs
+- [x] Update EnrollmentKai to generate and pass audio URLs
+- [x] Test audio playback with voice controls
+- [x] Test audio interruption on new messages
+- [x] Save checkpoint (version: pending)

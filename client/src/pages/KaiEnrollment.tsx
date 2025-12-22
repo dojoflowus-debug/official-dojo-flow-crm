@@ -11,6 +11,8 @@ import VoicePacedMessage from '@/components/VoicePacedMessage';
 interface Message {
   role: 'assistant' | 'user';
   content: string;
+  audioUrl?: string;
+  audioDuration?: number;
 }
 
 interface EnrollmentData {
@@ -73,14 +75,35 @@ export default function KaiEnrollment() {
   
   const createEnrollment = trpc.enrollment.create.useMutation();
   const kaiConverse = trpc.enrollment.kaiConverse.useMutation({
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       // Check if this is the first response (name collection)
       const isFirstResponse = messages.length === 1;
+      
+      // Generate TTS audio if voice is enabled
+      let audioUrl: string | undefined;
+      let audioDuration: number | undefined;
+      
+      if (voiceEnabled) {
+        try {
+          const ttsResult = await trpc.kai.generateSpeech.mutate({
+            text: response.kaiResponse
+          });
+          
+          if (ttsResult.success) {
+            audioUrl = ttsResult.audioUrl;
+            audioDuration = ttsResult.audioDuration;
+          }
+        } catch (error) {
+          console.error('[KaiEnrollment] TTS error:', error);
+        }
+      }
       
       // Add Kai's response to messages
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: response.kaiResponse
+        content: response.kaiResponse,
+        audioUrl,
+        audioDuration
       }]);
       
       // Update enrollment data (extract name from user input)
@@ -93,10 +116,33 @@ export default function KaiEnrollment() {
         const firstName = nameParts[0];
         
         if (firstName) {
-          setTimeout(() => {
+          setTimeout(async () => {
+            const greetingText = `Thanks, ${firstName}! I'm here to make this easy for you.`;
+            
+            // Generate TTS for greeting
+            let greetingAudioUrl: string | undefined;
+            let greetingAudioDuration: number | undefined;
+            
+            if (voiceEnabled) {
+              try {
+                const ttsResult = await trpc.kai.generateSpeech.mutate({
+                  text: greetingText
+                });
+                
+                if (ttsResult.success) {
+                  greetingAudioUrl = ttsResult.audioUrl;
+                  greetingAudioDuration = ttsResult.audioDuration;
+                }
+              } catch (error) {
+                console.error('[KaiEnrollment] Greeting TTS error:', error);
+              }
+            }
+            
             setMessages(prev => [...prev, {
               role: 'assistant',
-              content: `Thanks, ${firstName}! I'm here to make this easy for you.`
+              content: greetingText,
+              audioUrl: greetingAudioUrl,
+              audioDuration: greetingAudioDuration
             }]);
           }, 800);
         }
@@ -415,6 +461,8 @@ export default function KaiEnrollment() {
                         <VoicePacedMessage
                           content={message.content}
                           voiceEnabled={voiceEnabled}
+                          audioUrl={message.audioUrl}
+                          audioDuration={message.audioDuration}
                           theme="dark"
                           onSpeechEnd={() => {
                             setCurrentSpeechMessageIndex(null);
