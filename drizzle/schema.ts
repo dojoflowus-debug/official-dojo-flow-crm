@@ -2155,6 +2155,8 @@ export const floorPlans = mysqlTable("floor_plans", {
     "yoga_grid",        // Mat grid (A1, A2, B1, B2, etc.)
     "karate_lines"      // Traditional lineup by rank
   ]).notNull(),
+  /** Mat rotation for yoga_grid template (horizontal = wide, vertical = tall) */
+  matRotation: mysqlEnum("matRotation", ["horizontal", "vertical"]).default("horizontal"),
   /** Maximum capacity (auto-calculated from spots but can be overridden) */
   maxCapacity: int("maxCapacity").notNull(),
   /** Whether this floor plan is currently active */

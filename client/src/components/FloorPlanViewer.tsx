@@ -19,6 +19,7 @@ interface FloorPlan {
   widthFeet: number | null;
   squareFeet: number | null;
   templateType: string;
+  matRotation?: "horizontal" | "vertical" | null;
   spots: Spot[];
 }
 
@@ -100,11 +101,14 @@ function renderMatSpot(
   spot: any,
   isHighlighted: boolean,
   isEmpty: boolean,
-  assignment: any
+  assignment: any,
+  rotation: "horizontal" | "vertical" = "horizontal"
 ) {
-  // Draw mat (horizontal rectangle)
-  const matWidth = 30;
-  const matHeight = 18;
+  // Draw mat with rotation support
+  // Horizontal: 30px wide × 18px tall (6ft × 2ft ratio)
+  // Vertical: 18px wide × 30px tall (2ft × 6ft ratio)
+  const matWidth = rotation === "horizontal" ? 30 : 18;
+  const matHeight = rotation === "horizontal" ? 18 : 30;
 
   // Shadow
   ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
@@ -352,7 +356,16 @@ export function FloorPlanViewer({
       if (spot.spotType === "bag") {
         renderBagSpot(ctx, x, y, spot, isHighlighted, isEmpty, assignment);
       } else if (spot.spotType === "mat") {
-        renderMatSpot(ctx, x, y, spot, isHighlighted, isEmpty, assignment);
+        renderMatSpot(
+          ctx,
+          x,
+          y,
+          spot,
+          isHighlighted,
+          isEmpty,
+          assignment,
+          floorPlan.matRotation || "horizontal"
+        );
       } else if (spot.spotType === "rank_position") {
         renderRankPosition(ctx, x, y, spot, isHighlighted, isEmpty, assignment, rowPosition);
       }

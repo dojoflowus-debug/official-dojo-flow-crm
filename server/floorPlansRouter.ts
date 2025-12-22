@@ -65,7 +65,8 @@ function generateYogaGridSpots(
   floorPlanId: number,
   lengthFeet: number,
   widthFeet: number,
-  safetySpacing: number
+  safetySpacing: number,
+  matRotation: "horizontal" | "vertical" = "horizontal"
 ): Array<{
   floorPlanId: number;
   spotNumber: number;
@@ -81,10 +82,11 @@ function generateYogaGridSpots(
   
   // Calculate mat grid
   // Assume each mat is 2ft x 6ft + spacing
-  const matWidth = 2;
-  const matLength = 6;
+  // Rotation swaps dimensions: horizontal = 6ft wide x 2ft tall, vertical = 2ft wide x 6ft tall
+  const matWidth = matRotation === "horizontal" ? 6 : 2;
+  const matHeight = matRotation === "horizontal" ? 2 : 6;
   const matsPerRow = Math.floor(widthFeet / (matWidth + safetySpacing));
-  const rows = Math.floor(lengthFeet / (matLength + safetySpacing));
+  const rows = Math.floor(lengthFeet / (matHeight + safetySpacing));
   
   let spotNumber = 1;
   const rowLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -95,7 +97,7 @@ function generateYogaGridSpots(
       const colLabel = String(col + 1);
       
       // Calculate position as percentage (0-100)
-      const positionY = Math.floor(((row * (matLength + safetySpacing)) / lengthFeet) * 100);
+      const positionY = Math.floor(((row * (matHeight + safetySpacing)) / lengthFeet) * 100);
       const positionX = Math.floor(((col * (matWidth + safetySpacing)) / widthFeet) * 100);
       
       spots.push({
@@ -226,6 +228,7 @@ export const floorPlansRouter = router({
         squareFeet: z.number().nullable().optional(),
         safetySpacingFeet: z.number().default(3),
         templateType: templateTypeSchema,
+        matRotation: z.enum(["horizontal", "vertical"]).default("horizontal"),
         notes: z.string().nullable().optional(),
       })
     )
@@ -261,7 +264,8 @@ export const floorPlansRouter = router({
             0,
             input.lengthFeet,
             input.widthFeet,
-            input.safetySpacingFeet
+            input.safetySpacingFeet,
+            input.matRotation
           );
           break;
         case "karate_lines":
@@ -285,6 +289,7 @@ export const floorPlansRouter = router({
         squareFeet: input.squareFeet || input.lengthFeet * input.widthFeet,
         safetySpacingFeet: input.safetySpacingFeet,
         templateType: input.templateType,
+        matRotation: input.matRotation,
         maxCapacity,
         notes: input.notes,
         isActive: 1,
@@ -352,9 +357,15 @@ export const floorPlansRouter = router({
           case "kickboxing_bags":
             generatedSpots = generateKickboxingSpots(id, lengthFeet, widthFeet, safetySpacing);
             break;
-          case "yoga_grid":
-            generatedSpots = generateYogaGridSpots(id, lengthFeet, widthFeet, safetySpacing);
-            break;
+        case "yoga_grid":
+          generatedSpots = generateYogaGridSpots(
+            id,
+            lengthFeet,
+            widthFeet,
+            safetySpacing,
+            existingPlan.matRotation || "horizontal"
+          );
+          break;
           case "karate_lines":
             generatedSpots = generateKarateLineSpots(id, lengthFeet, widthFeet, safetySpacing);
             break;

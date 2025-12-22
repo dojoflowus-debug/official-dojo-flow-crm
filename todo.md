@@ -488,5 +488,39 @@
 - [x] Test live preview mode with all templates (rendering functions implemented)
 
 ### Phase 6: Delivery
+- [x] Save checkpoint (version: c126724c)
+- [x] Update documentation
+
+
+## Yoga Mat Rotation Feature
+
+### Phase 1: Database Schema
+- [x] Add rotation field to floor_plans table (horizontal/vertical) - matRotation enum added
+- [ ] Add rotation field to floor_plan_spots table (not needed - spots inherit from floor plan)
+- [x] Run database migration (via SQL ALTER TABLE)
+
+### Phase 2: Generation Algorithm
+- [x] Update generateYogaGrid to accept rotation parameter
+- [x] Calculate mat dimensions based on rotation (width/height swap)
+- [x] Update spot coordinates for vertical orientation
+
+### Phase 3: UI Controls
+- [x] Add rotation toggle to CreateFloorPlanDialog
+- [x] Show rotation preview description (horizontal/vertical dimensions)
+- [x] Update form submission to include matRotation
+
+### Phase 4: Viewer Rendering
+- [x] Update renderMatSpot to respect rotation field
+- [x] Swap width/height for vertical mats (30x18 vs 18x30)
+- [x] Pass matRotation from FloorPlan to renderMatSpot
+
+### Phase 5: Testing
+- [x] Test horizontal yoga grid (default) - 24 spots generated correctly
+- [x] Test vertical yoga grid - 24 spots generated with different layout
+- [x] Verify mat dimensions are correct - horizontal 6x2, vertical 2x6
+- [x] Test different spot arrangements - verified via row identifiers
+- [x] All vitest tests passing (5/5)
+
+### Phase 6: Delivery
 - [ ] Save checkpoint
 - [ ] Update documentation

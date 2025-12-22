@@ -55,6 +55,7 @@ export default function FloorPlanBuilder() {
   const [widthFeet, setWidthFeet] = useState("");
   const [safetySpacing, setSafetySpacing] = useState("3");
   const [templateType, setTemplateType] = useState<TemplateType>("kickboxing_bags");
+  const [matRotation, setMatRotation] = useState<"horizontal" | "vertical">("horizontal");
   const [notes, setNotes] = useState("");
 
   // Queries
@@ -108,6 +109,7 @@ export default function FloorPlanBuilder() {
     setWidthFeet("");
     setSafetySpacing("3");
     setTemplateType("kickboxing_bags");
+    setMatRotation("horizontal");
     setNotes("");
   };
 
@@ -127,6 +129,7 @@ export default function FloorPlanBuilder() {
       widthFeet: parseInt(widthFeet),
       safetySpacingFeet: parseInt(safetySpacing),
       templateType,
+      matRotation,
       notes: notes || undefined,
     });
   };
@@ -246,6 +249,27 @@ export default function FloorPlanBuilder() {
                   {templateDescriptions[templateType]}
                 </p>
               </div>
+
+              {/* Mat Rotation (only for yoga_grid) */}
+              {templateType === "yoga_grid" && (
+                <div className="space-y-2">
+                  <Label htmlFor="matRotation">Mat Orientation</Label>
+                  <Select value={matRotation} onValueChange={(value) => setMatRotation(value as "horizontal" | "vertical")}>
+                    <SelectTrigger id="matRotation">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="horizontal">Horizontal (6ft wide × 2ft tall)</SelectItem>
+                      <SelectItem value="vertical">Vertical (2ft wide × 6ft tall)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    {matRotation === "horizontal" 
+                      ? "Mats placed horizontally - wider layout, fewer rows" 
+                      : "Mats placed vertically - narrower layout, more rows"}
+                  </p>
+                </div>
+              )}
 
               {/* Notes */}
               <div className="space-y-2">
