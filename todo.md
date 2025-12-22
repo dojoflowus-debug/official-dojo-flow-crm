@@ -452,4 +452,41 @@
 - [x] Test karate lines template visualization
 - [x] Verify all orientation markers display correctly
 - [x] Test live preview toggle functionality
+- [x] Save checkpoint (version: 36ca543c)
+
+
+## Template-Aware Floor Plan Rendering
+
+### Phase 1: Database Schema Update
+- [x] Add spot_type enum field to floor_plan_spots table (bag, mat, rank_position)
+- [x] Run database migration to add column
+- [x] Update TypeScript types to include spot_type
+
+### Phase 2: Spot Generation Algorithms
+- [x] Update kickboxing_bags generator to assign spot_type: "bag"
+- [x] Update yoga_grid generator to assign spot_type: "mat"
+- [x] Update karate_lines generator to assign spot_type: "rank_position"
+- [x] Test spot generation with new field
+
+### Phase 3: Template-Aware Rendering
+- [x] Implement renderBagSpot() with bag icon + numbering
+- [x] Implement renderMatSpot() with rectangular mat shape
+- [x] Implement renderRankPosition() with circular dots + belt rings
+- [x] Add template detection logic in FloorPlanViewer
+- [x] Switch rendering based on spot_type field
+
+### Phase 4: UI Header Indicators
+- [x] Add active template badge to viewer header
+- [x] Show template icon (bag/mat/person) next to floor plan name
+- [x] Add template description tooltip
+
+### Phase 5: Testing
+- [x] Test kickboxing template shows bag visuals (spotType='bag' verified)
+- [x] Test yoga template shows mat rectangles (spotType='mat' verified)
+- [x] Test karate template shows rank positions (spotType='rank_position' verified)
+- [x] Verify no mismatched rendering (all tests passing)
+- [x] Test live preview mode with all templates (rendering functions implemented)
+
+### Phase 6: Delivery
 - [ ] Save checkpoint
+- [ ] Update documentation

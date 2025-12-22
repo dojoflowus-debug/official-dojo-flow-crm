@@ -2188,6 +2188,8 @@ export const floorPlanSpots = mysqlTable("floor_plan_spots", {
   rowIdentifier: varchar("rowIdentifier", { length: 10 }),
   /** Optional column identifier (for grid layouts) */
   columnIdentifier: varchar("columnIdentifier", { length: 10 }),
+  /** Semantic spot type for template-aware rendering */
+  spotType: mysqlEnum("spotType", ["bag", "mat", "rank_position"]).notNull(),
   /** Whether this spot is currently available for use */
   isAvailable: int("isAvailable").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

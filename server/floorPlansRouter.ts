@@ -24,6 +24,7 @@ function generateKickboxingSpots(
   spotLabel: string;
   positionX: number;
   positionY: number;
+  spotType: "bag" | "mat" | "rank_position";
   isAvailable: number;
 }> {
   const spots = [];
@@ -49,6 +50,7 @@ function generateKickboxingSpots(
         spotLabel: `Bag ${spotNumber}`,
         positionX,
         positionY,
+        spotType: "bag" as const,
         isAvailable: 1,
       });
       
@@ -72,6 +74,7 @@ function generateYogaGridSpots(
   positionY: number;
   rowIdentifier: string;
   columnIdentifier: string;
+  spotType: "bag" | "mat" | "rank_position";
   isAvailable: number;
 }> {
   const spots = [];
@@ -103,6 +106,7 @@ function generateYogaGridSpots(
         positionY,
         rowIdentifier: rowLabel,
         columnIdentifier: colLabel,
+        spotType: "mat" as const,
         isAvailable: 1,
       });
       
@@ -126,6 +130,7 @@ function generateKarateLineSpots(
   positionY: number;
   rowIdentifier: string;
   columnIdentifier: string;
+  spotType: "bag" | "mat" | "rank_position";
   isAvailable: number;
 }> {
   const spots = [];
@@ -153,6 +158,7 @@ function generateKarateLineSpots(
         positionY,
         rowIdentifier: `Line ${line + 1}`,
         columnIdentifier: String(spot + 1),
+        spotType: "rank_position" as const,
         isAvailable: 1,
       });
       

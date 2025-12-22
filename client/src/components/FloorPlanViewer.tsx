@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { User } from "lucide-react";
+import { User, Package, Grid3x3, Users } from "lucide-react";
 
 interface Spot {
   id: number;
@@ -7,6 +7,7 @@ interface Spot {
   spotLabel: string;
   positionX: number;
   positionY: number;
+  spotType: "bag" | "mat" | "rank_position";
   rowPosition?: "front" | "middle" | "back";
   beltRank?: string;
 }
@@ -41,6 +42,178 @@ const BELT_COLORS: Record<string, string> = {
   red: "#dc143c",
   black: "#1a1a1a",
 };
+
+// Rendering helper functions for each spot type
+function renderBagSpot(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  spot: any,
+  isHighlighted: boolean,
+  isEmpty: boolean,
+  assignment: any
+) {
+  // Draw bag icon (rectangular bag shape)
+  const bagWidth = 24;
+  const bagHeight = 36;
+
+  // Shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  // Bag body
+  ctx.fillStyle = isEmpty ? "#6b7280" : "#dc2626"; // Red for bags
+  ctx.fillRect(x - bagWidth / 2, y - bagHeight / 2, bagWidth, bagHeight);
+
+  // Bag outline
+  ctx.strokeStyle = isHighlighted ? "#b71c1c" : "#991b1b";
+  ctx.lineWidth = isHighlighted ? 3 : 2;
+  ctx.strokeRect(x - bagWidth / 2, y - bagHeight / 2, bagWidth, bagHeight);
+
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Draw bag number
+  ctx.fillStyle = isEmpty ? "#9ca3af" : "#ffffff";
+  ctx.font = isHighlighted ? "bold 14px sans-serif" : "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  if (assignment) {
+    const initials = assignment.studentName
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase();
+    ctx.fillText(initials, x, y);
+  } else {
+    ctx.fillText(spot.spotNumber.toString(), x, y);
+  }
+}
+
+function renderMatSpot(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  spot: any,
+  isHighlighted: boolean,
+  isEmpty: boolean,
+  assignment: any
+) {
+  // Draw mat (horizontal rectangle)
+  const matWidth = 30;
+  const matHeight = 18;
+
+  // Shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  // Mat body
+  ctx.fillStyle = isEmpty ? "#6b7280" : "#7c3aed"; // Purple for mats
+  ctx.fillRect(x - matWidth / 2, y - matHeight / 2, matWidth, matHeight);
+
+  // Mat outline
+  ctx.strokeStyle = isHighlighted ? "#b71c1c" : "#5b21b6";
+  ctx.lineWidth = isHighlighted ? 3 : 2;
+  ctx.strokeRect(x - matWidth / 2, y - matHeight / 2, matWidth, matHeight);
+
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Draw mat label
+  ctx.fillStyle = isEmpty ? "#9ca3af" : "#ffffff";
+  ctx.font = isHighlighted ? "bold 10px sans-serif" : "bold 9px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  if (assignment) {
+    const initials = assignment.studentName
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase();
+    ctx.fillText(initials, x, y);
+  } else {
+    ctx.fillText(spot.spotLabel, x, y);
+  }
+}
+
+function renderRankPosition(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  spot: any,
+  isHighlighted: boolean,
+  isEmpty: boolean,
+  assignment: any,
+  rowPosition: "front" | "middle" | "back"
+) {
+  // Determine spot size based on row position (front row larger)
+  let spotRadius = 15;
+  if (rowPosition === "front") spotRadius = 18;
+  if (rowPosition === "back") spotRadius = 13;
+  if (isHighlighted) spotRadius += 3;
+
+  // Get belt color
+  let spotColor = "#3b82f6"; // Default blue
+  if (assignment?.beltRank) {
+    const rank = assignment.beltRank.toLowerCase().replace(" belt", "");
+    spotColor = BELT_COLORS[rank] || "#3b82f6";
+  } else if (isEmpty) {
+    spotColor = "#6b7280"; // Gray for empty
+  }
+
+  // Draw spot circle with shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  ctx.beginPath();
+  ctx.arc(x, y, spotRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = spotColor;
+  ctx.fill();
+
+  // Draw rank-based outline (belt color ring)
+  if (assignment?.beltRank) {
+    const rank = assignment.beltRank.toLowerCase().replace(" belt", "");
+    ctx.strokeStyle = BELT_COLORS[rank] || "#3b82f6";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = isHighlighted ? "#b71c1c" : "#1e3a8a";
+    ctx.lineWidth = isHighlighted ? 3 : 2;
+    ctx.stroke();
+  }
+
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Draw spot label or student initials
+  ctx.fillStyle = isEmpty ? "#9ca3af" : "#ffffff";
+  ctx.font = isHighlighted
+    ? "bold 11px sans-serif"
+    : isEmpty
+    ? "10px sans-serif"
+    : "bold 10px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  if (assignment) {
+    const initials = assignment.studentName
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase();
+    ctx.fillText(initials, x, y);
+  } else {
+    ctx.fillText(spot.spotLabel, x, y);
+  }
+}
 
 export function FloorPlanViewer({
   floorPlan,
@@ -160,7 +333,7 @@ export function FloorPlanViewer({
     ctx.font = "9px sans-serif";
     ctx.fillText("INSTRUCTOR", instructorX, instructorY + 20);
 
-    // Draw spots with enhanced visualization
+    // Draw spots with template-aware rendering
     floorPlan.spots.forEach((spot) => {
       const x =
         (spot.positionX / 100) * (canvas.width - padding * 2) + padding;
@@ -171,67 +344,17 @@ export function FloorPlanViewer({
       const isHighlighted = highlightedSpots.includes(spot.id);
       const assignment = assignedStudents.find((a) => a.spotId === spot.id);
       const isEmpty = livePreview && !assignment;
-
-      // Determine spot size based on row position (front row larger)
-      let spotRadius = 15;
-      if (rowPosition === "front") spotRadius = 18;
-      if (rowPosition === "back") spotRadius = 13;
-      if (isHighlighted) spotRadius += 3;
-
-      // Determine spot opacity based on live preview
       const spotOpacity = isEmpty ? 0.3 : 1.0;
 
-      // Get belt color for karate template
-      const spotColor = getBeltColor(spot);
-
-      // Draw spot circle with shadow
-      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
-
       ctx.globalAlpha = spotOpacity;
-      ctx.beginPath();
-      ctx.arc(x, y, spotRadius, 0, 2 * Math.PI);
-      ctx.fillStyle = spotColor;
-      ctx.fill();
 
-      // Draw rank-based outline for karate template
-      if (floorPlan.templateType === "karate" && assignment?.beltRank) {
-        const rank = assignment.beltRank.toLowerCase().replace(" belt", "");
-        ctx.strokeStyle = BELT_COLORS[rank] || "#3b82f6";
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      } else {
-        ctx.strokeStyle = isHighlighted ? "#b71c1c" : "#1e3a8a";
-        ctx.lineWidth = isHighlighted ? 3 : 2;
-        ctx.stroke();
-      }
-
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-
-      // Draw spot label or student initials
-      ctx.fillStyle = isEmpty ? "#9ca3af" : "#ffffff";
-      ctx.font = isHighlighted
-        ? "bold 11px sans-serif"
-        : isEmpty
-        ? "10px sans-serif"
-        : "bold 10px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      if (livePreview && assignment) {
-        // Show student initials
-        const initials = assignment.studentName
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase();
-        ctx.fillText(initials, x, y);
-      } else {
-        // Show spot label
-        ctx.fillText(spot.spotLabel, x, y);
+      // Render based on spot type
+      if (spot.spotType === "bag") {
+        renderBagSpot(ctx, x, y, spot, isHighlighted, isEmpty, assignment);
+      } else if (spot.spotType === "mat") {
+        renderMatSpot(ctx, x, y, spot, isHighlighted, isEmpty, assignment);
+      } else if (spot.spotType === "rank_position") {
+        renderRankPosition(ctx, x, y, spot, isHighlighted, isEmpty, assignment, rowPosition);
       }
 
       ctx.globalAlpha = 1.0;
@@ -298,13 +421,40 @@ export function FloorPlanViewer({
   return (
     <div className="w-full">
       <div className="mb-4 flex items-start justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {floorPlan.roomName}
-          </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            {floorPlan.spots.length} spots • {floorPlan.templateType} layout
-          </p>
+        <div className="flex items-start gap-3">
+          <div className="mt-1">
+            {floorPlan.templateType === "kickboxing_bags" && (
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg" title="Kickboxing Bags Template">
+                <Package className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+            )}
+            {floorPlan.templateType === "yoga_grid" && (
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg" title="Yoga Grid Template">
+                <Grid3x3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            )}
+            {floorPlan.templateType === "karate_lines" && (
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg" title="Karate Lines Template">
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            )}
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              {floorPlan.roomName}
+            </h3>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {floorPlan.spots.length} spots
+              </p>
+              <span className="text-slate-400">•</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                {floorPlan.templateType === "kickboxing_bags" && "Kickboxing Bags"}
+                {floorPlan.templateType === "yoga_grid" && "Yoga Grid"}
+                {floorPlan.templateType === "karate_lines" && "Karate Lines"}
+              </span>
+            </div>
+          </div>
         </div>
         {livePreview && (
           <div className="text-right">

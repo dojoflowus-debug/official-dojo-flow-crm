@@ -181,9 +181,10 @@ describe('Spot Generation Algorithms', () => {
     fullPlan.spots.forEach((spot, index) => {
       expect(spot.spotLabel).toBe(`Bag ${index + 1}`);
       expect(spot.spotNumber).toBe(index + 1);
+      expect(spot.spotType).toBe('bag'); // Verify spotType is set correctly
     });
 
-    console.log(`✓ Kickboxing spots properly labeled (${fullPlan.spots.length} bags)`);
+    console.log(`✓ Kickboxing spots properly labeled with spotType='bag' (${fullPlan.spots.length} bags)`);
   });
 
   it('should generate yoga grid spots with row/column labels', async () => {
@@ -202,8 +203,14 @@ describe('Spot Generation Algorithms', () => {
     expect(firstSpot.spotLabel).toMatch(/^Mat [A-Z]\d+$/);
     expect(firstSpot.rowIdentifier).toBeDefined();
     expect(firstSpot.columnIdentifier).toBeDefined();
+    expect(firstSpot.spotType).toBe('mat'); // Verify spotType is set correctly
 
-    console.log(`✓ Yoga grid spots properly labeled (${fullPlan.spots.length} mats)`);
+    // Verify all spots have mat type
+    fullPlan.spots.forEach((spot) => {
+      expect(spot.spotType).toBe('mat');
+    });
+
+    console.log(`✓ Yoga grid spots properly labeled with spotType='mat' (${fullPlan.spots.length} mats)`);
     console.log(`  Example: ${firstSpot.spotLabel}`);
   });
 
@@ -223,8 +230,14 @@ describe('Spot Generation Algorithms', () => {
     expect(firstSpot.spotLabel).toMatch(/^Line \d+ Spot \d+$/);
     expect(firstSpot.rowIdentifier).toMatch(/^Line \d+$/);
     expect(firstSpot.columnIdentifier).toBeDefined();
+    expect(firstSpot.spotType).toBe('rank_position'); // Verify spotType is set correctly
 
-    console.log(`✓ Karate lineup spots properly labeled (${fullPlan.spots.length} positions)`);
+    // Verify all spots have rank_position type
+    fullPlan.spots.forEach((spot) => {
+      expect(spot.spotType).toBe('rank_position');
+    });
+
+    console.log(`✓ Karate lineup spots properly labeled with spotType='rank_position' (${fullPlan.spots.length} positions)`);
     console.log(`  Example: ${firstSpot.spotLabel}`);
   });
 });
