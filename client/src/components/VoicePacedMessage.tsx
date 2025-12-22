@@ -32,6 +32,7 @@ export default function VoicePacedMessage({
   const [displayedText, setDisplayedText] = useState('');
   const [isPlaying, setIsPlaying] = useState(true);
   const [showFullText, setShowFullText] = useState(false);
+  const [autoplayFailed, setAutoplayFailed] = useState(false);
   
   const currentIndexRef = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -96,7 +97,15 @@ export default function VoicePacedMessage({
       });
       
       audioRef.current.addEventListener('error', (e) => {
-        console.error('[VoicePacedMessage] Audio playback error:', e);
+        const target = e.target as HTMLAudioElement;
+        console.error('[VoicePacedMessage] Audio playback error:', {
+          error: e,
+          audioUrl,
+          networkState: target.networkState,
+          readyState: target.readyState,
+          errorCode: target.error?.code,
+          errorMessage: target.error?.message
+        });
       });
       
       audioRef.current.addEventListener('loadeddata', () => {
@@ -105,7 +114,20 @@ export default function VoicePacedMessage({
       
       // Start playback
       audioRef.current.play().catch(err => {
-        console.error('[VoicePacedMessage] Failed to play audio:', err);
+        console.error('[VoicePacedMessage] Failed to play audio:', {
+          error: err,
+          errorName: err.name,
+          errorMessage: err.message,
+          audioUrl,
+          isAutoplayBlocked: err.name === 'NotAllowedError'
+        });
+        
+        // If autoplay is blocked, we'll need user interaction
+        if (err.name === 'NotAllowedError') {
+          console.warn('[VoicePacedMessage] Autoplay blocked - audio requires user interaction');
+          setAutoplayFailed(true);
+          setIsPlaying(false);
+        }
       });
     } else {
       console.warn('[VoicePacedMessage] No audioUrl provided for voice-enabled message');
@@ -225,8 +247,47 @@ export default function VoicePacedMessage({
     return 'bg-gray-200 hover:bg-gray-300 text-gray-800 border border-gray-300';
   };
 
+  const handleManualPlay = () => {
+    if (audioRef.current) {
+      audioRef.current.play().then(() => {
+        console.log('[VoicePacedMessage] Manual playback started successfully');
+        setAutoplayFailed(false);
+        setIsPlaying(true);
+        
+        // Resume typewriter if needed
+        if (currentIndexRef.current < content.length) {
+          handleResume();
+        }
+      }).catch(err => {
+        console.error('[VoicePacedMessage] Manual playback failed:', err);
+      });
+    }
+  };
+
   return (
     <div className="relative">
+      {/* Autoplay blocked warning */}
+      {autoplayFailed && (
+        <div className={`mb-3 p-3 rounded-lg border flex items-center gap-3 ${
+          theme === 'cinematic' ? 'bg-white/10 border-white/20 text-white' :
+          theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' :
+          'bg-blue-50 border-blue-200 text-blue-900'
+        }`}>
+          <button
+            onClick={handleManualPlay}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              theme === 'cinematic' ? 'bg-white/20 hover:bg-white/30 text-white' :
+              theme === 'dark' ? 'bg-slate-600 hover:bg-slate-500 text-white' :
+              'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            <Play className="w-4 h-4 inline mr-2" />
+            Play Audio
+          </button>
+          <span className="text-sm">Click to enable voice playback</span>
+        </div>
+      )}
+      
       {/* Message content */}
       <div className="prose prose-sm max-w-none">
         {displayedText}
