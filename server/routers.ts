@@ -64,7 +64,9 @@ async function executeCRMFunction(name: string, args: any) {
       return { count: leadStats?.total_leads || 0, status: args.status || 'all' };
     
     case 'search_students':
+      console.log('[executeCRMFunction] search_students called with query:', args.query);
       const searchedStudents = await searchStudents(args.query);
+      console.log('[executeCRMFunction] search_students found:', searchedStudents.length, 'students');
       return {
         students: searchedStudents.map(s => ({
           id: s.id,
@@ -2554,18 +2556,24 @@ Return the data as a structured JSON object.`
       .mutation(async ({ input }) => {
         const { message, avatarName = 'Kai', conversationHistory = [] } = input;
         
+        console.log('[Kai Chat] User message:', message);
+        
         // Use OpenAI GPT-4 for conversational AI
         const { chatWithKai } = await import("./services/openai");
         
         try {
           const aiResponse = await chatWithKai(message, conversationHistory, avatarName);
+          console.log('[Kai Chat] AI response:', JSON.stringify(aiResponse, null, 2));
           
           // If GPT-4 wants to call functions, execute them
           if (aiResponse.functionCalls && aiResponse.functionCalls.length > 0) {
+            console.log('[Kai Chat] Function calls detected:', aiResponse.functionCalls.length);
             const functionResults: any[] = [];
             
             for (const call of aiResponse.functionCalls) {
+              console.log('[Kai Chat] Executing function:', call.name, 'with args:', call.arguments);
               const result = await executeCRMFunction(call.name, call.arguments);
+              console.log('[Kai Chat] Function result:', JSON.stringify(result, null, 2));
               functionResults.push(result);
             }
             
@@ -2583,7 +2591,9 @@ Return the data as a structured JSON object.`
             ui_blocks: aiResponse.ui_blocks || [],
           };
         } catch (error) {
-          console.error('[Kai Chat] Error:', error);
+          console.error('[Kai Chat] Error caught:', error);
+          console.error('[Kai Chat] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+          console.error('[Kai Chat] Error message:', error instanceof Error ? error.message : String(error));
           // Fallback to keyword-based parsing if OpenAI fails
           const lowerMessage = message.toLowerCase();
         

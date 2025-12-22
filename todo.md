@@ -181,6 +181,17 @@
 2. Is the system prompt clear enough about when to use tools?
 3. Should we use `tool_choice: 'required'` instead of `'auto'`?
 
+### Root Cause Found
+- [x] Fix searchStudents function to handle full name queries (e.g., "marcus johnson")
+- [x] Current search uses OR logic on individual columns (firstName, lastName, email, phone)
+- [x] Full name "marcus johnson" doesn't match because it's split across firstName/lastName columns
+- [x] Solution: Add CONCAT(firstName, ' ', lastName) to search conditions
+- [x] Test search with full names, first names only, last names only
+- [x] Fix Kai conversation saving - conversations not being saved to database
+- [x] Auto-create conversation on first message if in new conversation
+- [x] Test both fixes working together
+- [x] Save checkpoint
+
 ## 🐛 FIX: Conversation List Not Displaying Older Conversations
 - [x] Add "Older" section to conversation list (currently only shows Today/Yesterday)
 - [x] Add olderConversations filter for conversations older than yesterday

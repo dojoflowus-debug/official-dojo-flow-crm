@@ -285,21 +285,35 @@ export async function getKioskWaivers() {
 
 // Search students by name, phone, or email
 export async function searchStudents(query: string) {
+  console.log('[searchStudents] Query:', query);
   const db = await getDb();
-  if (!db) return [];
+  if (!db) {
+    console.log('[searchStudents] Database not available');
+    return [];
+  }
   
   const { students } = await import("../drizzle/schema");
-  const { or, like } = await import("drizzle-orm");
+  const { or, like, sql } = await import("drizzle-orm");
   
   const searchPattern = `%${query}%`;
+  console.log('[searchStudents] Search pattern:', searchPattern);
+  
+  // Search across firstName, lastName, email, phone, AND concatenated full name
   const results = await db.select().from(students).where(
     or(
       like(students.firstName, searchPattern),
       like(students.lastName, searchPattern),
       like(students.email, searchPattern),
-      like(students.phone, searchPattern)
+      like(students.phone, searchPattern),
+      // Also search concatenated full name (handles "marcus johnson" queries)
+      sql`CONCAT(${students.firstName}, ' ', ${students.lastName}) LIKE ${searchPattern}`
     )
   ).limit(10);
+  
+  console.log('[searchStudents] Results count:', results.length);
+  if (results.length > 0) {
+    console.log('[searchStudents] First result:', results[0].firstName, results[0].lastName);
+  }
   
   return results;
 }

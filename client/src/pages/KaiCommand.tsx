@@ -1610,10 +1610,25 @@ export default function KaiCommand() {
     setAttachments([]); // Clear attachments after sending
     setIsLoading(true);
 
-    // Save user message to database if we have a valid conversation
-    const conversationId = selectedConversationId && !selectedConversationId.startsWith('new-') 
+    // Auto-create conversation if we're in a new conversation
+    let conversationId = selectedConversationId && !selectedConversationId.startsWith('new-') 
       ? parseInt(selectedConversationId) 
       : null;
+    
+    if (!conversationId && selectedConversationId?.startsWith('new-')) {
+      try {
+        const result = await createConversationMutation.mutateAsync({
+          title: currentInput.slice(0, 50) // Use first 50 chars as title
+        });
+        conversationId = result.id;
+        // Update selected conversation to the real ID
+        setSelectedConversationId(conversationId.toString());
+        // Refresh conversations list
+        utils.kai.getConversations.invalidate();
+      } catch (error) {
+        console.error('Failed to create conversation:', error);
+      }
+    }
     
     if (conversationId) {
       try {
