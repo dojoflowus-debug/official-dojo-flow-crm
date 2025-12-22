@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight, Eye, Play } from "lucide-react";
 import { toast } from "sonner";
 import BottomNavLayout from "@/components/BottomNavLayout";
 import { Link } from "react-router-dom";
@@ -54,6 +54,7 @@ function FloorPlansContent() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [viewingPlan, setViewingPlan] = useState<FloorPlan | null>(null);
+  const [livePreview, setLivePreview] = useState(false);
 
   // Form state
   const [roomName, setRoomName] = useState("");
@@ -489,13 +490,31 @@ function FloorPlansContent() {
         </Dialog>
 
         {/* View Dialog */}
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <Dialog open={isViewDialogOpen} onOpenChange={(open) => {
+          setIsViewDialogOpen(open);
+          if (!open) setLivePreview(false); // Reset toggle when closing
+        }}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle>Floor Plan Viewer</DialogTitle>
-              <DialogDescription>
-                Visual layout showing all spot positions
-              </DialogDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle>Floor Plan Viewer</DialogTitle>
+                  <DialogDescription>
+                    Visual layout showing all spot positions
+                  </DialogDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={livePreview ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLivePreview(!livePreview)}
+                    className="gap-2"
+                  >
+                    <Play className="h-4 w-4" />
+                    {livePreview ? "Live Preview ON" : "Preview as Live Class"}
+                  </Button>
+                </div>
+              </div>
             </DialogHeader>
             <div className="py-4">
               {isLoadingSpots ? (
@@ -503,7 +522,18 @@ function FloorPlansContent() {
                   Loading floor plan...
                 </div>
               ) : floorPlanWithSpots ? (
-                <FloorPlanViewer floorPlan={floorPlanWithSpots} />
+                <FloorPlanViewer 
+                  floorPlan={floorPlanWithSpots} 
+                  livePreview={livePreview}
+                  assignedStudents={livePreview ? [
+                    // Mock data for live preview demo
+                    { spotId: floorPlanWithSpots.spots[0]?.id || 1, studentName: "Emma Wilson", beltRank: "Yellow Belt" },
+                    { spotId: floorPlanWithSpots.spots[2]?.id || 3, studentName: "Noah Chen", beltRank: "Green Belt" },
+                    { spotId: floorPlanWithSpots.spots[4]?.id || 5, studentName: "Sophia Lee", beltRank: "Blue Belt" },
+                    { spotId: floorPlanWithSpots.spots[6]?.id || 7, studentName: "Liam Brown", beltRank: "White Belt" },
+                    { spotId: floorPlanWithSpots.spots[8]?.id || 9, studentName: "Olivia Davis", beltRank: "Orange Belt" },
+                  ] : []}
+                />
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   Floor plan not found

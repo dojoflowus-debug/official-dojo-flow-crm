@@ -416,4 +416,40 @@
 - [x] Add View button to floor plan cards
 - [x] Create modal/dialog to display floor plan viewer
 - [x] Test floor plan visualization
+- [x] Save checkpoint (version: b9ad1031)
+
+## 🎨 Floor Plan UI Design Refinement
+
+### Phase 1: Analysis
+- [ ] Review current FloorPlanViewer component implementation
+- [ ] Identify all template types (kickboxing, yoga, karate)
+- [ ] Document current spot generation logic
+
+### Phase 2: Dojo-Inspired Canvas & Orientation
+- [x] Replace white canvas with dark mat tone background
+- [x] Add "Front of Class" label/indicator
+- [x] Add instructor position marker icon
+- [x] Add subtle gradient or texture to canvas
+
+### Phase 3: Enhanced Spot Visualization
+- [x] Differentiate front/middle/back rows visually (size, opacity, or color)
+- [x] Implement rank-based outlines for karate template (belt color rings)
+- [x] Increase visual weight for priority spots (front row)
+- [ ] Add row labels (Row A, Row B, etc.) - deferred
+
+### Phase 4: Simplified UI & Live Preview
+- [x] Simplify side panels - removed unnecessary details from viewer
+- [x] Add "Preview as Live Class" toggle switch
+- [x] Implement live class preview mode showing:
+  - [x] Assigned students on spots
+  - [x] Capacity fill state visualization
+  - [x] Dimmed/grayed empty spots
+  - [x] Student names or initials on occupied spots
+
+### Phase 5: Testing & Polish
+- [x] Test kickboxing bag template visualization
+- [x] Test yoga grid template visualization
+- [x] Test karate lines template visualization
+- [x] Verify all orientation markers display correctly
+- [x] Test live preview toggle functionality
 - [ ] Save checkpoint
