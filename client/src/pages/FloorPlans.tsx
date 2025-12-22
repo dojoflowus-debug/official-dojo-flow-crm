@@ -23,6 +23,7 @@ interface FloorPlan {
   squareFeet: number | null;
   safetySpacingFeet: number;
   templateType: TemplateType;
+  matRotation: "horizontal" | "vertical" | null;
   maxCapacity: number;
   isActive: number;
   notes: string | null;
@@ -62,6 +63,7 @@ function FloorPlansContent() {
   const [widthFeet, setWidthFeet] = useState("");
   const [safetySpacingFeet, setSafetySpacingFeet] = useState("3");
   const [templateType, setTemplateType] = useState<TemplateType>("kickboxing_bags");
+  const [matRotation, setMatRotation] = useState<"horizontal" | "vertical">("horizontal");
   const [notes, setNotes] = useState("");
 
   const utils = trpc.useUtils();
@@ -109,6 +111,7 @@ function FloorPlansContent() {
     setWidthFeet("");
     setSafetySpacingFeet("3");
     setTemplateType("kickboxing_bags");
+    setMatRotation("horizontal");
     setNotes("");
     setSelectedPlanId(null);
   };
@@ -139,6 +142,7 @@ function FloorPlansContent() {
     setWidthFeet(plan.widthFeet?.toString() || "");
     setSafetySpacingFeet(plan.safetySpacingFeet.toString());
     setTemplateType(plan.templateType);
+    setMatRotation(plan.matRotation || "horizontal");
     setNotes(plan.notes || "");
     setIsEditDialogOpen(true);
   };
@@ -159,7 +163,7 @@ function FloorPlansContent() {
       lengthFeet: length,
       widthFeet: width,
       safetySpacingFeet: parseFloat(safetySpacingFeet),
-      templateType,
+      matRotation,
       notes: notes.trim() || null,
     });
   };
@@ -453,7 +457,7 @@ function FloorPlansContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="edit-template">Layout Template *</Label>
-                <Select value={templateType} onValueChange={(v) => setTemplateType(v as TemplateType)}>
+                <Select value={templateType} onValueChange={(v) => setTemplateType(v as TemplateType)} disabled>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -465,7 +469,27 @@ function FloorPlansContent() {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">Template type cannot be changed after creation</p>
               </div>
+
+              {/* Mat Rotation (only for yoga_grid) */}
+              {templateType === "yoga_grid" && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-matRotation">Mat Orientation</Label>
+                  <Select value={matRotation} onValueChange={(value) => setMatRotation(value as "horizontal" | "vertical")}>
+                    <SelectTrigger id="edit-matRotation">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="horizontal">Horizontal (6ft wide × 2ft tall)</SelectItem>
+                      <SelectItem value="vertical">Vertical (2ft wide × 6ft tall)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-amber-600 dark:text-amber-500">
+                    ⚠️ Changing rotation will regenerate all spots. Existing spot assignments will be cleared.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="edit-notes">Notes</Label>

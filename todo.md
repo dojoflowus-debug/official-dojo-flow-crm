@@ -522,5 +522,44 @@
 - [x] All vitest tests passing (5/5)
 
 ### Phase 6: Delivery
+- [x] Save checkpoint (version: fcd83339)
+- [x] Update documentation
+
+
+## Floor Plan Rotation Editing (Enhancement)
+
+### Phase 1: Backend API
+- [x] Update floorPlansRouter.update to handle rotation changes
+- [x] Add matRotation to update input schema
+- [x] Detect rotation changes for yoga_grid template
+- [x] Regenerate spots when rotation changes
+- [x] Use new rotation value in generateYogaGridSpots
+- [ ] Add vitest tests for rotation editing
+
+### Phase 2: Edit UI
+- [x] Add rotation toggle to edit floor plan modal
+- [x] Show rotation toggle only for yoga_grid template
+- [x] Add warning message about regenerating spots
+- [x] Wire up rotation change handler
+- [x] Disable template type selector in edit mode
+- [x] Add matRotation to FloorPlan interface
+- [x] Update form state management
+
+### Phase 3: Regenerate Spots
+- [x] Implement spot regeneration on rotation change (already in backend update procedure)
+- [x] Update capacity when spots regenerate (handled by backend)
+- [x] Spots are deleted and regenerated automatically
+- [x] maxCapacity is updated with new spot count
+
+### Phase 4: Testing
+- [x] Test changing horizontal to vertical
+- [x] Test changing vertical to horizontal
+- [x] Verify spot count updates correctly
+- [x] Test rotation changes don't affect non-yoga templates
+- [x] Test combined dimension and rotation changes
+- [x] Test that unchanged rotation doesn't regenerate spots
+- [x] All vitest tests passing (7/7 tests passed)
+
+### Phase 5: Delivery
 - [ ] Save checkpoint
 - [ ] Update documentation

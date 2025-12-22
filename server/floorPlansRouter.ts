@@ -323,6 +323,7 @@ export const floorPlansRouter = router({
         widthFeet: z.number().nullable().optional(),
         squareFeet: z.number().nullable().optional(),
         safetySpacingFeet: z.number().optional(),
+        matRotation: z.enum(["horizontal", "vertical"]).optional(),
         notes: z.string().nullable().optional(),
         isActive: z.number().optional(),
       })
@@ -339,13 +340,20 @@ export const floorPlansRouter = router({
         throw new Error("Floor plan not found");
       }
       
-      // Check if dimensions changed
+      // Check if dimensions or rotation changed
       const dimensionsChanged =
         (updates.lengthFeet && updates.lengthFeet !== existingPlan.lengthFeet) ||
         (updates.widthFeet && updates.widthFeet !== existingPlan.widthFeet) ||
         (updates.safetySpacingFeet && updates.safetySpacingFeet !== existingPlan.safetySpacingFeet);
       
-      if (dimensionsChanged) {
+      const rotationChanged =
+        updates.matRotation &&
+        existingPlan.templateType === "yoga_grid" &&
+        updates.matRotation !== existingPlan.matRotation;
+      
+      const needsRegeneration = dimensionsChanged || rotationChanged;
+      
+      if (needsRegeneration) {
         // Regenerate spots
         const lengthFeet = updates.lengthFeet || existingPlan.lengthFeet || 30;
         const widthFeet = updates.widthFeet || existingPlan.widthFeet || 30;
@@ -363,7 +371,7 @@ export const floorPlansRouter = router({
             lengthFeet,
             widthFeet,
             safetySpacing,
-            existingPlan.matRotation || "horizontal"
+            updates.matRotation || existingPlan.matRotation || "horizontal"
           );
           break;
           case "karate_lines":
