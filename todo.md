@@ -604,3 +604,10 @@
 - [ ] Test performance (Lighthouse score)
 - [ ] Cross-browser testing
 - [ ] Save checkpoint with redesigned landing page
+
+
+## Pandawa Hero Banner Redesign
+- [x] Analyze Pandawa hero banner design patterns and layout
+- [x] Extract visual elements (typography, spacing, animations, effects)
+- [x] Implement Pandawa-style hero with DojoFlow branding
+- [x] Test responsiveness and animations
