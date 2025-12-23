@@ -89,6 +89,9 @@ import AISetup from "./pages/AISetup";
 import Security from "./pages/Security";
 import TestSimple from "./pages/TestSimple";
 import PublicChat from "./pages/PublicChat";
+import PublicHome from "./pages/PublicHome";
+import OwnerAuth from "./pages/OwnerAuth";
+import OwnerOnboarding from "./pages/OwnerOnboarding";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -99,6 +102,10 @@ function Router() {
   return (
     <Routes>
       {/* Public routes */}
+      <Route path="/public" element={<PublicHome />} />
+      <Route path="/owner" element={<OwnerAuth />} />
+      <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
+      <Route path="/owner/dashboard" element={<MinimalDashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

@@ -191,6 +191,9 @@ export default function KaiCommand() {
   // Add note to student mutation
   const addStudentNoteMutation = trpc.students.addNote.useMutation();
   
+  // TTS generation mutation
+  const generateSpeechMutation = trpc.kai.generateSpeech.useMutation();
+  
   // Handle saving note to student card
   const handleSaveToStudentCard = async (studentId: number, studentName: string, noteContent: string) => {
     try {
@@ -1571,6 +1574,11 @@ export default function KaiCommand() {
       return;
     }
     
+    // Close ResultsPanel when sending new message (auto-close on context change)
+    if (resultsPanelData) {
+      setResultsPanelData(null);
+    }
+    
     // Stop current speech when user sends new message
     if (voiceEnabled && currentSpeechMessageId) {
       setCurrentSpeechMessageId(null);
@@ -1695,7 +1703,7 @@ export default function KaiCommand() {
         
         if (voiceEnabled) {
           try {
-            const ttsResult = await trpc.kai.generateSpeech.mutate({
+            const ttsResult = await generateSpeechMutation.mutateAsync({
               text: response.response
             });
             

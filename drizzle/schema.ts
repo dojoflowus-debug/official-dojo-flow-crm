@@ -2263,3 +2263,120 @@ export const sessionSpotAssignments = mysqlTable("session_spot_assignments", {
 
 export type SessionSpotAssignment = typeof sessionSpotAssignments.$inferSelect;
 export type InsertSessionSpotAssignment = typeof sessionSpotAssignments.$inferInsert;
+
+/**
+ * Organizations table - School/Dojo profiles
+ * Each organization represents a martial arts school
+ */
+export const organizations = mysqlTable("organizations", {
+  id: int("id").autoincrement().primaryKey(),
+  /** School/Dojo name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Primary location address */
+  address: varchar("address", { length: 500 }),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zipCode: varchar("zipCode", { length: 20 }),
+  /** Timezone for scheduling */
+  timezone: varchar("timezone", { length: 100 }).default("America/New_York").notNull(),
+  /** Programs offered (JSON array) */
+  programs: text("programs"),
+  /** Estimated number of active students */
+  estimatedStudents: int("estimatedStudents"),
+  /** Desired launch date */
+  launchDate: timestamp("launchDate"),
+  /** School logo URL */
+  logoUrl: varchar("logoUrl", { length: 500 }),
+  /** Subscription plan */
+  planId: int("planId"),
+  /** Subscription status */
+  subscriptionStatus: mysqlEnum("subscriptionStatus", [
+    "trial",
+    "active",
+    "past_due",
+    "cancelled",
+    "inactive"
+  ]).default("trial").notNull(),
+  /** Trial end date */
+  trialEndsAt: timestamp("trialEndsAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = typeof organizations.$inferInsert;
+
+/**
+ * Organization Users table - Links users to organizations
+ * Supports multi-organization access and role management
+ */
+export const organizationUsers = mysqlTable("organization_users", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to user */
+  userId: int("userId").notNull(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull(),
+  /** User's role within this organization */
+  role: mysqlEnum("role", ["owner", "admin", "staff", "instructor"]).default("staff").notNull(),
+  /** Whether this is the user's primary organization */
+  isPrimary: int("isPrimary").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type OrganizationUser = typeof organizationUsers.$inferSelect;
+export type InsertOrganizationUser = typeof organizationUsers.$inferInsert;
+
+/**
+ * Onboarding Progress table - Tracks owner signup wizard progress
+ * Allows resuming onboarding if user leaves mid-flow
+ */
+export const onboardingProgress = mysqlTable("onboarding_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to user */
+  userId: int("userId").notNull().unique(),
+  /** Current onboarding step (1-5) */
+  currentStep: int("currentStep").default(1).notNull(),
+  /** Step 1: Account details (JSON) */
+  accountData: text("accountData"),
+  /** Step 2: Verification status */
+  isVerified: int("isVerified").default(0).notNull(),
+  /** Step 3: School profile data (JSON) */
+  schoolData: text("schoolData"),
+  /** Step 4: Selected plan ID */
+  selectedPlanId: int("selectedPlanId"),
+  /** Step 5: Payment completed */
+  paymentCompleted: int("paymentCompleted").default(0).notNull(),
+  /** Whether onboarding is fully completed */
+  isCompleted: int("isCompleted").default(0).notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type OnboardingProgress = typeof onboardingProgress.$inferSelect;
+export type InsertOnboardingProgress = typeof onboardingProgress.$inferInsert;
+
+/**
+ * Verification Codes table - OTP codes for email/SMS verification
+ * Used for owner signup verification and passwordless login
+ */
+export const verificationCodes = mysqlTable("verification_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Email or phone number */
+  identifier: varchar("identifier", { length: 320 }).notNull(),
+  /** 6-digit verification code */
+  code: varchar("code", { length: 6 }).notNull(),
+  /** Code type */
+  type: mysqlEnum("type", ["email", "sms", "login"]).default("email").notNull(),
+  /** Expiration time (15 minutes from creation) */
+  expiresAt: timestamp("expiresAt").notNull(),
+  /** Whether code has been used */
+  isUsed: int("isUsed").default(0).notNull(),
+  /** Number of verification attempts */
+  attempts: int("attempts").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type VerificationCode = typeof verificationCodes.$inferSelect;
+export type InsertVerificationCode = typeof verificationCodes.$inferInsert;

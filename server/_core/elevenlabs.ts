@@ -178,13 +178,65 @@ export async function getVoices(): Promise<GetVoicesResult> {
 }
 
 /**
+ * Sanitize text for speech by removing Markdown formatting
+ * Converts formatted text to natural speech-friendly text
+ * 
+ * @param text - Raw text with Markdown formatting
+ * @returns Clean text suitable for TTS
+ * 
+ * @example
+ * sanitizeForSpeech('**Focus on Leads:** Convert prospects first.')
+ * // Returns: 'Focus on Leads: Convert prospects first.'
+ */
+export function sanitizeForSpeech(text: string): string {
+  return text
+    // Remove bold formatting (**text** or __text__)
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    // Remove italic formatting (*text* or _text_)
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/_(.*?)_/g, '$1')
+    // Remove inline code (`code`)
+    .replace(/`(.*?)`/g, '$1')
+    // Remove code blocks (```code```)
+    .replace(/```[\s\S]*?```/g, '')
+    // Remove unordered list markers (-, *, •)
+    .replace(/^\s*[-*•]\s+/gm, '')
+    // Remove ordered list markers (1., 2., etc.)
+    .replace(/^\s*\d+\.\s+/gm, '')
+    // Remove headers (# Header)
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove links but keep link text [text](url)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove images ![alt](url)
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+    // Remove horizontal rules (---, ***, ___)
+    .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+    // Remove blockquotes (> text)
+    .replace(/^>\s+/gm, '')
+    // Replace multiple newlines with single space
+    .replace(/\n+/g, ' ')
+    // Replace multiple spaces with single space
+    .replace(/\s+/g, ' ')
+    // Trim whitespace
+    .trim();
+}
+
+/**
  * Generate speech for Kai's responses
  * Uses a professional, friendly voice suitable for a dojo assistant
+ * Automatically strips Markdown formatting for natural speech
  */
 export async function generateKaiSpeech(text: string): Promise<TextToSpeechResult> {
+  // Sanitize text to remove Markdown formatting before TTS
+  const cleanText = sanitizeForSpeech(text);
+  
+  console.log('[ElevenLabs] Original text:', text.substring(0, 100));
+  console.log('[ElevenLabs] Sanitized text:', cleanText.substring(0, 100));
+  
   return textToSpeech({
-    text,
-    voiceId: VOICES.RACHEL, // Professional female voice
+    text: cleanText,
+    voiceId: 'BL7YSL1bAkmW8U0JnU8o', // Custom Kai voice
     stability: 0.6,
     similarityBoost: 0.8,
     style: 0.2 // Slight expressiveness
