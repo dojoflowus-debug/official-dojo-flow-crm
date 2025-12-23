@@ -327,12 +327,17 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
               </Button>
 
               {/* Credits */}
-              <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isDark || isCinematic ? 'bg-[#2A2B2F]' : 'bg-gray-100'}`}>
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/billing/credits')}
+                className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:scale-105 transition-transform ${isDark || isCinematic ? 'bg-[#2A2B2F] hover:bg-[#35363B]' : 'bg-gray-100 hover:bg-gray-200'}`}
+                title="View credit dashboard"
+              >
                 <CreditCard className={`h-4 w-4 ${isDark || isCinematic ? 'text-gray-400' : 'text-gray-500'}`} />
                 <span className={`text-sm font-medium ${isDark || isCinematic ? 'text-white' : 'text-[#262626]'}`}>
                   Credits: 0
                 </span>
-              </div>
+              </Button>
 
               {/* Theme Toggle */}
               <div className="hidden md:block">

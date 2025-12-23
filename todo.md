@@ -403,3 +403,10 @@
 - [x] Test phone calls with credit deduction (via vitest)
 - [x] Verify low-credit warnings appear correctly (via vitest)
 - [x] All integration scenarios tested and passing
+## Credits Navigation Fix
+- [x] Locate Credits button in BottomNavLayout header
+- [x] Add navigation to /billing/credits route
+- [x] Convert Credits display to clickable Button component
+- [x] Add hover effects and scale transition
+- [x] Test navigation from header to credit dashboard (route verified in App.tsx)
+- [x] Verify credit dashboard displays correctly (CreditTransactions page exists)
