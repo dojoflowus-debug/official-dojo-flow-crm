@@ -91,6 +91,7 @@ import Security from "./pages/Security";
 import TestSimple from "./pages/TestSimple";
 import PublicChat from "./pages/PublicChat";
 import PublicHome from "./pages/PublicHome";
+import PublicLanding from "./pages/PublicLanding";
 import OwnerAuth from "./pages/OwnerAuth";
 import OwnerOnboarding from "./pages/OwnerOnboarding";
 import StaffAuth from "./pages/StaffAuth";
@@ -110,8 +111,9 @@ function Router() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<PublicHome />} />
-      <Route path="/public" element={<PublicHome />} />
+      <Route path="/" element={<PublicLanding />} />
+      <Route path="/public" element={<PublicLanding />} />
+      <Route path="/public-old" element={<PublicHome />} />
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<MinimalDashboard />} />
@@ -228,7 +230,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider
-        defaultTheme="dark"
+        defaultTheme="light"
         switchable
       >
         <EnvironmentProvider>

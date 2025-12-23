@@ -537,3 +537,70 @@
 - [x] Cross-organization access prevention implemented via middleware
 - [x] Location-bound Kiosk sessions implemented
 - [x] Role-based access control middleware in place
+
+
+## 🎨 Landing Page Redesign (State-of-the-Art)
+
+### Inspiration Analysis
+- [x] Analyze Lemon Squeezy design patterns (animations, typography, spacing, color system)
+- [x] Analyze Pandawa design patterns (visual effects, interactions, layout, 3D elements)
+- [x] Extract key design principles from both sites
+- [x] Document animation patterns and timing
+
+### Visual Identity Design
+- [x] Design DojoFlow color system (primary, secondary, accent, gradients)
+- [x] Choose premium typography (headings, body, code/data)
+- [x] Define motion principles (easing, duration, choreography)
+- [x] Create component design tokens
+- [x] Design glassmorphism/neumorphism style system
+
+### Hero Section
+- [x] Create premium hero with animated headline
+- [x] Add 3D visual elements or animated graphics
+- [x] Implement scroll-triggered animations
+- [x] Add CTA buttons with hover effects
+- [x] Create background effects (gradients, particles, blur)
+
+### Feature Showcase
+- [ ] Build interactive feature cards with hover states
+- [ ] Add animated product screenshots/demos
+- [ ] Create bento grid layout for features
+- [ ] Implement scroll-reveal animations
+- [ ] Add micro-interactions on hover/click
+
+### Pricing Section
+- [ ] Design pricing cards with tier comparison
+- [ ] Add toggle for monthly/annual billing
+- [ ] Create feature comparison table
+- [ ] Add "Most Popular" badges and highlights
+- [ ] Implement smooth transitions
+
+### Social Proof
+- [ ] Add testimonials carousel with photos
+- [ ] Create stats counter with animated numbers
+- [ ] Add customer logo wall
+- [ ] Include case study highlights
+- [ ] Add trust badges
+
+### Footer
+- [ ] Design multi-column footer with sitemap
+- [ ] Add newsletter signup form
+- [ ] Include social media links
+- [ ] Add legal links (privacy, terms)
+- [ ] Create back-to-top button
+
+### Polish & Interactions
+- [ ] Add scroll-triggered animations throughout
+- [ ] Implement smooth scroll behavior
+- [ ] Add cursor effects (optional)
+- [ ] Create loading states and transitions
+- [ ] Add hover effects on all interactive elements
+- [ ] Optimize performance and lazy loading
+
+### Testing & Delivery
+- [ ] Test responsiveness (mobile, tablet, desktop)
+- [ ] Test all animations and interactions
+- [ ] Verify accessibility (keyboard nav, screen readers)
+- [ ] Test performance (Lighthouse score)
+- [ ] Cross-browser testing
+- [ ] Save checkpoint with redesigned landing page
