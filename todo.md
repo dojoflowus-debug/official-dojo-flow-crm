@@ -611,3 +611,34 @@
 - [x] Extract visual elements (typography, spacing, animations, effects)
 - [x] Implement Pandawa-style hero with DojoFlow branding
 - [x] Test responsiveness and animations
+
+
+## 📸 Marketing Images for Website
+- [x] IMAGE 1: Kai Command hero panel (dark/cinematic mode)
+- [x] IMAGE 2: Students page with map + list split view
+- [x] IMAGE 3: Student detail card drawer
+- [x] IMAGE 4: Classes schedule weekly grid
+- [x] IMAGE 5: Kai in action with automation result
+- [x] Anonymize all personal data (names, emails, phones)
+- [x] Add professional polish (shadows, contrast, spacing)
+- [x] Export as high-resolution 16:9 assets
+- [x] Add subtle browser frame or shadow presentation
+
+
+## 🐛 BUG: Route / returns 404 error
+- [x] Check App.tsx routing configuration
+- [x] Ensure root route is properly defined
+- [x] Test root route after fix
+
+
+## 🎨 Public Website Redesign with Marketing Images (COMPLETED)
+- [x] Copy 5 marketing images to /client/public/ directory
+- [x] Redesign hero section with Kai Command image
+- [x] Create features showcase section with 4 product images
+- [x] Add text overlays and descriptions for each feature
+- [x] Implement modern layout with proper spacing and shadows
+- [x] Add CTA buttons and conversion elements
+- [x] Test responsive design on mobile/tablet/desktop
+- [x] Ensure images load optimally (lazy loading, compression)
+- [x] Update App.tsx routing to use redesigned PublicHome
+- [x] Verify all images display correctly in browser

@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Users, Calendar, BarChart3, Sparkles, Zap, Shield, TrendingUp } from "lucide-react";
+import { ArrowRight, Users, Calendar, BarChart3, Sparkles, Zap, Shield, TrendingUp, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
 /**
- * Public Marketing Landing Page - Pandawa-Inspired Design
- * Premium hero with split headline, centered layout, and minimal distractions
+ * Public Marketing Landing Page - Redesigned with Real Product Screenshots
+ * Features: Hero with Kai Command screenshot, product showcase with 4 feature images
  */
 export default function PublicHome() {
   const [scrollY, setScrollY] = useState(0);
@@ -47,8 +47,8 @@ export default function PublicHome() {
         </div>
       </header>
 
-      {/* Hero Section - Pandawa Style */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      {/* Hero Section - With Kai Command Screenshot */}
+      <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden py-20">
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
           <div 
@@ -65,62 +65,252 @@ export default function PublicHome() {
               transform: `translateY(${scrollY * 0.5}px)`
             }}
           />
-          {/* Grain texture */}
-          <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E")`
-            }}
-          />
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 container max-w-5xl mx-auto text-center px-6">
-          {/* Split Headline - Pandawa Style */}
-          <div className="space-y-4 mb-8">
-            <h1 className="text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight leading-none">
+        <div className="relative z-10 container max-w-7xl mx-auto px-6">
+          {/* Headline */}
+          <div className="text-center mb-12">
+            <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-[#ED393D]/20 to-[#FFD700]/20 border border-[#ED393D]/30 rounded-full">
+              <span className="text-sm font-semibold text-[#FFD700]">✨ AI-Powered Dojo Management</span>
+            </div>
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-none mb-6">
               <span className="block bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-                Run Your Dojo
+                Your Dojo's
+              </span>
+              <span className="block bg-gradient-to-r from-[#ED393D] via-[#FF6B6B] to-[#FFD700] bg-clip-text text-transparent">
+                Command Center
               </span>
             </h1>
-            <h1 className="text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight leading-none">
-              <span className="block bg-gradient-to-r from-[#ED393D] via-[#FF6B6B] to-[#FFD700] bg-clip-text text-transparent animate-gradient">
-                Like a Sensei
-              </span>
-            </h1>
+            <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto mb-8 leading-relaxed">
+              AI-powered decisions for growth, retention, and operations. Run your martial arts school in minutes, not hours.
+            </p>
+
+            {/* CTA */}
+            <div className="flex flex-col items-center gap-4 mb-16">
+              <Link to="/owner">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-[#ED393D] to-[#FF6B6B] hover:from-[#D9292D] hover:to-[#FF5555] h-14 px-10 text-lg font-semibold shadow-2xl shadow-red-500/40 hover:shadow-red-500/60 transition-all duration-300 hover:scale-105"
+                >
+                  Start Free Trial
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <p className="text-sm text-slate-400">
+                14-day free trial • No credit card required
+              </p>
+            </div>
           </div>
 
-          {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Whether it's student management, class scheduling, or billing, DojoFlow helps you run your martial arts school in minutes, not hours.
-          </p>
+          {/* Hero Image - Kai Command Screenshot */}
+          <div className="relative max-w-6xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-red-500/20 border border-white/10">
+              <img 
+                src="/01-kai-command-hero.png" 
+                alt="DojoFlow Kai Command Center" 
+                className="w-full h-auto"
+              />
+              {/* Overlay glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+            </div>
+            {/* Floating stats cards */}
+            <div className="absolute -bottom-8 left-8 bg-slate-900/90 backdrop-blur-sm border border-white/10 rounded-xl p-4 shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                  <Check className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">98%</div>
+                  <div className="text-xs text-slate-400">Accuracy</div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute -bottom-8 right-8 bg-slate-900/90 backdrop-blur-sm border border-white/10 rounded-xl p-4 shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#ED393D] to-[#FF6B6B] rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">24/7</div>
+                  <div className="text-xs text-slate-400">AI Support</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          {/* CTA */}
-          <div className="flex flex-col items-center gap-4 mb-8">
-            <Link to="/owner">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-[#ED393D] to-[#FF6B6B] hover:from-[#D9292D] hover:to-[#FF5555] h-14 px-10 text-lg font-semibold shadow-2xl shadow-red-500/40 hover:shadow-red-500/60 transition-all duration-300 hover:scale-105"
-              >
-                Start Free Trial
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-            <p className="text-sm text-slate-400">
-              14-day free trial • No credit card required
+      {/* Features Section - With Real Product Screenshots */}
+      <section id="features" className="container py-32 max-w-7xl mx-auto px-6">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Everything you need to run a professional dojo
+          </h2>
+          <p className="text-xl text-slate-400">
+            Real software. Real results. See DojoFlow in action.
+          </p>
+        </div>
+
+        {/* Feature 1: Student Intelligence */}
+        <div className="grid md:grid-cols-2 gap-12 items-center mb-32">
+          <div className="order-2 md:order-1">
+            <div className="inline-block mb-4 px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full">
+              <span className="text-sm font-semibold text-blue-400">Student Management</span>
+            </div>
+            <h3 className="text-4xl font-bold mb-6">
+              Every student, visible in real time
+            </h3>
+            <p className="text-xl text-slate-400 mb-6 leading-relaxed">
+              Attendance, status, and risk — without spreadsheets. Interactive map shows where your students live, color-coded status indicators, and instant access to complete profiles.
             </p>
+            <ul className="space-y-3 mb-8">
+              {[
+                "Live attendance tracking",
+                "Geographic student distribution",
+                "Risk indicators and alerts",
+                "Complete family profiles"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-slate-300">
+                  <div className="w-5 h-5 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-blue-400" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="order-1 md:order-2">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/10 border border-white/10">
+              <img 
+                src="/02-students-map-list.png" 
+                alt="Student Management with Map View" 
+                className="w-full h-auto"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-2">
-            <div className="w-1 h-3 bg-white/50 rounded-full" />
+        {/* Feature 2: Student Details */}
+        <div className="grid md:grid-cols-2 gap-12 items-center mb-32">
+          <div>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/10 border border-white/10">
+              <img 
+                src="/03-student-detail-drawer.png" 
+                alt="Student Detail View" 
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+          <div>
+            <div className="inline-block mb-4 px-3 py-1 bg-purple-500/10 border border-purple-500/30 rounded-full">
+              <span className="text-sm font-semibold text-purple-400">Data at Your Fingertips</span>
+            </div>
+            <h3 className="text-4xl font-bold mb-6">
+              Details when you need them
+            </h3>
+            <p className="text-xl text-slate-400 mb-6 leading-relaxed">
+              Every student record, one click away. Complete profiles with contact information, belt progression, attendance history, and parent/guardian details — all in one clean interface.
+            </p>
+            <ul className="space-y-3 mb-8">
+              {[
+                "Comprehensive student profiles",
+                "Belt rank progression tracking",
+                "Parent/guardian information",
+                "Attendance and payment history"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-slate-300">
+                  <div className="w-5 h-5 bg-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-purple-400" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Feature 3: Class Schedule */}
+        <div className="grid md:grid-cols-2 gap-12 items-center mb-32">
+          <div className="order-2 md:order-1">
+            <div className="inline-block mb-4 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full">
+              <span className="text-sm font-semibold text-green-400">Operations</span>
+            </div>
+            <h3 className="text-4xl font-bold mb-6">
+              Your entire schedule. One screen.
+            </h3>
+            <p className="text-xl text-slate-400 mb-6 leading-relaxed">
+              Classes, instructors, and capacity at a glance. Weekly grid view with color-coded class blocks, instructor assignments, and real-time capacity tracking.
+            </p>
+            <ul className="space-y-3 mb-8">
+              {[
+                "Visual weekly schedule grid",
+                "Instructor assignments",
+                "Capacity management",
+                "Conflict detection"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-slate-300">
+                  <div className="w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-green-400" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="order-1 md:order-2">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-green-500/10 border border-white/10">
+              <img 
+                src="/04-classes-schedule.png" 
+                alt="Class Schedule Grid" 
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Feature 4: Kai in Action */}
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-red-500/10 border border-white/10">
+              <img 
+                src="/05-kai-in-action.png" 
+                alt="Kai AI Taking Action" 
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+          <div>
+            <div className="inline-block mb-4 px-3 py-1 bg-[#ED393D]/10 border border-[#ED393D]/30 rounded-full">
+              <span className="text-sm font-semibold text-[#ED393D]">AI Automation</span>
+            </div>
+            <h3 className="text-4xl font-bold mb-6">
+              Kai doesn't just answer questions
+            </h3>
+            <p className="text-xl text-slate-400 mb-6 leading-relaxed">
+              She takes action. Automated follow-ups, task completion tracking, and intelligent suggestions — all powered by AI that understands your dojo.
+            </p>
+            <ul className="space-y-3 mb-8">
+              {[
+                "Automated student outreach",
+                "Task completion tracking",
+                "Intelligent recommendations",
+                "24/7 availability"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-slate-300">
+                  <div className="w-5 h-5 bg-[#ED393D]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-[#ED393D]" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
       {/* Pain Points Section */}
-      <section id="features" className="container py-24 max-w-6xl mx-auto">
+      <section className="container py-24 max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             We understand your pain
@@ -162,36 +352,19 @@ export default function PublicHome() {
         </div>
       </section>
 
-      {/* Solution Section */}
+      {/* Additional Features Grid */}
       <section id="how-it-works" className="container py-24 max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            From chaos to clarity
+            And so much more
           </h2>
           <p className="text-xl text-slate-400">
-            Everything you need to run a professional martial arts school
+            Everything you need in one powerful platform
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            {
-              icon: Sparkles,
-              title: "Kai AI Assistant",
-              description: "Your 24/7 AI sensei handles questions, schedules, and insights",
-              badge: "Most Popular",
-              highlight: true
-            },
-            {
-              icon: Users,
-              title: "Student CRM",
-              description: "Complete profiles, belt tracking, attendance, and family management"
-            },
-            {
-              icon: Calendar,
-              title: "Smart Scheduling",
-              description: "Automatic class assignments, conflict detection, and reminders"
-            },
             {
               icon: Zap,
               title: "Kiosk Check-In",
@@ -206,26 +379,28 @@ export default function PublicHome() {
               icon: TrendingUp,
               title: "Growth Analytics",
               description: "Retention insights, revenue forecasts, and performance metrics"
+            },
+            {
+              icon: Users,
+              title: "Lead Management",
+              description: "Track prospects from inquiry to enrollment with automated follow-ups"
+            },
+            {
+              icon: Calendar,
+              title: "Belt Testing",
+              description: "Schedule tests, track requirements, and manage promotions"
+            },
+            {
+              icon: BarChart3,
+              title: "Financial Reports",
+              description: "Revenue tracking, expense management, and profit analysis"
             }
           ].map((feature, i) => (
             <div 
               key={i}
-              className={`relative group bg-gradient-to-b ${
-                feature.highlight 
-                  ? 'from-[#ED393D]/20 to-[#FFD700]/10 border-[#ED393D]/50' 
-                  : 'from-slate-800/50 to-slate-900/50 border-white/10'
-              } backdrop-blur-sm border rounded-2xl p-8 hover:border-[#ED393D]/50 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1`}
+              className="relative group bg-gradient-to-b from-slate-800/50 to-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:border-[#ED393D]/50 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1"
             >
-              {feature.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-[#ED393D] to-[#FF6B6B] rounded-full text-xs font-semibold">
-                  {feature.badge}
-                </div>
-              )}
-              <div className={`w-12 h-12 ${
-                feature.highlight 
-                  ? 'bg-gradient-to-br from-[#ED393D] to-[#FFD700]' 
-                  : 'bg-gradient-to-br from-slate-700 to-slate-800'
-              } rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+              <div className="w-12 h-12 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <feature.icon className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
