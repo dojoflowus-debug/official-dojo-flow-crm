@@ -3,7 +3,7 @@ import { publicProcedure, router } from "./_core/trpc.js";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcrypt";
 import { getDb } from "./db.js";
-import { users, verificationCodes, onboardingProgress } from "../drizzle/schema.js";
+import { users, verificationCodes, onboardingProgress, organizationUsers, organizations } from "../drizzle/schema.js";
 import { eq, and, gt } from "drizzle-orm";
 
 /**
@@ -281,6 +281,19 @@ export const ownerAuthRouter = router({
         .set({ lastSignedIn: new Date() })
         .where(eq(users.id, user.id));
 
+      // Check if owner has an organization
+      const orgMemberships = await db
+        .select({
+          organizationId: organizationUsers.organizationId,
+          organizationName: organizations.name,
+        })
+        .from(organizationUsers)
+        .innerJoin(organizations, eq(organizationUsers.organizationId, organizations.id))
+        .where(eq(organizationUsers.userId, user.id))
+        .limit(1);
+
+      const hasOrganization = orgMemberships.length > 0;
+
       return {
         success: true,
         user: {
@@ -289,6 +302,9 @@ export const ownerAuthRouter = router({
           email: user.email,
           role: user.role,
         },
+        hasOrganization,
+        organizationId: hasOrganization ? orgMemberships[0].organizationId : null,
+        organizationName: hasOrganization ? orgMemberships[0].organizationName : null,
       };
     }),
 

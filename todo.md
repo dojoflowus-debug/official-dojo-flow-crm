@@ -180,4 +180,47 @@
 - [x] Test login flow
 - [x] Test resume onboarding
 - [x] Test duplicate prevention
+- [x] Save checkpoint
+
+
+## 🔐 Multi-Tenant SaaS Authentication Refactor
+
+### Database Schema Updates
+- [ ] Add role field to users table (owner, staff, student)
+- [ ] Ensure organization_users junction table supports multiple orgs per user
+- [ ] Add currentOrganizationId to user sessions
+
+### Account Type Selection Screen
+- [x] Create AccountTypeSelection component at /auth
+- [x] Remove "Back to Home" link from auth pages
+- [x] Add three role cards: School Owner, Staff/Instructor, Parent/Student
+- [x] Route to role-specific login after selection
+
+### Role-Aware Login Flows
+- [x] Update OwnerAuth to show "Welcome back, Owner" copy
+- [x] Create StaffAuth component with "Sign in to your school" copy
+- [x] Create StudentAuth component with "Access your student portal" copy
+- [x] Implement organization resolution for Staff/Students
+- [x] Add organization selector for users with multiple orgs
+
+### Backend API Updates
+- [x] Update ownerAuthRouter.login to return organization status
+- [x] Create staffAuthRouter with organization lookup
+- [x] Create studentAuthRouter with organization binding
+- [x] Add getOrganizations procedure for multi-org users
+- [x] Add selectOrganization procedure to set active org
+
+### Routing Logic
+- [x] Owner with no org → /owner/onboarding
+- [x] Owner with org → /owner/dashboard
+- [x] Staff → resolve org → /dashboard or /select-organization
+- [x] Student → resolve org → /student-dashboard or /select-organization
+- [ ] Update ProtectedRoute to check role and org status (deferred - not critical for MVP)
+
+### Testing
+- [x] Test owner first-time signup flow
+- [x] Test owner returning login flow
+- [x] Test staff login with single org
+- [x] Test staff login with multiple orgs
+- [x] Test student login flow
 - [ ] Save checkpoint

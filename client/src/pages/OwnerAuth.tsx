@@ -21,11 +21,7 @@ export default function OwnerAuth() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Back to Home */}
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
+        {/* Removed Back to Home - Auth is terminal entry point */}
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
@@ -69,9 +65,14 @@ function LoginForm() {
   const [otpSent, setOtpSent] = useState(false);
 
   const loginMutation = trpc.ownerAuth.login.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Login successful!");
-      navigate("/owner/dashboard");
+      // Route based on organization status
+      if (data.hasOrganization) {
+        navigate("/owner/dashboard");
+      } else {
+        navigate("/owner/onboarding");
+      }
     },
     onError: (error) => {
       toast.error(error.message);
@@ -113,10 +114,10 @@ function LoginForm() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Welcome Back</CardTitle>
-        <CardDescription>Log in to your DojoFlow account</CardDescription>
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome Back, Owner</CardTitle>
+                <CardDescription>Sign in to manage your martial arts school</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

@@ -92,6 +92,10 @@ import PublicChat from "./pages/PublicChat";
 import PublicHome from "./pages/PublicHome";
 import OwnerAuth from "./pages/OwnerAuth";
 import OwnerOnboarding from "./pages/OwnerOnboarding";
+import AccountTypeSelection from "./pages/AccountTypeSelection";
+import StaffAuth from "./pages/StaffAuth";
+import StudentAuthNew from "./pages/StudentAuthNew";
+import SelectOrganization from "./pages/SelectOrganization";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -103,9 +107,13 @@ function Router() {
     <Routes>
       {/* Public routes */}
       <Route path="/public" element={<PublicHome />} />
+      <Route path="/auth" element={<AccountTypeSelection />} />
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<MinimalDashboard />} />
+      <Route path="/staff/login" element={<StaffAuth />} />
+      <Route path="/student-login" element={<StudentAuthNew />} />
+      <Route path="/select-organization" element={<SelectOrganization />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
