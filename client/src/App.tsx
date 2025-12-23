@@ -105,6 +105,9 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PlatformAdminLogin from "./pages/PlatformAdminLogin";
+import OrganizationList from "./pages/OrganizationList";
+import OrganizationDetail from "./pages/OrganizationDetail";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -139,7 +142,10 @@ function Router() {
       <Route path="/new-visitor" element={<NewVisitor />} />
       <Route path="/waiver" element={<Waiver />} />
       <Route path="/payment" element={<Payment />} />
-      <Route path="/admin" element={<Admin />} />
+      {/* Platform Admin CRM (Internal DojoFlow) */}
+      <Route path="/admin" element={<PlatformAdminLogin />} />
+      <Route path="/admin/organizations" element={<OrganizationList />} />
+      <Route path="/admin/organizations/:id" element={<OrganizationDetail />} />
       <Route path="/events" element={<Events />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/referral" element={<Referral />} />

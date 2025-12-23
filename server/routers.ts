@@ -27,6 +27,8 @@ import { staffAuthRouter } from "./staffAuthRouter";
 import { studentAuthRouter } from "./studentAuthRouter";
 import { subscriptionRouter } from "./subscriptionRouter";
 import { creditRouter } from "./creditRouter";
+import { platformRouter } from "./platformRouter";
+import { platformAdminAuthRouter } from "./platformAdminAuth";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -357,6 +359,10 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  
+  // Platform Admin CRM (internal only)
+  platform: platformRouter,
+  platformAuth: platformAdminAuthRouter,
   
   // Multi-tenant authentication (public)
   ownerAuth: ownerAuthRouter,

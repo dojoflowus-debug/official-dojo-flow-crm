@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO users (name, email, password, role, globalRole, loginMethod, createdAt, updatedAt, lastSignedIn)\nVALUES (\n  'Platform Admin',\n  'admin@dojoflow.com',\n  '$2a$10$YourHashedPasswordHere',\n  'admin',\n  'platform_admin',\n  'password',\n  NOW(),\n  NOW(),\n  NOW()\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO users (name, email, password, role, globalRole, loginMethod, createdAt, updatedAt, lastSignedIn)\nVALUES (\n  'Platform Admin',\n  'admin@dojoflow.com',\n  '$2a$10$YourHashedPasswordHere',\n  'admin',\n  'platform_admin',\n  'password',\n  NOW(),\n  NOW(),\n  NOW()\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2960
+}

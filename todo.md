@@ -642,3 +642,86 @@
 - [x] Ensure images load optimally (lazy loading, compression)
 - [x] Update App.tsx routing to use redesigned PublicHome
 - [x] Verify all images display correctly in browser
+
+
+## 🏢 Platform CRM (Internal Admin System) - ADDITIVE LAYER
+
+### Phase 1: Database Schema (Platform-Level Tables)
+- [x] Create organizations table (id, name, status, plan_id, trial_start, trial_end, created_at)
+- [x] Create organization_users table (id, organization_id, user_id, role, created_at)
+- [x] Add global_role field to users table (platform_admin, support, none)
+- [x] Create subscriptions table (organization_id, plan, billing_status, stripe_customer_id, stripe_subscription_id)
+- [x] Create usage_events table (organization_id, type, quantity, created_at)
+- [x] Create onboarding_progress table (organization_id, steps_completed, completed)
+- [x] Create feature_flags table (organization_id, feature_name, enabled)
+- [x] Create account_flags table (organization_id, flag_type, notes)
+- [x] Run drizzle migrations
+
+### Phase 2: Platform Admin Authentication
+- [x] Create platformAdminRouter with login procedure
+- [x] Add platform admin login page at /admin
+- [x] Implement session management for platform admins
+- [x] Add role check middleware (platformAdminProcedure)
+- [ ] Prevent platform admins from accessing dojo routes
+- [ ] Prevent dojo owners from accessing /admin routes
+
+### Phase 3: Backend API (Platform Operations)
+- [x] Create platformRouter with organization management procedures
+- [x] Add getOrganizations procedure (list all with filters)
+- [x] Add getOrganization procedure (single org details)
+- [ ] Add createOrganization procedure
+- [x] Add updateOrganization procedure (status, plan, flags)
+- [x] Add getOrganizationUsers procedure
+- [x] Add addOrganizationUser procedure
+- [x] Add getUsageEvents procedure (with date range filter)
+- [x] Add getOnboardingProgress procedure
+- [x] Add updateFeatureFlags procedure
+- [x] Add createAccountFlag procedure
+- [ ] Write vitest tests for all procedures
+
+### Phase 4: Organization List View UI
+- [x] Create PlatformAdminLayout component (separate from dojo layout)
+- [x] Create OrganizationList page at /admin/organizations
+- [x] Display table with columns: name, status, plan, trial end, last activity
+- [x] Add status pills (Trial, Active, Paused, Churned, Risk)
+- [x] Add search by organization name
+- [x] Add filter by status
+- [ ] Add filter by plan
+- [ ] Add sort by created date, trial end, last activity
+- [x] Add pagination (50 orgs per page)
+- [x] Add "View Details" button for each org
+
+### Phase 5: Organization Detail View UI
+- [x] Create OrganizationDetail page at /admin/organizations/:id
+- [x] Section 1: Organization Profile (name, status, plan, trial dates)
+- [x] Section 2: Owners & Admins list with roles
+- [x] Section 3: Onboarding Checklist (steps completed)
+- [ ] Section 4: Usage Charts (Kai calls, SMS, emails by day)
+- [ ] Section 5: Feature Flags toggle switches
+- [x] Section 6: Account Notes and flags
+- [ ] Add "Edit Organization" button
+- [ ] Add "Add User" button
+- [ ] Add "View Usage Details" button
+- [x] Add breadcrumb navigation back to list
+
+### Phase 6: Incremental Organization Scoping
+- [ ] Add organization_id column to students table
+- [ ] Add organization_id column to classes table
+- [ ] Add organization_id column to staff table (team_members)
+- [ ] Add organization_id column to leads table
+- [ ] Add organization_id column to kai_conversations table
+- [ ] Update all queries to filter by organization_id when available
+- [ ] Create migration script to assign existing data to default organization
+- [ ] Add organization context to session cookies
+
+### Phase 7: Testing & Verification
+- [ ] Test platform admin login at /admin
+- [ ] Test organization list view with multiple orgs
+- [ ] Test organization detail view
+- [ ] Test creating new organization
+- [ ] Test adding users to organization
+- [ ] Test feature flag toggles
+- [ ] Test usage event tracking
+- [ ] Verify dojo routes still work unchanged
+- [ ] Verify platform admins cannot access dojo data without org context
+- [ ] Save checkpoint

@@ -27,6 +27,8 @@ export const users = mysqlTable("users", {
   resetTokenExpiry: timestamp("resetTokenExpiry"),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin", "owner", "staff"]).default("user").notNull(),
+  /** Platform-level role for DojoFlow internal admins */
+  globalRole: mysqlEnum("globalRole", ["platform_admin", "support", "none"]).default("none").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -2299,6 +2301,10 @@ export const organizations = mysqlTable("organizations", {
   ]).default("trial").notNull(),
   /** Trial end date */
   trialEndsAt: timestamp("trialEndsAt"),
+  /** Last activity timestamp (for platform CRM tracking) */
+  lastActivity: timestamp("lastActivity"),
+  /** Organization settings (JSON) */
+  settings: text("settings"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -2317,7 +2323,7 @@ export const organizationUsers = mysqlTable("organization_users", {
   /** Reference to organization */
   organizationId: int("organizationId").notNull(),
   /** User's role within this organization */
-  role: mysqlEnum("role", ["owner", "admin", "staff", "instructor"]).default("staff").notNull(),
+  role: mysqlEnum("role", ["owner", "admin", "staff", "instructor", "read_only"]).default("staff").notNull(),
   /** Whether this is the user's primary organization */
   isPrimary: int("isPrimary").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -2571,3 +2577,147 @@ export const creditTopUps = mysqlTable("credit_top_ups", {
 
 export type CreditTopUp = typeof creditTopUps.$inferSelect;
 export type InsertCreditTopUp = typeof creditTopUps.$inferInsert;
+
+// ============================================================================
+// PLATFORM CRM TABLES (Internal Admin System)
+// ============================================================================
+// Note: organizations and organizationUsers tables already exist above
+// We only add new platform-specific tables here
+
+/**
+ * Platform Subscriptions table - Billing and plan information per organization
+ * Separate from organization_subscriptions to avoid confusion with existing table
+ */
+export const platformSubscriptions = mysqlTable("platform_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull().unique(),
+  /** Current plan name */
+  plan: varchar("plan", { length: 100 }).notNull(),
+  /** Billing status */
+  billingStatus: mysqlEnum("billingStatus", [
+    "active",
+    "past_due",
+    "canceled",
+    "unpaid",
+    "trialing"
+  ]).default("trialing").notNull(),
+  /** Stripe customer ID */
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  /** Stripe subscription ID */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  /** Current billing period start */
+  currentPeriodStart: timestamp("currentPeriodStart"),
+  /** Current billing period end */
+  currentPeriodEnd: timestamp("currentPeriodEnd"),
+  /** Subscription cancel date (if applicable) */
+  canceledAt: timestamp("canceledAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PlatformSubscription = typeof platformSubscriptions.$inferSelect;
+export type InsertPlatformSubscription = typeof platformSubscriptions.$inferInsert;
+
+/**
+ * Usage Events table - Tracks all billable actions per organization
+ * Used for analytics, billing, and usage monitoring
+ */
+export const usageEvents = mysqlTable("usage_events", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull(),
+  /** Type of usage event */
+  type: mysqlEnum("type", [
+    "kai_call",
+    "sms",
+    "email",
+    "ai_action",
+    "phone_call"
+  ]).notNull(),
+  /** Quantity consumed (credits, minutes, etc.) */
+  quantity: int("quantity").default(1).notNull(),
+  /** Event metadata (JSON) */
+  metadata: text("metadata"),
+  /** User who triggered the event */
+  userId: int("userId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UsageEvent = typeof usageEvents.$inferSelect;
+export type InsertUsageEvent = typeof usageEvents.$inferInsert;
+
+/**
+ * Platform Onboarding Progress table - Tracks onboarding completion per organization
+ * Separate from existing onboarding_progress to avoid confusion
+ */
+export const platformOnboardingProgress = mysqlTable("platform_onboarding_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull().unique(),
+  /** Steps completed (JSON array of step IDs) */
+  stepsCompleted: text("stepsCompleted"),
+  /** Whether onboarding is fully completed */
+  completed: int("completed").default(0).notNull(),
+  /** Last step completed timestamp */
+  lastStepAt: timestamp("lastStepAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PlatformOnboardingProgress = typeof platformOnboardingProgress.$inferSelect;
+export type InsertPlatformOnboardingProgress = typeof platformOnboardingProgress.$inferInsert;
+
+/**
+ * Feature Flags table - Per-organization feature toggles
+ * Allows enabling/disabling features for specific organizations
+ */
+export const featureFlags = mysqlTable("feature_flags", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull(),
+  /** Feature name/key */
+  featureName: varchar("featureName", { length: 100 }).notNull(),
+  /** Whether feature is enabled */
+  enabled: int("enabled").default(0).notNull(),
+  /** Optional configuration (JSON) */
+  config: text("config"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type InsertFeatureFlag = typeof featureFlags.$inferInsert;
+
+/**
+ * Account Flags table - Risk indicators and manual review flags
+ * Used by platform admins to track problematic accounts
+ */
+export const accountFlags = mysqlTable("account_flags", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull(),
+  /** Type of flag */
+  flagType: mysqlEnum("flagType", [
+    "billing_risk",
+    "abuse",
+    "review_required",
+    "high_usage",
+    "support_escalation"
+  ]).notNull(),
+  /** Admin notes about the flag */
+  notes: text("notes"),
+  /** Whether flag is resolved */
+  resolved: int("resolved").default(0).notNull(),
+  /** User who created the flag */
+  createdBy: int("createdBy"),
+  /** User who resolved the flag */
+  resolvedBy: int("resolvedBy"),
+  /** Resolution timestamp */
+  resolvedAt: timestamp("resolvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AccountFlag = typeof accountFlags.$inferSelect;
+export type InsertAccountFlag = typeof accountFlags.$inferInsert;
