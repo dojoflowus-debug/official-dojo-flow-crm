@@ -692,6 +692,12 @@ async function startServer() {
     }
   });
   
+  // Stripe webhook (must be before body parser middleware for raw body)
+  app.post("/api/webhook/stripe", express.raw({ type: 'application/json' }), async (req, res) => {
+    const { handleStripeWebhook } = await import("./stripeWebhook");
+    await handleStripeWebhook(req, res);
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

@@ -96,6 +96,8 @@ import AccountTypeSelection from "./pages/AccountTypeSelection";
 import StaffAuth from "./pages/StaffAuth";
 import StudentAuthNew from "./pages/StudentAuthNew";
 import SelectOrganization from "./pages/SelectOrganization";
+import Pricing from "./pages/Pricing";
+import BillingSuccess from "./pages/BillingSuccess";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -165,6 +167,8 @@ function Router() {
       <Route path="/programs" element={<Programs />} />
       <Route path="/staff" element={<Staff />} />
       <Route path="/billing" element={<Billing />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/billing/success" element={<BillingSuccess />} />
       <Route path="/billing/structure" element={<BillingStructure />} />
       <Route path="/billing/setup" element={<BillingSetup />} />
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />

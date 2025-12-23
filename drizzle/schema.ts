@@ -2380,3 +2380,194 @@ export const verificationCodes = mysqlTable("verification_codes", {
 
 export type VerificationCode = typeof verificationCodes.$inferSelect;
 export type InsertVerificationCode = typeof verificationCodes.$inferInsert;
+
+/**
+ * Subscription Plans table - DojoFlow pricing tiers
+ * Defines available subscription plans with features and limits
+ */
+export const subscriptionPlans = mysqlTable("subscription_plans", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Plan name (Starter, Growth, Pro, Enterprise) */
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  /** Plan slug for URL-safe identification */
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  /** Monthly price in cents */
+  monthlyPrice: int("monthlyPrice").notNull(),
+  /** Annual price in cents (if applicable) */
+  annualPrice: int("annualPrice"),
+  /** Maximum active students allowed */
+  maxStudents: int("maxStudents").notNull(),
+  /** Maximum locations allowed */
+  maxLocations: int("maxLocations").notNull(),
+  /** Monthly AI credit allowance */
+  monthlyCredits: int("monthlyCredits").notNull(),
+  /** Features included (JSON array) */
+  features: text("features").notNull(),
+  /** Whether AI phone calls are enabled */
+  aiPhoneEnabled: int("aiPhoneEnabled").default(0).notNull(),
+  /** Whether plan is currently active/visible */
+  isActive: int("isActive").default(1).notNull(),
+  /** Display order on pricing page */
+  displayOrder: int("displayOrder").default(0).notNull(),
+  /** Stripe product ID */
+  stripeProductId: varchar("stripeProductId", { length: 255 }),
+  /** Stripe price ID (monthly) */
+  stripePriceId: varchar("stripePriceId", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+
+/**
+ * Organization Subscriptions table - Current subscription status per organization
+ * Tracks which plan each organization is on and billing details
+ */
+export const organizationSubscriptions = mysqlTable("organization_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull().unique(),
+  /** Reference to subscription plan */
+  planId: int("planId").notNull(),
+  /** Subscription status */
+  status: mysqlEnum("status", [
+    "trial",
+    "active",
+    "past_due",
+    "cancelled",
+    "paused"
+  ]).default("trial").notNull(),
+  /** Billing cycle (monthly or annual) */
+  billingCycle: mysqlEnum("billingCycle", ["monthly", "annual"]).default("monthly").notNull(),
+  /** Current period start date */
+  currentPeriodStart: timestamp("currentPeriodStart"),
+  /** Current period end date */
+  currentPeriodEnd: timestamp("currentPeriodEnd"),
+  /** Trial end date (if applicable) */
+  trialEndsAt: timestamp("trialEndsAt"),
+  /** Cancellation date (if applicable) */
+  cancelledAt: timestamp("cancelledAt"),
+  /** Cancellation reason */
+  cancellationReason: text("cancellationReason"),
+  /** Stripe subscription ID */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  /** Stripe customer ID */
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type OrganizationSubscription = typeof organizationSubscriptions.$inferSelect;
+export type InsertOrganizationSubscription = typeof organizationSubscriptions.$inferInsert;
+
+/**
+ * AI Credit Balance table - Current credit balance per organization
+ * Tracks remaining credits and usage for AI operations
+ */
+export const aiCreditBalance = mysqlTable("ai_credit_balance", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull().unique(),
+  /** Current credit balance */
+  balance: int("balance").default(0).notNull(),
+  /** Total credits allocated this billing period */
+  periodAllowance: int("periodAllowance").default(0).notNull(),
+  /** Total credits used this billing period */
+  periodUsed: int("periodUsed").default(0).notNull(),
+  /** Total credits purchased via top-ups (all time) */
+  totalPurchased: int("totalPurchased").default(0).notNull(),
+  /** Total credits used (all time) */
+  totalUsed: int("totalUsed").default(0).notNull(),
+  /** Last credit reset date (start of billing period) */
+  lastResetAt: timestamp("lastResetAt"),
+  /** Next credit reset date (end of billing period) */
+  nextResetAt: timestamp("nextResetAt"),
+  /** Low credit alert threshold */
+  lowCreditThreshold: int("lowCreditThreshold").default(50).notNull(),
+  /** Whether low credit alert has been sent this period */
+  lowCreditAlertSent: int("lowCreditAlertSent").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AiCreditBalance = typeof aiCreditBalance.$inferSelect;
+export type InsertAiCreditBalance = typeof aiCreditBalance.$inferInsert;
+
+/**
+ * AI Credit Transactions table - Audit log of all credit usage
+ * Records every credit deduction with context for transparency
+ */
+export const aiCreditTransactions = mysqlTable("ai_credit_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull(),
+  /** Transaction type */
+  type: mysqlEnum("type", [
+    "deduction",
+    "refund",
+    "allocation",
+    "purchase",
+    "bonus"
+  ]).default("deduction").notNull(),
+  /** Number of credits (positive for additions, negative for deductions) */
+  amount: int("amount").notNull(),
+  /** Balance after transaction */
+  balanceAfter: int("balanceAfter").notNull(),
+  /** Task type that consumed credits */
+  taskType: mysqlEnum("taskType", [
+    "kai_chat",
+    "ai_sms",
+    "ai_email",
+    "ai_phone_call",
+    "automation",
+    "data_analysis",
+    "other"
+  ]),
+  /** Description of the transaction */
+  description: text("description"),
+  /** Metadata (JSON) - e.g., message ID, recipient, etc. */
+  metadata: text("metadata"),
+  /** Reference to related record (e.g., message ID, campaign ID) */
+  relatedId: int("relatedId"),
+  /** User who initiated the action (if applicable) */
+  userId: int("userId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AiCreditTransaction = typeof aiCreditTransactions.$inferSelect;
+export type InsertAiCreditTransaction = typeof aiCreditTransactions.$inferInsert;
+
+/**
+ * Credit Top-Ups table - Purchase history for additional credits
+ * Tracks one-time credit purchases outside of subscription allowance
+ */
+export const creditTopUps = mysqlTable("credit_top_ups", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to organization */
+  organizationId: int("organizationId").notNull(),
+  /** Number of credits purchased */
+  credits: int("credits").notNull(),
+  /** Amount paid in cents */
+  amountPaid: int("amountPaid").notNull(),
+  /** Currency code */
+  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  /** Payment status */
+  status: mysqlEnum("status", [
+    "pending",
+    "completed",
+    "failed",
+    "refunded"
+  ]).default("pending").notNull(),
+  /** Stripe payment intent ID */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  /** User who purchased the top-up */
+  purchasedBy: int("purchasedBy"),
+  /** Payment completed timestamp */
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CreditTopUp = typeof creditTopUps.$inferSelect;
+export type InsertCreditTopUp = typeof creditTopUps.$inferInsert;

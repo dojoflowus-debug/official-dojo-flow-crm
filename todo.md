@@ -223,4 +223,79 @@
 - [x] Test staff login with single org
 - [x] Test staff login with multiple orgs
 - [x] Test student login flow
+- [x] Save checkpoint
+
+
+## 💳 DojoFlow Pricing + AI Credit System
+
+### Phase 1: Database Schema
+- [x] Create subscription_plans table (Starter, Growth, Pro, Enterprise)
+- [x] Create organization_subscriptions table (current plan, status, billing cycle)
+- [x] Create ai_credit_balance table (credits remaining, credits used, plan allowance)
+- [x] Create ai_credit_transactions table (audit log of credit usage)
+- [x] Create credit_top_ups table (purchase history)
+- [x] Add subscription fields to organizations table
+- [x] Push schema changes with drizzle
+
+### Phase 2: Backend API
+- [x] Create subscriptionRouter with plan management procedures
+- [x] Create creditRouter with balance/usage/transaction procedures
+- [x] Add getPlans, getCurrentSubscription, upgradePlan procedures
+- [x] Add getCreditBalance, deductCredits, addCredits procedures
+- [x] Add getCreditTransactions with filtering
+- [x] Add purchaseTopUp procedure
+- [x] Write vitest tests for all procedures
+
+### Phase 3: Pricing Page UI
+- [x] Create Pricing page at /pricing with 4 plan cards
+- [x] Display plan features, student limits, location limits, credit allowances
+- [x] Add "Current Plan" badge for active subscription
+- [x] Add "Upgrade" and "Select Plan" buttons
+- [x] Create plan comparison table
+- [x] Add credit top-up pricing section
+- [x] Make pricing page accessible from Settings and onboarding
+
+### Phase 4: Credit Consumption System
+- [ ] Create credit cost constants (chat: 1, SMS: 1, email: 2, call: 8-15)
+- [ ] Add credit deduction to chatWithKai procedure
+- [ ] Add credit deduction to sendSMS procedure
+- [ ] Add credit deduction to sendEmail procedure
+- [ ] Add credit deduction to makeCall procedure
+- [ ] Create middleware to check credit balance before AI operations
+- [ ] Add low credit warnings (< 50 credits)
+- [ ] Add zero credit blocking with upgrade prompt
+- [ ] Log all credit transactions with task type and metadata
+
+### Phase 5: Stripe Integration
+- [x] Create Stripe subscription products for each plan
+- [x] Add createCheckoutSession for plan subscription
+- [ ] Add createCheckoutSession for credit top-ups
+- [x] Add webhook handler for subscription.created (checkout.session.completed)
+- [x] Add webhook handler for subscription.updated (invoice.payment_succeeded)
+- [x] Add webhook handler for subscription.deleted (customer.subscription.deleted)
+- [x] Add webhook handler for payment failures (invoice.payment_failed)
+- [x] Update organization_subscriptions on successful payment
+- [x] Add credits to balance on successful subscription
+- [x] Create billing success page for post-checkout redirect
+- [x] Integrate Stripe checkout into Pricing page
+
+### Phase 6: Admin Dashboard
+- [ ] Create subscription status widget for owner dashboard
+- [ ] Display current plan, renewal date, student count vs limit
+- [ ] Create AI credit balance widget with usage chart
+- [ ] Add "Buy More Credits" button
+- [ ] Create credit usage history page at /billing/credits
+- [ ] Show credit transactions by date, task type, amount
+- [ ] Add export credit usage report (CSV)
+- [ ] Create low credit alert banner in header
+- [ ] Add upgrade plan modal from dashboard
+
+### Phase 7: Testing & Delivery
+- [ ] Test plan selection and Stripe checkout flow
+- [ ] Test credit deduction for all AI operations
+- [ ] Test credit top-up purchase flow
+- [ ] Test plan upgrade/downgrade
+- [ ] Test credit balance warnings and blocking
+- [ ] Test webhook handlers with Stripe CLI
+- [ ] Verify all vitest tests passing
 - [ ] Save checkpoint

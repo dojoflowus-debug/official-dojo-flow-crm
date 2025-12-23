@@ -3,6 +3,7 @@ import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, staffPins, InsertStaffPin, studentMessages, studentMessageAttachments, InsertStudentMessage, students } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import * as schema from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: mysql.Pool | null = null;
@@ -15,8 +16,8 @@ export async function getDb() {
       if (!_pool) {
         _pool = mysql.createPool(process.env.DATABASE_URL);
       }
-      // Pass the pool to drizzle
-      _db = drizzle(_pool);
+      // Pass the pool to drizzle with schema for query API
+      _db = drizzle(_pool, { schema, mode: 'default' });
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;

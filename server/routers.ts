@@ -25,6 +25,7 @@ import { ownerAuthRouter } from "./ownerAuthRouter";
 import { onboardingRouter } from "./onboardingRouter";
 import { staffAuthRouter } from "./staffAuthRouter";
 import { studentAuthRouter } from "./studentAuthRouter";
+import { subscriptionRouter } from "./subscriptionRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -361,6 +362,7 @@ export const appRouter = router({
   staffAuth: staffAuthRouter,
   studentAuth: studentAuthRouter,
   onboarding: onboardingRouter,
+  subscription: subscriptionRouter,
   
   // File upload for attachments
   upload: router({
@@ -3046,20 +3048,6 @@ Return the data as a structured JSON object.`
         }
         
         return { completed: result[0].setupCompleted === 1 };
-      }),
-  }),
-
-  subscription: router({
-    creditsBalance: publicProcedure
-      .query(async () => {
-        // TODO: Implement actual credit tracking in database
-        // For now, return mock data to remove the connection error
-        return {
-          current_balance: 10000,
-          monthly_allocation: 15000,
-          usage_this_month: 5000,
-          reset_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString()
-        };
       }),
   }),
 
