@@ -61,6 +61,7 @@ import Reports from "./pages/Reports";
 import Marketing from "./pages/MarketingUnified";
 import MarketingTest from "./pages/MarketingTest";
 import SubscriptionDashboard from "./pages/SubscriptionDashboard";
+import CreditTransactions from "./pages/CreditTransactions";
 import SetupWizard from "./pages/SetupWizard";
 import SettingsHub from "./pages/SettingsHub";
 import VirtualReceptionist from "./pages/VirtualReceptionist";
@@ -184,6 +185,7 @@ function Router() {
       <Route path="/marketing" element={<Marketing />} />
       <Route path="/marketing-test" element={<MarketingTest />} />
       <Route path="/subscription" element={<SubscriptionDashboard />} />
+      <Route path="/billing/credits" element={<CreditTransactions />} />
       <Route path="/themes" element={<Themes />} />
       <Route path="/preferences" element={<Themes />} />
       <Route path="/themes-test" element={<ThemesTest />} />

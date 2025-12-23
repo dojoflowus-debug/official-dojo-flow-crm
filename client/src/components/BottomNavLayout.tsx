@@ -39,6 +39,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import ThemeToggle from '@/components/ThemeToggle'
 import { BadgeCount } from '@/components/ui/badge-count'
 import { ScrollableNav } from '@/components/ScrollableNav'
+import LowCreditBanner from '@/components/LowCreditBanner'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -218,6 +219,9 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
     <div className={`min-h-screen flex flex-col ${getBgClass()}`}>
       {/* Environment Selector Modal */}
       <EnvironmentSelectorModal />
+
+      {/* Low Credit Banner */}
+      <LowCreditBanner />
 
       {/* Focus Mode Overlay */}
       {showOverlay && (

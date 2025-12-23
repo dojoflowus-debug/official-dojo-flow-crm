@@ -299,3 +299,41 @@
 - [ ] Test webhook handlers with Stripe CLI
 - [ ] Verify all vitest tests passing
 - [ ] Save checkpoint
+
+
+## 💳 Phase 6: Credit Usage Dashboard (COMPLETED)
+
+### Credit Balance Widget
+- [x] Update SubscriptionDashboard to use tRPC procedures
+- [x] Display current credit balance prominently
+- [x] Show monthly allowance from subscription plan
+- [x] Add usage percentage indicator (used/total)
+- [x] Add "Buy More Credits" button
+- [x] Show days until next renewal
+- [x] Add low credit warning banners in dashboard
+
+### Transaction History
+- [x] Create CreditTransactions page at /billing/credits
+- [x] Display transaction table with columns: date, task type, amount, description
+- [x] Add filtering by task type
+- [x] Add date range filter (7d, 30d, 90d, all time)
+- [x] Add search by description
+- [x] Add export to CSV button
+- [x] Add summary stats (total transactions, credits used, credits added)
+
+### Low Credit Alerts
+- [x] Create LowCreditBanner component for header
+- [x] Show warning when credits < 50 (amber banner)
+- [x] Show critical alert when credits < 10 (red banner)
+- [x] Show blocking message when credits = 0
+- [x] Add "Top Up Now" button in banner
+- [x] Add "Upgrade Plan" button in banner
+- [x] Dismiss banner temporarily (until next page load)
+
+### Integration
+- [x] Add LowCreditBanner to BottomNavLayout header
+- [x] Add route for /billing/credits in App.tsx
+- [x] Link from SubscriptionDashboard to CreditTransactions
+- [x] Test all components with real data
+- [x] Write comprehensive vitest tests (11 tests passing)
+- [ ] Save checkpoint
