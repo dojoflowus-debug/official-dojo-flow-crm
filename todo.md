@@ -410,3 +410,11 @@
 - [x] Add hover effects and scale transition
 - [x] Test navigation from header to credit dashboard (route verified in App.tsx)
 - [x] Verify credit dashboard displays correctly (CreditTransactions page exists)
+
+## Display Real Credit Balance in Header
+- [x] Verify credits.getBalance tRPC procedure exists (found in creditRouter.ts)
+- [x] Add tRPC query to BottomNavLayout component (with 60s polling)
+- [x] Update Credits button to display actual balance
+- [x] Add loading state while fetching balance (shows 'Credits: ...')
+- [x] Handle error states gracefully (fallback to 0 with ?? operator)
+- [x] Test with real data (dev server running, HMR applied successfully)

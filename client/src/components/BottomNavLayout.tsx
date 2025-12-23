@@ -108,6 +108,15 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
     }
   )
   
+  // Fetch credit balance with polling (every 60 seconds)
+  const { data: creditBalance, isLoading: isLoadingCredits } = trpc.credits.getBalance.useQuery(
+    undefined,
+    {
+      refetchInterval: 60000, // Poll every 60 seconds
+      refetchOnWindowFocus: true,
+    }
+  )
+  
   // Scroll detection for collapsible bottom nav
   const [isNavVisible, setIsNavVisible] = useState(true)
   const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(null)
@@ -335,7 +344,11 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
               >
                 <CreditCard className={`h-4 w-4 ${isDark || isCinematic ? 'text-gray-400' : 'text-gray-500'}`} />
                 <span className={`text-sm font-medium ${isDark || isCinematic ? 'text-white' : 'text-[#262626]'}`}>
-                  Credits: 0
+                  {isLoadingCredits ? (
+                    'Credits: ...'
+                  ) : (
+                    `Credits: ${creditBalance?.balance?.toLocaleString() ?? 0}`
+                  )}
                 </span>
               </Button>
 
