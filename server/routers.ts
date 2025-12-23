@@ -26,6 +26,7 @@ import { onboardingRouter } from "./onboardingRouter";
 import { staffAuthRouter } from "./staffAuthRouter";
 import { studentAuthRouter } from "./studentAuthRouter";
 import { subscriptionRouter } from "./subscriptionRouter";
+import { creditRouter } from "./creditRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -363,6 +364,7 @@ export const appRouter = router({
   studentAuth: studentAuthRouter,
   onboarding: onboardingRouter,
   subscription: subscriptionRouter,
+  credit: creditRouter,
   
   // File upload for attachments
   upload: router({
@@ -2617,11 +2619,27 @@ Return the data as a structured JSON object.`
           role: z.enum(['user', 'assistant', 'system']),
           content: z.string(),
         })).optional(),
+        organizationId: z.number().optional(), // For credit consumption
       }))
       .mutation(async ({ input }) => {
-        const { message, avatarName = 'Kai', conversationHistory = [] } = input;
+        const { message, avatarName = 'Kai', conversationHistory = [], organizationId } = input;
         
         console.log('[Kai Chat] User message:', message);
+        
+        // Check credit balance before processing (if organizationId provided)
+        if (organizationId) {
+          const { checkSufficientBalance, CREDIT_COSTS } = await import("./creditConsumption");
+          const balanceCheck = await checkSufficientBalance(organizationId, CREDIT_COSTS.KAI_CHAT);
+          
+          if (!balanceCheck.sufficient) {
+            throw new Error(balanceCheck.message || "Insufficient credits for Kai chat");
+          }
+          
+          // Log warning if balance is low
+          if (balanceCheck.message) {
+            console.warn('[Kai Chat] Credit warning:', balanceCheck.message);
+          }
+        }
         
         // Use OpenAI GPT-4 for conversational AI
         const { chatWithKai } = await import("./services/openai");
@@ -2649,6 +2667,28 @@ Return the data as a structured JSON object.`
               action_result: functionResults[0], // For backwards compatibility
               ui_blocks: formatted.ui_blocks,
             };
+          }
+          
+          // Deduct credits after successful response (if organizationId provided)
+          if (organizationId) {
+            const { deductCredits, CREDIT_COSTS } = await import("./creditConsumption");
+            const deductResult = await deductCredits({
+              organizationId,
+              amount: CREDIT_COSTS.KAI_CHAT,
+              taskType: 'kai_chat' as const,
+              description: `Kai chat: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`,
+              metadata: {
+                messageLength: message.length,
+                responseLength: aiResponse.response?.length || 0,
+                hasFunctionCalls: false,
+              },
+            });
+            
+            if (!deductResult.success) {
+              console.error('[Kai Chat] Failed to deduct credits:', deductResult.error);
+            } else {
+              console.log('[Kai Chat] Credits deducted. New balance:', deductResult.newBalance);
+            }
           }
           
           return {

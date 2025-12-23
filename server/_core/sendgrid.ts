@@ -40,39 +40,12 @@ interface SendEmailResult {
 }
 
 /**
- * Send an email using SendGrid
+ * Send an email using SendGrid (internal - no credit deduction)
  * 
  * @param options - Email options including recipients, subject, and content
  * @returns Promise with success status
- * 
- * @example
- * // Simple text email
- * const result = await sendEmail({
- *   to: { email: 'user@example.com', name: 'John Doe' },
- *   subject: 'Welcome to DojoFlow!',
- *   text: 'Thank you for joining our dojo management platform.'
- * });
- * 
- * // HTML email with template
- * const result = await sendEmail({
- *   to: { email: 'user@example.com' },
- *   subject: 'Class Reminder',
- *   html: '<h1>Your class starts in 1 hour!</h1><p>See you soon.</p>'
- * });
- * 
- * // Using SendGrid dynamic template
- * const result = await sendEmail({
- *   to: { email: 'user@example.com' },
- *   subject: 'Payment Confirmation',
- *   templateId: 'd-xxxxxxxxxxxxx',
- *   dynamicTemplateData: {
- *     name: 'John',
- *     amount: '$99.00',
- *     date: 'January 15, 2025'
- *   }
- * });
  */
-export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
+async function sendEmailInternal(options: SendEmailOptions): Promise<SendEmailResult> {
   if (!SENDGRID_API_KEY) {
     console.error('[SendGrid] Missing SendGrid API key');
     return {
@@ -277,19 +250,84 @@ export async function sendPaymentConfirmation(
 }
 
 /**
+ * Send an email using SendGrid with credit consumption
+ * 
+ * @param options - Email options including recipients, subject, content, and organizationId for credit tracking
+ * @returns Promise with success status
+ * 
+ * @example
+ * // Simple text email
+ * const result = await sendEmail({
+ *   to: { email: 'user@example.com', name: 'John Doe' },
+ *   subject: 'Welcome to DojoFlow!',
+ *   text: 'Thank you for joining our dojo management platform.',
+ *   organizationId: 1
+ * });
+ */
+export async function sendEmail(
+  options: SendEmailOptions & { organizationId?: number }
+): Promise<SendEmailResult> {
+  // Check credit balance if organizationId provided
+  if (options.organizationId) {
+    const { checkSufficientBalance, CREDIT_COSTS } = await import("../creditConsumption");
+    const balanceCheck = await checkSufficientBalance(options.organizationId, CREDIT_COSTS.EMAIL);
+    
+    if (!balanceCheck.sufficient) {
+      return {
+        success: false,
+        error: balanceCheck.message || "Insufficient credits for email"
+      };
+    }
+  }
+
+  // Send email
+  const result = await sendEmailInternal(options);
+
+  // Deduct credits if successful and organizationId provided
+  if (result.success && options.organizationId) {
+    const { deductCredits, CREDIT_COSTS } = await import("../creditConsumption");
+    const toEmails = Array.isArray(options.to) 
+      ? options.to.map(r => r.email).join(', ')
+      : options.to.email;
+    
+    const deductResult = await deductCredits({
+      organizationId: options.organizationId,
+      amount: CREDIT_COSTS.EMAIL,
+      taskType: 'ai_email' as const,
+      description: `Email to ${toEmails}: "${options.subject}"`,
+      metadata: {
+        to: toEmails,
+        subject: options.subject,
+        messageId: result.messageId,
+        hasTemplate: !!options.templateId,
+      },
+    });
+
+    if (!deductResult.success) {
+      console.error('[SendGrid] Failed to deduct credits for email:', deductResult.error);
+    } else {
+      console.log('[SendGrid] Credits deducted for email. New balance:', deductResult.newBalance);
+    }
+  }
+
+  return result;
+}
+
+/**
  * Send bulk emails to multiple recipients
  */
 export async function sendBulkEmail(
   recipients: EmailRecipient[],
   subject: string,
-  html: string
+  html: string,
+  organizationId?: number
 ): Promise<{ sent: number; failed: number; results: SendEmailResult[] }> {
   const results: SendEmailResult[] = [];
   let sent = 0;
   let failed = 0;
 
   for (const to of recipients) {
-    const result = await sendEmail({ to, subject, html });
+    const result = await sendEmail({ to, subject, html, organizationId });
     results.push(result);
     if (result.success) {
       sent++;

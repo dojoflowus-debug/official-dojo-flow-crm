@@ -336,4 +336,70 @@
 - [x] Link from SubscriptionDashboard to CreditTransactions
 - [x] Test all components with real data
 - [x] Write comprehensive vitest tests (11 tests passing)
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: b6f7f962)
+
+
+## 💳 Phase 4: Credit Consumption System
+
+### Architecture & Pricing
+- [x] Define credit costs for each operation type:
+  - [x] Kai chat message (1 credit per message)
+  - [x] SMS send (1 credit per message)
+  - [x] Email send (2 credits per email)
+  - [x] Phone call (10 credits per minute)
+- [x] Design credit deduction flow with transaction logging
+- [x] Plan balance check strategy (pre-check before operation)
+
+### Backend Implementation
+- [x] Create creditConsumption.ts service module
+- [x] Implement deductCredits() helper function
+- [x] Implement checkSufficientBalance() helper function
+- [x] Add transaction logging for all deductions
+- [x] Implement addCredits() helper function
+- [x] Implement getCreditBalance() helper function
+- [x] Create tRPC procedures for balance checks
+- [x] Create creditRouter with getBalance, checkBalance, deduct, getCosts procedures
+- [x] Register creditRouter in appRouter
+
+### Kai Chat Integration
+- [x] Add credit check before Kai response generation
+- [x] Deduct credits after successful LLM call
+- [x] Handle insufficient balance gracefully
+- [x] Add warning when balance is low during chat
+- [x] Add organizationId parameter to chat procedure
+- [x] Log credit deduction with message metadata
+
+### Communication Integration
+- [x] Add credit deduction to sendSMS function
+- [x] Add credit deduction to sendEmail function
+- [x] Add credit deduction to makeCall function
+- [x] Add organizationId parameter to all communication functions
+- [x] Create internal functions without credit deduction
+- [x] Wrap public functions with credit check and deduction
+- [x] Log all credit deductions with metadata
+- [ ] Handle failures and refund logic (deferred - not critical for MVP)
+
+### Balance Checks & Warnings
+- [x] Add pre-operation balance checks (implemented in all operations)
+- [x] Block operations when balance is insufficient
+- [x] Return error messages with credit balance info
+- [x] Log warnings when balance is low
+- [ ] Show low-credit warnings in UI before operations (frontend task)
+- [ ] Add "Top Up Credits" prompts in error messages (frontend task)
+
+### Testing
+- [x] Write vitest tests for deductCredits function
+- [x] Write vitest tests for balance checks
+- [x] Write vitest tests for Kai chat consumption
+- [x] Write vitest tests for SMS/email/call consumption
+- [x] Write vitest tests for insufficient balance scenarios
+- [x] Write vitest tests for transaction logging
+- [x] All 16 tests passing
+
+### Integration Testing
+- [x] Test Kai chat with real credit deduction (via vitest)
+- [x] Test SMS sending with credit deduction (via vitest)
+- [x] Test email sending with credit deduction (via vitest)
+- [x] Test phone calls with credit deduction (via vitest)
+- [x] Verify low-credit warnings appear correctly (via vitest)
+- [x] All integration scenarios tested and passing
