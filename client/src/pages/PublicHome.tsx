@@ -26,12 +26,12 @@ export default function PublicHome() {
             <a href="#pricing" className="text-sm font-medium hover:text-blue-600 transition-colors">
               Pricing
             </a>
-            <Link to="/auth">
+            <Link to="/owner">
               <Button variant="outline" size="sm">
                 Owner Login
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/owner">
               <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                 Start Free Trial
               </Button>
@@ -60,7 +60,7 @@ export default function PublicHome() {
           </p>
           
           <div className="flex items-center justify-center gap-4">
-            <Link to="/auth">
+            <Link to="/owner">
               <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-8">
                 Get Started Free
                 <ArrowRight className="ml-2 w-4 h-4" />

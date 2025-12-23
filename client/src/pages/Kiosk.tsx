@@ -157,7 +157,7 @@ export default function Kiosk() {
           {/* Member Login Card */}
           {behavior.showMemberLogin && (
             <div
-              onClick={() => navigate('/kiosk/member-login')}
+              onClick={() => navigate(`/kiosk/${locationSlug}/student-login`)}
               className="group relative bg-gradient-to-br from-slate-900/70 to-slate-800/70 backdrop-blur-md rounded-3xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/10"
             >
               {/* Icon Circle */}
@@ -249,7 +249,7 @@ export default function Kiosk() {
           <Button
             variant="ghost"
             className="text-white/60 hover:text-white text-base transition-colors"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate(`/kiosk/${locationSlug}/staff-login`)}
           >
             Staff Login
           </Button>

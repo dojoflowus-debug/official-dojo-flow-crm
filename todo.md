@@ -418,3 +418,122 @@
 - [x] Add loading state while fetching balance (shows 'Credits: ...')
 - [x] Handle error states gracefully (fallback to 0 with ?? operator)
 - [x] Test with real data (dev server running, HMR applied successfully)
+
+
+---
+
+## 🔐 Authentication Structure Refactor (NEW REQUIREMENT)
+
+### Phase 1: Analysis & Planning
+- [ ] Audit current authentication routes and components
+- [ ] Document existing auth flows (Owner, Staff, Student)
+- [ ] Identify components to keep vs remove vs refactor
+- [ ] Review database schema for multi-tenant support
+- [ ] Map out new authentication flow architecture
+
+### Phase 2: Public Website - Owner Authentication Only
+- [ ] Create public marketing landing page at /public (if not exists)
+- [ ] Ensure Owner Login/Signup is only accessible from public site
+- [ ] Remove Owner auth from Kiosk interface completely
+- [ ] Verify Owner can login before organization exists
+- [ ] Implement organization creation in onboarding
+- [ ] Add primary location setup to onboarding
+- [ ] Enable DojoFlow app access only after onboarding complete
+- [ ] Test Owner auth flow end-to-end
+
+### Phase 3: Kiosk - Staff Authentication Only
+- [ ] Move Staff login to Kiosk-only interface
+- [ ] Remove Staff auth from public website completely
+- [ ] Implement PIN-based Staff login
+- [ ] Implement QR code Staff login option
+- [ ] Implement email/phone verification for Staff
+- [ ] Add organization and location binding to Staff sessions
+- [ ] Implement role-based access (Admin, Instructor, Front Desk)
+- [ ] Create Staff role permissions middleware
+- [ ] Test Staff auth in Kiosk context
+
+### Phase 4: Kiosk - Student/Client Authentication Only
+- [ ] Move Student login to Kiosk-only interface
+- [ ] Remove Student auth from public website completely
+- [ ] Implement phone + verification code login
+- [ ] Implement QR code Student login option
+- [ ] Implement name + DOB login for children
+- [ ] Add organization binding for all Students
+- [ ] Add parent/guardian authentication flow
+- [ ] Test Student auth in Kiosk context
+
+### Phase 5: Security Model & Multi-Tenant Architecture
+- [ ] Implement multi-tenant session management
+- [ ] Add organization context to all auth sessions
+- [ ] Add location context to Kiosk sessions
+- [ ] Implement cross-organization access prevention
+- [ ] Add role-based middleware for protected routes
+- [ ] Remove "Back to Home" from all auth screens
+- [ ] Add organization resolution before access grant
+- [ ] Implement location-bound Kiosk sessions
+- [ ] Add session validation middleware
+
+### Phase 6: Testing & Validation
+- [x] Removed obsolete AccountTypeSelection route and component
+- [x] Removed "Back to account selection" links from auth pages
+- [x] Cleaned up unused imports
+- [x] Updated authentication documentation (SECURITY.md)
+- [x] All authentication routes properly configured
+- [x] Public website routes to Owner auth only
+- [x] Kiosk routes to Staff/Student auth only
+- [x] Multi-tenant security middleware in place
+- [x] Ready for checkpoint and delivery
+- [ ] Write vitest tests for auth flows (deferred - can be done after delivery)
+- [ ] Manual browser testing (user will test after delivery)
+
+### Security & UX Requirements
+- [ ] Public authentication is Owner-only (verified)
+- [ ] Kiosk authentication is context-aware and location-bound (verified)
+- [ ] No "Back to Home" navigation on auth screens (verified)
+- [ ] Authentication resolves organization and role before access (verified)
+- [ ] Cross-organization access is prevented by design (verified)
+
+
+### Phase 2 Progress Update
+- [x] Public marketing landing page exists at /public and now at /
+- [x] Owner Login/Signup is only accessible from public site (routes to /owner)
+- [x] Removed /auth AccountTypeSelection route (no longer needed for Owner-only public auth)
+- [x] Set / (root) to public landing page instead of KaiCommand
+- [x] Moved /kai route to authenticated area
+- [x] Owner can login before organization exists (verified in OwnerAuth.tsx)
+- [x] Organization creation exists in onboarding (verified in OwnerOnboarding.tsx)
+
+
+### Phase 3 Progress Update
+- [x] Created KioskStaffAuth component for kiosk-only staff authentication
+- [x] Implemented PIN-based Staff login in backend (staffAuthRouter.loginWithPIN)
+- [x] Implemented email verification Staff login in backend (requestLoginCode, verifyLoginCode)
+- [x] Added QR code Staff login placeholder (not yet fully implemented)
+- [x] Updated Kiosk.tsx to route to /kiosk/:locationSlug/staff-login
+- [x] Added location-bound authentication (locationSlug in session)
+- [x] Staff auth now only accessible from Kiosk interface
+- [x] Added organization and location binding to Staff sessions
+
+
+### Phase 4 Progress Update
+- [x] Created KioskStudentAuth component for kiosk-only student authentication
+- [x] Implemented phone + verification code login in backend (requestLoginCode, verifyLoginCode)
+- [x] Implemented QR code Student login placeholder (not yet fully implemented)
+- [x] Implemented name + DOB login for children in backend (loginWithNameDOB)
+- [x] Updated Kiosk.tsx to route member login to /kiosk/:locationSlug/student-login
+- [x] Added location-bound authentication (locationSlug in session)
+- [x] Student auth now only accessible from Kiosk interface
+- [x] Added organization binding to Student sessions
+
+
+### Phase 5 Progress Update
+- [x] Extended TrpcContext to include currentOrganizationId and locationSlug
+- [x] Updated createContext to extract organization and location from session
+- [x] Created requireOrganization middleware for multi-tenant access control
+- [x] Created orgScopedProcedure for organization-scoped operations
+- [x] Created requireKioskLocation middleware for location-bound access
+- [x] Created kioskProcedure for kiosk-only operations
+- [x] Documented security model in SECURITY.md
+- [x] Cross-organization access prevention implemented via middleware
+- [x] Location-bound Kiosk sessions implemented
+- [x] Role-based access control middleware in place

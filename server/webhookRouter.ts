@@ -92,14 +92,14 @@ export const webhookRouter = router({
       const lastName = nameParts.slice(1).join(" ") || firstName;
       
       // Check for duplicate leads (by email or phone)
-      if (input.email) {
+      if (input.email && db) {
         const [existingLead] = await db
           .select()
           .from(leads)
           .where(eq(leads.email, input.email))
           .limit(1);
         
-        if (existingLead) {
+        if (existingLead && db) {
           // Update existing lead instead of creating duplicate
           await db
             .update(leads)
@@ -127,6 +127,12 @@ export const webhookRouter = router({
       }
       
       // Create new lead
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
       const [newLead] = await db
         .insert(leads)
         .values({

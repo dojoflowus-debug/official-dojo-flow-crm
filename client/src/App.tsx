@@ -93,9 +93,10 @@ import PublicChat from "./pages/PublicChat";
 import PublicHome from "./pages/PublicHome";
 import OwnerAuth from "./pages/OwnerAuth";
 import OwnerOnboarding from "./pages/OwnerOnboarding";
-import AccountTypeSelection from "./pages/AccountTypeSelection";
 import StaffAuth from "./pages/StaffAuth";
 import StudentAuthNew from "./pages/StudentAuthNew";
+import KioskStaffAuth from "./pages/KioskStaffAuth";
+import KioskStudentAuth from "./pages/KioskStudentAuth";
 import SelectOrganization from "./pages/SelectOrganization";
 import Pricing from "./pages/Pricing";
 import BillingSuccess from "./pages/BillingSuccess";
@@ -109,8 +110,8 @@ function Router() {
   return (
     <Routes>
       {/* Public routes */}
+      <Route path="/" element={<PublicHome />} />
       <Route path="/public" element={<PublicHome />} />
-      <Route path="/auth" element={<AccountTypeSelection />} />
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<MinimalDashboard />} />
@@ -120,10 +121,12 @@ function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/" element={<KaiCommand />} />
+      <Route path="/kai" element={<KaiCommand />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
       <Route path="/kiosk/:locationSlug" element={<Kiosk />} />
+      <Route path="/kiosk/:locationSlug/staff-login" element={<KioskStaffAuth />} />
+      <Route path="/kiosk/:locationSlug/student-login" element={<KioskStudentAuth />} />
       <Route path="/test-brand" element={<TestBrand />} />
       <Route path="/kiosk/checkin" element={<KioskCheckIn />} />
       <Route path="/kiosk/member-login" element={<KioskMemberLogin />} />
@@ -151,9 +154,6 @@ function Router() {
       <Route path="/student-messages" element={<StudentMessages />} />
       <Route path="/student-profile" element={<StudentProfile />} />
       <Route path="/student-settings" element={<StudentSettings />} />
-      <Route path="/kai-dashboard" element={<KaiDashboard />} />
-      <Route path="/kai" element={<KaiCommand />} />
-      <Route path="/kai-command" element={<KaiCommand />} />
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
       <Route path="/dashboard" element={<ProtectedRoute><MinimalDashboard /></ProtectedRoute>} />
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
