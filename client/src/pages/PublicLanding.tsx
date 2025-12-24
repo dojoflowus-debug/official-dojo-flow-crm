@@ -201,14 +201,11 @@ export default function PublicLanding() {
             {/* Right: Dashboard Preview with Floating Cards */}
             <div className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border bg-card">
-                <div className="aspect-[4/3] bg-gradient-to-br from-muted to-background flex items-center justify-center">
-                  <div className="text-center space-y-4 p-8">
-                    <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto">
-                      <BarChart3 className="w-10 h-10 text-primary" />
-                    </div>
-                    <p className="text-muted-foreground">Dashboard Preview</p>
-                  </div>
-                </div>
+                <img 
+                  src="/01-kai-command-hero.png" 
+                  alt="DojoFlow Kai Command Center" 
+                  className="w-full h-auto"
+                />
               </div>
 
               {/* Floating stat cards */}
@@ -295,18 +292,12 @@ export default function PublicLanding() {
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
             {/* Left: Image */}
             <div className="order-2 lg:order-1">
-              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5">
-                <div className="aspect-[4/3] flex items-center justify-center p-12">
-                  <div className="text-center space-y-6">
-                    <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
-                      <Sparkles className="w-12 h-12 text-primary" />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Kai AI Assistant</p>
-                      <p className="text-lg font-semibold">"How can I help you today?"</p>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border">
+                <img 
+                  src="/05-kai-in-action.png" 
+                  alt="Kai AI Assistant in action" 
+                  className="w-full h-auto"
+                />
               </div>
             </div>
 
@@ -375,18 +366,12 @@ export default function PublicLanding() {
 
             {/* Right: Image */}
             <div>
-              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border bg-gradient-to-br from-accent/5 to-primary/5">
-                <div className="aspect-[4/3] flex items-center justify-center p-12">
-                  <div className="text-center space-y-6">
-                    <div className="w-24 h-24 rounded-full bg-accent/20 flex items-center justify-center mx-auto">
-                      <CreditCard className="w-12 h-12 text-accent" />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Automated Billing</p>
-                      <p className="text-lg font-semibold">$12,450 collected this month</p>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border">
+                <img 
+                  src="/04-classes-schedule.png" 
+                  alt="Class schedule and management" 
+                  className="w-full h-auto"
+                />
               </div>
             </div>
           </div>

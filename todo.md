@@ -759,3 +759,14 @@
 - [x] Write benefit-driven headlines
 - [x] Create short, punchy feature descriptions
 - [x] Add compelling CTAs guiding user journey
+
+
+## 📸 Add Real Product Screenshots to Landing Page
+
+### Task
+- [x] Locate existing product screenshots in /client/public
+- [x] Replace hero section placeholder with 01-kai-command-hero.png
+- [x] Replace Kai AI section placeholder with 05-kai-in-action.png
+- [x] Replace billing section placeholder with 04-classes-schedule.png
+- [x] Test visual layout on landing page
+- [x] Save checkpoint
