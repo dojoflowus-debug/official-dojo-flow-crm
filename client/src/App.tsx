@@ -114,9 +114,9 @@ function Router() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<PublicHome />} />
-      <Route path="/public" element={<PublicHome />} />
-      <Route path="/public-old" element={<PublicLanding />} />
+      <Route path="/" element={<PublicLanding />} />
+      <Route path="/public" element={<PublicLanding />} />
+      <Route path="/public-old" element={<PublicHome />} />
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<MinimalDashboard />} />

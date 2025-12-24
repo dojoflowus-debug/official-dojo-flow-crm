@@ -725,3 +725,37 @@
 - [ ] Verify dojo routes still work unchanged
 - [ ] Verify platform admins cannot access dojo data without org context
 - [ ] Save checkpoint
+
+
+## 🎨 Lemon Squeezy-Inspired Design Upgrades
+
+### Design System Enhancements
+- [x] Update color palette with vibrant, energetic colors (move away from generic blues)
+- [x] Configure typography with better hierarchy and readability
+- [x] Add soft shadow system for depth
+- [x] Implement rounded corner standards
+- [x] Add generous spacing/padding system
+
+### Homepage Redesign
+- [x] Create large hero section with clear value proposition
+- [x] Add feature cards grid with icons and benefits
+- [x] Implement alternating content sections (text-image rhythm)
+- [x] Add product screenshots in realistic contexts
+- [x] Create asymmetric layouts for visual interest
+
+### Social Proof & Trust
+- [x] Add testimonials section with avatars and names
+- [x] Implement customer logos/social proof section
+- [x] Add success stories or case studies
+
+### Visual Polish
+- [x] Add hover effects on interactive elements
+- [x] Implement smooth transitions and animations
+- [x] Add bold inline keywords for scannability
+- [x] Ensure mobile responsiveness for all new sections
+- [x] Add multiple CTAs throughout the page
+
+### Content Updates
+- [x] Write benefit-driven headlines
+- [x] Create short, punchy feature descriptions
+- [x] Add compelling CTAs guiding user journey

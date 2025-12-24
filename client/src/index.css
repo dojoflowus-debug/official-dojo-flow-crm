@@ -61,54 +61,56 @@
 :root {
   --radius: 1rem;
   
-  /* DojoFlow Light Mode - Apple-style design system */
-  /* Background: #F7F8FA */
-  --background: oklch(0.975 0.002 250); /* #F7F8FA */
-  --foreground: oklch(0.18 0 0); /* #262626 */
+  /* DojoFlow Light Mode - Vibrant Lemon Squeezy-inspired */
+  /* Background: Soft warm off-white */
+  --background: oklch(0.98 0.005 80); /* #FDFCFB warm white */
+  --foreground: oklch(0.20 0.01 280); /* #1A1A2E deep purple-black */
   
-  /* Panels: #FFFFFF */
+  /* Panels: Pure white with warmth */
   --card: oklch(1 0 0); /* Pure white */
-  --card-foreground: oklch(0.18 0 0); /* #262626 */
+  --card-foreground: oklch(0.20 0.01 280); /* #1A1A2E */
   
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.20 0.01 280);
   
-  /* Accent Red: #E53935 */
-  --primary: oklch(0.55 0.20 25); /* #E53935 */
-  --primary-foreground: oklch(1 0 0);
+  /* Primary: Vibrant energetic yellow-orange #FFC233 */
+  --primary: oklch(0.82 0.14 75); /* #FFC233 lemon yellow */
+  --primary-foreground: oklch(0.20 0.01 280); /* Dark text on yellow */
   
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.18 0 0);
+  /* Secondary: Soft purple accent */
+  --secondary: oklch(0.95 0.02 280); /* Light purple tint */
+  --secondary-foreground: oklch(0.20 0.01 280);
   
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.45 0 0); /* #6F6F73 */
+  --muted: oklch(0.96 0.005 80);
+  --muted-foreground: oklch(0.50 0.01 280); /* #6B6B7E muted purple-gray */
   
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.18 0 0);
+  /* Accent: Bright coral-pink for CTAs */
+  --accent: oklch(0.75 0.18 15); /* #FF6B6B coral */
+  --accent-foreground: oklch(1 0 0);
   
-  --destructive: oklch(0.55 0.20 25); /* #E53935 */
+  --destructive: oklch(0.60 0.22 25); /* #E74C3C red */
   --destructive-foreground: oklch(1 0 0);
   
-  /* Borders: #E2E3E6 */
-  --border: oklch(0.91 0.002 250); /* #E2E3E6 */
-  --input: oklch(0.91 0.002 250);
-  --ring: oklch(0.55 0.20 25); /* #E53935 */
+  /* Borders: Soft warm gray */
+  --border: oklch(0.92 0.005 80); /* #E8E7E5 */
+  --input: oklch(0.92 0.005 80);
+  --ring: oklch(0.82 0.14 75); /* Yellow focus ring */
   
-  --chart-1: oklch(0.55 0.20 25); /* Accent red */
-  --chart-2: oklch(0.45 0.15 250);
-  --chart-3: oklch(0.60 0.15 150);
-  --chart-4: oklch(0.70 0.15 80);
-  --chart-5: oklch(0.55 0.15 320);
+  --chart-1: oklch(0.82 0.14 75); /* Lemon yellow */
+  --chart-2: oklch(0.75 0.18 15); /* Coral */
+  --chart-3: oklch(0.70 0.15 150); /* Mint green */
+  --chart-4: oklch(0.65 0.18 280); /* Purple */
+  --chart-5: oklch(0.80 0.12 200); /* Sky blue */
   
-  /* Light sidebar (not used with bottom nav, but kept for compatibility) */
+  /* Light sidebar */
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.18 0 0);
-  --sidebar-primary: oklch(0.55 0.20 25);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.18 0 0);
-  --sidebar-border: oklch(0.91 0.002 250);
-  --sidebar-ring: oklch(0.55 0.20 25);
+  --sidebar-foreground: oklch(0.20 0.01 280);
+  --sidebar-primary: oklch(0.82 0.14 75); /* Yellow */
+  --sidebar-primary-foreground: oklch(0.20 0.01 280);
+  --sidebar-accent: oklch(0.95 0.02 280);
+  --sidebar-accent-foreground: oklch(0.20 0.01 280);
+  --sidebar-border: oklch(0.92 0.005 80);
+  --sidebar-ring: oklch(0.82 0.14 75);
 }
 
 .dark {
@@ -289,6 +291,28 @@ html:has(.focus-mode) {
   input[type="checkbox"]:not(:disabled),
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
+  }
+}
+
+/* Lemon Squeezy-inspired soft shadows for depth */
+@layer utilities {
+  .shadow-soft {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  .shadow-soft-lg {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+  .shadow-soft-xl {
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Hover lift effect */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.06);
   }
 }
 

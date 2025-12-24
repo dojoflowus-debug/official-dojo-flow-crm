@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function PublicLanding() {
@@ -36,17 +36,84 @@ export default function PublicLanding() {
     return () => observer.disconnect();
   }, []);
 
+  const features = [
+    {
+      icon: Sparkles,
+      title: "Kai AI Assistant",
+      description: "Your 24/7 AI sensei handles student inquiries, schedules classes, and answers questions instantly via chat, SMS, or voice.",
+      highlight: "Responds in seconds"
+    },
+    {
+      icon: Users,
+      title: "Student Management",
+      description: "Track progress, belt ranks, attendance, and achievements. Complete profiles with photos, emergency contacts, and custom notes.",
+      highlight: "All-in-one profiles"
+    },
+    {
+      icon: Calendar,
+      title: "Smart Scheduling",
+      description: "Automated class scheduling, private lesson booking, and belt testing coordination. Sync with Google Calendar seamlessly.",
+      highlight: "Zero conflicts"
+    },
+    {
+      icon: CreditCard,
+      title: "Automated Billing",
+      description: "Recurring payments, failed payment recovery, and instant invoicing. Stripe integration handles everything securely.",
+      highlight: "Get paid on time"
+    },
+    {
+      icon: MessageSquare,
+      title: "Multi-Channel Communication",
+      description: "Send announcements via SMS, email, or in-app notifications. Kai handles routine questions automatically.",
+      highlight: "Reach everyone instantly"
+    },
+    {
+      icon: BarChart3,
+      title: "Analytics & Insights",
+      description: "Track retention rates, revenue trends, attendance patterns, and student progress. Make data-driven decisions.",
+      highlight: "Know your numbers"
+    }
+  ];
+
+  const testimonials = [
+    {
+      quote: "DojoFlow transformed my school. Kai handles 80% of parent questions, and I finally have time to focus on teaching. Revenue is up 40% since we started.",
+      author: "Master Chen",
+      role: "Owner, Dragon Martial Arts",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Chen"
+    },
+    {
+      quote: "The billing automation alone saved me 10 hours per week. No more chasing payments or manual invoicing. It just works.",
+      author: "Sensei Rodriguez",
+      role: "Head Instructor, Elite Karate Academy",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rodriguez"
+    },
+    {
+      quote: "I was skeptical about AI, but Kai is incredible. Parents love getting instant answers at 11 PM. My phone finally stopped ringing during dinner.",
+      author: "Coach Williams",
+      role: "Founder, Williams BJJ",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Williams"
+    }
+  ];
+
+  const stats = [
+    { value: "10,000+", label: "Students Managed" },
+    { value: "98%", label: "Retention Rate" },
+    { value: "24/7", label: "AI Support" },
+    { value: "40%", label: "Revenue Growth" }
+  ];
+
   return (
-    <div className="min-h-screen bg-background landing-scrollbar overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-premium border-b border-border/50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-white font-bold text-lg">D</span>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-soft">
+                <span className="text-primary-foreground font-bold text-xl">D</span>
               </div>
-              <span className="text-xl font-bold text-gradient-red-gold">DojoFlow</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">DojoFlow</span>
             </div>
             
             <div className="hidden md:flex items-center gap-8">
@@ -54,10 +121,10 @@ export default function PublicLanding() {
               <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
               <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
               <Link href="/auth">
-                <Button variant="ghost" size="sm">Sign In</Button>
+                <Button variant="ghost" size="sm" className="font-medium">Sign In</Button>
               </Link>
               <Link href="/auth">
-                <Button size="sm" className="btn-premium bg-primary hover:bg-primary/90">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-soft">
                   Start Free Trial
                 </Button>
               </Link>
@@ -65,7 +132,7 @@ export default function PublicLanding() {
 
             <div className="md:hidden">
               <Link href="/auth">
-                <Button size="sm" className="btn-premium bg-primary hover:bg-primary/90">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   Get Started
                 </Button>
               </Link>
@@ -74,238 +141,295 @@ export default function PublicLanding() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section - Large, Asymmetric Layout */}
       <section 
         ref={heroRef}
-        className="relative min-h-screen flex items-center justify-center overflow-hidden grain"
-        style={{
-          paddingTop: "64px",
-        }}
+        className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden"
       >
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 gradient-animated opacity-10" />
-        
-        {/* Glow effects */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        {/* Gradient background blobs */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-3xl -z-10" />
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left: Hero Content */}
-            <div className="text-center lg:text-left space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-premium text-sm font-medium">
-                <Sparkles className="w-4 h-4 text-secondary" />
-                <span>AI-Powered Dojo Management</span>
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-sm font-medium border border-primary/20">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-foreground">AI-Powered Dojo Management</span>
               </div>
 
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
-                Run Your Dojo{" "}
-                <span className="text-gradient-red-gold">Like a Sensei</span>
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
+                Run your dojo like a{" "}
+                <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                  sensei
+                </span>
               </h1>
 
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl text-balance">
-                The all-in-one platform for martial arts schools. Manage students, track progress, automate billing, and let Kai AI handle the rest. Focus on teaching, we'll handle the operations.
+              <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
+                The all-in-one platform for martial arts schools. <strong className="text-foreground">Manage students, automate billing, and let Kai AI handle the rest.</strong> Focus on teaching—we'll handle operations.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/auth">
-                  <Button size="lg" className="btn-premium bg-primary hover:bg-primary/90 text-lg px-8 h-14 glow-red">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 h-14 shadow-soft-lg hover-lift font-semibold">
                     Start Free Trial
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="text-lg px-8 h-14 glass-premium hover:glass-premium-strong">
+                <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2 hover:bg-secondary font-semibold">
                   Watch Demo
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-muted-foreground">
+              <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-secondary" />
-                  <span>14-day free trial</span>
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <span><strong className="text-foreground">14-day</strong> free trial</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-secondary" />
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
                   <span>No credit card required</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-secondary" />
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
                   <span>Cancel anytime</span>
                 </div>
               </div>
             </div>
 
-            {/* Right: Dashboard Preview */}
-            <div 
-              className="relative"
-              style={{
-                transform: `translateY(${scrollY * 0.1}px)`,
-              }}
-            >
-              <div className="relative">
-                {/* Glow behind dashboard */}
-                <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-3xl" />
-                
-                {/* Dashboard image */}
-                <div className="relative rounded-2xl overflow-hidden shadow-depth-strong border border-border/50 glass-premium-strong">
-                  <img 
-                    src="/hero-dashboard.png" 
-                    alt="DojoFlow Dashboard" 
-                    className="w-full h-auto"
-                  />
-                </div>
-
-                {/* Floating stats cards */}
-                <div className="absolute -top-4 -left-4 glass-premium rounded-xl p-4 shadow-depth hover-lift">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-primary" />
+            {/* Right: Dashboard Preview with Floating Cards */}
+            <div className="relative">
+              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border bg-card">
+                <div className="aspect-[4/3] bg-gradient-to-br from-muted to-background flex items-center justify-center">
+                  <div className="text-center space-y-4 p-8">
+                    <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto">
+                      <BarChart3 className="w-10 h-10 text-primary" />
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold">1,247</div>
-                      <div className="text-xs text-muted-foreground">Active Students</div>
-                    </div>
+                    <p className="text-muted-foreground">Dashboard Preview</p>
                   </div>
                 </div>
+              </div>
 
-                <div className="absolute -bottom-4 -right-4 glass-premium rounded-xl p-4 shadow-depth hover-lift">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                      <BarChart3 className="w-5 h-5 text-secondary" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">98%</div>
-                      <div className="text-xs text-muted-foreground">Retention Rate</div>
-                    </div>
+              {/* Floating stat cards */}
+              <div className="absolute -top-6 -left-6 bg-card rounded-2xl p-6 shadow-soft-lg border border-border hover-lift">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold">1,247</div>
+                    <div className="text-sm text-muted-foreground">Active Students</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-6 -right-6 bg-card rounded-2xl p-6 shadow-soft-lg border border-border hover-lift">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-accent" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold">+40%</div>
+                    <div className="text-sm text-muted-foreground">Revenue Growth</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
-            <div className="w-1 h-2 bg-muted-foreground/30 rounded-full" />
-          </div>
-        </div>
-      </section>
-
-      {/* Problem Section */}
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16 scroll-reveal">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              We Understand Your Pain
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Running a martial arts school shouldn't feel like a full-time administrative job. You became a sensei to teach, not to wrestle with spreadsheets and billing software.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Calendar,
-                title: "Scheduling Chaos",
-                description: "Managing class schedules, private lessons, and belt testing dates across multiple locations is overwhelming."
-              },
-              {
-                icon: CreditCard,
-                title: "Billing Headaches",
-                description: "Chasing late payments, managing memberships, and handling refunds takes hours every week."
-              },
-              {
-                icon: MessageSquare,
-                title: "Communication Overload",
-                description: "Answering the same questions repeatedly via phone, email, and text eats into your teaching time."
-              }
-            ].map((problem, index) => (
-              <div 
-                key={index}
-                className="scroll-reveal glass-premium rounded-2xl p-8 hover-lift"
-                style={{ transitionDelay: `${index * 100}ms` }}
-              >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                  <problem.icon className="w-7 h-7 text-primary" />
+          {/* Stats Bar */}
+          <div className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                  {stat.value}
                 </div>
-                <h3 className="text-xl font-bold mb-3">{problem.title}</h3>
-                <p className="text-muted-foreground">{problem.description}</p>
+                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16 scroll-reveal">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-premium text-sm font-medium mb-6">
-              <Zap className="w-4 h-4 text-secondary" />
-              <span>The DojoFlow Solution</span>
+      {/* Features Grid - Card-Based Layout */}
+      <section id="features" className="py-24 bg-muted/30">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-sm font-medium border border-primary/20 mb-6">
+              <Zap className="w-4 h-4 text-primary" />
+              <span>Everything you need</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              From Chaos to{" "}
-              <span className="text-gradient-red-gold">Clarity</span>
+              Create the perfect experience for your students
             </h2>
             <p className="text-lg text-muted-foreground">
-              DojoFlow brings everything together in one powerful platform, powered by Kai AI—your intelligent assistant that handles operations so you can focus on what matters: teaching martial arts.
+              Launch your dojo management system in minutes. <strong className="text-foreground">No technical skills required</strong>—just focus on teaching while DojoFlow handles everything else.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {[
-              {
-                icon: Sparkles,
-                title: "Kai AI Assistant",
-                description: "Your 24/7 AI sensei that answers student questions, schedules classes, and handles routine tasks automatically.",
-                badge: "Most Popular"
-              },
-              {
-                icon: Users,
-                title: "Student Management",
-                description: "Track attendance, belt progression, and performance with detailed profiles and progress reports."
-              },
-              {
-                icon: Calendar,
-                title: "Smart Scheduling",
-                description: "Automated class scheduling, waitlists, and reminders that sync with your calendar."
-              },
-              {
-                icon: CreditCard,
-                title: "Automated Billing",
-                description: "Recurring payments, invoicing, and payment tracking that runs on autopilot."
-              },
-              {
-                icon: BarChart3,
-                title: "Analytics Dashboard",
-                description: "Real-time insights into revenue, retention, and growth metrics to make data-driven decisions."
-              },
-              {
-                icon: Shield,
-                title: "Kiosk Mode",
-                description: "Self-service check-in stations for students with facial recognition and attendance tracking."
-              }
-            ].map((feature, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
               <div 
                 key={index}
-                className="scroll-reveal glass-premium rounded-2xl p-8 hover-lift relative overflow-hidden"
-                style={{ transitionDelay: `${index * 100}ms` }}
+                className="bg-card rounded-2xl p-8 shadow-soft hover-lift border border-border group"
               >
-                {feature.badge && (
-                  <div className="absolute top-4 right-4">
-                    <span className="px-3 py-1 rounded-full bg-secondary/20 text-secondary text-xs font-medium">
-                      {feature.badge}
-                    </span>
-                  </div>
-                )}
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-6 glow-red">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                   <feature.icon className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <p className="text-muted-foreground mb-4 leading-relaxed">{feature.description}</p>
+                <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{feature.highlight}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Alternating Content Section - Kai AI Showcase */}
+      <section className="py-24">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
+            {/* Left: Image */}
+            <div className="order-2 lg:order-1">
+              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5">
+                <div className="aspect-[4/3] flex items-center justify-center p-12">
+                  <div className="text-center space-y-6">
+                    <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
+                      <Sparkles className="w-12 h-12 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Kai AI Assistant</p>
+                      <p className="text-lg font-semibold">"How can I help you today?"</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Content */}
+            <div className="order-1 lg:order-2 space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-sm font-medium border border-accent/20">
+                <Phone className="w-4 h-4 text-accent" />
+                <span>24/7 AI Support</span>
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-bold">
+                Meet Kai, your AI sensei
+              </h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Kai handles <strong className="text-foreground">student inquiries, class scheduling, and routine questions</strong> automatically via chat, SMS, or voice. Parents get instant answers at midnight. You get your time back.
+              </p>
+              <ul className="space-y-4">
+                {[
+                  "Answers questions about class schedules, belt requirements, and pricing",
+                  "Books private lessons and handles rescheduling requests",
+                  "Sends automated reminders for upcoming classes and payments",
+                  "Learns your dojo's policies and responds in your voice"
+                ].map((item, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/auth">
+                <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-soft">
+                  Try Kai for Free
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Second alternating section - Billing */}
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left: Content */}
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-sm font-medium border border-primary/20">
+                <CreditCard className="w-4 h-4 text-primary" />
+                <span>Automated Payments</span>
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-bold">
+                Get paid on time, every time
+              </h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">No more chasing payments.</strong> Automated billing, failed payment recovery, and instant invoicing. Stripe handles security, we handle everything else.
+              </p>
+              <ul className="space-y-4">
+                {[
+                  "Recurring monthly memberships with automatic billing",
+                  "Failed payment recovery with smart retry logic",
+                  "Instant digital receipts and invoices",
+                  "Support for payment plans and custom pricing"
+                ].map((item, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right: Image */}
+            <div>
+              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border bg-gradient-to-br from-accent/5 to-primary/5">
+                <div className="aspect-[4/3] flex items-center justify-center p-12">
+                  <div className="text-center space-y-6">
+                    <div className="w-24 h-24 rounded-full bg-accent/20 flex items-center justify-center mx-auto">
+                      <CreditCard className="w-12 h-12 text-accent" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Automated Billing</p>
+                      <p className="text-lg font-semibold">$12,450 collected this month</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-24 bg-muted/30">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+              You're in good company
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Join hundreds of successful martial arts schools using DojoFlow. <strong className="text-foreground">Become part of a growing community</strong> of innovative instructors and school owners.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <div 
+                key={index}
+                className="bg-card rounded-2xl p-8 shadow-soft hover-lift border border-border"
+              >
+                <div className="flex gap-1 mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                  ))}
+                </div>
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  "{testimonial.quote}"
+                </p>
+                <div className="flex items-center gap-4">
+                  <img 
+                    src={testimonial.avatar} 
+                    alt={testimonial.author}
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div>
+                    <div className="font-semibold">{testimonial.author}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -313,101 +437,70 @@ export default function PublicLanding() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 gradient-animated opacity-10" />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-4xl mx-auto text-center glass-premium rounded-3xl p-12 shadow-depth-strong scroll-reveal">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Ready to Transform Your Dojo?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join hundreds of martial arts schools already using DojoFlow to streamline operations and grow their business.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth">
-                <Button size="lg" className="btn-premium bg-primary hover:bg-primary/90 text-lg px-8 h-14 glow-red-strong">
-                  Start Your Free Trial
-                  <ArrowRight className="ml-2 w-5 h-5" />
+      <section className="py-24">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-primary via-accent to-primary p-12 md:p-16 text-center shadow-soft-xl">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30" />
+            
+            <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+              <h2 className="text-4xl sm:text-5xl font-bold text-primary-foreground">
+                Ready to transform your dojo?
+              </h2>
+              <p className="text-xl text-primary-foreground/90">
+                Start your 14-day free trial today. No credit card required, cancel anytime.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/auth">
+                  <Button size="lg" variant="secondary" className="text-lg px-8 h-14 font-semibold shadow-soft-lg hover-lift">
+                    Start Free Trial
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 font-semibold">
+                  Schedule a Demo
                 </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 h-14 glass-premium hover:glass-premium-strong">
-                Schedule a Demo
-              </Button>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-6">
-              No credit card required • 14-day free trial • Cancel anytime
-            </p>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-12 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">D</span>
-                </div>
-                <span className="text-xl font-bold text-gradient-red-gold">DojoFlow</span>
+      <footer className="py-12 border-t border-border">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-xl">D</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                The all-in-one platform for martial arts school management.
-              </p>
+              <span className="text-xl font-bold">DojoFlow</span>
             </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Integrations</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">API</a></li>
-              </ul>
+            
+            <div className="flex gap-8 text-sm text-muted-foreground">
+              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+              <a href="#" className="hover:text-foreground transition-colors">Support</a>
             </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Terms</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Security</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-border/50 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © 2024 DojoFlow. All rights reserved.
-            </p>
-            <div className="flex gap-6">
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <span className="sr-only">Twitter</span>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <span className="sr-only">GitHub</span>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <span className="sr-only">LinkedIn</span>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
-              </a>
+            
+            <div className="text-sm text-muted-foreground">
+              © 2025 DojoFlow. All rights reserved.
             </div>
           </div>
         </div>
       </footer>
+
+      <style>{`
+        .scroll-reveal {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        .scroll-reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      `}</style>
     </div>
   );
 }
