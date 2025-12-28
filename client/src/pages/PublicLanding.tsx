@@ -338,8 +338,8 @@ export default function PublicLanding() {
           <div className="max-w-6xl mx-auto">
             {/* Headline */}
             <div className="text-center mb-14 space-y-5">
-              <h1 className="text-7xl md:text-8xl font-bold text-white tracking-tight drop-shadow-2xl flex items-center justify-center gap-6">
-                <img src="/kai-icon-hero.png" alt="Kai" className="w-20 h-20 md:w-24 md:h-24 drop-shadow-2xl" />
+              <h1 className="text-8xl md:text-9xl font-bold text-white tracking-tight drop-shadow-2xl flex items-center justify-center gap-4">
+                <img src="/kai-icon-hero.png" alt="Kai" className="w-32 h-32 md:w-40 md:h-40 drop-shadow-2xl" />
                 Hi, I'm Kai.
               </h1>
               <p className="text-3xl md:text-4xl text-slate-200 font-light tracking-wide">
@@ -353,7 +353,7 @@ export default function PublicLanding() {
                 <button
                   key={card.category}
                   onClick={() => handleCardClick(card.category)}
-                  className={`group relative p-10 rounded-3xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-[3px] ${card.borderColor} hover:border-opacity-100 transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]`}
+                  className={`group relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-[3px] border-red-500 hover:border-red-400 transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]`}
                   style={{
                     boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
                   }}
@@ -365,16 +365,16 @@ export default function PublicLanding() {
                   }} />
                   
                   {/* Star icon top-right */}
-                  <div className="absolute top-5 right-5 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
-                    <Star className="w-6 h-6 text-white drop-shadow-lg" />
+                  <div className="absolute top-3 right-3 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                    <Star className="w-4 h-4 text-white drop-shadow-lg" />
                   </div>
 
                   {/* Card content */}
                   <div className="relative space-y-4">
-                    <div className={`text-sm font-bold uppercase tracking-widest ${card.titleColor} drop-shadow-md`}>
+                    <div className={`text-xs font-bold uppercase tracking-widest ${card.titleColor} drop-shadow-md`}>
                       {card.title}
                     </div>
-                    <div className="text-xl font-medium text-white leading-relaxed drop-shadow-lg">
+                    <div className="text-base font-medium text-white leading-relaxed drop-shadow-lg">
                       {card.prompt}
                     </div>
                   </div>

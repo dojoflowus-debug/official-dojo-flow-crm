@@ -12,6 +12,13 @@ Update hero banner to match exact mockup design:
 - [x] Test design matches mockup
 - [x] Push changes to GitHub
 - [x] Save checkpoint (version: 1d08a452)
+- [x] Reduce "Hi, I'm Kai." text size to match icon height
+- [x] Increase DojoFlow icon size by 2x for more visual prominence
+- [x] Double the size of "Hi, I'm Kai." heading in hero section
+- [x] Shrink prompt boxes to 2x smaller (reduce padding, text size)
+- [x] Replace multicolored borders with consistent red outline on all cards
+- [ ] Verify visual balance with icon
+- [ ] Test on mobile and desktop
 
 [Previous content preserved - truncated for brevity]
 
@@ -1028,3 +1035,10 @@ Replace hero section with cinematic design matching reference screenshot:
 - [x] Add bg-gradient-radial utility class to index.css
 - [x] Test visual output matches reference
 - [x] Verify changes are live on dev server
+
+## 🎨 Hero Section Text Sizing
+
+### Task
+- [x] Reduce "Hi, I'm Kai." text size to match icon height
+- [x] Ensure icon and text are visually balanced
+- [x] Test responsive behavior on different screen sizes
