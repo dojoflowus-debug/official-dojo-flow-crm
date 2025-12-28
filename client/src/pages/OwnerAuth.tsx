@@ -24,11 +24,8 @@ export default function OwnerAuth() {
         {/* Removed Back to Home - Auth is terminal entry point */}
 
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <span className="font-bold text-2xl">DojoFlow</span>
+        <div className="flex items-center justify-center mb-8">
+          <img src="/logo-dark.png" alt="DojoFlow" className="h-10" />
         </div>
 
         {/* Tabs */}

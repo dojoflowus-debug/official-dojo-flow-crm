@@ -2,8 +2,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
 
 // Default DojoFlow logos with proper contrast
-const DEFAULT_DARK_LOGO = "/logo-light.png"; // Dark text logo for light mode
-const DEFAULT_LIGHT_LOGO = "/logo-dark.png"; // Light text logo for dark mode
+const DEFAULT_DARK_LOGO = "/logo-dark.png"; // Dark text logo for light mode
+const DEFAULT_LIGHT_LOGO = "/logo-light.png"; // Light text logo for dark mode
 
 /**
  * Hook to get the appropriate logo based on current theme

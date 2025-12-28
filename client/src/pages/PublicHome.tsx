@@ -22,8 +22,7 @@ export default function PublicHome() {
       <header className="border-b border-white/10 bg-black/20 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
-            <img src="/kai-avatar.png" alt="DojoFlow" className="w-8 h-8" />
-            <span className="font-bold text-xl">DojoFlow</span>
+            <img src="/logo-light.png" alt="DojoFlow" className="h-8" />
           </div>
           
           <nav className="flex items-center gap-6">

@@ -49,11 +49,9 @@ export default function StudentAuthNew() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-            <GraduationCap className="w-7 h-7 text-white" />
-          </div>
-          <span className="font-bold text-2xl text-slate-900 dark:text-white">DojoFlow</span>
+        <div className="flex items-center justify-center mb-8">
+          <img src="/logo-dark.png" alt="DojoFlow" className="h-10 dark:hidden" />
+          <img src="/logo-light.png" alt="DojoFlow" className="h-10 hidden dark:block" />
         </div>
 
         <Card className="shadow-xl border-slate-200 dark:border-slate-700">

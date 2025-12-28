@@ -770,3 +770,20 @@
 - [x] Replace billing section placeholder with 04-classes-schedule.png
 - [x] Test visual layout on landing page
 - [x] Save checkpoint
+
+
+## 🎨 Replace All Logos with Correct DojoFlow Brand Assets
+
+### Task
+- [x] Copy Lightdojoflow.png to /client/public/logo-light.png (for dark backgrounds)
+- [x] Copy Darkdojoflow.png to /client/public/logo-dark.png (for light backgrounds)
+- [x] Copy DojoFLowLogo2Icon.png to /client/public/logo-icon.png (icon only)
+- [x] Update useThemeAwareLogo hook to use new logo files
+- [x] Update OwnerAuth page logo
+- [x] Update StaffAuth page logo
+- [x] Update StudentAuthNew page logo
+- [x] Update PublicHome landing page logo
+- [x] Test logos in Light mode (should show dark text logo)
+- [x] Test logos in Dark mode (should show light text logo)
+- [x] Verified logos display correctly across all auth pages
+- [x] Save checkpoint
