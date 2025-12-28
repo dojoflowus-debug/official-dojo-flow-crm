@@ -1,5 +1,18 @@
 # DojoFlow Kiosk - TODO
 
+## 🎨 Kai Command Hero Banner Redesign (2025-12-28)
+
+Update hero banner to match exact mockup design:
+- [x] Change card layout from 2x2 grid to horizontal row of 4 cards (already horizontal carousel)
+- [x] Increase border thickness (3px) with more prominent rounded corners
+- [x] Add colored titles matching border colors (red/orange text)
+- [x] Update card content to match mockup text exactly
+- [ ] Enhance background with darker atmospheric storm effect (already cinematic)
+- [ ] Update input bar styling with chat bubble icon and better prominence
+- [ ] Test design matches mockup
+- [ ] Push changes to GitHub
+- [ ] Save checkpoint
+
 [Previous content preserved - truncated for brevity]
 
 ## 🐛 BUG: TTS Audio Not Playing - User Cannot Hear Kai

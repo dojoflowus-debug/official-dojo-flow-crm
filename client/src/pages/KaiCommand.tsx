@@ -822,27 +822,27 @@ export default function KaiCommand() {
   const quickCommands = [
     {
       id: 'goals',
-      header: 'START WITH YOUR GOALS',
-      text: '"Help me grow my kids program to 150 students."',
+      header: 'START WITH WAET GOALS',
+      text: '"Help me grow my kids program to 150 students"',
       color: 'red'
     },
     {
       id: 'health',
-      header: 'CHECK HEALTH OF YOUR DOJO',
-      text: '"Show me attendance and missed classes this week."',
-      color: 'blue'
+      header: 'CHECK HEALTH OF FORT DOJO',
+      text: '"Show me attendance and missed classes this week"',
+      color: 'red'
     },
     {
       id: 'billing',
-      header: 'FIX BILLING & RENEWALS',
-      text: '"Who is late on payments and how can we fix it?"',
+      header: 'PIC BELING',
+      text: '"Who\'s late on payments and how can we fix it?"',
       color: 'orange'
     },
     {
       id: 'retention',
-      header: 'INCREASE RETENTION',
-      text: '"Tell me which students are at high risk of quitting."',
-      color: 'purple'
+      header: 'INCREAST RETENTION',
+      text: '"Tell me which students are a high risk of quitting"',
+      color: 'orange'
     },
     {
       id: 'enrollments',
@@ -2537,23 +2537,34 @@ export default function KaiCommand() {
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                       {sortedQuickCommands.map((command, index) => {
-                        // Get color-specific border classes with enhanced visibility
+                        // Get color-specific border and title color classes
                         const getColorBorder = (color: string) => {
                           const colorMap: Record<string, string> = {
-                            red: 'border-red-500/70',
-                            blue: 'border-blue-500/70',
-                            orange: 'border-orange-500/70',
-                            purple: 'border-purple-500/70',
-                            green: 'border-green-500/70'
+                            red: 'border-red-500',
+                            blue: 'border-blue-500',
+                            orange: 'border-orange-500',
+                            purple: 'border-purple-500',
+                            green: 'border-green-500'
                           };
                           return colorMap[color] || 'border-white/30';
+                        };
+                        
+                        const getTitleColor = (color: string) => {
+                          const colorMap: Record<string, string> = {
+                            red: 'text-red-500',
+                            blue: 'text-blue-500',
+                            orange: 'text-orange-500',
+                            purple: 'text-purple-500',
+                            green: 'text-green-500'
+                          };
+                          return colorMap[color] || 'text-white';
                         };
                         
                         return (
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border-2 ${(isCinematic || isFocusMode) ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
+                          className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border-[3px] ${(isCinematic || isFocusMode) ? 'rounded-[16px] p-4' : 'rounded-[20px] p-5'} text-left transition-all duration-300 group snap-start ${
                             (isCinematic || isFocusMode)
                               ? `${(command as any).color ? getColorBorder((command as any).color) : 'border-white/30'} hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/70' : ''}`
                               : isDark 
@@ -2581,7 +2592,7 @@ export default function KaiCommand() {
                           </div>
                           
                           <div 
-                            className="text-xs font-semibold text-[#FF4C4C] uppercase tracking-wide mb-2 pr-6"
+                            className={`text-xs font-semibold uppercase tracking-wide mb-2 pr-6 ${(command as any).color ? getTitleColor((command as any).color) : 'text-[#FF4C4C]'}`}
                             style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : {}}
                           >
                             {command.header}
