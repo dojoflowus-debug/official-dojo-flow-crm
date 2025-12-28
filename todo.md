@@ -847,4 +847,25 @@
 - [x] Test that hero section looks like Kai Command dashboard, not marketing hero
 - [x] Verify chat input bar placeholder: "Message Kai… Type @ to mention"
 - [x] Write and run vitest tests (5 tests passing)
+- [x] Save checkpoint
+
+
+## 🎨 Kai Command Dashboard Hero Section
+
+### Task
+- [x] Replace existing hero section with Kai Command Dashboard design
+- [x] Implement dark storm-cloud atmospheric background (deep navy → charcoal gradient)
+- [x] Add "Hi, I'm Kai. What would you like to optimize today?" centered headline
+- [x] Create 4 interactive command cards with colored borders:
+  - Card 1: "START WITH GROWTH" (red/pink border) - "Help me grow my kids program to 150 students"
+  - Card 2: "CHECK HEALTH OF FORT DOJO" (orange border) - "Show me attendance and missed classes this week"
+  - Card 3: "FIX BILLING" (yellow border) - "Who's behind on payments and how do we fix it?"
+  - Card 4: "INCREASE RETENTION" (purple border) - "Tell me which students are at risk of quitting"
+- [x] Add star icons in top-right of each card
+- [x] Implement hover lift + glow effects on cards
+- [x] Add glassmorphism chat input bar with "Message Kai… Type @ to mention" placeholder
+- [x] Add plus (+) icon on right side of input bar
+- [x] Make hero full viewport height (100vh)
+- [x] Implement card click behavior with conversational overlay
+- [x] Test all interactions and visual effects
 - [ ] Save checkpoint
