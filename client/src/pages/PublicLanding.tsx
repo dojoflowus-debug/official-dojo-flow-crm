@@ -1,11 +1,44 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+
+type PromptCategory = "growth" | "health" | "billing" | "retention";
+
+interface OnboardingStep {
+  id: number;
+  title: string;
+}
+
+const ONBOARDING_STEPS: OnboardingStep[] = [
+  { id: 1, title: "School Information" },
+  { id: 2, title: "Owner Details" },
+  { id: 3, title: "School Profile" },
+  { id: 4, title: "Current Status" },
+];
 
 export default function PublicLanding() {
   const [scrollY, setScrollY] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<PromptCategory | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Onboarding form state
+  const [schoolName, setSchoolName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [locationCount, setLocationCount] = useState("");
+  const [programs, setPrograms] = useState<string[]>([]);
+  const [studentCount, setStudentCount] = useState("");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +68,132 @@ export default function PublicLanding() {
 
     return () => observer.disconnect();
   }, []);
+
+  const handleCardClick = (category: PromptCategory) => {
+    setSelectedCategory(category);
+    setShowOnboarding(true);
+    setCurrentStep(1);
+  };
+
+  const handleNextStep = () => {
+    if (currentStep < ONBOARDING_STEPS.length) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleCreateWorkspace();
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const [, setLocation] = useLocation();
+  const quickSignupMutation = trpc.kaiOnboarding.quickSignup.useMutation();
+
+  const handleCreateWorkspace = async () => {
+    if (!selectedCategory) return;
+    
+    setIsCreating(true);
+    
+    try {
+      const result = await quickSignupMutation.mutateAsync({
+        schoolName,
+        ownerName,
+        ownerEmail,
+        locationCount: locationCount as "1" | "2-5" | "6+",
+        programs,
+        studentCount: studentCount as "0-50" | "51-100" | "101-200" | "201-500" | "500+",
+        category: selectedCategory,
+      });
+
+      if (result.success) {
+        // Show success message
+        toast({
+          title: "Workspace Created!",
+          description: `Welcome to DojoFlow, ${ownerName}! Your ${getCategoryName(selectedCategory)} Command Center is ready.`,
+        });
+
+        // Redirect to welcome page with category tag
+        window.location.href = `/welcome?category=${selectedCategory}`;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Signup Failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setIsCreating(false);
+    }
+  };
+
+  const getCategoryName = (category: PromptCategory): string => {
+    switch (category) {
+      case "growth":
+        return "Growth";
+      case "health":
+        return "School Health";
+      case "billing":
+        return "Billing";
+      case "retention":
+        return "Retention";
+    }
+  };
+
+  const handleProgramToggle = (program: string) => {
+    setPrograms(prev => 
+      prev.includes(program) 
+        ? prev.filter(p => p !== program)
+        : [...prev, program]
+    );
+  };
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 1:
+        return schoolName.trim() !== "";
+      case 2:
+        return ownerName.trim() !== "" && ownerEmail.trim() !== "";
+      case 3:
+        return locationCount !== "" && programs.length > 0;
+      case 4:
+        return studentCount !== "";
+      default:
+        return false;
+    }
+  };
+
+  const promptCards = [
+    {
+      category: "growth" as PromptCategory,
+      title: "START WITH GROWTH",
+      prompt: "Help me grow my kids program to 150 students",
+      gradient: "from-emerald-500/20 to-green-500/20",
+      hoverGradient: "hover:from-emerald-500/30 hover:to-green-500/30"
+    },
+    {
+      category: "health" as PromptCategory,
+      title: "CHECK SCHOOL HEALTH",
+      prompt: "Show me attendance and missed classes this week",
+      gradient: "from-blue-500/20 to-cyan-500/20",
+      hoverGradient: "hover:from-blue-500/30 hover:to-cyan-500/30"
+    },
+    {
+      category: "billing" as PromptCategory,
+      title: "FIX BILLING",
+      prompt: "Who's behind on payments and how do we fix it?",
+      gradient: "from-amber-500/20 to-orange-500/20",
+      hoverGradient: "hover:from-amber-500/30 hover:to-orange-500/30"
+    },
+    {
+      category: "retention" as PromptCategory,
+      title: "INCREASE RETENTION",
+      prompt: "Tell me which students are at risk of quitting",
+      gradient: "from-purple-500/20 to-pink-500/20",
+      hoverGradient: "hover:from-purple-500/30 hover:to-pink-500/30"
+    }
+  ];
 
   const features = [
     {
@@ -139,107 +298,244 @@ export default function PublicLanding() {
         </div>
       </nav>
 
-      {/* Hero Section - Large, Asymmetric Layout */}
+      {/* Hero Section - Interactive Kai Command Module */}
       <section 
         ref={heroRef}
-        className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden"
+        className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-background"
       >
-        {/* Gradient background blobs */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-3xl -z-10" />
+        {/* Storm cloud background effect */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-slate-700/30 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute top-20 right-1/4 w-80 h-80 bg-slate-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-slate-800/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        </div>
 
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left: Hero Content */}
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-sm font-medium border border-primary/20">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-foreground">AI-Powered Dojo Management</span>
-              </div>
-
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
-                Run your dojo like a{" "}
-                <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                  sensei
-                </span>
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+          {/* Kai Command Center */}
+          <div className="max-w-5xl mx-auto">
+            {/* Headline */}
+            <div className="text-center mb-16 space-y-4">
+              <h1 className="text-6xl md:text-7xl font-bold text-white tracking-tight">
+                Hi, I'm Kai.
               </h1>
-
-              <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-                The all-in-one platform for martial arts schools. <strong className="text-foreground">Manage students, automate billing, and let Kai AI handle the rest.</strong> Focus on teaching—we'll handle operations.
+              <p className="text-2xl md:text-3xl text-slate-300">
+                What would you like to optimize today?
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/auth">
-                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 h-14 shadow-soft-lg hover-lift font-semibold">
-                    Start Free Trial
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-                <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2 hover:bg-secondary font-semibold">
-                  Watch Demo
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span><strong className="text-foreground">14-day</strong> free trial</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>No credit card required</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  <span>Cancel anytime</span>
-                </div>
-              </div>
             </div>
 
-            {/* Right: Dashboard Preview with Floating Cards */}
-            <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border bg-card">
-                <img 
-                  src="/01-kai-command-hero.png" 
-                  alt="DojoFlow Kai Command Center" 
-                  className="w-full h-auto"
-                />
-              </div>
+            {/* Prompt Cards Grid */}
+            <div className="grid md:grid-cols-2 gap-6 mb-12">
+              {promptCards.map((card) => (
+                <button
+                  key={card.category}
+                  onClick={() => handleCardClick(card.category)}
+                  className={`group relative p-8 rounded-2xl bg-gradient-to-br ${card.gradient} ${card.hoverGradient} border border-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 text-left`}
+                >
+                  {/* Star icon top-right */}
+                  <div className="absolute top-4 right-4 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <Star className="w-5 h-5 text-white" />
+                  </div>
 
-              {/* Floating stat cards */}
-              <div className="absolute -top-6 -left-6 bg-card rounded-2xl p-6 shadow-soft-lg border border-border hover-lift">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary" />
+                  {/* Card content */}
+                  <div className="space-y-3">
+                    <div className="text-xs font-bold text-white/70 uppercase tracking-wider">
+                      {card.title}
+                    </div>
+                    <div className="text-lg font-medium text-white leading-relaxed">
+                      {card.prompt}
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold">1,247</div>
-                    <div className="text-sm text-muted-foreground">Active Students</div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="absolute -bottom-6 -right-6 bg-card rounded-2xl p-6 shadow-soft-lg border border-border hover-lift">
+                  {/* Glow effect on hover */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/0 to-white/0 group-hover:from-white/5 group-hover:to-white/10 transition-all duration-300 pointer-events-none" />
+                </button>
+              ))}
+            </div>
+
+            {/* Chat Input Bar */}
+            <div className="max-w-3xl mx-auto">
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-2xl">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-accent" />
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold">+40%</div>
-                    <div className="text-sm text-muted-foreground">Revenue Growth</div>
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Message Kai… Type @ to mention"
+                    className="flex-1 bg-transparent text-white placeholder:text-slate-400 outline-none text-lg"
+                    readOnly
+                  />
+                  <button className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    <Plus className="w-5 h-5 text-white" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Stats Bar */}
-          <div className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* Onboarding Dialog */}
+      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {isCreating ? "Creating your DojoFlow workspace…" : "Kai Setup: Let's get a little more information"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {isCreating ? (
+            <div className="py-12 text-center space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-primary animate-pulse" />
+              </div>
+              <p className="text-lg text-muted-foreground">Setting up your workspace...</p>
+            </div>
+          ) : (
+            <>
+              {/* Progress Indicator */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Step {currentStep} of {ONBOARDING_STEPS.length}
+                  </span>
+                  <span className="text-sm font-medium text-primary">
+                    {Math.round((currentStep / ONBOARDING_STEPS.length) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${(currentStep / ONBOARDING_STEPS.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Step Content */}
+              <div className="space-y-6 min-h-[300px]">
+                {currentStep === 1 && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="schoolName">School/Facility Name *</Label>
+                      <Input
+                        id="schoolName"
+                        value={schoolName}
+                        onChange={(e) => setSchoolName(e.target.value)}
+                        placeholder="e.g., Dragon Martial Arts Academy"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 2 && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="ownerName">Your Name *</Label>
+                      <Input
+                        id="ownerName"
+                        value={ownerName}
+                        onChange={(e) => setOwnerName(e.target.value)}
+                        placeholder="e.g., John Smith"
+                        className="mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ownerEmail">Email Address *</Label>
+                      <Input
+                        id="ownerEmail"
+                        type="email"
+                        value={ownerEmail}
+                        onChange={(e) => setOwnerEmail(e.target.value)}
+                        placeholder="e.g., john@dragonma.com"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="locationCount">Number of Locations *</Label>
+                      <Select value={locationCount} onValueChange={setLocationCount}>
+                        <SelectTrigger id="locationCount" className="mt-2">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 location</SelectItem>
+                          <SelectItem value="2-5">2-5 locations</SelectItem>
+                          <SelectItem value="6+">6+ locations</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Programs Offered *</Label>
+                      <div className="mt-3 space-y-3">
+                        {["Karate", "Kickboxing", "After-school", "Yoga", "Other"].map((program) => (
+                          <div key={program} className="flex items-center gap-2">
+                            <Checkbox
+                              id={program}
+                              checked={programs.includes(program)}
+                              onCheckedChange={() => handleProgramToggle(program)}
+                            />
+                            <Label htmlFor={program} className="cursor-pointer font-normal">
+                              {program}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep === 4 && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="studentCount">Current Student Count *</Label>
+                      <Select value={studentCount} onValueChange={setStudentCount}>
+                        <SelectTrigger id="studentCount" className="mt-2">
+                          <SelectValue placeholder="Select range..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0-50">0-50 students</SelectItem>
+                          <SelectItem value="51-100">51-100 students</SelectItem>
+                          <SelectItem value="101-200">101-200 students</SelectItem>
+                          <SelectItem value="201-500">201-500 students</SelectItem>
+                          <SelectItem value="500+">500+ students</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between pt-6 border-t">
+                <Button
+                  variant="ghost"
+                  onClick={handlePrevStep}
+                  disabled={currentStep === 1}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleNextStep}
+                  disabled={!canProceed()}
+                  className="min-w-[120px]"
+                >
+                  {currentStep === ONBOARDING_STEPS.length ? "Create Workspace" : "Next"}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Stats Bar */}
+      <section className="py-16 bg-card border-y border-border scroll-reveal">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-                  {stat.value}
-                </div>
+                <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">{stat.value}</div>
                 <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
               </div>
             ))}
@@ -247,36 +543,36 @@ export default function PublicLanding() {
         </div>
       </section>
 
-      {/* Features Grid - Card-Based Layout */}
-      <section id="features" className="py-24 bg-muted/30">
+      {/* Features Section */}
+      <section id="features" className="py-24 scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-sm font-medium border border-primary/20 mb-6">
               <Zap className="w-4 h-4 text-primary" />
-              <span>Everything you need</span>
+              <span>Everything You Need</span>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Create the perfect experience for your students
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Built for martial arts schools
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Launch your dojo management system in minutes. <strong className="text-foreground">No technical skills required</strong>—just focus on teaching while DojoFlow handles everything else.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Stop juggling spreadsheets, payment apps, and messaging tools. DojoFlow brings everything together in one powerful platform.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div 
+              <div
                 key={index}
-                className="bg-card rounded-2xl p-8 shadow-soft hover-lift border border-border group"
+                className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-soft-lg transition-all duration-300 hover-lift"
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <feature.icon className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground mb-4 leading-relaxed">{feature.description}</p>
+                <p className="text-muted-foreground leading-relaxed mb-4">{feature.description}</p>
                 <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{feature.highlight}</span>
+                  <Sparkles className="w-4 h-4" />
+                  {feature.highlight}
                 </div>
               </div>
             ))}
@@ -284,132 +580,41 @@ export default function PublicLanding() {
         </div>
       </section>
 
-      {/* Alternating Content Section - Kai AI Showcase */}
-      <section className="py-24">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
-            {/* Left: Image */}
-            <div className="order-2 lg:order-1">
-              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border">
-                <img 
-                  src="/05-kai-in-action.png" 
-                  alt="Kai AI Assistant in action" 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-
-            {/* Right: Content */}
-            <div className="order-1 lg:order-2 space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-sm font-medium border border-accent/20">
-                <Phone className="w-4 h-4 text-accent" />
-                <span>24/7 AI Support</span>
-              </div>
-              <h2 className="text-4xl sm:text-5xl font-bold">
-                Meet Kai, your AI sensei
-              </h2>
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                Kai handles <strong className="text-foreground">student inquiries, class scheduling, and routine questions</strong> automatically via chat, SMS, or voice. Parents get instant answers at midnight. You get your time back.
-              </p>
-              <ul className="space-y-4">
-                {[
-                  "Answers questions about class schedules, belt requirements, and pricing",
-                  "Books private lessons and handles rescheduling requests",
-                  "Sends automated reminders for upcoming classes and payments",
-                  "Learns your dojo's policies and responds in your voice"
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/auth">
-                <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-soft">
-                  Try Kai for Free
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Second alternating section - Billing */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left: Content */}
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-sm font-medium border border-primary/20">
-                <CreditCard className="w-4 h-4 text-primary" />
-                <span>Automated Payments</span>
-              </div>
-              <h2 className="text-4xl sm:text-5xl font-bold">
-                Get paid on time, every time
-              </h2>
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">No more chasing payments.</strong> Automated billing, failed payment recovery, and instant invoicing. Stripe handles security, we handle everything else.
-              </p>
-              <ul className="space-y-4">
-                {[
-                  "Recurring monthly memberships with automatic billing",
-                  "Failed payment recovery with smart retry logic",
-                  "Instant digital receipts and invoices",
-                  "Support for payment plans and custom pricing"
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Right: Image */}
-            <div>
-              <div className="relative rounded-2xl overflow-hidden shadow-soft-xl border border-border">
-                <img 
-                  src="/04-classes-schedule.png" 
-                  alt="Class schedule and management" 
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-muted/30">
+      <section id="testimonials" className="py-24 bg-card scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              You're in good company
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-sm font-medium border border-accent/20 mb-6">
+              <Star className="w-4 h-4 text-accent fill-accent" />
+              <span>Loved by Martial Arts Schools</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Real results from real schools
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Join hundreds of successful martial arts schools using DojoFlow. <strong className="text-foreground">Become part of a growing community</strong> of innovative instructors and school owners.
-            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <div 
+              <div
                 key={index}
-                className="bg-card rounded-2xl p-8 shadow-soft hover-lift border border-border"
+                className="p-8 rounded-2xl bg-background border border-border hover:border-primary/50 hover:shadow-soft-lg transition-all duration-300 hover-lift"
               >
-                <div className="flex gap-1 mb-6">
+                <div className="flex items-center gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                    <Star key={i} className="w-5 h-5 text-accent fill-accent" />
                   ))}
                 </div>
-                <p className="text-muted-foreground mb-6 leading-relaxed">
+                <p className="text-lg leading-relaxed mb-6 text-foreground">
                   "{testimonial.quote}"
                 </p>
                 <div className="flex items-center gap-4">
-                  <img 
-                    src={testimonial.avatar} 
+                  <img
+                    src={testimonial.avatar}
                     alt={testimonial.author}
                     className="w-12 h-12 rounded-full"
                   />
                   <div>
-                    <div className="font-semibold">{testimonial.author}</div>
+                    <div className="font-semibold text-foreground">{testimonial.author}</div>
                     <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                   </div>
                 </div>
@@ -419,29 +624,79 @@ export default function PublicLanding() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24">
+      {/* Pricing Teaser */}
+      <section id="pricing" className="py-24 scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
-          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-primary via-accent to-primary p-12 md:p-16 text-center shadow-soft-xl">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30" />
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-xl text-muted-foreground mb-12">
+              Start free for 14 days. No credit card required. Cancel anytime.
+            </p>
             
-            <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-              <h2 className="text-4xl sm:text-5xl font-bold text-primary-foreground">
-                Ready to transform your dojo?
-              </h2>
-              <p className="text-xl text-primary-foreground/90">
-                Start your 14-day free trial today. No credit card required, cancel anytime.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/auth">
-                  <Button size="lg" variant="secondary" className="text-lg px-8 h-14 font-semibold shadow-soft-lg hover-lift">
-                    Start Free Trial
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-                <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 font-semibold">
-                  Schedule a Demo
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              <div className="p-8 rounded-2xl bg-card border border-border">
+                <div className="text-3xl font-bold mb-2">$49</div>
+                <div className="text-muted-foreground mb-4">per month</div>
+                <div className="text-sm font-semibold">Starter</div>
+              </div>
+              <div className="p-8 rounded-2xl bg-primary text-primary-foreground border-2 border-primary shadow-soft-lg scale-105">
+                <div className="text-3xl font-bold mb-2">$99</div>
+                <div className="opacity-90 mb-4">per month</div>
+                <div className="text-sm font-semibold">Growth</div>
+              </div>
+              <div className="p-8 rounded-2xl bg-card border border-border">
+                <div className="text-3xl font-bold mb-2">$199</div>
+                <div className="text-muted-foreground mb-4">per month</div>
+                <div className="text-sm font-semibold">Pro</div>
+              </div>
+            </div>
+
+            <Link href="/pricing">
+              <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2">
+                View Full Pricing
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 scroll-reveal">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Ready to transform your dojo?
+            </h2>
+            <p className="text-xl text-muted-foreground mb-12">
+              Join hundreds of martial arts schools using DojoFlow to grow their business and focus on what matters: teaching.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/auth">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 h-14 shadow-soft-lg hover-lift font-semibold">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
+              </Link>
+              <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2 hover:bg-secondary font-semibold">
+                Schedule Demo
+              </Button>
+            </div>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <span>14-day free trial</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <span>Cancel anytime</span>
               </div>
             </div>
           </div>
@@ -451,39 +706,25 @@ export default function PublicLanding() {
       {/* Footer */}
       <footer className="py-12 border-t border-border">
         <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">D</span>
-              </div>
-              <span className="text-xl font-bold">DojoFlow</span>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <img src="/logo-dark.png" alt="DojoFlow" className="h-6 dark:hidden" />
+              <img src="/logo-light.png" alt="DojoFlow" className="h-6 hidden dark:block" />
             </div>
             
-            <div className="flex gap-8 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
               <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Support</a>
+              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+              <a href="#" className="hover:text-foreground transition-colors">Help</a>
             </div>
-            
+
             <div className="text-sm text-muted-foreground">
-              © 2025 DojoFlow. All rights reserved.
+              © 2024 DojoFlow. All rights reserved.
             </div>
           </div>
         </div>
       </footer>
-
-      <style>{`
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(20px);
-          transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        
-        .scroll-reveal.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      `}</style>
     </div>
   );
 }

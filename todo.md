@@ -803,4 +803,48 @@
 - [x] Add smooth micro-animations and transitions
 - [x] Ensure fully responsive design (desktop-first)
 - [x] Test all 4 onboarding paths
+- [x] Save checkpoint
+
+
+## 🎯 Kai Hero Onboarding - Specification Updates (NEW REQUIREMENTS)
+
+### Phase 1: Replace Hero Banner with Interactive Kai Command Module
+- [x] Delete existing hero layout and rebuild from scratch
+- [x] Make hero section full-width interactive Kai Command module (NOT a screenshot/mockup)
+- [x] Verify dark cinematic cloud background (storm clouds/mist)
+- [x] Center "Hi, I'm Kai" headline with "What would you like to optimize today?" subheadline
+- [x] Verify 4 interactive prompt cards are displayed correctly
+- [x] Ensure chat input bar is at bottom of hero with glassmorphism effect
+- [x] Verify hero is NOT inside a small card on the right - must be full-width and front-center
+
+### Phase 2: Update Card Content and Styling
+- [x] Update card 1: "START WITH GROWTH" - "Help me grow my kids program to 150 students"
+- [x] Update card 2: "CHECK SCHOOL HEALTH" - "Show me attendance and missed classes this week"
+- [x] Update card 3: "FIX BILLING" - "Who's behind on payments and how do we fix it?"
+- [x] Update card 4: "INCREASE RETENTION" - "Tell me which students are at risk of quitting"
+- [x] Verify each card has star icon top-right (favorite)
+- [x] Verify hover lift + glow effects work
+- [x] Verify premium Apple-like spacing/typography
+
+### Phase 3: Implement Account Creation Flow
+- [x] Update onboarding overlay to collect: School/Facility Name, Owner Name + Email, Number of Locations, Programs offered, Current student count
+- [x] Change from 3 generic questions to 3-5 steps collecting actual signup data
+- [x] Add progress indicator showing "Step X of Y"
+- [x] Implement backend account creation logic
+- [x] Show "✅ Creating your DojoFlow workspace…" after final step
+- [x] Create actual user account and organization in database
+
+### Phase 4: Post-Onboarding Routing
+- [x] Pass selected prompt category as setup tag (growth | health | billing | retention)
+- [x] Route to /welcome after account creation with category parameter
+- [x] Customize next screen headline based on category (e.g., "Growth Command Center is ready")
+- [ ] Ensure user is logged in after onboarding completes (deferred - requires auth integration)
+
+### Phase 5: Integration and Testing
+- [x] Test all 4 card flows (Growth, Health, Billing, Retention)
+- [x] Verify account creation works for each flow
+- [x] Verify routing and category tags work correctly
+- [x] Test that hero section looks like Kai Command dashboard, not marketing hero
+- [x] Verify chat input bar placeholder: "Message Kai… Type @ to mention"
+- [x] Write and run vitest tests (5 tests passing)
 - [ ] Save checkpoint

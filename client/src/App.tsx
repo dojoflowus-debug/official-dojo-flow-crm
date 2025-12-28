@@ -92,6 +92,7 @@ import TestSimple from "./pages/TestSimple";
 import PublicChat from "./pages/PublicChat";
 import PublicHome from "./pages/PublicHome";
 import PublicLanding from "./pages/PublicLanding";
+import WelcomeDashboard from "./pages/WelcomeDashboard";
 import OwnerAuth from "./pages/OwnerAuth";
 import OwnerOnboarding from "./pages/OwnerOnboarding";
 import StaffAuth from "./pages/StaffAuth";
@@ -121,6 +122,7 @@ function Router() {
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<MinimalDashboard />} />
+      <Route path="/welcome" element={<WelcomeDashboard />} />
       <Route path="/staff/login" element={<StaffAuth />} />
       <Route path="/student-login" element={<StudentAuthNew />} />
       <Route path="/select-organization" element={<SelectOrganization />} />
