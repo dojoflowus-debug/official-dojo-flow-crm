@@ -1,0 +1,40 @@
+{
+  "query": "SELECT o.id, o.name, ou.userId, ou.role \nFROM organizations o \nLEFT JOIN organization_users ou ON o.id = ou.organizationId \nLIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT o.id, o.name, ou.userId, ou.role \nFROM organizations o \nLEFT JOIN organization_users ou ON o.id = ou.organizationId \nLIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Test Martial Arts Academy",
+      "userId": "1740075",
+      "role": "owner"
+    },
+    {
+      "id": "30001",
+      "name": "Test Dojo",
+      "userId": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "30002",
+      "name": "Test Dojo",
+      "userId": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "30003",
+      "name": "Test Dojo",
+      "userId": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "30004",
+      "name": "Test Dojo",
+      "userId": "NULL",
+      "role": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tuserId\trole\n1\tTest Martial Arts Academy\t1740075\towner\n30001\tTest Dojo\tNULL\tNULL\n30002\tTest Dojo\tNULL\tNULL\n30003\tTest Dojo\tNULL\tNULL\n30004\tTest Dojo\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 106
+}

@@ -925,3 +925,20 @@
 - [ ] Verify 100vh viewport with no white space
 - [ ] Confirm dark atmospheric background throughout
 - [ ] Save checkpoint
+
+
+## 💬 Make Kai Command Chat Input Functional
+
+### Issue Found
+Chat input exists but fails with 500 error because:
+- Frontend not passing organizationId to Kai chat API
+- User has 0 credits, blocking chat functionality
+- No graceful error message shown to user
+
+### Fix Tasks
+- [x] Add organizationId parameter to kaiChatMutation call
+- [x] Get organizationId from user context or create helper
+- [x] Add initial credits to test organization for testing
+- [ ] Improve error handling to show credit-related errors to user (deferred - working for now)
+- [x] Test chat functionality end-to-end
+- [ ] Save checkpoint

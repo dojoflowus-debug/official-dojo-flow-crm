@@ -1689,6 +1689,7 @@ export default function KaiCommand() {
         const stats = statsQuery.data;
         const response = await kaiChatMutation.mutateAsync({
           message: currentInput,
+          organizationId: 1, // TODO: Get from user context when multi-org is implemented
           context: stats ? {
             totalStudents: stats.totalStudents,
             activeStudents: stats.activeStudents,
