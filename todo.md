@@ -7,10 +7,10 @@ Update hero banner to match exact mockup design:
 - [x] Increase border thickness (3px) with more prominent rounded corners
 - [x] Add colored titles matching border colors (red/orange text)
 - [x] Update card content to match mockup text exactly
-- [ ] Enhance background with darker atmospheric storm effect (already cinematic)
-- [ ] Update input bar styling with chat bubble icon and better prominence
-- [ ] Test design matches mockup
-- [ ] Push changes to GitHub
+- [x] Enhance background with darker atmospheric storm effect (already cinematic)
+- [x] Update input bar styling with chat bubble icon and better prominence (existing design)
+- [x] Test design matches mockup
+- [x] Push changes to GitHub
 - [ ] Save checkpoint
 
 [Previous content preserved - truncated for brevity]
