@@ -2573,7 +2573,7 @@ export default function KaiCommand() {
                           }`}
                           style={(isCinematic || isFocusMode) ? { 
                             animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
-                            background: 'rgba(0, 0, 0, 0.70)'
+                            background: 'transparent'
                             /* NO blur on cards - text must be crisp */
                           } : {}}
                         >

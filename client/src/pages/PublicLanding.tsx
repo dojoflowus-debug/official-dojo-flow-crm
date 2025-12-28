@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
@@ -169,37 +170,37 @@ export default function PublicLanding() {
       category: "growth" as PromptCategory,
       title: "CLASS MANAGEMENT",
       prompt: "Help me grow my kids program to 150 students",
-      gradient: "from-emerald-500/20 to-green-500/20",
-      hoverGradient: "hover:from-emerald-500/30 hover:to-green-500/30",
-      borderColor: "border-emerald-500/70",
-      titleColor: "text-emerald-400"
+      gradient: "from-transparent to-transparent",
+      hoverGradient: "hover:from-transparent hover:to-transparent",
+      borderColor: "border-red-500",
+      titleColor: "text-red-400"
     },
     {
       category: "health" as PromptCategory,
       title: "TRACK SCHOOL HEALTH",
       prompt: "Show me attendance and missed classes this week",
-      gradient: "from-blue-500/20 to-cyan-500/20",
-      hoverGradient: "hover:from-blue-500/30 hover:to-cyan-500/30",
-      borderColor: "border-blue-500/70",
-      titleColor: "text-blue-400"
+      gradient: "from-transparent to-transparent",
+      hoverGradient: "hover:from-transparent hover:to-transparent",
+      borderColor: "border-red-500",
+      titleColor: "text-red-400"
     },
     {
       category: "billing" as PromptCategory,
       title: "FIX BILLING",
       prompt: "Who's behind on payments and how do we fix it?",
-      gradient: "from-amber-500/20 to-orange-500/20",
-      hoverGradient: "hover:from-amber-500/30 hover:to-orange-500/30",
-      borderColor: "border-orange-500/70",
-      titleColor: "text-orange-400"
+      gradient: "from-transparent to-transparent",
+      hoverGradient: "hover:from-transparent hover:to-transparent",
+      borderColor: "border-red-500",
+      titleColor: "text-red-400"
     },
     {
       category: "retention" as PromptCategory,
       title: "INCREASE RETENTION",
       prompt: "Tell me which students are at risk of quitting",
-      gradient: "from-purple-500/20 to-pink-500/20",
-      hoverGradient: "hover:from-purple-500/30 hover:to-pink-500/30",
-      borderColor: "border-purple-500/70",
-      titleColor: "text-purple-400"
+      gradient: "from-transparent to-transparent",
+      hoverGradient: "hover:from-transparent hover:to-transparent",
+      borderColor: "border-red-500",
+      titleColor: "text-red-400"
     }
   ];
 
@@ -314,24 +315,11 @@ export default function PublicLanding() {
           background: 'radial-gradient(ellipse at center, #1a1f2e 0%, #0f1419 50%, #000000 100%)'
         }}
       >
-        {/* Cinematic storm cloud texture with vignette */}
-        <div className="absolute inset-0">
-          {/* Dark vignette overlay */}
-          <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/30 to-black/70" />
-          
-          {/* Animated cloud layers */}
-          <div className="absolute inset-0 opacity-30">
-            <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-gradient-radial from-slate-700/40 via-slate-800/20 to-transparent rounded-full blur-3xl animate-pulse" />
-            <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-radial from-slate-600/30 via-slate-700/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
-            <div className="absolute bottom-0 left-1/3 w-[700px] h-[700px] bg-gradient-radial from-slate-800/40 via-slate-900/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
-          </div>
-          
-          {/* Subtle grid pattern overlay */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-            backgroundSize: '50px 50px'
-          }} />
-        </div>
+        {/* Anima-inspired Animated Background */}
+        <AnimatedBackground />
+        
+        {/* Dark vignette overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/60 pointer-events-none" />
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10 py-20">
           {/* Kai Command Center */}

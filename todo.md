@@ -17,6 +17,9 @@ Update hero banner to match exact mockup design:
 - [x] Double the size of "Hi, I'm Kai." heading in hero section
 - [x] Shrink prompt boxes to 2x smaller (reduce padding, text size)
 - [x] Replace multicolored borders with consistent red outline on all cards
+- [x] Remove colored gradient backgrounds from prompt cards
+- [x] Make prompt card backgrounds transparent
+- [x] Keep red borders for visual definition
 - [ ] Verify visual balance with icon
 - [ ] Test on mobile and desktop
 
@@ -1042,3 +1045,47 @@ Replace hero section with cinematic design matching reference screenshot:
 - [x] Reduce "Hi, I'm Kai." text size to match icon height
 - [x] Ensure icon and text are visually balanced
 - [x] Test responsive behavior on different screen sizes
+
+
+## 🐛 BUG: Colored Gradient Backgrounds Still Showing on Prompt Cards
+
+### Issue
+- [x] User reports colored gradient backgrounds (teal, blue, orange, purple) still visible on prompt cards
+- [x] Previous fix was applied to wrong file (KaiCommand.tsx instead of PublicLanding.tsx)
+- [x] Need to remove gradient backgrounds from PublicLanding.tsx hero section
+
+### Fix Tasks
+- [x] Locate prompt card styling in PublicLanding.tsx
+- [x] Remove all gradient background classes (from-teal-500/20, from-blue-500/20, etc.)
+- [x] Apply transparent background with red border only
+- [x] Test on live site
+- [ ] Save checkpoint
+
+
+## 🎨 NEW FEATURE: Animated Moving Background (Anima-Inspired)
+
+### Design Goal
+- [x] Create animated moving background for hero section inspired by Anima website
+- [x] Implement smooth, continuous animation with geometric shapes
+- [x] Add depth and visual interest without overwhelming content
+
+### Animation Elements (Based on Anima Analysis)
+- [x] Large circular/blob shapes that move slowly across the background
+- [x] Gradient fills with purple/blue tones
+- [x] Curved lines that flow across the canvas
+- [x] Subtle glow effects on shapes
+- [x] Parallax-style movement at different speeds
+
+### Technical Implementation
+- [x] Create SVG-based animated shapes
+- [x] Use CSS animations or Framer Motion for smooth movement
+- [x] Implement multiple layers moving at different speeds
+- [x] Ensure animations are performant (GPU-accelerated)
+- [x] Add reduced-motion media query for accessibility
+
+### Integration
+- [x] Apply to PublicLanding.tsx hero section
+- [x] Ensure content remains readable over animated background
+- [x] Test on different screen sizes
+- [x] Verify performance on mobile devices
+- [x] Save checkpoint after implementation
