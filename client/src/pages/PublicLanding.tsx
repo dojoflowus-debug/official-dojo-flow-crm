@@ -109,11 +109,9 @@ export default function PublicLanding() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-soft">
-                <span className="text-primary-foreground font-bold text-xl">D</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">DojoFlow</span>
+            <div className="flex items-center">
+              <img src="/logo-dark.png" alt="DojoFlow" className="h-8 dark:hidden" />
+              <img src="/logo-light.png" alt="DojoFlow" className="h-8 hidden dark:block" />
             </div>
             
             <div className="hidden md:flex items-center gap-8">
