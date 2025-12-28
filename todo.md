@@ -352,6 +352,19 @@ Update hero banner to match exact mockup design:
 - [x] Save checkpoint (version: b6f7f962)
 
 
+## 🐛 BUG: DojoFlow Icon Not Displaying in Hero Section
+
+### Issue
+- [x] DojoFlow icon is not showing before "Hi, I'm Kai." in hero section
+- [x] Icon file exists in public folder but not rendering
+
+### Investigation Tasks
+- [x] Check PublicLanding.tsx implementation
+- [x] Verify icon path is correct
+- [x] Fix icon display - icon is showing on dev server
+- [x] Test on live site - needs checkpoint and publish
+
+
 ## 💳 Phase 4: Credit Consumption System
 
 ### Architecture & Pricing

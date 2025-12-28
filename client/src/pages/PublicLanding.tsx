@@ -338,7 +338,8 @@ export default function PublicLanding() {
           <div className="max-w-6xl mx-auto">
             {/* Headline */}
             <div className="text-center mb-14 space-y-5">
-              <h1 className="text-7xl md:text-8xl font-bold text-white tracking-tight drop-shadow-2xl">
+              <h1 className="text-7xl md:text-8xl font-bold text-white tracking-tight drop-shadow-2xl flex items-center justify-center gap-6">
+                <img src="/kai-icon-hero.png" alt="Kai" className="w-20 h-20 md:w-24 md:h-24 drop-shadow-2xl" />
                 Hi, I'm Kai.
               </h1>
               <p className="text-3xl md:text-4xl text-slate-200 font-light tracking-wide">
