@@ -868,4 +868,60 @@
 - [x] Make hero full viewport height (100vh)
 - [x] Implement card click behavior with conversational overlay
 - [x] Test all interactions and visual effects
+- [x] Save checkpoint
+
+
+## 🎯 Kai Command Application Interface (NOT Marketing Hero)
+
+### Phase 1: Full-Screen Application Shell
+- [x] Remove all marketing content above hero section
+- [x] Set hero to 100vh height with no white space above
+- [x] Implement dark atmospheric cloud/fog background (cinematic)
+- [x] Keep navigation minimal (logo + sign in only)
+- [x] Ensure no marketing copy interferes with command interface
+
+### Phase 2: Interactive Command Cards
+- [x] Layout 4 cards in single horizontal row with even spacing
+- [x] Add depth + glow effects to cards
+- [x] Implement hover lift + glow animations
+- [x] Add soft neon outlines to cards
+- [x] Ensure cards feel like primary UI elements, not marketing tiles
+- [x] Add star icons for favorites
+- [x] Update card content to exact specifications:
+  * "START WITH GROWTH" - "Help me grow my kids program to 150 students"
+  * "CHECK SCHOOL HEALTH" - "Show me attendance and missed classes this week"
+  * "FIX BILLING" - "Who's behind on payments and how do we fix it?"
+  * "INCREASE RETENTION" - "Tell me which students are at risk of quitting"
+
+### Phase 3: Conversational Overlay System
+- [x] Implement card click behavior:
+  * Background dims slightly
+  * Selected card glows brighter
+  * Other cards fade
+- [x] Create conversational panel that slides up/overlays
+- [x] Add "Got it. Let's get your dojo set up." confirmation message
+- [x] Implement 3-step onboarding preview
+- [x] Ensure overlay feels conversational, not form-like
+
+### Phase 4: Glassmorphism Chat Input
+- [x] Position chat input below command cards, centered
+- [x] Implement glassmorphism styling (blur, transparency)
+- [x] Add rounded corners and floating effect
+- [x] Add placeholder text: "Message Kai… Type @ to mention"
+- [x] Add plus (+) icon on right side
+- [x] Ensure input feels conversational, not form-like
+
+### Phase 5: Below-Fold Content
+- [ ] Move feature grid below fold (only visible after scroll)
+- [ ] Move testimonials below fold
+- [ ] Move pricing below fold
+- [ ] Move CTA below fold
+- [ ] Ensure below-fold content doesn't interfere with hero experience
+
+### Phase 6: Testing & Delivery
+- [ ] Verify page feels like "entering command center" not "browsing SaaS website"
+- [ ] Test all card interactions
+- [ ] Test conversational overlay flow
+- [ ] Verify 100vh viewport with no white space
+- [ ] Confirm dark atmospheric background throughout
 - [ ] Save checkpoint

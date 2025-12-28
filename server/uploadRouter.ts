@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { storagePut } from '../storage/index.js';
+import { storagePut } from './storage.js';
 import crypto from 'crypto';
 
 const router = express.Router();

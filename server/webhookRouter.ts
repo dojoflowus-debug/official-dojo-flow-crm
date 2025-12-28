@@ -1,4 +1,5 @@
-import { publicProcedure, router } from "./_core/trpc";
+import { router, publicProcedure } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getDb } from "./db";
 import { leads, webhookKeys } from "../drizzle/schema";
@@ -61,7 +62,7 @@ export const webhookRouter = router({
       const db = await getDb();
       
       // Optional API key validation
-      if (input.api_key) {
+      if (input.api_key && db) {
         const [keyRecord] = await db
           .select()
           .from(webhookKeys)
@@ -77,13 +78,15 @@ export const webhookRouter = router({
         }
         
         // Update usage stats
-        await db
-          .update(webhookKeys)
-          .set({
-            lastUsedAt: new Date(),
-            usageCount: keyRecord.usageCount + 1,
-          })
-          .where(eq(webhookKeys.id, keyRecord.id));
+        if (db) {
+          await db
+            .update(webhookKeys)
+            .set({
+              lastUsedAt: new Date(),
+              usageCount: keyRecord.usageCount + 1,
+            })
+            .where(eq(webhookKeys.id, keyRecord.id));
+        }
       }
       
       // Parse name into firstName and lastName
