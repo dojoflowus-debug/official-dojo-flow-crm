@@ -1089,3 +1089,12 @@ Replace hero section with cinematic design matching reference screenshot:
 - [x] Test on different screen sizes
 - [x] Verify performance on mobile devices
 - [x] Save checkpoint after implementation
+
+
+## 🎨 Hero Banner Animation Enhancement (Anima-Style)
+- [x] Analyze Anima website animation from user screenshot
+- [x] Create SVG curved line paths with flowing motion
+- [x] Implement smooth continuous animation with proper easing
+- [x] Add organic shapes with gradient fills
+- [x] Test animation matches Anima reference style
+- [ ] Save checkpoint
