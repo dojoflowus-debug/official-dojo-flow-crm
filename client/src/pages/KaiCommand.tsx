@@ -823,52 +823,62 @@ export default function KaiCommand() {
     {
       id: 'goals',
       header: 'START WITH YOUR GOALS',
-      text: '"Help me grow my kids program to 150 students."'
+      text: '"Help me grow my kids program to 150 students."',
+      color: 'red'
     },
     {
       id: 'health',
-      header: 'CHECK HEALTH OF YOUR DOJŌ',
-      text: '"Show me attendance and missed classes this week."'
+      header: 'CHECK HEALTH OF YOUR DOJO',
+      text: '"Show me attendance and missed classes this week."',
+      color: 'blue'
     },
     {
       id: 'billing',
       header: 'FIX BILLING & RENEWALS',
-      text: '"Who is late on payments and how can we fix it?"'
+      text: '"Who is late on payments and how can we fix it?"',
+      color: 'orange'
     },
     {
       id: 'retention',
       header: 'INCREASE RETENTION',
-      text: '"Tell me which students are at high risk of quitting."'
+      text: '"Tell me which students are at high risk of quitting."',
+      color: 'purple'
     },
     {
       id: 'enrollments',
       header: 'BOOST NEW ENROLLMENTS',
-      text: '"Show me all leads that need follow-up today."'
+      text: '"Show me all leads that need follow-up today."',
+      color: 'green'
     },
     {
       id: 'at-risk',
       header: 'SAVE AT-RISK MEMBERS',
-      text: '"Who hasn\'t attended in 14+ days?"'
+      text: '"Who hasn\'t attended in 14+ days?"',
+      color: 'red'
     },
     {
       id: 'class-quality',
       header: 'IMPROVE CLASS QUALITY',
-      text: '"Which classes are over capacity or under capacity?"'
+      text: '"Which classes are over capacity or under capacity?"',
+      color: 'blue'
     },
     {
       id: 'parent-comms',
       header: 'PARENT COMMUNICATIONS',
-      text: '"Draft a message to parents about upcoming events."'
+      text: '"Draft a message to parents about upcoming events."',
+      color: 'purple'
     },
     {
       id: 'staff-perf',
       header: 'STAFF PERFORMANCE',
-      text: '"Which instructors have the highest retention this month?"'
+      text: '"Which instructors have the highest retention this month?"',
+      color: 'orange'
     },
     {
       id: 'financial',
       header: 'FINANCIAL SNAPSHOT',
-      text: '"Give me revenue, expenses, and projections for this month."'
+      text: '"Give me revenue, expenses, and projections for this month."',
+      color: 'green'
     }
   ];
 
@@ -2305,7 +2315,7 @@ export default function KaiCommand() {
               className={`text-xs uppercase tracking-wide font-medium ${isCinematic ? 'text-white/90' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}
               style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
             >
-              Kai Command uses a structured, professional conversation format — designed for clarity, accuracy, and operational decision-making.
+              KAI COMMAND USES A STRUCTURED, PROFESSIONAL CONVERSATION FORMAT — DESIGNED FOR CLARITY, ACCURACY, AND OPERATIONAL DECISION-MAKING.
             </p>
             <div className="flex items-center gap-1">
               <DropdownMenu>
@@ -2526,16 +2536,29 @@ export default function KaiCommand() {
                       className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-1"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {sortedQuickCommands.map((command, index) => (
+                      {sortedQuickCommands.map((command, index) => {
+                        // Get color-specific border classes
+                        const getColorBorder = (color: string) => {
+                          const colorMap: Record<string, string> = {
+                            red: 'border-red-500/50',
+                            blue: 'border-blue-500/50',
+                            orange: 'border-orange-500/50',
+                            purple: 'border-purple-500/50',
+                            green: 'border-green-500/50'
+                          };
+                          return colorMap[color] || 'border-white/30';
+                        };
+                        
+                        return (
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border ${(isCinematic || isFocusMode) ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
+                          className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border-2 ${(isCinematic || isFocusMode) ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
                             (isCinematic || isFocusMode)
-                              ? `border-white/30 hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
+                              ? `${(command as any).color ? getColorBorder((command as any).color) : 'border-white/30'} hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
                               : isDark 
-                                ? `bg-[#18181A] border-[rgba(255,255,255,0.05)] hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.10)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/30' : ''}`
-                                : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 ${favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : 'border-slate-100'}`
+                                ? `bg-[#18181A] ${(command as any).color ? getColorBorder((command as any).color) : 'border-[rgba(255,255,255,0.05)]'} hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.10)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/30' : ''}`
+                                : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 ${(command as any).color ? getColorBorder((command as any).color) : 'border-slate-100'} ${favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : ''}`
                           }`}
                           style={(isCinematic || isFocusMode) ? { 
                             animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
@@ -2574,7 +2597,8 @@ export default function KaiCommand() {
                             {command.text}
                           </p>
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                   </div>{/* End Frosted Glass Panel */}
