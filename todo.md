@@ -998,4 +998,20 @@ Chat input exists but fails with 500 error because:
 - [x] Increase border opacity from 50% to 70%
 - [x] Update card text to match mockup exactly
 - [x] Test visual changes on homepage
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 9f1508e2)
+
+
+## 🎨 Cinematic Kai Command Hero Redesign (2025-12-28)
+
+Replace hero section with cinematic design matching reference screenshot:
+- [x] Search codebase for exact hero text ("Hi, I'm Kai.")
+- [x] Locate hero section in PublicLanding.tsx
+- [x] Replace with full viewport height hero (min-h-screen)
+- [x] Add cinematic storm cloud background with vignette
+- [x] Implement radial gradient dark background (not flat)
+- [x] Increase card size and prominence (p-10, text-xl)
+- [x] Add stronger glow effects and shadows to cards
+- [x] Enhance glassmorphism chat input with blur and highlight
+- [x] Add bg-gradient-radial utility class to index.css
+- [x] Test visual output matches reference
+- [x] Verify changes are live on dev server

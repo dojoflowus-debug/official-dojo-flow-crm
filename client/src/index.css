@@ -30,6 +30,11 @@
   animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Radial gradient utility for Kai Command hero */
+.bg-gradient-radial {
+  background-image: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {

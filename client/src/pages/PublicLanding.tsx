@@ -306,72 +306,105 @@ export default function PublicLanding() {
         </div>
       </nav>
 
-      {/* Hero Section - Interactive Kai Command Module */}
+      {/* Hero Section - Cinematic Kai Command Module */}
       <section 
         ref={heroRef}
-        className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-background"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        style={{
+          background: 'radial-gradient(ellipse at center, #1a1f2e 0%, #0f1419 50%, #000000 100%)'
+        }}
       >
-        {/* Storm cloud background effect */}
-        <div className="absolute inset-0 opacity-40">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-slate-700/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute top-20 right-1/4 w-80 h-80 bg-slate-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-slate-800/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        {/* Cinematic storm cloud texture with vignette */}
+        <div className="absolute inset-0">
+          {/* Dark vignette overlay */}
+          <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/30 to-black/70" />
+          
+          {/* Animated cloud layers */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-gradient-radial from-slate-700/40 via-slate-800/20 to-transparent rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-radial from-slate-600/30 via-slate-700/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
+            <div className="absolute bottom-0 left-1/3 w-[700px] h-[700px] bg-gradient-radial from-slate-800/40 via-slate-900/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
+          </div>
+          
+          {/* Subtle grid pattern overlay */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+            backgroundSize: '50px 50px'
+          }} />
         </div>
 
-        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+        <div className="container mx-auto px-6 lg:px-8 relative z-10 py-20">
           {/* Kai Command Center */}
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             {/* Headline */}
-            <div className="text-center mb-16 space-y-4">
-              <h1 className="text-6xl md:text-7xl font-bold text-white tracking-tight">
+            <div className="text-center mb-14 space-y-5">
+              <h1 className="text-7xl md:text-8xl font-bold text-white tracking-tight drop-shadow-2xl">
                 Hi, I'm Kai.
               </h1>
-              <p className="text-2xl md:text-3xl text-slate-300">
+              <p className="text-3xl md:text-4xl text-slate-200 font-light tracking-wide">
                 What would you like to optimize today?
               </p>
             </div>
 
-            {/* Prompt Cards Grid */}
-            <div className="grid md:grid-cols-2 gap-6 mb-12">
+            {/* Prompt Cards Grid - Larger with stronger glow */}
+            <div className="grid md:grid-cols-2 gap-8 mb-14">
               {promptCards.map((card) => (
                 <button
                   key={card.category}
                   onClick={() => handleCardClick(card.category)}
-                  className={`group relative p-8 rounded-2xl bg-gradient-to-br ${card.gradient} ${card.hoverGradient} border-[3px] ${card.borderColor} hover:border-opacity-90 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 text-left`}
+                  className={`group relative p-10 rounded-3xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-[3px] ${card.borderColor} hover:border-opacity-100 transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]`}
+                  style={{
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  }}
                 >
+                  {/* Stronger glow border effect */}
+                  <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
+                    background: `linear-gradient(135deg, ${card.borderColor.replace('border-', 'rgba(')}30, transparent)`,
+                    filter: 'blur(20px)'
+                  }} />
+                  
                   {/* Star icon top-right */}
-                  <div className="absolute top-4 right-4 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <Star className="w-5 h-5 text-white" />
+                  <div className="absolute top-5 right-5 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                    <Star className="w-6 h-6 text-white drop-shadow-lg" />
                   </div>
 
                   {/* Card content */}
-                  <div className="space-y-3">
-                    <div className={`text-xs font-bold uppercase tracking-wider ${card.titleColor}`}>
+                  <div className="relative space-y-4">
+                    <div className={`text-sm font-bold uppercase tracking-widest ${card.titleColor} drop-shadow-md`}>
                       {card.title}
                     </div>
-                    <div className="text-lg font-medium text-white leading-relaxed">
+                    <div className="text-xl font-medium text-white leading-relaxed drop-shadow-lg">
                       {card.prompt}
                     </div>
                   </div>
 
-                  {/* Glow effect on hover */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/0 to-white/0 group-hover:from-white/5 group-hover:to-white/10 transition-all duration-300 pointer-events-none" />
+                  {/* Enhanced glassmorphism overlay on hover */}
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/0 to-white/0 group-hover:from-white/10 group-hover:to-white/5 transition-all duration-500 pointer-events-none" />
                 </button>
               ))}
             </div>
 
-            {/* Chat Input Bar */}
-            <div className="max-w-3xl mx-auto">
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-2xl">
+            {/* Chat Input Bar - Enhanced glassmorphism with glow */}
+            <div className="max-w-4xl mx-auto">
+              <div 
+                className="relative backdrop-blur-2xl border-2 border-white/30 rounded-3xl p-5 shadow-2xl hover:border-white/40 transition-all duration-300"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.1)'
+                }}
+              >
+                {/* Subtle top highlight */}
+                <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                
                 <div className="flex items-center gap-4">
                   <input
                     type="text"
                     placeholder="Message Kai… Type @ to mention"
-                    className="flex-1 bg-transparent text-white placeholder:text-slate-400 outline-none text-lg"
+                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-xl font-light tracking-wide"
                     readOnly
                   />
-                  <button className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                    <Plus className="w-5 h-5 text-white" />
+                  <button className="w-12 h-12 rounded-2xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                    <Plus className="w-6 h-6 text-white" />
                   </button>
                 </div>
               </div>
