@@ -2537,14 +2537,14 @@ export default function KaiCommand() {
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                       {sortedQuickCommands.map((command, index) => {
-                        // Get color-specific border classes
+                        // Get color-specific border classes with enhanced visibility
                         const getColorBorder = (color: string) => {
                           const colorMap: Record<string, string> = {
-                            red: 'border-red-500/50',
-                            blue: 'border-blue-500/50',
-                            orange: 'border-orange-500/50',
-                            purple: 'border-purple-500/50',
-                            green: 'border-green-500/50'
+                            red: 'border-red-500/70',
+                            blue: 'border-blue-500/70',
+                            orange: 'border-orange-500/70',
+                            purple: 'border-purple-500/70',
+                            green: 'border-green-500/70'
                           };
                           return colorMap[color] || 'border-white/30';
                         };
@@ -2555,10 +2555,10 @@ export default function KaiCommand() {
                           onClick={() => handlePromptClick(command.text)}
                           className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border-2 ${(isCinematic || isFocusMode) ? 'rounded-[14px] p-4' : 'rounded-[18px] p-5'} text-left transition-all duration-300 group snap-start ${
                             (isCinematic || isFocusMode)
-                              ? `${(command as any).color ? getColorBorder((command as any).color) : 'border-white/30'} hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
+                              ? `${(command as any).color ? getColorBorder((command as any).color) : 'border-white/30'} hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/70' : ''}`
                               : isDark 
-                                ? `bg-[#18181A] ${(command as any).color ? getColorBorder((command as any).color) : 'border-[rgba(255,255,255,0.05)]'} hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.10)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/30' : ''}`
-                                : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/20 ${(command as any).color ? getColorBorder((command as any).color) : 'border-slate-100'} ${favorites.has(command.id) ? 'border-[#E53935]/30 bg-red-50/30' : ''}`
+                                ? `bg-[#18181A] ${(command as any).color ? getColorBorder((command as any).color) : 'border-[rgba(255,255,255,0.05)]'} hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.15)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
+                                : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/30 ${(command as any).color ? getColorBorder((command as any).color) : 'border-slate-100'} ${favorites.has(command.id) ? 'border-[#E53935]/50 bg-red-50/30' : ''}`
                           }`}
                           style={(isCinematic || isFocusMode) ? { 
                             animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
