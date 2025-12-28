@@ -787,3 +787,20 @@
 - [x] Test logos in Dark mode (should show light text logo)
 - [x] Verified logos display correctly across all auth pages
 - [x] Save checkpoint
+
+
+## 🎯 Kai AI Hero Onboarding Experience
+
+### Requirements
+- [x] Create cinematic hero section with storm-cloud/mist gradient background
+- [x] Add "Hi, I'm Kai" heading with "What would you like to optimize today?" subheading
+- [x] Implement 4 interactive prompt cards (Growth, School Health, Billing, Retention)
+- [x] Add hover animations and glow effects to cards
+- [x] Add star/favorite icon to each card
+- [x] Create conversational onboarding flows for each card path
+- [x] Add floating chat input bar at bottom with glassmorphism
+- [x] Implement card selection behavior (background darkens, card glows, Kai activates)
+- [x] Add smooth micro-animations and transitions
+- [x] Ensure fully responsive design (desktop-first)
+- [x] Test all 4 onboarding paths
+- [ ] Save checkpoint

@@ -100,6 +100,7 @@ import KioskStaffAuth from "./pages/KioskStaffAuth";
 import KioskStudentAuth from "./pages/KioskStudentAuth";
 import SelectOrganization from "./pages/SelectOrganization";
 import Pricing from "./pages/Pricing";
+import KaiHeroOnboarding from "./pages/KaiHeroOnboarding";
 import BillingSuccess from "./pages/BillingSuccess";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -127,6 +128,7 @@ function Router() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/kai" element={<KaiCommand />} />
+      <Route path="/kai-onboarding" element={<KaiHeroOnboarding />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
       <Route path="/kiosk/:locationSlug" element={<Kiosk />} />
