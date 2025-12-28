@@ -11,7 +11,7 @@ Update hero banner to match exact mockup design:
 - [x] Update input bar styling with chat bubble icon and better prominence (existing design)
 - [x] Test design matches mockup
 - [x] Push changes to GitHub
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 1d08a452)
 
 [Previous content preserved - truncated for brevity]
 
@@ -985,3 +985,17 @@ Chat input exists but fails with 500 error because:
 - [x] Add disclaimer text below input
 - [x] Test responsive behavior
 - [x] Save checkpoint
+
+
+## 🎨 PUBLIC LANDING PAGE - Hero Banner Update (NEW TASK - 2025-12-28)
+
+**Issue:** User viewing PublicLanding.tsx homepage, not KaiCommand.tsx
+
+**Required Changes to PublicLanding.tsx:**
+- [x] Identify hero banner section in PublicLanding.tsx
+- [x] Update card borders from 2px to 3px thickness
+- [x] Add colored titles matching border colors (green, blue, orange, purple)
+- [x] Increase border opacity from 50% to 70%
+- [x] Update card text to match mockup exactly
+- [x] Test visual changes on homepage
+- [ ] Save checkpoint

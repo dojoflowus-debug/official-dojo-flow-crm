@@ -167,31 +167,39 @@ export default function PublicLanding() {
   const promptCards = [
     {
       category: "growth" as PromptCategory,
-      title: "START WITH GROWTH",
+      title: "CLASS MANAGEMENT",
       prompt: "Help me grow my kids program to 150 students",
       gradient: "from-emerald-500/20 to-green-500/20",
-      hoverGradient: "hover:from-emerald-500/30 hover:to-green-500/30"
+      hoverGradient: "hover:from-emerald-500/30 hover:to-green-500/30",
+      borderColor: "border-emerald-500/70",
+      titleColor: "text-emerald-400"
     },
     {
       category: "health" as PromptCategory,
-      title: "CHECK SCHOOL HEALTH",
+      title: "TRACK SCHOOL HEALTH",
       prompt: "Show me attendance and missed classes this week",
       gradient: "from-blue-500/20 to-cyan-500/20",
-      hoverGradient: "hover:from-blue-500/30 hover:to-cyan-500/30"
+      hoverGradient: "hover:from-blue-500/30 hover:to-cyan-500/30",
+      borderColor: "border-blue-500/70",
+      titleColor: "text-blue-400"
     },
     {
       category: "billing" as PromptCategory,
       title: "FIX BILLING",
       prompt: "Who's behind on payments and how do we fix it?",
       gradient: "from-amber-500/20 to-orange-500/20",
-      hoverGradient: "hover:from-amber-500/30 hover:to-orange-500/30"
+      hoverGradient: "hover:from-amber-500/30 hover:to-orange-500/30",
+      borderColor: "border-orange-500/70",
+      titleColor: "text-orange-400"
     },
     {
       category: "retention" as PromptCategory,
       title: "INCREASE RETENTION",
       prompt: "Tell me which students are at risk of quitting",
       gradient: "from-purple-500/20 to-pink-500/20",
-      hoverGradient: "hover:from-purple-500/30 hover:to-pink-500/30"
+      hoverGradient: "hover:from-purple-500/30 hover:to-pink-500/30",
+      borderColor: "border-purple-500/70",
+      titleColor: "text-purple-400"
     }
   ];
 
@@ -329,7 +337,7 @@ export default function PublicLanding() {
                 <button
                   key={card.category}
                   onClick={() => handleCardClick(card.category)}
-                  className={`group relative p-8 rounded-2xl bg-gradient-to-br ${card.gradient} ${card.hoverGradient} border border-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 text-left`}
+                  className={`group relative p-8 rounded-2xl bg-gradient-to-br ${card.gradient} ${card.hoverGradient} border-[3px] ${card.borderColor} hover:border-opacity-90 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 text-left`}
                 >
                   {/* Star icon top-right */}
                   <div className="absolute top-4 right-4 opacity-60 group-hover:opacity-100 transition-opacity">
@@ -338,7 +346,7 @@ export default function PublicLanding() {
 
                   {/* Card content */}
                   <div className="space-y-3">
-                    <div className="text-xs font-bold text-white/70 uppercase tracking-wider">
+                    <div className={`text-xs font-bold uppercase tracking-wider ${card.titleColor}`}>
                       {card.title}
                     </div>
                     <div className="text-lg font-medium text-white leading-relaxed">
