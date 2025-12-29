@@ -49,7 +49,7 @@ export function CookieNotice() {
                 We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. 
                 By clicking "Accept", you consent to our use of cookies.{' '}
                 <a 
-                  href="/privacy" 
+                  href="/cookies" 
                   className="text-red-400 hover:text-red-300 underline transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"

@@ -977,8 +977,20 @@ Chat input exists but fails with 500 error because:
 - [x] Add initial credits to test organization for testing
 - [ ] Improve error handling to show credit-related errors to user (deferred - working for now)
 - [x] Test chat functionality end-to-end
-- [x] Save checkpoint
+-- [x] Save checkpoint
 
+## 📜 Legal Compliance Pages (2025-12-28)
+
+Create professional legal pages for DojoFlow:
+- [x] Create PrivacyPolicy.tsx component
+- [x] Create TermsOfUse.tsx component
+- [x] Create CookiePolicy.tsx component
+- [x] Create DMCAPolicy.tsx component
+- [x] Add routes for all legal pages
+- [x] Update cookie notice "Learn more" link to /cookies
+- [x] Add footer with legal links
+- [x] Test all pages and navigation
+- [x] Save checkpoint
 
 ## 🎨 Kai Command Hero Banner Redesign (2025-12-28)
 
@@ -1124,4 +1136,4 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add smooth fade-in animation
 - [x] Integrate into PublicLanding page
 - [x] Test functionality
-- [ ] Save checkpoint
+- [x] Save checkpoint

@@ -749,14 +749,14 @@ export default function PublicLanding() {
             </div>
             
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
-              <a href="#" className="hover:text-foreground transition-colors">Help</a>
+              <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+              <a href="/terms" className="hover:text-foreground transition-colors">Terms of Use</a>
+              <a href="/cookies" className="hover:text-foreground transition-colors">Cookie Policy</a>
+              <a href="/dmca" className="hover:text-foreground transition-colors">DMCA</a>
             </div>
 
             <div className="text-sm text-muted-foreground">
-              © 2024 DojoFlow. All rights reserved.
+              © 2025 DojoFlow. All rights reserved.
             </div>
           </div>
         </div>

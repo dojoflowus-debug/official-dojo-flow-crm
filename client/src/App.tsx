@@ -110,6 +110,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import OrganizationList from "./pages/OrganizationList";
 import OrganizationDetail from "./pages/OrganizationDetail";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
+import CookiePolicy from "./pages/CookiePolicy";
+import DMCAPolicy from "./pages/DMCAPolicy";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -182,6 +186,11 @@ function Router() {
       <Route path="/billing" element={<Billing />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/billing/success" element={<BillingSuccess />} />
+      {/* Legal pages */}
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfUse />} />
+      <Route path="/cookies" element={<CookiePolicy />} />
+      <Route path="/dmca" element={<DMCAPolicy />} />
       <Route path="/billing/structure" element={<BillingStructure />} />
       <Route path="/billing/setup" element={<BillingSetup />} />
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />
