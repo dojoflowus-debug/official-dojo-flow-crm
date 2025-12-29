@@ -21,7 +21,7 @@ const STORAGE_KEY = "dojoFlowTheme";
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
+  defaultTheme = "dark",
   switchable = true,
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {

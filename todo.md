@@ -1193,4 +1193,14 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add credit visibility indicator: "All plans include monthly AI credits. Upgrade anytime."
 - [x] Update database schema if needed for Elite plan
 - [x] Test pricing display and responsiveness
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+
+## 🌙 Full Dark Theme Conversion (2025-12-28)
+- [x] Change default theme to dark in ThemeProvider
+- [x] Update global CSS variables for dark theme
+- [x] Update public landing page (PublicLanding.tsx) for dark theme
+- [x] Update pricing page for dark theme
+- [x] Update authentication pages (OwnerAuth, StaffAuth, StudentAuthNew) for dark theme
+- [x] Verify all pages display correctly in dark theme
+- [ ] Save checkpoint for dark theme conversion
