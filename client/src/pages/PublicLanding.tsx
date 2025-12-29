@@ -831,25 +831,39 @@ export default function PublicLanding() {
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Simple, transparent pricing
             </h2>
-            <p className="text-xl text-muted-foreground mb-12">
-              Start free for 14 days. No credit card required. Cancel anytime.
+            <p className="text-xl text-muted-foreground mb-4">
+              All plans include monthly AI credits. Upgrade anytime.
+            </p>
+            <p className="text-sm text-muted-foreground mb-12">
+              Credits are used when Kai performs actions like sending messages, analyzing data, or running workflows.
             </p>
             
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              <div className="p-8 rounded-2xl bg-card border border-border">
-                <div className="text-3xl font-bold mb-2">$49</div>
-                <div className="text-muted-foreground mb-4">per month</div>
-                <div className="text-sm font-semibold">Starter</div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+                <div className="text-sm font-semibold text-muted-foreground mb-2">Starter</div>
+                <div className="text-3xl font-bold mb-1">$49</div>
+                <div className="text-xs text-muted-foreground mb-3">per month</div>
+                <div className="text-sm font-medium text-purple-600 dark:text-purple-400">500 credits</div>
               </div>
-              <div className="p-8 rounded-2xl bg-primary text-primary-foreground border-2 border-primary shadow-soft-lg scale-105">
-                <div className="text-3xl font-bold mb-2">$99</div>
-                <div className="opacity-90 mb-4">per month</div>
-                <div className="text-sm font-semibold">Growth</div>
+              <div className="p-6 rounded-2xl bg-primary text-primary-foreground border-2 border-primary shadow-lg scale-[1.02] hover:scale-105 transition-all">
+                <div className="text-xs font-semibold opacity-90 mb-2">Most Popular</div>
+                <div className="text-sm font-semibold mb-2">Growth</div>
+                <div className="text-3xl font-bold mb-1">$99</div>
+                <div className="text-xs opacity-90 mb-3">per month</div>
+                <div className="text-sm font-medium">1,500 credits</div>
               </div>
-              <div className="p-8 rounded-2xl bg-card border border-border">
-                <div className="text-3xl font-bold mb-2">$199</div>
-                <div className="text-muted-foreground mb-4">per month</div>
-                <div className="text-sm font-semibold">Pro</div>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+                <div className="text-sm font-semibold text-muted-foreground mb-2">Pro</div>
+                <div className="text-3xl font-bold mb-1">$199</div>
+                <div className="text-xs text-muted-foreground mb-3">per month</div>
+                <div className="text-sm font-medium text-purple-600 dark:text-purple-400">4,000 credits</div>
+              </div>
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/10 border-2 border-amber-500/50 hover:border-amber-500 shadow-lg scale-[1.02] hover:scale-105 transition-all">
+                <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-2">Most Powerful</div>
+                <div className="text-sm font-semibold mb-2">Elite</div>
+                <div className="text-3xl font-bold mb-1">$499</div>
+                <div className="text-xs text-muted-foreground mb-3">per month</div>
+                <div className="text-sm font-medium text-amber-600 dark:text-amber-400">10,000 credits</div>
               </div>
             </div>
 

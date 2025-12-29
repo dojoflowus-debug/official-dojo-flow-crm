@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE subscription_plans \nSET \n  name = 'Elite',\n  slug = 'elite',\n  monthlyPrice = 49900,\n  maxStudents = 999999,\n  maxLocations = 999,\n  monthlyCredits = 10000,\n  features = '[\"10,000 AI credits per month\",\"Predictive analytics & forecasting\",\"Advanced AI decision support\",\"Multi-location dashboards\",\"Role-based permissions\",\"White-label ready\",\"Priority AI + human support\",\"Unlimited students\",\"Unlimited locations\"]'\nWHERE slug = 'enterprise';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute UPDATE subscription_plans \nSET \n  name = 'Elite',\n  slug = 'elite',\n  monthlyPrice = 49900,\n  maxStudents = 999999,\n  maxLocations = 999,\n  monthlyCredits = 10000,\n  features = '[\"10,000 AI credits per month\",\"Predictive analytics & forecasting\",\"Advanced AI decision support\",\"Multi-location dashboards\",\"Role-based permissions\",\"White-label ready\",\"Priority AI + human support\",\"Unlimited students\",\"Unlimited locations\"]'\nWHERE slug = 'enterprise';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 151
+}

@@ -1219,3 +1219,22 @@ Add cookies notice that appears when page is first accessed:
 - [x] Ensure dark theme persists correctly after page refresh
 - [x] Test theme persistence across browser sessions
 - [x] Save checkpoint for theme persistence fix
+
+
+## 💎 Elite $499 Plan + Enhanced Credit Display (2025-12-28)
+
+### Implementation Tasks
+- [x] Analyze current pricing section in PublicLanding.tsx
+- [x] Add Elite $499/month plan card with "Most Powerful" badge
+- [x] Add credit allocation to all plans (Starter: 500, Growth: 1,500, Pro: 4,000, Elite: 10,000)
+- [x] Add credit info tooltip explaining credit usage and monthly reset
+- [x] Update plan features to include credit counts prominently
+- [x] Add "Best for 3+ locations or $50k+/month schools" subtext to Elite plan
+- [x] Style Elite plan card with subtle glow/highlight (slightly larger)
+- [x] Add credit visibility indicator near pricing header
+- [x] Add optional Monthly/Annual toggle with "2 months free" label (already exists in Pricing.tsx)
+- [x] Test pricing section display and responsiveness
+- [x] Verify Elite plan on public landing page pricing teaser
+- [x] Verify Elite plan on full Pricing page
+- [x] Confirm all credit allocations display correctly
+- [ ] Save checkpoint with Elite plan implementation
