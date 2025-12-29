@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CookieNotice } from "@/components/CookieNotice";
 
 type PromptCategory = "growth" | "health" | "billing" | "retention";
 
@@ -277,21 +278,26 @@ export default function PublicLanding() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex items-center">
-              <img src="/logo-dark.png" alt="DojoFlow" className="h-8 dark:hidden" />
-              <img src="/logo-light.png" alt="DojoFlow" className="h-8 hidden dark:block" />
+            <div className="flex items-center gap-12">
+              <Link href="/" className="flex items-center cursor-pointer">
+                <img src="/logo-dark.png" alt="DojoFlow" className="h-8 dark:hidden" />
+                <img src="/logo-light.png" alt="DojoFlow" className="h-8 hidden dark:block" />
+              </Link>
+              
+              <div className="hidden md:flex items-center gap-8">
+                <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
+                <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+                <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
+              </div>
             </div>
             
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-              <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
+            <div className="hidden md:flex items-center gap-6">
               <Link href="/auth" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-                Sign in
+                Login
               </Link>
               <Link href="/auth">
                 <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg px-6">
-                  Get started
+                  Sign up
                 </Button>
               </Link>
             </div>
@@ -755,6 +761,9 @@ export default function PublicLanding() {
           </div>
         </div>
       </footer>
+      
+      {/* Cookie Notice */}
+      <CookieNotice />
     </div>
   );
 }

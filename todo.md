@@ -1110,4 +1110,18 @@ Replace hero section with cinematic design matching reference screenshot:
 - [x] Connect Sign In button to /auth route (account type selection)
 - [x] Connect Get Started button to /auth route
 - [x] Test authentication flow from public landing
+- [x] Save checkpoint
+
+
+## 🍪 Cookies Notice Popup (2025-12-28)
+
+Add cookies notice that appears when page is first accessed:
+- [x] Create CookieNotice component with accept/decline buttons
+- [x] Add localStorage persistence to track acceptance
+- [x] Show popup on first visit only
+- [x] Position at bottom of screen with dark background
+- [x] Include privacy policy link
+- [x] Add smooth fade-in animation
+- [x] Integrate into PublicLanding page
+- [x] Test functionality
 - [ ] Save checkpoint
