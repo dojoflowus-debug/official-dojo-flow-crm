@@ -1180,3 +1180,17 @@ Add cookies notice that appears when page is first accessed:
 - [x] Ensure nothing feels noisy or cluttered
 - [x] Validate experience feels expensive
 - [x] Save checkpoint
+
+
+## 💎 Elite $499 Plan + Enhanced Credit Display
+
+### Task
+- [x] Add Elite $499/month plan to pricing page
+- [x] Update plan credit allocations: Starter (500), Growth (1,500), Pro (4,000), Elite (10,000)
+- [x] Add credit system explanation with tooltip near pricing header
+- [x] Style Elite plan card with subtle highlight/glow and "Most Powerful" badge
+- [x] Add subtext: "Best for 3+ locations or $50k+/month schools"
+- [x] Add credit visibility indicator: "All plans include monthly AI credits. Upgrade anytime."
+- [x] Update database schema if needed for Elite plan
+- [x] Test pricing display and responsiveness
+- [ ] Save checkpoint

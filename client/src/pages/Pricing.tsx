@@ -3,7 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Zap, TrendingUp, Building2, Crown, Loader2 } from "lucide-react";
+import { Check, Zap, TrendingUp, Building2, Crown, Loader2, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -60,6 +61,8 @@ export function Pricing() {
         return <TrendingUp className="w-6 h-6" />;
       case 'pro':
         return <Building2 className="w-6 h-6" />;
+      case 'elite':
+        return <Crown className="w-6 h-6" />;
       case 'enterprise':
         return <Crown className="w-6 h-6" />;
       default:
@@ -75,6 +78,8 @@ export function Pricing() {
         return 'from-purple-500/10 to-purple-600/10 border-purple-500/20';
       case 'pro':
         return 'from-orange-500/10 to-orange-600/10 border-orange-500/20';
+      case 'elite':
+        return 'from-amber-500/10 to-amber-600/10 border-amber-500/20';
       case 'enterprise':
         return 'from-amber-500/10 to-amber-600/10 border-amber-500/20';
       default:
@@ -103,9 +108,24 @@ export function Pricing() {
         <h1 className="text-4xl font-bold tracking-tight mb-4">
           Choose Your DojoFlow Plan
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          Kai is your AI-powered operational assistant. Credits represent AI labor performed, not user actions.
-        </p>
+        <div className="max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-muted-foreground mb-4">
+            All plans include monthly AI credits. Upgrade anytime.
+          </p>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <Info className="w-4 h-4" />
+                  What are credits?
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Credits are used when Kai performs actions like sending messages, analyzing data, or running workflows. Credits reset monthly.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
 
         {/* Billing Toggle */}
         <div className="inline-flex items-center gap-2 p-1 bg-muted rounded-lg mb-12">
@@ -140,17 +160,25 @@ export function Pricing() {
             const isCurrentPlan = currentSub?.planId === plan.id;
             const features = JSON.parse(plan.features) as string[];
             const isPopular = plan.slug === 'growth';
+            const isElite = plan.slug === 'elite';
 
             return (
               <Card
                 key={plan.id}
                 className={`relative flex flex-col bg-gradient-to-br ${getPlanColor(plan.slug)} ${
                   isPopular ? 'ring-2 ring-purple-500 shadow-lg scale-105' : ''
+                } ${
+                  isElite ? 'ring-2 ring-amber-500 shadow-xl scale-[1.02]' : ''
                 }`}
               >
                 {isPopular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <Badge className="bg-purple-500 text-white">Most Popular</Badge>
+                  </div>
+                )}
+                {isElite && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-amber-500 text-white">Most Powerful</Badge>
                   </div>
                 )}
 
@@ -180,6 +208,11 @@ export function Pricing() {
                     {' • '}
                     {plan.maxLocations === 999 ? 'Unlimited' : plan.maxLocations} location{plan.maxLocations > 1 ? 's' : ''}
                   </CardDescription>
+                  {isElite && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Best for 3+ locations or $50k+/month schools
+                    </p>
+                  )}
                 </CardHeader>
 
                 <CardContent className="flex-1">
