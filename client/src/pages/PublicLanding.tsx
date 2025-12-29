@@ -33,6 +33,10 @@ export default function PublicLanding() {
   const [selectedCategory, setSelectedCategory] = useState<PromptCategory | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<PromptCategory | null>(null);
+  const [focusedCard, setFocusedCard] = useState<PromptCategory | null>(null);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   // Onboarding form state
   const [schoolName, setSchoolName] = useState("");
@@ -140,6 +144,19 @@ export default function PublicLanding() {
         return "Billing";
       case "retention":
         return "Retention";
+    }
+  };
+
+  const getCardPlaceholder = (category: PromptCategory): string => {
+    switch (category) {
+      case "growth":
+        return "Ask Kai how to grow your kids program...";
+      case "health":
+        return "Ask Kai about your school's health metrics...";
+      case "billing":
+        return "Ask Kai about billing and payments...";
+      case "retention":
+        return "Ask Kai about student retention strategies...";
     }
   };
 
@@ -321,8 +338,27 @@ export default function PublicLanding() {
           background: 'radial-gradient(ellipse at center, #1a1f2e 0%, #0f1419 50%, #000000 100%)'
         }}
       >
-        {/* Anima-inspired Animated Background */}
-        <AnimatedBackground />
+        {/* Anima-inspired Animated Background with parallax */}
+        <div 
+          className="absolute inset-0 transition-transform duration-100 ease-out"
+          style={{
+            transform: `translateY(${scrollY * 0.3}px)`
+          }}
+        >
+          <AnimatedBackground />
+        </div>
+        
+        {/* Slow gradient drift animation */}
+        <div 
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.15) 0%, transparent 50%)',
+            animation: 'gradientDrift 10s ease-in-out infinite'
+          }}
+        />
+        
+        {/* Light vignette from top center */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent pointer-events-none" style={{ height: '40%' }} />
         
         {/* Dark vignette overlay for depth */}
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/60 pointer-events-none" />
@@ -332,9 +368,19 @@ export default function PublicLanding() {
           <div className="max-w-6xl mx-auto">
             {/* Headline */}
             <div className="text-center mb-14 space-y-5">
-              <h1 className="text-8xl md:text-9xl font-bold text-white tracking-tight drop-shadow-2xl flex items-center justify-center gap-4">
+              <h1 className="text-8xl md:text-9xl font-bold text-white tracking-tight drop-shadow-2xl flex items-center justify-center gap-4 relative">
                 <img src="/kai-icon-hero.png" alt="Kai" className="w-32 h-32 md:w-40 md:h-40 drop-shadow-2xl" />
-                Hi, I'm Kai.
+                <span className="relative">
+                  Hi, I'm Kai.
+                  {/* Soft ambient light pulse behind text */}
+                  <div 
+                    className="absolute inset-0 -z-10 blur-3xl opacity-40"
+                    style={{
+                      background: 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.6) 0%, transparent 70%)',
+                      animation: 'ambientPulse 4s ease-in-out infinite'
+                    }}
+                  />
+                </span>
               </h1>
               <p className="text-3xl md:text-4xl text-slate-200 font-light tracking-wide">
                 What would you like to optimize today?
@@ -343,32 +389,79 @@ export default function PublicLanding() {
 
             {/* Prompt Cards Grid - Larger with stronger glow */}
             <div className="grid md:grid-cols-2 gap-8 mb-14">
-              {promptCards.map((card) => (
+              {promptCards.map((card, index) => (
                 <button
                   key={card.category}
                   onClick={() => handleCardClick(card.category)}
-                  className={`group relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-[3px] border-red-500 hover:border-red-400 transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl hover:shadow-[0_0_40px_rgba(255,255,255,0.15)]`}
+                  onMouseEnter={() => setHoveredCard(card.category)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                  onFocus={() => setFocusedCard(card.category)}
+                  onBlur={() => setFocusedCard(null)}
+                  className={`group relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-[3px] transition-all duration-500 text-left shadow-2xl ${
+                    index === 0 && !hoveredCard && !focusedCard ? 'border-red-400' : 'border-red-500'
+                  } ${
+                    hoveredCard === card.category || focusedCard === card.category
+                      ? 'border-red-400 scale-[1.03] translate-y-[-4px] shadow-[0_0_60px_rgba(239,68,68,0.4)]'
+                      : hoveredCard || focusedCard
+                      ? 'opacity-40 scale-[0.98]'
+                      : 'hover:border-red-400 hover:scale-[1.03] hover:translate-y-[-4px] hover:shadow-[0_0_60px_rgba(239,68,68,0.4)]'
+                  }`}
                   style={{
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+                    boxShadow: hoveredCard === card.category || focusedCard === card.category
+                      ? '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 60px rgba(239,68,68,0.4)'
+                      : '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
                   }}
                 >
                   {/* Stronger glow border effect */}
-                  <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                    background: `linear-gradient(135deg, ${card.borderColor.replace('border-', 'rgba(')}30, transparent)`,
-                    filter: 'blur(20px)'
-                  }} />
+                  <div 
+                    className="absolute inset-0 rounded-3xl transition-opacity duration-500" 
+                    style={{
+                      background: 'radial-gradient(circle at center, rgba(239, 68, 68, 0.3) 0%, transparent 70%)',
+                      filter: 'blur(20px)',
+                      opacity: hoveredCard === card.category || focusedCard === card.category ? 1 : 0
+                    }} 
+                  />
                   
-                  {/* Star icon top-right */}
-                  <div className="absolute top-3 right-3 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
-                    <Star className="w-4 h-4 text-white drop-shadow-lg" />
-                  </div>
+                  {/* Animated outline pulse on focus */}
+                  {focusedCard === card.category && (
+                    <div 
+                      className="absolute inset-0 rounded-2xl border-2 border-red-400"
+                      style={{
+                        animation: 'outlinePulse 2s ease-in-out infinite'
+                      }}
+                    />
+                  )}
+                  
+                  {/* Star icon top-right OR Recommended badge */}
+                  {index === 0 && !hoveredCard && !focusedCard ? (
+                    <div className="absolute top-3 right-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 border border-red-400/50 text-xs font-semibold text-red-300 backdrop-blur-sm">
+                        <Star className="w-3 h-3 fill-red-400 text-red-400" />
+                        Recommended
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="absolute top-3 right-3 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                      <Star className="w-4 h-4 text-white drop-shadow-lg" />
+                    </div>
+                  )}
 
                   {/* Card content */}
                   <div className="relative space-y-4">
-                    <div className={`text-xs font-bold uppercase tracking-widest ${card.titleColor} drop-shadow-md`}>
+                    <div 
+                      className={`text-xs font-bold uppercase tracking-widest ${card.titleColor} drop-shadow-md transition-all duration-300`}
+                      style={{
+                        filter: hoveredCard === card.category || focusedCard === card.category ? 'brightness(1.3)' : 'brightness(1)'
+                      }}
+                    >
                       {card.title}
                     </div>
-                    <div className="text-base font-medium text-white leading-relaxed drop-shadow-lg">
+                    <div 
+                      className="text-base font-medium text-white leading-relaxed drop-shadow-lg transition-all duration-300"
+                      style={{
+                        filter: hoveredCard === card.category || focusedCard === card.category ? 'brightness(1.2)' : 'brightness(1)'
+                      }}
+                    >
                       {card.prompt}
                     </div>
                   </div>
@@ -382,20 +475,40 @@ export default function PublicLanding() {
             {/* Chat Input Bar - Enhanced glassmorphism with glow */}
             <div className="max-w-4xl mx-auto">
               <div 
-                className="relative backdrop-blur-2xl border-2 border-white/30 rounded-3xl p-5 shadow-2xl hover:border-white/40 transition-all duration-300"
+                className="relative backdrop-blur-2xl border-2 rounded-3xl p-5 shadow-2xl transition-all duration-300"
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.1)'
+                  borderColor: inputFocused ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)',
+                  boxShadow: inputFocused || inputValue
+                    ? '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 30px rgba(239,68,68,0.3)'
+                    : '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.1)',
+                  transform: inputFocused ? 'scale(1.02)' : 'scale(1)'
                 }}
               >
                 {/* Subtle top highlight */}
                 <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                 
+                {/* Reactive glow when typing */}
+                {(inputFocused || inputValue) && (
+                  <div 
+                    className="absolute inset-0 rounded-3xl -z-10"
+                    style={{
+                      background: 'radial-gradient(circle at center, rgba(239, 68, 68, 0.2) 0%, transparent 70%)',
+                      filter: 'blur(20px)',
+                      animation: 'inputGlow 2s ease-in-out infinite'
+                    }}
+                  />
+                )}
+                
                 <div className="flex items-center gap-4">
                   <input
                     type="text"
-                    placeholder="Message Kai… Type @ to mention"
-                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-xl font-light tracking-wide"
+                    placeholder={hoveredCard ? getCardPlaceholder(hoveredCard) : "Message Kai… Type @ to mention"}
+                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-xl font-light tracking-wide transition-all duration-300"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onFocus={() => setInputFocused(true)}
+                    onBlur={() => setInputFocused(false)}
                     readOnly
                   />
                   <button className="w-12 h-12 rounded-2xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
@@ -403,6 +516,11 @@ export default function PublicLanding() {
                   </button>
                 </div>
               </div>
+              
+              {/* Text hint below input */}
+              <p className="text-center text-sm text-slate-400 mt-3 font-light">
+                Ask Kai anything or choose a path above
+              </p>
             </div>
           </div>
         </div>
@@ -410,7 +528,7 @@ export default function PublicLanding() {
 
       {/* Onboarding Dialog */}
       <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl transition-all duration-500">
           <DialogHeader>
             <DialogTitle className="text-2xl">
               {isCreating ? "Creating your DojoFlow workspace…" : "Kai Setup: Let's get a little more information"}
@@ -436,10 +554,13 @@ export default function PublicLanding() {
                     {Math.round((currentStep / ONBOARDING_STEPS.length) * 100)}%
                   </span>
                 </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
                   <div 
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${(currentStep / ONBOARDING_STEPS.length) * 100}%` }}
+                    className="h-full bg-primary transition-all duration-500 ease-out"
+                    style={{ 
+                      width: `${(currentStep / ONBOARDING_STEPS.length) * 100}%`,
+                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
+                    }}
                   />
                 </div>
               </div>
@@ -565,14 +686,43 @@ export default function PublicLanding() {
         </DialogContent>
       </Dialog>
 
-      {/* Stats Bar */}
-      <section className="py-16 bg-card border-y border-border scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
+      {/* Stats Bar - Dark glass strip with glowing icons */}
+      <section className="py-12 scroll-reveal relative">
+        <div 
+          className="absolute inset-0 backdrop-blur-xl border-y"
+          style={{
+            background: 'rgba(0, 0, 0, 0.4)',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
+          }}
+        />
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">{stat.value}</div>
-                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+              <div key={index} className="text-center relative">
+                {/* Faint separator */}
+                {index > 0 && (
+                  <div 
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-px hidden md:block"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+                  />
+                )}
+                {/* Subtle glowing icon */}
+                <div className="flex items-center justify-center mb-3">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center relative"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)'
+                    }}
+                  >
+                    {index === 0 && <Users className="w-5 h-5 text-red-400" />}
+                    {index === 1 && <TrendingUp className="w-5 h-5 text-red-400" />}
+                    {index === 2 && <Clock className="w-5 h-5 text-red-400" />}
+                    {index === 3 && <BarChart3 className="w-5 h-5 text-red-400" />}
+                  </div>
+                </div>
+                <div className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">{stat.value}</div>
+                <div className="text-sm text-slate-300 font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -595,20 +745,34 @@ export default function PublicLanding() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-soft-lg transition-all duration-300 hover-lift"
+                className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-500 relative overflow-hidden"
+                style={{
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+                }}
               >
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <feature.icon className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">{feature.description}</p>
-                <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                  <Sparkles className="w-4 h-4" />
-                  {feature.highlight}
+                {/* Soft glow on hover */}
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(circle at center, rgba(239, 68, 68, 0.05) 0%, transparent 70%)',
+                    filter: 'blur(20px)'
+                  }}
+                />
+                
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                    <feature.icon className="w-7 h-7 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-4">{feature.description}</p>
+                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Sparkles className="w-4 h-4" />
+                    {feature.highlight}
+                  </div>
                 </div>
               </div>
             ))}

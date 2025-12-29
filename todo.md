@@ -1137,3 +1137,46 @@ Add cookies notice that appears when page is first accessed:
 - [x] Integrate into PublicLanding page
 - [x] Test functionality
 - [x] Save checkpoint
+
+
+## 🎯 Kai Command Hero Refinement - Interactive Product Experience (2025-12-28)
+
+### Phase 1: Hero Area Visual & Motion Enhancements
+- [x] Add subtle parallax motion to background waves
+- [x] Add slow gradient drift animation (8-12s loop)
+- [x] Add soft glow bloom behind active card
+- [x] Add light vignette from top center
+- [x] Add soft ambient light pulse behind "Hi, I'm Kai"
+
+### Phase 2: Prompt Cards - Make Them Alive
+- [x] Add hover effects: lift 2-4px, intensify border glow, brighten title
+- [x] Add focus effects: animated outline pulse, dim other cards
+- [x] Make "Start with Growth" default highlighted with "Recommended" tag
+- [x] Add card selection behavior: freeze background, fade other cards to 40%
+
+### Phase 3: Chat Input Enhancement
+- [x] Add soft glow that reacts when user types
+- [x] Add slight expansion on focus
+- [x] Add text hint below input: "Ask Kai anything or choose a path above"
+- [x] Implement dynamic placeholder that changes on card hover
+
+### Phase 4: Onboarding Transition
+- [x] Add smooth upward slide animation on card selection
+- [x] Add background darkening effect
+- [x] Add onboarding panel fade-in from below
+- [x] Add progress indicator: "Step 1 of 4"
+
+### Phase 5: Stats & Feature Grid Refinement
+- [x] Place stats on dark glass strip with faint separators
+- [x] Add subtle glowing icons to stats
+- [x] Increase feature card spacing
+- [x] Add soft glow on feature card hover
+- [x] Animate feature icons gently on hover
+
+### Phase 6: Final Validation
+- [x] Verify hero feels like application, not landing page
+- [x] Confirm motion is subtle and premium
+- [x] Test user attention flow (top → bottom)
+- [x] Ensure nothing feels noisy or cluttered
+- [x] Validate experience feels expensive
+- [x] Save checkpoint
