@@ -18,6 +18,7 @@ interface ThemeProviderProps {
 }
 
 const STORAGE_KEY = "dojoFlowTheme";
+const MIGRATION_KEY = "dojoFlowThemeMigration_v2";
 
 export function ThemeProvider({
   children,
@@ -25,6 +26,15 @@ export function ThemeProvider({
   switchable = true,
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
+    // Migration: Force dark theme once
+    const migrated = localStorage.getItem(MIGRATION_KEY);
+    if (!migrated) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(MIGRATION_KEY, "true");
+      localStorage.setItem(STORAGE_KEY, "dark");
+      return "dark";
+    }
+
     if (switchable) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === "light" || stored === "dark" || stored === "cinematic") {
