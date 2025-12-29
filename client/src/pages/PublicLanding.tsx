@@ -286,12 +286,12 @@ export default function PublicLanding() {
               <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
               <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
               <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
-              <Link href="/auth">
-                <Button variant="ghost" size="sm" className="font-medium">Sign In</Button>
+              <Link href="/auth" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Sign in
               </Link>
               <Link href="/auth">
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-soft">
-                  Start Free Trial
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg px-6">
+                  Get started
                 </Button>
               </Link>
             </div>

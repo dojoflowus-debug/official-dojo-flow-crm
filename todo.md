@@ -1097,4 +1097,17 @@ Replace hero section with cinematic design matching reference screenshot:
 - [x] Implement smooth continuous animation with proper easing
 - [x] Add organic shapes with gradient fills
 - [x] Test animation matches Anima reference style
+- [x] Save checkpoint
+
+
+## 🔐 Anima-Style Authentication UI (2025-12-28)
+
+### Task
+- [x] Analyze Anima website header authentication pattern
+- [x] Add "Sign In" text link button to PublicLanding header (top-right)
+- [x] Add "Get Started" prominent CTA button to header
+- [x] Update header navigation layout for proper spacing
+- [x] Connect Sign In button to /auth route (account type selection)
+- [x] Connect Get Started button to /auth route
+- [x] Test authentication flow from public landing
 - [ ] Save checkpoint
