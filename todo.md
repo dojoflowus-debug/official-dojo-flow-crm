@@ -1289,3 +1289,24 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add animate-float keyframe animation for footer shapes
 - [x] Test responsive behavior on mobile, tablet, desktop
 - [x] Verify all sections flow visually from Kai hero
+
+
+## 🎬 Cinematic Hero Video for Landing Page
+
+### Video Generation
+- [x] Generate cinematic 4K hero video (16:9, 12-18 seconds)
+  - Scene 1: Martial arts kids in dojo (close-up, discipline, warm lighting)
+  - Scene 2: Yoga studio with natural light (serene, synchronized motion)
+  - Scene 3: HIIT training (high-energy, determination, intensity)
+  - Scene 4: Brand moment (dark background, ambient glow, particles)
+- [x] Ensure TesoroXP-style pacing and visual polish
+- [x] Add cinematic depth of field, film grain, anamorphic lighting
+- [x] Make video loop-friendly (no abrupt cuts)
+
+### Integration
+- [x] Integrate video into PublicLanding.tsx hero section
+- [x] Add video as background with proper overlay
+- [x] Ensure video autoplays, loops, and is muted
+- [x] Optimize video file size for web delivery
+- [x] Test video performance on mobile and desktop
+- [ ] Save checkpoint

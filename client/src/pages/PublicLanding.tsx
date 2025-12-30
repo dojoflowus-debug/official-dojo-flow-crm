@@ -338,34 +338,24 @@ export default function PublicLanding() {
       <section 
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        style={{
-          background: 'radial-gradient(ellipse at center, #1a1f2e 0%, #0f1419 50%, #000000 100%)'
-        }}
       >
-        {/* Anima-inspired Animated Background with parallax */}
-        <div 
-          className="absolute inset-0 transition-transform duration-100 ease-out"
-          style={{
-            transform: `translateY(${scrollY * 0.3}px)`
-          }}
+        {/* Cinematic Hero Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: 'center' }}
         >
-          <AnimatedBackground />
-        </div>
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
         
-        {/* Slow gradient drift animation */}
-        <div 
-          className="absolute inset-0 opacity-30 pointer-events-none"
-          style={{
-            background: 'radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.15) 0%, transparent 50%)',
-            animation: 'gradientDrift 10s ease-in-out infinite'
-          }}
-        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
         
-        {/* Light vignette from top center */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent pointer-events-none" style={{ height: '40%' }} />
-        
-        {/* Dark vignette overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/60 pointer-events-none" />
+        {/* Additional vignette for depth */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/30 to-black/70 pointer-events-none" />
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10 py-20">
           {/* Kai Command Center */}
