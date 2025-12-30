@@ -4,7 +4,7 @@ import { createServer } from "http";
 import net from "net";
 import session from "express-session";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
+// import { registerOAuthRoutes } from "./oauth"; // DISABLED - using custom auth only
 import { registerLogoutEndpoint } from "../logoutEndpoint";
 import { kioskSettingsRouter } from "../kioskSettingsEndpoint";
 import { appRouter } from "../routers";
@@ -63,8 +63,8 @@ async function startServer() {
   app.use("/api/auth", localAuthRouter);
   // Mount social auth routes (includes /api/auth/google and /api/auth/google/callback)
   app.use("/api/auth", socialAuthRouter);
-  // OAuth callback under /api/oauth/callback
-  registerOAuthRoutes(app);
+  // OAuth callback under /api/oauth/callback - DISABLED (using custom auth only)
+  // registerOAuthRoutes(app);
   
   // Logout endpoint under /api/auth/logout
   registerLogoutEndpoint(app);

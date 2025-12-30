@@ -1876,3 +1876,20 @@ Add cookies notice that appears when page is first accessed:
 - [x] Updated studentAuthRouter.login with same fix
 - [x] Added ownerAuth.session.test.ts to verify fix
 - [x] All 6 tests passing
+
+
+
+## 🔐 Remove Manus OAuth Integration (2025-12-30)
+
+### Issue
+- [x] User wants to remove Manus OAuth from the app
+- [x] App should only use custom owner/staff/student login system
+
+### Tasks
+- [x] Identify OAuth routes and middleware in server/_core
+- [x] Remove or disable OAuth callback route (/api/oauth/callback)
+- [x] Update auth.me to only use custom session cookies
+- [x] Remove OAuth login redirect from frontend (const.ts, main.tsx, useAuth.ts, DashboardLayout.tsx)
+- [x] Update sdk.authenticateRequest to not call OAuth server
+- [x] Test login flow with owner/staff/student auth only
+- [x] Save checkpoint
