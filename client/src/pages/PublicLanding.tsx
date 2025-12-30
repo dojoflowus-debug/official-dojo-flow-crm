@@ -1002,7 +1002,7 @@ export default function PublicLanding() {
               </p>
               <div className="pt-4">
                 <Link 
-                  href="/schools" 
+                  to="/schools" 
                   className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
                 >
                   Learn more
@@ -1056,7 +1056,7 @@ export default function PublicLanding() {
               </p>
               <div className="pt-4">
                 <Link 
-                  href="/fitness" 
+                  to="/fitness" 
                   className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
                 >
                   Learn more
@@ -1088,7 +1088,7 @@ export default function PublicLanding() {
               </p>
               <div className="pt-4">
                 <Link 
-                  href="/studios" 
+                  to="/studios" 
                   className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
                 >
                   Learn more

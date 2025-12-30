@@ -1448,3 +1448,37 @@ Add cookies notice that appears when page is first accessed:
 - [x] Test all Learn More links work correctly
 - [ ] Save checkpoint
 
+
+## 🐛 BUG: Learn More Links Not Working on Landing Page
+
+### Issue
+- [ ] "Learn more" links on public landing page not navigating to facility pages
+
+### Investigation
+- [ ] Check PublicLanding.tsx for Learn More link implementation
+- [ ] Verify routes are registered in App.tsx
+- [ ] Fix navigation links
+
+### Fix
+- [ ] Update Learn More links to use proper navigation
+- [ ] Test all three facility links work
+- [ ] Save checkpoint
+
+
+
+## 🐛 BUG: Learn More Links Not Working in PublicLanding.tsx
+
+### Issue
+- [ ] User reports "Learn more" links in audience sections are not navigating
+- [ ] Links for Schools, Fitness, Studios sections not working
+
+### Investigation Findings
+- [x] Routes /schools, /fitness, /studios are correctly registered in App.tsx
+- [x] ForSchools, ForFitness, ForStudios pages exist and work when navigated directly
+- [x] Links in PublicLanding.tsx use `<Link href="/schools">` but wouter's Link uses `to` prop, not `href`
+- [x] The `href` prop is being ignored by wouter Link component
+
+### Fix Tasks
+- [x] Change `href` to `to` prop in all Learn more Link components
+- [x] Test navigation works after fix
+- [ ] Save checkpoint
