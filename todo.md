@@ -1237,4 +1237,55 @@ Add cookies notice that appears when page is first accessed:
 - [x] Verify Elite plan on public landing page pricing teaser
 - [x] Verify Elite plan on full Pricing page
 - [x] Confirm all credit allocations display correctly
-- [ ] Save checkpoint with Elite plan implementation
+- [x] Save checkpoint with Elite plan implementation (version: 04c86fb4)
+
+
+## 🎨 TesoroXP-Inspired Landing Page Redesign (2025-12-29)
+
+### Header & Navigation
+- [x] Update header to minimal clean design (logo left, nav middle/right)
+- [x] Add three nav links: Schools, Fitness Facilities, Studios
+- [x] Replace "Start Free Trial" with "Book a Demo" CTA
+- [ ] Implement mobile hamburger menu with full-screen overlay
+- [x] Ensure header works with dark theme
+
+### Hero Section
+- [x] Keep existing Kai hero section unchanged (dark theme, interactive cards)
+- [x] Ensure smooth visual transition to sections below
+
+### How It Works Section
+- [x] Create 4-step grid matching TesoroXP structure
+- [x] Add Connect step (connect school, staff, schedule)
+- [x] Add Activate step (turn on automations)
+- [x] Add Run step (manage daily operations)
+- [x] Add Grow step (track KPIs and revenue)
+- [x] Apply minimal big-tech styling with proper spacing
+
+### Three Audience Sections
+- [x] Build "For Schools" section with headline, text, image, CTA
+- [x] Build "For Fitness Facilities" section with same structure
+- [x] Build "For Studios" section with same structure
+- [x] Match TesoroXP spacing and rhythm
+- [x] Add "Learn more" links routing to #contact anchor
+
+### Contact Form Section
+- [x] Create "Get in touch" form with Full Name, Email, Message fields
+- [x] Add submit button with loading state
+- [x] Implement success and error states
+- [x] Style form with light background on mint green section
+
+### Footer
+- [x] Add link columns: Schools, Fitness Facilities, Studios, About
+- [x] Add newsletter signup with email field
+- [x] Add legal links: Terms, Privacy
+- [x] Add copyright line
+- [x] Match TesoroXP footer structure
+- [x] Add animated geometric shapes background
+
+### Styling & Polish
+- [x] Apply dark theme consistently across all new sections
+- [x] Implement subtle scroll animations (fades, gentle slide-ins)
+- [x] Ensure typography hierarchy matches hero section
+- [x] Add animate-float keyframe animation for footer shapes
+- [x] Test responsive behavior on mobile, tablet, desktop
+- [x] Verify all sections flow visually from Kai hero

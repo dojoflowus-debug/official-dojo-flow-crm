@@ -291,38 +291,42 @@ export default function PublicLanding() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
+      {/* Navigation - TesoroXP Style */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-xl border-b border-white/10">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-12">
-              <Link href="/" className="flex items-center cursor-pointer">
-                <img src="/logo-dark.png" alt="DojoFlow" className="h-8 dark:hidden" />
-                <img src="/logo-light.png" alt="DojoFlow" className="h-8 hidden dark:block" />
-              </Link>
-              
-              <div className="hidden md:flex items-center gap-8">
-                <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
-                <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-                <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
-              </div>
+            {/* Logo */}
+            <Link href="/" className="flex items-center cursor-pointer">
+              <img src="/logo-light.png" alt="DojoFlow" className="h-8" />
+            </Link>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#schools" className="text-sm font-medium text-white/80 hover:text-white transition-colors uppercase tracking-wide">Schools</a>
+              <a href="#facilities" className="text-sm font-medium text-white/80 hover:text-white transition-colors uppercase tracking-wide">Fitness Facilities</a>
+              <a href="#studios" className="text-sm font-medium text-white/80 hover:text-white transition-colors uppercase tracking-wide">Studios</a>
             </div>
             
-            <div className="hidden md:flex items-center gap-6">
-              <Link href="/auth" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-                Login
-              </Link>
+            {/* CTA Button */}
+            <div className="hidden md:flex items-center">
               <Link href="/auth">
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg px-6">
-                  Sign up
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold shadow-lg px-6 uppercase tracking-wide rounded-full"
+                >
+                  Book a Demo
                 </Button>
               </Link>
             </div>
 
+            {/* Mobile Menu Button */}
             <div className="md:hidden">
               <Link href="/auth">
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                  Get Started
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold uppercase tracking-wide rounded-full"
+                >
+                  Book a Demo
                 </Button>
               </Link>
             </div>
@@ -729,6 +733,91 @@ export default function PublicLanding() {
         </div>
       </section>
 
+      {/* How It Works Section - TesoroXP Style */}
+      <section className="py-24 bg-gradient-to-b from-[#d4f4dd] to-[#c8eed5] scroll-reveal">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
+              How DojoFlow Works
+            </h2>
+            <p className="text-xl text-gray-700 max-w-2xl mx-auto">
+              Four simple steps to transform your school operations
+            </p>
+          </div>
+
+          {/* 4-Step Grid */}
+          <div className="grid md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+            {/* Step 1: Connect */}
+            <div className="group">
+              <div className="bg-gradient-to-br from-[#ff6b6b] to-[#ff5252] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+                <div className="flex-1 space-y-4">
+                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
+                    <Users className="w-8 h-8 text-black" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-black mb-3">
+                    Connect
+                  </h3>
+                  <p className="text-base text-black/80 leading-relaxed">
+                    Connect your school, staff, and schedule.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Activate */}
+            <div className="group">
+              <div className="bg-gradient-to-br from-[#ffb800] to-[#ffa500] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+                <div className="flex-1 space-y-4">
+                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
+                    <Zap className="w-8 h-8 text-black" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-black mb-3">
+                    Activate
+                  </h3>
+                  <p className="text-base text-black/80 leading-relaxed">
+                    Turn on automations (calls, SMS, follow-ups, enrollment).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3: Run */}
+            <div className="group">
+              <div className="bg-gradient-to-br from-[#00d084] to-[#00b872] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+                <div className="flex-1 space-y-4">
+                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
+                    <Calendar className="w-8 h-8 text-black" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-black mb-3">
+                    Run
+                  </h3>
+                  <p className="text-base text-black/80 leading-relaxed">
+                    Manage check-ins, attendance, leads, and retention daily.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Grow */}
+            <div className="group">
+              <div className="bg-gradient-to-br from-[#00c9db] to-[#00b3c4] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+                <div className="flex-1 space-y-4">
+                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
+                    <TrendingUp className="w-8 h-8 text-black" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-black mb-3">
+                    Grow
+                  </h3>
+                  <p className="text-base text-black/80 leading-relaxed">
+                    Track KPIs and revenue with dashboards and insights.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="py-24 scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
@@ -776,6 +865,187 @@ export default function PublicLanding() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Three Audience Sections - TesoroXP Style */}
+      
+      {/* For Schools */}
+      <section id="schools" className="py-24 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc] scroll-reveal">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+            {/* Text Content */}
+            <div className="space-y-6">
+              <div className="inline-block">
+                <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">FOR THE</span>
+                <div className="mt-2 inline-block px-4 py-2 border-2 border-gray-800 rounded-lg">
+                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">SCHOOL</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                Run classes smoother. Enroll faster.
+              </h2>
+              <p className="text-lg text-gray-700 leading-relaxed">
+                DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff—all in one platform. Stop juggling spreadsheets and start growing.
+              </p>
+              <div className="pt-4">
+                <a 
+                  href="#contact" 
+                  className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
+                >
+                  Learn more
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </div>
+            </div>
+            {/* Image Placeholder */}
+            <div className="relative">
+              <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl flex items-center justify-center">
+                <Users className="w-24 h-24 text-white/20" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* For Fitness Facilities */}
+      <section id="facilities" className="py-24 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2] scroll-reveal">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+            {/* Image Placeholder */}
+            <div className="relative order-2 md:order-1">
+              <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl flex items-center justify-center">
+                <BarChart3 className="w-24 h-24 text-white/20" />
+              </div>
+            </div>
+            {/* Text Content */}
+            <div className="space-y-6 order-1 md:order-2">
+              <div className="inline-block">
+                <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">FOR THE</span>
+                <div className="mt-2 inline-block px-4 py-2 border-2 border-gray-800 rounded-lg">
+                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">FITNESS FACILITY</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                A kiosk + automation layer for busy gyms.
+              </h2>
+              <p className="text-lg text-gray-700 leading-relaxed">
+                Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, automates lead follow-up, and delivers real-time reporting. Keep your members moving and your operations efficient.
+              </p>
+              <div className="pt-4">
+                <a 
+                  href="#contact" 
+                  className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
+                >
+                  Learn more
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* For Studios */}
+      <section id="studios" className="py-24 bg-gradient-to-b from-[#b0e2c2] to-[#a4dcb8] scroll-reveal">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+            {/* Text Content */}
+            <div className="space-y-6">
+              <div className="inline-block">
+                <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">FOR THE</span>
+                <div className="mt-2 inline-block px-4 py-2 border-2 border-gray-800 rounded-lg">
+                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">STUDIO</span>
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                Modern operations for yoga, dance, and boutique training.
+              </h2>
+              <p className="text-lg text-gray-700 leading-relaxed">
+                DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX. Focus on your craft while we handle the operations.
+              </p>
+              <div className="pt-4">
+                <a 
+                  href="#contact" 
+                  className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
+                >
+                  Learn more
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </div>
+            </div>
+            {/* Image Placeholder */}
+            <div className="relative">
+              <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl flex items-center justify-center">
+                <Sparkles className="w-24 h-24 text-white/20" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Form Section - TesoroXP Style */}
+      <section id="contact" className="py-24 bg-gradient-to-b from-[#a4dcb8] to-[#98d6ae] scroll-reveal">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Get in touch
+              </h2>
+              <p className="text-lg text-gray-700">
+                Ready to transform your school operations? Send us a message.
+              </p>
+            </div>
+            
+            {/* Contact Form */}
+            <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+              <form className="space-y-6">
+                <div>
+                  <Label htmlFor="contact-name" className="text-gray-900 font-medium">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="contact-name"
+                    type="text"
+                    placeholder="John Smith"
+                    className="mt-2 bg-gray-50 border-gray-300 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-email" className="text-gray-900 font-medium">
+                    Email Address
+                  </Label>
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    placeholder="john@example.com"
+                    className="mt-2 bg-gray-50 border-gray-300 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-message" className="text-gray-900 font-medium">
+                    Message
+                  </Label>
+                  <textarea
+                    id="contact-message"
+                    rows={5}
+                    placeholder="Tell us about your school..."
+                    className="mt-2 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold py-6 text-lg uppercase tracking-wide rounded-xl"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toast.success("Message sent! We'll be in touch soon.");
+                  }}
+                >
+                  Send Message
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </section>
@@ -917,24 +1187,90 @@ export default function PublicLanding() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 border-t border-border">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <img src="/logo-dark.png" alt="DojoFlow" className="h-6 dark:hidden" />
-              <img src="/logo-light.png" alt="DojoFlow" className="h-6 hidden dark:block" />
-            </div>
-            
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-              <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
-              <a href="/terms" className="hover:text-foreground transition-colors">Terms of Use</a>
-              <a href="/cookies" className="hover:text-foreground transition-colors">Cookie Policy</a>
-              <a href="/dmca" className="hover:text-foreground transition-colors">DMCA</a>
+      {/* Footer - TesoroXP Style */}
+      <footer className="py-20 bg-[#1a1a1a] relative overflow-hidden">
+        {/* Animated geometric shapes background */}
+        <div className="absolute inset-0 pointer-events-none opacity-30">
+          <div className="absolute top-20 left-10 w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full animate-float" style={{ animationDelay: '0s' }} />
+          <div className="absolute top-40 right-20 w-32 h-32 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full animate-float" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-20 left-1/3 w-28 h-28 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full animate-float" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-40 right-1/4 w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full animate-float" style={{ animationDelay: '1.5s' }} />
+        </div>
+
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+          <div className="grid md:grid-cols-2 gap-16 mb-16">
+            {/* Left Column - Navigation Links */}
+            <div className="space-y-6">
+              <a href="#schools" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                Schools
+              </a>
+              <a href="#facilities" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                Fitness Facilities
+              </a>
+              <a href="#studios" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                Studios
+              </a>
+              <a href="#contact" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                About
+              </a>
             </div>
 
-            <div className="text-sm text-muted-foreground">
-              © 2025 DojoFlow. All rights reserved.
+            {/* Right Column - Newsletter */}
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold text-white">
+                Sign up to our newsletter for all the latest news and updates.
+              </h3>
+              <form className="flex gap-3">
+                <Input
+                  type="email"
+                  placeholder="Email address"
+                  className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white/40"
+                />
+                <Button
+                  type="submit"
+                  className="bg-white text-gray-900 hover:bg-white/90 font-bold px-8"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toast.success("Thanks for subscribing!");
+                  }}
+                >
+                  Submit
+                </Button>
+              </form>
+              
+              {/* Social Icons */}
+              <div className="flex gap-4 pt-4">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="border-t border-white/10 pt-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              {/* Logo */}
+              <div className="flex items-center">
+                <img src="/logo-light.png" alt="DojoFlow" className="h-8" />
+              </div>
+              
+              {/* Legal Links */}
+              <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-white/60">
+                <a href="/terms" className="hover:text-white transition-colors uppercase tracking-wide">Terms</a>
+                <a href="/privacy" className="hover:text-white transition-colors uppercase tracking-wide">Privacy</a>
+              </div>
+
+              {/* Copyright */}
+              <div className="text-sm text-white/60">
+                © 2025 DojoFlow, Inc.
+              </div>
             </div>
           </div>
         </div>
