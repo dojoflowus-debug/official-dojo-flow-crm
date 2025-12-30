@@ -374,6 +374,16 @@ export default function PublicLanding() {
               <p className="text-3xl md:text-4xl text-slate-200 font-light tracking-wide">
                 What would you like to optimize today?
               </p>
+              
+              {/* Talk to Kai CTA Button */}
+              <button
+                onClick={() => setShowKaiOnboarding(true)}
+                className="group inline-flex items-center gap-3 px-8 py-4 mt-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-lg font-semibold transition-all duration-300 shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] hover:scale-105"
+              >
+                <MessageCircle className="w-5 h-5 group-hover:animate-pulse" />
+                Talk to Kai
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
 
             {/* Prompt Cards Grid - Larger with stronger glow */}

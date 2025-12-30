@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   ArrowRight, 
@@ -21,7 +20,13 @@ import {
   ChevronRight,
   Eye,
   PartyPopper,
-  X
+  X,
+  Clock,
+  SkipForward,
+  CheckCircle2,
+  TrendingUp,
+  Mail,
+  CreditCard
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -106,6 +111,283 @@ const SETUP_STEPS = [
   { id: 3, title: "Invite staff", icon: Users },
   { id: 4, title: "Activate automations", icon: Zap },
 ];
+
+// Get current step number for progress indicator
+const getStepNumber = (step: ConversationStep): number => {
+  switch (step) {
+    case "initial": return 1;
+    case "intent_selected": return 1;
+    case "business_type": return 2;
+    case "question_1": return 3;
+    case "question_2": return 4;
+    case "question_3": return 5;
+    case "preview": return 6;
+    case "conversion": return 6;
+    case "signup": return 6;
+    case "success": return 6;
+    default: return 1;
+  }
+};
+
+const TOTAL_STEPS = 6;
+
+// Animated Dashboard Preview Component
+function AnimatedDashboardPreview({ businessType }: { businessType: BusinessType | null }) {
+  const type = businessType || "martial_arts";
+  
+  // Sample data for different business types
+  const getPreviewData = () => {
+    switch (type) {
+      case "martial_arts":
+        return {
+          title: "Dojo Dashboard",
+          students: [
+            { name: "Alex Chen", rank: "Blue Belt", status: "active" },
+            { name: "Sarah Kim", rank: "Green Belt", status: "active" },
+            { name: "Mike Johnson", rank: "White Belt", status: "new" },
+          ],
+          classes: [
+            { name: "Kids Karate", time: "4:00 PM", enrolled: 12 },
+            { name: "Adult BJJ", time: "6:30 PM", enrolled: 8 },
+            { name: "Sparring", time: "7:30 PM", enrolled: 6 },
+          ],
+          automations: [
+            { name: "Welcome email sent", status: "completed" },
+            { name: "Belt test reminder", status: "scheduled" },
+            { name: "Payment reminder", status: "running" },
+          ],
+          notifications: [
+            { text: "New enrollment: Mike Johnson", type: "success" },
+            { text: "Class starting in 30 min", type: "info" },
+          ],
+        };
+      case "fitness":
+        return {
+          title: "Fitness Command Center",
+          students: [
+            { name: "Emma Wilson", rank: "Premium", status: "active" },
+            { name: "James Brown", rank: "Basic", status: "active" },
+            { name: "Lisa Davis", rank: "Trial", status: "new" },
+          ],
+          classes: [
+            { name: "HIIT Training", time: "6:00 AM", enrolled: 15 },
+            { name: "Yoga Flow", time: "9:00 AM", enrolled: 10 },
+            { name: "Spin Class", time: "5:30 PM", enrolled: 20 },
+          ],
+          automations: [
+            { name: "Check-in confirmed", status: "completed" },
+            { name: "Membership renewal", status: "scheduled" },
+            { name: "Workout reminder", status: "running" },
+          ],
+          notifications: [
+            { text: "New member: Lisa Davis", type: "success" },
+            { text: "Equipment maintenance due", type: "info" },
+          ],
+        };
+      case "yoga_dance":
+        return {
+          title: "Studio Manager",
+          students: [
+            { name: "Maya Patel", rank: "Advanced", status: "active" },
+            { name: "Chris Lee", rank: "Intermediate", status: "active" },
+            { name: "Anna Smith", rank: "Beginner", status: "new" },
+          ],
+          classes: [
+            { name: "Morning Vinyasa", time: "7:00 AM", enrolled: 12 },
+            { name: "Hip Hop Dance", time: "4:00 PM", enrolled: 8 },
+            { name: "Meditation", time: "8:00 PM", enrolled: 6 },
+          ],
+          automations: [
+            { name: "Class reminder sent", status: "completed" },
+            { name: "Package expiry notice", status: "scheduled" },
+            { name: "Feedback request", status: "running" },
+          ],
+          notifications: [
+            { text: "New booking: Anna Smith", type: "success" },
+            { text: "Instructor schedule updated", type: "info" },
+          ],
+        };
+      default:
+        return {
+          title: "Your Dashboard",
+          students: [
+            { name: "John Doe", rank: "Member", status: "active" },
+            { name: "Jane Smith", rank: "Member", status: "active" },
+            { name: "Bob Wilson", rank: "Trial", status: "new" },
+          ],
+          classes: [
+            { name: "Session 1", time: "10:00 AM", enrolled: 5 },
+            { name: "Session 2", time: "2:00 PM", enrolled: 8 },
+            { name: "Session 3", time: "6:00 PM", enrolled: 4 },
+          ],
+          automations: [
+            { name: "Welcome message", status: "completed" },
+            { name: "Follow-up scheduled", status: "scheduled" },
+            { name: "Invoice generated", status: "running" },
+          ],
+          notifications: [
+            { text: "New signup received", type: "success" },
+            { text: "Task completed", type: "info" },
+          ],
+        };
+    }
+  };
+
+  const data = getPreviewData();
+
+  return (
+    <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900/95 to-slate-800/95 border border-white/10 p-6 backdrop-blur-xl">
+      {/* Animated gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-purple-500/5 to-blue-500/5 animate-pulse" />
+      
+      <div className="relative space-y-5">
+        {/* Dashboard header */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-white">{data.title}</h3>
+          <div className="flex items-center gap-2 text-xs text-green-400">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            Live Preview
+          </div>
+        </div>
+        
+        {/* Main dashboard grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Student List Panel */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/5 rounded-xl p-4 border border-white/10"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="w-4 h-4 text-blue-400" />
+              <span className="text-sm font-medium text-white/80">Students</span>
+            </div>
+            <div className="space-y-2">
+              {data.students.map((student, i) => (
+                <motion.div
+                  key={student.name}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  className="flex items-center justify-between p-2 rounded-lg bg-white/5"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
+                      {student.name.charAt(0)}
+                    </div>
+                    <span className="text-xs text-white/70">{student.name}</span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                    student.status === 'new' ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'
+                  }`}>
+                    {student.rank}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Class Schedule Panel */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white/5 rounded-xl p-4 border border-white/10"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-4 h-4 text-purple-400" />
+              <span className="text-sm font-medium text-white/80">Today's Classes</span>
+            </div>
+            <div className="space-y-2">
+              {data.classes.map((cls, i) => (
+                <motion.div
+                  key={cls.name}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                  className="flex items-center justify-between p-2 rounded-lg bg-white/5"
+                >
+                  <div>
+                    <div className="text-xs text-white/70">{cls.name}</div>
+                    <div className="text-[10px] text-white/40">{cls.time}</div>
+                  </div>
+                  <span className="text-[10px] text-white/50">{cls.enrolled} enrolled</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Automations Running */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white/5 rounded-xl p-4 border border-white/10"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm font-medium text-white/80">Automations</span>
+          </div>
+          <div className="flex gap-3">
+            {data.automations.map((auto, i) => (
+              <motion.div
+                key={auto.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8 + i * 0.15 }}
+                className={`flex-1 p-3 rounded-lg border ${
+                  auto.status === 'completed' 
+                    ? 'bg-green-500/10 border-green-500/20' 
+                    : auto.status === 'running'
+                    ? 'bg-blue-500/10 border-blue-500/20'
+                    : 'bg-yellow-500/10 border-yellow-500/20'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  {auto.status === 'completed' && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+                  {auto.status === 'running' && <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />}
+                  {auto.status === 'scheduled' && <Clock className="w-3 h-3 text-yellow-400" />}
+                  <span className={`text-[10px] font-medium ${
+                    auto.status === 'completed' ? 'text-green-300' : 
+                    auto.status === 'running' ? 'text-blue-300' : 'text-yellow-300'
+                  }`}>
+                    {auto.status}
+                  </span>
+                </div>
+                <div className="text-xs text-white/60">{auto.name}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Live Notifications */}
+        <div className="space-y-2">
+          {data.notifications.map((notif, i) => (
+            <motion.div
+              key={notif.text}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.2 + i * 0.3 }}
+              className={`flex items-center gap-3 p-3 rounded-xl border ${
+                notif.type === 'success' 
+                  ? 'bg-green-500/10 border-green-500/20' 
+                  : 'bg-blue-500/10 border-blue-500/20'
+              }`}
+            >
+              <Bell className={`w-4 h-4 ${notif.type === 'success' ? 'text-green-400' : 'text-blue-400'}`} />
+              <span className={`text-sm ${notif.type === 'success' ? 'text-green-300' : 'text-blue-300'}`}>
+                {notif.text}
+              </span>
+              <span className="text-xs text-white/30 ml-auto">Just now</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardingFlowProps) {
   const navigate = useNavigate();
@@ -208,6 +490,20 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
     setTimeout(() => setStep("preview"), 1000);
   };
 
+  // Handle skip to preview
+  const handleSkipToPreview = () => {
+    // Set default values for skipped questions
+    setState(prev => ({
+      ...prev,
+      businessType: prev.businessType || "martial_arts",
+      locationCount: prev.locationCount || "1",
+      studentCount: prev.studentCount || "under_100",
+      focus: prev.focus || "leads",
+    }));
+    showKaiMessage("Here's what DojoFlow would look like for you.");
+    setTimeout(() => setStep("preview"), 800);
+  };
+
   // Handle conversion decision
   const handleCreateAccount = () => {
     setStep("signup");
@@ -256,39 +552,12 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
     navigate("/owner/onboarding");
   };
 
-  // Get preview content based on business type
-  const getPreviewContent = () => {
-    const type = state.businessType || "martial_arts";
-    switch (type) {
-      case "martial_arts":
-        return {
-          title: "Dojo Dashboard",
-          items: ["Student roster with belt ranks", "Class schedule by program", "Attendance tracking", "Belt testing automation"],
-        };
-      case "fitness":
-        return {
-          title: "Fitness Command Center",
-          items: ["Member check-in kiosk", "Class capacity management", "Equipment booking", "Membership renewals"],
-        };
-      case "yoga_dance":
-        return {
-          title: "Studio Manager",
-          items: ["Class scheduling", "Instructor assignments", "Attendance tracking", "Package management"],
-        };
-      case "personal_trainer":
-        return {
-          title: "Training Hub",
-          items: ["Client profiles", "Session scheduling", "Progress tracking", "Payment management"],
-        };
-      default:
-        return {
-          title: "Your Dashboard",
-          items: ["Member management", "Scheduling", "Automations", "Analytics"],
-        };
-    }
-  };
+  // Check if we can show skip button
+  const canSkip = step === "business_type" || step === "question_1" || step === "question_2" || step === "question_3";
 
   if (!isActive) return null;
+
+  const currentStepNum = getStepNumber(step);
 
   return (
     <AnimatePresence>
@@ -300,9 +569,35 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-40"
             onClick={onClose}
           />
+
+          {/* Persistent Kai icon in corner */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ delay: 0.3 }}
+            className="fixed top-4 left-4 z-50 flex items-center gap-3"
+          >
+            <div className="relative">
+              <div 
+                className="absolute inset-0 blur-xl opacity-60"
+                style={{
+                  background: 'radial-gradient(circle, rgba(239, 68, 68, 0.5) 0%, transparent 70%)',
+                }}
+              />
+              <img 
+                src="/kai-icon-hero.png" 
+                alt="Kai" 
+                className="w-12 h-12 relative z-10 drop-shadow-lg"
+              />
+            </div>
+            <div className="text-white/80 text-sm font-medium">
+              Kai is helping you set up
+            </div>
+          </motion.div>
 
           {/* Onboarding container */}
           <motion.div
@@ -320,6 +615,31 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
               >
                 <X className="w-5 h-5 text-white" />
               </button>
+
+              {/* Progress indicator */}
+              {step !== "success" && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-white/60">Step {currentStepNum} of {TOTAL_STEPS}</span>
+                    <div className="flex items-center gap-2 text-xs text-white/40">
+                      <Clock className="w-3 h-3" />
+                      Most finish in under 3 minutes
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(currentStepNum / TOTAL_STEPS) * 100}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+                </motion.div>
+              )}
 
               {/* Kai avatar with glow */}
               <motion.div
@@ -513,41 +833,8 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                     transition={{ duration: 0.5 }}
                     className="space-y-6"
                   >
-                    {/* Dashboard preview */}
-                    <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 p-6">
-                      <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5" />
-                      
-                      <div className="relative space-y-4">
-                        <h3 className="text-xl font-semibold text-white">{getPreviewContent().title}</h3>
-                        
-                        {/* Animated preview items */}
-                        <div className="grid grid-cols-2 gap-3">
-                          {getPreviewContent().items.map((item, index) => (
-                            <motion.div
-                              key={item}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.3 + index * 0.15 }}
-                              className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10"
-                            >
-                              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                              <span className="text-sm text-white/80">{item}</span>
-                            </motion.div>
-                          ))}
-                        </div>
-
-                        {/* Animated notifications */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 1 }}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-green-500/10 border border-green-500/20"
-                        >
-                          <Bell className="w-4 h-4 text-green-400" />
-                          <span className="text-sm text-green-300">Automation running: Welcome email sent to new member</span>
-                        </motion.div>
-                      </div>
-                    </div>
+                    {/* Enhanced Dashboard preview */}
+                    <AnimatedDashboardPreview businessType={state.businessType} />
 
                     {/* Conversion buttons */}
                     <motion.div
@@ -727,6 +1014,24 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Skip button for qualification steps */}
+              {canSkip && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="mt-8 text-center"
+                >
+                  <button
+                    onClick={handleSkipToPreview}
+                    className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                    Skip to preview
+                  </button>
+                </motion.div>
+              )}
 
               {/* Input bar (visible in initial step) */}
               {step === "initial" && (

@@ -1628,3 +1628,30 @@ Add cookies notice that appears when page is first accessed:
 - [x] No page reloads
 - [x] Mobile-friendly
 - [x] Save progress locally until account created
+
+
+## 🎯 Kai Interactive Onboarding Flow Refinements (2025-12-30)
+
+### Phase 1: Hero Entry Point Enhancements
+- [x] Add "Talk to Kai" button as primary CTA in hero
+- [x] Ensure clicking input bar triggers onboarding flow
+- [x] Add subtle glow animation to Kai avatar on interaction
+
+### Phase 2: Visual Preview Mode Enhancements
+- [x] Add animated student list preview
+- [x] Add animated class schedule preview
+- [x] Add animated automations running indicator
+- [x] Add animated notifications firing effect
+- [x] Make preview feel more like a real dashboard
+
+### Phase 3: Optional Enhancements
+- [x] Add "Most schools finish in under 3 minutes" indicator
+- [x] Add persistent Kai icon in corner during onboarding
+- [x] Allow user to skip steps (add skip button)
+- [ ] Add subtle sound cue option when steps complete
+
+### Phase 4: Polish & Testing
+- [x] Test complete flow end-to-end
+- [ ] Verify mobile responsiveness
+- [ ] Ensure smooth transitions throughout
+- [ ] Save checkpoint
