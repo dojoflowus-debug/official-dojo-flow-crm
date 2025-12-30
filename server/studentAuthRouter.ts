@@ -98,7 +98,7 @@ export const studentAuthRouter = router({
         currentOrganizationId: orgMemberships.length === 1 ? orgMemberships[0].organizationId : null,
       };
 
-      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions());
+      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions(ctx.req));
 
       return {
         success: true,
@@ -202,7 +202,7 @@ export const studentAuthRouter = router({
         // TODO: Get organization from student record
       };
 
-      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions());
+      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions(ctx.req));
 
       return {
         success: true,
@@ -304,7 +304,7 @@ export const studentAuthRouter = router({
         // TODO: Get organization from student record
       };
 
-      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions());
+      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions(ctx.req));
 
       return {
         success: true,

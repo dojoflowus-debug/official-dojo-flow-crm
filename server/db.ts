@@ -216,16 +216,29 @@ export async function deleteStaffPin(id: number) {
  */
 
 // Get dashboard statistics
-export async function getDashboardStats() {
+export async function getDashboardStats(organizationId?: number | null) {
   const db = await getDb();
   if (!db) return null;
   
   const { students, leads, classes } = await import("../drizzle/schema");
-  const { eq, count } = await import("drizzle-orm");
+  const { eq, count, and } = await import("drizzle-orm");
   
-  const totalStudents = await db.select({ count: count() }).from(students).where(eq(students.status, 'Active'));
-  const totalLeads = await db.select({ count: count() }).from(leads);
-  const todaysClasses = await db.select().from(classes).where(eq(classes.isActive, 1)).limit(10);
+  // Filter by organization for multi-tenancy
+  const studentCondition = organizationId
+    ? and(eq(students.status, 'Active'), eq(students.organizationId, organizationId))
+    : eq(students.status, 'Active');
+  const leadCondition = organizationId
+    ? eq(leads.organizationId, organizationId)
+    : undefined;
+  const classCondition = organizationId
+    ? and(eq(classes.isActive, 1), eq(classes.organizationId, organizationId))
+    : eq(classes.isActive, 1);
+  
+  const totalStudents = await db.select({ count: count() }).from(students).where(studentCondition);
+  const totalLeads = leadCondition 
+    ? await db.select({ count: count() }).from(leads).where(leadCondition)
+    : await db.select({ count: count() }).from(leads);
+  const todaysClasses = await db.select().from(classes).where(classCondition).limit(10);
   
   return {
     total_students: totalStudents[0]?.count || 0,
@@ -285,8 +298,8 @@ export async function getKioskWaivers() {
 }
 
 // Search students by name, phone, or email
-export async function searchStudents(query: string) {
-  console.log('[searchStudents] Query:', query);
+export async function searchStudents(query: string, organizationId?: number | null) {
+  console.log('[searchStudents] Query:', query, 'OrgId:', organizationId);
   const db = await getDb();
   if (!db) {
     console.log('[searchStudents] Database not available');
@@ -294,22 +307,27 @@ export async function searchStudents(query: string) {
   }
   
   const { students } = await import("../drizzle/schema");
-  const { or, like, sql } = await import("drizzle-orm");
+  const { or, like, sql, and, eq } = await import("drizzle-orm");
   
   const searchPattern = `%${query}%`;
   console.log('[searchStudents] Search pattern:', searchPattern);
   
-  // Search across firstName, lastName, email, phone, AND concatenated full name
-  const results = await db.select().from(students).where(
-    or(
-      like(students.firstName, searchPattern),
-      like(students.lastName, searchPattern),
-      like(students.email, searchPattern),
-      like(students.phone, searchPattern),
-      // Also search concatenated full name (handles "marcus johnson" queries)
-      sql`CONCAT(${students.firstName}, ' ', ${students.lastName}) LIKE ${searchPattern}`
-    )
-  ).limit(10);
+  // Search conditions
+  const searchConditions = or(
+    like(students.firstName, searchPattern),
+    like(students.lastName, searchPattern),
+    like(students.email, searchPattern),
+    like(students.phone, searchPattern),
+    // Also search concatenated full name (handles "marcus johnson" queries)
+    sql`CONCAT(${students.firstName}, ' ', ${students.lastName}) LIKE ${searchPattern}`
+  );
+  
+  // Apply organization filter for multi-tenancy
+  const whereCondition = organizationId
+    ? and(eq(students.organizationId, organizationId), searchConditions)
+    : searchConditions;
+  
+  const results = await db.select().from(students).where(whereCondition).limit(10);
   
   console.log('[searchStudents] Results count:', results.length);
   if (results.length > 0) {

@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE kiosk_check_ins ADD COLUMN organizationId INT NULL;\nALTER TABLE kiosk_visitors ADD COLUMN organizationId INT NULL;\nALTER TABLE kiosk_waivers ADD COLUMN organizationId INT NULL;\nALTER TABLE leads ADD COLUMN organizationId INT NULL;\nALTER TABLE lead_sources ADD COLUMN organizationId INT NULL;\nALTER TABLE dojo_settings ADD COLUMN organizationId INT NULL;\nALTER TABLE staff_pins ADD COLUMN organizationId INT NULL;\nALTER TABLE locations ADD COLUMN organizationId INT NULL;\nALTER TABLE programs ADD COLUMN organizationId INT NULL;\nALTER TABLE team_members ADD COLUMN organizationId INT NULL;\nALTER TABLE member_journey_config ADD COLUMN organizationId INT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE kiosk_check_ins ADD COLUMN organizationId INT NULL;\nALTER TABLE kiosk_visitors ADD COLUMN organizationId INT NULL;\nALTER TABLE kiosk_waivers ADD COLUMN organizationId INT NULL;\nALTER TABLE leads ADD COLUMN organizationId INT NULL;\nALTER TABLE lead_sources ADD COLUMN organizationId INT NULL;\nALTER TABLE dojo_settings ADD COLUMN organizationId INT NULL;\nALTER TABLE staff_pins ADD COLUMN organizationId INT NULL;\nALTER TABLE locations ADD COLUMN organizationId INT NULL;\nALTER TABLE programs ADD COLUMN organizationId INT NULL;\nALTER TABLE team_members ADD COLUMN organizationId INT NULL;\nALTER TABLE member_journey_config ADD COLUMN organizationId INT NULL;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '2awpr243d2jitpj6cn66rx.kiosk_check_ins' doesn't exist"
+  ]
+}

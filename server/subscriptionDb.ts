@@ -235,30 +235,26 @@ export async function getCreditTransactions(
 ): Promise<AiCreditTransaction[]> {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  let query = db.select().from(aiCreditTransactions).where(eq(aiCreditTransactions.organizationId, organizationId));
-
+  
+  // Build conditions array
+  const conditions = [eq(aiCreditTransactions.organizationId, organizationId)];
+  
   if (options?.startDate) {
-    query = query.where(and(
-      eq(aiCreditTransactions.organizationId, organizationId),
-      gte(aiCreditTransactions.createdAt, options.startDate)
-    )) as any;
+    conditions.push(gte(aiCreditTransactions.createdAt, options.startDate));
   }
 
   if (options?.endDate) {
-    query = query.where(and(
-      eq(aiCreditTransactions.organizationId, organizationId),
-      lte(aiCreditTransactions.createdAt, options.endDate)
-    )) as any;
+    conditions.push(lte(aiCreditTransactions.createdAt, options.endDate));
   }
 
   if (options?.taskType) {
-    query = query.where(and(
-      eq(aiCreditTransactions.organizationId, organizationId),
-      eq(aiCreditTransactions.taskType, options.taskType)
-    )) as any;
+    conditions.push(eq(aiCreditTransactions.taskType, options.taskType));
   }
 
-  query = query.orderBy(desc(aiCreditTransactions.createdAt));
+  let query = db.select()
+    .from(aiCreditTransactions)
+    .where(and(...conditions))
+    .orderBy(desc(aiCreditTransactions.createdAt));
 
   if (options?.limit) {
     query = query.limit(options.limit) as any;

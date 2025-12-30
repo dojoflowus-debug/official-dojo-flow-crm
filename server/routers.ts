@@ -996,9 +996,9 @@ export const appRouter = router({
 
   // CRM Dashboard APIs
   dashboard: router({
-    stats: publicProcedure.query(async () => {
+    stats: protectedProcedure.query(async ({ ctx }) => {
       const { getDashboardStats } = await import("./db");
-      const stats = await getDashboardStats();
+      const stats = await getDashboardStats(ctx.currentOrganizationId);
       return stats || {
         total_students: 0,
         monthly_revenue: 0,
@@ -1007,15 +1007,19 @@ export const appRouter = router({
       };
     }),
     
-    getLeads: publicProcedure.query(async () => {
+    getLeads: protectedProcedure.query(async ({ ctx }) => {
       const { getDb } = await import("./db");
       const { leads } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
       
       const db = await getDb();
       if (!db) throw new Error('Database not available');
       
-      // Get all leads
-      const allLeads = await db.select().from(leads);
+      // Get leads filtered by organization for multi-tenancy
+      const orgId = ctx.currentOrganizationId;
+      const allLeads = orgId
+        ? await db.select().from(leads).where(eq(leads.organizationId, orgId))
+        : await db.select().from(leads);
       return allLeads;
     }),
   }),
@@ -1580,16 +1584,20 @@ export const appRouter = router({
   }),
   
   students: router({
-    list: publicProcedure
-      .query(async () => {
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         
-        // Get all students
-        const allStudents = await db.select().from(students);
+        // Get students filtered by organization for multi-tenancy
+        const orgId = ctx.currentOrganizationId;
+        const allStudents = orgId
+          ? await db.select().from(students).where(eq(students.organizationId, orgId))
+          : await db.select().from(students);
         return allStudents;
       }),
     

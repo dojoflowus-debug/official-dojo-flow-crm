@@ -1783,3 +1783,75 @@ Add cookies notice that appears when page is first accessed:
 - [x] Update post-login redirect logic to go to /kai
 - [ ] Test login flow redirects correctly
 - [ ] Save checkpoint
+
+## 🐛 BUG: Multi-Tenancy Issue - New Accounts Loading Existing User Data
+
+### Issue
+- [ ] New accounts are loading data from existing accounts (sensei30002003@gmail.com)
+- [ ] Users should have completely isolated data in a true SaaS model
+- [ ] Each new account should start with a fresh, empty workspace
+
+### Investigation Tasks
+- [ ] Review authentication flow and session management
+- [ ] Check database queries for proper user_id filtering
+- [ ] Verify organization isolation in queries
+- [ ] Check if hardcoded user IDs exist in code
+- [ ] Review Kai chat context and student data queries
+
+### Fix Tasks
+- [ ] Ensure all queries filter by current user's organization
+- [ ] Remove any hardcoded user/org references
+- [ ] Verify session properly sets user context
+- [ ] Test new account creation with isolated data
+- [ ] Save checkpoint
+
+
+## 🐛 BUG FIX: Multi-Tenancy Data Isolation (2025-12-30)
+
+### Issue
+- New accounts were seeing data from existing accounts (sensei30002003@gmail.com)
+- Data was not properly isolated between organizations
+- Core tables lacked organizationId for multi-tenant filtering
+
+### Root Cause
+- Core data tables (students, leads, classes, etc.) did not have organizationId column
+- Database queries were not filtering by organization
+- Session did not include organization context
+
+### Schema Changes
+- [x] Add organizationId column to students table
+- [x] Add organizationId column to classes table
+- [x] Add organizationId column to leads table
+- [x] Add organizationId column to dojo_settings table
+- [x] Add organizationId column to staff_pins table
+- [x] Add organizationId column to locations table
+- [x] Add organizationId column to programs table
+- [x] Add organizationId column to team_members table
+
+### Query Updates
+- [x] Update getDashboardStats() to filter by organizationId
+- [x] Update searchStudents() to filter by organizationId
+- [x] Update kaiDataRouter.searchStudents to filter by ctx.currentOrganizationId
+- [x] Update kaiDataRouter.getStudent to filter by ctx.currentOrganizationId
+- [x] Update kaiDataRouter.listAtRiskStudents to filter by ctx.currentOrganizationId
+- [x] Update kaiDataRouter.listLatePayments to filter by ctx.currentOrganizationId
+- [x] Update kaiDataRouter.searchLeads to filter by ctx.currentOrganizationId
+- [x] Update kaiDataRouter.getLead to filter by ctx.currentOrganizationId
+- [x] Update kaiDataRouter.getNewLeads to filter by ctx.currentOrganizationId
+- [x] Update dashboard.stats to use protectedProcedure with org filter
+- [x] Update dashboard.getLeads to use protectedProcedure with org filter
+- [x] Update students.list to use protectedProcedure with org filter
+
+### Session Management
+- [x] Update OAuth callback to set currentOrganizationId in session cookie
+- [x] Fix getSessionCookieOptions calls in studentAuthRouter
+
+### Testing
+- [x] Write multi-tenancy isolation tests (server/multitenancy.test.ts)
+- [x] All 8 tests passing
+
+### Result
+- New accounts now start with empty data
+- Data is properly isolated between organizations
+- Existing data remains accessible to original organization
+

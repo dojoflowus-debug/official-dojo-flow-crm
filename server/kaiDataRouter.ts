@@ -135,18 +135,25 @@ export const kaiDataRouter = router({
       if (!db) throw new Error("Database not initialized");
 
       const searchTerm = `%${input.query}%`;
+      
+      // Build conditions with organization filter for multi-tenancy
+      const orgId = ctx.currentOrganizationId;
+      const searchConditions = or(
+        like(students.firstName, searchTerm),
+        like(students.lastName, searchTerm),
+        like(students.email, searchTerm),
+        like(students.phone, searchTerm)
+      );
+      
+      // If user has an organization, filter by it
+      const whereCondition = orgId 
+        ? and(eq(students.organizationId, orgId), searchConditions)
+        : searchConditions;
 
       const results = await db
         .select()
         .from(students)
-        .where(
-          or(
-            like(students.firstName, searchTerm),
-            like(students.lastName, searchTerm),
-            like(students.email, searchTerm),
-            like(students.phone, searchTerm)
-          )
-        )
+        .where(whereCondition)
         .limit(input.limit)
         .orderBy(desc(students.updatedAt));
 
@@ -164,14 +171,19 @@ export const kaiDataRouter = router({
   getStudent: protectedProcedure
     .input(z.object({ studentId: z.number() }))
     .output(studentCardPayload.nullable())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
+
+      const orgId = ctx.currentOrganizationId;
+      const whereCondition = orgId
+        ? and(eq(students.id, input.studentId), eq(students.organizationId, orgId))
+        : eq(students.id, input.studentId);
 
       const result = await db
         .select()
         .from(students)
-        .where(eq(students.id, input.studentId))
+        .where(whereCondition)
         .limit(1);
 
       return result[0] || null;
@@ -193,20 +205,25 @@ export const kaiDataRouter = router({
         totalCount: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
+
+      const orgId = ctx.currentOrganizationId;
+      const statusCondition = or(
+        eq(students.status, "Inactive"),
+        eq(students.status, "On Hold")
+      );
+      
+      const whereCondition = orgId
+        ? and(eq(students.organizationId, orgId), statusCondition)
+        : statusCondition;
 
       // Students who are inactive or on hold
       const results = await db
         .select()
         .from(students)
-        .where(
-          or(
-            eq(students.status, "Inactive"),
-            eq(students.status, "On Hold")
-          )
-        )
+        .where(whereCondition)
         .orderBy(desc(students.updatedAt))
         .limit(50);
 
@@ -233,16 +250,22 @@ export const kaiDataRouter = router({
         totalCount: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
+
+      const orgId = ctx.currentOrganizationId;
+      const statusCondition = like(students.membershipStatus, "%Overdue%");
+      const whereCondition = orgId
+        ? and(eq(students.organizationId, orgId), statusCondition)
+        : statusCondition;
 
       // Placeholder: Return students with "Overdue" membership status
       // In production, this would query a billing/payments table
       const results = await db
         .select()
         .from(students)
-        .where(like(students.membershipStatus, "%Overdue%"))
+        .where(whereCondition)
         .orderBy(desc(students.updatedAt))
         .limit(50);
 
@@ -269,23 +292,27 @@ export const kaiDataRouter = router({
         totalCount: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
       const searchTerm = `%${input.query}%`;
+      const orgId = ctx.currentOrganizationId;
+      const searchConditions = or(
+        like(leads.firstName, searchTerm),
+        like(leads.lastName, searchTerm),
+        like(leads.email, searchTerm),
+        like(leads.phone, searchTerm)
+      );
+      
+      const whereCondition = orgId
+        ? and(eq(leads.organizationId, orgId), searchConditions)
+        : searchConditions;
 
       const results = await db
         .select()
         .from(leads)
-        .where(
-          or(
-            like(leads.firstName, searchTerm),
-            like(leads.lastName, searchTerm),
-            like(leads.email, searchTerm),
-            like(leads.phone, searchTerm)
-          )
-        )
+        .where(whereCondition)
         .limit(input.limit)
         .orderBy(desc(leads.updatedAt));
 
@@ -301,14 +328,19 @@ export const kaiDataRouter = router({
   getLead: protectedProcedure
     .input(z.object({ leadId: z.number() }))
     .output(leadCardPayload.nullable())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
+
+      const orgId = ctx.currentOrganizationId;
+      const whereCondition = orgId
+        ? and(eq(leads.id, input.leadId), eq(leads.organizationId, orgId))
+        : eq(leads.id, input.leadId);
 
       const result = await db
         .select()
         .from(leads)
-        .where(eq(leads.id, input.leadId))
+        .where(whereCondition)
         .limit(1);
 
       return result[0] || null;
@@ -330,17 +362,23 @@ export const kaiDataRouter = router({
         totalCount: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - input.days);
 
+      const orgId = ctx.currentOrganizationId;
+      const statusCondition = eq(leads.status, "New Lead");
+      const whereCondition = orgId
+        ? and(eq(leads.organizationId, orgId), statusCondition)
+        : statusCondition;
+
       const results = await db
         .select()
         .from(leads)
-        .where(eq(leads.status, "New Lead"))
+        .where(whereCondition)
         .orderBy(desc(leads.createdAt))
         .limit(50);
 

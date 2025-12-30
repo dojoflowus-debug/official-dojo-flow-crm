@@ -43,6 +43,8 @@ export type InsertUser = typeof users.$inferInsert;
  */
 export const staffPins = mysqlTable("staff_pins", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this staff PIN belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   /** Staff member name for identification */
   name: varchar("name", { length: 255 }).notNull(),
   /** Hashed PIN (bcrypt) - never store plain text */
@@ -64,6 +66,8 @@ export type InsertStaffPin = typeof staffPins.$inferInsert;
  */
 export const students = mysqlTable("students", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this student belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   firstName: varchar("firstName", { length: 255 }).notNull(),
   lastName: varchar("lastName", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }),
@@ -99,6 +103,8 @@ export type InsertStudent = typeof students.$inferInsert;
  */
 export const classes = mysqlTable("classes", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this class belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   name: varchar("name", { length: 255 }).notNull(),
   time: varchar("time", { length: 50 }).notNull(),
   enrolled: int("enrolled").default(0).notNull(),
@@ -120,6 +126,8 @@ export type InsertClass = typeof classes.$inferInsert;
  */
 export const kioskCheckIns = mysqlTable("kiosk_check_ins", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this check-in belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   studentId: int("studentId"),
   studentName: varchar("studentName", { length: 255 }).notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
@@ -133,6 +141,8 @@ export type InsertKioskCheckIn = typeof kioskCheckIns.$inferInsert;
  */
 export const kioskVisitors = mysqlTable("kiosk_visitors", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this visitor belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }),
@@ -147,6 +157,8 @@ export type InsertKioskVisitor = typeof kioskVisitors.$inferInsert;
  */
 export const kioskWaivers = mysqlTable("kiosk_waivers", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this waiver belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }),
   signed: int("signed").default(1).notNull(),
@@ -161,6 +173,8 @@ export type InsertKioskWaiver = typeof kioskWaivers.$inferInsert;
  */
 export const leads = mysqlTable("leads", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this lead belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   firstName: varchar("firstName", { length: 255 }).notNull(),
   lastName: varchar("lastName", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }),
@@ -206,6 +220,8 @@ export type InsertLead = typeof leads.$inferInsert;
  */
 export const leadSources = mysqlTable("lead_sources", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this lead source belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   /** Unique identifier for the source (e.g., 'website_form', 'chat_widget') */
   sourceKey: varchar("sourceKey", { length: 100 }).notNull().unique(),
   /** Display name for the source */
@@ -229,6 +245,8 @@ export type InsertLeadSource = typeof leadSources.$inferInsert;
  */
 export const dojoSettings = mysqlTable("dojo_settings", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this settings belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   
   // Step 1: Industry & Template
   industry: mysqlEnum("industry", ["martial_arts", "fitness", "yoga", "pilates", "other"]),
@@ -352,6 +370,8 @@ export type InsertDojoSettings = typeof dojoSettings.$inferInsert;
  */
 export const locations = mysqlTable("locations", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this location belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   name: varchar("name", { length: 255 }).notNull(),
   address: varchar("address", { length: 500 }),
   insideFacility: int("insideFacility").default(0),
@@ -377,6 +397,8 @@ export type InsertLocation = typeof locations.$inferInsert;
  */
 export const programs = mysqlTable("programs", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this program belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   
@@ -404,6 +426,8 @@ export type InsertProgram = typeof programs.$inferInsert;
  */
 export const teamMembers = mysqlTable("team_members", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this team member belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   name: varchar("name", { length: 255 }).notNull(),
   role: mysqlEnum("role", ["owner", "manager", "instructor", "front_desk", "coach", "trainer", "assistant"]).notNull(),
   email: varchar("email", { length: 320 }),
@@ -430,6 +454,8 @@ export type InsertTeamMember = typeof teamMembers.$inferInsert;
  */
 export const memberJourneyConfig = mysqlTable("member_journey_config", {
   id: int("id").autoincrement().primaryKey(),
+  /** Organization this config belongs to (for multi-tenancy) */
+  organizationId: int("organizationId"),
   
   // Lead Handling
   leadGreeting: text("leadGreeting"),
