@@ -67,42 +67,42 @@ export default function ForSchools() {
       title: "Complete Student Profiles",
       description: "Track belt ranks, attendance history, achievements, emergency contacts, and custom notes. Every student's journey documented in one place.",
       benefits: ["Belt progression tracking", "Photo ID management", "Emergency contact access", "Custom notes & tags"],
-      image: "/martial-arts-class.jpg"
+      image: "/schools/student-profiles.jpg"
     },
     {
       icon: Calendar,
       title: "Smart Class Scheduling",
       description: "Create recurring class schedules, manage belt testing events, and handle private lessons. Students can self-book available slots.",
       benefits: ["Drag-and-drop scheduling", "Capacity management", "Waitlist automation", "Google Calendar sync"],
-      image: "/taekwondo-class.jpg"
+      image: "/schools/class-scheduling.jpg"
     },
     {
       icon: GraduationCap,
       title: "Belt Testing & Promotions",
       description: "Organize belt tests, track eligibility requirements, and celebrate promotions. Automated notifications keep families informed.",
       benefits: ["Eligibility tracking", "Test scheduling", "Parent notifications", "Achievement certificates"],
-      image: "/belt-ceremony.jpg"
+      image: "/schools/belt-ceremony.jpg"
     },
     {
       icon: CreditCard,
       title: "Automated Billing",
       description: "Set up monthly memberships, class packs, or drop-in rates. Stripe integration handles payments, failed card recovery, and invoicing.",
       benefits: ["Recurring payments", "Failed payment recovery", "Family discounts", "Instant invoicing"],
-      image: "/martial-arts-reception.jpg"
+      image: "/schools/automated-billing.jpg"
     },
     {
       icon: MessageSquare,
       title: "Kai AI Assistant",
       description: "Your 24/7 front desk assistant answers parent questions, schedules trial classes, sends reminders, and handles routine communication.",
       benefits: ["Instant responses", "Trial class booking", "Absence follow-up", "FAQ handling"],
-      image: "/instructor-teaching.jpeg"
+      image: "/schools/kai-ai-assistant.jpg"
     },
     {
       icon: BarChart3,
       title: "School Health Dashboard",
       description: "See your school's vital signs at a glance: retention rates, revenue trends, attendance patterns, and student progress metrics.",
       benefits: ["Retention analytics", "Revenue forecasting", "Attendance reports", "Growth tracking"],
-      image: "/kids-martial-arts.jpeg"
+      image: "/schools/analytics-dashboard.jpg"
     }
   ];
 
@@ -182,7 +182,7 @@ export default function ForSchools() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="/martial-arts-class.jpg" 
+            src="/schools/martial-arts-class-hero.jpg" 
             alt="Martial arts class in action" 
             className="w-full h-full object-cover opacity-20"
           />
