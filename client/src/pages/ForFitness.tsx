@@ -69,37 +69,43 @@ export default function ForFitness() {
       icon: Monitor,
       title: "Self-Service Kiosk",
       description: "Reduce front desk congestion with a sleek check-in kiosk. Members scan in, sign waivers, book classes, and update payment info—all without staff assistance.",
-      benefits: ["QR code check-in", "Digital waiver signing", "Class booking", "Payment updates"]
+      benefits: ["QR code check-in", "Digital waiver signing", "Class booking", "Payment updates"],
+      image: "/fitness-reception.jpg"
     },
     {
       icon: Zap,
       title: "Kai AI Lead Response",
       description: "Every lead gets an instant, personalized response. Kai answers questions, schedules tours, sends pricing, and follows up until they convert or opt out.",
-      benefits: ["Instant response (< 30 seconds)", "Tour scheduling", "Pricing delivery", "Automated follow-up sequences"]
+      benefits: ["Instant response (< 30 seconds)", "Tour scheduling", "Pricing delivery", "Automated follow-up sequences"],
+      image: "/fitness-personal-training.jpg"
     },
     {
       icon: Calendar,
       title: "Smart Class Management",
       description: "Create class schedules, manage capacity, handle waitlists, and reduce no-shows with automated reminders. Members book via app, kiosk, or web.",
-      benefits: ["Capacity management", "Waitlist automation", "No-show tracking", "Multi-channel booking"]
+      benefits: ["Capacity management", "Waitlist automation", "No-show tracking", "Multi-channel booking"],
+      image: "/fitness-group-class.webp"
     },
     {
       icon: LineChart,
       title: "Real-Time Analytics",
       description: "See your gym's vital signs instantly: daily check-ins, class attendance, revenue trends, member growth, and retention rates—all in one dashboard.",
-      benefits: ["Live attendance tracking", "Revenue dashboards", "Retention analytics", "Custom reports"]
+      benefits: ["Live attendance tracking", "Revenue dashboards", "Retention analytics", "Custom reports"],
+      image: "/fitness-dashboard.jpg"
     },
     {
       icon: UserCheck,
       title: "Member Retention AI",
       description: "DojoFlow analyzes member behavior to predict who's at risk of canceling. Get alerts and automated re-engagement campaigns before it's too late.",
-      benefits: ["Churn prediction", "Automated outreach", "Win-back campaigns", "Engagement scoring"]
+      benefits: ["Churn prediction", "Automated outreach", "Win-back campaigns", "Engagement scoring"],
+      image: "/fitness-coach-class.jpeg"
     },
     {
       icon: CreditCard,
       title: "Automated Billing",
       description: "Handle memberships, class packs, personal training packages, and retail sales. Stripe integration manages recurring payments and failed card recovery.",
-      benefits: ["Recurring billing", "Failed payment recovery", "Package management", "POS integration"]
+      benefits: ["Recurring billing", "Failed payment recovery", "Package management", "POS integration"],
+      image: "/fitness-technology.jpg"
     }
   ];
 
@@ -178,8 +184,17 @@ export default function ForFitness() {
   return (
     <MainLayout transparentHeader>
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2]">
-        <div className="container mx-auto px-6 lg:px-8">
+      <section className="pt-32 pb-20 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2] relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/fitness-gym-interior.jpg" 
+            alt="Modern fitness facility" 
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#bce8cc]/80 to-[#b0e2c2]/90" />
+        </div>
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full text-sm font-medium text-gray-700 mb-8">
               <Dumbbell className="w-4 h-4 text-red-600" />
@@ -288,10 +303,16 @@ export default function ForFitness() {
               </ul>
             </div>
             <div className="relative">
-              <div className="aspect-[3/4] rounded-3xl bg-gradient-to-br from-red-600/20 to-orange-600/20 border border-red-500/30 flex items-center justify-center">
-                <div className="text-center">
-                  <Monitor className="w-32 h-32 text-red-400/50 mx-auto mb-4" />
-                  <p className="text-gray-400">Kiosk Interface Preview</p>
+              <div className="aspect-[3/4] rounded-3xl overflow-hidden border border-red-500/30 shadow-2xl">
+                <img 
+                  src="/fitness-reception.jpg" 
+                  alt="Modern gym reception and check-in area" 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <p className="text-white font-semibold text-lg">Self-Service Kiosk</p>
+                  <p className="text-gray-300 text-sm">Streamlined member check-in</p>
                 </div>
               </div>
             </div>
@@ -334,8 +355,12 @@ export default function ForFitness() {
                   </ul>
                 </div>
                 <div className={`${index % 2 === 1 ? 'md:order-1' : ''}`}>
-                  <div className="aspect-video rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 border border-red-100 flex items-center justify-center">
-                    <feature.icon className="w-24 h-24 text-red-200" />
+                  <div className="aspect-video rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title} 
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                 </div>
               </div>

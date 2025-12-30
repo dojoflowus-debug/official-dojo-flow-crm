@@ -1496,3 +1496,25 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add footer to MainLayout for consistent site-wide footer
 - [x] Test navigation flow on all pages
 - [x] Save checkpoint
+
+
+## 🖼️ Replace Placeholder Images on Audience Pages
+
+### Task
+- [ ] Identify placeholder images on ForSchools, ForFitness, ForStudios pages
+- [ ] Search for professional martial arts school images
+- [ ] Search for professional fitness facility images
+- [ ] Search for professional yoga/dance studio images
+- [ ] Download and save images to public folder
+- [ ] Update ForSchools.tsx with real images
+- [ ] Update ForFitness.tsx with real images
+- [ ] Update ForStudios.tsx with real images
+- [ ] Save checkpoint
+
+## 📸 Add Photos to Fitness Studio Page
+
+- [x] Search for professional fitness studio images
+- [x] Add hero section image
+- [x] Add feature section images
+- [x] Update ForFitness.tsx with new images
+- [ ] Save checkpoint
