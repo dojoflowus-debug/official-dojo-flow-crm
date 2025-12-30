@@ -1518,3 +1518,29 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add feature section images
 - [x] Update ForFitness.tsx with new images
 - [ ] Save checkpoint
+
+## 🎨 Pricing Page Visual Fixes (2025-12-30)
+
+### Must Fix
+- [ ] Add top padding under navbar (pt-28 md:pt-32) to prevent header cutoff
+- [ ] Increase vertical spacing under hero title (24-32px between title & subtitle, 20-24px between subtitle & toggle)
+- [ ] Enlarge active pricing card with scale(1.04), stronger glow, and subtle animation
+- [ ] Improve separation between pricing and credits section (gradient background or darker band)
+
+### Nice-to-Have
+- [ ] Animate pricing card hover effects
+- [ ] Add subtle gradient to "Need More Credits" block
+- [ ] Lighten footer visual noise (reduce orb opacity, increase section padding)
+- [ ] Add "Trusted by growing schools and studios" line above pricing cards
+- [ ] Add icons to "How Credits Work" section headers
+- [ ] Save checkpoint
+
+## ✅ Pricing Page Visual Fixes - COMPLETED (2025-12-30)
+- [x] Add top padding under navbar (pt-28 md:pt-32) to prevent header cutoff
+- [x] Increase vertical spacing under hero title (24-32px between title & subtitle, 20-24px between subtitle & toggle)
+- [x] Enlarge active pricing card with scale(1.04), stronger glow, and subtle animation
+- [x] Improve separation between pricing and credits section (gradient background band)
+- [x] Add "Trusted by growing schools and studios" line above pricing cards
+- [x] Animate pricing card hover effects (hover:-translate-y-1)
+- [x] Add subtle gradient to "Need More Credits" block
+- [x] Larger price display with smaller /month text

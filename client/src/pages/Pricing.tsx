@@ -108,14 +108,21 @@ export function Pricing() {
     <MainLayout>
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         {/* Header */}
-        <div className="container py-12 text-center">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">
-            Choose Your DojoFlow Plan
-          </h1>
-          <div className="max-w-2xl mx-auto mb-8">
-            <p className="text-xl text-muted-foreground mb-4">
-              All plans include monthly AI credits. Upgrade anytime.
+        <section className="pt-28 md:pt-32">
+          <div className="container text-center">
+            {/* Trust Line */}
+            <p className="text-sm text-muted-foreground/80 mb-6 tracking-wide uppercase">
+              Trusted by growing schools and studios across the country
             </p>
+            
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+              Choose Your DojoFlow Plan
+            </h1>
+            <div className="max-w-2xl mx-auto mb-6">
+              <p className="text-xl text-muted-foreground">
+                All plans include monthly AI credits. Upgrade anytime.
+              </p>
+            </div>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -129,33 +136,33 @@ export function Pricing() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
 
-          {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-2 p-1 bg-muted rounded-lg mb-12">
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                billingCycle === 'monthly'
-                  ? 'bg-background shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingCycle('annual')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                billingCycle === 'annual'
-                  ? 'bg-background shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Annual
-              <Badge variant="secondary" className="ml-2">Save 20%</Badge>
-            </button>
+            {/* Billing Toggle */}
+            <div className="inline-flex items-center gap-2 p-1 bg-muted rounded-lg mt-8 mb-12">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                  billingCycle === 'monthly'
+                    ? 'bg-background shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('annual')}
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                  billingCycle === 'annual'
+                    ? 'bg-background shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Annual
+                <Badge variant="secondary" className="ml-2">Save 20%</Badge>
+              </button>
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* Plan Cards */}
         <div className="container pb-16">
@@ -169,10 +176,10 @@ export function Pricing() {
               return (
                 <Card
                   key={plan.id}
-                  className={`relative flex flex-col bg-gradient-to-br ${getPlanColor(plan.slug)} ${
-                    isPopular ? 'ring-2 ring-purple-500 shadow-lg scale-105' : ''
+                  className={`relative flex flex-col bg-gradient-to-br ${getPlanColor(plan.slug)} transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
+                    isPopular ? 'ring-2 ring-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.4)] scale-[1.04] z-10' : ''
                   } ${
-                    isElite ? 'ring-2 ring-amber-500 shadow-xl scale-[1.02]' : ''
+                    isElite ? 'ring-2 ring-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.3)] scale-[1.02]' : ''
                   }`}
                 >
                   {isPopular && (
@@ -197,10 +204,10 @@ export function Pricing() {
                     <div className="flex items-baseline gap-1">
                       {plan.monthlyPrice > 0 ? (
                         <>
-                          <span className="text-4xl font-bold">
+                          <span className="text-5xl font-bold">
                             {formatPrice(plan.monthlyPrice)}
                           </span>
-                          <span className="text-muted-foreground">/month</span>
+                          <span className="text-sm text-muted-foreground">/month</span>
                         </>
                       ) : (
                         <span className="text-2xl font-bold">Custom Pricing</span>
@@ -272,9 +279,12 @@ export function Pricing() {
         </div>
 
         {/* Credit Top-Ups Section */}
-        <div className="container pb-16">
-          <div className="max-w-4xl mx-auto">
-            <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border-indigo-500/20">
+        <div className="relative py-20 mt-8">
+          {/* Background gradient band */}
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-950/30 via-indigo-950/40 to-background" />
+          <div className="container relative">
+            <div className="max-w-4xl mx-auto">
+              <Card className="bg-gradient-to-br from-indigo-500/15 to-purple-600/15 border-indigo-500/30 shadow-xl">
               <CardHeader>
                 <CardTitle className="text-2xl">Need More AI Credits?</CardTitle>
                 <CardDescription>
@@ -301,7 +311,8 @@ export function Pricing() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+              </Card>
+            </div>
           </div>
         </div>
 
