@@ -292,19 +292,19 @@ export default function PublicLanding() {
       quote: "DojoFlow transformed my school. Kai handles 80% of parent questions, and I finally have time to focus on teaching. Revenue is up 40% since we started.",
       author: "Master Chen",
       role: "Owner, Dragon Martial Arts",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Chen"
+      avatar: "/images/testimonials/avatar-1.jpg"
     },
     {
       quote: "The billing automation alone saved me 10 hours per week. No more chasing payments or manual invoicing. It just works.",
       author: "Sensei Rodriguez",
       role: "Head Instructor, Elite Karate Academy",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rodriguez"
+      avatar: "/images/testimonials/avatar-2.jpg"
     },
     {
       quote: "I was skeptical about AI, but Kai is incredible. Parents love getting instant answers at 11 PM. My phone finally stopped ringing during dinner.",
       author: "Coach Williams",
       role: "Founder, Williams BJJ",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Williams"
+      avatar: "/images/testimonials/avatar-3.jpg"
     }
   ];
 
@@ -451,20 +451,14 @@ export default function PublicLanding() {
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
       >
-        {/* Cinematic Hero Video Background */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: 'center' }}
-        >
-          <source src="/hero-video.mp4" type="video/mp4" />
-        </video>
+        {/* Cinematic Hero Background Image */}
+        <div 
+          className="absolute inset-0 w-full h-full bg-cover bg-center"
+          style={{ backgroundImage: 'url(/images/hero/hero-background.jpg)' }}
+        />
         
         {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/85" />
         
         {/* Additional vignette for depth */}
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/30 to-black/70 pointer-events-none" />
@@ -1001,10 +995,15 @@ export default function PublicLanding() {
                 </a>
               </div>
             </div>
-            {/* Image Placeholder */}
+            {/* Image */}
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl flex items-center justify-center">
-                <Users className="w-24 h-24 text-white/20" />
+              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden">
+                <img 
+                  src="/images/audience/martial-arts-school.jpg" 
+                  alt="Children practicing martial arts in dojo" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
             </div>
           </div>
@@ -1015,10 +1014,15 @@ export default function PublicLanding() {
       <section id="facilities" className="py-24 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2] scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
-            {/* Image Placeholder */}
+            {/* Image */}
             <div className="relative order-2 md:order-1">
-              <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl flex items-center justify-center">
-                <BarChart3 className="w-24 h-24 text-white/20" />
+              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden">
+                <img 
+                  src="/images/audience/fitness-facility.jpg" 
+                  alt="Personal training session with battle ropes" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
             </div>
             {/* Text Content */}
@@ -1077,10 +1081,15 @@ export default function PublicLanding() {
                 </a>
               </div>
             </div>
-            {/* Image Placeholder */}
+            {/* Image */}
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl flex items-center justify-center">
-                <Sparkles className="w-24 h-24 text-white/20" />
+              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden">
+                <img 
+                  src="/images/audience/yoga-studio.jpg" 
+                  alt="Yoga class in serene studio" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
             </div>
           </div>

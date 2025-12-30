@@ -1353,4 +1353,46 @@ Add cookies notice that appears when page is first accessed:
 ## 🎨 Shrink "Hi, I'm Kai." Heading Size (2025-12-29)
 - [x] Reduce "Hi, I'm Kai." heading by one size step
 - [x] Test visual balance
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+
+## 🖼️ Replace All Empty Image Placeholders with Premium Photos (2025-12-29)
+
+### Global Image Requirements
+- [x] Use realistic photography (no cartoons)
+- [x] Apply subtle dark overlay on images in dark sections
+- [x] Maintain consistent cinematic contrast, clean, modern look
+- [x] Proper cropping (no cut-off heads or faces)
+- [x] Match corner radius and shadow depth of existing UI
+- [x] Optimize with WebP/AVIF format (JPG used, WebP conversion attempted)
+- [x] Add loading="lazy" for below-the-fold images
+
+### Hero Section
+- [x] Replace hero background image/video with modern training environment
+- [x] Ensure dark, premium tone that supports multi-audience message
+
+### Audience Sections (3 Large Photo Blocks)
+- [x] Replace martial arts schools section image (kids standing at attention in dojo)
+- [x] Replace fitness facilities section image (HIIT/personal training session)
+- [x] Replace studios section image (yoga class with 4-10 people)
+
+### Feature Grid
+- [ ] Add contextual images to feature cards OR improve icon consistency (deferred - icons look good)
+- [ ] Consider small landscape thumbnails for each feature (deferred - not critical)
+
+### Testimonials Section
+- [x] Add circular headshots for testimonials (diverse, professional, friendly)
+- [x] Add slight border/glow consistent with dark theme (existing styling works well)
+
+### Pricing Section
+- [ ] Add subtle gradients or abstract shapes to pricing cards (deferred - current design is clean)
+- [ ] Keep pricing readable and clean
+
+### Footer
+- [ ] Add barely visible soft gradient or faint particles to footer background (deferred - current footer looks good)
+
+### Image Organization
+- [x] Create /public/images/hero/ folder
+- [x] Create /public/images/audience/ folder
+- [x] Create /public/images/testimonials/ folder
+- [x] Create /public/images/features/ folder
