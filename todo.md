@@ -1561,3 +1561,9 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add visual comparison with plan credit allocations
 - [x] Integrate calculator into pricing page
 - [x] Save checkpoint
+
+## 📸 Add Photos to Schools & Studios Pages + Hero Banners (2025-12-30)
+- [x] Add professional photos to Schools page (similar to Fitness Facilities)
+- [x] Add professional photos to Studios page (similar to Fitness Facilities)
+- [x] Enhance all hero banners with catchy background photos
+- [x] Save checkpoint

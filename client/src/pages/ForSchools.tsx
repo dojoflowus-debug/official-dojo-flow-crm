@@ -66,37 +66,43 @@ export default function ForSchools() {
       icon: Users,
       title: "Complete Student Profiles",
       description: "Track belt ranks, attendance history, achievements, emergency contacts, and custom notes. Every student's journey documented in one place.",
-      benefits: ["Belt progression tracking", "Photo ID management", "Emergency contact access", "Custom notes & tags"]
+      benefits: ["Belt progression tracking", "Photo ID management", "Emergency contact access", "Custom notes & tags"],
+      image: "/martial-arts-class.jpg"
     },
     {
       icon: Calendar,
       title: "Smart Class Scheduling",
       description: "Create recurring class schedules, manage belt testing events, and handle private lessons. Students can self-book available slots.",
-      benefits: ["Drag-and-drop scheduling", "Capacity management", "Waitlist automation", "Google Calendar sync"]
+      benefits: ["Drag-and-drop scheduling", "Capacity management", "Waitlist automation", "Google Calendar sync"],
+      image: "/taekwondo-class.jpg"
     },
     {
       icon: GraduationCap,
       title: "Belt Testing & Promotions",
       description: "Organize belt tests, track eligibility requirements, and celebrate promotions. Automated notifications keep families informed.",
-      benefits: ["Eligibility tracking", "Test scheduling", "Parent notifications", "Achievement certificates"]
+      benefits: ["Eligibility tracking", "Test scheduling", "Parent notifications", "Achievement certificates"],
+      image: "/belt-ceremony.jpg"
     },
     {
       icon: CreditCard,
       title: "Automated Billing",
       description: "Set up monthly memberships, class packs, or drop-in rates. Stripe integration handles payments, failed card recovery, and invoicing.",
-      benefits: ["Recurring payments", "Failed payment recovery", "Family discounts", "Instant invoicing"]
+      benefits: ["Recurring payments", "Failed payment recovery", "Family discounts", "Instant invoicing"],
+      image: "/martial-arts-reception.jpg"
     },
     {
       icon: MessageSquare,
       title: "Kai AI Assistant",
       description: "Your 24/7 front desk assistant answers parent questions, schedules trial classes, sends reminders, and handles routine communication.",
-      benefits: ["Instant responses", "Trial class booking", "Absence follow-up", "FAQ handling"]
+      benefits: ["Instant responses", "Trial class booking", "Absence follow-up", "FAQ handling"],
+      image: "/instructor-teaching.jpeg"
     },
     {
       icon: BarChart3,
       title: "School Health Dashboard",
       description: "See your school's vital signs at a glance: retention rates, revenue trends, attendance patterns, and student progress metrics.",
-      benefits: ["Retention analytics", "Revenue forecasting", "Attendance reports", "Growth tracking"]
+      benefits: ["Retention analytics", "Revenue forecasting", "Attendance reports", "Growth tracking"],
+      image: "/kids-martial-arts.jpeg"
     }
   ];
 
@@ -172,8 +178,17 @@ export default function ForSchools() {
   return (
     <MainLayout transparentHeader>
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc]">
-        <div className="container mx-auto px-6 lg:px-8">
+      <section className="pt-32 pb-20 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc] relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/martial-arts-class.jpg" 
+            alt="Martial arts class in action" 
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#c8eed5]/80 to-[#bce8cc]/90" />
+        </div>
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full text-sm font-medium text-gray-700 mb-8">
               <GraduationCap className="w-4 h-4 text-red-600" />
@@ -242,8 +257,8 @@ export default function ForSchools() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-24 bg-gray-50 scroll-reveal">
+      {/* Features Deep Dive */}
+      <section className="py-24 bg-gradient-to-b from-gray-50 to-white scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
@@ -253,28 +268,40 @@ export default function ForSchools() {
               Purpose-built features for martial arts schools, from white belt to black belt operations.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow">
-                  <div className="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center mb-6">
-                    <Icon className="w-7 h-7 text-red-600" />
+          <div className="space-y-16 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                className={`grid md:grid-cols-2 gap-12 items-center ${
+                  index % 2 === 1 ? 'md:flex-row-reverse' : ''
+                }`}
+              >
+                <div className={index % 2 === 1 ? 'md:order-2' : ''}>
+                  <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-6">
+                    <feature.icon className="w-8 h-8 text-red-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 mb-4">{feature.description}</p>
-                  <ul className="space-y-2">
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4">{feature.title}</h3>
+                  <p className="text-lg text-gray-600 mb-6">{feature.description}</p>
+                  <ul className="space-y-3">
                     {feature.benefits.map((benefit, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-gray-500">
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        {benefit}
+                      <li key={i} className="flex items-center gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-700">{benefit}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-              );
-            })}
+                <div className={`${index % 2 === 1 ? 'md:order-1' : ''}`}>
+                  <div className="aspect-video rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title} 
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -75,37 +75,43 @@ export default function ForStudios() {
       icon: Calendar,
       title: "Elegant Class Booking",
       description: "A booking experience as refined as your studio. Clients browse schedules, book classes, and manage their packs from any device with a clean, intuitive interface.",
-      benefits: ["Mobile-first design", "Real-time availability", "Waitlist management", "Easy rescheduling"]
+      benefits: ["Mobile-first design", "Real-time availability", "Waitlist management", "Easy rescheduling"],
+      image: "/yoga-studio-interior.jpg"
     },
     {
       icon: CreditCard,
       title: "Flexible Memberships & Packs",
       description: "Unlimited memberships, 10-class packs, drop-in rates, private sessions—DojoFlow handles any pricing model with automatic renewals and expiration tracking.",
-      benefits: ["Class pack tracking", "Auto-renewals", "Expiration alerts", "Family accounts"]
+      benefits: ["Class pack tracking", "Auto-renewals", "Expiration alerts", "Family accounts"],
+      image: "/yoga-studio-modern.jpg"
     },
     {
       icon: Users,
       title: "Instructor Management",
       description: "Track instructor availability, handle sub requests, manage payroll hours, and keep your schedule running smoothly even when life happens.",
-      benefits: ["Availability calendars", "Sub request system", "Hour tracking", "Performance insights"]
+      benefits: ["Availability calendars", "Sub request system", "Hour tracking", "Performance insights"],
+      image: "/ballet-class.jpg"
     },
     {
       icon: MessageSquare,
       title: "Kai AI Concierge",
       description: "Your always-on studio assistant answers questions, recommends classes, sends reminders, and keeps clients engaged with personalized communication.",
-      benefits: ["Instant responses", "Class recommendations", "Reminder sequences", "Re-engagement campaigns"]
+      benefits: ["Instant responses", "Class recommendations", "Reminder sequences", "Re-engagement campaigns"],
+      image: "/pilates-reformer-class.jpg"
     },
     {
       icon: Heart,
       title: "Client Relationship Tools",
       description: "Track client preferences, celebrate milestones, send birthday messages, and build the kind of relationships that keep clients coming back for years.",
-      benefits: ["Preference tracking", "Milestone celebrations", "Birthday automation", "Attendance history"]
+      benefits: ["Preference tracking", "Milestone celebrations", "Birthday automation", "Attendance history"],
+      image: "/dance-class-kids.jpg"
     },
     {
       icon: BarChart3,
       title: "Studio Analytics",
       description: "Understand your business with clear insights: class popularity, instructor performance, revenue trends, and client retention—all in one dashboard.",
-      benefits: ["Class popularity", "Revenue tracking", "Retention metrics", "Instructor analytics"]
+      benefits: ["Class popularity", "Revenue tracking", "Retention metrics", "Instructor analytics"],
+      image: "/barre-class.jpg"
     }
   ];
 
@@ -189,8 +195,17 @@ export default function ForStudios() {
   return (
     <MainLayout transparentHeader>
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-[#b0e2c2] to-[#a4dcb8]">
-        <div className="container mx-auto px-6 lg:px-8">
+      <section className="pt-32 pb-20 bg-gradient-to-b from-[#b0e2c2] to-[#a4dcb8] relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/boutique-fitness-studio.jpg" 
+            alt="Boutique fitness studio interior" 
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#b0e2c2]/80 to-[#a4dcb8]/90" />
+        </div>
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full text-sm font-medium text-gray-700 mb-8">
               <Heart className="w-4 h-4 text-red-600" />
@@ -360,8 +375,12 @@ export default function ForStudios() {
                   </ul>
                 </div>
                 <div className={`${index % 2 === 1 ? 'md:order-1' : ''}`}>
-                  <div className="aspect-video rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 border border-red-100 flex items-center justify-center">
-                    <feature.icon className="w-24 h-24 text-red-200" />
+                  <div className="aspect-video rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title} 
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                 </div>
               </div>

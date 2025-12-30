@@ -48,6 +48,14 @@ export default function PublicHome() {
 
       {/* Hero Section - With Kai Command Screenshot */}
       <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden py-20">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/hero-martial-arts.jpg" 
+            alt="Martial arts training" 
+            className="w-full h-full object-cover opacity-15"
+          />
+        </div>
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
           <div 
