@@ -1855,3 +1855,24 @@ Add cookies notice that appears when page is first accessed:
 - Data is properly isolated between organizations
 - Existing data remains accessible to original organization
 
+
+
+## 🐛 BUG: Login with Different Account Shows Previous User's Data
+
+### Issue
+- [x] User logs in with different account (solbittech@gmail.com)
+- [x] Still sees sensei30002003@gmail.com account data
+- [x] Session not properly cleared when switching accounts
+
+### Root Cause Found
+- [x] ownerAuth.login mutation validated credentials but did NOT set session cookies
+- [x] Old Manus OAuth session cookie persisted from previous user
+- [x] auth.me read old cookie and returned old user's data
+
+### Fix Applied
+- [x] Updated ownerAuthRouter.login to set COOKIE_NAME (app_session_id) JWT token
+- [x] Updated ownerAuthRouter.login to set session cookie with org context
+- [x] Updated staffAuthRouter.login with same fix
+- [x] Updated studentAuthRouter.login with same fix
+- [x] Added ownerAuth.session.test.ts to verify fix
+- [x] All 6 tests passing

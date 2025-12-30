@@ -6,6 +6,8 @@ import { users, organizationUsers, organizations, students } from "../drizzle/sc
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { sdk } from "./_core/sdk";
 
 /**
  * Student/Parent Authentication Router
@@ -88,7 +90,17 @@ export const studentAuthRouter = router({
         });
       }
 
-      // Set session cookie
+      // Create session token and set cookies (critical for auth to work)
+      const openId = user.openId || `local_${user.id}`;
+      const sessionToken = await sdk.createSessionToken(openId, {
+        name: user.name || "",
+        expiresInMs: ONE_YEAR_MS,
+      });
+
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+      // Set session cookie with organization context
       const sessionData = {
         userId: user.id,
         email: user.email!,
@@ -98,7 +110,7 @@ export const studentAuthRouter = router({
         currentOrganizationId: orgMemberships.length === 1 ? orgMemberships[0].organizationId : null,
       };
 
-      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions(ctx.req));
+      ctx.res.cookie("session", JSON.stringify(sessionData), { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       return {
         success: true,

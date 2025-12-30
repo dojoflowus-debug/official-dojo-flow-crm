@@ -5,6 +5,9 @@ import bcrypt from "bcrypt";
 import { getDb } from "./db.js";
 import { users, verificationCodes, onboardingProgress, organizationUsers, organizations } from "../drizzle/schema.js";
 import { eq, and, gt } from "drizzle-orm";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { getSessionCookieOptions } from "./_core/cookies.js";
+import { sdk } from "./_core/sdk.js";
 
 /**
  * Owner Authentication Router
@@ -206,7 +209,7 @@ export const ownerAuthRouter = router({
         code: z.string().length(6).optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       
@@ -293,6 +296,28 @@ export const ownerAuthRouter = router({
         .limit(1);
 
       const hasOrganization = orgMemberships.length > 0;
+      const currentOrganizationId = hasOrganization ? orgMemberships[0].organizationId : null;
+
+      // Create session token and set cookies (critical for auth to work)
+      // Use openId if available, otherwise create a pseudo-openId from user id
+      const openId = user.openId || `local_${user.id}`;
+      const sessionToken = await sdk.createSessionToken(openId, {
+        name: user.name || "",
+        expiresInMs: ONE_YEAR_MS,
+      });
+
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+      // Set session cookie with organization context
+      const sessionData = {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        currentOrganizationId,
+      };
+      ctx.res.cookie("session", JSON.stringify(sessionData), { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       return {
         success: true,
@@ -303,7 +328,7 @@ export const ownerAuthRouter = router({
           role: user.role,
         },
         hasOrganization,
-        organizationId: hasOrganization ? orgMemberships[0].organizationId : null,
+        organizationId: currentOrganizationId,
         organizationName: hasOrganization ? orgMemberships[0].organizationName : null,
       };
     }),
