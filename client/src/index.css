@@ -1218,3 +1218,63 @@ html {
     display: none !important;
   }
 }
+
+
+/* ========================================
+   Custom Scroll Indicator Styles
+   ======================================== */
+
+/* Hide default scrollbar globally */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+/* Firefox scrollbar hiding */
+* {
+  scrollbar-width: none;
+}
+
+/* IE/Edge scrollbar hiding */
+* {
+  -ms-overflow-style: none;
+}
+
+/* Scroll indicator container */
+.scroll-indicator {
+  position: fixed;
+  right: 12px;
+  top: 15%;
+  width: 4px;
+  height: 70%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show indicator while scrolling */
+.scrolling .scroll-indicator,
+body.scrolling .scroll-indicator {
+  opacity: 1;
+}
+
+/* Progress bar inside indicator */
+.scroll-indicator__progress {
+  width: 100%;
+  height: 0%;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ff3b3b, #ff8a00);
+  box-shadow: 0 0 8px rgba(255, 90, 90, 0.7);
+  transition: height 0.15s ease-out;
+}
+
+/* Hide scroll indicator when Kai chat is open */
+.kai-open .scroll-indicator,
+body.kai-open .scroll-indicator {
+  opacity: 0 !important;
+  pointer-events: none;
+}

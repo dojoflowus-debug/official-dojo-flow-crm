@@ -1703,3 +1703,15 @@ Add cookies notice that appears when page is first accessed:
 - [x] Verify Kai remains accessible after closing preview
 - [x] Save checkpoint
 
+
+
+## 🎨 Custom Floating Scroll Indicator (2025-12-30)
+
+### Task
+- [x] Create ScrollIndicator React component
+- [x] Hide default browser scrollbar
+- [x] Implement gradient progress bar with DojoFlow brand colors
+- [x] Add fade in/out animation on scroll activity
+- [x] Hide scroll indicator when Kai chat is open
+- [ ] Test on desktop and mobile
+- [ ] Save checkpoint

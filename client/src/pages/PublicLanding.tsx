@@ -15,6 +15,7 @@ import { CookieNotice } from "@/components/CookieNotice";
 import { FloatingVideoIcon } from "@/components/FloatingVideoIcon";
 import { KaiOnboardingFlow } from "@/components/KaiOnboardingFlow";
 import { FloatingKaiButton } from "@/components/FloatingKaiButton";
+import { ScrollIndicator } from "@/components/ScrollIndicator";
 
 type PromptCategory = "growth" | "health" | "billing" | "retention";
 
@@ -1232,6 +1233,9 @@ export default function PublicLanding() {
           setShowKaiOnboarding(false);
         }}
       />
+      
+      {/* Custom Floating Scroll Indicator - hides when Kai is open */}
+      <ScrollIndicator hidden={showKaiOnboarding} />
       </div>
     </MainLayout>
   );
