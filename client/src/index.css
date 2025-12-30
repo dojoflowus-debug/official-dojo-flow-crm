@@ -1278,3 +1278,314 @@ body.kai-open .scroll-indicator {
   opacity: 0 !important;
   pointer-events: none;
 }
+
+
+/* ============================================
+   MASTER DASHBOARD - Premium SaaS Admin Styles
+   ============================================ */
+
+/* Master Dashboard Theme Variables */
+.master-dashboard {
+  /* Background: Dark charcoal with subtle gradient */
+  --md-bg-primary: oklch(0.08 0.005 270); /* #111113 */
+  --md-bg-secondary: oklch(0.10 0.005 270); /* #161618 */
+  --md-bg-card: oklch(0.12 0.008 270); /* #1A1A1D */
+  --md-bg-card-hover: oklch(0.14 0.008 270); /* #1E1E21 */
+  
+  /* Text colors */
+  --md-text-primary: oklch(1 0 0); /* #FFFFFF */
+  --md-text-secondary: oklch(0.70 0 0); /* rgba(255,255,255,0.7) */
+  --md-text-muted: oklch(0.50 0 0); /* rgba(255,255,255,0.5) */
+  
+  /* Accent colors - neon glow */
+  --md-accent-red: oklch(0.65 0.25 25); /* #FF4C4C */
+  --md-accent-amber: oklch(0.75 0.18 75); /* #FFB347 */
+  --md-accent-green: oklch(0.70 0.20 145); /* #4ADE80 */
+  --md-accent-blue: oklch(0.65 0.18 250); /* #60A5FA */
+  --md-accent-purple: oklch(0.60 0.20 300); /* #A78BFA */
+  
+  /* Glassmorphism */
+  --md-glass-bg: oklch(1 0 0 / 0.03);
+  --md-glass-border: oklch(1 0 0 / 0.08);
+  --md-glass-glow: oklch(1 0 0 / 0.05);
+  
+  /* Gradients */
+  --md-gradient-red: linear-gradient(135deg, oklch(0.65 0.25 25) 0%, oklch(0.55 0.22 35) 100%);
+  --md-gradient-amber: linear-gradient(135deg, oklch(0.75 0.18 75) 0%, oklch(0.65 0.16 65) 100%);
+  --md-gradient-green: linear-gradient(135deg, oklch(0.70 0.20 145) 0%, oklch(0.60 0.18 155) 100%);
+  --md-gradient-purple: linear-gradient(135deg, oklch(0.60 0.20 300) 0%, oklch(0.50 0.18 280) 100%);
+}
+
+/* Master Dashboard Base Styles */
+.master-dashboard {
+  background: linear-gradient(180deg, var(--md-bg-primary) 0%, var(--md-bg-secondary) 100%);
+  min-height: 100vh;
+  color: var(--md-text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Glassmorphism Card */
+.md-glass-card {
+  background: var(--md-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--md-glass-border);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.md-glass-card:hover {
+  background: oklch(1 0 0 / 0.05);
+  border-color: oklch(1 0 0 / 0.12);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.3);
+}
+
+/* Neon Glow Effects */
+.md-glow-red {
+  box-shadow: 0 0 20px oklch(0.65 0.25 25 / 0.3), 0 0 40px oklch(0.65 0.25 25 / 0.1);
+}
+
+.md-glow-amber {
+  box-shadow: 0 0 20px oklch(0.75 0.18 75 / 0.3), 0 0 40px oklch(0.75 0.18 75 / 0.1);
+}
+
+.md-glow-green {
+  box-shadow: 0 0 20px oklch(0.70 0.20 145 / 0.3), 0 0 40px oklch(0.70 0.20 145 / 0.1);
+}
+
+/* KPI Card Styles */
+.md-kpi-card {
+  background: linear-gradient(135deg, oklch(0.12 0.008 270) 0%, oklch(0.10 0.005 270) 100%);
+  border: 1px solid oklch(1 0 0 / 0.06);
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.md-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--md-gradient-red);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.md-kpi-card:hover::before {
+  opacity: 1;
+}
+
+/* Health Status Cards */
+.md-health-healthy {
+  background: linear-gradient(135deg, oklch(0.70 0.20 145 / 0.15) 0%, oklch(0.70 0.20 145 / 0.05) 100%);
+  border-color: oklch(0.70 0.20 145 / 0.3);
+}
+
+.md-health-warning {
+  background: linear-gradient(135deg, oklch(0.75 0.18 75 / 0.15) 0%, oklch(0.75 0.18 75 / 0.05) 100%);
+  border-color: oklch(0.75 0.18 75 / 0.3);
+}
+
+.md-health-risk {
+  background: linear-gradient(135deg, oklch(0.65 0.25 25 / 0.15) 0%, oklch(0.65 0.25 25 / 0.05) 100%);
+  border-color: oklch(0.65 0.25 25 / 0.3);
+}
+
+/* Sidebar Styles */
+.md-sidebar {
+  background: linear-gradient(180deg, oklch(0.09 0.005 270) 0%, oklch(0.07 0.003 270) 100%);
+  border-right: 1px solid oklch(1 0 0 / 0.05);
+}
+
+.md-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: var(--md-text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.md-sidebar-item:hover {
+  background: oklch(1 0 0 / 0.05);
+  color: var(--md-text-primary);
+}
+
+.md-sidebar-item.active {
+  background: linear-gradient(135deg, oklch(0.65 0.25 25 / 0.2) 0%, oklch(0.65 0.25 25 / 0.1) 100%);
+  color: var(--md-text-primary);
+  box-shadow: 0 0 20px oklch(0.65 0.25 25 / 0.2);
+}
+
+.md-sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  background: var(--md-accent-red);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Data Table Styles */
+.md-table {
+  background: var(--md-glass-bg);
+  border: 1px solid var(--md-glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.md-table-header {
+  background: oklch(1 0 0 / 0.02);
+  border-bottom: 1px solid var(--md-glass-border);
+}
+
+.md-table-row {
+  border-bottom: 1px solid oklch(1 0 0 / 0.04);
+  transition: background 0.2s ease;
+}
+
+.md-table-row:hover {
+  background: oklch(1 0 0 / 0.03);
+}
+
+/* Status Badges */
+.md-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.md-badge-active {
+  background: oklch(0.70 0.20 145 / 0.15);
+  color: oklch(0.80 0.18 145);
+}
+
+.md-badge-warning {
+  background: oklch(0.75 0.18 75 / 0.15);
+  color: oklch(0.85 0.16 75);
+}
+
+.md-badge-risk {
+  background: oklch(0.65 0.25 25 / 0.15);
+  color: oklch(0.75 0.22 25);
+}
+
+/* Plan Badges */
+.md-plan-starter {
+  background: oklch(0.50 0 0 / 0.2);
+  color: oklch(0.75 0 0);
+}
+
+.md-plan-growth {
+  background: oklch(0.65 0.18 250 / 0.2);
+  color: oklch(0.75 0.16 250);
+}
+
+.md-plan-pro {
+  background: oklch(0.60 0.20 300 / 0.2);
+  color: oklch(0.70 0.18 300);
+}
+
+/* Slide-in Panel */
+.md-slide-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  background: linear-gradient(180deg, oklch(0.10 0.005 270) 0%, oklch(0.08 0.003 270) 100%);
+  border-left: 1px solid oklch(1 0 0 / 0.08);
+  box-shadow: -20px 0 60px oklch(0 0 0 / 0.5);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 50;
+  overflow-y: auto;
+}
+
+.md-slide-panel.open {
+  transform: translateX(0);
+}
+
+/* Alert Banner */
+.md-alert-banner {
+  background: linear-gradient(135deg, oklch(0.65 0.25 25 / 0.15) 0%, oklch(0.65 0.25 25 / 0.05) 100%);
+  border: 1px solid oklch(0.65 0.25 25 / 0.3);
+  border-radius: 12px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Ambient Particle Animation */
+@keyframes md-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.6;
+  }
+}
+
+.md-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: oklch(0.65 0.25 25 / 0.5);
+  border-radius: 50%;
+  animation: md-float 6s ease-in-out infinite;
+}
+
+/* Subtle Glow Animation */
+@keyframes md-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px oklch(0.65 0.25 25 / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px oklch(0.65 0.25 25 / 0.4);
+  }
+}
+
+.md-glow-animate {
+  animation: md-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Chart Area Gradient */
+.md-chart-gradient {
+  background: linear-gradient(180deg, oklch(0.65 0.25 25 / 0.2) 0%, transparent 100%);
+}
+
+/* Scrollbar Styling for Dashboard */
+.master-dashboard ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.master-dashboard ::-webkit-scrollbar-track {
+  background: oklch(0.10 0.005 270);
+  border-radius: 4px;
+}
+
+.master-dashboard ::-webkit-scrollbar-thumb {
+  background: oklch(1 0 0 / 0.15);
+  border-radius: 4px;
+}
+
+.master-dashboard ::-webkit-scrollbar-thumb:hover {
+  background: oklch(1 0 0 / 0.25);
+}

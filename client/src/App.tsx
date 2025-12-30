@@ -117,6 +117,13 @@ import DMCAPolicy from "./pages/DMCAPolicy";
 import ForSchools from "./pages/ForSchools";
 import ForFitness from "./pages/ForFitness";
 import ForStudios from "./pages/ForStudios";
+import MasterDashboard from "./pages/MasterDashboard";
+import MasterSchools from "./pages/MasterSchools";
+import MasterAnalytics from "./pages/MasterAnalytics";
+import MasterAIUsage from "./pages/MasterAIUsage";
+import MasterBilling from "./pages/MasterBilling";
+import MasterSupport from "./pages/MasterSupport";
+import MasterSettings from "./pages/MasterSettings";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -157,6 +164,17 @@ function Router() {
       <Route path="/new-visitor" element={<NewVisitor />} />
       <Route path="/waiver" element={<Waiver />} />
       <Route path="/payment" element={<Payment />} />
+      {/* Master Dashboard (Internal DojoFlow Admin) */}
+      <Route path="/master" element={<MasterDashboard />} />
+      <Route path="/master/schools" element={<MasterSchools />} />
+      <Route path="/master/schools/onboarding" element={<MasterSchools />} />
+      <Route path="/master/schools/at-risk" element={<MasterSchools />} />
+      <Route path="/master/analytics" element={<MasterAnalytics />} />
+      <Route path="/master/ai-usage" element={<MasterAIUsage />} />
+      <Route path="/master/billing" element={<MasterBilling />} />
+      <Route path="/master/support" element={<MasterSupport />} />
+      <Route path="/master/settings" element={<MasterSettings />} />
+      
       {/* Platform Admin CRM (Internal DojoFlow) */}
       <Route path="/admin" element={<PlatformAdminLogin />} />
       <Route path="/admin/organizations" element={<OrganizationList />} />
