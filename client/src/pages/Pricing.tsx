@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Check, Zap, TrendingUp, Building2, Crown, Loader2, Info, ChevronDown } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { CreditCalculator } from "@/components/CreditCalculator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -314,6 +315,15 @@ export function Pricing() {
               </CardContent>
               </Card>
             </div>
+          </div>
+        </div>
+
+        {/* Credit Calculator */}
+        <div className="container pb-16">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-2 text-center">Estimate Your Usage</h2>
+            <p className="text-muted-foreground text-center mb-8">Use the calculator to find the right plan for your school</p>
+            <CreditCalculator />
           </div>
         </div>
 

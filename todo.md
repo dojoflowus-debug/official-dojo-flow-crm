@@ -1551,3 +1551,13 @@ Add cookies notice that appears when page is first accessed:
 - [x] Use accordion/collapsible design pattern
 - [x] Match dark theme styling
 - [ ] Save checkpoint
+
+
+## 🧮 Credit Calculator Tool (2025-12-30)
+- [x] Create CreditCalculator component
+- [x] Add sliders/inputs for operation types (Kai chats, SMS, emails, phone calls)
+- [x] Calculate estimated monthly credits based on inputs
+- [x] Show recommended plan based on calculation
+- [x] Add visual comparison with plan credit allocations
+- [x] Integrate calculator into pricing page
+- [x] Save checkpoint
