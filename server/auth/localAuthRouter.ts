@@ -4,8 +4,43 @@ import { users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { sdk } from "../_core/sdk";
+import { COOKIE_NAME } from "@shared/const";
+import { getSessionCookieOptions } from "../_core/cookies";
 
 const router = Router();
+
+/**
+ * Helper function to set JWT session cookie for local auth users
+ * This ensures compatibility with the tRPC authentication system
+ */
+async function setSessionCookie(user: any, req: any, res: any) {
+  // Generate a unique openId if user doesn't have one (for local auth users)
+  let openId = user.openId;
+  if (!openId) {
+    openId = `local_${user.id}_${crypto.randomBytes(8).toString("hex")}`;
+    // Update user with openId
+    const db = await getDb();
+    if (db) {
+      await db
+        .update(users)
+        .set({ openId })
+        .where(eq(users.id, user.id));
+    }
+  }
+
+  // Create JWT session token using SDK
+  const sessionToken = await sdk.createSessionToken(openId, {
+    name: user.name || user.email?.split("@")[0] || "User",
+  });
+
+  // Set the session cookie
+  const cookieOptions = getSessionCookieOptions(req);
+  res.cookie(COOKIE_NAME, sessionToken, {
+    ...cookieOptions,
+    maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+  });
+}
 
 /**
  * Register new user with email and password
@@ -41,7 +76,10 @@ router.post("/register", async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
+    // Generate openId for new user
+    const openId = `local_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+
+    // Create new user with openId
     await db
       .insert(users)
       .values({
@@ -50,6 +88,7 @@ router.post("/register", async (req, res) => {
         name: email.split("@")[0], // Use email prefix as default name
         provider: "local",
         role: "owner", // Default role
+        openId,
       });
 
     // Fetch the newly created user
@@ -65,10 +104,14 @@ router.post("/register", async (req, res) => {
 
     const newUser = newUserResult[0];
 
-    // Log the user in by setting session
-    req.login(newUser, (err) => {
+    // Set JWT session cookie for tRPC compatibility
+    await setSessionCookie(newUser, req, res);
+
+    // Also set passport session for backward compatibility
+    req.login(newUser, (err: any) => {
       if (err) {
-        return res.status(500).json({ error: "Login failed after registration" });
+        console.error("Passport login error after registration:", err);
+        // Still return success since JWT cookie is set
       }
       res.json({ success: true, user: { id: newUser.id, email: newUser.email } });
     });
@@ -118,10 +161,14 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Log the user in by setting session
-    req.login(user, (err) => {
+    // Set JWT session cookie for tRPC compatibility
+    await setSessionCookie(user, req, res);
+
+    // Also set passport session for backward compatibility
+    req.login(user, (err: any) => {
       if (err) {
-        return res.status(500).json({ error: "Login failed" });
+        console.error("Passport login error:", err);
+        // Still return success since JWT cookie is set
       }
       res.json({ success: true, user: { id: user.id, email: user.email } });
     });

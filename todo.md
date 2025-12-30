@@ -1893,3 +1893,63 @@ Add cookies notice that appears when page is first accessed:
 - [x] Update sdk.authenticateRequest to not call OAuth server
 - [x] Test login flow with owner/staff/student auth only
 - [x] Save checkpoint
+
+
+## 🐛 BUG: Permission Error on Published Site
+
+### Issue
+- [ ] User gets "You don't have permission to view this page" when accessing published site
+- [ ] Error message shows "To continue, please switch to an account with access"
+- [ ] This appears to be a Manus OAuth/visibility settings issue
+
+### Investigation Tasks
+- [ ] Check project visibility settings in Dashboard
+- [ ] Verify public routes are not requiring authentication
+- [ ] Check if the issue is with Manus platform permissions vs app code
+
+
+## 🐛 BUG: Login Redirect Loop - User Immediately Pushed Back to Login Screen
+
+### Issue
+- [ ] User reports being immediately redirected back to login screen after attempting to sign in
+- [ ] Login appears to process but session is not maintained
+- [ ] User sees custom DojoFlow login page (not Manus OAuth)
+
+### Investigation Tasks
+- [ ] Check authentication flow in the codebase
+- [ ] Verify session/cookie handling
+- [ ] Check if custom login is conflicting with Manus OAuth
+- [ ] Review auth context and protected routes
+- [ ] Identify root cause
+
+### Fix Tasks
+- [ ] Fix the authentication issue
+- [ ] Test login flow works correctly
+- [ ] Save checkpoint
+
+
+## 🎨 UI: Update Login & Forgot Password Pages to Generic Design
+
+### Issue
+- [ ] Login page uses old DojoFlow logo (red swirl) with background image
+- [ ] Forgot Password page uses old DojoFlow logo with background image
+- [ ] Both should match the cleaner Owner page design (simpler logo, no background image)
+
+### Fix Tasks
+- [x] Update Login page to use generic design (matching Owner page style)
+- [x] Update Forgot Password page to use generic design (matching Owner page style)
+- [ ] Test both pages display correctly
+- [ ] Save checkpoint
+
+## 🎨 UI: Update Login & Forgot Password Pages to Generic Design
+
+### Issue
+- [ ] Login page uses old DojoFlow logo (red swirl) with background image
+- [ ] Forgot Password page uses old DojoFlow logo with background image
+- [ ] Both should match the cleaner Owner page design (simpler logo, no background image)
+
+### Fix Tasks
+- [x] Update Login page to use generic design (matching Owner page style)
+- [x] Update Forgot Password page to use generic design (matching Owner page style)
+- [ ] Test both pages display correctly
+- [ ] Save checkpoint

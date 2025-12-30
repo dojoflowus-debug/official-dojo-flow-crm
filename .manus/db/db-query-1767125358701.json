@@ -1,0 +1,73 @@
+{
+  "query": "SELECT id, email, openId, provider, password IS NOT NULL as hasPassword FROM users LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, email, openId, provider, password IS NOT NULL as hasPassword FROM users LIMIT 10",
+  "rows": [
+    {
+      "id": "1",
+      "email": "sensei30002003@gmail.com",
+      "openId": "LEWRwD5NBqhLQNFRGgZ24G",
+      "provider": "NULL",
+      "hasPassword": "0"
+    },
+    {
+      "id": "690017",
+      "email": "export-test-1765925647226@test.com",
+      "openId": "test-export-1765925647226",
+      "provider": "NULL",
+      "hasPassword": "0"
+    },
+    {
+      "id": "2070001",
+      "email": "admin@dojoflow.com",
+      "openId": "NULL",
+      "provider": "NULL",
+      "hasPassword": "1"
+    },
+    {
+      "id": "2550002",
+      "email": "vincent.holmes00@gmail.com",
+      "openId": "NULL",
+      "provider": "NULL",
+      "hasPassword": "1"
+    },
+    {
+      "id": "2580004",
+      "email": "solbittech@gmail.com",
+      "openId": "NULL",
+      "provider": "NULL",
+      "hasPassword": "1"
+    },
+    {
+      "id": "2610062",
+      "email": "test-growth@example.com",
+      "openId": "NULL",
+      "provider": "NULL",
+      "hasPassword": "1"
+    },
+    {
+      "id": "2610063",
+      "email": "test-health@example.com",
+      "openId": "NULL",
+      "provider": "NULL",
+      "hasPassword": "1"
+    },
+    {
+      "id": "2610064",
+      "email": "test-billing@example.com",
+      "openId": "NULL",
+      "provider": "NULL",
+      "hasPassword": "1"
+    },
+    {
+      "id": "2610065",
+      "email": "test-retention@example.com",
+      "openId": "NULL",
+      "provider": "NULL",
+      "hasPassword": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\topenId\tprovider\thasPassword\n1\tsensei30002003@gmail.com\tLEWRwD5NBqhLQNFRGgZ24G\tNULL\t0\n690017\texport-test-1765925647226@test.com\ttest-export-1765925647226\tNULL\t0\n2070001\tadmin@dojoflow.com\tNULL\tNULL\t1\n2550002\tvincent.holmes00@gmail.com\tNULL\tNULL\t1\n2580004\tsolbittech@gmail.com\tNULL\tNULL\t1\n2610062\ttest-growth@example.com\tNULL\tNULL\t1\n2610063\ttest-health@example.com\tNULL\tNULL\t1\n2610064\ttest-billing@example.com\tNULL\tNULL\t1\n2610065\ttest-retention@example.com\tNULL\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 97
+}
