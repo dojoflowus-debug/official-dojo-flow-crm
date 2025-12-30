@@ -1348,3 +1348,9 @@ Add cookies notice that appears when page is first accessed:
 - [x] Verify integration with existing dark hero
 - [x] Ensure Apple-level polish on all interactions
 - [x] Save checkpoint
+
+
+## 🎨 Shrink "Hi, I'm Kai." Heading Size (2025-12-29)
+- [x] Reduce "Hi, I'm Kai." heading by one size step
+- [x] Test visual balance
+- [ ] Save checkpoint
