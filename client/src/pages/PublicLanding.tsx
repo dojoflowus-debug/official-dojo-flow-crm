@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CookieNotice } from "@/components/CookieNotice";
 import { FloatingVideoIcon } from "@/components/FloatingVideoIcon";
 import { KaiOnboardingFlow } from "@/components/KaiOnboardingFlow";
+import { FloatingKaiButton } from "@/components/FloatingKaiButton";
 
 type PromptCategory = "growth" | "health" | "billing" | "retention";
 
@@ -1215,6 +1216,11 @@ export default function PublicLanding() {
         videoSrc="/videos/hero-background.mp4"
         posterSrc="/images/hero/hero-background.jpg"
         heroRef={heroRef as React.RefObject<HTMLElement>}
+      />
+      
+      {/* Floating Kai Button - appears after user chooses "Keep exploring" */}
+      <FloatingKaiButton 
+        onClick={() => setShowKaiOnboarding(true)}
       />
       
       {/* Kai Interactive Onboarding Flow */}

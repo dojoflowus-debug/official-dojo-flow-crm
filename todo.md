@@ -1655,3 +1655,51 @@ Add cookies notice that appears when page is first accessed:
 - [ ] Verify mobile responsiveness
 - [ ] Ensure smooth transitions throughout
 - [ ] Save checkpoint
+
+
+## 🚪 Flow Gate State - Onboarding Preview Fix (2025-12-30)
+
+### Issue
+- [x] Onboarding flow gets stuck after "Here's what DojoFlow would look like for you" preview screen
+- [x] No clear next action for users - dead-end state
+
+### State Machine Implementation
+- [x] Create OnboardingState enum (HERO_IDLE, INTENT_CAPTURED, QUALIFIED, PREVIEW_MODE, SIGNUP, ONBOARDING)
+- [x] Implement state transitions with proper flow logic
+- [x] Persist previous answers (school type, size, goals) across states
+
+### Preview Screen CTAs
+- [x] Add primary CTA: "Create my account" button
+- [x] Add secondary CTA: "Keep exploring" button
+- [x] Make CTA sticky at bottom of preview card
+- [x] Add subtle glow effect on hover
+- [x] Add visual direction (arrow/motion cue) pointing to CTA
+- [x] Add microcopy: "Takes under 60 seconds · No credit card required"
+
+### Signup Modal
+- [x] Create signup modal component (email, password, optional school name)
+- [x] Preserve onboarding answers when opening modal
+- [x] Route to /onboarding/setup after successful signup
+- [x] Handle form validation and error states
+
+### "Keep Exploring" Flow
+- [x] Close preview overlay on "Keep exploring" click
+- [x] Return user to scrollable homepage
+- [x] Keep Kai floating bottom-right
+- [x] Add subtle hint: "When you're ready, click Kai to continue."
+
+### UX Improvements
+- [x] Lock background scroll when preview is open
+- [x] Prevent page scrolling so users don't get lost
+- [x] Ensure no dead-ends exist in the flow
+
+### Testing
+- [x] Test complete flow from hero to signup
+- [x] Test "Keep exploring" returns to homepage correctly
+- [x] Verified floating Kai button appears after exploring
+- [x] Verified signup modal opens with form fields
+- [x] Verified "Back to preview" navigation works
+- [x] Test state persistence across interactions
+- [x] Verify Kai remains accessible after closing preview
+- [x] Save checkpoint
+

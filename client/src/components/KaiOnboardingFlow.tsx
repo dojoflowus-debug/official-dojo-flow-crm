@@ -26,7 +26,9 @@ import {
   CheckCircle2,
   TrendingUp,
   Mail,
-  CreditCard
+  CreditCard,
+  ArrowLeft,
+  MessageCircle
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -39,7 +41,17 @@ type StudentCount = "under_100" | "100-300" | "300+";
 type Focus = "leads" | "retention" | "automation" | "scaling";
 type Intent = "grow" | "automate" | "manage" | "fitness" | "exploring";
 
-interface OnboardingState {
+// Flow Gate State Machine
+enum OnboardingState {
+  HERO_IDLE = "HERO_IDLE",
+  INTENT_CAPTURED = "INTENT_CAPTURED",
+  QUALIFIED = "QUALIFIED",
+  PREVIEW_MODE = "PREVIEW_MODE",
+  SIGNUP = "SIGNUP",
+  ONBOARDING = "ONBOARDING"
+}
+
+interface OnboardingData {
   intent: Intent | null;
   businessType: BusinessType | null;
   locationCount: LocationCount | null;
@@ -50,7 +62,7 @@ interface OnboardingState {
 interface KaiOnboardingFlowProps {
   isActive: boolean;
   onClose: () => void;
-  onComplete: (data: OnboardingState) => void;
+  onComplete: (data: OnboardingData) => void;
 }
 
 // Kai's conversation steps
@@ -397,8 +409,11 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
   const [kaiMessage, setKaiMessage] = useState("Hi, I'm Kai. What would you like to improve today?");
   const [userInput, setUserInput] = useState("");
   
+  // Flow Gate State
+  const [flowState, setFlowState] = useState<OnboardingState>(OnboardingState.HERO_IDLE);
+  
   // Onboarding state
-  const [state, setState] = useState<OnboardingState>({
+  const [state, setState] = useState<OnboardingData>({
     intent: null,
     businessType: null,
     locationCount: null,
@@ -412,13 +427,16 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
   const [schoolName, setSchoolName] = useState("");
   const [startTrial, setStartTrial] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  
+  // Keep exploring hint state
+  const [showKaiHint, setShowKaiHint] = useState(false);
 
   // Save progress to localStorage
   useEffect(() => {
     if (isActive) {
-      localStorage.setItem("kai_onboarding_progress", JSON.stringify({ step, state }));
+      localStorage.setItem("kai_onboarding_progress", JSON.stringify({ step, state, flowState }));
     }
-  }, [step, state, isActive]);
+  }, [step, state, flowState, isActive]);
 
   // Restore progress from localStorage
   useEffect(() => {
@@ -426,10 +444,13 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
       const saved = localStorage.getItem("kai_onboarding_progress");
       if (saved) {
         try {
-          const { step: savedStep, state: savedState } = JSON.parse(saved);
+          const { step: savedStep, state: savedState, flowState: savedFlowState } = JSON.parse(saved);
           if (savedStep && savedState) {
             setStep(savedStep);
             setState(savedState);
+            if (savedFlowState) {
+              setFlowState(savedFlowState);
+            }
           }
         } catch (e) {
           // Ignore parse errors
@@ -444,6 +465,18 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [isActive]);
+  
+  // Lock body scroll when preview is active
+  useEffect(() => {
+    if (isActive && step === "preview") {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isActive, step]);
 
   // Simulate Kai typing
   const showKaiMessage = useCallback((message: string, delay = 500) => {
@@ -457,6 +490,7 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
   // Handle intent selection
   const handleIntentSelect = (intent: Intent) => {
     setState(prev => ({ ...prev, intent }));
+    setFlowState(OnboardingState.INTENT_CAPTURED);
     setStep("intent_selected");
     showKaiMessage("Got it. Let's personalize this a bit so I can show you the right setup.");
     setTimeout(() => setStep("business_type"), 1200);
@@ -486,8 +520,12 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
   // Handle focus selection
   const handleFocusSelect = (focus: Focus) => {
     setState(prev => ({ ...prev, focus }));
+    setFlowState(OnboardingState.QUALIFIED);
     showKaiMessage("Here's what DojoFlow would look like for you.");
-    setTimeout(() => setStep("preview"), 1000);
+    setTimeout(() => {
+      setStep("preview");
+      setFlowState(OnboardingState.PREVIEW_MODE);
+    }, 1000);
   };
 
   // Handle skip to preview
@@ -500,18 +538,39 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
       studentCount: prev.studentCount || "under_100",
       focus: prev.focus || "leads",
     }));
+    setFlowState(OnboardingState.QUALIFIED);
     showKaiMessage("Here's what DojoFlow would look like for you.");
-    setTimeout(() => setStep("preview"), 800);
+    setTimeout(() => {
+      setStep("preview");
+      setFlowState(OnboardingState.PREVIEW_MODE);
+    }, 800);
   };
 
-  // Handle conversion decision
+  // Handle conversion decision - Create Account
   const handleCreateAccount = () => {
+    setFlowState(OnboardingState.SIGNUP);
     setStep("signup");
+    showKaiMessage("Let's save your setup and get you started.");
   };
 
+  // Handle Keep Exploring - Return to homepage with Kai hint
   const handleKeepExploring = () => {
+    // Save state for later
+    localStorage.setItem("kai_onboarding_progress", JSON.stringify({ step: "preview", state, flowState: OnboardingState.PREVIEW_MODE }));
+    
+    // Close the overlay
     onComplete(state);
     onClose();
+    
+    // Show hint that Kai is available
+    setShowKaiHint(true);
+    setTimeout(() => setShowKaiHint(false), 5000);
+    
+    // Toast notification
+    toast.info("When you're ready, click Kai to continue.", {
+      duration: 4000,
+      icon: <MessageCircle className="w-4 h-4 text-red-400" />,
+    });
   };
 
   // Signup mutation
@@ -538,6 +597,7 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
 
       if (result.success) {
         localStorage.removeItem("kai_onboarding_progress");
+        setFlowState(OnboardingState.ONBOARDING);
         setStep("success");
       }
     } catch (error: any) {
@@ -563,14 +623,14 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
     <AnimatePresence>
       {isActive && (
         <>
-          {/* Dimmed background overlay */}
+          {/* Dimmed background overlay - prevents scroll */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-md z-40"
-            onClick={onClose}
+            onClick={step !== "preview" ? onClose : undefined}
           />
 
           {/* Persistent Kai icon in corner */}
@@ -605,16 +665,18 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none overflow-hidden"
           >
-            <div className="w-full max-w-3xl pointer-events-auto">
+            <div className="w-full max-w-3xl pointer-events-auto max-h-[90vh] overflow-y-auto">
               {/* Close button */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
+              {step !== "preview" && (
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              )}
 
               {/* Progress indicator */}
               {step !== "success" && (
@@ -703,10 +765,10 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleIntentSelect(chip.id)}
-                        className="group flex items-center gap-2 px-5 py-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 text-white transition-all duration-300 hover:scale-105"
+                        className="group flex items-center gap-2 px-5 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                       >
                         <chip.icon className="w-4 h-4 text-red-400 group-hover:text-red-300" />
-                        <span className="text-sm font-medium">{chip.label}</span>
+                        <span className="text-white/80 group-hover:text-white">{chip.label}</span>
                       </motion.button>
                     ))}
                   </motion.div>
@@ -720,32 +782,25 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4 }}
-                    className="space-y-4"
+                    className="grid grid-cols-2 md:grid-cols-3 gap-4"
                   >
-                    <p className="text-center text-white/70 text-sm mb-6">What best describes you?</p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {BUSINESS_TYPES.map((type, index) => (
-                        <motion.button
-                          key={type.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          onClick={() => handleBusinessTypeSelect(type.id)}
-                          className={`group relative p-6 rounded-2xl bg-gradient-to-br ${type.color} border border-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]`}
-                        >
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <type.icon className="w-6 h-6 text-white" />
-                            </div>
-                            <span className="text-white text-sm font-medium text-center">{type.label}</span>
-                          </div>
-                        </motion.button>
-                      ))}
-                    </div>
+                    {BUSINESS_TYPES.map((type, index) => (
+                      <motion.button
+                        key={type.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                        onClick={() => handleBusinessTypeSelect(type.id)}
+                        className={`group p-6 rounded-2xl bg-gradient-to-br ${type.color} border border-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105`}
+                      >
+                        <type.icon className="w-8 h-8 text-white/60 group-hover:text-white mb-3" />
+                        <span className="text-white/80 group-hover:text-white font-medium">{type.label}</span>
+                      </motion.button>
+                    ))}
                   </motion.div>
                 )}
 
-                {/* Question 1: Locations */}
+                {/* Question 1: Location count */}
                 {step === "question_1" && (
                   <motion.div
                     key="question_1"
@@ -762,15 +817,15 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleLocationSelect(option.id)}
-                        className="px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-red-400/50 text-white text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                        className="group w-24 h-24 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-red-500/50 transition-all duration-300 flex items-center justify-center"
                       >
-                        {option.label}
+                        <span className="text-2xl font-bold text-white/80 group-hover:text-white">{option.label}</span>
                       </motion.button>
                     ))}
                   </motion.div>
                 )}
 
-                {/* Question 2: Students */}
+                {/* Question 2: Student count */}
                 {step === "question_2" && (
                   <motion.div
                     key="question_2"
@@ -787,15 +842,15 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleStudentSelect(option.id)}
-                        className="px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-red-400/50 text-white text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                        className="group px-6 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-red-500/50 transition-all duration-300"
                       >
-                        {option.label}
+                        <span className="text-lg font-medium text-white/80 group-hover:text-white">{option.label}</span>
                       </motion.button>
                     ))}
                   </motion.div>
                 )}
 
-                {/* Question 3: Focus */}
+                {/* Question 3: Focus area */}
                 {step === "question_3" && (
                   <motion.div
                     key="question_3"
@@ -803,27 +858,25 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4 }}
-                    className="grid grid-cols-2 gap-4 max-w-xl mx-auto"
+                    className="grid grid-cols-2 gap-4 max-w-lg mx-auto"
                   >
                     {FOCUS_OPTIONS.map((option, index) => (
                       <motion.button
                         key={option.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleFocusSelect(option.id)}
-                        className="group flex items-center gap-3 p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 hover:border-red-400/50 text-white transition-all duration-300 hover:scale-105"
+                        className="group flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-red-500/50 transition-all duration-300"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
-                          <option.icon className="w-5 h-5 text-red-400" />
-                        </div>
-                        <span className="text-sm font-medium">{option.label}</span>
+                        <option.icon className="w-5 h-5 text-red-400" />
+                        <span className="text-white/80 group-hover:text-white text-left">{option.label}</span>
                       </motion.button>
                     ))}
                   </motion.div>
                 )}
 
-                {/* Preview mode */}
+                {/* Preview mode - Flow Gate Decision Point */}
                 {step === "preview" && (
                   <motion.div
                     key="preview"
@@ -831,35 +884,59 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.5 }}
-                    className="space-y-6"
+                    className="space-y-6 relative"
                   >
                     {/* Enhanced Dashboard preview */}
                     <AnimatedDashboardPreview businessType={state.businessType} />
 
-                    {/* Conversion buttons */}
+                    {/* Sticky CTA Bar - Flow Gate Decision */}
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 1.5 }}
-                      className="text-center space-y-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.2 }}
+                      className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/80 to-transparent pt-8 pb-4 -mx-4 px-4"
                     >
-                      <p className="text-white/70 text-lg">Want me to save this setup and turn it on for you?</p>
-                      <div className="flex justify-center gap-4">
-                        <Button
-                          onClick={handleCreateAccount}
-                          className="bg-red-500 hover:bg-red-600 text-white px-8 py-6 text-lg rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:shadow-[0_0_40px_rgba(239,68,68,0.4)] transition-all"
+                      <div className="text-center space-y-4">
+                        <p className="text-white/70 text-lg">Want me to save this setup and turn it on for you?</p>
+                        
+                        {/* Microcopy */}
+                        <p className="text-sm text-white/50">
+                          Takes under 60 seconds · No credit card required
+                        </p>
+                        
+                        {/* CTA Buttons */}
+                        <div className="flex flex-col sm:flex-row justify-center gap-4">
+                          {/* Primary CTA - Create Account */}
+                          <Button
+                            onClick={handleCreateAccount}
+                            className="relative bg-red-500 hover:bg-red-600 text-white px-8 py-6 text-lg rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] transition-all group overflow-hidden"
+                          >
+                            {/* Glow animation */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                            <Check className="w-5 h-5 mr-2" />
+                            Create my account
+                            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                          </Button>
+                          
+                          {/* Secondary CTA - Keep Exploring */}
+                          <Button
+                            variant="outline"
+                            onClick={handleKeepExploring}
+                            className="border-white/20 hover:border-white/40 text-white hover:bg-white/10 px-8 py-6 text-lg rounded-2xl transition-all"
+                          >
+                            <Eye className="w-5 h-5 mr-2" />
+                            Keep exploring
+                          </Button>
+                        </div>
+                        
+                        {/* Visual direction arrow */}
+                        <motion.div
+                          animate={{ y: [0, 5, 0] }}
+                          transition={{ repeat: Infinity, duration: 1.5 }}
+                          className="flex justify-center pt-2"
                         >
-                          <Check className="w-5 h-5 mr-2" />
-                          Yes, create my account
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={handleKeepExploring}
-                          className="border-white/20 hover:border-white/40 text-white hover:bg-white/10 px-8 py-6 text-lg rounded-2xl"
-                        >
-                          <Eye className="w-5 h-5 mr-2" />
-                          Keep exploring
-                        </Button>
+                          <ChevronRight className="w-6 h-6 text-red-400/60 rotate-90" />
+                        </motion.div>
                       </div>
                     </motion.div>
                   </motion.div>
@@ -876,7 +953,17 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                     className="max-w-md mx-auto"
                   >
                     <div className="bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl">
-                      <h3 className="text-2xl font-semibold text-white mb-6 text-center">Create your account</h3>
+                      {/* Back button */}
+                      <button
+                        onClick={() => setStep("preview")}
+                        className="flex items-center gap-2 text-white/60 hover:text-white mb-6 transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to preview
+                      </button>
+                      
+                      <h3 className="text-2xl font-semibold text-white mb-2 text-center">Create your account</h3>
+                      <p className="text-white/50 text-sm text-center mb-6">Let's save your setup and get you started.</p>
                       
                       <div className="space-y-4">
                         <div>
@@ -932,7 +1019,7 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                         <Button
                           onClick={handleSubmitSignup}
                           disabled={isCreating || !email || !password}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg rounded-xl mt-4"
+                          className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg rounded-xl mt-4 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
                         >
                           {isCreating ? (
                             <span className="flex items-center gap-2">
@@ -940,7 +1027,10 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                               Creating...
                             </span>
                           ) : (
-                            "Create Account"
+                            <>
+                              Create Account
+                              <ArrowRight className="w-5 h-5 ml-2" />
+                            </>
                           )}
                         </Button>
                       </div>

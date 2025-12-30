@@ -131,6 +131,7 @@ function Router() {
       <Route path="/studios" element={<ForStudios />} />
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
+      <Route path="/onboarding/setup" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<MinimalDashboard />} />
       <Route path="/welcome" element={<WelcomeDashboard />} />
       <Route path="/staff/login" element={<StaffAuth />} />
