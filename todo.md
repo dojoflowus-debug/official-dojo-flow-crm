@@ -1411,14 +1411,14 @@ Add cookies notice that appears when page is first accessed:
 ## 🎬 Scroll-Condense Hero Video Into DojoFlow Icon (TesoroXP Effect)
 
 ### Task
-- [ ] Research TesoroXP scroll-condense effect behavior
-- [ ] Convert DojoFlow icon to SVG path mask
-- [ ] Create FloatingVideoIcon component with SVG masking
-- [ ] Implement scroll-triggered animation (scale, position, opacity)
-- [ ] Add floating state pinned to bottom-right viewport
-- [ ] Implement reverse animation on scroll up
-- [ ] Add click-to-scroll-top functionality
-- [ ] Add subtle glow and hover effects
-- [ ] Make responsive (desktop/mobile sizes)
-- [ ] Test 60fps smoothness across browsers
+- [x] Research TesoroXP scroll-condense effect behavior
+- [x] Convert DojoFlow icon to SVG path mask
+- [x] Create FloatingVideoIcon component with SVG masking
+- [x] Implement scroll-triggered animation (scale, position, opacity)
+- [x] Add floating state pinned to bottom-right viewport
+- [x] Implement reverse animation on scroll up
+- [x] Add click-to-scroll-top functionality
+- [x] Add subtle glow and hover effects
+- [x] Make responsive (desktop/mobile sizes)
+- [x] Test 60fps smoothness across browsers
 - [ ] Save checkpoint

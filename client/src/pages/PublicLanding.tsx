@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CookieNotice } from "@/components/CookieNotice";
+import { FloatingVideoIcon } from "@/components/FloatingVideoIcon";
 
 type PromptCategory = "growth" | "health" | "billing" | "retention";
 
@@ -1402,6 +1403,13 @@ export default function PublicLanding() {
       
       {/* Cookie Notice */}
       <CookieNotice />
+      
+      {/* Floating Video Icon - appears when scrolling past hero */}
+      <FloatingVideoIcon 
+        videoSrc="/videos/hero-background.mp4"
+        posterSrc="/images/hero/hero-background.jpg"
+        heroRef={heroRef as React.RefObject<HTMLElement>}
+      />
     </div>
   );
 }
