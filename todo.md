@@ -1580,3 +1580,51 @@ Add cookies notice that appears when page is first accessed:
 - [x] Generate AI image for Automated Billing section (automated-billing.jpg)
 - [x] Update Schools page with new AI images
 - [x] Save checkpoint
+
+
+## 🚀 Kai Interactive Onboarding Flow (2025-12-30)
+
+### Phase 1: Hero Interaction Entry Point
+- [x] Dim background on hero interaction
+- [x] Animate Kai forward with soft glow
+- [x] Auto-focus input field
+- [x] Keep hero background visible (no navigation)
+- [x] Add initial Kai message: "Hi, I'm Kai. What would you like to improve today?"
+- [x] Add quick action chips (Grow my school, Automate operations, Manage students, Run a fitness studio, Just exploring)
+
+### Phase 2: Intent Classification
+- [x] Kai response after user selection
+- [x] Show selection cards (Martial Arts School, Fitness Facility, Yoga/Dance Studio, Personal Trainer, Other)
+- [x] Card styling with rounded corners, subtle glow, dark theme
+
+### Phase 3: Lightweight Qualification (3 questions)
+- [x] Question 1: How many locations? (1, 2-5, 6+)
+- [x] Question 2: How many students/members? (Under 100, 100-300, 300+)
+- [x] Question 3: Biggest focus? (Getting more leads, Retaining members, Automating admin work, Scaling to multiple locations)
+
+### Phase 4: Visual Preview Mode
+- [x] Transition background to contextual dashboard preview
+- [x] Show different previews based on selection (dojo/fitness/studio)
+- [x] Overlay text: "Here's what DojoFlow would look like for you."
+- [x] Animated UI previews (student list, class schedule, automations, notifications)
+
+### Phase 5: Soft Conversion
+- [x] Kai message: "Want me to save this setup and turn it on for you?"
+- [x] Buttons: "Yes, create my account" and "Keep exploring"
+
+### Phase 6: Account Creation
+- [x] Minimal modal with Email, Password, School name (optional)
+- [x] Checkbox: "Start free trial"
+- [x] No credit card required
+
+### Phase 7: Post-Signup Success
+- [x] Success screen with celebration
+- [x] Progress bar with 4 steps
+- [x] CTA: Continue Setup
+
+### Design Rules
+- [x] Maintain dark theme throughout
+- [x] Smooth motion (ease-in-out)
+- [x] No page reloads
+- [x] Mobile-friendly
+- [x] Save progress locally until account created

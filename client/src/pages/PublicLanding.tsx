@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/MainLayout";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus, Menu, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus, Menu, X, MessageCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { CookieNotice } from "@/components/CookieNotice";
 import { FloatingVideoIcon } from "@/components/FloatingVideoIcon";
+import { KaiOnboardingFlow } from "@/components/KaiOnboardingFlow";
 
 type PromptCategory = "growth" | "health" | "billing" | "retention";
 
@@ -41,6 +42,7 @@ export default function PublicLanding() {
   const [inputValue, setInputValue] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showKaiOnboarding, setShowKaiOnboarding] = useState(false);
 
   // Onboarding form state
   const [schoolName, setSchoolName] = useState("");
@@ -490,23 +492,30 @@ export default function PublicLanding() {
                 <div className="flex items-center gap-4">
                   <input
                     type="text"
-                    placeholder={hoveredCard ? getCardPlaceholder(hoveredCard) : "Message Kai… Type @ to mention"}
-                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-xl font-light tracking-wide transition-all duration-300"
+                    placeholder="Talk to Kai..."
+                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-xl font-light tracking-wide transition-all duration-300 cursor-pointer"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onFocus={() => setInputFocused(true)}
+                    onFocus={() => {
+                      setInputFocused(true);
+                      setShowKaiOnboarding(true);
+                    }}
                     onBlur={() => setInputFocused(false)}
+                    onClick={() => setShowKaiOnboarding(true)}
                     readOnly
                   />
-                  <button className="w-12 h-12 rounded-2xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
-                    <Plus className="w-6 h-6 text-white" />
+                  <button 
+                    onClick={() => setShowKaiOnboarding(true)}
+                    className="w-12 h-12 rounded-2xl bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                  >
+                    <MessageCircle className="w-6 h-6 text-white" />
                   </button>
                 </div>
               </div>
               
               {/* Text hint below input */}
               <p className="text-center text-sm text-slate-400 mt-3 font-light">
-                Ask Kai anything or choose a path above
+                Click to start a conversation with Kai
               </p>
             </div>
           </div>
@@ -1196,6 +1205,16 @@ export default function PublicLanding() {
         videoSrc="/videos/hero-background.mp4"
         posterSrc="/images/hero/hero-background.jpg"
         heroRef={heroRef as React.RefObject<HTMLElement>}
+      />
+      
+      {/* Kai Interactive Onboarding Flow */}
+      <KaiOnboardingFlow
+        isActive={showKaiOnboarding}
+        onClose={() => setShowKaiOnboarding(false)}
+        onComplete={(data) => {
+          console.log('Onboarding completed:', data);
+          setShowKaiOnboarding(false);
+        }}
       />
       </div>
     </MainLayout>

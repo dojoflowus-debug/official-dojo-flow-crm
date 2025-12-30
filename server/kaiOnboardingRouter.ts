@@ -8,15 +8,117 @@ import { eq } from "drizzle-orm";
 
 /**
  * Kai Hero Onboarding Router
- * Handles quick signup flow from the Kai Command hero section
+ * Handles the conversational onboarding flow from the Kai Command hero section
  */
 
 export const kaiOnboardingRouter = router({
   /**
-   * Quick signup from Kai hero cards
+   * Quick signup from Kai conversational onboarding flow
    * Creates account, organization, and logs user in
    */
   quickSignup: publicProcedure
+    .input(
+      z.object({
+        // Account credentials
+        email: z.string().email("Valid email is required"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        schoolName: z.string().optional(),
+        
+        // Onboarding data from conversational flow
+        businessType: z.enum(["martial_arts", "fitness", "yoga_dance", "personal_trainer", "other"]),
+        locationCount: z.enum(["1", "2-5", "6+"]),
+        studentCount: z.enum(["under_100", "100-300", "300+"]),
+        focus: z.enum(["leads", "retention", "automation", "scaling"]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      
+      // Check if email already exists
+      const existingUser = await db.select().from(users).where(eq(users.email, input.email)).limit(1);
+      
+      if (existingUser.length > 0) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "An account with this email already exists. Please sign in instead.",
+        });
+      }
+
+      // Hash the password
+      const passwordHash = await bcrypt.hash(input.password, 10);
+
+      // Create user record
+      const [newUser] = await db.insert(users).values({
+        name: input.schoolName || "New User",
+        email: input.email,
+        password: passwordHash,
+        role: "owner",
+        loginMethod: "password",
+      });
+
+      const userId = newUser.insertId;
+
+      // Determine default school name based on business type
+      const defaultSchoolName = getDefaultSchoolName(input.businessType);
+      const schoolName = input.schoolName || defaultSchoolName;
+
+      // Determine programs based on business type
+      const programs = getDefaultPrograms(input.businessType);
+
+      // Create organization
+      const [newOrg] = await db.insert(organizations).values({
+        name: schoolName,
+        timezone: "America/New_York", // Default timezone
+        programs: JSON.stringify(programs),
+        estimatedStudents: parseStudentCount(input.studentCount),
+        planId: 1, // Default to Starter plan
+        subscriptionStatus: "trial",
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
+      });
+
+      const organizationId = newOrg.insertId;
+
+      // Link user to organization as owner
+      await db.insert(organizationUsers).values({
+        userId,
+        organizationId,
+        role: "owner",
+        isPrimary: 1,
+      });
+
+      // Create onboarding progress record
+      await db.insert(onboardingProgress).values({
+        userId,
+        currentStep: 1, // Start at step 1 for post-signup setup
+        isVerified: 0,
+        isCompleted: 0,
+        accountData: JSON.stringify({
+          email: input.email,
+        }),
+        schoolData: JSON.stringify({
+          schoolName,
+          businessType: input.businessType,
+          locationCount: input.locationCount,
+          studentCount: input.studentCount,
+          focus: input.focus,
+          programs,
+        }),
+      });
+
+      return {
+        success: true,
+        userId,
+        organizationId,
+        businessType: input.businessType,
+        message: "Account created successfully",
+      };
+    }),
+
+  /**
+   * Legacy quick signup (for backward compatibility with old hero cards)
+   */
+  legacyQuickSignup: publicProcedure
     .input(
       z.object({
         // Step 1: School Information
@@ -71,7 +173,7 @@ export const kaiOnboardingRouter = router({
         name: input.schoolName,
         timezone: "America/New_York", // Default timezone
         programs: JSON.stringify(input.programs),
-        estimatedStudents: parseStudentCount(input.studentCount),
+        estimatedStudents: parseLegacyStudentCount(input.studentCount),
         planId: 1, // Default to Starter plan
         subscriptionStatus: "trial",
         trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
@@ -118,9 +220,61 @@ export const kaiOnboardingRouter = router({
 });
 
 /**
- * Helper: Parse student count range to estimated number
+ * Helper: Get default school name based on business type
+ */
+function getDefaultSchoolName(businessType: string): string {
+  switch (businessType) {
+    case "martial_arts":
+      return "My Dojo";
+    case "fitness":
+      return "My Fitness Center";
+    case "yoga_dance":
+      return "My Studio";
+    case "personal_trainer":
+      return "My Training Business";
+    default:
+      return "My Business";
+  }
+}
+
+/**
+ * Helper: Get default programs based on business type
+ */
+function getDefaultPrograms(businessType: string): string[] {
+  switch (businessType) {
+    case "martial_arts":
+      return ["Karate", "Kids Classes", "Adult Classes"];
+    case "fitness":
+      return ["Group Fitness", "Personal Training", "Cardio"];
+    case "yoga_dance":
+      return ["Yoga", "Dance", "Pilates"];
+    case "personal_trainer":
+      return ["Personal Training", "Group Sessions"];
+    default:
+      return ["General"];
+  }
+}
+
+/**
+ * Helper: Parse student count range to estimated number (new format)
  */
 function parseStudentCount(range: string): number {
+  switch (range) {
+    case "under_100":
+      return 50;
+    case "100-300":
+      return 200;
+    case "300+":
+      return 500;
+    default:
+      return 50;
+  }
+}
+
+/**
+ * Helper: Parse student count range to estimated number (legacy format)
+ */
+function parseLegacyStudentCount(range: string): number {
   switch (range) {
     case "0-50":
       return 25;
