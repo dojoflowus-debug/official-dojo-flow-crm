@@ -3,7 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Zap, TrendingUp, Building2, Crown, Loader2, Info } from "lucide-react";
+import { Check, Zap, TrendingUp, Building2, Crown, Loader2, Info, ChevronDown } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -381,6 +382,88 @@ export function Pricing() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="container pb-20">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-2 text-center">Frequently Asked Questions</h2>
+            <p className="text-muted-foreground text-center mb-8">Everything you need to know about billing and credits</p>
+            
+            <Accordion type="single" collapsible className="space-y-3">
+              <AccordionItem value="rollover" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">Do unused credits roll over to the next month?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  No, credits reset at the beginning of each billing cycle. We recommend using your credits throughout the month to get the most value from your plan. If you consistently run out of credits, consider upgrading to a higher plan for better value.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="upgrade" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">Can I upgrade or downgrade my plan anytime?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  Yes! You can upgrade your plan at any time, and the change takes effect immediately. When upgrading, you'll receive the additional credits right away. Downgrades take effect at the start of your next billing cycle to ensure you keep access to your current features until then.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="billing" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">How does billing work?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  We charge monthly or annually depending on your selected billing cycle. Annual plans save you 20% compared to monthly billing. Your card is charged automatically on your billing date, and you'll receive an invoice via email. You can update your payment method anytime in your account settings.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="run-out" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">What happens if I run out of credits?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  If you run out of credits, AI-powered features like Kai chat, automated messages, and AI calls will be paused until you either purchase a credit top-up or your credits reset at the next billing cycle. Your CRM, dashboards, and manual features continue to work normally without credits.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="topup" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">How do credit top-ups work?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  Credit top-ups are one-time purchases that add credits to your account immediately. Top-up credits don't expire and remain in your account until used. They're perfect for busy months or special campaigns when you need extra AI power beyond your plan's monthly allowance.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="cancel" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">Can I cancel my subscription?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  Yes, you can cancel your subscription at any time from your account settings. When you cancel, you'll retain access to your plan's features until the end of your current billing period. Your data is kept for 30 days after cancellation in case you decide to reactivate.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="enterprise" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">What's included in the Enterprise plan?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  The Enterprise plan is designed for large organizations with custom needs. It includes unlimited students and locations, dedicated support, custom integrations, white-label options, and volume credit pricing. Contact our sales team to discuss your specific requirements and get a custom quote.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="trial" className="bg-card border rounded-lg px-4">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-medium">Is there a free trial?</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">
+                  Yes! New users can start with our Starter plan which includes 100 credits per month. This gives you a chance to experience DojoFlow's AI capabilities before committing to a higher plan. You can upgrade anytime as your school grows.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
       </div>

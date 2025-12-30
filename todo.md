@@ -1544,3 +1544,10 @@ Add cookies notice that appears when page is first accessed:
 - [x] Animate pricing card hover effects (hover:-translate-y-1)
 - [x] Add subtle gradient to "Need More Credits" block
 - [x] Larger price display with smaller /month text
+
+## 📋 Pricing Page FAQ Section (2025-12-30)
+- [x] Add FAQ section below "How Credits Work"
+- [x] Include questions about billing, upgrades, credit rollover
+- [x] Use accordion/collapsible design pattern
+- [x] Match dark theme styling
+- [ ] Save checkpoint
