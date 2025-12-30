@@ -1309,4 +1309,42 @@ Add cookies notice that appears when page is first accessed:
 - [x] Ensure video autoplays, loops, and is muted
 - [x] Optimize video file size for web delivery
 - [x] Test video performance on mobile and desktop
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+
+## 🎯 TesoroXP-Style Navigation Bar (2025-12-29)
+
+### Desktop Navigation
+- [x] Analyze current PublicLanding header structure
+- [x] Create sticky top navigation with transparent background
+- [x] Add DojoFlow logo on far left (icon-only, vertically centered)
+- [x] Implement center navigation with exact TesoroXP spacing:
+  * Schools
+  * Fitness Facilities
+  * Studios
+- [x] Style menu items: text-only, subtle hover animation, no backgrounds
+- [x] Add "Book a Demo" CTA button on right (pill shape, high contrast)
+- [x] Match font weight, spacing, and timing to TesoroXP
+
+### Scroll Behavior
+- [x] Implement transparent → dark fade on scroll
+- [x] Add subtle height compression on scroll down
+- [x] Expand back to original height on scroll up
+- [x] Ensure logo remains anchored and readable
+- [x] Add smooth transitions (150-200ms)
+
+### Mobile Responsiveness
+- [x] Replace center nav with hamburger menu icon
+- [x] Create full-screen overlay menu on hamburger click
+- [x] Stack menu items vertically and centered
+- [x] Add close icon in top right
+- [x] Implement smooth slide/fade animation
+- [x] Highlight "Book a Demo" in mobile menu
+
+### Polish & Testing
+- [x] Match animation timing exactly to TesoroXP
+- [x] Test scroll behavior (no jump or jitter)
+- [x] Test mobile menu open/close
+- [x] Verify integration with existing dark hero
+- [x] Ensure Apple-level polish on all interactions
+- [x] Save checkpoint

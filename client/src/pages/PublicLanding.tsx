@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -37,6 +37,8 @@ export default function PublicLanding() {
   const [focusedCard, setFocusedCard] = useState<PromptCategory | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Onboarding form state
   const [schoolName, setSchoolName] = useState("");
@@ -49,11 +51,35 @@ export default function PublicLanding() {
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
+      setIsScrolled(window.scrollY > 20);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close mobile menu on ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [mobileMenuOpen]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     // Reveal animations on scroll
@@ -292,47 +318,133 @@ export default function PublicLanding() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Navigation - TesoroXP Style */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-xl border-b border-white/10">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-black/90 backdrop-blur-xl border-b border-white/10 h-16' 
+            : 'bg-transparent h-20'
+        }`}
+      >
+        <div className="container mx-auto px-6 lg:px-8 h-full">
+          <div className="flex items-center justify-between h-full">
             {/* Logo */}
-            <Link href="/" className="flex items-center cursor-pointer">
-              <img src="/logo-light.png" alt="DojoFlow" className="h-8" />
-            </Link>
+            <button 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex items-center cursor-pointer transition-opacity hover:opacity-80 duration-200"
+            >
+              <img 
+                src="/logo-light.png" 
+                alt="DojoFlow" 
+                className={`transition-all duration-300 ${
+                  isScrolled ? 'h-7' : 'h-8'
+                }`}
+              />
+            </button>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#schools" className="text-sm font-medium text-white/80 hover:text-white transition-colors uppercase tracking-wide">Schools</a>
-              <a href="#facilities" className="text-sm font-medium text-white/80 hover:text-white transition-colors uppercase tracking-wide">Fitness Facilities</a>
-              <a href="#studios" className="text-sm font-medium text-white/80 hover:text-white transition-colors uppercase tracking-wide">Studios</a>
+            <div className="hidden md:flex items-center gap-10">
+              <a 
+                href="#schools" 
+                className="text-sm font-medium text-white/70 hover:text-white transition-all duration-200 relative group"
+              >
+                Schools
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white transition-all duration-200 group-hover:w-full" />
+              </a>
+              <a 
+                href="#facilities" 
+                className="text-sm font-medium text-white/70 hover:text-white transition-all duration-200 relative group"
+              >
+                Fitness Facilities
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white transition-all duration-200 group-hover:w-full" />
+              </a>
+              <a 
+                href="#studios" 
+                className="text-sm font-medium text-white/70 hover:text-white transition-all duration-200 relative group"
+              >
+                Studios
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white transition-all duration-200 group-hover:w-full" />
+              </a>
             </div>
             
             {/* CTA Button */}
             <div className="hidden md:flex items-center">
               <Link href="/auth">
                 <Button 
-                  size="sm" 
-                  className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold shadow-lg px-6 uppercase tracking-wide rounded-full"
+                  className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl px-8 py-2.5 rounded-full transition-all duration-200 hover:scale-105"
                 >
                   Book a Demo
                 </Button>
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Link href="/auth">
-                <Button 
-                  size="sm" 
-                  className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold uppercase tracking-wide rounded-full"
-                >
-                  Book a Demo
-                </Button>
-              </Link>
-            </div>
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              aria-label="Open menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
           </div>
         </div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <div
+        className={`fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl transition-all duration-300 md:hidden ${
+          mobileMenuOpen 
+            ? 'opacity-100 pointer-events-auto' 
+            : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Mobile Menu Header */}
+          <div className="flex items-center justify-between px-6 h-20 border-b border-white/10">
+            <img src="/logo-light.png" alt="DojoFlow" className="h-7" />
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              aria-label="Close menu"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Mobile Menu Items */}
+          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6">
+            <a 
+              href="#schools"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-2xl font-medium text-white/80 hover:text-white transition-colors duration-200"
+            >
+              Schools
+            </a>
+            <a 
+              href="#facilities"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-2xl font-medium text-white/80 hover:text-white transition-colors duration-200"
+            >
+              Fitness Facilities
+            </a>
+            <a 
+              href="#studios"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-2xl font-medium text-white/80 hover:text-white transition-colors duration-200"
+            >
+              Studios
+            </a>
+            
+            {/* Mobile CTA */}
+            <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+              <Button 
+                className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold shadow-xl px-12 py-6 text-lg rounded-full transition-all duration-200 hover:scale-105 mt-8"
+              >
+                Book a Demo
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* Hero Section - Cinematic Kai Command Module */}
       <section 
