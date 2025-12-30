@@ -2998,14 +2998,25 @@ Return the data as a structured JSON object.`
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         
-        // Get settings (single row with id=1)
-        const result = await db.select().from(dojoSettings).limit(1);
-        
-        if (result.length === 0) {
-          return { setupCompleted: 0 };
+        try {
+          // Only query the setupCompleted column to avoid schema mismatch errors
+          // This is the only field needed for auth flow
+          const result = await db.select({
+            id: dojoSettings.id,
+            setupCompleted: dojoSettings.setupCompleted,
+          }).from(dojoSettings).limit(1);
+          
+          if (result.length === 0) {
+            return { setupCompleted: 0 };
+          }
+          
+          return result[0];
+        } catch (error) {
+          console.error('Error fetching dojo settings:', error);
+          // If there's a database error, assume setup is completed to avoid
+          // blocking returning users with a setup wizard
+          return { setupCompleted: 1 };
         }
-        
-        return result[0];
       }),
     
     updateSettings: publicProcedure

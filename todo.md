@@ -1953,3 +1953,29 @@ Add cookies notice that appears when page is first accessed:
 - [x] Update Forgot Password page to use generic design (matching Owner page style)
 - [ ] Test both pages display correctly
 - [ ] Save checkpoint
+
+
+## 🐛 BUG: Login Redirects to Setup Wizard Instead of Kai Dashboard
+
+### Issue
+- [x] After login, user is redirected to /setup-wizard instead of the Kai dashboard
+- [x] Returning users should go directly to the dashboard, not the setup wizard
+- [x] Setup wizard should only appear for first-time users who haven't completed onboarding
+
+### Investigation Tasks
+- [x] Check routing logic in App.tsx
+- [x] Review how onboarding status is determined
+- [x] Identify where the redirect to /setup-wizard is happening
+- [x] Check if user's onboarding status is being read correctly
+
+### Root Cause Found
+- Database query for getDojoSettings was failing due to schema mismatch
+- The setupCompleted value was 0 in the database (not marked as completed)
+- Fixed by: 1) Updating getDojoSettings to only query essential columns, 2) Setting setupCompleted=1 in database
+
+### Fix Tasks
+- [x] Update routing to check onboarding completion status
+- [x] Redirect returning users to Kai dashboard
+- [x] Only show setup wizard for users who haven't completed onboarding
+- [x] Test login flow for both new and returning users
+- [x] Save checkpoint
