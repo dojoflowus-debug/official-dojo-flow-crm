@@ -800,45 +800,46 @@ export default function PublicLanding() {
         </DialogContent>
       </Dialog>
 
-      {/* Stats Bar - Dark glass strip with glowing icons */}
-      <section className="py-12 scroll-reveal relative">
+      {/* TesoroXP-Style Slogan Section */}
+      <section className="py-16 md:py-20 scroll-reveal relative">
         <div 
-          className="absolute inset-0 backdrop-blur-xl border-y"
+          className="absolute inset-0 backdrop-blur-xl"
           style={{
-            background: 'rgba(0, 0, 0, 0.4)',
-            borderColor: 'rgba(255, 255, 255, 0.1)'
+            background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3))'
           }}
         />
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center relative">
-                {/* Faint separator */}
-                {index > 0 && (
-                  <div 
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-px hidden md:block"
-                    style={{ background: 'rgba(255, 255, 255, 0.1)' }}
-                  />
-                )}
-                {/* Subtle glowing icon */}
-                <div className="flex items-center justify-center mb-3">
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center relative"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)'
-                    }}
-                  >
-                    {index === 0 && <Users className="w-5 h-5 text-red-400" />}
-                    {index === 1 && <TrendingUp className="w-5 h-5 text-red-400" />}
-                    {index === 2 && <Clock className="w-5 h-5 text-red-400" />}
-                    {index === 3 && <BarChart3 className="w-5 h-5 text-red-400" />}
-                  </div>
-                </div>
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">{stat.value}</div>
-                <div className="text-sm text-slate-300 font-medium">{stat.label}</div>
-              </div>
-            ))}
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Headline - staggered animation */}
+            <h2 
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.3s_forwards]"
+              style={{
+                textShadow: '0 0 30px rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              Your brand. Their training.
+            </h2>
+            
+            {/* Punchline with gradient highlight - staggered animation */}
+            <p 
+              className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.6s_forwards]"
+              style={{
+                background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 0 20px rgba(147, 51, 234, 0.4))'
+              }}
+            >
+              Everyone wins.
+            </p>
+            
+            {/* Support line - staggered animation */}
+            <p 
+              className="text-lg md:text-xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.9s_forwards]"
+            >
+              DojoFlow unifies enrollment, retention, and operations with AI-assisted automation built for schools and fitness studios.
+            </p>
           </div>
         </div>
       </section>

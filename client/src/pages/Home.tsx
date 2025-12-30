@@ -1,11 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, Plus, MessageCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Home() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [animationStage, setAnimationStage] = useState(0);
+
+  // Staggered animation effect for slogan section
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setAnimationStage(1), 300),  // Headline
+      setTimeout(() => setAnimationStage(2), 600),  // Punchline
+      setTimeout(() => setAnimationStage(3), 900),  // Support line
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   const cards = [
     {
@@ -73,7 +84,7 @@ export default function Home() {
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-20">
         {/* Hero Heading */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-4 tracking-tight" style={{
             textShadow: '0 0 40px rgba(255, 255, 255, 0.3)'
           }}>
@@ -81,6 +92,53 @@ export default function Home() {
           </h1>
           <p className="text-2xl md:text-3xl text-gray-300 font-light">
             What would you like to optimize today?
+          </p>
+        </div>
+
+        {/* TesoroXP-Style Slogan Section */}
+        <div className="text-center mb-16 max-w-4xl mx-auto px-4">
+          {/* Headline */}
+          <h2 
+            className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight transition-all duration-700 ease-out ${
+              animationStage >= 1 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-8'
+            }`}
+            style={{
+              textShadow: '0 0 30px rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            Your brand. Their training.
+          </h2>
+          
+          {/* Punchline with gradient highlight */}
+          <p 
+            className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight transition-all duration-700 ease-out ${
+              animationStage >= 2 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-8'
+            }`}
+            style={{
+              background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: 'none',
+              filter: 'drop-shadow(0 0 20px rgba(147, 51, 234, 0.4))'
+            }}
+          >
+            Everyone wins.
+          </p>
+          
+          {/* Support line */}
+          <p 
+            className={`text-lg md:text-xl text-gray-400 font-light max-w-2xl mx-auto leading-relaxed transition-all duration-700 ease-out ${
+              animationStage >= 3 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-8'
+            }`}
+          >
+            DojoFlow unifies enrollment, retention, and operations with AI-assisted automation built for schools and fitness studios.
           </p>
         </div>
 

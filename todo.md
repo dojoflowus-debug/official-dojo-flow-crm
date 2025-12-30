@@ -1422,3 +1422,17 @@ Add cookies notice that appears when page is first accessed:
 - [x] Make responsive (desktop/mobile sizes)
 - [x] Test 60fps smoothness across browsers
 - [ ] Save checkpoint
+
+
+## 🎨 Replace KPI Stats Row with TesoroXP-Style Slogan Block
+
+### Task
+- [x] Remove KPI stats row from homepage (10,000+ Students, 98% Retention, etc.)
+- [x] Add TesoroXP-style slogan section below hero/Kai area
+- [x] Implement staggered entrance animation (headline → punchline → support line)
+- [x] Use Option B copy: "Your brand. Their training. Everyone wins."
+- [x] Center align with proper mobile line breaks
+- [x] Add subtle gradient highlight on punchline (optional)
+- [x] Test on mobile and desktop
+- [ ] Save checkpoint
+
