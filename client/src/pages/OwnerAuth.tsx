@@ -222,7 +222,7 @@ function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     onSuccess: (data) => {
       toast.success("Login successful!");
       if (data.hasOrganization) {
-        navigate("/owner/dashboard");
+        navigate("/kai");
       } else {
         navigate("/owner/onboarding");
       }

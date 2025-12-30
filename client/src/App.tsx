@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "./pages/NotFound";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
@@ -132,7 +132,7 @@ function Router() {
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/onboarding/setup" element={<OwnerOnboarding />} />
-      <Route path="/owner/dashboard" element={<MinimalDashboard />} />
+      <Route path="/owner/dashboard" element={<Navigate to="/kai" replace />} />
       <Route path="/welcome" element={<WelcomeDashboard />} />
       <Route path="/staff/login" element={<StaffAuth />} />
       <Route path="/student-login" element={<StudentAuthNew />} />

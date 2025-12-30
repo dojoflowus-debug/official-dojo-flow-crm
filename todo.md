@@ -1772,3 +1772,14 @@ Add cookies notice that appears when page is first accessed:
 - [x] Inline validation messages
 - [x] Loading states on buttons
 - [x] Form centered vertically and horizontally on desktop
+
+## 🐛 BUG: Post-Login Redirect Goes to Wrong Dashboard
+
+### Issue
+- [x] After successful login, users are redirected to /owner/dashboard instead of /kai
+- [x] Kai Command dashboard should be the default landing page after login
+
+### Fix Tasks
+- [x] Update post-login redirect logic to go to /kai
+- [ ] Test login flow redirects correctly
+- [ ] Save checkpoint
