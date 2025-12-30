@@ -96,7 +96,7 @@ Update hero banner to match exact mockup design:
 - [x] Change `trpc.kai.generateSpeech.mutate()` to `generateSpeechMutation.mutateAsync()`
 - [ ] Test voice output in browser
 - [ ] Verify audio plays correctly
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎤 UPDATE: Change Kai's Voice to Custom ElevenLabs Voice
@@ -104,7 +104,7 @@ Update hero banner to match exact mockup design:
 ### Task
 - [x] Update generateKaiSpeech to use voice ID: BL7YSL1bAkmW8U0JnU8o
 - [ ] Test new voice output
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎙️ Strip Markdown Before TTS
@@ -113,7 +113,7 @@ Update hero banner to match exact mockup design:
 - [x] Create sanitizeForSpeech function to remove Markdown formatting
 - [x] Update generateKaiSpeech to sanitize text before TTS
 - [ ] Test voice output with Markdown-heavy responses
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎙️ Kai Voice & Thinking Behavior System
@@ -123,7 +123,7 @@ Update hero banner to match exact mockup design:
 - [x] Add thinking state behavior with approved phrases
 - [x] Implement response delivery guidelines
 - [ ] Test thinking phrases with voice enabled
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🧩 Student Card Dismissal & State Management
@@ -138,7 +138,7 @@ Update hero banner to match exact mockup design:
 - [x] Keep main Kai Command interface interactive while card is open
 - [x] Add subtle "Press ESC to close" hint (show once)
 - [ ] Test all dismissal behaviors
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎨 Student Drawer: Sticky Header + Edit Modal
@@ -155,7 +155,7 @@ Update hero banner to match exact mockup design:
 - [x] Update student card immediately after save
 - [x] Ensure no duplicate contact sections in drawer
 - [ ] Test all interactions
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🏢 Public Owner Signup + First-Time Onboarding
@@ -321,7 +321,7 @@ Update hero banner to match exact mockup design:
 - [ ] Test credit balance warnings and blocking
 - [ ] Test webhook handlers with Stripe CLI
 - [ ] Verify all vitest tests passing
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 💳 Phase 6: Credit Usage Dashboard (COMPLETED)
@@ -760,7 +760,7 @@ Update hero banner to match exact mockup design:
 - [ ] Test usage event tracking
 - [ ] Verify dojo routes still work unchanged
 - [ ] Verify platform admins cannot access dojo data without org context
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎨 Lemon Squeezy-Inspired Design Upgrades
@@ -960,7 +960,7 @@ Update hero banner to match exact mockup design:
 - [ ] Test conversational overlay flow
 - [ ] Verify 100vh viewport with no white space
 - [ ] Confirm dark atmospheric background throughout
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 💬 Make Kai Command Chat Input Functional
@@ -1071,7 +1071,7 @@ Replace hero section with cinematic design matching reference screenshot:
 - [x] Remove all gradient background classes (from-teal-500/20, from-blue-500/20, etc.)
 - [x] Apply transparent background with red border only
 - [x] Test on live site
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎨 NEW FEATURE: Animated Moving Background (Anima-Inspired)
@@ -1405,7 +1405,7 @@ Add cookies notice that appears when page is first accessed:
 - [x] Ensure video autoplays, loops, and is muted
 - [x] Maintain dark overlay for text readability
 - [x] Test video playback
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎬 Scroll-Condense Hero Video Into DojoFlow Icon (TesoroXP Effect)
@@ -1421,7 +1421,7 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add subtle glow and hover effects
 - [x] Make responsive (desktop/mobile sizes)
 - [x] Test 60fps smoothness across browsers
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🎨 Replace KPI Stats Row with TesoroXP-Style Slogan Block
@@ -1446,7 +1446,7 @@ Add cookies notice that appears when page is first accessed:
 - [x] Connect all "Learn more" buttons to respective pages
 - [x] Add consistent navigation and CTA on each page
 - [x] Test all Learn More links work correctly
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🐛 BUG: Learn More Links Not Working on Landing Page
@@ -1462,7 +1462,7 @@ Add cookies notice that appears when page is first accessed:
 ### Fix
 - [ ] Update Learn More links to use proper navigation
 - [ ] Test all three facility links work
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 
@@ -1481,7 +1481,7 @@ Add cookies notice that appears when page is first accessed:
 ### Fix Tasks
 - [x] Change `href` to `to` prop in all Learn more Link components
 - [x] Test navigation works after fix
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🧭 Unified Navigation - Cohesive Website Structure
@@ -1509,7 +1509,7 @@ Add cookies notice that appears when page is first accessed:
 - [ ] Update ForSchools.tsx with real images
 - [ ] Update ForFitness.tsx with real images
 - [ ] Update ForStudios.tsx with real images
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 ## 📸 Add Photos to Fitness Studio Page
 
@@ -1517,7 +1517,7 @@ Add cookies notice that appears when page is first accessed:
 - [x] Add hero section image
 - [x] Add feature section images
 - [x] Update ForFitness.tsx with new images
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 ## 🎨 Pricing Page Visual Fixes (2025-12-30)
 
@@ -1533,7 +1533,7 @@ Add cookies notice that appears when page is first accessed:
 - [ ] Lighten footer visual noise (reduce orb opacity, increase section padding)
 - [ ] Add "Trusted by growing schools and studios" line above pricing cards
 - [ ] Add icons to "How Credits Work" section headers
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 ## ✅ Pricing Page Visual Fixes - COMPLETED (2025-12-30)
 - [x] Add top padding under navbar (pt-28 md:pt-32) to prevent header cutoff
@@ -1550,7 +1550,7 @@ Add cookies notice that appears when page is first accessed:
 - [x] Include questions about billing, upgrades, credit rollover
 - [x] Use accordion/collapsible design pattern
 - [x] Match dark theme styling
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🧮 Credit Calculator Tool (2025-12-30)
@@ -1654,7 +1654,7 @@ Add cookies notice that appears when page is first accessed:
 - [x] Test complete flow end-to-end
 - [ ] Verify mobile responsiveness
 - [ ] Ensure smooth transitions throughout
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 835da55a)
 
 
 ## 🚪 Flow Gate State - Onboarding Preview Fix (2025-12-30)
@@ -1708,10 +1708,67 @@ Add cookies notice that appears when page is first accessed:
 ## 🎨 Custom Floating Scroll Indicator (2025-12-30)
 
 ### Task
+- [x] Save checkpoint (version: 835da55a)
+
+### Task
 - [x] Create ScrollIndicator React component
 - [x] Hide default browser scrollbar
 - [x] Implement gradient progress bar with DojoFlow brand colors
 - [x] Add fade in/out animation on scroll activity
 - [x] Hide scroll indicator when Kai chat is open
-- [ ] Test on desktop and mobile
-- [ ] Save checkpoint
+- [x] Test on desktop and mobile
+- [x] Save checkpoint (version: 835da55a)
+
+
+## 🎨 Auth Page Redesign (Premium Split Layout)
+
+### Layout
+- [x] Implement 2-column split layout (40% form / 60% visual panel)
+- [x] Full viewport height design (no scrolling on desktop)
+- [x] Mobile responsive stacking (form first, visual second)
+
+### Left Panel (Form)
+- [x] DojoFlow logo + branding header
+- [x] Create Account page with premium styling
+  - [x] Title: "Create your DojoFlow account"
+  - [x] Subtitle: "Set up your school in minutes. Kai will guide you."
+  - [x] Continue with Google button
+  - [x] "or" divider with horizontal lines
+  - [x] First name + Last name fields (side by side)
+  - [x] Email field
+  - [x] Password field with show/hide toggle
+  - [x] Terms and Privacy Policy checkbox
+  - [x] Product updates checkbox (optional)
+  - [x] Full-width pill-shaped red CTA button
+  - [x] "Already have an account? Log in" link
+- [x] Login page with premium styling
+  - [x] Title: "Welcome back"
+  - [x] Subtitle: "Sign in to manage your school"
+  - [x] Email + Password fields
+  - [x] Forgot password link
+  - [x] Use verification code link
+  - [x] Full-width pill-shaped red CTA button
+  - [x] "Don't have an account? Create account" link
+
+### Right Panel (Visual Brand)
+- [x] Dark gradient background with subtle particles/bokeh effect
+- [x] Faint oversized DojoFlow swirl watermark (10-15% opacity)
+- [x] Floating UI feature cards (Schedule, Attendance, Automations, Revenue)
+- [x] Headline: "AI with a black belt in operations"
+- [x] Subtext: "Enroll faster, retain longer, and automate the busy work with Kai."
+
+### Styling
+- [x] Dark charcoal/black background
+- [x] Rounded inputs (16-20px) with soft border
+- [x] DojoFlow red focus rings
+- [x] Large title with clear hierarchy
+- [x] Generous padding and spacing
+- [x] Subtle fade + slide animations on load
+
+### Accessibility & Behavior
+- [x] Fully responsive design
+- [x] Accessible labels and focus states
+- [x] Keyboard navigation support
+- [x] Inline validation messages
+- [x] Loading states on buttons
+- [x] Form centered vertically and horizontally on desktop
