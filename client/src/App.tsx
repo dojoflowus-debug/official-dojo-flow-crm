@@ -114,6 +114,9 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import CookiePolicy from "./pages/CookiePolicy";
 import DMCAPolicy from "./pages/DMCAPolicy";
+import ForSchools from "./pages/ForSchools";
+import ForFitness from "./pages/ForFitness";
+import ForStudios from "./pages/ForStudios";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -123,6 +126,9 @@ function Router() {
       <Route path="/" element={<PublicLanding />} />
       <Route path="/public" element={<PublicLanding />} />
       <Route path="/public-old" element={<PublicHome />} />
+      <Route path="/schools" element={<ForSchools />} />
+      <Route path="/fitness" element={<ForFitness />} />
+      <Route path="/studios" element={<ForStudios />} />
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<MinimalDashboard />} />

@@ -1434,5 +1434,17 @@ Add cookies notice that appears when page is first accessed:
 - [x] Center align with proper mobile line breaks
 - [x] Add subtle gradient highlight on punchline (optional)
 - [x] Test on mobile and desktop
+- [x] Save checkpoint (version: 03921013)
+
+
+## 📄 Facility-Specific Landing Pages (Learn More)
+
+### Task
+- [x] Create Schools landing page (/schools) with detailed DojoFlow benefits
+- [x] Create Fitness Facilities landing page (/fitness) with detailed benefits
+- [x] Create Studios landing page (/studios) with detailed benefits
+- [x] Connect all "Learn more" buttons to respective pages
+- [x] Add consistent navigation and CTA on each page
+- [x] Test all Learn More links work correctly
 - [ ] Save checkpoint
 

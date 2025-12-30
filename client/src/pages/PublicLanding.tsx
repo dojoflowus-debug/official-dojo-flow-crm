@@ -1001,13 +1001,13 @@ export default function PublicLanding() {
                 DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff—all in one platform. Stop juggling spreadsheets and start growing.
               </p>
               <div className="pt-4">
-                <a 
-                  href="#contact" 
+                <Link 
+                  href="/schools" 
                   className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
                 >
                   Learn more
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </Link>
               </div>
             </div>
             {/* Image */}
@@ -1055,13 +1055,13 @@ export default function PublicLanding() {
                 Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, automates lead follow-up, and delivers real-time reporting. Keep your members moving and your operations efficient.
               </p>
               <div className="pt-4">
-                <a 
-                  href="#contact" 
+                <Link 
+                  href="/fitness" 
                   className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
                 >
                   Learn more
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -1087,13 +1087,13 @@ export default function PublicLanding() {
                 DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX. Focus on your craft while we handle the operations.
               </p>
               <div className="pt-4">
-                <a 
-                  href="#contact" 
+                <Link 
+                  href="/studios" 
                   className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
                 >
                   Learn more
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </Link>
               </div>
             </div>
             {/* Image */}
