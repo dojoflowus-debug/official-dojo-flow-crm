@@ -111,6 +111,56 @@ describe("Owner Authentication & Onboarding", () => {
         })
       ).rejects.toThrow();
     });
+
+    it("should allow signup without phone field", async () => {
+      const caller = appRouter.createCaller({ user: null });
+      const noPhoneEmail = `test-no-phone-${Date.now()}@example.com`;
+
+      const result = await caller.ownerAuth.signup({
+        firstName: "NoPhone",
+        lastName: "User",
+        email: noPhoneEmail,
+        // phone is intentionally omitted
+        password: "testpassword123",
+        agreeToTerms: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.userId).toBeGreaterThan(0);
+
+      // Clean up
+      const db = await getDb();
+      if (db) {
+        await db.delete(users).where(eq(users.email, noPhoneEmail));
+        await db.delete(verificationCodes).where(eq(verificationCodes.identifier, noPhoneEmail));
+        await db.delete(onboardingProgress).where(eq(onboardingProgress.userId, result.userId));
+      }
+    });
+
+    it("should allow signup with empty phone string", async () => {
+      const caller = appRouter.createCaller({ user: null });
+      const emptyPhoneEmail = `test-empty-phone-${Date.now()}@example.com`;
+
+      const result = await caller.ownerAuth.signup({
+        firstName: "EmptyPhone",
+        lastName: "User",
+        email: emptyPhoneEmail,
+        phone: "", // empty string should be accepted
+        password: "testpassword123",
+        agreeToTerms: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.userId).toBeGreaterThan(0);
+
+      // Clean up
+      const db = await getDb();
+      if (db) {
+        await db.delete(users).where(eq(users.email, emptyPhoneEmail));
+        await db.delete(verificationCodes).where(eq(verificationCodes.identifier, emptyPhoneEmail));
+        await db.delete(onboardingProgress).where(eq(onboardingProgress.userId, result.userId));
+      }
+    });
   });
 
   describe("Email Verification", () => {

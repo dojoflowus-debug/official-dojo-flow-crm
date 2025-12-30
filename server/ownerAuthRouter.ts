@@ -42,7 +42,7 @@ export const ownerAuthRouter = router({
         firstName: z.string().min(1, "First name is required"),
         lastName: z.string().min(1, "Last name is required"),
         email: z.string().email("Valid email is required"),
-        phone: z.string().min(10, "Valid phone number is required"),
+        phone: z.string().min(10, "Valid phone number is required").optional().or(z.literal("")),
         password: z.string().min(8, "Password must be at least 8 characters").optional(),
         agreeToTerms: z.boolean().refine((val) => val === true, {
           message: "You must agree to Terms and Privacy Policy",
