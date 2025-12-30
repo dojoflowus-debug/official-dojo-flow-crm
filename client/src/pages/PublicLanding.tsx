@@ -451,9 +451,22 @@ export default function PublicLanding() {
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
       >
-        {/* Cinematic Hero Background Image */}
+        {/* Cinematic Hero Video Background */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          poster="/images/hero/hero-background.jpg"
+        >
+          <source src="/videos/hero-background.mp4" type="video/mp4" />
+          {/* Fallback to image if video doesn't load */}
+        </video>
+        
+        {/* Fallback background image for browsers that don't support video */}
         <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-center"
+          className="absolute inset-0 w-full h-full bg-cover bg-center -z-10"
           style={{ backgroundImage: 'url(/images/hero/hero-background.jpg)' }}
         />
         

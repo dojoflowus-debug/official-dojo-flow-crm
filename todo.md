@@ -1396,3 +1396,29 @@ Add cookies notice that appears when page is first accessed:
 - [x] Create /public/images/audience/ folder
 - [x] Create /public/images/testimonials/ folder
 - [x] Create /public/images/features/ folder
+
+
+## 🎬 Restore Video Background to Hero Banner
+
+### Task
+- [x] Restore video background to hero banner on public landing page
+- [x] Ensure video autoplays, loops, and is muted
+- [x] Maintain dark overlay for text readability
+- [x] Test video playback
+- [ ] Save checkpoint
+
+
+## 🎬 Scroll-Condense Hero Video Into DojoFlow Icon (TesoroXP Effect)
+
+### Task
+- [ ] Research TesoroXP scroll-condense effect behavior
+- [ ] Convert DojoFlow icon to SVG path mask
+- [ ] Create FloatingVideoIcon component with SVG masking
+- [ ] Implement scroll-triggered animation (scale, position, opacity)
+- [ ] Add floating state pinned to bottom-right viewport
+- [ ] Implement reverse animation on scroll up
+- [ ] Add click-to-scroll-top functionality
+- [ ] Add subtle glow and hover effects
+- [ ] Make responsive (desktop/mobile sizes)
+- [ ] Test 60fps smoothness across browsers
+- [ ] Save checkpoint
