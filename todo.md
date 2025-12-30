@@ -1979,3 +1979,37 @@ Add cookies notice that appears when page is first accessed:
 - [x] Only show setup wizard for users who haven't completed onboarding
 - [x] Test login flow for both new and returning users
 - [x] Save checkpoint
+
+
+## 🔒 Remove Fake Data from New Accounts (2025-12-30)
+
+### Task
+Remove fake/seed data (fake students, fake leads) from all new accounts except for the test account (sensei30002003@gmail.com).
+
+### Database Changes
+- [x] Created "DojoFlow Test Organization" (ID: 180001)
+- [x] Assigned all existing fake students (57) to test organization
+- [x] Assigned all existing fake leads (80) to test organization
+- [x] Linked test account (sensei30002003@gmail.com) to test organization
+- [x] Cleaned up any remaining records with null organizationId
+
+### Code Changes
+- [x] Updated students.list to return empty array when no organization
+- [x] Updated getLeads to return empty array when no organization
+- [x] Updated leads.getByStatus to use protectedProcedure and filter by organization
+- [x] Updated leads.getAllWithScores to use protectedProcedure and filter by organization
+- [x] Updated getDashboardStats to return zeros when no organization
+- [x] Updated searchStudents to return empty array when no organization
+- [x] Updated kaiDataRouter.searchStudents to return empty when no organization
+- [x] Updated kaiDataRouter.getStudent to return null when no organization
+- [x] Updated kaiDataRouter.listAtRiskStudents to return empty when no organization
+- [x] Updated kaiDataRouter.listLatePayments to return empty when no organization
+- [x] Updated kaiDataRouter.searchLeads to return empty when no organization
+- [x] Updated kaiDataRouter.getLead to return null when no organization
+- [x] Updated kaiDataRouter.getNewLeads to return empty when no organization
+
+### Result
+- New accounts now start with a clean slate (no fake data)
+- Test account (sensei30002003@gmail.com) retains access to all test data
+- Multi-tenancy properly enforced across all student/lead queries
+

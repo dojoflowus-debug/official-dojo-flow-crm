@@ -1016,10 +1016,12 @@ export const appRouter = router({
       if (!db) throw new Error('Database not available');
       
       // Get leads filtered by organization for multi-tenancy
+      // Users without an organization see empty list (no fake data)
       const orgId = ctx.currentOrganizationId;
-      const allLeads = orgId
-        ? await db.select().from(leads).where(eq(leads.organizationId, orgId))
-        : await db.select().from(leads);
+      if (!orgId) {
+        return []; // No organization = empty list (clean slate for new accounts)
+      }
+      const allLeads = await db.select().from(leads).where(eq(leads.organizationId, orgId));
       return allLeads;
     }),
   }),
@@ -1059,15 +1061,20 @@ export const appRouter = router({
   }),
 
   leads: router({
-    getByStatus: publicProcedure.query(async () => {
+    getByStatus: protectedProcedure.query(async ({ ctx }) => {
       const { getDb } = await import("./db");
       const { leads } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
       
       const db = await getDb();
       if (!db) throw new Error('Database not available');
       
-      // Get all leads
-      const allLeads = await db.select().from(leads);
+      // Get leads filtered by organization for multi-tenancy
+      // Users without an organization see empty lists (no fake data)
+      const orgId = ctx.currentOrganizationId;
+      const allLeads = orgId
+        ? await db.select().from(leads).where(eq(leads.organizationId, orgId))
+        : [];
       
       // Group by status (map database enum values to frontend keys)
       const grouped = {
@@ -1300,18 +1307,25 @@ export const appRouter = router({
       }),
     
     // Get all leads with scores for sorting
-    getAllWithScores: publicProcedure
+    getAllWithScores: protectedProcedure
       .input(z.object({
         sortBy: z.enum(["score", "created", "updated"]).optional().default("created"),
         sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
       }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
         const { getDb } = await import("./db");
         const { leads } = await import("../drizzle/schema");
-        const { desc, asc } = await import("drizzle-orm");
+        const { desc, asc, eq } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
+        
+        // Filter by organization for multi-tenancy
+        // Users without an organization see empty list (no fake data)
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) {
+          return []; // No organization = empty list (clean slate for new accounts)
+        }
         
         let orderBy;
         const orderFn = input.sortOrder === "asc" ? asc : desc;
@@ -1327,7 +1341,7 @@ export const appRouter = router({
             orderBy = orderFn(leads.createdAt);
         }
         
-        const allLeads = await db.select().from(leads).orderBy(orderBy);
+        const allLeads = await db.select().from(leads).where(eq(leads.organizationId, orgId)).orderBy(orderBy);
         
         return allLeads.map(lead => ({
           id: lead.id,
@@ -1594,10 +1608,12 @@ export const appRouter = router({
         if (!db) throw new Error('Database not available');
         
         // Get students filtered by organization for multi-tenancy
+        // Users without an organization see empty list (no fake data)
         const orgId = ctx.currentOrganizationId;
-        const allStudents = orgId
-          ? await db.select().from(students).where(eq(students.organizationId, orgId))
-          : await db.select().from(students);
+        if (!orgId) {
+          return []; // No organization = empty list (clean slate for new accounts)
+        }
+        const allStudents = await db.select().from(students).where(eq(students.organizationId, orgId));
         return allStudents;
       }),
     

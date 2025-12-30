@@ -138,6 +138,12 @@ export const kaiDataRouter = router({
       
       // Build conditions with organization filter for multi-tenancy
       const orgId = ctx.currentOrganizationId;
+      
+      // If user has no organization, return empty results (no fake data)
+      if (!orgId) {
+        return { students: [], totalCount: 0 };
+      }
+      
       const searchConditions = or(
         like(students.firstName, searchTerm),
         like(students.lastName, searchTerm),
@@ -145,10 +151,7 @@ export const kaiDataRouter = router({
         like(students.phone, searchTerm)
       );
       
-      // If user has an organization, filter by it
-      const whereCondition = orgId 
-        ? and(eq(students.organizationId, orgId), searchConditions)
-        : searchConditions;
+      const whereCondition = and(eq(students.organizationId, orgId), searchConditions);
 
       const results = await db
         .select()
@@ -175,10 +178,13 @@ export const kaiDataRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
+      // If user has no organization, return null (no fake data)
       const orgId = ctx.currentOrganizationId;
-      const whereCondition = orgId
-        ? and(eq(students.id, input.studentId), eq(students.organizationId, orgId))
-        : eq(students.id, input.studentId);
+      if (!orgId) {
+        return null;
+      }
+      
+      const whereCondition = and(eq(students.id, input.studentId), eq(students.organizationId, orgId));
 
       const result = await db
         .select()
@@ -209,15 +215,18 @@ export const kaiDataRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
+      // If user has no organization, return empty results (no fake data)
       const orgId = ctx.currentOrganizationId;
+      if (!orgId) {
+        return { students: [], totalCount: 0 };
+      }
+      
       const statusCondition = or(
         eq(students.status, "Inactive"),
         eq(students.status, "On Hold")
       );
       
-      const whereCondition = orgId
-        ? and(eq(students.organizationId, orgId), statusCondition)
-        : statusCondition;
+      const whereCondition = and(eq(students.organizationId, orgId), statusCondition);
 
       // Students who are inactive or on hold
       const results = await db
@@ -254,11 +263,14 @@ export const kaiDataRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
+      // If user has no organization, return empty results (no fake data)
       const orgId = ctx.currentOrganizationId;
+      if (!orgId) {
+        return { students: [], totalCount: 0 };
+      }
+      
       const statusCondition = like(students.membershipStatus, "%Overdue%");
-      const whereCondition = orgId
-        ? and(eq(students.organizationId, orgId), statusCondition)
-        : statusCondition;
+      const whereCondition = and(eq(students.organizationId, orgId), statusCondition);
 
       // Placeholder: Return students with "Overdue" membership status
       // In production, this would query a billing/payments table
@@ -297,7 +309,13 @@ export const kaiDataRouter = router({
       if (!db) throw new Error("Database not initialized");
 
       const searchTerm = `%${input.query}%`;
+      
+      // If user has no organization, return empty results (no fake data)
       const orgId = ctx.currentOrganizationId;
+      if (!orgId) {
+        return { leads: [], totalCount: 0 };
+      }
+      
       const searchConditions = or(
         like(leads.firstName, searchTerm),
         like(leads.lastName, searchTerm),
@@ -305,9 +323,7 @@ export const kaiDataRouter = router({
         like(leads.phone, searchTerm)
       );
       
-      const whereCondition = orgId
-        ? and(eq(leads.organizationId, orgId), searchConditions)
-        : searchConditions;
+      const whereCondition = and(eq(leads.organizationId, orgId), searchConditions);
 
       const results = await db
         .select()
@@ -332,10 +348,13 @@ export const kaiDataRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
+      // If user has no organization, return null (no fake data)
       const orgId = ctx.currentOrganizationId;
-      const whereCondition = orgId
-        ? and(eq(leads.id, input.leadId), eq(leads.organizationId, orgId))
-        : eq(leads.id, input.leadId);
+      if (!orgId) {
+        return null;
+      }
+      
+      const whereCondition = and(eq(leads.id, input.leadId), eq(leads.organizationId, orgId));
 
       const result = await db
         .select()
@@ -366,14 +385,17 @@ export const kaiDataRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not initialized");
 
+      // If user has no organization, return empty results (no fake data)
+      const orgId = ctx.currentOrganizationId;
+      if (!orgId) {
+        return { leads: [], totalCount: 0 };
+      }
+
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - input.days);
 
-      const orgId = ctx.currentOrganizationId;
       const statusCondition = eq(leads.status, "New Lead");
-      const whereCondition = orgId
-        ? and(eq(leads.organizationId, orgId), statusCondition)
-        : statusCondition;
+      const whereCondition = and(eq(leads.organizationId, orgId), statusCondition);
 
       const results = await db
         .select()
