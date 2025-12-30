@@ -1,5 +1,6 @@
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import MainLayout from "@/components/MainLayout";
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -8,33 +9,11 @@ import {
   CreditCard, 
   MessageSquare, 
   BarChart3, 
-  Shield, 
-  Zap, 
-  Star, 
-  TrendingUp, 
-  Clock, 
-  Bell, 
   GraduationCap,
-  Award,
-  UserPlus,
-  ClipboardCheck,
-  Target,
-  Sparkles,
-  ChevronLeft
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function ForSchools() {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   useEffect(() => {
     // Reveal animations on scroll
     const observer = new IntersectionObserver(
@@ -191,30 +170,7 @@ export default function ForSchools() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-white/95 backdrop-blur-md shadow-sm' 
-            : 'bg-transparent'
-        }`}
-      >
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-              <ChevronLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Home</span>
-            </Link>
-            <Link href="/auth">
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                Get Started Free
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <MainLayout transparentHeader>
       {/* Hero Section */}
       <section className="pt-32 pb-20 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc]">
         <div className="container mx-auto px-6 lg:px-8">
@@ -231,13 +187,13 @@ export default function ForSchools() {
               boost retention, streamline billing, and focus on what matters most—teaching.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth">
+              <Link to="/owner">
                 <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-6 h-auto">
                   Start Your Free Trial
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="#demo">
+              <Link to="#demo">
                 <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white">
                   Watch Demo
                 </Button>
@@ -269,101 +225,83 @@ export default function ForSchools() {
               We Know Your Challenges
             </h2>
             <p className="text-xl text-gray-600">
-              Running a martial arts school means wearing a dozen hats. DojoFlow takes the operational 
-              burden off your shoulders so you can focus on your students.
+              Running a martial arts school means wearing a dozen hats. DojoFlow takes the admin burden off your shoulders.
             </p>
           </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {challenges.map((item, index) => (
-              <div 
-                key={index}
-                className="p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:border-red-200 hover:shadow-lg transition-all duration-300"
-              >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-red-600 font-bold text-sm">{index + 1}</span>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm line-through mb-2">{item.problem}</p>
-                    <p className="text-gray-900 font-medium">{item.solution}</p>
-                  </div>
-                </div>
+              <div key={index} className="bg-gray-50 rounded-2xl p-8 hover:shadow-lg transition-shadow">
+                <div className="text-red-600 font-semibold mb-3">The Problem</div>
+                <p className="text-gray-900 font-medium mb-4">{item.problem}</p>
+                <div className="text-green-600 font-semibold mb-3">Our Solution</div>
+                <p className="text-gray-600">{item.solution}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Deep Dive */}
-      <section className="py-24 bg-gradient-to-b from-gray-50 to-white scroll-reveal">
+      {/* Features Section */}
+      <section className="py-24 bg-gray-50 scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Everything You Need to Grow
             </h2>
             <p className="text-xl text-gray-600">
-              Purpose-built features for martial arts schools, designed by people who understand the dojo.
+              Purpose-built features for martial arts schools, from white belt to black belt operations.
             </p>
           </div>
-          <div className="space-y-16 max-w-6xl mx-auto">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className={`grid md:grid-cols-2 gap-12 items-center ${
-                  index % 2 === 1 ? 'md:flex-row-reverse' : ''
-                }`}
-              >
-                <div className={index % 2 === 1 ? 'md:order-2' : ''}>
-                  <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-6">
-                    <feature.icon className="w-8 h-8 text-red-600" />
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div key={index} className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow">
+                  <div className="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center mb-6">
+                    <Icon className="w-7 h-7 text-red-600" />
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-4">{feature.title}</h3>
-                  <p className="text-lg text-gray-600 mb-6">{feature.description}</p>
-                  <ul className="space-y-3">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600 mb-4">{feature.description}</p>
+                  <ul className="space-y-2">
                     {feature.benefits.map((benefit, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700">{benefit}</span>
+                      <li key={i} className="flex items-center gap-2 text-sm text-gray-500">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        {benefit}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className={`${index % 2 === 1 ? 'md:order-1' : ''}`}>
-                  <div className="aspect-video rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 border border-red-100 flex items-center justify-center">
-                    <feature.icon className="w-24 h-24 text-red-200" />
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Workflow Automation Section */}
-      <section className="py-24 bg-gray-900 text-white scroll-reveal">
+      {/* Workflows Section */}
+      <section className="py-24 bg-white scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Automation That <span className="text-red-500">Actually Works</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Automated Workflows That Work
             </h2>
-            <p className="text-xl text-gray-400">
-              See how DojoFlow handles your most time-consuming tasks automatically.
+            <p className="text-xl text-gray-600">
+              Set it and forget it. DojoFlow handles the routine so you can focus on students.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+
+          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {workflows.map((workflow, index) => (
-              <div 
-                key={index}
-                className="p-8 rounded-2xl bg-gray-800 border border-gray-700"
-              >
-                <h3 className="text-xl font-bold text-white mb-6">{workflow.title}</h3>
+              <div key={index} className="bg-gray-50 rounded-2xl p-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">{workflow.title}</h3>
                 <ol className="space-y-4">
                   {workflow.steps.map((step, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                    <li key={i} className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 text-sm font-bold flex items-center justify-center">
                         {i + 1}
-                      </div>
-                      <span className="text-gray-300 text-sm">{step}</span>
+                      </span>
+                      <span className="text-gray-600 text-sm">{step}</span>
                     </li>
                   ))}
                 </ol>
@@ -373,36 +311,26 @@ export default function ForSchools() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 bg-white scroll-reveal">
+      {/* Testimonials Section */}
+      <section className="py-24 bg-gray-900 text-white scroll-reveal">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Trusted by School Owners
             </h2>
-            <p className="text-xl text-gray-600">
-              Join hundreds of martial arts schools already growing with DojoFlow.
+            <p className="text-xl text-gray-400">
+              Join hundreds of martial arts schools already using DojoFlow.
             </p>
           </div>
+
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {testimonials.map((testimonial, index) => (
-              <div 
-                key={index}
-                className="p-8 rounded-2xl bg-gray-50 border border-gray-100"
-              >
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-6 italic">"{testimonial.quote}"</p>
-                <div className="border-t border-gray-200 pt-4">
-                  <p className="font-semibold text-gray-900">{testimonial.author}</p>
-                  <p className="text-sm text-gray-500">{testimonial.role}</p>
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">{testimonial.metric}</span>
-                  </div>
+              <div key={index} className="bg-gray-800 rounded-2xl p-8">
+                <div className="text-red-500 font-bold text-2xl mb-4">{testimonial.metric}</div>
+                <p className="text-gray-300 mb-6 italic">"{testimonial.quote}"</p>
+                <div>
+                  <div className="font-semibold text-white">{testimonial.author}</div>
+                  <div className="text-gray-500 text-sm">{testimonial.role}</div>
                 </div>
               </div>
             ))}
@@ -411,56 +339,40 @@ export default function ForSchools() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc] scroll-reveal">
+      <section className="py-24 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc]">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Ready to Transform Your School?
             </h2>
             <p className="text-xl text-gray-700 mb-10">
-              Start your free trial today. No credit card required. 
-              See results in your first week.
+              Join the martial arts schools that are growing faster, retaining more students, and spending less time on admin.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth">
+              <Link to="/owner">
                 <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-6 h-auto">
-                  Start Free Trial
+                  Start Your Free Trial
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="/#contact">
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white">
-                  Talk to Sales
-                </Button>
-              </Link>
             </div>
-            <p className="mt-8 text-sm text-gray-600">
-              14-day free trial • No credit card required • Cancel anytime
-            </p>
+            <div className="flex flex-wrap justify-center gap-6 mt-8 text-gray-600">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span>14-day free trial</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span>Cancel anytime</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 bg-gray-900 text-white">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <img src="/dojoflow-icon.svg" alt="DojoFlow" className="w-8 h-8" />
-              <span className="text-xl font-bold">DojoFlow</span>
-            </div>
-            <div className="flex items-center gap-8 text-sm text-gray-400">
-              <Link href="/" className="hover:text-white transition-colors">Home</Link>
-              <Link href="/fitness" className="hover:text-white transition-colors">For Fitness</Link>
-              <Link href="/studios" className="hover:text-white transition-colors">For Studios</Link>
-              <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-            </div>
-            <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} DojoFlow. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MainLayout>
   );
 }

@@ -1482,3 +1482,17 @@ Add cookies notice that appears when page is first accessed:
 - [x] Change `href` to `to` prop in all Learn more Link components
 - [x] Test navigation works after fix
 - [ ] Save checkpoint
+
+
+## 🧭 Unified Navigation - Cohesive Website Structure
+
+### Task
+- [x] Create MainLayout component with consistent navbar across all pages
+- [x] Add unified header with logo, navigation links, and auth buttons
+- [x] Add mobile-responsive hamburger menu
+- [x] Update all public pages to use MainLayout wrapper
+- [x] Remove duplicate headers/navigation from individual pages
+- [x] Ensure navigation links work consistently across all pages
+- [x] Add footer to MainLayout for consistent site-wide footer
+- [x] Test navigation flow on all pages
+- [x] Save checkpoint

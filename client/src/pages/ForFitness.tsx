@@ -1,46 +1,22 @@
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import MainLayout from "@/components/MainLayout";
 import { 
   ArrowRight, 
   CheckCircle2, 
-  Users, 
   Calendar, 
   CreditCard, 
-  MessageSquare, 
-  BarChart3, 
-  Shield, 
-  Zap, 
   Star, 
   TrendingUp, 
-  Clock, 
-  Bell, 
   Dumbbell,
-  Activity,
-  UserPlus,
-  ClipboardCheck,
-  Target,
-  Sparkles,
-  ChevronLeft,
+  Zap,
   Monitor,
-  Smartphone,
   LineChart,
-  RefreshCw,
   UserCheck,
-  Timer
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function ForFitness() {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   useEffect(() => {
     // Reveal animations on scroll
     const observer = new IntersectionObserver(
@@ -200,30 +176,7 @@ export default function ForFitness() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-white/95 backdrop-blur-md shadow-sm' 
-            : 'bg-transparent'
-        }`}
-      >
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-              <ChevronLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Home</span>
-            </Link>
-            <Link href="/auth">
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                Get Started Free
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <MainLayout transparentHeader>
       {/* Hero Section */}
       <section className="pt-32 pb-20 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2]">
         <div className="container mx-auto px-6 lg:px-8">
@@ -240,13 +193,13 @@ export default function ForFitness() {
               check-ins, convert leads, manage classes, and retain members—without adding headcount.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth">
+              <Link to="/owner">
                 <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-6 h-auto">
                   Start Your Free Trial
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="#demo">
+              <Link to="#demo">
                 <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white">
                   See It In Action
                 </Button>
@@ -498,13 +451,13 @@ export default function ForFitness() {
               See the difference in your first week.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth">
+              <Link to="/owner">
                 <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-6 h-auto">
                   Start Free Trial
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="/#contact">
+              <Link to="/#contact">
                 <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white">
                   Request Demo
                 </Button>
@@ -516,27 +469,6 @@ export default function ForFitness() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 bg-gray-900 text-white">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <img src="/dojoflow-icon.svg" alt="DojoFlow" className="w-8 h-8" />
-              <span className="text-xl font-bold">DojoFlow</span>
-            </div>
-            <div className="flex items-center gap-8 text-sm text-gray-400">
-              <Link href="/" className="hover:text-white transition-colors">Home</Link>
-              <Link href="/schools" className="hover:text-white transition-colors">For Schools</Link>
-              <Link href="/studios" className="hover:text-white transition-colors">For Studios</Link>
-              <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-            </div>
-            <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} DojoFlow. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MainLayout>
   );
 }
