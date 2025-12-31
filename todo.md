@@ -2797,3 +2797,22 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Stats display correctly: 4 New Leads, $2,000 Pipeline Value
 - [x] New lead "New Customer" was created and appears in list
 - [x] Database confirms organizationId is set correctly on all leads
+
+
+## 🐛 BUG FIX: Student Count Not Displaying in Navigation Badge
+
+### Issue
+- [x] User reported student count not showing in bottom navigation
+- [x] Leads count was showing correctly (5 Leads)
+- [x] Students badge was empty
+
+### Root Cause
+- Navigation badges were designed to show only "actionable" counts (items needing attention)
+- Students badge only showed count when students had "On Hold" or "Inactive" status
+- User expected to see total student count like the leads badge
+
+### Fix Applied
+- [x] Modified navBadgesRouter.ts to show total student count instead of only actionable counts
+- [x] Changed query from filtering by status (On Hold/Inactive) to counting all students
+- [x] Verified fix working - now shows "25 Students" in navigation
+

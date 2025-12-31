@@ -55,24 +55,14 @@ export const navBadgesRouter = router({
           return {};
         }
 
-        // STUDENTS COUNT: Only students needing attention for THIS organization
-        // - Students on hold (status = "On Hold")
-        // - Students marked as inactive (status = "Inactive")
-        // Note: Status values are capitalized in the database enum
-        const studentsNeedingAttention = await db
+        // STUDENTS COUNT: Total students for THIS organization
+        // Shows total count so users always see their student count in navigation
+        const totalStudents = await db
           .select({ count: count() })
           .from(students)
-          .where(
-            and(
-              eq(students.organizationId, organizationId),
-              or(
-                eq(students.status, 'On Hold'),
-                eq(students.status, 'Inactive')
-              )
-            )
-          );
+          .where(eq(students.organizationId, organizationId));
         
-        counts.students = studentsNeedingAttention[0]?.count || 0;
+        counts.students = totalStudents[0]?.count || 0;
 
         // LEADS COUNT: Only leads requiring follow-up action for THIS organization
         // - New leads (not yet contacted) - need immediate action
