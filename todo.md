@@ -2816,3 +2816,81 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Changed query from filtering by status (On Hold/Inactive) to counting all students
 - [x] Verified fix working - now shows "25 Students" in navigation
 
+
+
+## 🎨 Credits & Billing Page Redesign (2025-12-31)
+
+### Goal
+Transform the basic "Credit Transaction History" page into a comprehensive "Credits & Billing" dashboard matching the target design.
+
+### Credit Status Bar (Top Section)
+- [ ] Large card with real-time credit usage display
+- [ ] Credits Remaining (large bold number)
+- [ ] Credits Used This Month
+- [ ] Average Daily Usage
+- [ ] Projected Days Remaining
+- [ ] Horizontal progress bar with green → yellow → red gradient
+- [ ] Warning state when below threshold ("⚠ Low credits — estimated X days remaining")
+- [ ] Low Credit Alert dropdown (100, 250, 500)
+- [ ] Auto Top-Up toggle (On/Off)
+- [ ] Download Invoice button
+- [ ] Export Usage (CSV) button
+
+### Usage Action Bar
+- [ ] Buy Credits button
+- [ ] Upgrade Plan button
+- [ ] Add Payment Method button
+- [ ] Export to CSV button
+- [ ] Soft-glow, rounded buttons consistent with DojoFlow style
+
+### Usage Breakdown Table
+- [ ] Sortable, filterable table with columns:
+  - Type (AI Chat, SMS, Voice Call, Automation, Kiosk, Email)
+  - Direction (Inbound/Outbound)
+  - Units (messages, minutes, triggers)
+  - Credits Used
+  - Related Object (Student, Campaign, Automation)
+  - Timestamp
+  - Status (Delivered/Failed/Pending)
+- [ ] Expandable rows for details
+- [ ] Filters: Date range, Feature type, Staff member, Location/Dojo
+- [ ] Pagination at bottom
+
+### Plan & Billing Sidebar (Right Panel)
+- [ ] Current Plan display (name, price, included credits, renewal date)
+- [ ] Included Features list (AI Assistant, SMS + Voice, Attendance, Automation)
+- [ ] Upgrade Options cards (DojoFlow Pro, DojoFlow Advanced)
+- [ ] Each upgrade card shows monthly credits, price, and "Upgrade" CTA
+
+### Smart Features
+- [ ] Credit usage forecasting
+- [ ] Hover tooltips explaining each charge
+- [ ] Contextual suggestions ("High SMS usage detected...")
+- [ ] "Ask Kai" shortcut integration
+
+### Design Requirements
+- [ ] Dark gradient background
+- [ ] Subtle neon borders (green/yellow/red for credit states)
+- [ ] Rounded cards (12-16px radius)
+- [ ] Glassmorphism panels
+- [ ] Smooth hover animations
+- [ ] Loading skeletons (not spinners)
+- [ ] Empty state: "No usage yet — your activity will appear here."
+
+
+
+## 🎨 Credits & Billing Page Redesign (Completed - 2025-12-31)
+
+### Implemented Features
+- [x] Credits Status card with remaining credits, usage stats, progress bar
+- [x] Plan information sidebar with current plan and upgrade options
+- [x] Low credit alert with configurable threshold and auto top-up toggle
+- [x] Usage Breakdown section with colorful category cards
+- [x] Action tabs (Buy Credits, Upgrade Plan, Add Payment Method, Export to CSV)
+- [x] Detailed transaction table with Type, Direction, Units, Credits, Related Object, Time, Status
+- [x] Pagination for transaction list
+- [x] Top Up Options sidebar section
+- [x] Multi-colored progress bar showing usage breakdown
+- [x] Download Invoice and Export Usage (CSV) buttons
+- [x] Plan features list with bullet points
+- [x] Billing information section with Stripe integration notes

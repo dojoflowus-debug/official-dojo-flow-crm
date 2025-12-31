@@ -1,0 +1,36 @@
+Target Design Analysis - Credits & Billing Page
+
+Key differences from current implementation:
+
+1. CREDITS STATUS CARD:
+   - Multi-colored progress bar showing usage breakdown (green, yellow, orange, red segments)
+   - Shows "800 or 100X" scale indicator
+   - "Low credits!" warning with yellow triangle icon and message "Only 2 days left at this usage rate"
+   - Plan button shows DojoFlow logo icon next to "DojoFlow Standard"
+
+2. USAGE BREAKDOWN SECTION:
+   - Target has a TABLE layout instead of colored cards
+   - Table columns: Type, Direction, Units, Credits, Related Object, Time, Status
+   - Each row has colored icon badges (purple for AI Chat, green for SMS, yellow for Voice Calls, blue for Emails, red for Automations, teal for Kiosk Check-Ins)
+   - Direction column shows "Inbound", "Outbound", "Phone", "Emails", "20 Triggers", "21 Credits"
+   - Units column shows specific counts like "216 messages", "134 minutes", "73 emails", "20 triggers", "21 credits"
+   - Related Object column shows user names or "Attendance Insight"
+   - Status column shows "Delivered" or "Completed" with icons
+   - Pagination at bottom: "1-5 of 138" with page navigation
+
+3. MANAGE PLAN SIDEBAR:
+   - "CURRENT PLAN" label with badge showing plan number
+   - Plan features with bullet points (not checkmarks)
+   - "TOP UP OPTIONS" section showing upgrade plans (DojoFlow Advanced, DojoFlow Pro)
+   - Each upgrade option shows monthly credits
+
+4. ACTION BUTTONS:
+   - Buy Credits, Upgrade Plan, Add Payment Method, Export to CSV tabs
+   - Currently showing "Buy Credits" tab selected
+
+Current implementation is close but needs:
+- Remove the colored category cards grid
+- Replace with the detailed transaction table as the main content
+- Add pagination to the table
+- Add the "Low credits!" warning message
+- Improve the progress bar with multi-colored segments
