@@ -2480,5 +2480,42 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Update frontend to show proper display name (use email prefix as fallback)
 - [x] Add fallback loading state instead of "New User"
 - [x] Write vitest tests for user profile persistence (8 tests passing)
-- [ ] Save checkpoint with fix
+- [x] Save checkpoint with fix
+
+
+
+## 🐛 BUG: Dashboard Stats Show Fictitious Data (2025-12-31)
+
+### Issue
+- [x] Dashboard stats (students, leads, operations) show fake/fictitious numbers
+- [x] Need to display real data from database
+
+### Root Cause
+- Navigation badges show "actionable counts" (items needing attention) not total counts
+- This is by design - they show students on hold/inactive, leads needing follow-up, pending operations
+- The actual data queries are working correctly and filtering by organization
+
+### Fix Tasks
+- [x] Investigate dashboard stats source
+- [x] Confirmed stats use real database queries filtered by organization
+- [x] Badges show actionable items (by design), not totals
+
+
+## 🐛 BUG: Add Student Not Working (2025-12-31)
+
+### Issue
+- [x] User cannot add a student - functionality not working
+- [x] Need to investigate and fix student creation flow
+
+### Root Cause
+- POST /api/students endpoint was missing organizationId field
+- localAuthRouter.setSessionCookie was not setting the session cookie with organization context
+- Students were created with NULL organizationId, so they didn't appear in filtered queries
+
+### Fix Tasks
+- [x] Check Add Student dialog and form submission
+- [x] Verify backend procedure is being called
+- [x] Fix POST /api/students to include organizationId from session cookie
+- [x] Fix localAuthRouter to set session cookie with organization context
+- [x] Test adding a student works correctly
 

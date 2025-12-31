@@ -755,10 +755,31 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { students } = await import("../../drizzle/schema");
+      const { parse: parseCookieHeader } = await import("cookie");
       
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: "Database not available" });
+      }
+      
+      // Get organization ID from session cookie
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // Require organization ID for multi-tenancy
+      if (!organizationId) {
+        return res.status(400).json({ error: "No organization found. Please log in again." });
       }
       
       const { name, email, phone, date_of_birth, belt_rank, status, membership_status, street_address, city, state, zip_code } = req.body;
@@ -781,6 +802,7 @@ async function startServer() {
         city: city || null,
         state: state || null,
         zipCode: zip_code || null,
+        organizationId: organizationId,
       });
       
       res.status(201).json({ success: true, id: result[0].insertId });

@@ -15,12 +15,13 @@ const router = Router();
  * This ensures compatibility with the tRPC authentication system
  */
 async function setSessionCookie(user: any, req: any, res: any) {
+  const db = await getDb();
+  
   // Generate a unique openId if user doesn't have one (for local auth users)
   let openId = user.openId;
   if (!openId) {
     openId = `local_${user.id}_${crypto.randomBytes(8).toString("hex")}`;
     // Update user with openId
-    const db = await getDb();
     if (db) {
       await db
         .update(users)
@@ -37,6 +38,33 @@ async function setSessionCookie(user: any, req: any, res: any) {
   // Set the session cookie
   const cookieOptions = getSessionCookieOptions(req);
   res.cookie(COOKIE_NAME, sessionToken, {
+    ...cookieOptions,
+    maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+  });
+  
+  // Get user's organization for multi-tenancy support
+  let currentOrganizationId: number | null = null;
+  if (db) {
+    const { organizationUsers } = await import("../../drizzle/schema");
+    const orgMemberships = await db
+      .select({ organizationId: organizationUsers.organizationId })
+      .from(organizationUsers)
+      .where(eq(organizationUsers.userId, user.id))
+      .limit(1);
+    if (orgMemberships.length > 0) {
+      currentOrganizationId = orgMemberships[0].organizationId;
+    }
+  }
+  
+  // Set session cookie with organization context (for REST API endpoints)
+  const sessionData = {
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    currentOrganizationId,
+  };
+  res.cookie("session", JSON.stringify(sessionData), {
     ...cookieOptions,
     maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
   });
