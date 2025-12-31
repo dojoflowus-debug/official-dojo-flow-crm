@@ -42,54 +42,33 @@ export const navBadgesRouter = router({
           return {};
         }
 
-        // STUDENTS COUNT: Students needing attention
-        // - Late on payments (overdue > 7 days)
-        // - Missing waiver
-        // - At risk (status = 'on_hold' or 'inactive')
-        // - Failed autopay
-        const studentsNeedingAttention = await db
+        // STUDENTS COUNT: Total active students
+        const totalStudents = await db
           .select({ count: count() })
           .from(students)
           .where(
             or(
+              eq(students.status, 'active'),
+              eq(students.status, 'trial'),
               eq(students.status, 'on_hold'),
-              eq(students.status, 'inactive'),
-              // Add more conditions as needed
+              isNull(students.status) // Include students with no status set
             )
           );
         
-        counts.students = studentsNeedingAttention[0]?.count || 0;
+        counts.students = totalStudents[0]?.count || 0;
 
-        // LEADS COUNT: Leads requiring follow-up
-        // - New leads (created < 24h ago, no contact yet)
-        // - Uncontacted leads (no activities)
-        // - Overdue follow-ups (last contact > 3 days ago, stage = 'contacted' or 'qualified')
-        const now = new Date();
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-
-        const leadsRequiringFollowup = await db
+        // LEADS COUNT: Total active leads (not converted or lost)
+        const totalLeads = await db
           .select({ count: count() })
           .from(leads)
           .where(
-            or(
-              // New leads (created < 24h ago)
-              and(
-                gt(leads.createdAt, oneDayAgo),
-                eq(leads.status, 'New Lead')
-              ),
-              // Overdue follow-ups
-              and(
-                lt(leads.updatedAt, threeDaysAgo),
-                or(
-                  eq(leads.status, 'Attempting Contact'),
-                  eq(leads.status, 'Contact Made')
-                )
-              )
+            and(
+              sql`${leads.status} != 'Converted'`,
+              sql`${leads.status} != 'Lost'`
             )
           );
 
-        counts.leads = leadsRequiringFollowup[0]?.count || 0;
+        counts.leads = totalLeads[0]?.count || 0;
 
         // BILLING COUNT: Failed payments and disputed transactions
         // - Failed payments (status = 'failed')
