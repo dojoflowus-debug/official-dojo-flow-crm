@@ -45,7 +45,7 @@ import LowCreditBanner from '@/components/LowCreditBanner'
 const NAVIGATION = [
   { id: 'students', name: 'Students', href: '/students', icon: Users },
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
-  { id: 'kai-command', name: 'Kai', href: '/kai-command', icon: Sparkles, isCenter: true },
+  { id: 'kai-command', name: 'Kai', href: '/kai', icon: Sparkles, isCenter: true },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
   { id: 'floor-plans', name: 'Floor Plans', href: '/floor-plans', icon: Grid3x3 },
   { id: 'operations', name: 'Operations', href: '/operations/merchandise', icon: Package },
@@ -156,7 +156,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   
   // Check if a nav item is active
   const isActive = (href: string) => {
-    if (href === '/kai-command' && location.pathname === '/') return true
+    if (href === '/kai' && location.pathname === '/') return true
     return location.pathname === href || location.pathname.startsWith(href + '/')
   }
 
@@ -322,7 +322,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
             <div className="flex items-center gap-2 md:gap-4">
               {/* Ask Kai Button */}
               <Button
-                onClick={() => navigate('/kai-command')}
+                onClick={() => navigate('/kai')}
                 className={`
                   hidden sm:flex items-center gap-2 rounded-full px-4 py-2
                   ${isDark 

@@ -2221,3 +2221,17 @@ Remove fake/seed data (fake students, fake leads) from all new accounts except f
 - [x] Added PUT /api/staff/:id to update staff members
 - [x] Added DELETE /api/staff/:id to delete staff members
 - [x] New staff members will be automatically linked to the logged-in user's organization
+
+
+## 🐛 BUG: Kai Command Dashboard 404 Error
+
+### Issue
+- [x] Clicking Kai in navigation shows 404 Page Not Found
+- [x] Route /kai-command or /kai not working on published site
+
+### Investigation Tasks
+- [ ] Check App.tsx routing configuration
+- [ ] Verify KaiCommand page component exists
+- [ ] Check if route is properly registered
+- [ ] Test on dev server vs published site
+

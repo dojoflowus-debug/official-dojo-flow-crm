@@ -38,7 +38,7 @@ const NAVIGATION = [
   { id: 'dashboard', name: 'Dashboard', href: '/crm-dashboard', icon: LayoutDashboard },
   { id: 'students', name: 'Students', href: '/students', icon: Users },
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
-  { id: 'kai-command', name: 'Kai Command', href: '/kai-command', icon: Sparkles },
+  { id: 'kai-command', name: 'Kai Command', href: '/kai', icon: Sparkles },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
   // Kiosk removed - Kai Command is the central focus
   { id: 'receptionist', name: 'Receptionist', href: '/receptionist', icon: Headphones },
@@ -283,7 +283,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
             <div className="flex items-center gap-3">
               {/* Ask Kai Button */}
               <Button
-                onClick={() => navigate('/kai-dashboard')}
+                onClick={() => navigate('/kai')}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
@@ -397,7 +397,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
         )}
 
         {/* Page Content */}
-        <main className={`flex-1 ${location.pathname === '/kai-command' ? 'p-0' : 'p-6'}`}>
+        <main className={`flex-1 ${location.pathname === '/kai' ? 'p-0' : 'p-6'}`}>
           {children}
         </main>
       </div>
