@@ -2449,3 +2449,4 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Update PublicLanding.tsx prompt cards
 - [x] Update Home.tsx prompt cards
 
+- [x] Add more prompt cards to public landing page carousel (match 10-card set from KaiCommand)
