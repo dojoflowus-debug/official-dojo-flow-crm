@@ -2894,3 +2894,46 @@ Transform the basic "Credit Transaction History" page into a comprehensive "Cred
 - [x] Download Invoice and Export Usage (CSV) buttons
 - [x] Plan features list with bullet points
 - [x] Billing information section with Stripe integration notes
+
+
+## 🎨 Dark Mode Color Scheme Update (2025-12-31)
+
+### Task
+- [x] Update dark mode colors from bluish grey to pure blacks and dark greys
+- [x] Update cinematic mode colors to use pure blacks
+- [x] Remove all blue/purple tints from dark mode (hue 270 → 0)
+- [x] Set background to pure black (#000000)
+- [x] Set card/panel backgrounds to dark grey (#111111)
+- [x] Update sidebar to near-black (#0A0A0A)
+- [x] Update cinematic gradient to black (#000000 → #111111)
+
+
+
+## 🐛 BUG: Credit Page Slow Loading (2025-12-31)
+
+### Issue
+- [x] Credit page takes a long time to load
+- [x] Need to investigate performance bottleneck
+
+### Investigation Tasks
+- [x] Check credit page component implementation
+- [x] Review tRPC queries being made on page load
+- [x] Identify slow database queries or API calls
+- [x] Check for unnecessary re-renders or data fetching
+
+### Root Cause Found
+**Unstable query references causing infinite re-fetches:**
+- `getStartDate()` function was creating new Date objects on every render
+- This caused the tRPC query to re-run continuously
+- Additionally, fetching 500 transactions on initial load was excessive
+
+### Fix Applied
+- [x] Memoized `startDate` calculation with `useMemo` to prevent new Date objects on every render
+- [x] Memoized `taskType` filter to prevent query re-runs
+- [x] Reduced initial transaction limit from 500 to 100 for faster load
+- [x] Added `staleTime` to all queries to enable caching:
+  - Credit balance: 60s refetch interval (existing)
+  - Subscription: 60s staleTime
+  - Plans: 5 minutes staleTime (rarely change)
+  - Transactions: 30s staleTime
+- [x] Test page load performance

@@ -204,37 +204,37 @@
 }
 
 .dark {
-  /* DojoFlow Premium Dark Mode - Matches mockup */
-  /* Main Background: #0C0C0D (near-black) */
-  --background: oklch(0.06 0.002 270); /* #0C0C0D */
+  /* DojoFlow Premium Dark Mode - Pure Blacks & Dark Greys */
+  /* Main Background: #000000 (pure black) */
+  --background: oklch(0 0 0); /* #000000 */
   --foreground: oklch(1 0 0); /* #FFFFFF */
   
-  /* Card/Panel Background: #18181A */
-  --card: oklch(0.11 0.002 270); /* #18181A */
+  /* Card/Panel Background: #111111 (dark grey) */
+  --card: oklch(0.08 0 0); /* #111111 */
   --card-foreground: oklch(1 0 0);
   
-  --popover: oklch(0.11 0.002 270); /* #18181A */
+  --popover: oklch(0.08 0 0); /* #111111 */
   --popover-foreground: oklch(1 0 0);
   
   /* Accent Red: #FF4C4C */
   --primary: oklch(0.63 0.24 25); /* #FF4C4C */
   --primary-foreground: oklch(1 0 0);
   
-  /* Secondary: #202022 (input fields) */
-  --secondary: oklch(0.14 0.002 270); /* #202022 */
+  /* Secondary: #1A1A1A (input fields) */
+  --secondary: oklch(0.12 0 0); /* #1A1A1A */
   --secondary-foreground: oklch(1 0 0);
   
-  /* Muted: rgba(255,255,255,0.45) for placeholder */
-  --muted: oklch(0.11 0.002 270);
-  --muted-foreground: oklch(0.75 0 0); /* rgba(255,255,255,0.65) */
+  /* Muted: #0D0D0D */
+  --muted: oklch(0.06 0 0); /* #0D0D0D */
+  --muted-foreground: oklch(0.70 0 0); /* #A0A0A0 */
   
-  --accent: oklch(0.11 0.01 25);
+  --accent: oklch(0.10 0 0); /* #171717 */
   --accent-foreground: oklch(1 0 0);
   
   --destructive: oklch(0.63 0.24 25); /* #FF4C4C */
   --destructive-foreground: oklch(1 0 0);
   
-  /* Borders: rgba(255,255,255,0.05) - very subtle */
+  /* Borders: rgba(255,255,255,0.08) - very subtle */
   --border: oklch(1 0 0 / 0.08); /* rgba(255,255,255,0.08) */
   --input: oklch(1 0 0 / 0.10); /* rgba(255,255,255,0.10) */
   --ring: oklch(0.63 0.24 25); /* #FF4C4C */
@@ -245,8 +245,8 @@
   --chart-4: oklch(0.75 0.18 80);
   --chart-5: oklch(0.60 0.18 320);
   
-  /* Sidebar: #121214 */
-  --sidebar: oklch(0.09 0.002 270); /* #121214 */
+  /* Sidebar: #0A0A0A */
+  --sidebar: oklch(0.05 0 0); /* #0A0A0A */
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(0.63 0.24 25); /* #FF4C4C */
   --sidebar-primary-foreground: oklch(1 0 0);
@@ -258,28 +258,28 @@
 
 /* Cinematic Glass Mode - Glassmorphism Dashboard Aesthetic */
 .cinematic, .cinematic-mode {
-  /* Background: dark ambient gradient */
-  --background: oklch(0.06 0.005 270); /* #0C0C0D to #1A1A1C gradient base */
+  /* Background: pure black base */
+  --background: oklch(0 0 0); /* #000000 */
   --foreground: oklch(1 0 0); /* #FFFFFF */
   
   /* Glass Panels: translucent with blur */
-  --card: oklch(0.15 0.005 270 / 0.06); /* rgba(255,255,255,0.06) */
+  --card: oklch(0.10 0 0 / 0.06); /* rgba(255,255,255,0.06) */
   --card-foreground: oklch(1 0 0);
   
-  --popover: oklch(0.15 0.005 270 / 0.08);
+  --popover: oklch(0.10 0 0 / 0.08);
   --popover-foreground: oklch(1 0 0);
   
   /* Kai Accent: Vibrant cinematic red-orange #FF5A3D */
   --primary: oklch(0.65 0.25 30); /* #FF5A3D */
   --primary-foreground: oklch(1 0 0);
   
-  --secondary: oklch(0.12 0.005 270 / 0.1);
+  --secondary: oklch(0.08 0 0 / 0.1);
   --secondary-foreground: oklch(1 0 0);
   
-  --muted: oklch(0.12 0.005 270 / 0.15);
-  --muted-foreground: oklch(0.80 0.005 270); /* #C1C1C3 */
+  --muted: oklch(0.08 0 0 / 0.15);
+  --muted-foreground: oklch(0.75 0 0); /* #A0A0A0 */
   
-  --accent: oklch(0.12 0.01 30 / 0.15);
+  --accent: oklch(0.08 0 0 / 0.15);
   --accent-foreground: oklch(1 0 0);
   
   --destructive: oklch(0.65 0.25 30); /* #FF5A3D */
@@ -297,11 +297,11 @@
   --chart-5: oklch(0.60 0.18 320);
   
   /* Glass sidebar */
-  --sidebar: oklch(0.08 0.005 270 / 0.45); /* rgba(20,20,22,0.45) */
+  --sidebar: oklch(0.05 0 0 / 0.45); /* rgba(10,10,10,0.45) */
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(0.65 0.25 30); /* #FF5A3D */
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.15 0.005 270 / 0.2);
+  --sidebar-accent: oklch(0.10 0 0 / 0.2);
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(1 0 0 / 0.12);
   --sidebar-ring: oklch(0.65 0.25 30);
@@ -312,7 +312,7 @@
 .cinematic body,
 html.cinematic,
 html.cinematic-mode {
-  background: linear-gradient(180deg, #0C0C0D 0%, #1A1A1C 100%);
+  background: linear-gradient(180deg, #000000 0%, #111111 100%);
   background-attachment: fixed;
 }
 

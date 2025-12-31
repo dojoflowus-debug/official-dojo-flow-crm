@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -90,8 +90,8 @@ const CreditTransactions = () => {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const itemsPerPage = 10;
 
-  // Calculate date range
-  const getStartDate = () => {
+  // Calculate date range - memoized to prevent infinite query loops
+  const startDate = useMemo(() => {
     const now = new Date();
     switch (dateRange) {
       case '7d':
@@ -103,7 +103,7 @@ const CreditTransactions = () => {
       default:
         return undefined;
     }
-  };
+  }, [dateRange]);
 
   // Fetch credit balance
   const { data: creditBalance, isLoading: balanceLoading, isError: balanceError } = trpc.credits.getBalance.useQuery(undefined, {
@@ -114,20 +114,32 @@ const CreditTransactions = () => {
   // Fetch subscription data
   const { data: subscription, isLoading: subLoading } = trpc.subscription.getCurrentSubscription.useQuery(
     { organizationId: 1 }, // TODO: Get from organization context
-    { enabled: !!user }
+    { 
+      enabled: !!user,
+      staleTime: 60000, // Cache for 1 minute
+    }
   );
 
   // Fetch all plans for upgrade options
-  const { data: allPlans } = trpc.subscription.getPlans.useQuery();
+  const { data: allPlans } = trpc.subscription.getPlans.useQuery(undefined, {
+    staleTime: 300000, // Cache for 5 minutes - plans rarely change
+  });
 
-  // Fetch transactions with filters
+  // Memoize taskType to prevent query re-runs
+  const taskType = useMemo(() => 
+    taskTypeFilter === 'all' ? undefined : taskTypeFilter as any,
+    [taskTypeFilter]
+  );
+
+  // Fetch transactions with filters - reduced initial limit for faster load
   const { data: transactions, isLoading: txLoading } = trpc.subscription.getCreditTransactions.useQuery({
     organizationId: 1, // TODO: Get from organization context
-    taskType: taskTypeFilter === 'all' ? undefined : taskTypeFilter as any,
-    startDate: getStartDate(),
-    limit: 500,
+    taskType,
+    startDate,
+    limit: 100, // Reduced from 500 for faster initial load
   }, {
     enabled: !!user,
+    staleTime: 30000, // Cache for 30 seconds to prevent unnecessary refetches
   });
 
   // Calculate usage summary by type
