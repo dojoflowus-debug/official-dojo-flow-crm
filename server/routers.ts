@@ -1112,7 +1112,7 @@ export const appRouter = router({
       return grouped;
     }),
     
-    create: publicProcedure
+    create: protectedProcedure
       .input(z.object({
         firstName: z.string(),
         lastName: z.string(),
@@ -1121,12 +1121,15 @@ export const appRouter = router({
         source: z.string().optional(),
         notes: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const { getDb } = await import("./db");
         const { leads } = await import("../drizzle/schema");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
+        
+        // Use organization ID from context for multi-tenancy
+        const orgId = ctx.currentOrganizationId;
         
         const result = await db.insert(leads).values({
           firstName: input.firstName,
@@ -1136,15 +1139,19 @@ export const appRouter = router({
           source: input.source,
           notes: input.notes,
           status: "New Lead",
+          organizationId: orgId,
         });
         
         const newLeadId = result.insertId;
         
         // Trigger automation for new lead (async, don't wait)
-        const { triggerAutomation } = await import("./services/automationEngine");
-        triggerAutomation("new_lead", "lead", newLeadId).catch((err) => {
-          console.error('[Leads] Automation trigger error:', err);
-        });
+        // Only trigger if we have a valid lead ID
+        if (newLeadId) {
+          const { triggerAutomation } = await import("./services/automationEngine");
+          triggerAutomation("new_lead", "lead", Number(newLeadId)).catch((err) => {
+            console.error('[Leads] Automation trigger error:', err);
+          });
+        }
         
         return { success: true, id: newLeadId };
       }),

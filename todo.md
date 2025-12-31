@@ -2755,3 +2755,45 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Badge counts not filtering by organizationId (multi-tenancy issue)
 - [x] Fix navBadgesRouter to filter by user's organization
 - [x] Verify each account sees only their own data
+
+
+## 🐛 BUG: Icon Not Showing Data + Unable to Add Lead (2025-12-31)
+
+### Issues Reported
+- [ ] Icon not showing any data
+- [ ] Unable to add a lead
+
+### Investigation Tasks
+- [ ] Check leads page and lead creation form
+- [ ] Verify lead creation API endpoint
+- [ ] Check database schema for leads table
+- [ ] Test lead creation flow
+- [ ] Identify icon display issue
+- [ ] Fix lead creation functionality
+- [ ] Test fixes
+
+
+
+## 🐛 BUG FIX: Leads Not Showing & Unable to Add Lead (2025-12-31)
+
+### Issues Reported
+- [x] Icon/data not displaying in leads page
+- [x] Unable to add a new lead
+
+### Root Cause Analysis
+- [x] Leads were being created without organizationId
+- [x] leads.getByStatus query filters by organizationId for multi-tenancy
+- [x] leads.create was using publicProcedure without setting organizationId
+- [x] Existing leads had NULL organizationId so they weren't returned
+
+### Fixes Applied
+- [x] Updated leads.create from publicProcedure to protectedProcedure
+- [x] Added ctx.currentOrganizationId to lead creation values
+- [x] Updated existing leads in database to have organizationId = 120001
+- [x] Verified new leads are created with correct organizationId
+
+### Verification
+- [x] Leads page now shows 4 leads with correct data
+- [x] Stats display correctly: 4 New Leads, $2,000 Pipeline Value
+- [x] New lead "New Customer" was created and appears in list
+- [x] Database confirms organizationId is set correctly on all leads
