@@ -1,0 +1,220 @@
+{
+  "query": "SELECT id, firstName, lastName, status FROM students ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, status FROM students ORDER BY id;",
+  "rows": [
+    {
+      "id": "360001",
+      "firstName": "Emma",
+      "lastName": "Rodriguez",
+      "status": "Active"
+    },
+    {
+      "id": "360002",
+      "firstName": "Liam",
+      "lastName": "Chen",
+      "status": "Active"
+    },
+    {
+      "id": "360003",
+      "firstName": "Sophia",
+      "lastName": "Johnson",
+      "status": "Active"
+    },
+    {
+      "id": "360004",
+      "firstName": "Noah",
+      "lastName": "Williams",
+      "status": "Active"
+    },
+    {
+      "id": "360005",
+      "firstName": "Olivia",
+      "lastName": "Brown",
+      "status": "On Hold"
+    },
+    {
+      "id": "360006",
+      "firstName": "Ethan",
+      "lastName": "Davis",
+      "status": "Active"
+    },
+    {
+      "id": "360007",
+      "firstName": "Ava",
+      "lastName": "Martinez",
+      "status": "Active"
+    },
+    {
+      "id": "360008",
+      "firstName": "Mason",
+      "lastName": "Garcia",
+      "status": "Active"
+    },
+    {
+      "id": "360009",
+      "firstName": "Isabella",
+      "lastName": "Anderson",
+      "status": "Active"
+    },
+    {
+      "id": "360010",
+      "firstName": "Lucas",
+      "lastName": "Taylor",
+      "status": "Active"
+    },
+    {
+      "id": "360011",
+      "firstName": "John",
+      "lastName": "Doe",
+      "status": "Active"
+    },
+    {
+      "id": "360012",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "status": "Active"
+    },
+    {
+      "id": "360013",
+      "firstName": "Mike",
+      "lastName": "Johnson",
+      "status": "Active"
+    },
+    {
+      "id": "360014",
+      "firstName": "Sarah",
+      "lastName": "Williams",
+      "status": "Active"
+    },
+    {
+      "id": "360015",
+      "firstName": "Tom",
+      "lastName": "Davis",
+      "status": "Active"
+    },
+    {
+      "id": "360016",
+      "firstName": "Emily",
+      "lastName": "Wilson",
+      "status": "Active"
+    },
+    {
+      "id": "360017",
+      "firstName": "Chris",
+      "lastName": "Moore",
+      "status": "Active"
+    },
+    {
+      "id": "360018",
+      "firstName": "Amanda",
+      "lastName": "Lee",
+      "status": "Active"
+    },
+    {
+      "id": "360019",
+      "firstName": "David",
+      "lastName": "Harris",
+      "status": "Active"
+    },
+    {
+      "id": "360020",
+      "firstName": "Jessica",
+      "lastName": "Clark",
+      "status": "Active"
+    },
+    {
+      "id": "360021",
+      "firstName": "Ryan",
+      "lastName": "Thompson",
+      "status": "Inactive"
+    },
+    {
+      "id": "360022",
+      "firstName": "Megan",
+      "lastName": "White",
+      "status": "Active"
+    },
+    {
+      "id": "360023",
+      "firstName": "Kevin",
+      "lastName": "Lewis",
+      "status": "Active"
+    },
+    {
+      "id": "360024",
+      "firstName": "Rachel",
+      "lastName": "Walker",
+      "status": "On Hold"
+    },
+    {
+      "id": "360025",
+      "firstName": "Brandon",
+      "lastName": "Hall",
+      "status": "Active"
+    },
+    {
+      "id": "390001",
+      "firstName": "Unknown",
+      "lastName": "Unknown",
+      "status": "Active"
+    },
+    {
+      "id": "420001",
+      "firstName": "Unknown",
+      "lastName": "Unknown",
+      "status": "Active"
+    },
+    {
+      "id": "450001",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "status": "Active"
+    },
+    {
+      "id": "480001",
+      "firstName": "Test",
+      "lastName": "Student",
+      "status": "Active"
+    },
+    {
+      "id": "480002",
+      "firstName": "Dominique",
+      "lastName": "Holmes",
+      "status": "Active"
+    },
+    {
+      "id": "510001",
+      "firstName": "Test",
+      "lastName": "Student",
+      "status": "Active"
+    },
+    {
+      "id": "510002",
+      "firstName": "NewTest",
+      "lastName": "StudentTwo",
+      "status": "Active"
+    },
+    {
+      "id": "510003",
+      "firstName": "Test",
+      "lastName": "Error",
+      "status": "Active"
+    },
+    {
+      "id": "510004",
+      "firstName": "Vincent",
+      "lastName": "Holmes",
+      "status": "Active"
+    },
+    {
+      "id": "510005",
+      "firstName": "Vincent",
+      "lastName": "Holmes",
+      "status": "Active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tstatus\n360001\tEmma\tRodriguez\tActive\n360002\tLiam\tChen\tActive\n360003\tSophia\tJohnson\tActive\n360004\tNoah\tWilliams\tActive\n360005\tOlivia\tBrown\tOn Hold\n360006\tEthan\tDavis\tActive\n360007\tAva\tMartinez\tActive\n360008\tMason\tGarcia\tActive\n360009\tIsabella\tAnderson\tActive\n360010\tLucas\tTaylor\tActive\n360011\tJohn\tDoe\tActive\n360012\tJane\tSmith\tActive\n360013\tMike\tJohnson\tActive\n360014\tSarah\tWilliams\tActive\n360015\tTom\tDavis\tActive\n360016\tEmily\tWilson\tActive\n360017\tChris\tMoore\tActive\n360018\tAmanda\tLee\tActive\n360019\tDavid\tHarris\tActive\n360020\tJessica\tClark\tActive\n360021\tRyan\tThompson\tInactive\n360022\tMegan\tWhite\tActive\n360023\tKevin\tLewis\tActive\n360024\tRachel\tWalker\tOn Hold\n360025\tBrandon\tHall\tActive\n390001\tUnknown\tUnknown\tActive\n420001\tUnknown\tUnknown\tActive\n450001\tJane\tDoe\tActive\n480001\tTest\tStudent\tActive\n480002\tDominique\tHolmes\tActive\n510001\tTest\tStudent\tActive\n510002\tNewTest\tStudentTwo\tActive\n510003\tTest\tError\tActive\n510004\tVincent\tHolmes\tActive\n510005\tVincent\tHolmes\tActive\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

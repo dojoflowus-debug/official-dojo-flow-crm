@@ -2739,3 +2739,19 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Test adding student with photo
 - [x] Verify no script error appears - user confirmed fix works
 
+
+## 🐛 BUG: Sidebar Menu Icons Showing Incorrect Statistics
+
+### Issue
+- [ ] Students count shows 32 instead of actual 8 students
+- [ ] Leads count shows 83 instead of actual 0 leads
+
+### Fix Tasks
+- [ ] Investigate sidebar statistics data source
+- [ ] Fix statistics to use actual database counts
+- [ ] Verify correct numbers display
+
+### Root Cause Found
+- [x] Badge counts not filtering by organizationId (multi-tenancy issue)
+- [x] Fix navBadgesRouter to filter by user's organization
+- [x] Verify each account sees only their own data

@@ -9,6 +9,12 @@ import { eq, and, or, lt, gt, isNull, sql, count } from "drizzle-orm";
  * 
  * Provides actionable counts for navigation menu items.
  * Only shows counts for items requiring attention/action.
+ * 
+ * IMPORTANT: These badges should ONLY show items that need attention,
+ * NOT total counts. The badge is meant to alert users to take action.
+ * 
+ * MULTI-TENANCY: All queries MUST filter by organizationId to ensure
+ * each account only sees their own data.
  */
 
 export const navBadgesRouter = router({
@@ -23,6 +29,7 @@ export const navBadgesRouter = router({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
       const userRole = ctx.user.role;
+      const organizationId = ctx.currentOrganizationId;
       
       // Initialize all counts
       const counts = {
@@ -35,6 +42,12 @@ export const navBadgesRouter = router({
         operations: 0,
       };
 
+      // If no organization context, return empty counts
+      if (!organizationId) {
+        console.warn('[NavBadges] No organization context available');
+        return {};
+      }
+
       try {
         const db = await getDb();
         if (!db) {
@@ -42,35 +55,59 @@ export const navBadgesRouter = router({
           return {};
         }
 
-        // STUDENTS COUNT: Total active students
-        const totalStudents = await db
+        // STUDENTS COUNT: Only students needing attention for THIS organization
+        // - Students on hold (status = "On Hold")
+        // - Students marked as inactive (status = "Inactive")
+        // Note: Status values are capitalized in the database enum
+        const studentsNeedingAttention = await db
           .select({ count: count() })
           .from(students)
           .where(
-            or(
-              eq(students.status, 'active'),
-              eq(students.status, 'trial'),
-              eq(students.status, 'on_hold'),
-              isNull(students.status) // Include students with no status set
+            and(
+              eq(students.organizationId, organizationId),
+              or(
+                eq(students.status, 'On Hold'),
+                eq(students.status, 'Inactive')
+              )
             )
           );
         
-        counts.students = totalStudents[0]?.count || 0;
+        counts.students = studentsNeedingAttention[0]?.count || 0;
 
-        // LEADS COUNT: Total active leads (not converted or lost)
-        const totalLeads = await db
+        // LEADS COUNT: Only leads requiring follow-up action for THIS organization
+        // - New leads (not yet contacted) - need immediate action
+        // - Leads in "Attempting Contact" for more than 3 days
+        // - Leads in "Contact Made" with no activity for more than 7 days
+        const now = new Date();
+        const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        const leadsNeedingFollowUp = await db
           .select({ count: count() })
           .from(leads)
           .where(
             and(
-              sql`${leads.status} != 'Converted'`,
-              sql`${leads.status} != 'Lost'`
+              eq(leads.organizationId, organizationId),
+              or(
+                // New leads that haven't been contacted
+                eq(leads.status, 'New Lead'),
+                // Leads stuck in "Attempting Contact" for too long
+                and(
+                  eq(leads.status, 'Attempting Contact'),
+                  lt(leads.updatedAt, threeDaysAgo)
+                ),
+                // Leads with contact made but stale
+                and(
+                  eq(leads.status, 'Contact Made'),
+                  lt(leads.updatedAt, sevenDaysAgo)
+                )
+              )
             )
           );
 
-        counts.leads = totalLeads[0]?.count || 0;
+        counts.leads = leadsNeedingFollowUp[0]?.count || 0;
 
-        // BILLING COUNT: Failed payments and disputed transactions
+        // BILLING COUNT: Failed payments and disputed transactions for THIS organization
         // - Failed payments (status = 'failed')
         // - Disputed transactions (status = 'disputed')
         try {
@@ -78,9 +115,12 @@ export const navBadgesRouter = router({
             .select({ count: count() })
             .from(billingTransactions)
             .where(
-              or(
-                eq(billingTransactions.status, 'failed'),
-                eq(billingTransactions.status, 'disputed')
+              and(
+                eq(billingTransactions.organizationId, organizationId),
+                or(
+                  eq(billingTransactions.status, 'failed'),
+                  eq(billingTransactions.status, 'disputed')
+                )
               )
             );
 
@@ -97,48 +137,55 @@ export const navBadgesRouter = router({
         counts.tasks = 0;
 
         // MESSAGES COUNT: Unread messages for current user
-        // Count unread messages in kaiConversations where user is a participant
-        const unreadMessages = await db
-          .select({ count: count() })
-          .from(kaiMessages)
-          .where(
-            and(
-              sql`${kaiMessages.conversationId} IN (
-                SELECT id FROM ${kaiConversations} 
-                WHERE ${kaiConversations.userId} = ${userId}
-              )`,
-              eq(kaiMessages.role, 'assistant'),
-              // Add unread tracking field if it exists
-            )
-          );
-
         // For now, count conversations with new messages (simplified)
         counts.messages = 0; // Will implement proper unread tracking later
 
-        // KIOSK COUNT: Issues requiring attention
-        // - Unconfigured kiosks
-        // - Offline kiosks (if we track status)
+        // KIOSK COUNT: Issues requiring attention for THIS organization
         // - Pending merchandise fulfillment
-        const pendingFulfillments = await db
-          .select({ count: count() })
-          .from(studentMerchandise)
-          .where(eq(studentMerchandise.fulfillmentStatus, 'pending'));
+        try {
+          const pendingFulfillments = await db
+            .select({ count: count() })
+            .from(studentMerchandise)
+            .where(
+              and(
+                eq(studentMerchandise.organizationId, organizationId),
+                eq(studentMerchandise.fulfillmentStatus, 'pending')
+              )
+            );
 
-        counts.kiosk = pendingFulfillments[0]?.count || 0;
+          counts.kiosk = pendingFulfillments[0]?.count || 0;
+        } catch (error) {
+          counts.kiosk = 0;
+        }
 
-        // OPERATIONS COUNT: Pending fulfillments + low stock items
-        const lowStockItems = await db
-          .select({ count: count() })
-          .from(merchandiseItems)
-          .where(
-            and(
-              sql`${merchandiseItems.stockQuantity} IS NOT NULL`,
-              sql`${merchandiseItems.lowStockThreshold} IS NOT NULL`,
-              sql`${merchandiseItems.stockQuantity} <= ${merchandiseItems.lowStockThreshold}`
-            )
-          );
+        // OPERATIONS COUNT: Pending fulfillments + low stock items for THIS organization
+        try {
+          const pendingFulfillments = await db
+            .select({ count: count() })
+            .from(studentMerchandise)
+            .where(
+              and(
+                eq(studentMerchandise.organizationId, organizationId),
+                eq(studentMerchandise.fulfillmentStatus, 'pending')
+              )
+            );
 
-        counts.operations = (pendingFulfillments[0]?.count || 0) + (lowStockItems[0]?.count || 0);
+          const lowStockItems = await db
+            .select({ count: count() })
+            .from(merchandiseItems)
+            .where(
+              and(
+                eq(merchandiseItems.organizationId, organizationId),
+                sql`${merchandiseItems.stockQuantity} IS NOT NULL`,
+                sql`${merchandiseItems.lowStockThreshold} IS NOT NULL`,
+                sql`${merchandiseItems.stockQuantity} <= ${merchandiseItems.lowStockThreshold}`
+              )
+            );
+
+          counts.operations = (pendingFulfillments[0]?.count || 0) + (lowStockItems[0]?.count || 0);
+        } catch (error) {
+          counts.operations = 0;
+        }
 
         // Return only non-zero counts
         const result: Record<string, number> = {};
@@ -166,21 +213,27 @@ export const navBadgesRouter = router({
     }))
     .query(async ({ ctx, input }) => {
       const { badge } = input;
+      const organizationId = ctx.currentOrganizationId;
+      
       const db = await getDb();
-      if (!db) {
+      if (!db || !organizationId) {
         return { items: [] };
       }
 
       switch (badge) {
         case 'students':
-          // Return list of students needing attention with reasons
+          // Return list of students needing attention with reasons for THIS organization
+          // Note: Status values are capitalized ("On Hold", "Inactive")
           const studentsAtRisk = await db
             .select()
             .from(students)
             .where(
-              or(
-                eq(students.status, 'on_hold'),
-                eq(students.status, 'inactive')
+              and(
+                eq(students.organizationId, organizationId),
+                or(
+                  eq(students.status, 'On Hold'),
+                  eq(students.status, 'Inactive')
+                )
               )
             )
             .limit(50);
@@ -188,32 +241,33 @@ export const navBadgesRouter = router({
           return {
             items: studentsAtRisk.map(s => ({
               id: s.id,
-              name: s.name,
-              reason: s.status === 'on_hold' ? 'On Hold' : 'Inactive',
-              severity: 'medium',
+              name: `${s.firstName} ${s.lastName}`,
+              reason: s.status === 'On Hold' ? 'On Hold' : 'Inactive',
+              severity: s.status === 'On Hold' ? 'medium' : 'high',
             })),
           };
 
         case 'leads':
-          // Return leads requiring follow-up
+          // Return leads requiring follow-up for THIS organization
           const now = new Date();
-          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
           const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+          const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
           const leadsNeedingAction = await db
             .select()
             .from(leads)
             .where(
-              or(
-                and(
-                  gt(leads.createdAt, oneDayAgo),
-                  eq(leads.status, 'New Lead')
-                ),
-                and(
-                  lt(leads.updatedAt, threeDaysAgo),
-                  or(
+              and(
+                eq(leads.organizationId, organizationId),
+                or(
+                  eq(leads.status, 'New Lead'),
+                  and(
                     eq(leads.status, 'Attempting Contact'),
-                    eq(leads.status, 'Contact Made')
+                    lt(leads.updatedAt, threeDaysAgo)
+                  ),
+                  and(
+                    eq(leads.status, 'Contact Made'),
+                    lt(leads.updatedAt, sevenDaysAgo)
                   )
                 )
               )
@@ -224,20 +278,25 @@ export const navBadgesRouter = router({
             items: leadsNeedingAction.map(l => ({
               id: l.id,
               name: `${l.firstName} ${l.lastName}`,
-              reason: l.status === 'New Lead' ? 'New Lead' : 'Overdue Follow-up',
+              reason: l.status === 'New Lead' ? 'New Lead - Needs Contact' : 
+                      l.status === 'Attempting Contact' ? 'Stale - No Response' :
+                      'Overdue Follow-up',
               severity: l.status === 'New Lead' ? 'high' : 'medium',
             })),
           };
 
         case 'billing':
-          // Return failed/disputed transactions
+          // Return failed/disputed transactions for THIS organization
           const failedTransactions = await db
             .select()
             .from(billingTransactions)
             .where(
-              or(
-                eq(billingTransactions.status, 'failed'),
-                eq(billingTransactions.status, 'disputed')
+              and(
+                eq(billingTransactions.organizationId, organizationId),
+                or(
+                  eq(billingTransactions.status, 'failed'),
+                  eq(billingTransactions.status, 'disputed')
+                )
               )
             )
             .limit(50);
@@ -253,7 +312,7 @@ export const navBadgesRouter = router({
           };
 
         case 'operations':
-          // Return pending fulfillments
+          // Return pending fulfillments for THIS organization
           const pendingItems = await db
             .select({
               id: studentMerchandise.id,
@@ -264,7 +323,12 @@ export const navBadgesRouter = router({
             })
             .from(studentMerchandise)
             .leftJoin(merchandiseItems, eq(studentMerchandise.itemId, merchandiseItems.id))
-            .where(eq(studentMerchandise.fulfillmentStatus, 'pending'))
+            .where(
+              and(
+                eq(studentMerchandise.organizationId, organizationId),
+                eq(studentMerchandise.fulfillmentStatus, 'pending')
+              )
+            )
             .limit(50);
 
           return {
