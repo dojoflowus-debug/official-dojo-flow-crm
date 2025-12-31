@@ -2235,3 +2235,4 @@ Remove fake/seed data (fake students, fake leads) from all new accounts except f
 - [ ] Check if route is properly registered
 - [ ] Test on dev server vs published site
 
+- [x] BUG: Add Student button not working on Students page (fixed - added onClick handler and dialog to StudentsSplitScreen.tsx)
