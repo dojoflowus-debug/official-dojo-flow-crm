@@ -10,6 +10,7 @@ import ViewModeToggle, { ViewMode } from '../components/ViewModeToggle'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
 import StudentModal from '../components/StudentModal'
+import AddStudentModal from '../components/AddStudentModal'
 import NotesDrawer from '../components/NotesDrawer'
 import Breadcrumb, { BreadcrumbItem } from '../components/Breadcrumb'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -1072,251 +1073,136 @@ export default function StudentsSplitScreen() {
         )}
       </MapOverlay>
 
-      {/* Add Student Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center">
-              <Plus className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-primary" />
-              Add New Student
-            </DialogTitle>
-            <DialogDescription className="text-sm">
-              Enter the student's information to add them to your dojo roster.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4 overflow-y-auto flex-1 px-1">
-            {/* Photo Upload */}
-            <div className="grid gap-2">
-              <Label>Student Photo</Label>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  {formData.photo_url ? (
-                    <img 
-                      src={formData.photo_url} 
-                      alt="Student" 
-                      className="w-20 h-20 rounded-full object-cover border-2 border-border"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                      <User className="h-10 w-10 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5">
-                    <Camera className="h-3 w-3 text-primary-foreground" />
-                  </div>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <Input
-                    id="photo-file"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        const reader = new FileReader()
-                        reader.onloadend = () => {
-                          handleInputChange('photo_url', reader.result)
-                        }
-                        reader.readAsDataURL(file)
-                      }
-                    }}
-                    disabled={submitting}
-                    className="cursor-pointer"
-                  />
-                  <p className="text-xs text-muted-foreground">Or paste an image URL:</p>
-                  <Input
-                    id="photo-url"
-                    type="url"
-                    placeholder="https://example.com/photo.jpg"
-                    value={formData.photo_url && !formData.photo_url.startsWith('data:') ? formData.photo_url : ''}
-                    onChange={(e) => handleInputChange('photo_url', e.target.value)}
-                    disabled={submitting}
-                  />
-                </div>
-              </div>
-            </div>
+      {/* Add Student Modal - Redesigned Premium Version */}
+      <AddStudentModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={async (data) => {
+          try {
+            // Map enrollment status to membership status
+            const membershipStatusMap: Record<string, string> = {
+              'trial': 'Trial',
+              'active': 'Paid',
+              'prospect': 'Standard',
+              'frozen': 'Cancelled'
+            }
+            
+            // Map enrollment status to student status
+            const studentStatusMap: Record<string, string> = {
+              'trial': 'Active',
+              'active': 'Active',
+              'prospect': 'Inactive',
+              'frozen': 'On Hold'
+            }
 
-            <div className="grid gap-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input
-                id="name"
-                placeholder="Enter student's full name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                disabled={submitting}
-              />
-            </div>
+            const studentData = {
+              first_name: data.firstName,
+              last_name: data.lastName,
+              email: data.email || '',
+              phone: data.phone || '',
+              date_of_birth: data.dateOfBirth ? data.dateOfBirth.toISOString().split('T')[0] : '',
+              belt_rank: 'White Belt',
+              status: studentStatusMap[data.enrollmentStatus] || 'Active',
+              membership_status: membershipStatusMap[data.enrollmentStatus] || 'Standard',
+              street_address: data.streetAddress || '',
+              city: data.city || '',
+              state: data.state || '',
+              zip_code: data.zipCode || '',
+              photo_url: data.photoUrl || '',
+              program: data.program || '',
+              guardian_name: data.guardianName || '',
+              guardian_email: data.guardianEmail || '',
+              guardian_phone: data.guardianPhone || '',
+              notes: data.notes || '',
+              tags: data.tags?.join(',') || ''
+            }
 
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="student@email.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={submitting}
-              />
-            </div>
+            const response = await fetch('/api/students', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(studentData)
+            })
 
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Phone Number *</Label>
-              <PhoneInput
-                value={formData.phone}
-                onChange={(value) => handleInputChange('phone', value)}
-                country="United States"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                required
-                disabled={submitting}
-              />
-            </div>
+            if (response.ok) {
+              // Refresh data using tRPC
+              utils.students.list.invalidate()
+              utils.students.stats.invalidate()
+            } else {
+              const error = await response.json()
+              let errorMessage = error.error || 'Unknown error'
+              
+              if (errorMessage.includes('UNIQUE constraint failed') && errorMessage.includes('email')) {
+                errorMessage = 'A student with this email address already exists.'
+              }
+              
+              throw new Error(errorMessage)
+            }
+          } catch (error) {
+            console.error('Error adding student:', error)
+            throw error
+          }
+        }}
+        onSubmitAndAddAnother={async (data) => {
+          try {
+            const membershipStatusMap: Record<string, string> = {
+              'trial': 'Trial',
+              'active': 'Paid',
+              'prospect': 'Standard',
+              'frozen': 'Cancelled'
+            }
+            
+            const studentStatusMap: Record<string, string> = {
+              'trial': 'Active',
+              'active': 'Active',
+              'prospect': 'Inactive',
+              'frozen': 'On Hold'
+            }
 
-            <div className="grid gap-2">
-              <Label htmlFor="date_of_birth">Date of Birth *</Label>
-              <Input
-                id="date_of_birth"
-                type="date"
-                value={formData.date_of_birth}
-                onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
-                disabled={submitting}
-              />
-            </div>
+            const studentData = {
+              first_name: data.firstName,
+              last_name: data.lastName,
+              email: data.email || '',
+              phone: data.phone || '',
+              date_of_birth: data.dateOfBirth ? data.dateOfBirth.toISOString().split('T')[0] : '',
+              belt_rank: 'White Belt',
+              status: studentStatusMap[data.enrollmentStatus] || 'Active',
+              membership_status: membershipStatusMap[data.enrollmentStatus] || 'Standard',
+              street_address: data.streetAddress || '',
+              city: data.city || '',
+              state: data.state || '',
+              zip_code: data.zipCode || '',
+              photo_url: data.photoUrl || '',
+              program: data.program || '',
+              guardian_name: data.guardianName || '',
+              guardian_email: data.guardianEmail || '',
+              guardian_phone: data.guardianPhone || '',
+              notes: data.notes || '',
+              tags: data.tags?.join(',') || ''
+            }
 
-            <div className="grid gap-2">
-              <Label htmlFor="street_address">Street Address</Label>
-              <Input
-                id="street_address"
-                placeholder="123 Main St"
-                value={formData.street_address}
-                onChange={(e) => handleInputChange('street_address', e.target.value)}
-                disabled={submitting}
-              />
-            </div>
+            const response = await fetch('/api/students', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(studentData)
+            })
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  placeholder="City"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  disabled={submitting}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="state">State</Label>
-                <Input
-                  id="state"
-                  placeholder="IL"
-                  value={formData.state}
-                  onChange={(e) => handleInputChange('state', e.target.value)}
-                  disabled={submitting}
-                  maxLength={2}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="zip_code">Zip Code</Label>
-              <Input
-                id="zip_code"
-                placeholder="62701"
-                value={formData.zip_code}
-                onChange={(e) => handleInputChange('zip_code', e.target.value)}
-                disabled={submitting}
-                maxLength={10}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="belt">Belt Rank</Label>
-              <Select 
-                value={formData.belt_rank} 
-                onValueChange={(value) => handleInputChange('belt_rank', value)}
-                disabled={submitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select belt rank" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="White Belt">White Belt</SelectItem>
-                  <SelectItem value="Yellow Belt">Yellow Belt</SelectItem>
-                  <SelectItem value="Orange Belt">Orange Belt</SelectItem>
-                  <SelectItem value="Green Belt">Green Belt</SelectItem>
-                  <SelectItem value="Blue Belt">Blue Belt</SelectItem>
-                  <SelectItem value="Brown Belt">Brown Belt</SelectItem>
-                  <SelectItem value="Black Belt">Black Belt</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="membership">Membership Status</Label>
-              <Select 
-                value={formData.membership_status} 
-                onValueChange={(value) => handleInputChange('membership_status', value)}
-                disabled={submitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select membership status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Paid">Paid</SelectItem>
-                  <SelectItem value="Overdue">Overdue</SelectItem>
-                  <SelectItem value="Cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="status">Student Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => handleInputChange('status', value)}
-                disabled={submitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select student status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter className="flex-shrink-0 mt-4 pt-4 border-t gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowAddModal(false)}
-              disabled={submitting}
-              className="flex-1 sm:flex-none"
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="bg-primary hover:bg-primary/90 flex-1 sm:flex-none"
-              onClick={handleAddStudent}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Student
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            if (response.ok) {
+              utils.students.list.invalidate()
+              utils.students.stats.invalidate()
+            } else {
+              const error = await response.json()
+              throw new Error(error.error || 'Unknown error')
+            }
+          } catch (error) {
+            console.error('Error adding student:', error)
+            throw error
+          }
+        }}
+      />
     </div>
     </BottomNavLayout>
   )

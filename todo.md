@@ -2236,3 +2236,128 @@ Remove fake/seed data (fake students, fake leads) from all new accounts except f
 - [ ] Test on dev server vs published site
 
 - [x] BUG: Add Student button not working on Students page (fixed - added onClick handler and dialog to StudentsSplitScreen.tsx)
+
+
+## 🎨 Redesign "Add Student" Modal (2025-12-30)
+
+### Objective
+Redesign the Add Student modal to feel structured, modern, and scalable - like a professional CRM onboarding step.
+
+### Modal Structure
+- [ ] Centered modal, max width 720-800px
+- [ ] Rounded corners (16-20px), soft shadow
+- [ ] Scrollable body with fixed footer
+- [ ] Dark theme with soft gradients matching DojoFlow design
+
+### Section 1: Student Profile
+- [ ] Profile photo upload with avatar preview
+- [ ] First Name (required)
+- [ ] Last Name (required)
+- [ ] Date of Birth (required)
+- [ ] Live preview of student avatar + name at top
+
+### Section 2: Contact Information
+- [ ] Email Address
+- [ ] Phone Number
+- [ ] Street Address (optional)
+
+### Section 3: Enrollment Details
+- [ ] Program/Track dropdown (Martial Arts, Kickboxing, Youth, Adult, Private)
+- [ ] Enrollment Status (Trial, Active, Prospect, Frozen)
+- [ ] Start Date picker
+
+### Section 4: Guardian Info (Conditional)
+- [ ] Show only if DOB < 18 years
+- [ ] Guardian Name
+- [ ] Guardian Email
+- [ ] Guardian Phone
+
+### Section 5: Tags & Notes
+- [ ] Tags multi-select (New, VIP, Competition Team)
+- [ ] Internal Notes textarea
+
+### Smart Defaults
+- [ ] Auto-detect youth vs adult based on DOB
+- [ ] Auto-suggest program based on age
+- [ ] Auto-fill start date as today
+- [ ] Preselect "Trial" if no payment info
+
+### Footer Actions
+- [ ] Cancel button (secondary)
+- [ ] Save & Add Another button
+- [ ] Add Student button (primary, DojoFlow red)
+- [ ] Primary button disabled until required fields filled
+
+### Validation & Behavior
+- [ ] Inline validation (no page reload)
+- [ ] Friendly error messages
+- [ ] Prevent duplicate email entries
+- [ ] Allow optional fields to be skipped
+
+### Testing
+- [ ] Test modal opens correctly
+- [ ] Test all form sections render
+- [ ] Test guardian section shows/hides based on age
+- [ ] Test smart defaults work
+- [ ] Test form submission
+- [ ] Save checkpoint
+
+
+
+## 🎨 Redesign "Add Student" Modal (COMPLETED)
+
+### Modal Structure
+- [x] Multi-section modal structure (720-800px max width)
+- [x] Rounded corners (16-20px) with soft shadow
+- [x] Scrollable body with fixed footer
+- [x] Dark theme with soft gradients matching DojoFlow aesthetic
+
+### Section 1: Student Profile
+- [x] Live preview header with avatar (shows initials or uploaded photo)
+- [x] First Name field (required)
+- [x] Last Name field (required)
+- [x] Date of Birth field (required) with calendar picker
+- [x] Photo upload with camera icon overlay
+
+### Section 2: Contact Details
+- [x] Email Address with mail icon
+- [x] Phone Number with phone icon
+- [x] Street Address with map pin icon
+- [x] City, State, Zip Code fields
+
+### Section 3: Program & Status
+- [x] Program/Track dropdown (Martial Arts, Kickboxing, Youth Program, Adult Program, Private Training, BJJ, MMA)
+- [x] Enrollment Status dropdown (Trial, Active, Prospect, Frozen)
+- [x] Start Date picker (defaults to today)
+
+### Section 4: Guardian Info (Conditional)
+- [x] Shows only when DOB indicates minor (< 18 years)
+- [x] Guardian Name (required for minors)
+- [x] Guardian Email
+- [x] Guardian Phone
+
+### Section 5: Tags & Notes
+- [x] Multi-select tags (New, VIP, Competition Team, Family Plan, Referral)
+- [x] Internal Notes textarea
+
+### Smart Defaults
+- [x] Auto-detect youth vs adult based on DOB
+- [x] Auto-suggest program based on age (Youth Program for < 13, Adult Program for 18+)
+- [x] Start date defaults to today
+- [x] "Trial" preselected as default enrollment status
+- [x] "New" tag preselected by default
+- [x] "Smart defaults applied" indicator badge
+
+### Footer Actions
+- [x] Cancel button (secondary)
+- [x] Save & Add Another button
+- [x] Add Student button (primary, DojoFlow red)
+- [x] Required fields indicator
+
+### Design Elements
+- [x] Section headers with icons
+- [x] Clear visual separation between sections (separators)
+- [x] Inline validation with error messages
+- [x] Clean typography matching DojoFlow aesthetic
+- [x] Primary button only activates when required fields are filled
+
