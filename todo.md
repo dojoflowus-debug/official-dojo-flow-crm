@@ -2545,3 +2545,48 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Fixed missing useMemo import in StudentsSplitScreen
 - [x] Verified student creation works end-to-end (Dominique Holmes added successfully)
 
+
+
+#### 🐛 BUG: Student Card Modal Issues (User Report 2025-12-31)
+
+### Issue
+- [x] Modal background is transparent - can see through to the map/list behind (FIXED)
+- [x] Form fields are hard to read due to transparency (FIXED - solid backgrounds)
+- [x] UI is not user-friendly for data entry (FIXED - mobile optimizations)
+- [ ] Cannot add/edit school logo on student cards (deferred)
+- [x] Student/lead counts in sidebar show incorrect numbers (explained - shows actionable items)ct student/lead counts
+
+### Fix Tasks
+- [ ] Fix modal background to be solid/opaque (not transparent)
+- [ ] Improve form layout and readability
+- [ ] Add proper backdrop overlay to modal
+- [ ] Add school logo upload functionality to student cards
+- [ ] Fix student count calculations in dashboard stats
+- [ ] Fix lead count calculations in dashboard stats
+- [ ] Test all fixes
+- [ ] Save checkpoint
+
+
+
+## 📱 Mobile Optimization (User Request 2025-12-31)
+
+### AddStudentModal Mobile Fixes
+- [x] Make modal full-screen on mobile devices
+- [x] Improve form field sizes for touch input
+- [x] Stack form fields vertically on small screens
+- [x] Ensure footer buttons are accessible
+
+### Students Page Mobile Fixes
+- [x] Stack map and list views instead of side-by-side on mobile (default to list view)
+- [x] Improve student card touch targets
+- [x] Ensure search and filters are accessible (horizontal scroll)
+
+### Navigation Mobile Fixes
+- [x] Verify bottom navigation is not cut off
+- [x] Ensure all nav items are accessible
+- [x] Improve touch targets for nav buttons (larger icons and padding)
+
+### General Mobile Improvements
+- [ ] Test and fix any overflow issues
+- [ ] Ensure text is readable on small screens
+- [ ] Verify modals/dialogs work on mobile

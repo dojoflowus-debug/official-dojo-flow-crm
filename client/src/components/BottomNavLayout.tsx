@@ -508,10 +508,11 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`
                   flex flex-col items-center justify-center gap-1
-                  pt-1.5 pb-1 text-center
+                  pt-2 pb-1.5 sm:pt-1.5 sm:pb-1 text-center
                   transition-all duration-[180ms] ease-out
                   flex-shrink-0
-                  min-w-[70px]
+                  min-w-[60px] sm:min-w-[70px]
+                  min-h-[52px] sm:min-h-[48px]
                 `}
                 style={{ 
                   transform: getHoverTransform(),
@@ -547,7 +548,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                   ) : (
                     <>
                       <Icon 
-                        className="transition-all duration-200 h-[18px] w-[18px]"
+                        className="transition-all duration-200 h-[22px] w-[22px] sm:h-[18px] sm:w-[18px]"
                         style={{
                           color: active 
                             ? '#E53935' 

@@ -149,7 +149,7 @@ export function ScrollableNav({
           onClick={() => scrollTo('left')}
           className={`
             absolute left-0 top-1/2 -translate-y-1/2 z-10
-            h-10 w-8 flex items-center justify-center
+            h-12 w-10 sm:h-10 sm:w-8 flex items-center justify-center
             transition-all duration-200
             ${isDark || isCinematic 
               ? 'bg-gradient-to-r from-[#111217] via-[#111217]/95 to-transparent hover:from-[#1A1B1F]' 
@@ -190,7 +190,7 @@ export function ScrollableNav({
           onClick={() => scrollTo('right')}
           className={`
             absolute right-0 top-1/2 -translate-y-1/2 z-10
-            h-10 w-8 flex items-center justify-center
+            h-12 w-10 sm:h-10 sm:w-8 flex items-center justify-center
             transition-all duration-200
             ${isDark || isCinematic 
               ? 'bg-gradient-to-l from-[#111217] via-[#111217]/95 to-transparent hover:from-[#1A1B1F]' 

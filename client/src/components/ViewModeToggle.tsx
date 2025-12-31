@@ -37,7 +37,7 @@ export const ViewModeToggle: React.FC<ViewModeToggleProps> = ({
           key={value}
           onClick={() => onChange(value)}
           className={`
-            flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium
+            flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-md text-sm font-medium min-h-[40px] sm:min-h-0
             transition-all duration-150
             ${mode === value
               ? isDarkMode
@@ -49,7 +49,7 @@ export const ViewModeToggle: React.FC<ViewModeToggleProps> = ({
             }
           `}
         >
-          <Icon className="h-4 w-4" />
+          <Icon className="h-5 w-5 sm:h-4 sm:w-4" />
           <span className="hidden sm:inline">{label}</span>
         </button>
       ))}

@@ -353,11 +353,11 @@ export default function AddStudentModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="sm:max-w-[800px] max-h-[90vh] p-0 gap-0 overflow-hidden bg-card border-border/50 rounded-2xl shadow-2xl"
+        className="w-full h-full sm:w-auto sm:h-auto sm:max-w-[800px] sm:max-h-[90vh] max-h-full p-0 gap-0 overflow-hidden !bg-[#1a1a1c] dark:!bg-[#1a1a1c] border-0 sm:border sm:border-border/50 rounded-none sm:rounded-2xl shadow-2xl backdrop-blur-none"
         showCloseButton={false}
       >
         {/* Header with Live Preview */}
-        <div className="relative px-6 pt-6 pb-4 border-b border-border/50 bg-gradient-to-b from-primary/5 to-transparent">
+        <div className="relative px-6 pt-6 pb-4 border-b border-border/50 bg-[#1f1f22]">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -461,7 +461,7 @@ export default function AddStudentModal({
                     value={formData.firstName}
                     onChange={(e) => handleChange('firstName', e.target.value)}
                     className={cn(
-                      "h-11 bg-secondary/50 border-border/50 focus:border-primary",
+                      "h-11 bg-[#252528] border-border focus:border-primary",
                       errors.firstName && "border-destructive"
                     )}
                   />
@@ -477,7 +477,7 @@ export default function AddStudentModal({
                     value={formData.lastName}
                     onChange={(e) => handleChange('lastName', e.target.value)}
                     className={cn(
-                      "h-11 bg-secondary/50 border-border/50 focus:border-primary",
+                      "h-11 bg-[#252528] border-border focus:border-primary",
                       errors.lastName && "border-destructive"
                     )}
                   />
@@ -492,7 +492,7 @@ export default function AddStudentModal({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full h-11 justify-start text-left font-normal bg-secondary/50 border-border/50 hover:bg-secondary",
+                          "w-full h-11 justify-start text-left font-normal bg-[#252528] border-border hover:bg-[#2a2a2d]",
                           !formData.dateOfBirth && "text-muted-foreground",
                           errors.dateOfBirth && "border-destructive"
                         )}
@@ -545,7 +545,7 @@ export default function AddStudentModal({
                       value={formData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
                       className={cn(
-                        "h-11 pl-10 bg-secondary/50 border-border/50 focus:border-primary",
+                        "h-11 pl-10 bg-[#252528] border-border focus:border-primary",
                         errors.email && "border-destructive"
                       )}
                     />
@@ -562,7 +562,7 @@ export default function AddStudentModal({
                       value={formData.phone}
                       onChange={(value: string) => handleChange('phone', value)}
                       country="United States"
-                      className="h-11 pl-10 bg-secondary/50 border border-border/50 rounded-md focus:border-primary w-full"
+                      className="h-11 pl-10 bg-[#252528] border border-border rounded-md focus:border-primary w-full"
                     />
                   </div>
                 </div>
@@ -577,7 +577,7 @@ export default function AddStudentModal({
                       placeholder="123 Main Street"
                       value={formData.streetAddress}
                       onChange={(e) => handleChange('streetAddress', e.target.value)}
-                      className="h-11 pl-10 bg-secondary/50 border-border/50 focus:border-primary"
+                      className="h-11 pl-10 bg-[#252528] border-border focus:border-primary"
                     />
                   </div>
                 </div>
@@ -590,7 +590,7 @@ export default function AddStudentModal({
                     placeholder="City"
                     value={formData.city}
                     onChange={(e) => handleChange('city', e.target.value)}
-                    className="h-11 bg-secondary/50 border-border/50 focus:border-primary"
+                    className="h-11 bg-[#252528] border-border focus:border-primary"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -604,7 +604,7 @@ export default function AddStudentModal({
                       value={formData.state}
                       onChange={(e) => handleChange('state', e.target.value)}
                       maxLength={2}
-                      className="h-11 bg-secondary/50 border-border/50 focus:border-primary uppercase"
+                      className="h-11 bg-[#252528] border-border focus:border-primary uppercase"
                     />
                   </div>
                   <div className="space-y-2">
@@ -617,7 +617,7 @@ export default function AddStudentModal({
                       value={formData.zipCode}
                       onChange={(e) => handleChange('zipCode', e.target.value)}
                       maxLength={10}
-                      className="h-11 bg-secondary/50 border-border/50 focus:border-primary"
+                      className="h-11 bg-[#252528] border-border focus:border-primary"
                     />
                   </div>
                 </div>
@@ -640,7 +640,7 @@ export default function AddStudentModal({
                     value={formData.program}
                     onValueChange={(value) => handleChange('program', value)}
                   >
-                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50">
+                    <SelectTrigger className="h-11 bg-[#252528] border-border">
                       <SelectValue placeholder="Select program" />
                     </SelectTrigger>
                     <SelectContent>
@@ -658,7 +658,7 @@ export default function AddStudentModal({
                     value={formData.enrollmentStatus}
                     onValueChange={(value) => handleChange('enrollmentStatus', value)}
                   >
-                    <SelectTrigger className="h-11 bg-secondary/50 border-border/50">
+                    <SelectTrigger className="h-11 bg-[#252528] border-border">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -680,7 +680,7 @@ export default function AddStudentModal({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full h-11 justify-start text-left font-normal bg-secondary/50 border-border/50 hover:bg-secondary",
+                          "w-full h-11 justify-start text-left font-normal bg-[#252528] border-border hover:bg-[#2a2a2d]",
                           !formData.startDate && "text-muted-foreground"
                         )}
                       >
@@ -726,7 +726,7 @@ export default function AddStudentModal({
                         value={formData.guardianName}
                         onChange={(e) => handleChange('guardianName', e.target.value)}
                         className={cn(
-                          "h-11 bg-secondary/50 border-border/50 focus:border-primary",
+                          "h-11 bg-[#252528] border-border focus:border-primary",
                           errors.guardianName && "border-destructive"
                         )}
                       />
@@ -742,7 +742,7 @@ export default function AddStudentModal({
                         placeholder="guardian@email.com"
                         value={formData.guardianEmail}
                         onChange={(e) => handleChange('guardianEmail', e.target.value)}
-                        className="h-11 bg-secondary/50 border-border/50 focus:border-primary"
+                        className="h-11 bg-[#252528] border-border focus:border-primary"
                       />
                     </div>
                     <div className="space-y-2">
@@ -753,7 +753,7 @@ export default function AddStudentModal({
                         value={formData.guardianPhone}
                         onChange={(value: string) => handleChange('guardianPhone', value)}
                         country="United States"
-                        className="h-11 bg-secondary/50 border border-border/50 rounded-md focus:border-primary w-full"
+                        className="h-11 bg-[#252528] border border-border rounded-md focus:border-primary w-full"
                       />
                     </div>
                   </div>
@@ -783,7 +783,7 @@ export default function AddStudentModal({
                           "px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
                           formData.tags.includes(tag.value)
                             ? cn(tag.color, "border-current")
-                            : "bg-secondary/50 text-muted-foreground border-border/50 hover:bg-secondary"
+                            : "bg-[#252528] text-muted-foreground border-border hover:bg-[#2a2a2d]"
                         )}
                       >
                         {formData.tags.includes(tag.value) && (
@@ -803,7 +803,7 @@ export default function AddStudentModal({
                     placeholder="Add any internal notes about this student..."
                     value={formData.notes}
                     onChange={(e) => handleChange('notes', e.target.value)}
-                    className="min-h-[100px] bg-secondary/50 border-border/50 focus:border-primary resize-none"
+                    className="min-h-[100px] bg-[#252528] border-border focus:border-primary resize-none"
                   />
                 </div>
               </div>
@@ -812,7 +812,7 @@ export default function AddStudentModal({
         </ScrollArea>
 
         {/* Sticky Footer */}
-        <div className="px-6 py-4 border-t border-border/50 bg-card/95 backdrop-blur-sm">
+        <div className="px-6 py-4 border-t border-border/50 bg-[#1a1a1c]">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               <span className="text-destructive">*</span> Required fields

@@ -422,7 +422,13 @@ export default function StudentsSplitScreen() {
   
   // Split pane state
   const [mapWidth, setMapWidth] = useState(50) // percentage - default 50/50
-  const [viewMode, setViewMode] = useState<ViewMode>('split') // Default to split view
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    // Default to list view on mobile, split view on desktop
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return 'list'
+    }
+    return 'split'
+  })
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [isHeaderHidden, setIsHeaderHidden] = useState(false)
@@ -758,15 +764,24 @@ export default function StudentsSplitScreen() {
 
       {/* Page Sub-Header - with scroll hide/show behavior */}
       <div 
-        className={`backdrop-blur-sm border-b px-6 py-4 flex items-center justify-between transition-all duration-300 z-10 ${isDarkMode ? 'bg-[#18181A]/95 border-white/5' : 'bg-white/95 border-slate-200/60'} ${
+        className={`backdrop-blur-sm border-b px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 transition-all duration-300 z-10 ${isDarkMode ? 'bg-[#18181A]/95 border-white/5' : 'bg-white/95 border-slate-200/60'} ${
           isHeaderHidden ? '-translate-y-full opacity-0 h-0 py-0 overflow-hidden' : 'translate-y-0 opacity-100'
         }`}
       >
-        <div>
-          <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Students</h1>
-          <p className={`text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>Manage your dojo's student roster</p>
+        <div className="flex items-center justify-between sm:block">
+          <div>
+            <h1 className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Students</h1>
+            <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'} hidden sm:block`}>Manage your dojo's student roster</p>
+          </div>
+          {/* Mobile Add Button */}
+          <Button 
+            className="sm:hidden bg-[#E73C3C] hover:bg-[#E73C3C]/90 rounded-xl h-9 px-3"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* View Mode Toggle */}
           <ViewModeToggle
             mode={viewMode}
@@ -774,7 +789,7 @@ export default function StudentsSplitScreen() {
             isDarkMode={isDarkMode}
           />
           <Button 
-            className="bg-[#E73C3C] hover:bg-[#E73C3C]/90 rounded-xl shadow-[0_2px_8px_rgba(231,60,60,0.25)] hover:shadow-[0_4px_12px_rgba(231,60,60,0.35)] transition-all"
+            className="hidden sm:flex bg-[#E73C3C] hover:bg-[#E73C3C]/90 rounded-xl shadow-[0_2px_8px_rgba(231,60,60,0.25)] hover:shadow-[0_4px_12px_rgba(231,60,60,0.35)] transition-all"
             onClick={() => setShowAddModal(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -902,9 +917,9 @@ export default function StudentsSplitScreen() {
               </div>
 
               {/* Filters Row - Clean DojoFlow style */}
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap scrollbar-hide">
                 <Select defaultValue="all">
-                  <SelectTrigger className={`w-[130px] h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
+                  <SelectTrigger className={`w-[110px] sm:w-[130px] h-10 sm:h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow flex-shrink-0 ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -915,7 +930,7 @@ export default function StudentsSplitScreen() {
                   </SelectContent>
                 </Select>
                 <Select defaultValue="all">
-                  <SelectTrigger className={`w-[130px] h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
+                  <SelectTrigger className={`w-[110px] sm:w-[130px] h-10 sm:h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow flex-shrink-0 ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
                     <SelectValue placeholder="Belt Rank" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -928,7 +943,7 @@ export default function StudentsSplitScreen() {
                   </SelectContent>
                 </Select>
                 <Select defaultValue="all">
-                  <SelectTrigger className={`w-[140px] h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
+                  <SelectTrigger className={`w-[120px] sm:w-[140px] h-10 sm:h-9 text-sm rounded-xl shadow-sm hover:shadow-md transition-shadow flex-shrink-0 ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white' : 'border-slate-200/80 bg-white'}`}>
                     <SelectValue placeholder="Membership" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -938,7 +953,7 @@ export default function StudentsSplitScreen() {
                     <SelectItem value="trial">Trial</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" className={`h-9 rounded-xl shadow-sm hover:shadow-md transition-all ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white hover:bg-[#202022]' : 'border-slate-200/80'}`}>
+                <Button variant="outline" size="sm" className={`h-10 sm:h-9 rounded-xl shadow-sm hover:shadow-md transition-all flex-shrink-0 ${isDarkMode ? 'border-white/10 bg-[#18181A] text-white hover:bg-[#202022]' : 'border-slate-200/80'}`}>
                   <Filter className="h-3.5 w-3.5 mr-1.5" />
                   More Filters
                 </Button>
