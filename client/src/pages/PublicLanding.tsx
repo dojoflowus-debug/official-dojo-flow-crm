@@ -408,13 +408,13 @@ export default function PublicLanding() {
         {/* Additional vignette for depth */}
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/30 to-black/70 pointer-events-none" />
 
-        <div className="container mx-auto px-6 lg:px-8 relative z-10 py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 sm:py-16 md:py-20">
           {/* Kai Command Center */}
           <div className="max-w-6xl mx-auto">
             {/* Headline */}
-            <div className="text-center mb-14 space-y-5">
-              <h1 className="text-7xl md:text-8xl font-bold text-white tracking-tight drop-shadow-2xl flex items-center justify-center gap-4 relative">
-                <img src="/kai-icon-hero.png" alt="Kai" className="w-32 h-32 md:w-40 md:h-40 drop-shadow-2xl" />
+            <div className="text-center mb-8 sm:mb-10 md:mb-14 space-y-3 sm:space-y-4 md:space-y-5">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight drop-shadow-2xl flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 relative">
+                <img src="/kai-icon-hero.png" alt="Kai" className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 drop-shadow-2xl" />
                 <span className="relative">
                   Hi, I'm Kai.
                   {/* Soft ambient light pulse behind text */}
@@ -427,14 +427,14 @@ export default function PublicLanding() {
                   />
                 </span>
               </h1>
-              <p className="text-3xl md:text-4xl text-slate-200 font-light tracking-wide">
+              <p className="text-lg sm:text-xl md:text-3xl lg:text-4xl text-slate-200 font-light tracking-wide px-4 sm:px-0">
                 What would you like to optimize today?
               </p>
               
               {/* Talk to Kai CTA Button */}
               <button
                 onClick={() => setShowKaiOnboarding(true)}
-                className="group inline-flex items-center gap-3 px-8 py-4 mt-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-lg font-semibold transition-all duration-300 shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] hover:scale-105"
+                className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 mt-4 sm:mt-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-base sm:text-lg font-semibold transition-all duration-300 shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] hover:scale-105"
               >
                 <MessageCircle className="w-5 h-5 group-hover:animate-pulse" />
                 Talk to Kai
@@ -443,14 +443,14 @@ export default function PublicLanding() {
             </div>
 
             {/* Prompt Cards Carousel - Horizontal scrolling with navigation */}
-            <div className="relative mb-14">
+            <div className="relative mb-8 sm:mb-10 md:mb-14">
               {/* Carousel Navigation Buttons */}
               <button
                 onClick={() => {
                   const carousel = document.getElementById('prompt-carousel');
                   if (carousel) carousel.scrollBy({ left: -320, behavior: 'smooth' });
                 }}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-black/70 hover:border-white/40 transition-all duration-300 shadow-lg"
+                className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-black/70 hover:border-white/40 transition-all duration-300 shadow-lg"
                 aria-label="Scroll left"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -460,7 +460,7 @@ export default function PublicLanding() {
                   const carousel = document.getElementById('prompt-carousel');
                   if (carousel) carousel.scrollBy({ left: 320, behavior: 'smooth' });
                 }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-black/70 hover:border-white/40 transition-all duration-300 shadow-lg"
+                className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-black/70 hover:border-white/40 transition-all duration-300 shadow-lg"
                 aria-label="Scroll right"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -480,7 +480,7 @@ export default function PublicLanding() {
                     onMouseLeave={() => setHoveredCard(null)}
                     onFocus={() => setFocusedCard(card.category)}
                     onBlur={() => setFocusedCard(null)}
-                    className={`group relative flex-shrink-0 w-[280px] p-4 rounded-2xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-[3px] transition-all duration-500 text-left shadow-2xl snap-start ${
+                    className={`group relative flex-shrink-0 w-[200px] sm:w-[240px] md:w-[280px] p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-2 sm:border-[3px] transition-all duration-500 text-left shadow-2xl snap-start ${
                       index === 0 && !hoveredCard && !focusedCard ? 'border-red-400' : 'border-red-500'
                     } ${
                       hoveredCard === card.category || focusedCard === card.category
@@ -572,9 +572,9 @@ export default function PublicLanding() {
             </div>
 
             {/* Chat Input Bar - Enhanced glassmorphism with glow */}
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto px-2 sm:px-0">
               <div 
-                className="relative backdrop-blur-2xl border-2 rounded-3xl p-5 shadow-2xl transition-all duration-300"
+                className="relative backdrop-blur-2xl border-2 rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 shadow-2xl transition-all duration-300"
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
                   borderColor: inputFocused ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)',
@@ -599,11 +599,11 @@ export default function PublicLanding() {
                   />
                 )}
                 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4">
                   <input
                     type="text"
                     placeholder="Talk to Kai..."
-                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-xl font-light tracking-wide transition-all duration-300 cursor-pointer"
+                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-base sm:text-lg md:text-xl font-light tracking-wide transition-all duration-300 cursor-pointer"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onFocus={() => {
@@ -616,7 +616,7 @@ export default function PublicLanding() {
                   />
                   <button 
                     onClick={() => setShowKaiOnboarding(true)}
-                    className="w-12 h-12 rounded-2xl bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 flex-shrink-0"
                   >
                     <MessageCircle className="w-6 h-6 text-white" />
                   </button>
@@ -793,18 +793,18 @@ export default function PublicLanding() {
       </Dialog>
 
       {/* TesoroXP-Style Slogan Section */}
-      <section className="py-16 md:py-20 scroll-reveal relative">
+      <section className="py-12 sm:py-16 md:py-20 scroll-reveal relative">
         <div 
           className="absolute inset-0 backdrop-blur-xl"
           style={{
             background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3))'
           }}
         />
-        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             {/* Headline - staggered animation */}
             <h2 
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.3s_forwards]"
+              className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.3s_forwards]"
               style={{
                 textShadow: '0 0 30px rgba(255, 255, 255, 0.2)'
               }}
@@ -814,7 +814,7 @@ export default function PublicLanding() {
             
             {/* Punchline with gradient highlight - staggered animation */}
             <p 
-              className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.6s_forwards]"
+              className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.6s_forwards]"
               style={{
                 background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%)',
                 WebkitBackgroundClip: 'text',
@@ -828,7 +828,7 @@ export default function PublicLanding() {
             
             {/* Support line - staggered animation */}
             <p 
-              className="text-lg md:text-xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.9s_forwards]"
+              className="text-base sm:text-lg md:text-xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.9s_forwards] px-4 sm:px-0"
             >
               DojoFlow unifies enrollment, retention, and operations with AI-assisted automation built for schools and fitness studios.
             </p>
@@ -837,30 +837,30 @@ export default function PublicLanding() {
       </section>
 
       {/* How It Works Section - TesoroXP Style */}
-      <section className="py-24 bg-gradient-to-b from-[#d4f4dd] to-[#c8eed5] scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
+      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#d4f4dd] to-[#c8eed5] scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12 md:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
               How DojoFlow Works
             </h2>
-            <p className="text-xl text-gray-700 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-2xl mx-auto px-4 sm:px-0">
               Four simple steps to transform your school operations
             </p>
           </div>
 
           {/* 4-Step Grid */}
-          <div className="grid md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto">
             {/* Step 1: Connect */}
             <div className="group">
-              <div className="bg-gradient-to-br from-[#ff6b6b] to-[#ff5252] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div className="bg-gradient-to-br from-[#ff6b6b] to-[#ff5252] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
                 <div className="flex-1 space-y-4">
-                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
-                    <Users className="w-8 h-8 text-black" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
                   </div>
-                  <h3 className="text-2xl font-bold text-black mb-3">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
                     Connect
                   </h3>
-                  <p className="text-base text-black/80 leading-relaxed">
+                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
                     Connect your school, staff, and schedule.
                   </p>
                 </div>
@@ -869,15 +869,15 @@ export default function PublicLanding() {
 
             {/* Step 2: Activate */}
             <div className="group">
-              <div className="bg-gradient-to-br from-[#ffb800] to-[#ffa500] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div className="bg-gradient-to-br from-[#ffb800] to-[#ffa500] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
                 <div className="flex-1 space-y-4">
-                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
-                    <Zap className="w-8 h-8 text-black" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
+                    <Zap className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
                   </div>
-                  <h3 className="text-2xl font-bold text-black mb-3">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
                     Activate
                   </h3>
-                  <p className="text-base text-black/80 leading-relaxed">
+                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
                     Turn on automations (calls, SMS, follow-ups, enrollment).
                   </p>
                 </div>
@@ -886,15 +886,15 @@ export default function PublicLanding() {
 
             {/* Step 3: Run */}
             <div className="group">
-              <div className="bg-gradient-to-br from-[#00d084] to-[#00b872] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div className="bg-gradient-to-br from-[#00d084] to-[#00b872] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
                 <div className="flex-1 space-y-4">
-                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
-                    <Calendar className="w-8 h-8 text-black" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
+                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
                   </div>
-                  <h3 className="text-2xl font-bold text-black mb-3">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
                     Run
                   </h3>
-                  <p className="text-base text-black/80 leading-relaxed">
+                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
                     Manage check-ins, attendance, leads, and retention daily.
                   </p>
                 </div>
@@ -903,15 +903,15 @@ export default function PublicLanding() {
 
             {/* Step 4: Grow */}
             <div className="group">
-              <div className="bg-gradient-to-br from-[#00c9db] to-[#00b3c4] rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div className="bg-gradient-to-br from-[#00c9db] to-[#00b3c4] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
                 <div className="flex-1 space-y-4">
-                  <div className="w-16 h-16 bg-black/20 rounded-2xl flex items-center justify-center mb-4">
-                    <TrendingUp className="w-8 h-8 text-black" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
+                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
                   </div>
-                  <h3 className="text-2xl font-bold text-black mb-3">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
                     Grow
                   </h3>
-                  <p className="text-base text-black/80 leading-relaxed">
+                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
                     Track KPIs and revenue with dashboards and insights.
                   </p>
                 </div>
@@ -922,26 +922,26 @@ export default function PublicLanding() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-sm font-medium border border-primary/20 mb-6">
-              <Zap className="w-4 h-4 text-primary" />
+      <section id="features" className="py-16 sm:py-20 md:py-24 scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-xs sm:text-sm font-medium border border-primary/20 mb-4 sm:mb-6">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
               <span>Everything You Need</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
               Built for martial arts schools
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4 sm:px-0">
               Stop juggling spreadsheets, payment apps, and messaging tools. DojoFlow brings everything together in one powerful platform.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-10">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-500 relative overflow-hidden"
+                className="group p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-500 relative overflow-hidden"
                 style={{
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                 }}
@@ -956,12 +956,12 @@ export default function PublicLanding() {
                 />
                 
                 <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                    <feature.icon className="w-7 h-7 text-primary" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center mb-4 sm:mb-5 md:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                    <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">{feature.description}</p>
-                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{feature.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-3 sm:mb-4">{feature.description}</p>
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-primary">
                     <Sparkles className="w-4 h-4" />
                     {feature.highlight}
                   </div>
@@ -975,9 +975,9 @@ export default function PublicLanding() {
       {/* Three Audience Sections - TesoroXP Style */}
       
       {/* For Schools */}
-      <section id="schools" className="py-24 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc] scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+      <section id="schools" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc] scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center max-w-6xl mx-auto">
             {/* Text Content */}
             <div className="space-y-6">
               <div className="inline-block">
@@ -986,10 +986,10 @@ export default function PublicLanding() {
                   <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">SCHOOL</span>
                 </div>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                 Run classes smoother. Enroll faster.
               </h2>
-              <p className="text-lg text-gray-700 leading-relaxed">
+              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
                 DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff—all in one platform. Stop juggling spreadsheets and start growing.
               </p>
               <div className="pt-4">
@@ -1004,7 +1004,7 @@ export default function PublicLanding() {
             </div>
             {/* Image */}
             <div className="relative">
-              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden">
+              <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
                 <img 
                   src="/images/audience/martial-arts-school.jpg" 
                   alt="Children practicing martial arts in dojo" 
@@ -1018,12 +1018,12 @@ export default function PublicLanding() {
       </section>
 
       {/* For Fitness Facilities */}
-      <section id="facilities" className="py-24 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2] scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+      <section id="facilities" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2] scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center max-w-6xl mx-auto">
             {/* Image */}
             <div className="relative order-2 md:order-1">
-              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden">
+              <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
                 <img 
                   src="/images/audience/fitness-facility.jpg" 
                   alt="Personal training session with battle ropes" 
@@ -1040,10 +1040,10 @@ export default function PublicLanding() {
                   <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">FITNESS FACILITY</span>
                 </div>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                 A kiosk + automation layer for busy gyms.
               </h2>
-              <p className="text-lg text-gray-700 leading-relaxed">
+              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
                 Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, automates lead follow-up, and delivers real-time reporting. Keep your members moving and your operations efficient.
               </p>
               <div className="pt-4">
@@ -1061,9 +1061,9 @@ export default function PublicLanding() {
       </section>
 
       {/* For Studios */}
-      <section id="studios" className="py-24 bg-gradient-to-b from-[#b0e2c2] to-[#a4dcb8] scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+      <section id="studios" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#b0e2c2] to-[#a4dcb8] scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center max-w-6xl mx-auto">
             {/* Text Content */}
             <div className="space-y-6">
               <div className="inline-block">
@@ -1072,10 +1072,10 @@ export default function PublicLanding() {
                   <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">STUDIO</span>
                 </div>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                 Modern operations for yoga, dance, and boutique training.
               </h2>
-              <p className="text-lg text-gray-700 leading-relaxed">
+              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
                 DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX. Focus on your craft while we handle the operations.
               </p>
               <div className="pt-4">
@@ -1090,7 +1090,7 @@ export default function PublicLanding() {
             </div>
             {/* Image */}
             <div className="relative">
-              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden">
+              <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
                 <img 
                   src="/images/audience/yoga-studio.jpg" 
                   alt="Yoga class in serene studio" 
@@ -1104,20 +1104,20 @@ export default function PublicLanding() {
       </section>
 
       {/* Contact Form Section - TesoroXP Style */}
-      <section id="contact" className="py-24 bg-gradient-to-b from-[#a4dcb8] to-[#98d6ae] scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
+      <section id="contact" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#a4dcb8] to-[#98d6ae] scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <div className="text-center mb-8 sm:mb-10 md:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
                 Get in touch
               </h2>
-              <p className="text-lg text-gray-700">
+              <p className="text-base sm:text-lg text-gray-700">
                 Ready to transform your school operations? Send us a message.
               </p>
             </div>
             
             {/* Contact Form */}
-            <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 md:p-12">
               <form className="space-y-6">
                 <div>
                   <Label htmlFor="contact-name" className="text-gray-900 font-medium">
@@ -1169,30 +1169,30 @@ export default function PublicLanding() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-card scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-sm font-medium border border-accent/20 mb-6">
-              <Star className="w-4 h-4 text-accent fill-accent" />
+      <section id="testimonials" className="py-16 sm:py-20 md:py-24 bg-card scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent/10 text-xs sm:text-sm font-medium border border-accent/20 mb-4 sm:mb-6">
+              <Star className="w-3 h-3 sm:w-4 sm:h-4 text-accent fill-accent" />
               <span>Loved by Martial Arts Schools</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
               Real results from real schools
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="p-8 rounded-2xl bg-background border border-border hover:border-primary/50 hover:shadow-soft-lg transition-all duration-300 hover-lift"
+                className="p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl bg-background border border-border hover:border-primary/50 hover:shadow-soft-lg transition-all duration-300 hover-lift"
               >
                 <div className="flex items-center gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 text-accent fill-accent" />
                   ))}
                 </div>
-                <p className="text-lg leading-relaxed mb-6 text-foreground">
+                <p className="text-base sm:text-lg leading-relaxed mb-4 sm:mb-6 text-foreground">
                   "{testimonial.quote}"
                 </p>
                 <div className="flex items-center gap-4">
@@ -1213,43 +1213,43 @@ export default function PublicLanding() {
       </section>
 
       {/* Pricing Teaser */}
-      <section id="pricing" className="py-24 scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
+      <section id="pricing" className="py-16 sm:py-20 md:py-24 scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
               Simple, transparent pricing
             </h2>
-            <p className="text-xl text-muted-foreground mb-4">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4">
               All plans include monthly AI credits. Upgrade anytime.
             </p>
-            <p className="text-sm text-muted-foreground mb-12">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-8 sm:mb-10 md:mb-12 px-4 sm:px-0">
               Credits are used when Kai performs actions like sending messages, analyzing data, or running workflows.
             </p>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-10 md:mb-12">
+              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
                 <div className="text-sm font-semibold text-muted-foreground mb-2">Starter</div>
-                <div className="text-3xl font-bold mb-1">$49</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$49</div>
                 <div className="text-xs text-muted-foreground mb-3">per month</div>
                 <div className="text-sm font-medium text-purple-600 dark:text-purple-400">500 credits</div>
               </div>
-              <div className="p-6 rounded-2xl bg-primary text-primary-foreground border-2 border-primary shadow-lg scale-[1.02] hover:scale-105 transition-all">
+              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-primary text-primary-foreground border-2 border-primary shadow-lg scale-[1.02] hover:scale-105 transition-all">
                 <div className="text-xs font-semibold opacity-90 mb-2">Most Popular</div>
                 <div className="text-sm font-semibold mb-2">Growth</div>
-                <div className="text-3xl font-bold mb-1">$99</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$99</div>
                 <div className="text-xs opacity-90 mb-3">per month</div>
                 <div className="text-sm font-medium">1,500 credits</div>
               </div>
-              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
                 <div className="text-sm font-semibold text-muted-foreground mb-2">Pro</div>
-                <div className="text-3xl font-bold mb-1">$199</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$199</div>
                 <div className="text-xs text-muted-foreground mb-3">per month</div>
                 <div className="text-sm font-medium text-purple-600 dark:text-purple-400">4,000 credits</div>
               </div>
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/10 border-2 border-amber-500/50 hover:border-amber-500 shadow-lg scale-[1.02] hover:scale-105 transition-all">
+              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/10 border-2 border-amber-500/50 hover:border-amber-500 shadow-lg scale-[1.02] hover:scale-105 transition-all">
                 <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-2">Most Powerful</div>
                 <div className="text-sm font-semibold mb-2">Elite</div>
-                <div className="text-3xl font-bold mb-1">$499</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$499</div>
                 <div className="text-xs text-muted-foreground mb-3">per month</div>
                 <div className="text-sm font-medium text-amber-600 dark:text-amber-400">10,000 credits</div>
               </div>
@@ -1265,13 +1265,13 @@ export default function PublicLanding() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 scroll-reveal">
-        <div className="container mx-auto px-6 lg:px-8">
+      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 scroll-reveal">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
               Ready to transform your dojo?
             </h2>
-            <p className="text-xl text-muted-foreground mb-12">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 sm:mb-10 md:mb-12 px-4 sm:px-0">
               Join hundreds of martial arts schools using DojoFlow to grow their business and focus on what matters: teaching.
             </p>
             

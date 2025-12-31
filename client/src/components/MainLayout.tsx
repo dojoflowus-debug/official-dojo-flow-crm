@@ -76,7 +76,7 @@ export default function MainLayout({
             : 'bg-transparent h-20'
         }`}
       >
-        <div className="container mx-auto px-6 lg:px-8 h-full">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-between h-full">
             {/* Logo */}
             <Link 
@@ -210,7 +210,7 @@ export default function MainLayout({
 
       {/* Footer */}
       {!hideFooter && (
-        <footer className="py-20 bg-[#1a1a1a] relative overflow-hidden">
+        <footer className="py-12 sm:py-16 md:py-20 bg-[#1a1a1a] relative overflow-hidden">
           {/* Animated geometric shapes background */}
           <div className="absolute inset-0 pointer-events-none opacity-30">
             <div className="absolute top-20 left-10 w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full animate-float" style={{ animationDelay: '0s' }} />
@@ -219,30 +219,30 @@ export default function MainLayout({
             <div className="absolute bottom-40 right-1/4 w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full animate-float" style={{ animationDelay: '1.5s' }} />
           </div>
 
-          <div className="container mx-auto px-6 lg:px-8 relative z-10">
-            <div className="grid md:grid-cols-2 gap-16 mb-16">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid md:grid-cols-2 gap-10 sm:gap-12 md:gap-16 mb-10 sm:mb-12 md:mb-16">
               {/* Left Column - Navigation Links */}
               <div className="space-y-6">
-                <Link to="/schools" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                <Link to="/schools" className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white hover:text-white/80 transition-colors">
                   Schools
                 </Link>
-                <Link to="/fitness" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                <Link to="/fitness" className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white hover:text-white/80 transition-colors">
                   Fitness Facilities
                 </Link>
-                <Link to="/studios" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                <Link to="/studios" className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white hover:text-white/80 transition-colors">
                   Studios
                 </Link>
-                <Link to="/pricing" className="block text-4xl md:text-5xl font-bold text-white hover:text-white/80 transition-colors">
+                <Link to="/pricing" className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white hover:text-white/80 transition-colors">
                   Pricing
                 </Link>
               </div>
 
               {/* Right Column - Newsletter */}
               <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-white">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
                   Sign up to our newsletter for all the latest news and updates.
                 </h3>
-                <form className="flex gap-3" onSubmit={(e) => {
+                <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => {
                   e.preventDefault();
                   toast.success("Thanks for subscribing!");
                 }}>
@@ -253,7 +253,7 @@ export default function MainLayout({
                   />
                   <Button
                     type="submit"
-                    className="bg-white text-gray-900 hover:bg-white/90 font-bold px-8"
+                    className="bg-white text-gray-900 hover:bg-white/90 font-bold px-6 sm:px-8"
                   >
                     Submit
                   </Button>
