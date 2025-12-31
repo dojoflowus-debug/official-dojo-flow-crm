@@ -2203,3 +2203,21 @@ Remove fake/seed data (fake students, fake leads) from all new accounts except f
 - [x] Import students from schools database into DojoFlow for sensei30002003@gmail.com organization
 
 - [x] Bug: Sidebar Schools badge shows 5 instead of actual school count (2)
+
+## 🐛 BUG: Staff Members Not Showing for School
+
+### Issue
+- [ ] Staff members registered to a school are not displaying
+- [ ] Need to investigate database and frontend display logic
+
+### Root Cause
+- [x] Staff members in team_members table had organizationId = NULL
+- [x] API endpoints were not filtering by organization
+
+### Fix Applied
+- [x] Updated GET /api/staff to filter by organizationId from session cookie
+- [x] Updated GET /api/staff/stats to filter by organizationId from session cookie
+- [x] Added POST /api/staff to create staff with organizationId from session
+- [x] Added PUT /api/staff/:id to update staff members
+- [x] Added DELETE /api/staff/:id to delete staff members
+- [x] New staff members will be automatically linked to the logged-in user's organization

@@ -290,14 +290,42 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { teamMembers } = await import("../../drizzle/schema");
-      const { eq } = await import("drizzle-orm");
+      const { eq, and, isNull, or } = await import("drizzle-orm");
+      const { parse: parseCookieHeader } = await import("cookie");
       
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: "Database not available" });
       }
       
-      const staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      // Get organization ID from session cookie
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // Filter by organization if available, otherwise show all active staff
+      let staff;
+      if (organizationId) {
+        staff = await db.select().from(teamMembers).where(
+          and(
+            eq(teamMembers.isActive, 1),
+            eq(teamMembers.organizationId, organizationId)
+          )
+        );
+      } else {
+        // Fallback: show staff with no organization (legacy data) or all if no org context
+        staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      }
       
       // Transform to match expected format
       const transformedStaff = staff.map(s => ({
@@ -308,14 +336,144 @@ async function startServer() {
         phone: s.phone,
         role: s.role.charAt(0).toUpperCase() + s.role.slice(1).replace('_', ' '),
         bio: s.focusAreas ? JSON.parse(s.focusAreas).join(', ') : '',
-        photo_url: '',
+        photo_url: s.photoUrl || '',
         addressAs: s.addressAs,
+        organizationId: s.organizationId,
       }));
       
       res.json(transformedStaff);
     } catch (error) {
       console.error("Staff endpoint error:", error);
       res.status(500).json({ error: "Failed to fetch staff members" });
+    }
+  });
+  
+  // Staff POST endpoint - create new staff member
+  app.post("/api/staff", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { teamMembers } = await import("../../drizzle/schema");
+      const { parse: parseCookieHeader } = await import("cookie");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      // Get organization ID from session cookie
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      const { first_name, last_name, email, phone, role, bio, photo_url } = req.body;
+      const fullName = `${first_name || ''} ${last_name || ''}`.trim() || 'Staff Member';
+      
+      // Map frontend role to schema role
+      const roleMap: Record<string, string> = {
+        'Instructor': 'instructor',
+        'Manager': 'manager',
+        'Front Desk': 'front_desk',
+        'Coach': 'coach',
+        'Trainer': 'trainer',
+        'Assistant': 'assistant',
+        'Owner': 'owner',
+      };
+      const schemaRole = roleMap[role] || 'instructor';
+      
+      const result = await db.insert(teamMembers).values({
+        name: fullName,
+        role: schemaRole as any,
+        email: email || null,
+        phone: phone || null,
+        focusAreas: bio ? JSON.stringify([bio]) : null,
+        photoUrl: photo_url || null,
+        organizationId: organizationId,
+        isActive: 1,
+      });
+      
+      res.status(201).json({ success: true, id: result[0].insertId });
+    } catch (error) {
+      console.error("Create staff endpoint error:", error);
+      res.status(500).json({ error: "Failed to create staff member" });
+    }
+  });
+  
+  // Staff PUT endpoint - update staff member
+  app.put("/api/staff/:id", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { teamMembers } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const staffId = parseInt(req.params.id);
+      const { first_name, last_name, email, phone, role, bio, photo_url } = req.body;
+      
+      const updateData: Record<string, any> = {};
+      
+      if (first_name !== undefined || last_name !== undefined) {
+        updateData.name = `${first_name || ''} ${last_name || ''}`.trim();
+      }
+      if (email !== undefined) updateData.email = email || null;
+      if (phone !== undefined) updateData.phone = phone || null;
+      if (photo_url !== undefined) updateData.photoUrl = photo_url || null;
+      if (bio !== undefined) updateData.focusAreas = bio ? JSON.stringify([bio]) : null;
+      
+      if (role !== undefined) {
+        const roleMap: Record<string, string> = {
+          'Instructor': 'instructor',
+          'Manager': 'manager',
+          'Front Desk': 'front_desk',
+          'Coach': 'coach',
+          'Trainer': 'trainer',
+          'Assistant': 'assistant',
+          'Owner': 'owner',
+        };
+        updateData.role = roleMap[role] || 'instructor';
+      }
+      
+      await db.update(teamMembers).set(updateData).where(eq(teamMembers.id, staffId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Update staff endpoint error:", error);
+      res.status(500).json({ error: "Failed to update staff member" });
+    }
+  });
+  
+  // Staff DELETE endpoint - delete staff member
+  app.delete("/api/staff/:id", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { teamMembers } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      const staffId = parseInt(req.params.id);
+      await db.delete(teamMembers).where(eq(teamMembers.id, staffId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete staff endpoint error:", error);
+      res.status(500).json({ error: "Failed to delete staff member" });
     }
   });
   
@@ -479,14 +637,41 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { teamMembers } = await import("../../drizzle/schema");
-      const { eq, sql } = await import("drizzle-orm");
+      const { eq, and, sql } = await import("drizzle-orm");
+      const { parse: parseCookieHeader } = await import("cookie");
       
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: "Database not available" });
       }
       
-      const staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      // Get organization ID from session cookie
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // Filter by organization if available
+      let staff;
+      if (organizationId) {
+        staff = await db.select().from(teamMembers).where(
+          and(
+            eq(teamMembers.isActive, 1),
+            eq(teamMembers.organizationId, organizationId)
+          )
+        );
+      } else {
+        staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      }
       
       const stats = {
         total_staff: staff.length,
