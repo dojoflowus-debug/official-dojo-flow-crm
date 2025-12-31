@@ -2186,3 +2186,20 @@ Remove fake/seed data (fake students, fake leads) from all new accounts except f
 - [ ] Add sub-users/instructors count
 - [ ] Fix View Details button functionality
 - [ ] Test all fixes in browser
+
+## 🐛 BUG: Master Dashboard Showing Fake/Mock Data
+
+### Issue
+- [ ] Master Dashboard schools list shows fake/mock data instead of real database data
+- [ ] Data keeps being added automatically (not from real schools)
+
+### Fix Tasks
+- [ ] Find the source of mock data in Master Dashboard components
+- [ ] Remove mock data and connect to real database queries
+- [ ] Test that only real schools from database are displayed
+- [ ] Save checkpoint
+
+- [x] BUG: Mock students and data for sensei30002003@gmail.com not showing in Master Dashboard (FIXED - seeded 25 students)
+- [x] Import students from schools database into DojoFlow for sensei30002003@gmail.com organization
+
+- [x] Bug: Sidebar Schools badge shows 5 instead of actual school count (2)

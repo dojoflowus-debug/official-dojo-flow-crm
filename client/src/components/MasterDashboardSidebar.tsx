@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -31,26 +32,6 @@ interface NavItem {
   children?: { label: string; href: string }[];
 }
 
-const navItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/master" },
-  {
-    label: "Schools",
-    icon: Building2,
-    href: "/master/schools",
-    badge: 5,
-    children: [
-      { label: "All Schools", href: "/master/schools" },
-      { label: "Onboarding", href: "/master/schools/onboarding" },
-      { label: "At Risk", href: "/master/schools/at-risk" },
-    ],
-  },
-  { label: "Analytics", icon: BarChart3, href: "/master/analytics" },
-  { label: "AI Usage", icon: Sparkles, href: "/master/ai-usage" },
-  { label: "Billing", icon: CreditCard, href: "/master/billing" },
-  { label: "Support", icon: HeadphonesIcon, href: "/master/support" },
-  { label: "System Settings", icon: Settings, href: "/master/settings" },
-];
-
 interface MasterDashboardSidebarProps {
   user?: {
     name: string;
@@ -64,6 +45,33 @@ interface MasterDashboardSidebarProps {
 export function MasterDashboardSidebar({ user, onLogout }: MasterDashboardSidebarProps) {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>(["Schools"]);
+
+  // Fetch actual school count from the API
+  const { data: schoolsData } = trpc.masterDashboard.getSchools.useQuery(
+    { status: "all", limit: 1, offset: 0 },
+    { staleTime: 30000 } // Cache for 30 seconds
+  );
+
+  // Build nav items with dynamic school count
+  const navItems: NavItem[] = useMemo(() => [
+    { label: "Dashboard", icon: LayoutDashboard, href: "/master" },
+    {
+      label: "Schools",
+      icon: Building2,
+      href: "/master/schools",
+      badge: schoolsData?.total || 0,
+      children: [
+        { label: "All Schools", href: "/master/schools" },
+        { label: "Onboarding", href: "/master/schools/onboarding" },
+        { label: "At Risk", href: "/master/schools/at-risk" },
+      ],
+    },
+    { label: "Analytics", icon: BarChart3, href: "/master/analytics" },
+    { label: "AI Usage", icon: Sparkles, href: "/master/ai-usage" },
+    { label: "Billing", icon: CreditCard, href: "/master/billing" },
+    { label: "Support", icon: HeadphonesIcon, href: "/master/support" },
+    { label: "System Settings", icon: Settings, href: "/master/settings" },
+  ], [schoolsData?.total]);
 
   const toggleExpanded = (label: string) => {
     setExpandedItems((prev) =>
@@ -115,7 +123,7 @@ export function MasterDashboardSidebar({ user, onLogout }: MasterDashboardSideba
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="flex-1 text-left">{item.label}</span>
-                  {item.badge && (
+                  {item.badge !== undefined && item.badge > 0 && (
                     <span className="px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-400 rounded-full">
                       {item.badge}
                     </span>
@@ -156,7 +164,7 @@ export function MasterDashboardSidebar({ user, onLogout }: MasterDashboardSideba
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>
-                {item.badge && (
+                {item.badge !== undefined && item.badge > 0 && (
                   <span className="px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-400 rounded-full">
                     {item.badge}
                   </span>

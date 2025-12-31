@@ -1,0 +1,8 @@
+{
+  "query": "SELECT o.id, o.name, o.owner_id, u.email as owner_email, u.name as owner_name \nFROM organizations o \nLEFT JOIN users u ON o.owner_id = u.id \nORDER BY o.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT o.id, o.name, o.owner_id, u.email as owner_email, u.name as owner_name \nFROM organizations o \nLEFT JOIN users u ON o.owner_id = u.id \nORDER BY o.id;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'o.owner_id' in 'on clause'"
+  ]
+}
