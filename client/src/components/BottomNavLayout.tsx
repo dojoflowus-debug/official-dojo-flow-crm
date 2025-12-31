@@ -167,12 +167,21 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    if (!user?.name) return 'U'
-    const names = user.name.split(' ')
+    // Try name first, then email prefix
+    const displayName = user?.name || user?.email?.split('@')[0]
+    if (!displayName) return 'U'
+    const names = displayName.split(' ')
     if (names.length >= 2) {
       return `${names[0][0]}${names[1][0]}`.toUpperCase()
     }
-    return user.name.substring(0, 2).toUpperCase()
+    return displayName.substring(0, 2).toUpperCase()
+  }
+
+  // Get display name with fallback
+  const getDisplayName = () => {
+    if (user?.name) return user.name
+    if (user?.email) return user.email.split('@')[0]
+    return 'User'
   }
 
   // Get background class based on theme
@@ -400,7 +409,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                   className={`w-56 ${isDark ? 'bg-[#1A1B1F] border-[#2A2B2F]' : 'bg-white border-[#E2E3E6]'}`}
                 >
                   <div className={`px-3 py-2 ${isDark ? 'text-white' : 'text-[#262626]'}`}>
-                    <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                    <p className="text-sm font-medium">{getDisplayName()}</p>
                     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {user?.email || 'user@example.com'}
                     </p>

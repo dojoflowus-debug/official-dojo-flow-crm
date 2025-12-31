@@ -46,6 +46,24 @@ export function MasterDashboardSidebar({ user, onLogout }: MasterDashboardSideba
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>(["Schools"]);
 
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    const displayName = user?.name || user?.email?.split('@')[0];
+    if (!displayName) return 'AD';
+    const names = displayName.split(' ');
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[1][0]}`.toUpperCase();
+    }
+    return displayName.substring(0, 2).toUpperCase();
+  };
+
+  // Get display name with fallback
+  const getDisplayName = () => {
+    if (user?.name) return user.name;
+    if (user?.email) return user.email.split('@')[0];
+    return 'Admin User';
+  };
+
   // Fetch actual school count from the API
   const { data: schoolsData } = trpc.masterDashboard.getSchools.useQuery(
     { status: "all", limit: 1, offset: 0 },
@@ -183,12 +201,12 @@ export function MasterDashboardSidebar({ user, onLogout }: MasterDashboardSideba
               <Avatar className="w-10 h-10 border-2 border-white/10">
                 <AvatarImage src={user?.avatar} />
                 <AvatarFallback className="bg-gradient-to-br from-red-500 to-red-600 text-white text-sm">
-                  {user?.name?.split(" ").map((n) => n[0]).join("") || "AD"}
+                  {getUserInitials()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
                 <p className="text-sm font-medium text-white">
-                  {user?.name || "Admin User"}
+                  {getDisplayName()}
                 </p>
                 <p className="text-xs text-white/50">
                   {user?.role || "Administrator"}

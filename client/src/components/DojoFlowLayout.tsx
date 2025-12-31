@@ -75,6 +75,20 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    const displayName = user?.name || user?.email?.split('@')[0]
+    if (!displayName) return 'U'
+    return displayName.charAt(0).toUpperCase()
+  }
+
+  // Get display name with fallback
+  const getDisplayName = () => {
+    if (user?.name) return user.name
+    if (user?.email) return user.email.split('@')[0]
+    return 'User'
+  }
   
   // Sidebar visibility state (persisted)
   const [sidebarVisible, setSidebarVisible] = useState(() => {
@@ -207,11 +221,11 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-slate-800 text-white text-sm">
-                  {user?.name?.charAt(0) || 'U'}
+                  {getUserInitials()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-white">{user?.name || 'User'}</p>
+                <p className="text-sm font-medium truncate text-white">{getDisplayName()}</p>
                 <p className="text-xs text-slate-400 truncate">{user?.email || ''}</p>
               </div>
               <Button
@@ -307,7 +321,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
                   <Button variant="ghost" className="flex items-center gap-2 px-2">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-slate-800 text-white text-sm">
-                        {user?.name?.charAt(0) || 'U'}
+                        {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -315,7 +329,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                    <p className="text-sm font-medium">{getDisplayName()}</p>
                     <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
                   </div>
                   <DropdownMenuSeparator />

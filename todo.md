@@ -2450,3 +2450,35 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Update Home.tsx prompt cards
 
 - [x] Add more prompt cards to public landing page carousel (match 10-card set from KaiCommand)
+
+
+## 🐛 BUG: User Profile Shows "New User" After Authentication (2025-12-30)
+
+### Issue
+- [x] User profile dropdown shows "New User" instead of actual user name
+- [x] Email displays correctly (solibtech@gmail.com) but name is missing
+- [x] Onboarding data not persisted to user profile
+- [x] Session missing enriched user context
+
+### Root Cause Analysis
+- [x] Auth provider creates session but app user record not created/linked
+- [x] Onboarding data not saved to database
+- [x] Session not hydrated with user profile data
+
+### Root Cause Found
+**Missing openId in local auth users:**
+- Users created via local auth (ownerAuthRouter.signup) didn't have an openId assigned
+- Login created a pseudo-openId like `local_${user.id}` but didn't store it in the database
+- The auth.me endpoint looks up users by openId, which failed for local auth users
+- This caused the frontend to show "New User" as a fallback
+
+### Fix Applied
+- [x] Investigate current auth flow and user creation
+- [x] Generate unique openId during signup (format: local_{timestamp}_{random})
+- [x] Generate and persist openId during login if missing (for existing users)
+- [x] Applied fix to ownerAuthRouter, staffAuthRouter, and studentAuthRouter
+- [x] Update frontend to show proper display name (use email prefix as fallback)
+- [x] Add fallback loading state instead of "New User"
+- [x] Write vitest tests for user profile persistence (8 tests passing)
+- [ ] Save checkpoint with fix
+

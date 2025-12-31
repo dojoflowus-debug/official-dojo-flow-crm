@@ -92,7 +92,14 @@ export const staffAuthRouter = router({
       }
 
       // Create session token and set cookies (critical for auth to work)
-      const openId = user.openId || `local_${user.id}`;
+      // Ensure user has an openId - if not, generate one and update the user record
+      let openId = user.openId;
+      if (!openId) {
+        openId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+        // Update the user record with the new openId
+        await db.update(users).set({ openId }).where(eq(users.id, user.id));
+      }
+      
       const sessionToken = await sdk.createSessionToken(openId, {
         name: user.name || "",
         expiresInMs: ONE_YEAR_MS,

@@ -72,8 +72,13 @@ export const ownerAuthRouter = router({
         passwordHash = await bcrypt.hash(input.password, 10);
       }
 
-      // Create user record
+      // Generate a unique openId for local auth users
+      // Format: local_{timestamp}_{random} to ensure uniqueness
+      const openId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+
+      // Create user record with openId
       const [newUser] = await db.insert(users).values({
+        openId,
         name: `${input.firstName} ${input.lastName}`,
         email: input.email,
         password: passwordHash,
@@ -299,8 +304,14 @@ export const ownerAuthRouter = router({
       const currentOrganizationId = hasOrganization ? orgMemberships[0].organizationId : null;
 
       // Create session token and set cookies (critical for auth to work)
-      // Use openId if available, otherwise create a pseudo-openId from user id
-      const openId = user.openId || `local_${user.id}`;
+      // Ensure user has an openId - if not, generate one and update the user record
+      let openId = user.openId;
+      if (!openId) {
+        openId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+        // Update the user record with the new openId
+        await db.update(users).set({ openId }).where(eq(users.id, user.id));
+      }
+      
       const sessionToken = await sdk.createSessionToken(openId, {
         name: user.name || "",
         expiresInMs: ONE_YEAR_MS,

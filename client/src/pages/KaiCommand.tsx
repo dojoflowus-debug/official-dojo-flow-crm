@@ -176,12 +176,13 @@ export default function KaiCommand() {
 
   // Get user initials for avatar fallback
   const getUserInitials = () => {
-    if (!user?.name) return 'U';
-    const names = user.name.split(' ');
+    const displayName = user?.name || user?.email?.split('@')[0];
+    if (!displayName) return 'U';
+    const names = displayName.split(' ');
     if (names.length >= 2) {
       return `${names[0][0]}${names[1][0]}`.toUpperCase();
     }
-    return user.name.substring(0, 2).toUpperCase();
+    return displayName.substring(0, 2).toUpperCase();
   };
 
   // Staff data for mention rendering
