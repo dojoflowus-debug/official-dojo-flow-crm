@@ -822,61 +822,61 @@ export default function KaiCommand() {
   const quickCommands = [
     {
       id: 'goals',
-      header: 'START WITH WAET GOALS',
-      text: '"Help me grow my kids program to 150 students"',
+      header: 'GROW KIDS PROGRAM',
+      text: '"Help me grow my kids program to 150 students."',
       color: 'red'
     },
     {
       id: 'health',
-      header: 'CHECK HEALTH OF FORT DOJO',
-      text: '"Show me attendance and missed classes this week"',
+      header: 'REVIEW ATTENDANCE',
+      text: '"Show attendance and missed classes for this week."',
       color: 'red'
     },
     {
       id: 'billing',
-      header: 'PIC BELING',
-      text: '"Who\'s late on payments and how can we fix it?"',
+      header: 'RESOLVE LATE PAYMENTS',
+      text: '"Who is late on payments, and how can we fix it?"',
       color: 'orange'
     },
     {
       id: 'retention',
-      header: 'INCREAST RETENTION',
-      text: '"Tell me which students are a high risk of quitting"',
+      header: 'IDENTIFY AT-RISK STUDENTS',
+      text: '"Show me which students are at high risk of quitting."',
       color: 'orange'
     },
     {
       id: 'enrollments',
-      header: 'BOOST NEW ENROLLMENTS',
+      header: 'FOLLOW UP ON LEADS',
       text: '"Show me all leads that need follow-up today."',
       color: 'green'
     },
     {
       id: 'at-risk',
-      header: 'SAVE AT-RISK MEMBERS',
+      header: 'RECOVER INACTIVE MEMBERS',
       text: '"Who hasn\'t attended in 14+ days?"',
       color: 'red'
     },
     {
       id: 'class-quality',
-      header: 'IMPROVE CLASS QUALITY',
-      text: '"Which classes are over capacity or under capacity?"',
+      header: 'ANALYZE CLASS CAPACITY',
+      text: '"Which classes are over- or under-capacity?"',
       color: 'blue'
     },
     {
       id: 'parent-comms',
-      header: 'PARENT COMMUNICATIONS',
+      header: 'DRAFT PARENT MESSAGE',
       text: '"Draft a message to parents about upcoming events."',
       color: 'purple'
     },
     {
       id: 'staff-perf',
-      header: 'STAFF PERFORMANCE',
+      header: 'REVIEW INSTRUCTOR PERFORMANCE',
       text: '"Which instructors have the highest retention this month?"',
       color: 'orange'
     },
     {
       id: 'financial',
-      header: 'FINANCIAL SNAPSHOT',
+      header: 'VIEW FINANCIAL SUMMARY',
       text: '"Give me revenue, expenses, and projections for this month."',
       color: 'green'
     }

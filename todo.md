@@ -2428,3 +2428,24 @@ The password reset functionality is working. The user can now:
 - [x] Logout redirects to /login which causes 404 error
 - [x] Should redirect to /owner instead
 - [x] Fix login flow from /login page causing 404
+
+
+## 📝 Kai Prompt Cards Copy Update (2025-12-30)
+
+### Task
+Update prompt card titles and descriptions with corrected, professional copy:
+- [x] Fix typos: "START WITH WAET GOALS" → "GROW KIDS PROGRAM"
+- [x] Fix typos: "CHECK HEALTH OF FORT DOJO" → "REVIEW ATTENDANCE"
+- [x] Fix typos: "PIC BELING" → "RESOLVE LATE PAYMENTS"
+- [x] Fix typos: "INCREAST RETENTION" → "IDENTIFY AT-RISK STUDENTS"
+- [x] Update "BOOST NEW ENROLLMENTS" → "FOLLOW UP ON LEADS"
+- [x] Update "SAVE AT-RISK MEMBERS" → "RECOVER INACTIVE MEMBERS"
+- [x] Update "IMPROVE CLASS QUALITY" → "ANALYZE CLASS CAPACITY"
+- [x] Update "PARENT COMMUNICATIONS" → "DRAFT PARENT MESSAGE"
+- [x] Update "STAFF PERFORMANCE" → "REVIEW INSTRUCTOR PERFORMANCE"
+- [x] Update "FINANCIAL SNAPSHOT" → "VIEW FINANCIAL SUMMARY"
+- [x] Correct description text with proper punctuation and grammar
+- [x] Ensure consistent action-verb-first format for all headers
+- [x] Update PublicLanding.tsx prompt cards
+- [x] Update Home.tsx prompt cards
+

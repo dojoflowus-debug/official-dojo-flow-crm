@@ -218,8 +218,8 @@ export default function PublicLanding() {
   const promptCards = [
     {
       category: "growth" as PromptCategory,
-      title: "CLASS MANAGEMENT",
-      prompt: "Help me grow my kids program to 150 students",
+      title: "GROW KIDS PROGRAM",
+      prompt: "Help me grow my kids program to 150 students.",
       gradient: "from-transparent to-transparent",
       hoverGradient: "hover:from-transparent hover:to-transparent",
       borderColor: "border-red-500",
@@ -227,8 +227,8 @@ export default function PublicLanding() {
     },
     {
       category: "health" as PromptCategory,
-      title: "TRACK SCHOOL HEALTH",
-      prompt: "Show me attendance and missed classes this week",
+      title: "REVIEW ATTENDANCE",
+      prompt: "Show attendance and missed classes for this week.",
       gradient: "from-transparent to-transparent",
       hoverGradient: "hover:from-transparent hover:to-transparent",
       borderColor: "border-red-500",
@@ -236,8 +236,8 @@ export default function PublicLanding() {
     },
     {
       category: "billing" as PromptCategory,
-      title: "FIX BILLING",
-      prompt: "Who's behind on payments and how do we fix it?",
+      title: "RESOLVE LATE PAYMENTS",
+      prompt: "Who is late on payments, and how can we fix it?",
       gradient: "from-transparent to-transparent",
       hoverGradient: "hover:from-transparent hover:to-transparent",
       borderColor: "border-red-500",
@@ -245,8 +245,8 @@ export default function PublicLanding() {
     },
     {
       category: "retention" as PromptCategory,
-      title: "INCREASE RETENTION",
-      prompt: "Tell me which students are at risk of quitting",
+      title: "IDENTIFY AT-RISK STUDENTS",
+      prompt: "Show me which students are at high risk of quitting.",
       gradient: "from-transparent to-transparent",
       hoverGradient: "hover:from-transparent hover:to-transparent",
       borderColor: "border-red-500",

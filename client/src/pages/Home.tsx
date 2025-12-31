@@ -21,36 +21,36 @@ export default function Home() {
   const cards = [
     {
       id: 1,
-      title: "START WITH GROWTH",
+      title: "GROW KIDS PROGRAM",
       subtitle: "",
-      description: "Help me grow my kids program to 150 students",
+      description: "Help me grow my kids program to 150 students.",
       gradient: "from-red-500/20 via-pink-500/20 to-red-500/20",
       borderGradient: "from-red-500 via-pink-500 to-red-500",
       hoverGlow: "hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]"
     },
     {
       id: 2,
-      title: "CHECK SCHOOL HEALTH",
+      title: "REVIEW ATTENDANCE",
       subtitle: "",
-      description: "Show me attendance and missed classes this week",
+      description: "Show attendance and missed classes for this week.",
       gradient: "from-orange-500/20 via-red-500/20 to-orange-500/20",
       borderGradient: "from-orange-500 via-red-500 to-orange-500",
       hoverGlow: "hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]"
     },
     {
       id: 3,
-      title: "FIX BILLING",
+      title: "RESOLVE LATE PAYMENTS",
       subtitle: "",
-      description: "Who's behind on payments and how do we fix it?",
+      description: "Who is late on payments, and how can we fix it?",
       gradient: "from-yellow-500/20 via-amber-500/20 to-yellow-500/20",
       borderGradient: "from-yellow-500 via-amber-500 to-yellow-500",
       hoverGlow: "hover:shadow-[0_0_30px_rgba(234,179,8,0.5)]"
     },
     {
       id: 4,
-      title: "INCREASE RETENTION",
+      title: "IDENTIFY AT-RISK STUDENTS",
       subtitle: "",
-      description: "Tell me which students are at risk of quitting",
+      description: "Show me which students are at high risk of quitting.",
       gradient: "from-purple-500/20 via-pink-500/20 to-purple-500/20",
       borderGradient: "from-purple-500 via-pink-500 to-purple-500",
       hoverGlow: "hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]"
