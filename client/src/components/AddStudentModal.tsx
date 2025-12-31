@@ -45,6 +45,7 @@ import {
 import PhoneInput from '@/components/PhoneInput'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { trpc } from '@/lib/trpc'
 
 // Types
 interface AddStudentFormData {
@@ -258,15 +259,53 @@ export default function AddStudentModal({
     }
   }
 
-  // Handle photo upload
+  // Upload photo mutation
+  const uploadPhotoMutation = trpc.students.uploadPhoto.useMutation({
+    onSuccess: (data) => {
+      handleChange('photoUrl', data.url)
+      setIsUploading(false)
+      toast.success('Photo uploaded successfully')
+    },
+    onError: (error) => {
+      console.error('Photo upload error:', error)
+      setIsUploading(false)
+      toast.error('Failed to upload photo. Please try again.')
+    },
+  })
+
+  // Handle photo upload - uploads to S3 and stores URL
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Photo must be less than 5MB')
+        return
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file')
+        return
+      }
+      
       setIsUploading(true)
       const reader = new FileReader()
       reader.onloadend = () => {
-        handleChange('photoUrl', reader.result as string)
+        const base64String = reader.result as string
+        // Extract the base64 data without the data:image/xxx;base64, prefix
+        const base64Data = base64String.split(',')[1]
+        
+        // Upload to S3
+        uploadPhotoMutation.mutate({
+          base64Data,
+          mimeType: file.type,
+          fileName: file.name,
+        })
+      }
+      reader.onerror = () => {
         setIsUploading(false)
+        toast.error('Failed to read photo file')
       }
       reader.readAsDataURL(file)
     }

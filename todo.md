@@ -2721,3 +2721,21 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Update students count to use real database query
 - [x] Test counts display correctly
 
+
+## 🐛 BUG: Script Error When Adding Student with Photo (Recurring)
+
+### Issue
+- [x] Script error appears when trying to add a student
+- [x] Error keeps recurring despite previous fixes
+- [x] User isolated the problem: error occurs when adding a picture
+
+### Root Cause
+- [x] Photo upload functionality causing the error - base64 data too large for varchar(500) column
+- [x] Need to check handlePhotoUpload in AddStudentModal
+
+### Fix Tasks
+- [x] Check photo upload code in AddStudentModal
+- [x] Fix the photo upload error handling - now uploads to S3 and stores URL
+- [x] Test adding student with photo
+- [x] Verify no script error appears - user confirmed fix works
+

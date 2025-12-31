@@ -1698,6 +1698,31 @@ export const appRouter = router({
         };
       }),
     
+    uploadPhoto: protectedProcedure
+      .input(z.object({
+        base64Data: z.string(), // base64 encoded image data (without data:image prefix)
+        mimeType: z.string(), // e.g., 'image/jpeg', 'image/png'
+        fileName: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { storagePut } = await import("./storage");
+        
+        // Generate unique file key
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const extension = input.mimeType.split('/')[1] || 'jpg';
+        const fileName = input.fileName || `student-photo-${timestamp}-${randomSuffix}.${extension}`;
+        const fileKey = `student-photos/${ctx.user?.openId || 'unknown'}/${fileName}`;
+        
+        // Convert base64 to buffer
+        const buffer = Buffer.from(input.base64Data, 'base64');
+        
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        
+        return { url };
+      }),
+    
     create: protectedProcedure
       .input(z.object({
         firstName: z.string(),
