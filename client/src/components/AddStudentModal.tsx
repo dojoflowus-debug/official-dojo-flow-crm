@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -338,15 +339,16 @@ export default function AddStudentModal({
         await onSubmit(formData)
         onClose()
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error)
+      toast.error(error?.message || 'Failed to add student. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Check if required fields are filled
-  const isFormValid = formData.firstName.trim() && formData.lastName.trim() && formData.dateOfBirth
+  // Check if required fields are filled (including guardian for minors)
+  const isFormValid = formData.firstName.trim() && formData.lastName.trim() && formData.dateOfBirth && (!isMinor || formData.guardianName.trim())
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

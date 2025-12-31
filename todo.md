@@ -2519,3 +2519,29 @@ Update prompt card titles and descriptions with corrected, professional copy:
 - [x] Fix localAuthRouter to set session cookie with organization context
 - [x] Test adding a student works correctly
 
+
+## 🐛 BUG: Add Student Button Not Working (Persistent)
+
+- [ ] Investigate Add Student mutation and form submission
+- [ ] Fix the issue preventing student creation
+- [ ] Test and verify fix works
+
+
+## 🐛 BUG: Add Student Button Not Working (FIXED)
+
+### Issue
+- [x] User reported Add Student button not responding
+- [x] Form appeared to submit but no student was created
+
+### Root Cause Found
+1. **isFormValid check incomplete**: The button enable/disable logic didn't account for guardian name requirement for minors
+2. **Missing useMemo import**: After adding toast, the useMemo import was accidentally removed causing runtime error
+3. **No error feedback**: Errors during submission were only logged to console, not shown to user
+
+### Fixes Applied
+- [x] Updated isFormValid to include guardian name check for minors: `(!isMinor || formData.guardianName.trim())`
+- [x] Added toast import and error notifications to AddStudentModal
+- [x] Added success/error toast notifications to createStudentMutation in StudentsSplitScreen
+- [x] Fixed missing useMemo import in StudentsSplitScreen
+- [x] Verified student creation works end-to-end (Dominique Holmes added successfully)
+

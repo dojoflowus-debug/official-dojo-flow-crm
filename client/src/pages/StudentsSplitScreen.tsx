@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { toast } from 'sonner'
 import { trpc } from '../lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
 import BottomNavLayout from '@/components/BottomNavLayout'
@@ -488,6 +489,11 @@ export default function StudentsSplitScreen() {
     onSuccess: () => {
       utils.students.list.invalidate()
       utils.students.stats.invalidate()
+      toast.success('Student added successfully!')
+    },
+    onError: (error) => {
+      console.error('Error creating student:', error)
+      toast.error(error.message || 'Failed to add student. Please try again.')
     },
   })
   
