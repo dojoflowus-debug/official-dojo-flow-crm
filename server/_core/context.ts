@@ -24,13 +24,39 @@ export async function createContext(
     
     // Extract organization and location context from session cookie
     const sessionCookie = opts.req.cookies?.session;
+    console.log('[Context] Session cookie raw:', sessionCookie ? 'present' : 'missing');
     if (sessionCookie) {
       try {
         const sessionData = JSON.parse(sessionCookie);
+        console.log('[Context] Session data parsed:', { userId: sessionData.userId, orgId: sessionData.currentOrganizationId });
         currentOrganizationId = sessionData.currentOrganizationId || null;
         locationSlug = sessionData.locationSlug || null;
       } catch (e) {
+        console.log('[Context] Error parsing session cookie:', e);
         // Invalid session data, ignore
+      }
+    }
+    
+    // If no org from session cookie, try to get it from user's organization membership
+    if (!currentOrganizationId && user) {
+      try {
+        const { getDb } = await import("../db");
+        const { organizationUsers } = await import("../../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (db) {
+          const orgMemberships = await db
+            .select({ organizationId: organizationUsers.organizationId })
+            .from(organizationUsers)
+            .where(eq(organizationUsers.userId, user.id))
+            .limit(1);
+          if (orgMemberships.length > 0) {
+            currentOrganizationId = orgMemberships[0].organizationId;
+            console.log('[Context] Got org from DB lookup:', currentOrganizationId);
+          }
+        }
+      } catch (e) {
+        console.log('[Context] Error looking up org from DB:', e);
       }
     }
   } catch (error) {

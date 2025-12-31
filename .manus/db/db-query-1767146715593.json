@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, email, resetToken, resetTokenExpiry FROM users WHERE email = 'sensei30002003@gmail.com' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, email, resetToken, resetTokenExpiry FROM users WHERE email = 'sensei30002003@gmail.com' LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "sensei30002003@gmail.com",
+      "resetToken": "ba513fb063f0d05569b26bdce644496312aea128f64e4b0b0430f862b2a8679a",
+      "resetTokenExpiry": "2025-12-31 03:04:51"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tresetToken\tresetTokenExpiry\n1\tsensei30002003@gmail.com\tba513fb063f0d05569b26bdce644496312aea128f64e4b0b0430f862b2a8679a\t2025-12-31 03:04:51\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

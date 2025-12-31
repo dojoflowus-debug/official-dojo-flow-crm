@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, email, role, openId FROM users WHERE role = 'owner' OR role = 'admin' ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, email, role, openId FROM users WHERE role = 'owner' OR role = 'admin' ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "2670119",
+      "name": "Test Owner",
+      "email": "test-owner-1767132616415@example.com",
+      "role": "owner",
+      "openId": "NULL"
+    },
+    {
+      "id": "2670118",
+      "name": "Test retention",
+      "email": "test-retention@example.com",
+      "role": "owner",
+      "openId": "NULL"
+    },
+    {
+      "id": "2670117",
+      "name": "Test billing",
+      "email": "test-billing@example.com",
+      "role": "owner",
+      "openId": "NULL"
+    },
+    {
+      "id": "2670116",
+      "name": "Test health",
+      "email": "test-health@example.com",
+      "role": "owner",
+      "openId": "NULL"
+    },
+    {
+      "id": "2670115",
+      "name": "Test growth",
+      "email": "test-growth@example.com",
+      "role": "owner",
+      "openId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\topenId\n2670119\tTest Owner\ttest-owner-1767132616415@example.com\towner\tNULL\n2670118\tTest retention\ttest-retention@example.com\towner\tNULL\n2670117\tTest billing\ttest-billing@example.com\towner\tNULL\n2670116\tTest health\ttest-health@example.com\towner\tNULL\n2670115\tTest growth\ttest-growth@example.com\towner\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

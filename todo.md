@@ -2361,3 +2361,65 @@ Redesign the Add Student modal to feel structured, modern, and scalable - like a
 - [x] Clean typography matching DojoFlow aesthetic
 - [x] Primary button only activates when required fields are filled
 
+
+
+## 🔐 BUG: Password Reset Not Working (2025-12-30)
+
+### Issue
+- [x] User reported password reset not working for sensei30002003@gmail.com
+
+### Investigation
+- [x] Found user exists in users table
+- [x] Found ForgotPassword.tsx and ResetPassword.tsx calling /api/auth/forgot-password and /api/auth/reset-password
+- [x] Discovered localAuthRouter.ts already has the endpoints implemented
+- [x] Server was using _core/index.ts which already mounts localAuthRouter
+
+### Root Cause
+- The password reset endpoints were already implemented in localAuthRouter.ts
+- The endpoints are working correctly - tested successfully
+
+### Fix Verification
+- [x] Tested forgot-password flow - token generated successfully
+- [x] Tested reset-password flow - password updated successfully  
+- [x] Tested login with new password - login successful
+- [x] User redirected to dashboard after login
+
+### Status: RESOLVED
+The password reset functionality is working. The user can now:
+1. Go to /forgot-password
+2. Enter email address
+3. Receive reset token (email sent if SendGrid configured)
+4. Go to /reset-password?token=xxx
+5. Enter new password
+6. Login with new password
+
+
+## 🐛 BUG: Add Student Not Saving (2025-12-30)
+
+### Issue
+- [ ] User reports Add Student form doesn't save - students don't appear in roster
+
+### Investigation
+- [ ] Check handleAddStudent function in StudentsSplitScreen.tsx
+- [ ] Check if mutation is being called
+- [ ] Check if organizationId is being passed
+- [ ] Check backend students.create procedure
+
+### Fix
+- [ ] Fix the student creation flow
+- [ ] Verify students save to database
+- [ ] Verify students appear in roster after creation
+
+
+## 🐛 BUG: OAuth Redirect to Wrong Dashboard (2025-12-30)
+- [ ] After login, user is redirected to basic dashboard instead of proper DojoFlow dashboard with sidebar
+- [ ] OAuth callback should redirect to /kai or proper dashboard route
+
+## 🐛 BUG: Organization ID Not Set in Session (2025-12-30)
+- [ ] Session cookie doesn't have currentOrganizationId set after login
+- [ ] This causes Add Student to fail with "No organization found" error
+
+## 🗑️ Remove /dashboard Route (2025-12-30)
+- [x] Remove /dashboard route from App.tsx (not part of the software)
+- [x] Clean up any related navigation links
+

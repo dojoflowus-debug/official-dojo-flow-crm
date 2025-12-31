@@ -52,7 +52,6 @@ const NAVIGATION = [
 // Page titles mapping
 const PAGE_TITLES: Record<string, string> = {
   '/crm-dashboard': 'Dashboard',
-  '/dashboard': 'Dashboard',
   '/students': 'Students',
   '/leads': 'Leads',
   '/kai-dashboard': 'Kai Command',
@@ -120,7 +119,7 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
   // Check if nav item is active
   const isActive = (href: string) => {
     if (href === '/crm-dashboard') {
-      return location.pathname === '/crm-dashboard' || location.pathname === '/dashboard'
+      return location.pathname === '/crm-dashboard'
     }
     return location.pathname.startsWith(href)
   }

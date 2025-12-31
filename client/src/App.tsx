@@ -198,7 +198,7 @@ function Router() {
       <Route path="/student-profile" element={<StudentProfile />} />
       <Route path="/student-settings" element={<StudentSettings />} />
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
-      <Route path="/dashboard" element={<ProtectedRoute><MinimalDashboard /></ProtectedRoute>} />
+
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
       <Route path="/students" element={<StudentsSplitScreen />} />
       <Route path="/students-old" element={<StudentsNew />} />

@@ -483,6 +483,14 @@ export default function StudentsSplitScreen() {
   const { data: studentsData, isLoading: studentsLoading } = trpc.students.list.useQuery()
   const { data: statsData } = trpc.students.stats.useQuery()
   
+  // Create student mutation
+  const createStudentMutation = trpc.students.create.useMutation({
+    onSuccess: () => {
+      utils.students.list.invalidate()
+      utils.students.stats.invalidate()
+    },
+  })
+  
   // Callback when student is updated - refresh data and update selected student
   const handleStudentUpdated = useCallback(() => {
     utils.students.list.invalidate()
@@ -1095,53 +1103,36 @@ export default function StudentsSplitScreen() {
               'frozen': 'On Hold'
             }
 
-            const studentData = {
-              first_name: data.firstName,
-              last_name: data.lastName,
-              email: data.email || '',
-              phone: data.phone || '',
-              date_of_birth: data.dateOfBirth ? data.dateOfBirth.toISOString().split('T')[0] : '',
-              belt_rank: 'White Belt',
+            // Use tRPC mutation instead of fetch
+            await createStudentMutation.mutateAsync({
+              firstName: data.firstName,
+              lastName: data.lastName,
+              email: data.email || null,
+              phone: data.phone || null,
+              dateOfBirth: data.dateOfBirth ? data.dateOfBirth.toISOString().split('T')[0] : null,
+              beltRank: 'White Belt',
               status: studentStatusMap[data.enrollmentStatus] || 'Active',
-              membership_status: membershipStatusMap[data.enrollmentStatus] || 'Standard',
-              street_address: data.streetAddress || '',
-              city: data.city || '',
-              state: data.state || '',
-              zip_code: data.zipCode || '',
-              photo_url: data.photoUrl || '',
-              program: data.program || '',
-              guardian_name: data.guardianName || '',
-              guardian_email: data.guardianEmail || '',
-              guardian_phone: data.guardianPhone || '',
-              notes: data.notes || '',
-              tags: data.tags?.join(',') || ''
-            }
-
-            const response = await fetch('/api/students', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(studentData)
+              membershipStatus: membershipStatusMap[data.enrollmentStatus] || 'Standard',
+              streetAddress: data.streetAddress || null,
+              city: data.city || null,
+              state: data.state || null,
+              zipCode: data.zipCode || null,
+              photoUrl: data.photoUrl || null,
+              program: data.program || null,
+              guardianName: data.guardianName || null,
+              guardianEmail: data.guardianEmail || null,
+              guardianPhone: data.guardianPhone || null,
+              notes: data.notes || null,
+              tags: data.tags?.join(',') || null,
             })
-
-            if (response.ok) {
-              // Refresh data using tRPC
-              utils.students.list.invalidate()
-              utils.students.stats.invalidate()
-            } else {
-              const error = await response.json()
-              let errorMessage = error.error || 'Unknown error'
-              
-              if (errorMessage.includes('UNIQUE constraint failed') && errorMessage.includes('email')) {
-                errorMessage = 'A student with this email address already exists.'
-              }
-              
-              throw new Error(errorMessage)
-            }
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error adding student:', error)
-            throw error
+            // Handle specific error messages
+            let errorMessage = error.message || 'Unknown error'
+            if (errorMessage.includes('UNIQUE') && errorMessage.includes('email')) {
+              errorMessage = 'A student with this email address already exists.'
+            }
+            throw new Error(errorMessage)
           }
         }}
         onSubmitAndAddAnother={async (data) => {
@@ -1160,46 +1151,31 @@ export default function StudentsSplitScreen() {
               'frozen': 'On Hold'
             }
 
-            const studentData = {
-              first_name: data.firstName,
-              last_name: data.lastName,
-              email: data.email || '',
-              phone: data.phone || '',
-              date_of_birth: data.dateOfBirth ? data.dateOfBirth.toISOString().split('T')[0] : '',
-              belt_rank: 'White Belt',
+            // Use tRPC mutation instead of fetch
+            await createStudentMutation.mutateAsync({
+              firstName: data.firstName,
+              lastName: data.lastName,
+              email: data.email || null,
+              phone: data.phone || null,
+              dateOfBirth: data.dateOfBirth ? data.dateOfBirth.toISOString().split('T')[0] : null,
+              beltRank: 'White Belt',
               status: studentStatusMap[data.enrollmentStatus] || 'Active',
-              membership_status: membershipStatusMap[data.enrollmentStatus] || 'Standard',
-              street_address: data.streetAddress || '',
-              city: data.city || '',
-              state: data.state || '',
-              zip_code: data.zipCode || '',
-              photo_url: data.photoUrl || '',
-              program: data.program || '',
-              guardian_name: data.guardianName || '',
-              guardian_email: data.guardianEmail || '',
-              guardian_phone: data.guardianPhone || '',
-              notes: data.notes || '',
-              tags: data.tags?.join(',') || ''
-            }
-
-            const response = await fetch('/api/students', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(studentData)
+              membershipStatus: membershipStatusMap[data.enrollmentStatus] || 'Standard',
+              streetAddress: data.streetAddress || null,
+              city: data.city || null,
+              state: data.state || null,
+              zipCode: data.zipCode || null,
+              photoUrl: data.photoUrl || null,
+              program: data.program || null,
+              guardianName: data.guardianName || null,
+              guardianEmail: data.guardianEmail || null,
+              guardianPhone: data.guardianPhone || null,
+              notes: data.notes || null,
+              tags: data.tags?.join(',') || null,
             })
-
-            if (response.ok) {
-              utils.students.list.invalidate()
-              utils.students.stats.invalidate()
-            } else {
-              const error = await response.json()
-              throw new Error(error.error || 'Unknown error')
-            }
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error adding student:', error)
-            throw error
+            throw new Error(error.message || 'Unknown error')
           }
         }}
       />

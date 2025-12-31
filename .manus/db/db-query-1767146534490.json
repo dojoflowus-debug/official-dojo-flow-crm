@@ -1,0 +1,35 @@
+{
+  "query": "SELECT * FROM users WHERE email = 'sensei30002003@gmail.com' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM users WHERE email = 'sensei30002003@gmail.com' LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "LEWRwD5NBqhLQNFRGgZ24G",
+      "provider": "NULL",
+      "providerId": "NULL",
+      "name": "Vincent Holmes",
+      "email": "sensei30002003@gmail.com",
+      "password": "$2b$10$qmaEHbSWaCsBqUkTu5APhuf4D.YkRtIB1K8Lv28.DoF36cFzUvf.i",
+      "resetToken": "NULL",
+      "resetTokenExpiry": "NULL",
+      "loginMethod": "google",
+      "role": "admin",
+      "globalRole": "platform_admin",
+      "createdAt": "2025-12-10 05:18:00",
+      "updatedAt": "2025-12-31 02:02:01",
+      "lastSignedIn": "2025-12-31 02:02:01",
+      "displayName": "NULL",
+      "preferredName": "NULL",
+      "phone": "NULL",
+      "bio": "NULL",
+      "photoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/profile-photos/1/1765736678972-1vluhy.jpeg",
+      "photoUrlSmall": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/profile-photos/1/1765736678972-1vluhy.jpeg",
+      "staffId": "NULL",
+      "locationIds": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tprovider\tproviderId\tname\temail\tpassword\tresetToken\tresetTokenExpiry\tloginMethod\trole\tglobalRole\tcreatedAt\tupdatedAt\tlastSignedIn\tdisplayName\tpreferredName\tphone\tbio\tphotoUrl\tphotoUrlSmall\tstaffId\tlocationIds\n1\tLEWRwD5NBqhLQNFRGgZ24G\tNULL\tNULL\tVincent Holmes\tsensei30002003@gmail.com\t$2b$10$qmaEHbSWaCsBqUkTu5APhuf4D.YkRtIB1K8Lv28.DoF36cFzUvf.i\tNULL\tNULL\tgoogle\tadmin\tplatform_admin\t2025-12-10 05:18:00\t2025-12-31 02:02:01\t2025-12-31 02:02:01\tNULL\tNULL\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/profile-photos/1/1765736678972-1vluhy.jpeg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/profile-photos/1/1765736678972-1vluhy.jpeg\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

@@ -36,7 +36,7 @@ export default function Layout({ children, onLogout = () => {}, theme = 'dark', 
   const [dragOverIndex, setDragOverIndex] = useState(null)
 
   const defaultNavigation = [
-    { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { id: 'dashboard', name: 'Dashboard', href: '/crm-dashboard', icon: LayoutDashboard },
     { id: 'students', name: 'Students', href: '/students', icon: Users },
     // { id: 'kiosk', name: 'Kiosk', href: '/kiosk', icon: Tablet },
     { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
@@ -80,8 +80,8 @@ export default function Layout({ children, onLogout = () => {}, theme = 'dark', 
   }, [])
 
   const isActive = (path) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/' || location.pathname === '/dashboard'
+    if (path === '/crm-dashboard') {
+      return location.pathname === '/' || location.pathname === '/crm-dashboard'
     }
     return location.pathname.startsWith(path)
   }

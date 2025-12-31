@@ -1698,35 +1698,91 @@ export const appRouter = router({
         };
       }),
     
-    create: publicProcedure
+    create: protectedProcedure
       .input(z.object({
         firstName: z.string(),
         lastName: z.string(),
-        email: z.string().email().optional(),
-        phone: z.string().optional(),
-        dateOfBirth: z.date().optional(),
-        age: z.number().optional(),
-        beltRank: z.string().optional(),
-        status: z.string().optional(),
-        membershipStatus: z.string().optional(),
+        email: z.string().email().optional().nullable(),
+        phone: z.string().optional().nullable(),
+        dateOfBirth: z.string().optional().nullable(), // Accept string date from frontend
+        age: z.number().optional().nullable(),
+        beltRank: z.string().optional().nullable(),
+        status: z.string().optional().nullable(),
+        membershipStatus: z.string().optional().nullable(),
+        program: z.string().optional().nullable(),
+        streetAddress: z.string().optional().nullable(),
+        city: z.string().optional().nullable(),
+        state: z.string().optional().nullable(),
+        zipCode: z.string().optional().nullable(),
+        photoUrl: z.string().optional().nullable(),
+        guardianName: z.string().optional().nullable(),
+        guardianEmail: z.string().email().optional().nullable(),
+        guardianPhone: z.string().optional().nullable(),
+        notes: z.string().optional().nullable(),
+        tags: z.string().optional().nullable(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
+        const { geocodeAddress } = await import("./geocoding");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         
+        // Get organization ID from context for multi-tenancy
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) {
+          throw new Error('No organization found. Please complete your account setup.');
+        }
+        
+        // Parse date string to Date object if provided
+        let dateOfBirth: Date | null = null;
+        if (input.dateOfBirth) {
+          dateOfBirth = new Date(input.dateOfBirth);
+        }
+        
+        // Geocode address if provided
+        let latitude: string | null = null;
+        let longitude: string | null = null;
+        if (input.streetAddress || input.city || input.state || input.zipCode) {
+          try {
+            const coords = await geocodeAddress({
+              streetAddress: input.streetAddress || undefined,
+              city: input.city || undefined,
+              state: input.state || undefined,
+              zipCode: input.zipCode || undefined,
+            });
+            if (coords) {
+              latitude = coords.lat.toString();
+              longitude = coords.lng.toString();
+            }
+          } catch (e) {
+            console.log('Geocoding failed, continuing without coordinates');
+          }
+        }
+        
         const newStudent = await db.insert(students).values({
+          organizationId: orgId,
           firstName: input.firstName,
           lastName: input.lastName,
           email: input.email || null,
           phone: input.phone || null,
-          dateOfBirth: input.dateOfBirth || null,
+          dateOfBirth: dateOfBirth,
           age: input.age || null,
-          beltRank: input.beltRank || 'White',
-          status: input.status || 'Active',
+          beltRank: input.beltRank || 'White Belt',
+          status: (input.status as 'Active' | 'Inactive' | 'On Hold') || 'Active',
           membershipStatus: input.membershipStatus || 'Active',
+          program: input.program || null,
+          streetAddress: input.streetAddress || null,
+          city: input.city || null,
+          state: input.state || null,
+          zipCode: input.zipCode || null,
+          latitude: latitude,
+          longitude: longitude,
+          photoUrl: input.photoUrl || null,
+          guardianName: input.guardianName || null,
+          guardianEmail: input.guardianEmail || null,
+          guardianPhone: input.guardianPhone || null,
         });
         
         return { success: true, id: newStudent.insertId };
