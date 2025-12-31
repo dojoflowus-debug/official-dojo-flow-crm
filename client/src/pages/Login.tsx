@@ -48,8 +48,8 @@ export default function Login() {
         return;
       }
       
-      // Redirect to dashboard on success
-      window.location.href = '/dashboard';
+      // Redirect to Kai Command on success
+      window.location.href = '/kai';
     } catch (err) {
       setError('Network error. Please try again.');
     }
@@ -73,8 +73,8 @@ export default function Login() {
         return;
       }
       
-      // Redirect to dashboard on success
-      window.location.href = '/dashboard';
+      // Redirect to Kai Command on success
+      window.location.href = '/kai';
     } catch (err) {
       setError('Network error. Please try again.');
     }

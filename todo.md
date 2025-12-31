@@ -2423,3 +2423,8 @@ The password reset functionality is working. The user can now:
 - [x] Remove /dashboard route from App.tsx (not part of the software)
 - [x] Clean up any related navigation links
 
+
+## 🐛 BUG: Logout Redirect to Wrong Page (2025-12-30)
+- [x] Logout redirects to /login which causes 404 error
+- [x] Should redirect to /owner instead
+- [x] Fix login flow from /login page causing 404

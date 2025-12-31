@@ -6,7 +6,7 @@ export const APP_LOGO =
   import.meta.env.VITE_APP_LOGO ||
   "https://placehold.co/128x128/E1E7EF/1F2937?text=App";
 
-// Generate login URL - now redirects to custom login page instead of OAuth
+// Generate login URL - redirects to owner login page
 export const getLoginUrl = () => {
-  return "/login";
+  return "/owner";
 };

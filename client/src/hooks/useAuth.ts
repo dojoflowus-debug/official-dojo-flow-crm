@@ -72,8 +72,8 @@ export function useAuth() {
       // Clear local state
       setUser(null);
       
-      // Redirect to login
-      window.location.href = "/login";
+      // Redirect to owner login page
+      window.location.href = "/owner";
     } catch (error) {
       console.error("Logout failed:", error);
     }

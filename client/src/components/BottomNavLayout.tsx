@@ -162,7 +162,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
 
   const handleLogout = async () => {
     await logout()
-    navigate('/login')
+    navigate('/owner')
   }
 
   // Get user initials for avatar

@@ -8,8 +8,8 @@ type UseAuthOptions = {
 };
 
 export function useAuth(options?: UseAuthOptions) {
-  // Default redirect to custom login page instead of OAuth
-  const { redirectOnUnauthenticated = false, redirectPath = "/login" } =
+  // Default redirect to owner login page
+  const { redirectOnUnauthenticated = false, redirectPath = "/owner" } =
     options ?? {};
   const utils = trpc.useUtils();
 

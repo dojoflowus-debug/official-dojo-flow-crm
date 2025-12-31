@@ -33,7 +33,7 @@ export default function ProtectedRoute({ children, requireSetup = true }: Protec
     if (!isLoading) {
       // Not authenticated - redirect to login
       if (!isAuthenticated) {
-        navigate("/login", { 
+        navigate("/owner", { 
           replace: true,
           state: { from: location.pathname }
         });

@@ -19,8 +19,8 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  // Redirect to custom login page instead of OAuth
-  window.location.href = "/login";
+  // Redirect to owner login page
+  window.location.href = "/owner";
 };
 
 queryClient.getQueryCache().subscribe(event => {
