@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE organizations \nADD COLUMN IF NOT EXISTS subscriptionStatus ENUM('trial', 'active', 'past_due', 'cancelled', 'inactive') DEFAULT 'trial' NOT NULL,\nADD COLUMN IF NOT EXISTS planId INT,\nADD COLUMN IF NOT EXISTS trialEndsAt TIMESTAMP,\nADD COLUMN IF NOT EXISTS lastActivity TIMESTAMP;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE organizations \nADD COLUMN IF NOT EXISTS subscriptionStatus ENUM('trial', 'active', 'past_due', 'cancelled', 'inactive') DEFAULT 'trial' NOT NULL,\nADD COLUMN IF NOT EXISTS planId INT,\nADD COLUMN IF NOT EXISTS trialEndsAt TIMESTAMP,\nADD COLUMN IF NOT EXISTS lastActivity TIMESTAMP;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 53
+}

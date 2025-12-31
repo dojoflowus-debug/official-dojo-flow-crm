@@ -2127,3 +2127,62 @@ Remove fake/seed data (fake students, fake leads) from all new accounts except f
 - [x] Gradient orbs in background
 - [x] Inter font family
 - [x] Smooth hover transitions
+
+
+## 📊 Master Dashboard - Real Data Only (No Mock Data)
+
+### Task
+- [ ] Remove all mock/fake data from Master Dashboard
+- [ ] Create backend API to fetch real organizations data
+- [ ] Display only enrolled schools from database
+- [ ] Show real KPIs (actual school count, student count, revenue)
+- [ ] Connect schools table to real organization data
+- [ ] Test Master Dashboard with real data
+- [ ] Remove fake/demo school data from Schools dashboard - display only real database schools
+
+- [x] Fix 'Platform admin access required' error on Master Dashboard Schools page
+
+## 🐛 BUG: Master Dashboard Schools Page - Platform Admin Access Error
+
+### Issue
+- [x] Schools page shows 'Failed to load schools - Platform admin access required'
+- [ ] User Vincent Holmes is logged in but globalRole was 'none' instead of 'platform_admin'
+
+### Fix Applied
+- [x] Updated Vincent Holmes (id=1) globalRole to 'platform_admin' in database
+- [x] Test Schools page loads correctly with organizations data
+
+
+
+## 🐛 BUG: Master Dashboard Missing School Details (Dec 30, 2024)
+
+### Issues Reported
+- [x] Credits not displayed - school's AI credit balance not showing
+- [x] Onboarding info missing - profile data from signup not displayed
+- [x] Payment plan/amount not displayed - subscription details missing
+- [x] Delinquent/current status not showing - payment status indicators
+- [x] Sub-users/instructors not displayed - staff count missing
+- [x] View Details button not working - can't open school details
+
+### Fixes Applied
+- [x] Updated masterDashboardRouter.getSchools to include credits, payment status, staff count
+- [x] Updated SchoolsTable component to display Credits, Plan/Payment, Students/Staff columns
+- [x] Added payment status indicators (Trial, Current, Delinquent)
+- [x] Created MasterSchoolDetail page for viewing individual school details
+- [x] Added route /master/schools/:id for school detail view
+- [x] Updated SchoolDetailPanel with tabs for Overview, Billing, Team
+- [x] View button now navigates to school detail page
+
+### Investigation
+- [ ] Review MasterSchools.tsx implementation
+- [ ] Check backend API for school data fields
+- [ ] Identify missing data in school cards
+
+### Fixes
+- [ ] Add credits display to school cards
+- [ ] Display onboarding profile information
+- [ ] Add payment plan and billing info
+- [ ] Show payment status (current/delinquent)
+- [ ] Add sub-users/instructors count
+- [ ] Fix View Details button functionality
+- [ ] Test all fixes in browser

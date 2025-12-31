@@ -30,6 +30,7 @@ import { subscriptionRouter } from "./subscriptionRouter";
 import { creditRouter } from "./creditRouter";
 import { platformRouter } from "./platformRouter";
 import { platformAdminAuthRouter } from "./platformAdminAuth";
+import { masterDashboardRouter } from "./masterDashboardRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -364,6 +365,7 @@ export const appRouter = router({
   // Platform Admin CRM (internal only)
   platform: platformRouter,
   platformAuth: platformAdminAuthRouter,
+  masterDashboard: masterDashboardRouter,
   
   // Multi-tenant authentication (public)
   ownerAuth: ownerAuthRouter,

@@ -124,6 +124,7 @@ import MasterAIUsage from "./pages/MasterAIUsage";
 import MasterBilling from "./pages/MasterBilling";
 import MasterSupport from "./pages/MasterSupport";
 import MasterSettings from "./pages/MasterSettings";
+import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -169,6 +170,7 @@ function Router() {
       <Route path="/master/schools" element={<MasterSchools />} />
       <Route path="/master/schools/onboarding" element={<MasterSchools />} />
       <Route path="/master/schools/at-risk" element={<MasterSchools />} />
+      <Route path="/master/schools/:id" element={<MasterSchoolDetail />} />
       <Route path="/master/analytics" element={<MasterAnalytics />} />
       <Route path="/master/ai-usage" element={<MasterAIUsage />} />
       <Route path="/master/billing" element={<MasterBilling />} />

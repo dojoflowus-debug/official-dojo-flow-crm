@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   MapPin,
@@ -11,11 +12,18 @@ import {
   Mail,
   Phone,
   ExternalLink,
+  Building,
+  Clock,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import type { School } from "./SchoolsTable";
 
 interface SchoolDetailPanelProps {
@@ -24,25 +32,11 @@ interface SchoolDetailPanelProps {
   onClose: () => void;
 }
 
-// Mock data for the detail panel
-const mockSchoolDetails = {
-  email: "contact@edenjj.com",
-  phone: "(310) 555-0123",
-  joinedDate: "Mar 15, 2024",
-  lastBilling: "7 days ago",
-  automationsActive: 5,
-  aiCreditsUsed: 1240,
-  monthlyRevenue: 4520,
-  revenueChange: 12,
-  activityData: [
-    { date: "Mon", value: 45 },
-    { date: "Tue", value: 52 },
-    { date: "Wed", value: 38 },
-    { date: "Thu", value: 65 },
-    { date: "Fri", value: 48 },
-    { date: "Sat", value: 72 },
-    { date: "Sun", value: 35 },
-  ],
+const paymentStatusConfig = {
+  current: { icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/20", label: "Current" },
+  delinquent: { icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/20", label: "Delinquent" },
+  trial: { icon: Clock, color: "text-blue-400", bg: "bg-blue-500/20", label: "Trial" },
+  cancelled: { icon: X, color: "text-red-400", bg: "bg-red-500/20", label: "Cancelled" },
 };
 
 export function SchoolDetailPanel({
@@ -50,6 +44,8 @@ export function SchoolDetailPanel({
   isOpen,
   onClose,
 }: SchoolDetailPanelProps) {
+  const navigate = useNavigate();
+
   // Close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -66,6 +62,19 @@ export function SchoolDetailPanel({
   }, [isOpen, onClose]);
 
   if (!school) return null;
+
+  const paymentConfig = paymentStatusConfig[school.paymentStatus || "current"];
+  const PaymentIcon = paymentConfig.icon;
+
+  // Calculate credit usage percentage
+  const creditUsagePercent = school.creditsAllowance && school.creditsAllowance > 0
+    ? Math.round(((school.creditsUsed || 0) / school.creditsAllowance) * 100)
+    : 0;
+
+  const handleViewDetails = () => {
+    onClose();
+    navigate(`/master/schools/${school.id}`);
+  };
 
   return (
     <>
@@ -90,7 +99,7 @@ export function SchoolDetailPanel({
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="w-14 h-14 rounded-xl border-2 border-white/10">
-                <AvatarImage src={school.logoUrl} />
+                <AvatarImage src={school.logoUrl || undefined} />
                 <AvatarFallback className="rounded-xl bg-gradient-to-br from-red-500 to-red-600 text-white text-lg">
                   {school.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                 </AvatarFallback>
@@ -128,14 +137,53 @@ export function SchoolDetailPanel({
             </div>
             <div className="md-glass-card p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/20">
-                  <CreditCard className="w-4 h-4 text-blue-400" />
+                <div className={cn("p-2 rounded-lg", paymentConfig.bg)}>
+                  <PaymentIcon className={cn("w-4 h-4", paymentConfig.color)} />
                 </div>
                 <div>
-                  <p className="text-xs text-white/50">Last Billing</p>
-                  <p className="text-lg font-semibold text-white">{mockSchoolDetails.lastBilling}</p>
+                  <p className="text-xs text-white/50">Payment Status</p>
+                  <p className={cn("text-lg font-semibold", paymentConfig.color)}>
+                    {paymentConfig.label}
+                  </p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Credit Balance Card */}
+          <div className="md-glass-card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-medium text-white">AI Credits</span>
+              </div>
+              <span className={cn(
+                "text-2xl font-bold",
+                (school.credits || 0) < 50 ? "text-amber-400" : "text-white"
+              )}>
+                {(school.credits || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-white/50">
+                <span>Used this period</span>
+                <span>{(school.creditsUsed || 0).toLocaleString()} / {(school.creditsAllowance || 0).toLocaleString()}</span>
+              </div>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    creditUsagePercent > 80 ? "bg-amber-500" : "bg-purple-500"
+                  )}
+                  style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
+                />
+              </div>
+              {(school.credits || 0) < 50 && (
+                <p className="text-xs text-amber-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  Low credit balance
+                </p>
+              )}
             </div>
           </div>
 
@@ -149,99 +197,174 @@ export function SchoolDetailPanel({
                 Overview
               </TabsTrigger>
               <TabsTrigger
-                value="students"
+                value="billing"
                 className="flex-1 data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60"
               >
-                Students
+                Billing
+              </TabsTrigger>
+              <TabsTrigger
+                value="team"
+                className="flex-1 data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60"
+              >
+                Team
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4 space-y-4">
-              {/* Activity Chart */}
-              <div className="md-glass-card p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-white">Activity</h3>
-                  <span className="text-xs text-white/50">Last 7 days</span>
-                </div>
-                <div className="h-32 flex items-end gap-2">
-                  {mockSchoolDetails.activityData.map((item, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <div
-                        className="w-full bg-gradient-to-t from-red-500/50 to-red-500/20 rounded-t"
-                        style={{ height: `${(item.value / 80) * 100}%` }}
-                      />
-                      <span className="text-xs text-white/40">{item.date}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Contact Info */}
               <div className="md-glass-card p-4 space-y-3">
-                <h3 className="text-sm font-medium text-white mb-3">Contact</h3>
+                <h3 className="text-sm font-medium text-white mb-3">Contact & Location</h3>
                 <div className="flex items-center gap-3 text-white/70">
                   <MapPin className="w-4 h-4 text-white/40" />
-                  <span className="text-sm">{school.location}</span>
+                  <span className="text-sm">{school.fullAddress || school.location}</span>
                 </div>
-                <div className="flex items-center gap-3 text-white/70">
-                  <Mail className="w-4 h-4 text-white/40" />
-                  <span className="text-sm">{mockSchoolDetails.email}</span>
-                </div>
-                <div className="flex items-center gap-3 text-white/70">
-                  <Phone className="w-4 h-4 text-white/40" />
-                  <span className="text-sm">{mockSchoolDetails.phone}</span>
-                </div>
-                <div className="flex items-center gap-3 text-white/70">
-                  <Calendar className="w-4 h-4 text-white/40" />
-                  <span className="text-sm">Joined {mockSchoolDetails.joinedDate}</span>
-                </div>
+                {school.ownerEmail && (
+                  <div className="flex items-center gap-3 text-white/70">
+                    <Mail className="w-4 h-4 text-white/40" />
+                    <span className="text-sm">{school.ownerEmail}</span>
+                  </div>
+                )}
+                {school.timezone && (
+                  <div className="flex items-center gap-3 text-white/70">
+                    <Clock className="w-4 h-4 text-white/40" />
+                    <span className="text-sm">{school.timezone}</span>
+                  </div>
+                )}
+                {school.joinedDate && (
+                  <div className="flex items-center gap-3 text-white/70">
+                    <Calendar className="w-4 h-4 text-white/40" />
+                    <span className="text-sm">
+                      Joined {new Date(school.joinedDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Metrics */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Programs */}
+              {school.programs && school.programs.length > 0 && (
                 <div className="md-glass-card p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-4 h-4 text-purple-400" />
-                    <span className="text-xs text-white/50">Automation</span>
+                  <h3 className="text-sm font-medium text-white mb-3">Programs Offered</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {school.programs.map((program, i) => (
+                      <Badge 
+                        key={i} 
+                        variant="secondary"
+                        className="bg-white/10 text-white/70 hover:bg-white/15"
+                      >
+                        {program}
+                      </Badge>
+                    ))}
                   </div>
-                  <p className="text-2xl font-bold text-white">
-                    {mockSchoolDetails.automationsActive}
-                  </p>
-                  <p className="text-xs text-emerald-400">active</p>
                 </div>
-                <div className="md-glass-card p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Activity className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs text-white/50">AI Credits</span>
-                  </div>
-                  <p className="text-2xl font-bold text-white">
-                    {mockSchoolDetails.aiCreditsUsed.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-white/40">this month</p>
-                </div>
-              </div>
+              )}
 
-              {/* Revenue */}
+              {/* Activity */}
               <div className="md-glass-card p-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-white/50">Monthly Revenue</p>
-                    <p className="text-2xl font-bold text-white">
-                      ${mockSchoolDetails.monthlyRevenue.toLocaleString()}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-medium text-white">Last Activity</span>
                   </div>
-                  <div className="flex items-center gap-1 text-emerald-400 text-sm">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>+{mockSchoolDetails.revenueChange}%</span>
-                  </div>
+                  <span className="text-sm text-white/70">{school.lastActivity || "Never"}</span>
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="students" className="mt-4">
+            <TabsContent value="billing" className="mt-4 space-y-4">
+              {/* Subscription Info */}
+              <div className="md-glass-card p-4 space-y-4">
+                <h3 className="text-sm font-medium text-white">Subscription</h3>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-white/50">Plan</span>
+                  <Badge className={cn(
+                    "text-sm",
+                    school.plan === "Starter" && "bg-blue-500/20 text-blue-400",
+                    school.plan === "Growth" && "bg-emerald-500/20 text-emerald-400",
+                    school.plan === "Pro" && "bg-purple-500/20 text-purple-400",
+                    school.plan === "Enterprise" && "bg-amber-500/20 text-amber-400"
+                  )}>
+                    {school.plan}
+                  </Badge>
+                </div>
+
+                {school.monthlyPrice !== undefined && school.monthlyPrice > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/50">Amount</span>
+                    <span className="text-white font-medium">
+                      ${school.monthlyPrice}/{school.billingCycle === "annual" ? "year" : "month"}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-white/50">Status</span>
+                  <div className={cn("flex items-center gap-1", paymentConfig.color)}>
+                    <PaymentIcon className="w-4 h-4" />
+                    <span>{paymentConfig.label}</span>
+                  </div>
+                </div>
+
+                {school.paymentStatus === "trial" && school.trialEndsAt && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/50">Trial Ends</span>
+                    <span className="text-blue-400">
+                      {new Date(school.trialEndsAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+
+                {school.nextBillingDate && school.paymentStatus !== "trial" && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/50">Next Billing</span>
+                    <span className="text-white/70">
+                      {new Date(school.nextBillingDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Warning */}
+              {school.paymentStatus === "delinquent" && (
+                <div className="md-glass-card p-4 border border-amber-500/30 bg-amber-500/10">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-400">Payment Overdue</p>
+                      <p className="text-xs text-white/60 mt-1">
+                        This school has an overdue payment. Contact the owner to resolve.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="team" className="mt-4 space-y-4">
+              {/* Team Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="md-glass-card p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs text-white/50">Staff Members</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">{school.staffCount || 0}</p>
+                  <p className="text-xs text-white/40">instructors & staff</p>
+                </div>
+                <div className="md-glass-card p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <UserPlus className="w-4 h-4 text-purple-400" />
+                    <span className="text-xs text-white/50">Sub-Users</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">{school.subUserCount || 0}</p>
+                  <p className="text-xs text-white/40">with platform access</p>
+                </div>
+              </div>
+
+              {/* Team Info */}
               <div className="md-glass-card p-4">
-                <p className="text-white/50 text-sm text-center py-8">
-                  Student list will be loaded here
+                <p className="text-white/50 text-sm text-center py-4">
+                  View full team details in the school dashboard
                 </p>
               </div>
             </TabsContent>
@@ -251,8 +374,9 @@ export function SchoolDetailPanel({
           <div className="space-y-3 pt-4">
             <Button
               className="w-full bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleViewDetails}
             >
-              View Details
+              View Full Details
               <ExternalLink className="w-4 h-4 ml-2" />
             </Button>
             <div className="grid grid-cols-2 gap-3">
