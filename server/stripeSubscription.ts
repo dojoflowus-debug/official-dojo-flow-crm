@@ -6,7 +6,7 @@
 
 import Stripe from 'stripe';
 import { getDb } from './db';
-import { organizationSubscriptions, aiCreditBalance, subscriptionPlans } from '../drizzle/schema';
+import { organizationSubscriptions, aiCreditBalance, subscriptionPlans, creditTopUps, aiCreditTransactions } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -285,6 +285,163 @@ export async function handlePaymentFailed(invoice: Stripe.Invoice) {
     .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
 
   return { success: true };
+}
+
+/**
+ * Create Stripe checkout session for credit top-up
+ */
+export async function createCreditTopUpCheckout(params: {
+  organizationId: number;
+  credits: number;
+  amountInCents: number;
+  successUrl: string;
+  cancelUrl: string;
+  customerEmail?: string;
+  userId?: number;
+}) {
+  const { organizationId, credits, amountInCents, successUrl, cancelUrl, customerEmail, userId } = params;
+
+  // Get existing customer ID if available
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  const existingSub = await db.query.organizationSubscriptions.findFirst({
+    where: eq(organizationSubscriptions.organizationId, organizationId),
+  });
+
+  // Create top-up record
+  const topUpResult = await db.insert(creditTopUps).values({
+    organizationId,
+    credits,
+    amountPaid: amountInCents,
+    currency: 'USD',
+    status: 'pending',
+    purchasedBy: userId ?? null,
+  });
+  
+  const topUpId = Number(topUpResult.insertId);
+
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    mode: 'payment',
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `${credits} AI Credits`,
+            description: `Top up your DojoFlow AI credits balance`,
+          },
+          unit_amount: amountInCents,
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: {
+      type: 'credit_top_up',
+      organizationId: organizationId.toString(),
+      credits: credits.toString(),
+      topUpId: topUpId.toString(),
+    },
+  };
+
+  // Add customer email if provided
+  if (customerEmail) {
+    sessionParams.customer_email = customerEmail;
+  }
+
+  // Use existing customer if available
+  if (existingSub?.stripeCustomerId) {
+    sessionParams.customer = existingSub.stripeCustomerId;
+  }
+
+  const session = await stripe.checkout.sessions.create(sessionParams);
+
+  // Update top-up with Stripe session ID
+  await db.update(creditTopUps)
+    .set({
+      stripePaymentIntentId: session.payment_intent as string || session.id,
+      updatedAt: new Date(),
+    })
+    .where(eq(creditTopUps.id, topUpId));
+
+  return {
+    sessionId: session.id,
+    url: session.url,
+    topUpId,
+  };
+}
+
+/**
+ * Handle successful credit top-up payment
+ */
+export async function handleCreditTopUpComplete(session: Stripe.Checkout.Session) {
+  const { organizationId, credits, topUpId } = session.metadata as { 
+    organizationId: string; 
+    credits: string; 
+    topUpId: string;
+  };
+
+  if (!organizationId || !credits || !topUpId) {
+    throw new Error('Missing metadata in checkout session');
+  }
+
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+
+  // Update top-up status
+  await db.update(creditTopUps)
+    .set({
+      status: 'completed',
+      completedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(creditTopUps.id, parseInt(topUpId)));
+
+  // Add credits to balance
+  const creditAmount = parseInt(credits);
+  const existing = await db.query.aiCreditBalance.findFirst({
+    where: eq(aiCreditBalance.organizationId, parseInt(organizationId)),
+  });
+
+  if (existing) {
+    await db.update(aiCreditBalance)
+      .set({
+        balance: existing.balance + creditAmount,
+        totalPurchased: existing.totalPurchased + creditAmount,
+        updatedAt: new Date(),
+      })
+      .where(eq(aiCreditBalance.organizationId, parseInt(organizationId)));
+  } else {
+    // Create new balance record
+    await db.insert(aiCreditBalance).values({
+      organizationId: parseInt(organizationId),
+      balance: creditAmount,
+      periodAllowance: 0,
+      periodUsed: 0,
+      totalPurchased: creditAmount,
+      totalUsed: 0,
+    });
+  }
+
+  // Log transaction
+  const newBalance = existing ? existing.balance + creditAmount : creditAmount;
+  await db.insert(aiCreditTransactions).values({
+    organizationId: parseInt(organizationId),
+    type: 'purchase',
+    amount: creditAmount,
+    balanceAfter: newBalance,
+    description: `Credit top-up: ${creditAmount} credits purchased`,
+    metadata: JSON.stringify({
+      topUpId: parseInt(topUpId),
+      sessionId: session.id,
+      amountPaid: session.amount_total,
+    }),
+  });
+
+  return { success: true, creditsAdded: creditAmount, newBalance };
 }
 
 export { stripe };

@@ -88,7 +88,24 @@ const CreditTransactions = () => {
   const [autoTopUp, setAutoTopUp] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedCredits, setSelectedCredits] = useState(100);
   const itemsPerPage = 10;
+
+  // Credit top-up mutation
+  const createTopUpCheckout = trpc.subscription.createCreditTopUpCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create checkout session');
+    },
+  });
+
+  // Credit pricing tiers
+  const { data: pricingData } = trpc.subscription.getCreditTopUpPricing.useQuery();
 
   // Calculate date range - memoized to prevent infinite query loops
   const startDate = useMemo(() => {
@@ -450,7 +467,7 @@ const CreditTransactions = () => {
                   <div className="flex items-center gap-2">
                     <Button
                       className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                      onClick={() => toast.info('Buy Credits feature coming soon')}
+                      onClick={() => setShowPurchaseModal(true)}
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Buy Credits
@@ -803,6 +820,107 @@ const CreditTransactions = () => {
           </div>
         </div>
       </div>
+      {/* Credit Purchase Modal */}
+      {showPurchaseModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white">Buy AI Credits</h3>
+              <button
+                onClick={() => setShowPurchaseModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Pricing Tiers */}
+            <div className="space-y-3 mb-6">
+              {pricingData?.tiers.map((tier) => (
+                <div
+                  key={tier.credits}
+                  onClick={() => setSelectedCredits(tier.credits)}
+                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                    selectedCredits === tier.credits
+                      ? 'border-primary bg-primary/10'
+                      : 'border-slate-700 hover:border-slate-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-white">{tier.label}</span>
+                        {tier.savings > 0 && (
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                            Save {tier.savings}%
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-400 mt-1">
+                        {tier.credits.toLocaleString()} credits at ${(tier.pricePerCredit / 100).toFixed(2)}/credit
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-white">${(tier.price / 100).toFixed(2)}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Selected Summary */}
+            <div className="p-4 bg-slate-900 rounded-lg mb-6">
+              <div className="flex items-center justify-between text-sm text-slate-400 mb-2">
+                <span>Selected:</span>
+                <span>{selectedCredits.toLocaleString()} credits</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-300">Total:</span>
+                <span className="text-2xl font-bold text-white">
+                  ${((pricingData?.tiers.find(t => t.credits === selectedCredits)?.price || selectedCredits * 10) / 100).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 border-slate-600"
+                onClick={() => setShowPurchaseModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-primary hover:bg-primary/90"
+                disabled={createTopUpCheckout.isPending}
+                onClick={() => {
+                  createTopUpCheckout.mutate({
+                    organizationId: 1, // TODO: Get from context
+                    credits: selectedCredits,
+                  });
+                }}
+              >
+                {createTopUpCheckout.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⏳</span>
+                    Processing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    Proceed to Checkout
+                  </span>
+                )}
+              </Button>
+            </div>
+
+            <p className="text-xs text-slate-500 text-center mt-4">
+              Secure payment powered by Stripe. Credits are added instantly after payment.
+            </p>
+          </div>
+        </div>
+      )}
     </BottomNavLayout>
   );
 };

@@ -259,5 +259,57 @@ export const subscriptionRouter = router({
       });
 
       return result;
-    })
+    }),
+
+  /**
+   * Create Stripe checkout session for credit top-up
+   */
+  createCreditTopUpCheckout: protectedProcedure
+    .input(z.object({
+      organizationId: z.number(),
+      credits: z.number().min(100).max(10000),
+      customerEmail: z.string().email().optional()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { createCreditTopUpCheckout } = await import('./stripeSubscription');
+      const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:3000';
+      
+      // Calculate price: $10 per 100 credits
+      const pricePerCredit = 10; // cents
+      const amountInCents = input.credits * pricePerCredit;
+      
+      const result = await createCreditTopUpCheckout({
+        organizationId: input.organizationId,
+        credits: input.credits,
+        amountInCents,
+        successUrl: `${baseUrl}/billing/credits?topup=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${baseUrl}/billing/credits?topup=cancelled`,
+        customerEmail: input.customerEmail,
+        userId: ctx.user?.id
+      });
+
+      return result;
+    }),
+
+  /**
+   * Get credit top-up pricing tiers
+   */
+  getCreditTopUpPricing: publicProcedure.query(() => {
+    // Price per credit in cents
+    const basePrice = 10; // $0.10 per credit
+    
+    return {
+      tiers: [
+        { credits: 100, price: 1000, pricePerCredit: basePrice, savings: 0, label: 'Starter Pack' },
+        { credits: 250, price: 2250, pricePerCredit: 9, savings: 10, label: 'Value Pack' },
+        { credits: 500, price: 4000, pricePerCredit: 8, savings: 20, label: 'Pro Pack' },
+        { credits: 1000, price: 7000, pricePerCredit: 7, savings: 30, label: 'Business Pack' },
+      ],
+      customPricing: {
+        minCredits: 100,
+        maxCredits: 10000,
+        pricePerCredit: basePrice,
+      }
+    };
+  })
 });

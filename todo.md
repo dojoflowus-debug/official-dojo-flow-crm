@@ -279,20 +279,20 @@ Update hero banner to match exact mockup design:
 - [x] Make pricing page accessible from Settings and onboarding
 
 ### Phase 4: Credit Consumption System
-- [ ] Create credit cost constants (chat: 1, SMS: 1, email: 2, call: 8-15)
-- [ ] Add credit deduction to chatWithKai procedure
-- [ ] Add credit deduction to sendSMS procedure
-- [ ] Add credit deduction to sendEmail procedure
-- [ ] Add credit deduction to makeCall procedure
+- [x] Create credit cost constants (chat: 1, SMS: 1, email: 2, call: 8-15)
+- [x] Add credit deduction to chatWithKai procedure
+- [x] Add credit deduction to sendSMS procedure
+- [x] Add credit deduction to sendEmail procedure
+- [x] Add credit deduction to makeCall procedure
 - [ ] Create middleware to check credit balance before AI operations
 - [ ] Add low credit warnings (< 50 credits)
 - [ ] Add zero credit blocking with upgrade prompt
-- [ ] Log all credit transactions with task type and metadata
+- [x] Log all credit transactions with task type and metadata
 
 ### Phase 5: Stripe Integration
 - [x] Create Stripe subscription products for each plan
 - [x] Add createCheckoutSession for plan subscription
-- [ ] Add createCheckoutSession for credit top-ups
+- [x] Add createCheckoutSession for credit top-ups
 - [x] Add webhook handler for subscription.created (checkout.session.completed)
 - [x] Add webhook handler for subscription.updated (invoice.payment_succeeded)
 - [x] Add webhook handler for subscription.deleted (customer.subscription.deleted)
@@ -305,11 +305,11 @@ Update hero banner to match exact mockup design:
 ### Phase 6: Admin Dashboard
 - [ ] Create subscription status widget for owner dashboard
 - [ ] Display current plan, renewal date, student count vs limit
-- [ ] Create AI credit balance widget with usage chart
-- [ ] Add "Buy More Credits" button
-- [ ] Create credit usage history page at /billing/credits
-- [ ] Show credit transactions by date, task type, amount
-- [ ] Add export credit usage report (CSV)
+- [x] Create AI credit balance widget with usage chart
+- [x] Add "Buy More Credits" button
+- [x] Create credit usage history page at /billing/credits
+- [x] Show credit transactions by date, task type, amount
+- [x] Add export credit usage report (CSV)
 - [ ] Create low credit alert banner in header
 - [ ] Add upgrade plan modal from dashboard
 
