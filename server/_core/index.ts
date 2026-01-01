@@ -313,19 +313,18 @@ async function startServer() {
         }
       }
       
-      // Filter by organization if available, otherwise show all active staff
-      let staff;
-      if (organizationId) {
-        staff = await db.select().from(teamMembers).where(
-          and(
-            eq(teamMembers.isActive, 1),
-            eq(teamMembers.organizationId, organizationId)
-          )
-        );
-      } else {
-        // Fallback: show staff with no organization (legacy data) or all if no org context
-        staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      // SECURITY: Require organization ID for multi-tenancy - no org = empty list
+      if (!organizationId) {
+        console.log('[/api/staff] No organization ID found, returning empty list for data isolation');
+        return res.json([]);
       }
+      
+      const staff = await db.select().from(teamMembers).where(
+        and(
+          eq(teamMembers.isActive, 1),
+          eq(teamMembers.organizationId, organizationId)
+        )
+      );
       
       // Transform to match expected format
       const transformedStaff = staff.map(s => ({
@@ -482,14 +481,38 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { classes, classEnrollments } = await import("../../drizzle/schema");
-      const { eq, sql } = await import("drizzle-orm");
+      const { eq, sql, and } = await import("drizzle-orm");
+      const { parse: parseCookieHeader } = await import("cookie");
       
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: "Database not available" });
       }
       
-      const allClasses = await db.select().from(classes).where(eq(classes.isActive, 1));
+      // Get organization ID from session cookie for multi-tenancy
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // SECURITY: Require organization ID for multi-tenancy - no org = empty list
+      if (!organizationId) {
+        console.log('[/api/classes] No organization ID found, returning empty list for data isolation');
+        return res.json([]);
+      }
+      
+      const allClasses = await db.select().from(classes).where(
+        and(eq(classes.isActive, 1), eq(classes.organizationId, organizationId))
+      );
       
       // Get enrollment counts for all classes from class_enrollments table
       const enrollmentCounts = await db
@@ -660,18 +683,23 @@ async function startServer() {
         }
       }
       
-      // Filter by organization if available
-      let staff;
-      if (organizationId) {
-        staff = await db.select().from(teamMembers).where(
-          and(
-            eq(teamMembers.isActive, 1),
-            eq(teamMembers.organizationId, organizationId)
-          )
-        );
-      } else {
-        staff = await db.select().from(teamMembers).where(eq(teamMembers.isActive, 1));
+      // SECURITY: Require organization ID for multi-tenancy - no org = zero counts
+      if (!organizationId) {
+        console.log('[/api/staff/stats] No organization ID found, returning zeros for data isolation');
+        return res.json({
+          total_staff: 0,
+          instructors: 0,
+          assistants: 0,
+          admin_staff: 0,
+        });
       }
+      
+      const staff = await db.select().from(teamMembers).where(
+        and(
+          eq(teamMembers.isActive, 1),
+          eq(teamMembers.organizationId, organizationId)
+        )
+      );
       
       const stats = {
         total_staff: staff.length,
@@ -715,10 +743,13 @@ async function startServer() {
         }
       }
       
-      // Filter by organization if available, otherwise return all (for backwards compatibility)
-      const allStudents = organizationId 
-        ? await db.select().from(students).where(eq(students.organizationId, organizationId))
-        : await db.select().from(students);
+      // SECURITY: Require organization ID for multi-tenancy - no org = empty list
+      if (!organizationId) {
+        console.log('[/api/students] No organization ID found, returning empty list for data isolation');
+        return res.json([]);
+      }
+      
+      const allStudents = await db.select().from(students).where(eq(students.organizationId, organizationId));
       
       // Transform to snake_case for frontend compatibility
       const transformedStudents = allStudents.map(s => ({
@@ -782,15 +813,22 @@ async function startServer() {
         }
       }
       
+      // SECURITY: Require organization ID for multi-tenancy - no org = zero counts
+      if (!organizationId) {
+        console.log('[/api/students/stats] No organization ID found, returning zeros for data isolation');
+        return res.json({
+          total_students: 0,
+          active_students: 0,
+          overdue_payments: 0,
+          new_this_month: 0
+        });
+      }
+      
       // Count ALL students for the organization (not just active)
-      const totalStudentsResult = organizationId
-        ? await db.select({ count: count() }).from(students).where(eq(students.organizationId, organizationId))
-        : await db.select({ count: count() }).from(students);
+      const totalStudentsResult = await db.select({ count: count() }).from(students).where(eq(students.organizationId, organizationId));
       
       // Count only active students for the organization
-      const activeStudentsResult = organizationId
-        ? await db.select({ count: count() }).from(students).where(and(eq(students.organizationId, organizationId), eq(students.status, 'Active')))
-        : await db.select({ count: count() }).from(students).where(eq(students.status, 'Active'));
+      const activeStudentsResult = await db.select({ count: count() }).from(students).where(and(eq(students.organizationId, organizationId), eq(students.status, 'Active')));
       
       res.json({
         total_students: totalStudentsResult[0]?.count || 0,
@@ -869,15 +907,46 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { students } = await import("../../drizzle/schema");
-      const { eq } = await import("drizzle-orm");
+      const { eq, and } = await import("drizzle-orm");
       const { geocodeAddress } = await import("../geocoding");
+      const { parse: parseCookieHeader } = await import("cookie");
       
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: "Database not available" });
       }
       
+      // Get organization ID from session cookie for multi-tenancy
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // SECURITY: Require organization ID for multi-tenancy
+      if (!organizationId) {
+        return res.status(403).json({ error: "No organization found. Please log in again." });
+      }
+      
       const studentId = parseInt(req.params.id);
+      
+      // SECURITY: Verify student belongs to user's organization before updating
+      const [existingStudent] = await db.select().from(students).where(
+        and(eq(students.id, studentId), eq(students.organizationId, organizationId))
+      );
+      
+      if (!existingStudent) {
+        return res.status(404).json({ error: "Student not found or access denied" });
+      }
+      
       const { name, email, phone, date_of_birth, belt_rank, status, membership_status, street_address, city, state, zip_code, program } = req.body;
       
       // Build update data - only include fields that are provided
@@ -935,15 +1004,46 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { students } = await import("../../drizzle/schema");
-      const { eq } = await import("drizzle-orm");
+      const { eq, and } = await import("drizzle-orm");
+      const { parse: parseCookieHeader } = await import("cookie");
       
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: "Database not available" });
       }
       
+      // Get organization ID from session cookie for multi-tenancy
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // SECURITY: Require organization ID for multi-tenancy
+      if (!organizationId) {
+        return res.status(403).json({ error: "No organization found. Please log in again." });
+      }
+      
       const studentId = parseInt(req.params.id);
-      await db.delete(students).where(eq(students.id, studentId));
+      
+      // SECURITY: Verify student belongs to user's organization before deleting
+      const [existingStudent] = await db.select().from(students).where(
+        and(eq(students.id, studentId), eq(students.organizationId, organizationId))
+      );
+      
+      if (!existingStudent) {
+        return res.status(404).json({ error: "Student not found or access denied" });
+      }
+      
+      await db.delete(students).where(and(eq(students.id, studentId), eq(students.organizationId, organizationId)));
       
       res.json({ success: true });
     } catch (error) {

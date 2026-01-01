@@ -3353,3 +3353,51 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Clear hierarchy
 - [x] Easy future expansion
 - [ ] Test on desktop and mobile
+
+## 🐛 BUG: Multi-Tenancy Data Isolation - Students Shared Across Accounts
+
+### Issue
+- [ ] Two different user accounts (NU and TA) see the same student data
+- [ ] Data should be isolated per organization, not shared globally
+
+### Investigation Tasks
+- [ ] Check database schema for organization_id foreign keys
+- [ ] Review student queries for organization filtering
+- [ ] Verify all student-related procedures filter by organization
+- [ ] Fix data isolation in all affected queries
+
+### Fix Tasks
+- [ ] Add organization filtering to student list queries
+- [ ] Add organization filtering to student detail queries
+- [ ] Add organization filtering to all related data (leads, classes, etc.)
+- [ ] Write tests to verify data isolation
+- [ ] Test with multiple accounts
+- [ ] Save checkpoint
+
+
+
+## 🐛 BUG: Multi-Tenancy Data Isolation (FIXED)
+
+### Issue
+- [x] Two different user accounts (NU and TA) see the same student data
+- [x] Data was not properly isolated per organization
+
+### Root Cause
+- REST API endpoints had a "backwards compatibility" fallback that returned ALL data when no organization ID was present
+- This allowed users without proper organization context to see all students from all organizations
+
+### Fixes Applied
+- [x] /api/students - Now returns empty array when no organization ID
+- [x] /api/students/stats - Now returns zeros when no organization ID
+- [x] /api/staff - Now returns empty array when no organization ID
+- [x] /api/staff/stats - Now returns zeros when no organization ID
+- [x] /api/classes - Now filters by organization ID
+- [x] PUT /api/students/:id - Now verifies student belongs to user's organization before updating
+- [x] DELETE /api/students/:id - Now verifies student belongs to user's organization before deleting
+- [x] Added students.getAll tRPC procedure with proper organization filtering
+- [x] All existing tRPC procedures (leads, dashboard) already had proper filtering
+
+### Testing
+- [x] Multi-tenancy tests passing (8 tests)
+- [x] Server restarted with fixes applied
+

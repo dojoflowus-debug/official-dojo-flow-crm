@@ -1626,6 +1626,48 @@ export const appRouter = router({
         return allStudents;
       }),
     
+    // Get all students with search support (for mention dropdown, etc.)
+    getAll: protectedProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        limit: z.number().optional().default(10),
+      }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        const { eq, and, or, like, sql } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) return [];
+        
+        // SECURITY: Require organization ID for multi-tenancy
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) {
+          return []; // No organization = empty list (data isolation)
+        }
+        
+        let result;
+        if (input.search && input.search.length > 0) {
+          const searchPattern = `%${input.search}%`;
+          result = await db.select().from(students).where(
+            and(
+              eq(students.organizationId, orgId),
+              or(
+                like(students.firstName, searchPattern),
+                like(students.lastName, searchPattern),
+                like(students.email, searchPattern)
+              )
+            )
+          ).limit(input.limit);
+        } else {
+          result = await db.select().from(students)
+            .where(eq(students.organizationId, orgId))
+            .limit(input.limit);
+        }
+        
+        return result;
+      }),
+    
     lookupByPhone: publicProcedure
       .input(z.object({
         phone: z.string(),
