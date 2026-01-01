@@ -1,2749 +1,1575 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, timestamp, varchar, datetime, json, tinyint } from "drizzle-orm/mysql-core"
+import { sql } from "drizzle-orm"
 
-/**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
- */
-export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
-  id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).unique(),
-  /** OAuth provider name (google, facebook, apple) */
-  provider: varchar("provider", { length: 64 }),
-  /** Provider-specific user ID (unique per provider) */
-  providerId: varchar("providerId", { length: 255 }),
-  name: text("name"),
-  email: varchar("email", { length: 320 }),
-  /** Password hash for local authentication (bcrypt) */
-  password: varchar("password", { length: 255 }),
-  /** Password reset token */
-  resetToken: varchar("resetToken", { length: 255 }),
-  /** Password reset token expiry */
-  resetTokenExpiry: timestamp("resetTokenExpiry"),
-  loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin", "owner", "staff"]).default("user").notNull(),
-  /** Platform-level role for DojoFlow internal admins */
-  globalRole: mysqlEnum("globalRole", ["platform_admin", "support", "none"]).default("none").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
-});
-
-export type User = typeof users.$inferSelect;
-export type InsertUser = typeof users.$inferInsert;
-
-/**
- * Staff PINs table for kiosk access control
- * Stores hashed PINs for staff members to access the CRM dashboard
- */
-export const staffPins = mysqlTable("staff_pins", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this staff PIN belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  /** Staff member name for identification */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Hashed PIN (bcrypt) - never store plain text */
-  pinHash: varchar("pinHash", { length: 255 }).notNull(),
-  /** Whether this PIN is currently active */
-  isActive: int("isActive").default(1).notNull(),
-  /** Optional role for future role-based access */
-  role: varchar("role", { length: 50 }).default("staff"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastUsed: timestamp("lastUsed"),
-});
-
-export type StaffPin = typeof staffPins.$inferSelect;
-export type InsertStaffPin = typeof staffPins.$inferInsert;
-
-/**
- * Students table - Core student information
- */
-export const students = mysqlTable("students", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this student belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  firstName: varchar("firstName", { length: 255 }).notNull(),
-  lastName: varchar("lastName", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 20 }),
-  dateOfBirth: timestamp("dateOfBirth"),
-  age: int("age"), // Deprecated - kept for backward compatibility, use dateOfBirth instead
-  beltRank: varchar("beltRank", { length: 100 }),
-  status: mysqlEnum("status", ["Active", "Inactive", "On Hold"]).default("Active").notNull(),
-  membershipStatus: varchar("membershipStatus", { length: 100 }),
-  photoUrl: varchar("photoUrl", { length: 500 }),
-  program: varchar("program", { length: 100 }),
-  streetAddress: varchar("streetAddress", { length: 255 }),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zipCode", { length: 20 }),
-  // Geocoded coordinates for map display
-  latitude: varchar("latitude", { length: 20 }),
-  longitude: varchar("longitude", { length: 20 }),
-  // Parent/Guardian information (for students under 18)
-  guardianName: varchar("guardianName", { length: 255 }),
-  guardianRelationship: varchar("guardianRelationship", { length: 50 }),
-  guardianPhone: varchar("guardianPhone", { length: 20 }),
-  guardianEmail: varchar("guardianEmail", { length: 320 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Student = typeof students.$inferSelect;
-export type InsertStudent = typeof students.$inferInsert;
-
-/**
- * Classes table - Martial arts classes schedule
- */
-export const classes = mysqlTable("classes", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this class belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  name: varchar("name", { length: 255 }).notNull(),
-  time: varchar("time", { length: 50 }).notNull(),
-  enrolled: int("enrolled").default(0).notNull(),
-  capacity: int("capacity").default(20).notNull(),
-  instructor: varchar("instructor", { length: 255 }), // Deprecated - kept for backward compatibility
-  instructorId: int("instructorId"), // Foreign key to teamMembers table
-  dayOfWeek: varchar("dayOfWeek", { length: 20 }),
-  floorPlanId: int("floorPlanId"), // Foreign key to floorPlans table
-  isActive: int("isActive").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Class = typeof classes.$inferSelect;
-export type InsertClass = typeof classes.$inferInsert;
-
-/**
- * Kiosk check-ins table - Track student attendance
- */
-export const kioskCheckIns = mysqlTable("kiosk_check_ins", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this check-in belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  studentId: int("studentId"),
-  studentName: varchar("studentName", { length: 255 }).notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-});
-
-export type KioskCheckIn = typeof kioskCheckIns.$inferSelect;
-export type InsertKioskCheckIn = typeof kioskCheckIns.$inferInsert;
-
-/**
- * Kiosk visitors table - Track new visitors
- */
-export const kioskVisitors = mysqlTable("kiosk_visitors", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this visitor belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 20 }),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-});
-
-export type KioskVisitor = typeof kioskVisitors.$inferSelect;
-export type InsertKioskVisitor = typeof kioskVisitors.$inferInsert;
-
-/**
- * Kiosk waivers table - Track waiver sign-ups
- */
-export const kioskWaivers = mysqlTable("kiosk_waivers", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this waiver belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }),
-  signed: int("signed").default(1).notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-});
-
-export type KioskWaiver = typeof kioskWaivers.$inferSelect;
-export type InsertKioskWaiver = typeof kioskWaivers.$inferInsert;
-
-/**
- * Leads table - Track potential students
- */
-export const leads = mysqlTable("leads", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this lead belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  firstName: varchar("firstName", { length: 255 }).notNull(),
-  lastName: varchar("lastName", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 20 }),
-  status: mysqlEnum("status", [
-    "New Lead",
-    "Attempting Contact",
-    "Contact Made",
-    "Intro Scheduled",
-    "Offer Presented",
-    "Enrolled",
-    "Nurture",
-    "Lost/Winback"
-  ]).default("New Lead").notNull(),
-  source: varchar("source", { length: 100 }),
-  notes: text("notes"),
-  message: text("message"),
-  // UTM tracking parameters
-  utmSource: varchar("utmSource", { length: 255 }),
-  utmMedium: varchar("utmMedium", { length: 255 }),
-  utmCampaign: varchar("utmCampaign", { length: 255 }),
-  utmContent: varchar("utmContent", { length: 255 }),
-  utmTerm: varchar("utmTerm", { length: 255 }),
-  // Address fields for map functionality
-  address: varchar("address", { length: 255 }),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zipCode", { length: 20 }),
-  lat: varchar("lat", { length: 50 }),
-  lng: varchar("lng", { length: 50 }),
-  // Lead scoring
-  leadScore: int("leadScore").default(50).notNull(),
-  leadScoreUpdatedAt: timestamp("leadScoreUpdatedAt").defaultNow(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Lead = typeof leads.$inferSelect;
-export type InsertLead = typeof leads.$inferInsert;
-
-/**
- * Lead Sources table - Track enabled/disabled lead capture sources
- */
-export const leadSources = mysqlTable("lead_sources", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this lead source belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  /** Unique identifier for the source (e.g., 'website_form', 'chat_widget') */
-  sourceKey: varchar("sourceKey", { length: 100 }).notNull().unique(),
-  /** Display name for the source */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Icon name from lucide-react (e.g., 'Globe', 'MessageSquare') */
-  icon: varchar("icon", { length: 100 }).notNull(),
-  /** Whether this source is currently enabled */
-  enabled: int("enabled").default(1).notNull(),
-  /** Display order in settings UI */
-  displayOrder: int("displayOrder").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type LeadSource = typeof leadSources.$inferSelect;
-export type InsertLeadSource = typeof leadSources.$inferInsert;
-
-/**
- * Dojo Settings table - Store school/dojo configuration
- * Single-row table (id=1) for global settings
- */
-export const dojoSettings = mysqlTable("dojo_settings", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this settings belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  
-  // Step 1: Industry & Template
-  industry: mysqlEnum("industry", ["martial_arts", "fitness", "yoga", "pilates", "other"]),
-  businessModel: mysqlEnum("businessModel", ["inside_gym", "standalone", "mobile", "online_hybrid"]),
-  usePreset: int("usePreset").default(1),
-  
-  // Step 2: Business Basics & Brand Identity
-  businessName: varchar("businessName", { length: 255 }),
-  dbaName: varchar("dbaName", { length: 255 }),
-  operatorName: varchar("operatorName", { length: 255 }),
-  preferredName: varchar("preferredName", { length: 255 }),
-  pronounsTone: mysqlEnum("pronounsTone", ["formal", "casual", "energetic", "calm"]),
-  timezone: varchar("timezone", { length: 100 }).default("America/New_York"),
-  primaryColor: varchar("primaryColor", { length: 20 }),
-  secondaryColor: varchar("secondaryColor", { length: 20 }),
-  logoSquare: varchar("logoSquare", { length: 500 }),
-  logoHorizontal: varchar("logoHorizontal", { length: 500 }),
-  // Theme-aware logos
-  logoDarkUrl: varchar("logoDarkUrl", { length: 500 }), // For light mode (dark logo on light bg)
-  logoLightUrl: varchar("logoLightUrl", { length: 500 }), // For dark mode (light logo on dark bg)
-  
-  // Step 5: Money, Targets & Constraints
-  monthlyRent: int("monthlyRent"),
-  monthlyUtilities: int("monthlyUtilities"),
-  monthlyPayroll: int("monthlyPayroll"),
-  monthlyMarketing: int("monthlyMarketing"),
-  currentMembers: int("currentMembers"),
-  revenueGoal: int("revenueGoal"),
-  maxClassSize: int("maxClassSize").default(20),
-  nonNegotiables: text("nonNegotiables"),
-  focusSlider: int("focusSlider").default(50), // 0=stability, 100=aggressive growth
-  riskComfort: int("riskComfort").default(50), // 0=strict, 100=flexible
-  
-  // Legacy fields (kept for backward compatibility)
-  schoolName: varchar("schoolName", { length: 255 }),
-  contactEmail: varchar("contactEmail", { length: 320 }),
-  contactPhone: varchar("contactPhone", { length: 20 }),
-  website: varchar("website", { length: 500 }),
-  instructorTitle: varchar("instructorTitle", { length: 50 }),
-  instructorFirstName: varchar("instructorFirstName", { length: 255 }),
-  instructorLastName: varchar("instructorLastName", { length: 255 }),
-  martialArtsStyle: varchar("martialArtsStyle", { length: 100 }),
-  addressLine1: varchar("addressLine1", { length: 255 }),
-  addressLine2: varchar("addressLine2", { length: 255 }),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 100 }),
-  zipCode: varchar("zipCode", { length: 20 }),
-  country: varchar("country", { length: 100 }).default("United States"),
-  weatherApiKey: varchar("weatherApiKey", { length: 255 }),
-  enableWeatherAlerts: int("enableWeatherAlerts").default(1),
-  hasOutdoorClasses: int("hasOutdoorClasses").default(0),
-  heatIndexThreshold: int("heatIndexThreshold").default(95),
-  airQualityThreshold: int("airQualityThreshold").default(150),
-  paymentProvider: varchar("paymentProvider", { length: 50 }),
-  stripeApiKey: varchar("stripeApiKey", { length: 255 }),
-  stripePublishableKey: varchar("stripePublishableKey", { length: 255 }),
-  stripeWebhookSecret: varchar("stripeWebhookSecret", { length: 255 }),
-  squareAccessToken: varchar("squareAccessToken", { length: 255 }),
-  squareLocationId: varchar("squareLocationId", { length: 255 }),
-  
-  // Step 9: Payment Processor Setup
-  paymentProcessor: mysqlEnum("paymentProcessor", ["stripe", "square", "clover", "pc_bancard", "none"]).default("stripe"),
-  paymentApiKey: varchar("paymentApiKey", { length: 500 }),
-  paymentMerchantId: varchar("paymentMerchantId", { length: 500 }),
-  paymentSetupLater: int("paymentSetupLater").default(0),
-  
-  // Communication Settings (Twilio SMS)
-  twilioAccountSid: varchar("twilioAccountSid", { length: 255 }),
-  twilioAuthToken: varchar("twilioAuthToken", { length: 255 }),
-  twilioPhoneNumber: varchar("twilioPhoneNumber", { length: 20 }),
-  enableSmsForLeads: int("enableSmsForLeads").default(0),
-  
-  // Communication Settings (Email)
-  emailProvider: mysqlEnum("emailProvider", ["sendgrid", "smtp"]).default("sendgrid"),
-  senderEmail: varchar("senderEmail", { length: 320 }),
-  sendgridApiKey: varchar("sendgridApiKey", { length: 500 }),
-  smtpHost: varchar("smtpHost", { length: 255 }),
-  smtpPort: int("smtpPort"),
-  smtpUser: varchar("smtpUser", { length: 255 }),
-  smtpPassword: varchar("smtpPassword", { length: 500 }),
-  enableEmailForLeads: int("enableEmailForLeads").default(0),
-  
-  // Staff Notification Settings
-  notifyStaffOnNewLead: int("notifyStaffOnNewLead").default(1),
-  staffNotificationMethod: mysqlEnum("staffNotificationMethod", ["sms", "email", "both"]).default("both"),
-  staffNotificationPhone: varchar("staffNotificationPhone", { length: 20 }),
-  staffNotificationEmail: varchar("staffNotificationEmail", { length: 320 }),
-  
-  // Lead Automation Settings
-  autoSendSmsToLead: int("autoSendSmsToLead").default(1),
-  autoSendEmailToLead: int("autoSendEmailToLead").default(1),
-  autoUpdatePipelineStage: int("autoUpdatePipelineStage").default(1),
-  bookingLink: varchar("bookingLink", { length: 500 }),
-  
-  // Kiosk Theme & Personalization
-  kioskTheme: varchar("kioskTheme", { length: 50 }).default("default"),
-  kioskAccentColor: varchar("kioskAccentColor", { length: 7 }),
-  kioskLogoLight: varchar("kioskLogoLight", { length: 500 }),
-  kioskLogoDark: varchar("kioskLogoDark", { length: 500 }),
-  kioskWelcomeHeadline: varchar("kioskWelcomeHeadline", { length: 50 }),
-  kioskWelcomeSubtext: varchar("kioskWelcomeSubtext", { length: 100 }),
-  kioskBackgroundBlur: int("kioskBackgroundBlur").default(5),
-  kioskBackgroundOpacity: int("kioskBackgroundOpacity").default(80),
-  kioskScheduledThemeStartDate: timestamp("kioskScheduledThemeStartDate"),
-  kioskScheduledThemeEndDate: timestamp("kioskScheduledThemeEndDate"),
-  kioskRevertToTheme: varchar("kioskRevertToTheme", { length: 50 }),
-  
-  // Setup Completion
-  setupCompleted: int("setupCompleted").default(0).notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type DojoSettings = typeof dojoSettings.$inferSelect;
-export type InsertDojoSettings = typeof dojoSettings.$inferInsert;
-
-/**
- * Locations table - Step 3: Locations & Schedule
- * Multiple locations with operating hours and time blocks
- */
-export const locations = mysqlTable("locations", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this location belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  name: varchar("name", { length: 255 }).notNull(),
-  address: varchar("address", { length: 500 }),
-  insideFacility: int("insideFacility").default(0),
-  facilityName: varchar("facilityName", { length: 255 }),
-  operatingHours: text("operatingHours"), // JSON: {monday: {open: "09:00", close: "21:00"}, ...}
-  timeBlocks: text("timeBlocks"), // JSON: [{name: "Kids Classes", start: "16:00", end: "18:00"}, ...]
-  // Kiosk configuration
-  kioskEnabled: int("kioskEnabled").default(0).notNull(),
-  kioskSlug: varchar("kioskSlug", { length: 255 }),
-  kioskSettings: text("kioskSettings"), // JSON: {theme, appearance, behavior}
-  isActive: int("isActive").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Location = typeof locations.$inferSelect;
-export type InsertLocation = typeof locations.$inferInsert;
-
-/**
- * Programs table - Membership tracks/tiers (REFACTORED)
- * Examples: Free Trial, Beginner Program, Black Belt Club, Leadership Team
- * Note: Pricing moved to membership_plans table
- */
-export const programs = mysqlTable("programs", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this program belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  // Program characteristics
-  termLength: int("termLength"), // In months (12, 24, 36, null for month-to-month)
-  eligibility: mysqlEnum("eligibility", ["open", "invitation_only", "upgrade_only"]).default("open").notNull(),
-  ageRange: varchar("ageRange", { length: 100 }),
-  
-  // Display & enrollment
-  showOnKiosk: int("showOnKiosk").default(1).notNull(),
-  showOnEnrollment: int("showOnEnrollment").default(1).notNull(),
-  sortOrder: int("sortOrder").default(0).notNull(),
-  isActive: int("isActive").default(1).notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Program = typeof programs.$inferSelect;
-export type InsertProgram = typeof programs.$inferInsert;
-
-/**
- * Team Members table - Step 6: Team & Roles
- * Staff, instructors, coaches with permissions and focus areas
- */
-export const teamMembers = mysqlTable("team_members", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this team member belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  name: varchar("name", { length: 255 }).notNull(),
-  role: mysqlEnum("role", ["owner", "manager", "instructor", "front_desk", "coach", "trainer", "assistant"]).notNull(),
-  email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 20 }),
-  locationIds: text("locationIds"), // JSON: [1, 2, 3]
-  addressAs: varchar("addressAs", { length: 255 }), // "Coach Sarah", "Professor João"
-  focusAreas: text("focusAreas"), // JSON: ["kids", "advanced", "beginners", "sales"]
-  photoUrl: varchar("photoUrl", { length: 500 }), // S3 URL for profile photo
-  canViewFinancials: int("canViewFinancials").default(0),
-  canEditSchedule: int("canEditSchedule").default(0),
-  canManageLeads: int("canManageLeads").default(0),
-  viewOnly: int("viewOnly").default(1),
-  isActive: int("isActive").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type TeamMember = typeof teamMembers.$inferSelect;
-export type InsertTeamMember = typeof teamMembers.$inferInsert;
-
-/**
- * Member Journey Config table - Step 7: Member Journey & Automations
- * Single-row table (id=1) for automation settings
- */
-export const memberJourneyConfig = mysqlTable("member_journey_config", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Organization this config belongs to (for multi-tenancy) */
-  organizationId: int("organizationId"),
-  
-  // Lead Handling
-  leadGreeting: text("leadGreeting"),
-  contactPreference: mysqlEnum("contactPreference", ["sms", "email", "both"]).default("both"),
-  responseSpeedMinutes: int("responseSpeedMinutes").default(15),
-  trialOffer: varchar("trialOffer", { length: 255 }),
-  
-  // Trial / Intro
-  trialType: mysqlEnum("trialType", ["free_class", "paid_intro", "free_week", "assessment"]),
-  trialFollowUp: text("trialFollowUp"),
-  
-  // New Member Onboarding
-  welcomeTone: mysqlEnum("welcomeTone", ["shorter", "detailed"]).default("detailed"),
-  miss1ClassAction: varchar("miss1ClassAction", { length: 255 }),
-  miss2WeeksAction: varchar("miss2WeeksAction", { length: 255 }),
-  
-  // Long-Term Retention
-  absenceAlertThreshold: int("absenceAlertThreshold").default(3), // Number of absences
-  renewalReminderWeeks: int("renewalReminderWeeks").default(2),
-  
-  // Industry-specific toggles
-  autoBookingPrompts: int("autoBookingPrompts").default(0),
-  encouragementMessages: int("encouragementMessages").default(1),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type MemberJourneyConfig = typeof memberJourneyConfig.$inferSelect;
-export type InsertMemberJourneyConfig = typeof memberJourneyConfig.$inferInsert;
-
-/**
- * Billing Applications table - PC Bancard and Stripe applications
- * Stores merchant account applications with document tracking
- */
-export const billingApplications = mysqlTable("billing_applications", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Link to user who submitted
-  
-  // Payment provider
-  provider: mysqlEnum("provider", ["pcbancard", "stripe"]).notNull(),
-  
-  // Application status
-  status: mysqlEnum("status", ["draft", "submitted", "under_review", "approved", "rejected", "requires_info"]).default("draft").notNull(),
-  
-  // PC Bancard specific fields
-  businessName: varchar("businessName", { length: 255 }),
-  dbaName: varchar("dbaName", { length: 255 }),
-  businessAddress: text("businessAddress"),
-  businessPhone: varchar("businessPhone", { length: 20 }),
-  ownerName: varchar("ownerName", { length: 255 }),
-  ownerCell: varchar("ownerCell", { length: 20 }),
-  managerName: varchar("managerName", { length: 255 }),
-  managerCell: varchar("managerCell", { length: 20 }),
-  hoursOfOperation: varchar("hoursOfOperation", { length: 255 }),
-  daysOfOperation: varchar("daysOfOperation", { length: 255 }),
-  estimatedMonthlyVolume: int("estimatedMonthlyVolume"),
-  specialInstructions: text("specialInstructions"),
-  
-  // Contact info for PC Bancard
-  pcbancardRepName: varchar("pcbancardRepName", { length: 255 }).default("Randy Sinclair"),
-  pcbancardRepPhone: varchar("pcbancardRepPhone", { length: 20 }).default("682-218-1669"),
-  
-  // Stripe specific fields (for future use)
-  stripeAccountId: varchar("stripeAccountId", { length: 255 }),
-  stripeOnboardingComplete: int("stripeOnboardingComplete").default(0),
-  
-  // Processing info
-  submittedAt: timestamp("submittedAt"),
-  reviewedAt: timestamp("reviewedAt"),
-  approvedAt: timestamp("approvedAt"),
-  rejectedAt: timestamp("rejectedAt"),
-  rejectionReason: text("rejectionReason"),
-  adminNotes: text("adminNotes"),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BillingApplication = typeof billingApplications.$inferSelect;
-export type InsertBillingApplication = typeof billingApplications.$inferInsert;
-
-/**
- * Billing Documents table - Store S3 URLs for uploaded documents
- * Links to billing applications with document type tracking
- */
-export const billingDocuments = mysqlTable("billing_documents", {
-  id: int("id").autoincrement().primaryKey(),
-  applicationId: int("applicationId").notNull(), // Foreign key to billing_applications
-  
-  // Document type
-  documentType: mysqlEnum("documentType", [
-    "drivers_license",
-    "voided_check",
-    "state_ein",
-    "address_verification",
-    "bank_letter"
-  ]).notNull(),
-  
-  // S3 storage
-  s3Key: varchar("s3Key", { length: 500 }).notNull(),
-  s3Url: varchar("s3Url", { length: 1000 }).notNull(),
-  
-  // File metadata
-  fileName: varchar("fileName", { length: 255 }).notNull(),
-  fileSize: int("fileSize"), // In bytes
-  mimeType: varchar("mimeType", { length: 100 }),
-  
-  // Verification status
-  verified: int("verified").default(0).notNull(),
-  verifiedAt: timestamp("verifiedAt"),
-  verifiedBy: int("verifiedBy"), // Admin user ID
-  verificationNotes: text("verificationNotes"),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BillingDocument = typeof billingDocuments.$inferSelect;
-export type InsertBillingDocument = typeof billingDocuments.$inferInsert;
-
-/**
- * Payment Methods table - Store configured payment processors
- * Tracks which payment methods are active for the dojo
- */
-export const paymentMethods = mysqlTable("payment_methods", {
-  id: int("id").autoincrement().primaryKey(),
-  
-  // Provider info
-  provider: mysqlEnum("provider", ["pcbancard", "stripe", "square", "other"]).notNull(),
-  providerName: varchar("providerName", { length: 255 }),
-  
-  // Account credentials (encrypted/hashed)
-  merchantId: varchar("merchantId", { length: 255 }),
-  apiKey: varchar("apiKey", { length: 500 }),
-  apiSecret: varchar("apiSecret", { length: 500 }),
-  webhookSecret: varchar("webhookSecret", { length: 500 }),
-  
-  // Status
-  isActive: int("isActive").default(0).notNull(),
-  isPrimary: int("isPrimary").default(0).notNull(),
-  
-  // Linked application
-  applicationId: int("applicationId"), // Link to billing_applications if applicable
-  
-  // Configuration
-  acceptedCardTypes: text("acceptedCardTypes"), // JSON: ["visa", "mastercard", "amex", "discover"]
-  transactionFeePercent: int("transactionFeePercent"), // In basis points (e.g., 275 = 2.75%)
-  transactionFeeFixed: int("transactionFeeFixed"), // In cents
-  
-  // Testing
-  isTestMode: int("isTestMode").default(0).notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type PaymentMethod = typeof paymentMethods.$inferSelect;
-export type InsertPaymentMethod = typeof paymentMethods.$inferInsert;
-
-/**
- * Billing Transactions table - Track all payment transactions
- * Records all payments processed through any payment method
- */
-export const billingTransactions = mysqlTable("billing_transactions", {
-  id: int("id").autoincrement().primaryKey(),
-  
-  // Transaction identification
-  transactionId: varchar("transactionId", { length: 255 }).notNull().unique(),
-  paymentMethodId: int("paymentMethodId").notNull(), // Foreign key to payment_methods
-  
-  // Customer info
-  studentId: int("studentId"), // Link to student if applicable
-  customerName: varchar("customerName", { length: 255 }),
-  customerEmail: varchar("customerEmail", { length: 320 }),
-  
-  // Transaction details
-  amount: int("amount").notNull(), // In cents
-  currency: varchar("currency", { length: 3 }).default("USD"),
-  status: mysqlEnum("status", ["pending", "completed", "failed", "refunded", "disputed"]).default("pending").notNull(),
-  
-  // Payment method details
-  cardLast4: varchar("cardLast4", { length: 4 }),
-  cardBrand: varchar("cardBrand", { length: 50 }),
-  
-  // Related records
-  programId: int("programId"), // Link to program if applicable
-  invoiceId: int("invoiceId"), // Link to invoice if applicable
-  
-  // Processing info
-  processorResponse: text("processorResponse"), // JSON response from payment processor
-  errorMessage: text("errorMessage"),
-  
-  // Timestamps
-  processedAt: timestamp("processedAt"),
-  refundedAt: timestamp("refundedAt"),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BillingTransaction = typeof billingTransactions.$inferSelect;
-export type InsertBillingTransaction = typeof billingTransactions.$inferInsert;
-
-/**
- * Webhook Keys table - API keys for webhook authentication
- * Allows external systems to submit leads via webhook
- */
-export const webhookKeys = mysqlTable("webhook_keys", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Human-readable name for the key (e.g., "Wix Website", "WordPress Form") */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** The actual API key (should be hashed or encrypted in production) */
-  apiKey: varchar("apiKey", { length: 255 }).notNull().unique(),
-  /** Whether this key is currently active */
-  isActive: int("isActive").default(1).notNull(),
-  /** Last time this key was used */
-  lastUsedAt: timestamp("lastUsedAt"),
-  /** Number of times this key has been used */
-  usageCount: int("usageCount").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type WebhookKey = typeof webhookKeys.$inferSelect;
-export type InsertWebhookKey = typeof webhookKeys.$inferInsert;
-
-/**
- * Campaigns table - SMS/Email marketing campaigns
- * Stores campaign configuration and metadata
- */
-export const campaigns = mysqlTable("campaigns", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Campaign name for internal reference */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Campaign type: sms or email */
-  type: mysqlEnum("type", ["sms", "email"]).notNull(),
-  /** Campaign status */
-  status: mysqlEnum("status", ["draft", "scheduled", "sending", "sent", "cancelled"]).default("draft").notNull(),
-  /** Message subject (for email) */
-  subject: varchar("subject", { length: 500 }),
-  /** Message body/content */
-  message: text("message").notNull(),
-  /** Target audience filter (JSON) - e.g., {type: "leads", status: ["New Lead", "Contacted"]} */
-  audienceFilter: text("audienceFilter"),
-  /** Total recipients count */
-  recipientCount: int("recipientCount").default(0),
-  /** Successfully sent count */
-  sentCount: int("sentCount").default(0),
-  /** Delivered count */
-  deliveredCount: int("deliveredCount").default(0),
-  /** Failed count */
-  failedCount: int("failedCount").default(0),
-  /** Opened count (email only) */
-  openedCount: int("openedCount").default(0),
-  /** Clicked count (email only) */
-  clickedCount: int("clickedCount").default(0),
-  /** Scheduled send time (null = send immediately) */
-  scheduledAt: timestamp("scheduledAt"),
-  /** Actual send start time */
-  sentAt: timestamp("sentAt"),
-  /** Send completion time */
-  completedAt: timestamp("completedAt"),
-  /** Created by user ID */
-  createdBy: int("createdBy"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Campaign = typeof campaigns.$inferSelect;
-export type InsertCampaign = typeof campaigns.$inferInsert;
-
-/**
- * Campaign Recipients table - Track individual message delivery
- * Links campaigns to specific recipients with delivery status
- */
-export const campaignRecipients = mysqlTable("campaign_recipients", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to campaigns */
-  campaignId: int("campaignId").notNull(),
-  /** Recipient type: lead or student */
-  recipientType: mysqlEnum("recipientType", ["lead", "student"]).notNull(),
-  /** Foreign key to leads or students table */
-  recipientId: int("recipientId").notNull(),
-  /** Recipient name */
-  recipientName: varchar("recipientName", { length: 255 }).notNull(),
-  /** Recipient contact (email or phone) */
-  recipientContact: varchar("recipientContact", { length: 320 }).notNull(),
-  /** Delivery status */
-  status: mysqlEnum("status", ["pending", "sent", "delivered", "failed", "bounced", "opened", "clicked"]).default("pending").notNull(),
-  /** External message ID from provider (Twilio/SendGrid) */
-  externalMessageId: varchar("externalMessageId", { length: 255 }),
-  /** Error message if failed */
-  errorMessage: text("errorMessage"),
-  /** Sent timestamp */
-  sentAt: timestamp("sentAt"),
-  /** Delivered timestamp */
-  deliveredAt: timestamp("deliveredAt"),
-  /** Opened timestamp (email only) */
-  openedAt: timestamp("openedAt"),
-  /** Clicked timestamp (email only) */
-  clickedAt: timestamp("clickedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type CampaignRecipient = typeof campaignRecipients.$inferSelect;
-export type InsertCampaignRecipient = typeof campaignRecipients.$inferInsert;
-
-/**
- * Automation Sequences table - Automated follow-up sequences
- * Defines multi-step automation workflows with triggers
- */
-export const automationSequences = mysqlTable("automation_sequences", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Sequence name */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Sequence description */
-  description: text("description"),
-  /** Trigger type - what starts this sequence */
-  trigger: mysqlEnum("trigger", [
-    "new_lead",
-    "trial_scheduled",
-    "trial_completed",
-    "trial_no_show",
-    "enrollment",
-    "missed_class",
-    "inactive_student",
-    "renewal_due",
-    "custom"
-  ]).notNull(),
-  /** Trigger conditions (JSON) - additional filters for trigger */
-  triggerConditions: text("triggerConditions"),
-  /** Whether sequence is active */
-  isActive: int("isActive").default(1).notNull(),
-  /** Total enrollments (people who entered this sequence) */
-  enrollmentCount: int("enrollmentCount").default(0),
-  /** Completed count */
-  completedCount: int("completedCount").default(0),
-  /** Created by user ID */
-  createdBy: int("createdBy"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AutomationSequence = typeof automationSequences.$inferSelect;
-export type InsertAutomationSequence = typeof automationSequences.$inferInsert;
-
-/**
- * Automation Steps table - Individual steps in automation sequences
- * Defines the actions and timing for each step
- */
-export const automationSteps = mysqlTable("automation_steps", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to automation_sequences */
-  sequenceId: int("sequenceId").notNull(),
-  /** Step order in sequence */
-  stepOrder: int("stepOrder").notNull(),
-  /** Step type */
-  stepType: mysqlEnum("stepType", ["wait", "send_sms", "send_email", "condition", "end"]).notNull(),
-  /** Wait duration in minutes (for wait steps) */
-  waitMinutes: int("waitMinutes"),
-  /** Message subject (for email steps) */
-  subject: varchar("subject", { length: 500 }),
-  /** Message content (for send steps) */
-  message: text("message"),
-  /** Condition logic (JSON) - for conditional branching */
-  condition: text("condition"),
-  /** Next step ID if condition is true */
-  nextStepIdTrue: int("nextStepIdTrue"),
-  /** Next step ID if condition is false */
-  nextStepIdFalse: int("nextStepIdFalse"),
-  /** Step name for identification */
-  name: varchar("name", { length: 255 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AutomationStep = typeof automationSteps.$inferSelect;
-export type InsertAutomationStep = typeof automationSteps.$inferInsert;
-
-/**
- * Automation Enrollments table - Track who is in which sequence
- * Links people to active automation sequences
- */
-export const automationEnrollments = mysqlTable("automation_enrollments", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to automation_sequences */
-  sequenceId: int("sequenceId").notNull(),
-  /** Enrolled person type: lead or student */
-  enrolledType: mysqlEnum("enrolledType", ["lead", "student"]).notNull(),
-  /** Foreign key to leads or students table */
-  enrolledId: int("enrolledId").notNull(),
-  /** Current step ID in sequence */
-  currentStepId: int("currentStepId"),
-  /** Enrollment status */
-  status: mysqlEnum("status", ["active", "paused", "completed", "cancelled"]).default("active").notNull(),
-  /** When to execute next step */
-  nextExecutionAt: timestamp("nextExecutionAt"),
-  /** Enrollment start time */
-  enrolledAt: timestamp("enrolledAt").defaultNow().notNull(),
-  /** Completion time */
-  completedAt: timestamp("completedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AutomationEnrollment = typeof automationEnrollments.$inferSelect;
-export type InsertAutomationEnrollment = typeof automationEnrollments.$inferInsert;
-
-/**
- * Conversations table - Two-way SMS conversation threads
- * Tracks ongoing conversations with leads and students
- */
-export const conversations = mysqlTable("conversations", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Participant type: lead or student */
-  participantType: mysqlEnum("participantType", ["lead", "student"]).notNull(),
-  /** Foreign key to leads or students table */
-  participantId: int("participantId").notNull(),
-  /** Participant name */
-  participantName: varchar("participantName", { length: 255 }).notNull(),
-  /** Participant phone number */
-  participantPhone: varchar("participantPhone", { length: 20 }).notNull(),
-  /** Conversation status */
-  status: mysqlEnum("status", ["open", "closed", "archived"]).default("open").notNull(),
-  /** Assigned to team member ID */
-  assignedTo: int("assignedTo"),
-  /** Last message preview */
-  lastMessagePreview: text("lastMessagePreview"),
-  /** Last message timestamp */
-  lastMessageAt: timestamp("lastMessageAt"),
-  /** Unread message count */
-  unreadCount: int("unreadCount").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Conversation = typeof conversations.$inferSelect;
-export type InsertConversation = typeof conversations.$inferInsert;
-
-/**
- * Messages table - Individual messages in conversations
- * Stores all SMS messages sent and received
- */
-export const messages = mysqlTable("messages", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to conversations */
-  conversationId: int("conversationId").notNull(),
-  /** Message direction */
-  direction: mysqlEnum("direction", ["inbound", "outbound"]).notNull(),
-  /** Message content */
-  content: text("content").notNull(),
-  /** Sender type (for outbound: system, staff, automation) */
-  senderType: mysqlEnum("senderType", ["system", "staff", "automation", "customer"]),
-  /** Sender ID (team member ID for staff messages) */
-  senderId: int("senderId"),
-  /** Delivery status */
-  status: mysqlEnum("status", ["pending", "sent", "delivered", "failed", "read"]).default("pending").notNull(),
-  /** External message ID from Twilio */
-  externalMessageId: varchar("externalMessageId", { length: 255 }),
-  /** Error message if failed */
-  errorMessage: text("errorMessage"),
-  /** Sent timestamp */
-  sentAt: timestamp("sentAt"),
-  /** Delivered timestamp */
-  deliveredAt: timestamp("deliveredAt"),
-  /** Read timestamp */
-  readAt: timestamp("readAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = typeof messages.$inferInsert;
-
-/**
- * Message Templates table - Reusable message templates
- * Quick replies and standard messages for conversations
- */
-export const messageTemplates = mysqlTable("message_templates", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Template name */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Template category */
-  category: mysqlEnum("category", ["greeting", "follow_up", "reminder", "confirmation", "general"]).notNull(),
-  /** Template type */
-  type: mysqlEnum("type", ["sms", "email"]).notNull(),
-  /** Message subject (for email) */
-  subject: varchar("subject", { length: 500 }),
-  /** Message content with placeholders (e.g., {{firstName}}, {{trialDate}}) */
-  content: text("content").notNull(),
-  /** Whether this is a system template (not editable) */
-  isSystem: int("isSystem").default(0).notNull(),
-  /** Usage count */
-  usageCount: int("usageCount").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type MessageTemplate = typeof messageTemplates.$inferSelect;
-export type InsertMessageTemplate = typeof messageTemplates.$inferInsert;
-
-/**
- * Automation Templates table - Pre-built automation sequence templates
- * Library of ready-to-use automation workflows with variable placeholders
- */
-export const automationTemplates = mysqlTable("automation_templates", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Template name */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Template description */
-  description: text("description").notNull(),
-  /** Template category */
-  category: mysqlEnum("category", ["welcome", "trial", "engagement", "celebration", "followup", "renewal"]).notNull(),
-  /** Trigger type */
-  trigger: mysqlEnum("trigger", [
-    "new_lead",
-    "trial_scheduled",
-    "trial_completed",
-    "trial_no_show",
-    "enrollment",
-    "missed_class",
-    "inactive_student",
-    "renewal_due",
-    "custom"
-  ]).notNull(),
-  /** Trigger conditions (JSON) */
-  triggerConditions: text("triggerConditions"),
-  /** Steps configuration (JSON array of steps) */
-  steps: text("steps").notNull(),
-  /** Whether this is a system template */
-  isSystem: int("isSystem").default(1).notNull(),
-  /** Installation count */
-  installCount: int("installCount").default(0),
-  /** Preview image URL */
-  previewImage: varchar("previewImage", { length: 500 }),
-  /** Tags for filtering (JSON array) */
-  tags: text("tags"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AutomationTemplate = typeof automationTemplates.$inferSelect;
-export type InsertAutomationTemplate = typeof automationTemplates.$inferInsert;
-
-
-/**
- * Kai Conversations table - AI chat conversations with Kai
- * Stores conversation metadata for the Kai Command interface
- */
-export const kaiConversations = mysqlTable("kai_conversations", {
-  id: int("id").autoincrement().primaryKey(),
-  /** User who owns this conversation */
-  userId: int("userId").notNull(),
-  /** Conversation title (auto-generated from first message or user-set) */
-  title: varchar("title", { length: 500 }).default("New Conversation").notNull(),
-  /** Preview of last message */
-  preview: text("preview"),
-  /** Conversation status */
-  status: mysqlEnum("status", ["active", "archived"]).default("active").notNull(),
-  /** Category tag for organization */
-  category: mysqlEnum("category", ["kai", "growth", "billing", "operations", "general"]).default("kai").notNull(),
-  /** Priority/attention status */
-  priority: mysqlEnum("priority", ["neutral", "attention", "urgent"]).default("neutral").notNull(),
-  /** Last message timestamp */
-  lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
-  /** JSON array of participant user IDs (for determining solo vs group conversations) */
-  participantIds: text("participantIds"),
-  /** Soft delete timestamp - null means not deleted */
-  deletedAt: timestamp("deletedAt"),
-  /** Archive timestamp - null means not archived */
-  archivedAt: timestamp("archivedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type KaiConversation = typeof kaiConversations.$inferSelect;
-export type InsertKaiConversation = typeof kaiConversations.$inferInsert;
-
-/**
- * Kai Messages table - Messages within Kai conversations
- * Stores individual messages between user and Kai AI
- */
-export const kaiMessages = mysqlTable("kai_messages", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to kai_conversations */
-  conversationId: int("conversationId").notNull(),
-  /** Message role (user or assistant) */
-  role: mysqlEnum("role", ["user", "assistant", "system"]).notNull(),
-  /** Message content */
-  content: text("content").notNull(),
-  /** Metadata (function calls, context, etc.) stored as JSON */
-  metadata: text("metadata"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type KaiMessage = typeof kaiMessages.$inferSelect;
-export type InsertKaiMessage = typeof kaiMessages.$inferInsert;
-
-/**
- * Class Enrollments table - Links students to classes they're enrolled in
- */
-export const classEnrollments = mysqlTable("class_enrollments", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to students table */
-  studentId: int("studentId").notNull(),
-  /** Foreign key to classes table */
-  classId: int("classId").notNull(),
-  /** Whether student wants SMS reminders for this class */
-  smsRemindersEnabled: int("smsRemindersEnabled").default(1).notNull(),
-  /** Enrollment status */
-  status: mysqlEnum("status", ["active", "paused", "cancelled"]).default("active").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ClassEnrollment = typeof classEnrollments.$inferSelect;
-export type InsertClassEnrollment = typeof classEnrollments.$inferInsert;
-
-/**
- * Class Reminders table - Track sent SMS reminders to prevent duplicates
- */
-export const classReminders = mysqlTable("class_reminders", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to students table */
-  studentId: int("studentId").notNull(),
-  /** Foreign key to classes table */
-  classId: int("classId").notNull(),
-  /** The specific class date this reminder is for */
-  classDate: timestamp("classDate").notNull(),
-  /** Phone number the reminder was sent to */
-  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
-  /** Twilio message SID for tracking */
-  twilioMessageId: varchar("twilioMessageId", { length: 100 }),
-  /** Reminder status */
-  status: mysqlEnum("status", ["pending", "sent", "failed", "delivered"]).default("pending").notNull(),
-  /** Error message if failed */
-  errorMessage: text("errorMessage"),
-  /** When the reminder was sent */
-  sentAt: timestamp("sentAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ClassReminder = typeof classReminders.$inferSelect;
-export type InsertClassReminder = typeof classReminders.$inferInsert;
-
-/**
- * SMS Preferences table - Global SMS preferences for students
- */
-export const smsPreferences = mysqlTable("sms_preferences", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to students table */
-  studentId: int("studentId").notNull().unique(),
-  /** Whether student has opted in to receive SMS */
-  optedIn: int("optedIn").default(1).notNull(),
-  /** Whether to receive class reminders */
-  classReminders: int("classReminders").default(1).notNull(),
-  /** Whether to receive billing reminders */
-  billingReminders: int("billingReminders").default(1).notNull(),
-  /** Whether to receive promotional messages */
-  promotionalMessages: int("promotionalMessages").default(0).notNull(),
-  /** Preferred reminder time (hours before class) */
-  reminderHoursBefore: int("reminderHoursBefore").default(24).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type SmsPreference = typeof smsPreferences.$inferSelect;
-export type InsertSmsPreference = typeof smsPreferences.$inferInsert;
-
-
-/**
- * Lead Activities table - Track all interactions with leads
- * Stores calls, emails, SMS, notes, and status changes for timeline display
- */
-export const leadActivities = mysqlTable("lead_activities", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to leads table */
-  leadId: int("leadId").notNull(),
-  /** Activity type */
-  type: mysqlEnum("type", ["call", "email", "sms", "note", "status_change", "meeting", "task"]).notNull(),
-  /** Activity title/subject */
-  title: varchar("title", { length: 255 }),
-  /** Activity content/description */
-  content: text("content"),
-  /** Previous status (for status_change type) */
-  previousStatus: varchar("previousStatus", { length: 100 }),
-  /** New status (for status_change type) */
-  newStatus: varchar("newStatus", { length: 100 }),
-  /** Call duration in seconds (for call type) */
-  callDuration: int("callDuration"),
-  /** Call outcome (for call type) */
-  callOutcome: mysqlEnum("callOutcome", ["answered", "voicemail", "no_answer", "busy", "wrong_number"]),
-  /** Whether the activity was automated (vs manual) */
-  isAutomated: int("isAutomated").default(0).notNull(),
-  /** User who created this activity (null for automated) */
-  createdById: int("createdById"),
-  /** Name of the user who created this (denormalized for display) */
-  createdByName: varchar("createdByName", { length: 255 }),
-  /** Metadata (JSON) for additional type-specific data */
-  metadata: text("metadata"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type LeadActivity = typeof leadActivities.$inferSelect;
-export type InsertLeadActivity = typeof leadActivities.$inferInsert;
-
-
-/**
- * Lead Scoring Rules table - Define point values for different activities
- * Used to automatically calculate lead scores based on engagement
- */
-export const leadScoringRules = mysqlTable("lead_scoring_rules", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Activity type that triggers this rule */
-  activityType: varchar("activityType", { length: 100 }).notNull().unique(),
-  /** Points to add/subtract for this activity */
-  points: int("points").notNull(),
-  /** Human-readable description */
-  description: varchar("description", { length: 255 }),
-  /** Whether this rule is active */
-  isActive: int("isActive").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type LeadScoringRule = typeof leadScoringRules.$inferSelect;
-export type InsertLeadScoringRule = typeof leadScoringRules.$inferInsert;
-
-
-/**
- * Student Portal Accounts table - Student login credentials
- * Separate from main users table for student-specific authentication
- */
-export const studentAccounts = mysqlTable("student_accounts", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to students table */
-  studentId: int("studentId").notNull().unique(),
-  /** Login email (may differ from student contact email) */
-  email: varchar("email", { length: 320 }).notNull().unique(),
-  /** Password hash (bcrypt) */
-  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
-  /** Password reset token */
-  resetToken: varchar("resetToken", { length: 255 }),
-  /** Password reset token expiry */
-  resetTokenExpiry: timestamp("resetTokenExpiry"),
-  /** Whether account is active */
-  isActive: int("isActive").default(1).notNull(),
-  /** Last login timestamp */
-  lastLoginAt: timestamp("lastLoginAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StudentAccount = typeof studentAccounts.$inferSelect;
-export type InsertStudentAccount = typeof studentAccounts.$inferInsert;
-
-/**
- * Belt Progress table - Track student progress toward next belt
- * Records attendance, skills, and evaluation readiness
- */
-export const beltProgress = mysqlTable("belt_progress", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to students table */
-  studentId: int("studentId").notNull().unique(),
-  /** Current belt rank */
-  currentBelt: varchar("currentBelt", { length: 50 }).notNull().default("White"),
-  /** Next belt to achieve */
-  nextBelt: varchar("nextBelt", { length: 50 }).notNull().default("Yellow"),
-  /** Progress percentage toward next belt (0-100) */
-  progressPercent: int("progressPercent").default(0).notNull(),
-  /** Qualified classes attended this cycle */
-  qualifiedClasses: int("qualifiedClasses").default(0).notNull(),
-  /** Total classes required for next belt */
-  classesRequired: int("classesRequired").default(20).notNull(),
-  /** Qualified attendance percentage (0-100) */
-  qualifiedAttendance: int("qualifiedAttendance").default(0).notNull(),
-  /** Minimum attendance required for belt eligibility (default 80%) */
-  attendanceRequired: int("attendanceRequired").default(80).notNull(),
-  /** Next evaluation date */
-  nextEvaluationDate: timestamp("nextEvaluationDate"),
-  /** Whether student is eligible for belt test */
-  isEligible: int("isEligible").default(0).notNull(),
-  /** Notes from instructor */
-  instructorNotes: text("instructorNotes"),
-  /** Last belt promotion date */
-  lastPromotionDate: timestamp("lastPromotionDate"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BeltProgress = typeof beltProgress.$inferSelect;
-export type InsertBeltProgress = typeof beltProgress.$inferInsert;
-
-/**
- * Student Attendance table - Detailed attendance records
- * Tracks each class attendance with qualification status
- */
-export const studentAttendance = mysqlTable("student_attendance", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to students table */
-  studentId: int("studentId").notNull(),
-  /** Foreign key to classes table */
-  classId: int("classId"),
-  /** Class name (denormalized for history) */
-  className: varchar("className", { length: 255 }),
-  /** Instructor name */
-  instructorName: varchar("instructorName", { length: 255 }),
-  /** Class date and time */
-  classDate: timestamp("classDate").notNull(),
-  /** Attendance status */
-  status: mysqlEnum("status", ["attended", "missed", "excused", "upcoming"]).default("upcoming").notNull(),
-  /** Whether this attendance counts toward belt qualification */
-  isQualified: int("isQualified").default(1).notNull(),
-  /** Check-in timestamp */
-  checkedInAt: timestamp("checkedInAt"),
-  /** Location */
-  location: varchar("location", { length: 255 }),
-  /** Belt requirement for this class */
-  beltRequirement: varchar("beltRequirement", { length: 50 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type StudentAttendance = typeof studentAttendance.$inferSelect;
-export type InsertStudentAttendance = typeof studentAttendance.$inferInsert;
-
-
-/**
- * Belt Tests table
- * Stores scheduled belt testing events that students can register for
- */
-export const beltTests = mysqlTable("belt_tests", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Name of the belt test event */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Belt level being tested for (e.g., "Yellow", "Orange", "Green") */
-  beltLevel: varchar("beltLevel", { length: 50 }).notNull(),
-  /** Date of the belt test */
-  testDate: timestamp("testDate").notNull(),
-  /** Start time of the test */
-  startTime: varchar("startTime", { length: 10 }).notNull(),
-  /** End time of the test */
-  endTime: varchar("endTime", { length: 10 }),
-  /** Location of the test */
-  location: varchar("location", { length: 255 }).notNull(),
-  /** Maximum number of students that can register */
-  maxCapacity: int("maxCapacity").default(20).notNull(),
-  /** Current number of registered students */
-  currentRegistrations: int("currentRegistrations").default(0).notNull(),
-  /** Lead instructor for the test */
-  instructorId: int("instructorId"),
-  /** Instructor name for display */
-  instructorName: varchar("instructorName", { length: 255 }),
-  /** Registration fee in cents */
-  fee: int("fee").default(0),
-  /** Test status: open, closed, completed, cancelled */
-  status: mysqlEnum("status", ["open", "closed", "completed", "cancelled"]).default("open").notNull(),
-  /** Additional notes or requirements */
-  notes: text("notes"),
-  /** Minimum attendance percentage required to register */
-  minAttendanceRequired: int("minAttendanceRequired").default(80),
-  /** Minimum qualified classes required to register */
-  minClassesRequired: int("minClassesRequired").default(20),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BeltTest = typeof beltTests.$inferSelect;
-export type InsertBeltTest = typeof beltTests.$inferInsert;
-
-/**
- * Belt Test Registrations table
- * Tracks student registrations for belt tests
- */
-export const beltTestRegistrations = mysqlTable("belt_test_registrations", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to the belt test */
-  testId: int("testId").notNull(),
-  /** Reference to the student */
-  studentId: int("studentId").notNull(),
-  /** Student name for display */
-  studentName: varchar("studentName", { length: 255 }).notNull(),
-  /** Current belt at time of registration */
-  currentBelt: varchar("currentBelt", { length: 50 }).notNull(),
-  /** Registration status: registered, cancelled, passed, failed, no_show */
-  status: mysqlEnum("status", ["registered", "cancelled", "passed", "failed", "no_show"]).default("registered").notNull(),
-  /** Attendance percentage at time of registration */
-  attendanceAtRegistration: int("attendanceAtRegistration"),
-  /** Qualified classes at time of registration */
-  classesAtRegistration: int("classesAtRegistration"),
-  /** Payment status: pending, paid, refunded */
-  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded", "waived"]).default("pending"),
-  /** Stripe checkout session ID */
-  stripeSessionId: varchar("stripeSessionId", { length: 255 }),
-  /** Stripe payment intent ID */
-  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
-  /** Amount paid in cents */
-  amountPaid: int("amountPaid"),
-  /** Instructor notes about the student's test */
-  instructorNotes: text("instructorNotes"),
-  /** Result notes after test completion */
-  resultNotes: text("resultNotes"),
-  registeredAt: timestamp("registeredAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BeltTestRegistration = typeof beltTestRegistrations.$inferSelect;
-export type InsertBeltTestRegistration = typeof beltTestRegistrations.$inferInsert;
-
-
-/**
- * Student Portal Messages table
- * Stores messages between students and instructors/staff
- */
-export const studentMessages = mysqlTable("student_messages", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to students table - the student in the conversation */
-  studentId: int("studentId").notNull(),
-  /** Sender type: student or staff */
-  senderType: mysqlEnum("senderType", ["student", "staff"]).notNull(),
-  /** Sender ID - studentId if student, staffPinId or userId if staff */
-  senderId: int("senderId").notNull(),
-  /** Sender name for display */
-  senderName: varchar("senderName", { length: 255 }).notNull(),
-  /** Message subject */
-  subject: varchar("subject", { length: 500 }),
-  /** Message content */
-  content: text("content").notNull(),
-  /** Whether the message has been read */
-  isRead: int("isRead").default(0).notNull(),
-  /** Parent message ID for replies (thread support) */
-  parentMessageId: int("parentMessageId"),
-  /** Message priority */
-  priority: mysqlEnum("priority", ["normal", "high", "urgent"]).default("normal").notNull(),
-  /** Read timestamp */
-  readAt: timestamp("readAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StudentMessage = typeof studentMessages.$inferSelect;
-export type InsertStudentMessage = typeof studentMessages.$inferInsert;
-
-/**
- * Student Message Attachments table
- * Stores file attachments for student messages
- */
-export const studentMessageAttachments = mysqlTable("student_message_attachments", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to student_messages table */
-  messageId: int("messageId").notNull(),
-  /** File name */
-  fileName: varchar("fileName", { length: 255 }).notNull(),
-  /** File URL in S3 */
-  fileUrl: varchar("fileUrl", { length: 500 }).notNull(),
-  /** File MIME type */
-  mimeType: varchar("mimeType", { length: 100 }),
-  /** File size in bytes */
-  fileSize: int("fileSize"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type StudentMessageAttachment = typeof studentMessageAttachments.$inferSelect;
-export type InsertStudentMessageAttachment = typeof studentMessageAttachments.$inferInsert;
-
-
-/**
- * Student Password Reset Tokens table
- * Stores temporary tokens for password reset flow
- */
-export const studentPasswordResetTokens = mysqlTable("student_password_reset_tokens", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Student ID (foreign key to students table) */
-  studentId: int("studentId").notNull(),
-  /** Unique reset token (hashed) */
-  token: varchar("token", { length: 255 }).notNull().unique(),
-  /** Token expiration timestamp */
-  expiresAt: timestamp("expiresAt").notNull(),
-  /** Whether the token has been used */
-  used: int("used").default(0).notNull(),
-  /** When the token was used */
-  usedAt: timestamp("usedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type StudentPasswordResetToken = typeof studentPasswordResetTokens.$inferSelect;
-export type InsertStudentPasswordResetToken = typeof studentPasswordResetTokens.$inferInsert;
-
-/**
- * Student Passwords table
- * Stores hashed passwords for student portal authentication
- */
-export const studentPasswords = mysqlTable("student_passwords", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Student ID (foreign key to students table) */
-  studentId: int("studentId").notNull().unique(),
-  /** Hashed password */
-  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
-  /** Last password change */
-  lastChangedAt: timestamp("lastChangedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StudentPassword = typeof studentPasswords.$inferSelect;
-export type InsertStudentPassword = typeof studentPasswords.$inferInsert;
-
-
-/**
- * Directed Messages table - Messages created from @mentions
- * Polymorphic recipients: student, staff, or group (class)
- * Used for routing messages to appropriate inboxes
- */
-export const directedMessages = mysqlTable("directed_messages", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Recipient type: student, staff, or group */
-  recipientType: mysqlEnum("recipientType", ["student", "staff", "group"]).notNull(),
-  /** Recipient ID - studentId, staffId (team_members.id), or classId */
-  recipientId: int("recipientId").notNull(),
-  /** Sender user ID (from users table) */
-  senderId: int("senderId").notNull(),
-  /** Sender name for display */
-  senderName: varchar("senderName", { length: 255 }).notNull(),
-  /** Message content */
-  content: text("content").notNull(),
-  /** Optional subject line */
-  subject: varchar("subject", { length: 500 }),
-  /** Source conversation ID (kai_conversations.id) if from Kai Command */
-  sourceConversationId: int("sourceConversationId"),
-  /** Source message ID (kai_messages.id) if from Kai Command */
-  sourceMessageId: int("sourceMessageId"),
-  /** Whether @Kai was also mentioned (Kai should respond) */
-  kaiMentioned: int("kaiMentioned").default(0).notNull(),
-  /** Whether the message has been read */
-  isRead: int("isRead").default(0).notNull(),
-  /** Read timestamp */
-  readAt: timestamp("readAt"),
-  /** Message priority */
-  priority: mysqlEnum("priority", ["normal", "high", "urgent"]).default("normal").notNull(),
-  /** Message label for categorization */
-  label: varchar("label", { length: 100 }).default("message"),
-  /** Attachments JSON array [{url, name, type, size}] */
-  attachments: text("attachments"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type DirectedMessage = typeof directedMessages.$inferSelect;
-export type InsertDirectedMessage = typeof directedMessages.$inferInsert;
-
-/**
- * Staff Messages table - Messages in staff inbox
- * Similar to studentMessages but for staff members
- */
-export const staffMessages = mysqlTable("staff_messages", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Foreign key to team_members table - the staff member */
-  staffId: int("staffId").notNull(),
-  /** Sender type: staff, student, system */
-  senderType: mysqlEnum("senderType", ["staff", "student", "system"]).notNull(),
-  /** Sender ID - staffId, studentId, or null for system */
-  senderId: int("senderId"),
-  /** Sender name for display */
-  senderName: varchar("senderName", { length: 255 }).notNull(),
-  /** Message subject */
-  subject: varchar("subject", { length: 500 }),
-  /** Message content */
-  content: text("content").notNull(),
-  /** Whether the message has been read */
-  isRead: int("isRead").default(0).notNull(),
-  /** Parent message ID for replies (thread support) */
-  parentMessageId: int("parentMessageId"),
-  /** Message priority */
-  priority: mysqlEnum("priority", ["normal", "high", "urgent"]).default("normal").notNull(),
-  /** Read timestamp */
-  readAt: timestamp("readAt"),
-  /** Attachments JSON array */
-  attachments: text("attachments"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StaffMessage = typeof staffMessages.$inferSelect;
-export type InsertStaffMessage = typeof staffMessages.$inferInsert;
-
-
-/**
- * Student Notes table - Notes attached to student profiles
- * Can be created manually or extracted from Kai conversations
- */
-export const studentNotes = mysqlTable("student_notes", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Student this note belongs to */
-  studentId: int("studentId").notNull(),
-  /** Note content */
-  content: text("content").notNull(),
-  /** Note type: manual, extraction, action_item, follow_up */
-  noteType: mysqlEnum("noteType", ["manual", "extraction", "action_item", "follow_up"]).default("manual").notNull(),
-  /** Priority for action items */
-  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium"),
-  /** User who created the note */
-  createdById: int("createdById"),
-  /** User name for display */
-  createdByName: varchar("createdByName", { length: 255 }),
-  /** Source conversation ID if extracted from Kai */
-  sourceConversationId: int("sourceConversationId"),
-  /** Whether the note/action is completed */
-  isCompleted: int("isCompleted").default(0).notNull(),
-  /** Completion timestamp */
-  completedAt: timestamp("completedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StudentNote = typeof studentNotes.$inferSelect;
-export type InsertStudentNote = typeof studentNotes.$inferInsert;
-
-/**
- * Kiosk Theme Presets - Built-in themes that schools can apply
- */
-export const kioskThemePresets = mysqlTable("kiosk_theme_presets", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Theme name (e.g., "Default", "Light Minimal", "Winter Holiday") */
-  name: varchar("name", { length: 100 }).notNull(),
-  /** Theme type (preset, custom, holiday, event) */
-  type: mysqlEnum("type", ["preset", "custom", "holiday", "event"]).default("preset").notNull(),
-  /** Theme description */
-  description: text("description"),
-  /** Theme configuration as JSON */
-  config: json("config").notNull(),
-  /** Preview image URL */
-  previewUrl: varchar("previewUrl", { length: 500 }),
-  /** Whether this theme is active/available */
-  isActive: int("isActive").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type KioskThemePreset = typeof kioskThemePresets.$inferSelect;
-export type InsertKioskThemePreset = typeof kioskThemePresets.$inferInsert;
-
-/**
- * Kiosk Settings - Per-school kiosk configuration and active theme
- */
-export const kioskSettings = mysqlTable("kiosk_settings", {
-  id: int("id").autoincrement().primaryKey(),
-  /** School/location ID (default 1 for single-location) */
-  schoolId: int("schoolId").default(1).notNull(),
-  /** Active theme preset ID */
-  activeThemeId: int("activeThemeId"),
-  /** Custom theme configuration (overrides preset) */
-  customConfig: json("customConfig"),
-  /** Custom welcome headline */
-  welcomeHeadline: varchar("welcomeHeadline", { length: 50 }),
-  /** Custom welcome subtext */
-  welcomeSubtext: varchar("welcomeSubtext", { length: 100 }),
-  /** Custom accent color (hex) */
-  accentColor: varchar("accentColor", { length: 7 }),
-  /** Logo URL for light backgrounds */
-  logoLight: varchar("logoLight", { length: 500 }),
-  /** Logo URL for dark backgrounds */
-  logoDark: varchar("logoDark", { length: 500 }),
-  /** Background blur amount (0-100) */
-  backgroundBlur: int("backgroundBlur").default(5),
-  /** Background opacity (0-100) */
-  backgroundOpacity: int("backgroundOpacity").default(80),
-  /** Scheduled theme start date */
-  scheduledThemeStartDate: timestamp("scheduledThemeStartDate"),
-  /** Scheduled theme end date */
-  scheduledThemeEndDate: timestamp("scheduledThemeEndDate"),
-  /** Theme to revert to after scheduled theme ends */
-  revertToThemeId: int("revertToThemeId"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type KioskSetting = typeof kioskSettings.$inferSelect;
-export type InsertKioskSetting = typeof kioskSettings.$inferInsert;
-
-/**
- * Enrollments table - Tracks student enrollment submissions from kiosk
- * Supports both Typeform-style and Kai-guided enrollment modes
- */
-export const enrollments = mysqlTable("enrollments", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Enrollment source: kai, form, staff */
-  source: mysqlEnum("source", ["kai", "form", "staff"]).default("form").notNull(),
-  /** Enrollment status: draft, submitted, approved, rejected */
-  status: mysqlEnum("status", ["draft", "submitted", "approved", "rejected"]).default("draft").notNull(),
-  
-  // Student Information
-  firstName: varchar("firstName", { length: 255 }).notNull(),
-  lastName: varchar("lastName", { length: 255 }).notNull(),
-  dateOfBirth: timestamp("dateOfBirth"),
-  age: int("age"),
-  
-  // Contact Information
-  phone: varchar("phone", { length: 20 }),
-  email: varchar("email", { length: 320 }),
-  streetAddress: varchar("streetAddress", { length: 255 }),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zipCode", { length: 20 }),
-  
-  // Parent/Guardian Information (if under 18)
-  guardianName: varchar("guardianName", { length: 255 }),
-  guardianRelationship: varchar("guardianRelationship", { length: 50 }),
-  guardianPhone: varchar("guardianPhone", { length: 20 }),
-  guardianEmail: varchar("guardianEmail", { length: 320 }),
-  
-  // Program Interest
-  programInterest: varchar("programInterest", { length: 100 }),
-  experienceLevel: mysqlEnum("experienceLevel", ["beginner", "intermediate", "advanced"]).default("beginner"),
-  classType: varchar("classType", { length: 100 }),
-  
-  // Goals & Motivation
-  goals: text("goals"),
-  motivation: text("motivation"),
-  
-  // Medical Information
-  allergies: text("allergies"),
-  medicalConditions: text("medicalConditions"),
-  emergencyContactName: varchar("emergencyContactName", { length: 255 }),
-  emergencyContactPhone: varchar("emergencyContactPhone", { length: 20 }),
-  
-  // Pricing & Membership (optional)
-  selectedMembershipPlan: varchar("selectedMembershipPlan", { length: 100 }),
-  pricingNotes: text("pricingNotes"),
-  
-  // Waiver & Consent
-  waiverSigned: int("waiverSigned").default(0).notNull(),
-  waiverSignature: text("waiverSignature"), // Base64 signature image
-  waiverSignedAt: timestamp("waiverSignedAt"),
-  consentGiven: int("consentGiven").default(0).notNull(),
-  
-  // Kai Conversation Data (for Kai-guided enrollments)
-  conversationId: int("conversationId"),
-  conversationTranscript: text("conversationTranscript"),
-  
-  // Timestamps
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  submittedAt: timestamp("submittedAt"),
-});
-
-export type Enrollment = typeof enrollments.$inferSelect;
-export type InsertEnrollment = typeof enrollments.$inferInsert;
-
-
-/**
- * ============================================================================
- * BILLING SYSTEM REFACTOR - Separated Concerns
- * ============================================================================
- * This section defines the new billing structure with clear separation between:
- * - Programs (membership tracks)
- * - Membership Plans (pricing tiers)
- * - Class Entitlements (access rules)
- * - One-time Fees
- * - Discounts
- * - Add-ons
- */
-
-/**
- * Membership Plans - Pricing tiers and billing structure
- * Examples: $149/mo, $199/mo, $249/mo with different terms
- */
-export const membershipPlans = mysqlTable("membership_plans", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  // Billing Frequency (new multi-frequency support)
-  billingFrequency: mysqlEnum("billingFrequency", ["monthly", "weekly", "daily", "drop_in"]).default("monthly").notNull(),
-  
-  // Pricing (unified field for all frequencies)
-  priceAmount: int("priceAmount").notNull(), // In cents - base price for the frequency
-  monthlyAmount: int("monthlyAmount").notNull(), // In cents - DEPRECATED but kept for backward compatibility
-  
-  // Billing interval and anchor
-  billingInterval: int("billingInterval").default(1), // 1 = every interval (weekly/daily)
-  billingAnchorDayOfWeek: int("billingAnchorDayOfWeek"), // 0-6 for weekly billing (0=Sunday)
-  
-  // Term length (flexible units)
-  termLength: int("termLength"), // DEPRECATED - kept for backward compatibility (months)
-  termLengthUnits: mysqlEnum("termLengthUnits", ["months", "weeks", "days", "visits"]),
-  termLengthValue: int("termLengthValue"),
-  
-  // Drop-in / Visit pack options
-  perVisitPrice: int("perVisitPrice"), // In cents - for drop-in pricing
-  visitPackSize: int("visitPackSize"), // e.g., 1, 5, 10, 20 visits
-  visitPackExpiryDays: int("visitPackExpiryDays"), // Days until visit pack expires
-  chargeOnAttendance: int("chargeOnAttendance").default(0), // Boolean - charge when student checks in
-  
-  // Billing cycle (legacy field for monthly plans)
-  billingCycle: mysqlEnum("billingCycle", ["monthly", "biweekly", "weekly", "annual"]).default("monthly").notNull(),
-  billingDays: varchar("billingDays", { length: 50 }), // "10,25" for 10th and 25th
-  
-  // Down payment / Registration
-  downPayment: int("downPayment").default(0).notNull(),
-  registrationFee: int("registrationFee").default(0).notNull(),
-  
-  // Contract terms
-  autoRenew: int("autoRenew").default(1).notNull(),
-  cancellationPolicy: text("cancellationPolicy"),
-  
-  // Display
-  isPopular: int("isPopular").default(0).notNull(),
-  sortOrder: int("sortOrder").default(0).notNull(),
-  isActive: int("isActive").default(1).notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type MembershipPlan = typeof membershipPlans.$inferSelect;
-export type InsertMembershipPlan = typeof membershipPlans.$inferInsert;
-
-/**
- * Class Entitlements - What classes members can attend
- */
-export const classEntitlements = mysqlTable("class_entitlements", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  // Class access rules
-  classesPerWeek: int("classesPerWeek"), // null = unlimited
-  classesPerMonth: int("classesPerMonth"),
-  isUnlimited: int("isUnlimited").default(0).notNull(),
-  
-  // Class duration types allowed
-  allowedDurations: varchar("allowedDurations", { length: 255 }), // "30,60"
-  
-  // Class categories/types allowed
-  allowedCategories: text("allowedCategories"), // JSON array
-  
-  // Restrictions
-  requiresAdvanceBooking: int("requiresAdvanceBooking").default(0).notNull(),
-  bookingWindowDays: int("bookingWindowDays").default(7).notNull(),
-  
-  isActive: int("isActive").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ClassEntitlement = typeof classEntitlements.$inferSelect;
-export type InsertClassEntitlement = typeof classEntitlements.$inferInsert;
-
-/**
- * One-time Fees - Registration, certification, equipment
- */
-export const oneTimeFees = mysqlTable("one_time_fees", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  amount: int("amount").notNull(), // In cents
-  feeType: mysqlEnum("feeType", [
-    "registration",
-    "down_payment",
-    "certification",
-    "testing",
-    "equipment",
-    "uniform",
-    "other"
-  ]).notNull(),
-  
-  chargeWhen: mysqlEnum("chargeWhen", [
-    "signup",
-    "first_class",
-    "certification_event",
-    "testing_event",
-    "manual"
-  ]).default("signup").notNull(),
-  
-  applicableToPrograms: text("applicableToPrograms"), // JSON array
-  applicableToPlans: text("applicableToPlans"), // JSON array
-  
-  isRequired: int("isRequired").default(0).notNull(),
-  isActive: int("isActive").default(1).notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type OneTimeFee = typeof oneTimeFees.$inferSelect;
-export type InsertOneTimeFee = typeof oneTimeFees.$inferInsert;
-
-/**
- * Discounts - Rule-based offers
- */
-export const discounts = mysqlTable("discounts", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  discountType: mysqlEnum("discountType", [
-    "percentage",
-    "fixed_amount",
-    "waive_fee",
-    "special_rate"
-  ]).notNull(),
-  
-  discountValue: int("discountValue").notNull(),
-  
-  appliesTo: mysqlEnum("appliesTo", [
-    "monthly_fee",
-    "registration_fee",
-    "down_payment",
-    "all_fees"
-  ]).notNull(),
-  
-  eligibilityRules: text("eligibilityRules"), // JSON
-  applicableToPrograms: text("applicableToPrograms"), // JSON array
-  applicableToPlans: text("applicableToPlans"), // JSON array
-  
-  validFrom: timestamp("validFrom"),
-  validUntil: timestamp("validUntil"),
-  maxUses: int("maxUses"),
-  currentUses: int("currentUses").default(0).notNull(),
-  
-  requiresApproval: int("requiresApproval").default(0).notNull(),
-  isActive: int("isActive").default(1).notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Discount = typeof discounts.$inferSelect;
-export type InsertDiscount = typeof discounts.$inferInsert;
-
-/**
- * Add-ons - Seminars, tournaments, merchandise
- */
-export const addOns = mysqlTable("add_ons", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  addOnType: mysqlEnum("addOnType", [
-    "seminar",
-    "workshop",
-    "tournament",
-    "camp",
-    "merchandise",
-    "equipment",
-    "private_lesson",
-    "other"
-  ]).notNull(),
-  
-  price: int("price").notNull(),
-  pricingType: mysqlEnum("pricingType", ["one_time", "per_session", "subscription"]).default("one_time").notNull(),
-  
-  availableFrom: timestamp("availableFrom"),
-  availableUntil: timestamp("availableUntil"),
-  maxCapacity: int("maxCapacity"),
-  currentEnrollment: int("currentEnrollment").default(0).notNull(),
-  
-  requiresMembership: int("requiresMembership").default(0).notNull(),
-  minimumBeltRank: varchar("minimumBeltRank", { length: 50 }),
-  
-  showOnKiosk: int("showOnKiosk").default(1).notNull(),
-  showOnEnrollment: int("showOnEnrollment").default(1).notNull(),
-  imageUrl: varchar("imageUrl", { length: 500 }),
-  sortOrder: int("sortOrder").default(0).notNull(),
-  isActive: int("isActive").default(1).notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AddOn = typeof addOns.$inferSelect;
-export type InsertAddOn = typeof addOns.$inferInsert;
-
-/**
- * Junction Tables
- */
-
-// Programs can have multiple membership plans
-export const programPlans = mysqlTable("program_plans", {
-  id: int("id").autoincrement().primaryKey(),
-  programId: int("programId").notNull(),
-  planId: int("planId").notNull(),
-  isDefault: int("isDefault").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ProgramPlan = typeof programPlans.$inferSelect;
-export type InsertProgramPlan = typeof programPlans.$inferInsert;
-
-// Plans include class entitlements
-export const planEntitlements = mysqlTable("plan_entitlements", {
-  id: int("id").autoincrement().primaryKey(),
-  planId: int("planId").notNull(),
-  entitlementId: int("entitlementId").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type PlanEntitlement = typeof planEntitlements.$inferSelect;
-export type InsertPlanEntitlement = typeof planEntitlements.$inferInsert;
-
-// Student enrollments with new billing structure
-export const studentEnrollments = mysqlTable("student_enrollments", {
-  id: int("id").autoincrement().primaryKey(),
-  studentId: int("studentId").notNull(),
-  programId: int("programId").notNull(),
-  planId: int("planId").notNull(),
-  entitlementId: int("entitlementId"),
-  
-  status: mysqlEnum("status", ["active", "paused", "cancelled", "completed"]).default("active").notNull(),
-  
-  startDate: timestamp("startDate").notNull(),
-  endDate: timestamp("endDate"),
-  nextBillingDate: timestamp("nextBillingDate"),
-  
-  appliedDiscounts: text("appliedDiscounts"), // JSON array
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StudentEnrollment = typeof studentEnrollments.$inferSelect;
-export type InsertStudentEnrollment = typeof studentEnrollments.$inferInsert;
-
-/**
- * Merchandise Items table - Uniforms, gear, and other merchandise
- * Tracks available merchandise items that can be issued to students
- */
-export const merchandiseItems = mysqlTable("merchandise_items", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Item name (e.g., "White Uniform", "Sparring Gloves") */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Item type/category */
-  type: mysqlEnum("type", ["uniform", "gear", "belt", "equipment", "other"]).notNull(),
-  /** Default price in cents (0 for free items) */
-  defaultPrice: int("defaultPrice").default(0).notNull(),
-  /** Whether this item requires size selection */
-  requiresSize: int("requiresSize").default(0).notNull(),
-  /** Available sizes (JSON array: ["XS", "S", "M", "L", "XL", "XXL"]) */
-  sizeOptions: text("sizeOptions"),
-  /** Item description */
-  description: text("description"),
-  /** Product image URL */
-  imageUrl: varchar("imageUrl", { length: 500 }),
-  /** Current stock quantity (null = unlimited/not tracked) */
-  stockQuantity: int("stockQuantity"),
-  /** Low stock alert threshold (null = no alerts) */
-  lowStockThreshold: int("lowStockThreshold"),
-  /** Reorder point - when to reorder (calculated from velocity × lead time + safety stock) */
-  reorderPoint: int("reorderPoint"),
-  /** Suggested reorder quantity (calculated from usage patterns) */
-  reorderQuantity: int("reorderQuantity"),
-  /** Average daily usage rate (items per day) */
-  averageDailyUsage: varchar("averageDailyUsage", { length: 20 }),
-  /** When reorder analytics were last calculated */
-  lastCalculatedAt: timestamp("lastCalculatedAt"),
-  /** Lead time in days (time from order to delivery) */
-  leadTimeDays: int("leadTimeDays").default(7),
-  /** Safety stock multiplier (1.5 = 150% of expected usage during lead time) */
-  safetyStockMultiplier: varchar("safetyStockMultiplier", { length: 10 }).default("1.5"),
-  /** Whether this item is currently available */
-  isActive: int("isActive").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type MerchandiseItem = typeof merchandiseItems.$inferSelect;
-export type InsertMerchandiseItem = typeof merchandiseItems.$inferInsert;
-
-/**
- * Student Merchandise table - Tracks merchandise issued to students
- * Manages fulfillment lifecycle from pending to confirmed/disputed
- */
-export const studentMerchandise = mysqlTable("student_merchandise", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Student receiving the item */
-  studentId: int("studentId").notNull(),
-  /** Merchandise item being issued */
-  itemId: int("itemId").notNull(),
-  /** Selected size (if applicable) */
-  size: varchar("size", { length: 20 }),
-  /** Price paid in cents (may differ from default) */
-  pricePaid: int("pricePaid").default(0).notNull(),
-  /** Current fulfillment status */
-  fulfillmentStatus: mysqlEnum("fulfillmentStatus", ["pending", "handed_out", "confirmed", "disputed"]).default("pending").notNull(),
-  /** When item was marked as handed out */
-  handedOutAt: timestamp("handedOutAt"),
-  /** Staff member who handed out the item */
-  handedOutBy: int("handedOutBy"),
-  /** When parent confirmed receipt */
-  confirmedAt: timestamp("confirmedAt"),
-  /** How parent confirmed (sms, email, in_person) */
-  confirmationMethod: mysqlEnum("confirmationMethod", ["sms", "email", "in_person"]),
-  /** Confirmation token for public link */
-  confirmationToken: varchar("confirmationToken", { length: 255 }),
-  /** Token expiry timestamp */
-  confirmationTokenExpiry: timestamp("confirmationTokenExpiry"),
-  /** Reason if disputed */
-  disputeReason: text("disputeReason"),
-  /** When dispute was filed */
-  disputedAt: timestamp("disputedAt"),
-  /** Notes from staff */
-  notes: text("notes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StudentMerchandise = typeof studentMerchandise.$inferSelect;
-export type InsertStudentMerchandise = typeof studentMerchandise.$inferInsert;
-
-/**
- * Stock Alerts table - Tracks low stock alerts for merchandise items
- */
-export const stockAlerts = mysqlTable("stock_alerts", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to merchandise item */
-  itemId: int("itemId").notNull(),
-  /** Type of alert */
-  alertType: mysqlEnum("alertType", ["low_stock", "out_of_stock"]).default("low_stock").notNull(),
-  /** Stock quantity when alert was triggered */
-  quantityAtAlert: int("quantityAtAlert").notNull(),
-  /** Threshold that triggered the alert */
-  threshold: int("threshold").notNull(),
-  /** When the alert was last sent */
-  lastAlertSent: timestamp("lastAlertSent").defaultNow().notNull(),
-  /** Number of times this alert has been sent */
-  alertCount: int("alertCount").default(1).notNull(),
-  /** Whether the alert has been resolved (stock replenished) */
-  isResolved: int("isResolved").default(0).notNull(),
-  /** When the alert was resolved */
-  resolvedAt: timestamp("resolvedAt"),
-  /** Who resolved the alert */
-  resolvedBy: int("resolvedBy"),
-  /** Resolution notes */
-  resolutionNotes: text("resolutionNotes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type StockAlert = typeof stockAlerts.$inferSelect;
-export type InsertStockAlert = typeof stockAlerts.$inferInsert;
-
-/**
- * Alert Settings table - Configuration for stock alert notifications
- */
-export const alertSettings = mysqlTable("alert_settings", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Whether the alert system is enabled */
-  isEnabled: int("isEnabled").default(1).notNull(),
-  /** Whether to send email notifications */
-  notifyEmail: int("notifyEmail").default(1).notNull(),
-  /** Whether to send SMS notifications */
-  notifySMS: int("notifySMS").default(0).notNull(),
-  /** How often to check stock levels (in minutes) */
-  checkIntervalMinutes: int("checkIntervalMinutes").default(360).notNull(), // Default: 6 hours
-  /** Comma-separated list of email addresses to notify */
-  recipientEmails: text("recipientEmails"),
-  /** Comma-separated list of phone numbers to notify */
-  recipientPhones: text("recipientPhones"),
-  /** Minimum hours between repeat alerts for same item */
-  alertCooldownHours: int("alertCooldownHours").default(24).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AlertSettings = typeof alertSettings.$inferSelect;
-export type InsertAlertSettings = typeof alertSettings.$inferInsert;
-
-/**
- * Stock Usage History table - Tracks all stock changes for analytics
- * Used to calculate consumption velocity and predict reorder needs
- */
-export const stockUsageHistory = mysqlTable("stock_usage_history", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to merchandise item */
-  itemId: int("itemId").notNull(),
-  /** Quantity change (positive for additions, negative for usage) */
-  quantityChange: int("quantityChange").notNull(),
-  /** Type of change */
-  changeType: mysqlEnum("changeType", [
-    "fulfillment",      // Item handed out to student
-    "bulk_assignment",  // Bulk assignment to multiple students
-    "adjustment",       // Manual stock adjustment
-    "received_shipment",// New inventory received
-    "inventory_count",  // Physical inventory count correction
-    "damage",           // Damaged/lost items
-    "return",           // Item returned
-    "other"             // Other changes
-  ]).notNull(),
-  /** Stock quantity after this change */
-  quantityAfter: int("quantityAfter").notNull(),
-  /** Optional notes about the change */
-  notes: text("notes"),
-  /** Who made the change (staff member ID) */
-  changedBy: int("changedBy"),
-  /** When the change occurred */
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-});
-
-export type StockUsageHistory = typeof stockUsageHistory.$inferSelect;
-export type InsertStockUsageHistory = typeof stockUsageHistory.$inferInsert;
-
-/**
- * Floor Plans table - Room layouts for class capacity planning
- * Template-based approach: kickboxing bags, yoga grids, karate lines
- */
-export const floorPlans = mysqlTable("floor_plans", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Room name (e.g., "Main Dojo", "Studio A", "Kickboxing Room") */
-  roomName: varchar("roomName", { length: 255 }).notNull(),
-  /** Location/facility identifier (for multi-location support) */
-  locationId: int("locationId"),
-  /** Room dimensions - length in feet */
-  lengthFeet: int("lengthFeet"),
-  /** Room dimensions - width in feet */
-  widthFeet: int("widthFeet"),
-  /** Total square footage (can be used instead of length/width) */
-  squareFeet: int("squareFeet"),
-  /** Safety spacing between spots in feet */
-  safetySpacingFeet: int("safetySpacingFeet").default(3).notNull(),
-  /** Template type determines spot layout algorithm */
-  templateType: mysqlEnum("templateType", [
-    "kickboxing_bags",  // Heavy bags in rows
-    "yoga_grid",        // Mat grid (A1, A2, B1, B2, etc.)
-    "karate_lines"      // Traditional lineup by rank
-  ]).notNull(),
-  /** Mat rotation for yoga_grid template (horizontal = wide, vertical = tall) */
-  matRotation: mysqlEnum("matRotation", ["horizontal", "vertical"]).default("horizontal"),
-  /** Maximum capacity (auto-calculated from spots but can be overridden) */
-  maxCapacity: int("maxCapacity").notNull(),
-  /** Whether this floor plan is currently active */
-  isActive: int("isActive").default(1).notNull(),
-  /** Optional notes about the room or layout */
-  notes: text("notes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type FloorPlan = typeof floorPlans.$inferSelect;
-export type InsertFloorPlan = typeof floorPlans.$inferInsert;
-
-/**
- * Floor Plan Spots table - Individual spots within a floor plan
- * Generated automatically based on template type
- */
-export const floorPlanSpots = mysqlTable("floor_plan_spots", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to parent floor plan */
-  floorPlanId: int("floorPlanId").notNull(),
-  /** Numeric spot number (1, 2, 3...) */
-  spotNumber: int("spotNumber").notNull(),
-  /** Display label (e.g., "Bag 12", "Mat B4", "Line 2 Spot 3") */
-  spotLabel: varchar("spotLabel", { length: 50 }).notNull(),
-  /** X coordinate for visualization (0-100 scale) */
-  positionX: int("positionX"),
-  /** Y coordinate for visualization (0-100 scale) */
-  positionY: int("positionY"),
-  /** Optional row identifier (for grid layouts) */
-  rowIdentifier: varchar("rowIdentifier", { length: 10 }),
-  /** Optional column identifier (for grid layouts) */
-  columnIdentifier: varchar("columnIdentifier", { length: 10 }),
-  /** Semantic spot type for template-aware rendering */
-  spotType: mysqlEnum("spotType", ["bag", "mat", "rank_position"]).notNull(),
-  /** Whether this spot is currently available for use */
-  isAvailable: int("isAvailable").default(1).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type FloorPlanSpot = typeof floorPlanSpots.$inferSelect;
-export type InsertFloorPlanSpot = typeof floorPlanSpots.$inferInsert;
-
-/**
- * Class Sessions table - Individual class occurrences with date/time
- * Links classes to floor plans for spot assignment
- */
-export const classSessions = mysqlTable("class_sessions", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to recurring class */
-  classId: int("classId").notNull(),
-  /** Specific date of this session */
-  sessionDate: timestamp("sessionDate").notNull(),
-  /** Session start time */
-  startTime: varchar("startTime", { length: 20 }).notNull(),
-  /** Session end time */
-  endTime: varchar("endTime", { length: 20 }),
-  /** Floor plan used for this session */
-  floorPlanId: int("floorPlanId"),
-  /** Instructor for this specific session (can override class instructor) */
-  instructorId: int("instructorId"),
-  /** Session status */
-  status: mysqlEnum("status", [
-    "scheduled",
-    "in_progress",
-    "completed",
-    "cancelled"
-  ]).default("scheduled").notNull(),
-  /** Optional notes for this session */
-  notes: text("notes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ClassSession = typeof classSessions.$inferSelect;
-export type InsertClassSession = typeof classSessions.$inferInsert;
-
-/**
- * Session Spot Assignments table - Student assignments to specific spots
- * Created during check-in process
- */
-export const sessionSpotAssignments = mysqlTable("session_spot_assignments", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to class session */
-  sessionId: int("sessionId").notNull(),
-  /** Reference to student */
-  studentId: int("studentId").notNull(),
-  /** Reference to assigned spot */
-  spotId: int("spotId").notNull(),
-  /** When the student was assigned this spot */
-  assignedAt: timestamp("assignedAt").defaultNow().notNull(),
-  /** How the assignment was made */
-  assignmentMethod: mysqlEnum("assignmentMethod", [
-    "auto",           // Automatically assigned during check-in
-    "manual",         // Manually assigned by instructor
-    "student_choice"  // Student selected their own spot
-  ]).default("auto").notNull(),
-  /** Whether student actually attended (checked in) */
-  attended: int("attended").default(1).notNull(),
-  /** Optional notes about this assignment */
-  notes: text("notes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type SessionSpotAssignment = typeof sessionSpotAssignments.$inferSelect;
-export type InsertSessionSpotAssignment = typeof sessionSpotAssignments.$inferInsert;
-
-/**
- * Organizations table - School/Dojo profiles
- * Each organization represents a martial arts school
- */
-export const organizations = mysqlTable("organizations", {
-  id: int("id").autoincrement().primaryKey(),
-  /** School/Dojo name */
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Primary location address */
-  address: varchar("address", { length: 500 }),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zipCode", { length: 20 }),
-  /** Timezone for scheduling */
-  timezone: varchar("timezone", { length: 100 }).default("America/New_York").notNull(),
-  /** Programs offered (JSON array) */
-  programs: text("programs"),
-  /** Estimated number of active students */
-  estimatedStudents: int("estimatedStudents"),
-  /** Desired launch date */
-  launchDate: timestamp("launchDate"),
-  /** School logo URL */
-  logoUrl: varchar("logoUrl", { length: 500 }),
-  /** Subscription plan */
-  planId: int("planId"),
-  /** Subscription status */
-  subscriptionStatus: mysqlEnum("subscriptionStatus", [
-    "trial",
-    "active",
-    "past_due",
-    "cancelled",
-    "inactive"
-  ]).default("trial").notNull(),
-  /** Trial end date */
-  trialEndsAt: timestamp("trialEndsAt"),
-  /** Last activity timestamp (for platform CRM tracking) */
-  lastActivity: timestamp("lastActivity"),
-  /** Organization settings (JSON) */
-  settings: text("settings"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Organization = typeof organizations.$inferSelect;
-export type InsertOrganization = typeof organizations.$inferInsert;
-
-/**
- * Organization Users table - Links users to organizations
- * Supports multi-organization access and role management
- */
-export const organizationUsers = mysqlTable("organization_users", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to user */
-  userId: int("userId").notNull(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull(),
-  /** User's role within this organization */
-  role: mysqlEnum("role", ["owner", "admin", "staff", "instructor", "read_only"]).default("staff").notNull(),
-  /** Whether this is the user's primary organization */
-  isPrimary: int("isPrimary").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type OrganizationUser = typeof organizationUsers.$inferSelect;
-export type InsertOrganizationUser = typeof organizationUsers.$inferInsert;
-
-/**
- * Onboarding Progress table - Tracks owner signup wizard progress
- * Allows resuming onboarding if user leaves mid-flow
- */
-export const onboardingProgress = mysqlTable("onboarding_progress", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to user */
-  userId: int("userId").notNull().unique(),
-  /** Current onboarding step (1-5) */
-  currentStep: int("currentStep").default(1).notNull(),
-  /** Step 1: Account details (JSON) */
-  accountData: text("accountData"),
-  /** Step 2: Verification status */
-  isVerified: int("isVerified").default(0).notNull(),
-  /** Step 3: School profile data (JSON) */
-  schoolData: text("schoolData"),
-  /** Step 4: Selected plan ID */
-  selectedPlanId: int("selectedPlanId"),
-  /** Step 5: Payment completed */
-  paymentCompleted: int("paymentCompleted").default(0).notNull(),
-  /** Whether onboarding is fully completed */
-  isCompleted: int("isCompleted").default(0).notNull(),
-  completedAt: timestamp("completedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type OnboardingProgress = typeof onboardingProgress.$inferSelect;
-export type InsertOnboardingProgress = typeof onboardingProgress.$inferInsert;
-
-/**
- * Verification Codes table - OTP codes for email/SMS verification
- * Used for owner signup verification and passwordless login
- */
-export const verificationCodes = mysqlTable("verification_codes", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Email or phone number */
-  identifier: varchar("identifier", { length: 320 }).notNull(),
-  /** 6-digit verification code */
-  code: varchar("code", { length: 6 }).notNull(),
-  /** Code type */
-  type: mysqlEnum("type", ["email", "sms", "login"]).default("email").notNull(),
-  /** Expiration time (15 minutes from creation) */
-  expiresAt: timestamp("expiresAt").notNull(),
-  /** Whether code has been used */
-  isUsed: int("isUsed").default(0).notNull(),
-  /** Number of verification attempts */
-  attempts: int("attempts").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type VerificationCode = typeof verificationCodes.$inferSelect;
-export type InsertVerificationCode = typeof verificationCodes.$inferInsert;
-
-/**
- * Subscription Plans table - DojoFlow pricing tiers
- * Defines available subscription plans with features and limits
- */
-export const subscriptionPlans = mysqlTable("subscription_plans", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Plan name (Starter, Growth, Pro, Enterprise) */
-  name: varchar("name", { length: 100 }).notNull().unique(),
-  /** Plan slug for URL-safe identification */
-  slug: varchar("slug", { length: 100 }).notNull().unique(),
-  /** Monthly price in cents */
-  monthlyPrice: int("monthlyPrice").notNull(),
-  /** Annual price in cents (if applicable) */
-  annualPrice: int("annualPrice"),
-  /** Maximum active students allowed */
-  maxStudents: int("maxStudents").notNull(),
-  /** Maximum locations allowed */
-  maxLocations: int("maxLocations").notNull(),
-  /** Monthly AI credit allowance */
-  monthlyCredits: int("monthlyCredits").notNull(),
-  /** Features included (JSON array) */
-  features: text("features").notNull(),
-  /** Whether AI phone calls are enabled */
-  aiPhoneEnabled: int("aiPhoneEnabled").default(0).notNull(),
-  /** Whether plan is currently active/visible */
-  isActive: int("isActive").default(1).notNull(),
-  /** Display order on pricing page */
-  displayOrder: int("displayOrder").default(0).notNull(),
-  /** Stripe product ID */
-  stripeProductId: varchar("stripeProductId", { length: 255 }),
-  /** Stripe price ID (monthly) */
-  stripePriceId: varchar("stripePriceId", { length: 255 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
-export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
-
-/**
- * Organization Subscriptions table - Current subscription status per organization
- * Tracks which plan each organization is on and billing details
- */
-export const organizationSubscriptions = mysqlTable("organization_subscriptions", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull().unique(),
-  /** Reference to subscription plan */
-  planId: int("planId").notNull(),
-  /** Subscription status */
-  status: mysqlEnum("status", [
-    "trial",
-    "active",
-    "past_due",
-    "cancelled",
-    "paused"
-  ]).default("trial").notNull(),
-  /** Billing cycle (monthly or annual) */
-  billingCycle: mysqlEnum("billingCycle", ["monthly", "annual"]).default("monthly").notNull(),
-  /** Current period start date */
-  currentPeriodStart: timestamp("currentPeriodStart"),
-  /** Current period end date */
-  currentPeriodEnd: timestamp("currentPeriodEnd"),
-  /** Trial end date (if applicable) */
-  trialEndsAt: timestamp("trialEndsAt"),
-  /** Cancellation date (if applicable) */
-  cancelledAt: timestamp("cancelledAt"),
-  /** Cancellation reason */
-  cancellationReason: text("cancellationReason"),
-  /** Stripe subscription ID */
-  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
-  /** Stripe customer ID */
-  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type OrganizationSubscription = typeof organizationSubscriptions.$inferSelect;
-export type InsertOrganizationSubscription = typeof organizationSubscriptions.$inferInsert;
-
-/**
- * AI Credit Balance table - Current credit balance per organization
- * Tracks remaining credits and usage for AI operations
- */
-export const aiCreditBalance = mysqlTable("ai_credit_balance", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull().unique(),
-  /** Current credit balance */
-  balance: int("balance").default(0).notNull(),
-  /** Total credits allocated this billing period */
-  periodAllowance: int("periodAllowance").default(0).notNull(),
-  /** Total credits used this billing period */
-  periodUsed: int("periodUsed").default(0).notNull(),
-  /** Total credits purchased via top-ups (all time) */
-  totalPurchased: int("totalPurchased").default(0).notNull(),
-  /** Total credits used (all time) */
-  totalUsed: int("totalUsed").default(0).notNull(),
-  /** Last credit reset date (start of billing period) */
-  lastResetAt: timestamp("lastResetAt"),
-  /** Next credit reset date (end of billing period) */
-  nextResetAt: timestamp("nextResetAt"),
-  /** Low credit alert threshold */
-  lowCreditThreshold: int("lowCreditThreshold").default(50).notNull(),
-  /** Whether low credit alert has been sent this period */
-  lowCreditAlertSent: int("lowCreditAlertSent").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AiCreditBalance = typeof aiCreditBalance.$inferSelect;
-export type InsertAiCreditBalance = typeof aiCreditBalance.$inferInsert;
-
-/**
- * AI Credit Transactions table - Audit log of all credit usage
- * Records every credit deduction with context for transparency
- */
-export const aiCreditTransactions = mysqlTable("ai_credit_transactions", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull(),
-  /** Transaction type */
-  type: mysqlEnum("type", [
-    "deduction",
-    "refund",
-    "allocation",
-    "purchase",
-    "bonus"
-  ]).default("deduction").notNull(),
-  /** Number of credits (positive for additions, negative for deductions) */
-  amount: int("amount").notNull(),
-  /** Balance after transaction */
-  balanceAfter: int("balanceAfter").notNull(),
-  /** Task type that consumed credits */
-  taskType: mysqlEnum("taskType", [
-    "kai_chat",
-    "ai_sms",
-    "ai_email",
-    "ai_phone_call",
-    "automation",
-    "data_analysis",
-    "other"
-  ]),
-  /** Description of the transaction */
-  description: text("description"),
-  /** Metadata (JSON) - e.g., message ID, recipient, etc. */
-  metadata: text("metadata"),
-  /** Reference to related record (e.g., message ID, campaign ID) */
-  relatedId: int("relatedId"),
-  /** User who initiated the action (if applicable) */
-  userId: int("userId"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type AiCreditTransaction = typeof aiCreditTransactions.$inferSelect;
-export type InsertAiCreditTransaction = typeof aiCreditTransactions.$inferInsert;
-
-/**
- * Credit Top-Ups table - Purchase history for additional credits
- * Tracks one-time credit purchases outside of subscription allowance
- */
-export const creditTopUps = mysqlTable("credit_top_ups", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull(),
-  /** Number of credits purchased */
-  credits: int("credits").notNull(),
-  /** Amount paid in cents */
-  amountPaid: int("amountPaid").notNull(),
-  /** Currency code */
-  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
-  /** Payment status */
-  status: mysqlEnum("status", [
-    "pending",
-    "completed",
-    "failed",
-    "refunded"
-  ]).default("pending").notNull(),
-  /** Stripe payment intent ID */
-  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
-  /** User who purchased the top-up */
-  purchasedBy: int("purchasedBy"),
-  /** Payment completed timestamp */
-  completedAt: timestamp("completedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type CreditTopUp = typeof creditTopUps.$inferSelect;
-export type InsertCreditTopUp = typeof creditTopUps.$inferInsert;
-
-// ============================================================================
-// PLATFORM CRM TABLES (Internal Admin System)
-// ============================================================================
-// Note: organizations and organizationUsers tables already exist above
-// We only add new platform-specific tables here
-
-/**
- * Platform Subscriptions table - Billing and plan information per organization
- * Separate from organization_subscriptions to avoid confusion with existing table
- */
-export const platformSubscriptions = mysqlTable("platform_subscriptions", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull().unique(),
-  /** Current plan name */
-  plan: varchar("plan", { length: 100 }).notNull(),
-  /** Billing status */
-  billingStatus: mysqlEnum("billingStatus", [
-    "active",
-    "past_due",
-    "canceled",
-    "unpaid",
-    "trialing"
-  ]).default("trialing").notNull(),
-  /** Stripe customer ID */
-  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
-  /** Stripe subscription ID */
-  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
-  /** Current billing period start */
-  currentPeriodStart: timestamp("currentPeriodStart"),
-  /** Current billing period end */
-  currentPeriodEnd: timestamp("currentPeriodEnd"),
-  /** Subscription cancel date (if applicable) */
-  canceledAt: timestamp("canceledAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type PlatformSubscription = typeof platformSubscriptions.$inferSelect;
-export type InsertPlatformSubscription = typeof platformSubscriptions.$inferInsert;
-
-/**
- * Usage Events table - Tracks all billable actions per organization
- * Used for analytics, billing, and usage monitoring
- */
-export const usageEvents = mysqlTable("usage_events", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull(),
-  /** Type of usage event */
-  type: mysqlEnum("type", [
-    "kai_call",
-    "sms",
-    "email",
-    "ai_action",
-    "phone_call"
-  ]).notNull(),
-  /** Quantity consumed (credits, minutes, etc.) */
-  quantity: int("quantity").default(1).notNull(),
-  /** Event metadata (JSON) */
-  metadata: text("metadata"),
-  /** User who triggered the event */
-  userId: int("userId"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type UsageEvent = typeof usageEvents.$inferSelect;
-export type InsertUsageEvent = typeof usageEvents.$inferInsert;
-
-/**
- * Platform Onboarding Progress table - Tracks onboarding completion per organization
- * Separate from existing onboarding_progress to avoid confusion
- */
-export const platformOnboardingProgress = mysqlTable("platform_onboarding_progress", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull().unique(),
-  /** Steps completed (JSON array of step IDs) */
-  stepsCompleted: text("stepsCompleted"),
-  /** Whether onboarding is fully completed */
-  completed: int("completed").default(0).notNull(),
-  /** Last step completed timestamp */
-  lastStepAt: timestamp("lastStepAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type PlatformOnboardingProgress = typeof platformOnboardingProgress.$inferSelect;
-export type InsertPlatformOnboardingProgress = typeof platformOnboardingProgress.$inferInsert;
-
-/**
- * Feature Flags table - Per-organization feature toggles
- * Allows enabling/disabling features for specific organizations
- */
-export const featureFlags = mysqlTable("feature_flags", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull(),
-  /** Feature name/key */
-  featureName: varchar("featureName", { length: 100 }).notNull(),
-  /** Whether feature is enabled */
-  enabled: int("enabled").default(0).notNull(),
-  /** Optional configuration (JSON) */
-  config: text("config"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type FeatureFlag = typeof featureFlags.$inferSelect;
-export type InsertFeatureFlag = typeof featureFlags.$inferInsert;
-
-/**
- * Account Flags table - Risk indicators and manual review flags
- * Used by platform admins to track problematic accounts
- */
 export const accountFlags = mysqlTable("account_flags", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Reference to organization */
-  organizationId: int("organizationId").notNull(),
-  /** Type of flag */
-  flagType: mysqlEnum("flagType", [
-    "billing_risk",
-    "abuse",
-    "review_required",
-    "high_usage",
-    "support_escalation"
-  ]).notNull(),
-  /** Admin notes about the flag */
-  notes: text("notes"),
-  /** Whether flag is resolved */
-  resolved: int("resolved").default(0).notNull(),
-  /** User who created the flag */
-  createdBy: int("createdBy"),
-  /** User who resolved the flag */
-  resolvedBy: int("resolvedBy"),
-  /** Resolution timestamp */
-  resolvedAt: timestamp("resolvedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	flagType: mysqlEnum(['billing_risk','abuse','review_required','high_usage','support_escalation']).notNull(),
+	notes: text(),
+	resolved: int().default(0).notNull(),
+	createdBy: int(),
+	resolvedBy: int(),
+	resolvedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_org_resolved").on(table.organizationId, table.resolved),
+]);
+
+export const addOns = mysqlTable("add_ons", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	addOnType: mysqlEnum(['seminar','workshop','tournament','camp','merchandise','equipment','private_lesson','other']).notNull(),
+	price: int().notNull(),
+	pricingType: mysqlEnum(['one_time','per_session','subscription']).default('one_time').notNull(),
+	availableFrom: timestamp({ mode: 'string' }),
+	availableUntil: timestamp({ mode: 'string' }),
+	maxCapacity: int(),
+	currentEnrollment: int().default(0).notNull(),
+	requiresMembership: int().default(0).notNull(),
+	minimumBeltRank: varchar({ length: 50 }),
+	showOnKiosk: int().default(1).notNull(),
+	showOnEnrollment: int().default(1).notNull(),
+	imageUrl: varchar({ length: 500 }),
+	sortOrder: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 });
 
-export type AccountFlag = typeof accountFlags.$inferSelect;
-export type InsertAccountFlag = typeof accountFlags.$inferInsert;
+export const aiCreditBalance = mysqlTable("ai_credit_balance", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	balance: int().default(0).notNull(),
+	periodAllowance: int().default(0).notNull(),
+	periodUsed: int().default(0).notNull(),
+	totalPurchased: int().default(0).notNull(),
+	totalUsed: int().default(0).notNull(),
+	lastResetAt: timestamp({ mode: 'string' }),
+	nextResetAt: timestamp({ mode: 'string' }),
+	lowCreditThreshold: int().default(50).notNull(),
+	lowCreditAlertSent: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("organizationId").on(table.organizationId),
+]);
+
+export const aiCreditTransactions = mysqlTable("ai_credit_transactions", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	type: mysqlEnum(['deduction','refund','allocation','purchase','bonus']).default('deduction').notNull(),
+	amount: int().notNull(),
+	balanceAfter: int().notNull(),
+	taskType: mysqlEnum(['kai_chat','ai_sms','ai_email','ai_phone_call','automation','data_analysis','other']),
+	description: text(),
+	metadata: text(),
+	relatedId: int(),
+	userId: int(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_org_created").on(table.organizationId, table.createdAt),
+	index("idx_task_type").on(table.taskType),
+]);
+
+export const alertSettings = mysqlTable("alert_settings", {
+	id: int().autoincrement().notNull(),
+	isEnabled: int().default(1).notNull(),
+	notifyEmail: int().default(1).notNull(),
+	notifySms: int().default(0).notNull(),
+	checkIntervalMinutes: int().default(360).notNull(),
+	recipientEmails: text(),
+	recipientPhones: text(),
+	alertCooldownHours: int().default(24).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const automationEnrollments = mysqlTable("automation_enrollments", {
+	id: int().autoincrement().notNull(),
+	sequenceId: int().notNull(),
+	enrolledType: mysqlEnum(['lead','student']).notNull(),
+	enrolledId: int().notNull(),
+	currentStepId: int(),
+	status: mysqlEnum(['active','paused','completed','cancelled']).default('active').notNull(),
+	nextExecutionAt: timestamp({ mode: 'string' }),
+	enrolledAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	completedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const automationSequences = mysqlTable("automation_sequences", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	trigger: mysqlEnum(['new_lead','trial_scheduled','trial_completed','trial_no_show','enrollment','missed_class','inactive_student','renewal_due','custom']).notNull(),
+	triggerConditions: text(),
+	isActive: int().default(1).notNull(),
+	enrollmentCount: int().default(0),
+	completedCount: int().default(0),
+	createdBy: int(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const automationSteps = mysqlTable("automation_steps", {
+	id: int().autoincrement().notNull(),
+	sequenceId: int().notNull(),
+	stepOrder: int().notNull(),
+	stepType: mysqlEnum(['wait','send_sms','send_email','condition','end']).notNull(),
+	waitMinutes: int(),
+	subject: varchar({ length: 500 }),
+	message: text(),
+	condition: text(),
+	nextStepIdTrue: int(),
+	nextStepIdFalse: int(),
+	name: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const beltProgress = mysqlTable("belt_progress", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	currentBelt: varchar({ length: 50 }).default('White').notNull(),
+	nextBelt: varchar({ length: 50 }).default('Yellow').notNull(),
+	progressPercent: int().default(0).notNull(),
+	qualifiedClasses: int().default(0).notNull(),
+	classesRequired: int().default(20).notNull(),
+	qualifiedAttendance: int().default(0).notNull(),
+	attendanceRequired: int().default(80).notNull(),
+	nextEvaluationDate: timestamp({ mode: 'string' }),
+	isEligible: int().default(0).notNull(),
+	instructorNotes: text(),
+	lastPromotionDate: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("belt_progress_studentId_unique").on(table.studentId),
+]);
+
+export const beltTestRegistrations = mysqlTable("belt_test_registrations", {
+	id: int().autoincrement().notNull(),
+	testId: int().notNull(),
+	studentId: int().notNull(),
+	studentName: varchar({ length: 255 }).notNull(),
+	currentBelt: varchar({ length: 50 }).notNull(),
+	status: mysqlEnum(['registered','cancelled','passed','failed','no_show']).default('registered').notNull(),
+	attendanceAtRegistration: int(),
+	classesAtRegistration: int(),
+	paymentStatus: mysqlEnum(['pending','paid','refunded','waived']).default('pending'),
+	instructorNotes: text(),
+	resultNotes: text(),
+	registeredAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	stripeSessionId: varchar({ length: 255 }),
+	stripePaymentIntentId: varchar({ length: 255 }),
+	amountPaid: int(),
+});
+
+export const beltTests = mysqlTable("belt_tests", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	beltLevel: varchar({ length: 50 }).notNull(),
+	testDate: timestamp({ mode: 'string' }).notNull(),
+	startTime: varchar({ length: 10 }).notNull(),
+	endTime: varchar({ length: 10 }),
+	location: varchar({ length: 255 }).notNull(),
+	maxCapacity: int().default(20).notNull(),
+	currentRegistrations: int().default(0).notNull(),
+	instructorId: int(),
+	instructorName: varchar({ length: 255 }),
+	fee: int().default(0),
+	status: mysqlEnum(['open','closed','completed','cancelled']).default('open').notNull(),
+	notes: text(),
+	minAttendanceRequired: int().default(80),
+	minClassesRequired: int().default(20),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const classEnrollments = mysqlTable("class_enrollments", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	classId: int().notNull(),
+	smsRemindersEnabled: int().default(1).notNull(),
+	status: mysqlEnum(['active','paused','cancelled']).default('active').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const classEntitlements = mysqlTable("class_entitlements", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	classesPerWeek: int(),
+	classesPerMonth: int(),
+	isUnlimited: int().default(0).notNull(),
+	allowedDurations: varchar({ length: 255 }),
+	allowedCategories: text(),
+	requiresAdvanceBooking: int().default(0).notNull(),
+	bookingWindowDays: int().default(7).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const classReminders = mysqlTable("class_reminders", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	classId: int().notNull(),
+	classDate: timestamp({ mode: 'string' }).notNull(),
+	phoneNumber: varchar({ length: 20 }).notNull(),
+	twilioMessageId: varchar({ length: 100 }),
+	status: mysqlEnum(['pending','sent','failed','delivered']).default('pending').notNull(),
+	errorMessage: text(),
+	sentAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const classSessions = mysqlTable("class_sessions", {
+	id: int().autoincrement().notNull(),
+	classId: int().notNull(),
+	sessionDate: timestamp({ mode: 'string' }).notNull(),
+	startTime: varchar({ length: 20 }).notNull(),
+	endTime: varchar({ length: 20 }),
+	floorPlanId: int(),
+	instructorId: int(),
+	status: mysqlEnum(['scheduled','in_progress','completed','cancelled']).default('scheduled').notNull(),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_class").on(table.classId),
+	index("idx_session_date").on(table.sessionDate),
+	index("idx_floor_plan").on(table.floorPlanId),
+]);
+
+export const classes = mysqlTable("classes", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	time: varchar({ length: 50 }).notNull(),
+	enrolled: int().default(0).notNull(),
+	capacity: int().default(20).notNull(),
+	instructor: varchar({ length: 255 }),
+	dayOfWeek: varchar({ length: 20 }),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	instructorId: int(),
+	program: varchar({ length: 255 }),
+	level: varchar({ length: 50 }),
+	room: varchar({ length: 100 }),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	floorPlanId: int(),
+	organizationId: int(),
+});
+
+export const conversations = mysqlTable("conversations", {
+	id: int().autoincrement().notNull(),
+	userId: int().notNull(),
+	title: varchar({ length: 255 }),
+	collection: varchar({ length: 100 }),
+	isPinned: tinyint().default(0),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const creditTopUps = mysqlTable("credit_top_ups", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	credits: int().notNull(),
+	amountPaid: int().notNull(),
+	currency: varchar({ length: 3 }).default('USD').notNull(),
+	status: mysqlEnum(['pending','completed','failed','refunded']).default('pending').notNull(),
+	stripePaymentIntentId: varchar({ length: 255 }),
+	purchasedBy: int(),
+	completedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const directMessages = mysqlTable("direct_messages", {
+	id: int().autoincrement().notNull(),
+	threadId: int().notNull(),
+	senderId: int().notNull(),
+	senderType: varchar({ length: 20 }).notNull(),
+	senderRole: varchar({ length: 50 }),
+	body: text().notNull(),
+	mentions: text().notNull(),
+	readBy: text().notNull(),
+	triggeredKai: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const directedMessages = mysqlTable("directed_messages", {
+	id: int().autoincrement().notNull(),
+	recipientType: mysqlEnum(['student','staff','group']).notNull(),
+	recipientId: int().notNull(),
+	senderId: int().notNull(),
+	senderName: varchar({ length: 255 }).notNull(),
+	content: text().notNull(),
+	subject: varchar({ length: 500 }),
+	sourceConversationId: int(),
+	sourceMessageId: int(),
+	kaiMentioned: int().default(0).notNull(),
+	isRead: int().default(0).notNull(),
+	readAt: timestamp({ mode: 'string' }),
+	priority: mysqlEnum(['normal','high','urgent']).default('normal').notNull(),
+	label: varchar({ length: 100 }).default('message'),
+	attachments: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const discounts = mysqlTable("discounts", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	discountType: mysqlEnum(['percentage','fixed_amount','waive_fee','special_rate']).notNull(),
+	discountValue: int().notNull(),
+	appliesTo: mysqlEnum(['monthly_fee','registration_fee','down_payment','all_fees']).notNull(),
+	eligibilityRules: text(),
+	applicableToPrograms: text(),
+	applicableToPlans: text(),
+	validFrom: timestamp({ mode: 'string' }),
+	validUntil: timestamp({ mode: 'string' }),
+	maxUses: int(),
+	currentUses: int().default(0).notNull(),
+	requiresApproval: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const documents = mysqlTable("documents", {
+	id: int().autoincrement().notNull(),
+	ownerType: mysqlEnum(['student','guardian','staff','account']).notNull(),
+	ownerId: int().notNull(),
+	linkedStudentId: int(),
+	threadId: int(),
+	messageId: int(),
+	source: mysqlEnum(['chat_upload','waiver','invoice','onboarding','manual_upload','receipt']).notNull(),
+	filename: varchar({ length: 500 }).notNull(),
+	mimeType: varchar({ length: 100 }).notNull(),
+	sizeBytes: int().notNull(),
+	storageUrl: varchar({ length: 1000 }).notNull(),
+	tags: text(),
+	permissions: text(),
+	description: text(),
+	uploadedById: int(),
+	uploadedByName: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const dojoSettings = mysqlTable("dojo_settings", {
+	id: int().autoincrement().notNull(),
+	businessName: varchar({ length: 255 }),
+	dbaName: varchar({ length: 255 }),
+	operatorName: varchar({ length: 255 }),
+	preferredName: varchar({ length: 255 }),
+	pronounsTone: varchar({ length: 50 }),
+	timezone: varchar({ length: 100 }).default('America/New_York'),
+	primaryColor: varchar({ length: 20 }).default('#3b82f6'),
+	secondaryColor: varchar({ length: 20 }).default('#8b5cf6'),
+	logoSquare: text(),
+	logoHorizontal: text(),
+	setupCompleted: tinyint().default(0),
+	createdAt: datetime({ mode: 'string'}).default('CURRENT_TIMESTAMP'),
+	updatedAt: datetime({ mode: 'string'}).default(sql`(CURRENT_TIMESTAMP)`),
+	industry: varchar({ length: 50 }),
+	businessModel: varchar({ length: 50 }),
+	usePreset: int().default(1),
+	monthlyRent: int(),
+	monthlyUtilities: int(),
+	monthlyPayroll: int(),
+	monthlyMarketing: int(),
+	currentMembers: int(),
+	revenueGoal: int(),
+	maxClassSize: int().default(20),
+	nonNegotiables: text(),
+	focusSlider: int().default(50),
+	riskComfort: int().default(50),
+	schoolName: varchar({ length: 255 }),
+	contactEmail: varchar({ length: 320 }),
+	contactPhone: varchar({ length: 20 }),
+	website: varchar({ length: 500 }),
+	instructorTitle: varchar({ length: 50 }),
+	instructorFirstName: varchar({ length: 255 }),
+	instructorLastName: varchar({ length: 255 }),
+	martialArtsStyle: varchar({ length: 100 }),
+	addressLine1: varchar({ length: 255 }),
+	addressLine2: varchar({ length: 255 }),
+	city: varchar({ length: 100 }),
+	state: varchar({ length: 100 }),
+	zipCode: varchar({ length: 20 }),
+	country: varchar({ length: 100 }).default('United States'),
+	weatherApiKey: varchar({ length: 255 }),
+	enableWeatherAlerts: int().default(1),
+	hasOutdoorClasses: int().default(0),
+	heatIndexThreshold: int().default(95),
+	airQualityThreshold: int().default(150),
+	paymentProvider: varchar({ length: 50 }),
+	stripeApiKey: varchar({ length: 255 }),
+	stripePublishableKey: varchar({ length: 255 }),
+	stripeWebhookSecret: varchar({ length: 255 }),
+	squareAccessToken: varchar({ length: 255 }),
+	squareLocationId: varchar({ length: 255 }),
+	paymentProcessor: varchar({ length: 50 }).default('stripe'),
+	paymentApiKey: varchar({ length: 500 }),
+	paymentMerchantId: varchar({ length: 500 }),
+	paymentSetupLater: int().default(0),
+	twilioAccountSid: varchar({ length: 255 }),
+	twilioAuthToken: varchar({ length: 255 }),
+	twilioPhoneNumber: varchar({ length: 20 }),
+	enableSmsForLeads: int().default(0),
+	emailProvider: varchar({ length: 50 }).default('sendgrid'),
+	senderEmail: varchar({ length: 320 }),
+	sendgridApiKey: varchar({ length: 500 }),
+	smtpHost: varchar({ length: 255 }),
+	smtpPort: int(),
+	smtpUser: varchar({ length: 255 }),
+	smtpPassword: varchar({ length: 500 }),
+	enableEmailForLeads: int().default(0),
+	notifyStaffOnNewLead: int().default(1),
+	staffNotificationMethod: varchar({ length: 50 }).default('email'),
+	staffNotificationPhone: varchar({ length: 20 }),
+	staffNotificationEmail: varchar({ length: 320 }),
+	autoSendSmsToLead: int().default(0),
+	autoSendEmailToLead: int().default(1),
+	autoUpdatePipelineStage: int().default(1),
+	bookingLink: varchar({ length: 500 }),
+	logoDarkUrl: varchar({ length: 500 }),
+	logoLightUrl: varchar({ length: 500 }),
+	organizationId: int(),
+});
+
+export const enrollments = mysqlTable("enrollments", {
+	id: int().autoincrement().notNull(),
+	source: mysqlEnum(['kai','form','staff']).default('form').notNull(),
+	status: mysqlEnum(['draft','submitted','approved','rejected']).default('draft').notNull(),
+	firstName: varchar({ length: 255 }).notNull(),
+	lastName: varchar({ length: 255 }).notNull(),
+	dateOfBirth: timestamp({ mode: 'string' }),
+	age: int(),
+	phone: varchar({ length: 20 }),
+	email: varchar({ length: 320 }),
+	streetAddress: varchar({ length: 255 }),
+	city: varchar({ length: 100 }),
+	state: varchar({ length: 50 }),
+	zipCode: varchar({ length: 20 }),
+	guardianName: varchar({ length: 255 }),
+	guardianRelationship: varchar({ length: 50 }),
+	guardianPhone: varchar({ length: 20 }),
+	guardianEmail: varchar({ length: 320 }),
+	programInterest: varchar({ length: 100 }),
+	experienceLevel: mysqlEnum(['beginner','intermediate','advanced']).default('beginner'),
+	classType: varchar({ length: 100 }),
+	goals: text(),
+	motivation: text(),
+	allergies: text(),
+	medicalConditions: text(),
+	emergencyContactName: varchar({ length: 255 }),
+	emergencyContactPhone: varchar({ length: 20 }),
+	selectedMembershipPlan: varchar({ length: 100 }),
+	pricingNotes: text(),
+	waiverSigned: int().default(0).notNull(),
+	waiverSignature: text(),
+	waiverSignedAt: timestamp({ mode: 'string' }),
+	consentGiven: int().default(0).notNull(),
+	conversationId: int(),
+	conversationTranscript: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	submittedAt: timestamp({ mode: 'string' }),
+});
+
+export const featureFlags = mysqlTable("feature_flags", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	featureName: varchar({ length: 100 }).notNull(),
+	enabled: int().default(0).notNull(),
+	config: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("unique_org_feature").on(table.organizationId, table.featureName),
+]);
+
+export const floorPlanSpots = mysqlTable("floor_plan_spots", {
+	id: int().autoincrement().notNull(),
+	floorPlanId: int().notNull(),
+	spotNumber: int().notNull(),
+	spotLabel: varchar({ length: 50 }).notNull(),
+	positionX: int(),
+	positionY: int(),
+	rowIdentifier: varchar({ length: 10 }),
+	columnIdentifier: varchar({ length: 10 }),
+	isAvailable: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	spotType: mysqlEnum(['bag','mat','rank_position']).default('rank_position').notNull(),
+},
+(table) => [
+	index("idx_floor_plan").on(table.floorPlanId),
+]);
+
+export const floorPlans = mysqlTable("floor_plans", {
+	id: int().autoincrement().notNull(),
+	roomName: varchar({ length: 255 }).notNull(),
+	locationId: int(),
+	lengthFeet: int(),
+	widthFeet: int(),
+	squareFeet: int(),
+	safetySpacingFeet: int().default(3).notNull(),
+	templateType: mysqlEnum(['kickboxing_bags','yoga_grid','karate_lines']).notNull(),
+	matRotation: mysqlEnum(['horizontal','vertical']).default('horizontal'),
+	maxCapacity: int().notNull(),
+	isActive: int().default(1).notNull(),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const kaiConversations = mysqlTable("kai_conversations", {
+	id: int().autoincrement().notNull(),
+	userId: int().notNull(),
+	title: varchar({ length: 500 }).default('New Conversation').notNull(),
+	preview: text(),
+	threadType: mysqlEnum(['kai_direct','group']).default('kai_direct').notNull(),
+	status: mysqlEnum(['active','archived']).default('active').notNull(),
+	category: mysqlEnum(['kai','growth','billing','operations','general']).default('kai').notNull(),
+	priority: mysqlEnum(['neutral','attention','urgent']).default('neutral').notNull(),
+	lastMessageAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	deletedAt: timestamp({ mode: 'string' }),
+	archivedAt: timestamp({ mode: 'string' }),
+	participantIds: text(),
+});
+
+export const kaiMessages = mysqlTable("kai_messages", {
+	id: int().autoincrement().notNull(),
+	conversationId: int().notNull(),
+	role: mysqlEnum(['user','assistant','system']).notNull(),
+	content: text().notNull(),
+	metadata: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	attachments: text(),
+});
+
+export const leadActivities = mysqlTable("lead_activities", {
+	id: int().autoincrement().notNull(),
+	leadId: int().notNull(),
+	type: mysqlEnum(['call','email','sms','note','status_change','meeting','task']).notNull(),
+	title: varchar({ length: 255 }),
+	content: text(),
+	previousStatus: varchar({ length: 100 }),
+	newStatus: varchar({ length: 100 }),
+	callDuration: int(),
+	callOutcome: mysqlEnum(['answered','voicemail','no_answer','busy','wrong_number']),
+	isAutomated: int().default(0).notNull(),
+	createdById: int(),
+	createdByName: varchar({ length: 255 }),
+	metadata: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const leadScoringRules = mysqlTable("lead_scoring_rules", {
+	id: int().autoincrement().notNull(),
+	activityType: varchar({ length: 100 }).notNull(),
+	points: int().notNull(),
+	description: varchar({ length: 255 }),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("lead_scoring_rules_activityType_unique").on(table.activityType),
+]);
+
+export const leads = mysqlTable("leads", {
+	id: int().autoincrement().notNull(),
+	firstName: varchar({ length: 100 }).notNull(),
+	lastName: varchar({ length: 100 }).notNull(),
+	email: varchar({ length: 320 }),
+	phone: varchar({ length: 20 }),
+	stage: mysqlEnum(['new','contacted','appointment_set','trial_scheduled','trial_completed','proposal_sent','negotiation','won','lost']).default('new').notNull(),
+	source: varchar({ length: 100 }),
+	interestedProgram: varchar({ length: 100 }),
+	notes: text(),
+	assignedTo: int(),
+	lastContactDate: timestamp({ mode: 'string' }),
+	nextFollowUpDate: timestamp({ mode: 'string' }),
+	locationId: int(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	address: varchar({ length: 255 }),
+	city: varchar({ length: 100 }),
+	state: varchar({ length: 50 }),
+	zipCode: varchar({ length: 20 }),
+	lat: varchar({ length: 50 }),
+	lng: varchar({ length: 50 }),
+	status: mysqlEnum(['New Lead','Attempting Contact','Contact Made','Intro Scheduled','Offer Presented','Enrolled','Nurture','Lost/Winback']).default('New Lead').notNull(),
+	message: text(),
+	utmSource: varchar({ length: 255 }),
+	utmMedium: varchar({ length: 255 }),
+	utmCampaign: varchar({ length: 255 }),
+	utmContent: varchar({ length: 255 }),
+	utmTerm: varchar({ length: 255 }),
+	leadScore: int().default(50).notNull(),
+	leadScoreUpdatedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP'),
+	organizationId: int(),
+});
+
+export const locations = mysqlTable("locations", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 200 }).notNull(),
+	address: text(),
+	city: varchar({ length: 100 }),
+	state: varchar({ length: 50 }),
+	zipCode: varchar({ length: 20 }),
+	phone: varchar({ length: 20 }),
+	latitude: varchar({ length: 20 }),
+	longitude: varchar({ length: 20 }),
+	isActive: tinyint().default(1),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	kioskEnabled: int().default(0).notNull(),
+	kioskSlug: varchar({ length: 255 }),
+	kioskSettings: text(),
+	organizationId: int(),
+},
+(table) => [
+	index("idx_locations_kiosk_slug").on(table.kioskSlug),
+]);
+
+export const membershipPlans = mysqlTable("membership_plans", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	billingFrequency: mysqlEnum(['monthly','weekly','daily','drop_in']).default('monthly').notNull(),
+	priceAmount: int().default(0).notNull(),
+	billingInterval: int().default(1),
+	monthlyAmount: int().notNull(),
+	termLength: int(),
+	billingCycle: mysqlEnum(['monthly','biweekly','weekly','annual']).default('monthly').notNull(),
+	billingDays: varchar({ length: 50 }),
+	downPayment: int().default(0).notNull(),
+	registrationFee: int().default(0).notNull(),
+	autoRenew: int().default(1).notNull(),
+	cancellationPolicy: text(),
+	isPopular: int().default(0).notNull(),
+	sortOrder: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	billingAnchorDayOfWeek: int(),
+	termLengthUnits: mysqlEnum(['months','weeks','days','visits']),
+	termLengthValue: int(),
+	perVisitPrice: int(),
+	visitPackSize: int(),
+	visitPackExpiryDays: int(),
+	chargeOnAttendance: int().default(0),
+});
+
+export const merchandiseItems = mysqlTable("merchandise_items", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	type: mysqlEnum(['uniform','gear','belt','equipment','other']).notNull(),
+	defaultPrice: int().default(0).notNull(),
+	requiresSize: int().default(0).notNull(),
+	sizeOptions: text(),
+	description: text(),
+	imageUrl: varchar({ length: 500 }),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	stockQuantity: int(),
+	lowStockThreshold: int(),
+	reorderPoint: int(),
+	reorderQuantity: int(),
+	averageDailyUsage: varchar({ length: 20 }),
+	lastCalculatedAt: timestamp({ mode: 'string' }),
+	leadTimeDays: int().default(7),
+	safetyStockMultiplier: varchar({ length: 10 }).default('1.5'),
+});
+
+export const messageThreads = mysqlTable("message_threads", {
+	id: int().autoincrement().notNull(),
+	contextType: varchar({ length: 50 }).default('general').notNull(),
+	contextId: int(),
+	participants: text().notNull(),
+	subject: varchar({ length: 255 }),
+	lastMessageAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const messages = mysqlTable("messages", {
+	id: int().autoincrement().notNull(),
+	conversationId: int().notNull(),
+	role: mysqlEnum(['user','assistant']).notNull(),
+	content: text().notNull(),
+	attachments: json(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const onboardingProgress = mysqlTable("onboarding_progress", {
+	id: int().autoincrement().notNull(),
+	userId: int().notNull(),
+	currentStep: int().default(1).notNull(),
+	accountData: text(),
+	isVerified: int().default(0).notNull(),
+	schoolData: text(),
+	selectedPlanId: int(),
+	paymentCompleted: int().default(0).notNull(),
+	isCompleted: int().default(0).notNull(),
+	completedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("userId").on(table.userId),
+]);
+
+export const oneTimeFees = mysqlTable("one_time_fees", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	amount: int().notNull(),
+	feeType: mysqlEnum(['registration','down_payment','certification','testing','equipment','uniform','other']).notNull(),
+	chargeWhen: mysqlEnum(['signup','first_class','certification_event','testing_event','manual']).default('signup').notNull(),
+	applicableToPrograms: text(),
+	applicableToPlans: text(),
+	isRequired: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const organizationSubscriptions = mysqlTable("organization_subscriptions", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	planId: int().notNull(),
+	status: mysqlEnum(['trial','active','past_due','cancelled','paused']).default('trial').notNull(),
+	billingCycle: mysqlEnum(['monthly','annual']).default('monthly').notNull(),
+	currentPeriodStart: timestamp({ mode: 'string' }),
+	currentPeriodEnd: timestamp({ mode: 'string' }),
+	trialEndsAt: timestamp({ mode: 'string' }),
+	cancelledAt: timestamp({ mode: 'string' }),
+	cancellationReason: text(),
+	stripeSubscriptionId: varchar({ length: 255 }),
+	stripeCustomerId: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("organizationId").on(table.organizationId),
+]);
+
+export const organizationUsers = mysqlTable("organization_users", {
+	id: int().autoincrement().notNull(),
+	userId: int().notNull(),
+	organizationId: int().notNull(),
+	role: mysqlEnum(['owner','admin','staff','instructor','read_only']).default('staff').notNull(),
+	isPrimary: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const organizations = mysqlTable("organizations", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	address: varchar({ length: 500 }),
+	city: varchar({ length: 100 }),
+	state: varchar({ length: 50 }),
+	zipCode: varchar({ length: 20 }),
+	timezone: varchar({ length: 100 }).default('America/New_York').notNull(),
+	programs: text(),
+	estimatedStudents: int(),
+	launchDate: timestamp({ mode: 'string' }),
+	logoUrl: varchar({ length: 500 }),
+	planId: int(),
+	subscriptionStatus: mysqlEnum(['trial','active','past_due','cancelled','inactive']).default('trial').notNull(),
+	trialEndsAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	lastActivity: timestamp({ mode: 'string' }),
+	settings: text(),
+});
+
+export const planEntitlements = mysqlTable("plan_entitlements", {
+	id: int().autoincrement().notNull(),
+	planId: int().notNull(),
+	entitlementId: int().notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const platformOnboardingProgress = mysqlTable("platform_onboarding_progress", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	stepsCompleted: text(),
+	completed: int().default(0).notNull(),
+	lastStepAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("organizationId").on(table.organizationId),
+]);
+
+export const platformSubscriptions = mysqlTable("platform_subscriptions", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	plan: varchar({ length: 100 }).notNull(),
+	billingStatus: mysqlEnum(['active','past_due','canceled','unpaid','trialing']).default('trialing').notNull(),
+	stripeCustomerId: varchar({ length: 255 }),
+	stripeSubscriptionId: varchar({ length: 255 }),
+	currentPeriodStart: timestamp({ mode: 'string' }),
+	currentPeriodEnd: timestamp({ mode: 'string' }),
+	canceledAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("organizationId").on(table.organizationId),
+]);
+
+export const programEnrollments = mysqlTable("program_enrollments", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	programId: int().notNull(),
+	status: mysqlEnum(['pending_waiver','pending_payment','pending_approval','trial','active','expired','cancelled']).default('pending_waiver').notNull(),
+	enrollmentType: mysqlEnum(['paid','free_trial','prorated_trial','instructor_approval']).default('paid').notNull(),
+	trialStartDate: timestamp({ mode: 'string' }),
+	trialEndDate: timestamp({ mode: 'string' }),
+	trialLengthDays: int(),
+	amountPaid: int().default(0),
+	stripeSubscriptionId: varchar({ length: 255 }),
+	signedWaiverId: int(),
+	approvedBy: int(),
+	approvedAt: timestamp({ mode: 'string' }),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const programPlans = mysqlTable("program_plans", {
+	id: int().autoincrement().notNull(),
+	programId: int().notNull(),
+	planId: int().notNull(),
+	isDefault: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const programs = mysqlTable("programs", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	type: mysqlEnum(['membership','class_pack','drop_in','private']).notNull(),
+	ageRange: varchar({ length: 100 }),
+	billing: mysqlEnum(['monthly','weekly','per_session','one_time']),
+	price: int(),
+	contractLength: varchar({ length: 50 }),
+	maxSize: int().default(20),
+	isCoreProgram: int().default(0),
+	showOnKiosk: int().default(1),
+	allowAutopilot: int().default(0),
+	description: text(),
+	isActive: int().default(1).notNull(),
+	waiverRequired: int().default(1).notNull(),
+	paymentRequired: int().default(1).notNull(),
+	approvalRequired: int().default(0).notNull(),
+	trialType: mysqlEnum(['none','free','prorated']).default('none'),
+	trialLengthDays: int().default(7),
+	trialPrice: int().default(0),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	termLength: int(),
+	eligibility: mysqlEnum(['open','invitation_only','upgrade_only']).default('open').notNull(),
+	showOnEnrollment: int().default(1).notNull(),
+	sortOrder: int().default(0).notNull(),
+	organizationId: int(),
+});
+
+export const sessionSpotAssignments = mysqlTable("session_spot_assignments", {
+	id: int().autoincrement().notNull(),
+	sessionId: int().notNull(),
+	studentId: int().notNull(),
+	spotId: int().notNull(),
+	assignedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	assignmentMethod: mysqlEnum(['auto','manual','student_choice']).default('auto').notNull(),
+	attended: int().default(1).notNull(),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_session").on(table.sessionId),
+	index("idx_student").on(table.studentId),
+	index("idx_spot").on(table.spotId),
+]);
+
+export const signedWaivers = mysqlTable("signed_waivers", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	waiverTemplateId: int().notNull(),
+	programId: int(),
+	signerType: mysqlEnum(['student','guardian']).notNull(),
+	signerName: varchar({ length: 255 }).notNull(),
+	signerEmail: varchar({ length: 320 }),
+	signatureData: text().notNull(),
+	pdfUrl: varchar({ length: 500 }),
+	ipAddress: varchar({ length: 45 }),
+	userAgent: text(),
+	signedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const smsPreferences = mysqlTable("sms_preferences", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	optedIn: int().default(1).notNull(),
+	classReminders: int().default(1).notNull(),
+	billingReminders: int().default(1).notNull(),
+	promotionalMessages: int().default(0).notNull(),
+	reminderHoursBefore: int().default(24).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("sms_preferences_studentId_unique").on(table.studentId),
+]);
+
+export const staffMessages = mysqlTable("staff_messages", {
+	id: int().autoincrement().notNull(),
+	staffId: int().notNull(),
+	senderType: mysqlEnum(['staff','student','system']).notNull(),
+	senderId: int(),
+	senderName: varchar({ length: 255 }).notNull(),
+	subject: varchar({ length: 500 }),
+	content: text().notNull(),
+	isRead: int().default(0).notNull(),
+	parentMessageId: int(),
+	priority: mysqlEnum(['normal','high','urgent']).default('normal').notNull(),
+	readAt: timestamp({ mode: 'string' }),
+	attachments: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const staffPins = mysqlTable("staff_pins", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	pinHash: varchar({ length: 255 }).notNull(),
+	isActive: int().default(1).notNull(),
+	role: varchar({ length: 50 }).default('staff'),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	lastUsed: timestamp({ mode: 'string' }),
+	organizationId: int(),
+});
+
+export const stockAlerts = mysqlTable("stock_alerts", {
+	id: int().autoincrement().notNull(),
+	itemId: int().notNull(),
+	alertType: mysqlEnum(['low_stock','out_of_stock']).default('low_stock').notNull(),
+	quantityAtAlert: int().notNull(),
+	threshold: int().notNull(),
+	lastAlertSent: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	alertCount: int().default(1).notNull(),
+	isResolved: int().default(0).notNull(),
+	resolvedAt: timestamp({ mode: 'string' }),
+	resolvedBy: int(),
+	resolutionNotes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const stockUsageHistory = mysqlTable("stock_usage_history", {
+	id: int().autoincrement().notNull(),
+	itemId: int().notNull(),
+	quantityChange: int().notNull(),
+	changeType: mysqlEnum(['fulfillment','bulk_assignment','adjustment','received_shipment','inventory_count','damage','return','other']).notNull(),
+	quantityAfter: int().notNull(),
+	notes: text(),
+	changedBy: int(),
+	timestamp: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_itemId").on(table.itemId),
+	index("idx_timestamp").on(table.timestamp),
+]);
+
+export const studentAccounts = mysqlTable("student_accounts", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	email: varchar({ length: 320 }).notNull(),
+	passwordHash: varchar({ length: 255 }).notNull(),
+	resetToken: varchar({ length: 255 }),
+	resetTokenExpiry: timestamp({ mode: 'string' }),
+	isActive: int().default(1).notNull(),
+	lastLoginAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("student_accounts_studentId_unique").on(table.studentId),
+	index("student_accounts_email_unique").on(table.email),
+]);
+
+export const studentAttendance = mysqlTable("student_attendance", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	classId: int(),
+	className: varchar({ length: 255 }),
+	instructorName: varchar({ length: 255 }),
+	classDate: timestamp({ mode: 'string' }).notNull(),
+	status: mysqlEnum(['attended','missed','excused','upcoming']).default('upcoming').notNull(),
+	isQualified: int().default(1).notNull(),
+	checkedInAt: timestamp({ mode: 'string' }),
+	location: varchar({ length: 255 }),
+	beltRequirement: varchar({ length: 50 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const studentDocuments = mysqlTable("student_documents", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	documentType: mysqlEnum(['waiver','receipt','certificate','medical','other']).notNull(),
+	title: varchar({ length: 255 }).notNull(),
+	description: text(),
+	fileUrl: varchar({ length: 500 }).notNull(),
+	mimeType: varchar({ length: 100 }),
+	fileSize: int(),
+	isImmutable: int().default(0).notNull(),
+	relatedType: varchar({ length: 50 }),
+	relatedId: int(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const studentEnrollments = mysqlTable("student_enrollments", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	programId: int().notNull(),
+	planId: int().notNull(),
+	entitlementId: int(),
+	status: mysqlEnum(['active','paused','cancelled','completed']).default('active').notNull(),
+	startDate: timestamp({ mode: 'string' }).notNull(),
+	endDate: timestamp({ mode: 'string' }),
+	nextBillingDate: timestamp({ mode: 'string' }),
+	appliedDiscounts: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const studentMerchandise = mysqlTable("student_merchandise", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	itemId: int().notNull(),
+	size: varchar({ length: 20 }),
+	pricePaid: int().default(0).notNull(),
+	fulfillmentStatus: mysqlEnum(['pending','handed_out','confirmed','disputed']).default('pending').notNull(),
+	handedOutAt: timestamp({ mode: 'string' }),
+	handedOutBy: int(),
+	confirmedAt: timestamp({ mode: 'string' }),
+	confirmationMethod: mysqlEnum(['sms','email','in_person']),
+	confirmationToken: varchar({ length: 255 }),
+	confirmationTokenExpiry: timestamp({ mode: 'string' }),
+	disputeReason: text(),
+	disputedAt: timestamp({ mode: 'string' }),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_student").on(table.studentId),
+	index("idx_item").on(table.itemId),
+	index("idx_status").on(table.fulfillmentStatus),
+]);
+
+export const studentMessageAttachments = mysqlTable("student_message_attachments", {
+	id: int().autoincrement().notNull(),
+	messageId: int().notNull(),
+	fileName: varchar({ length: 255 }).notNull(),
+	fileUrl: varchar({ length: 500 }).notNull(),
+	mimeType: varchar({ length: 100 }),
+	fileSize: int(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const studentMessages = mysqlTable("student_messages", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	senderType: mysqlEnum(['student','staff']).notNull(),
+	senderId: int().notNull(),
+	senderName: varchar({ length: 255 }).notNull(),
+	subject: varchar({ length: 500 }),
+	content: text().notNull(),
+	isRead: int().default(0).notNull(),
+	parentMessageId: int(),
+	priority: mysqlEnum(['normal','high','urgent']).default('normal').notNull(),
+	readAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const studentNotes = mysqlTable("student_notes", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	noteType: varchar({ length: 20 }).default('note').notNull(),
+	createdBy: int(),
+	createdByName: varchar({ length: 255 }),
+	content: text(),
+	threadId: int(),
+	messageId: int(),
+	isPinned: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const studentPasswordResetTokens = mysqlTable("student_password_reset_tokens", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	token: varchar({ length: 255 }).notNull(),
+	expiresAt: timestamp({ mode: 'string' }).notNull(),
+	used: int().default(0).notNull(),
+	usedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("student_password_reset_tokens_token_unique").on(table.token),
+]);
+
+export const studentPasswords = mysqlTable("student_passwords", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	passwordHash: varchar({ length: 255 }).notNull(),
+	lastChangedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("student_passwords_studentId_unique").on(table.studentId),
+]);
+
+export const students = mysqlTable("students", {
+	id: int().autoincrement().notNull(),
+	firstName: varchar({ length: 255 }).notNull(),
+	lastName: varchar({ length: 255 }).notNull(),
+	email: varchar({ length: 320 }),
+	phone: varchar({ length: 20 }),
+	dateOfBirth: timestamp({ mode: 'string' }),
+	age: int(),
+	beltRank: varchar({ length: 100 }),
+	status: mysqlEnum(['Active','Inactive','On Hold']).default('Active').notNull(),
+	membershipStatus: varchar({ length: 100 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	photoUrl: varchar({ length: 500 }),
+	program: varchar({ length: 100 }),
+	streetAddress: varchar({ length: 255 }),
+	city: varchar({ length: 100 }),
+	state: varchar({ length: 50 }),
+	zipCode: varchar({ length: 20 }),
+	latitude: varchar({ length: 20 }),
+	longitude: varchar({ length: 20 }),
+	guardianName: varchar({ length: 255 }),
+	guardianRelationship: varchar({ length: 50 }),
+	guardianPhone: varchar({ length: 20 }),
+	guardianEmail: varchar({ length: 320 }),
+	organizationId: int(),
+});
+
+export const subscriptionPlans = mysqlTable("subscription_plans", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	slug: varchar({ length: 100 }).notNull(),
+	monthlyPrice: int().notNull(),
+	annualPrice: int(),
+	maxStudents: int().notNull(),
+	maxLocations: int().notNull(),
+	monthlyCredits: int().notNull(),
+	features: text().notNull(),
+	aiPhoneEnabled: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	displayOrder: int().default(0).notNull(),
+	stripeProductId: varchar({ length: 255 }),
+	stripePriceId: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("name").on(table.name),
+	index("slug").on(table.slug),
+]);
+
+export const teamMembers = mysqlTable("team_members", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	role: mysqlEnum(['owner','manager','instructor','front_desk','coach','trainer','assistant']).notNull(),
+	email: varchar({ length: 320 }),
+	phone: varchar({ length: 20 }),
+	locationIds: text(),
+	addressAs: varchar({ length: 255 }),
+	focusAreas: text(),
+	canViewFinancials: int().default(0),
+	canEditSchedule: int().default(0),
+	canManageLeads: int().default(0),
+	viewOnly: int().default(1),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	photoUrl: varchar({ length: 500 }),
+	organizationId: int(),
+});
+
+export const threadParticipants = mysqlTable("thread_participants", {
+	id: int().autoincrement().notNull(),
+	conversationId: int().notNull(),
+	participantType: mysqlEnum(['staff','student','system']).notNull(),
+	participantId: int(),
+	participantName: varchar({ length: 255 }).notNull(),
+	role: mysqlEnum(['owner','member','viewer']).default('member').notNull(),
+	addedById: int(),
+	addedByName: varchar({ length: 255 }),
+	isActive: int().default(1).notNull(),
+	lastReadMessageId: int(),
+	lastReadAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const unreadMessageCounts = mysqlTable("unread_message_counts", {
+	id: int().autoincrement().notNull(),
+	userId: int().notNull(),
+	userType: varchar({ length: 20 }).notNull(),
+	threadId: int().notNull(),
+	unreadCount: int().default(0).notNull(),
+	lastReadMessageId: int(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const usageEvents = mysqlTable("usage_events", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	type: mysqlEnum(['kai_call','sms','email','ai_action','phone_call']).notNull(),
+	quantity: int().default(1).notNull(),
+	metadata: text(),
+	userId: int(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_org_created").on(table.organizationId, table.createdAt),
+	index("idx_type").on(table.type),
+]);
+
+export const users = mysqlTable("users", {
+	id: int().autoincrement().notNull(),
+	openId: varchar({ length: 64 }),
+	provider: varchar({ length: 64 }),
+	providerId: varchar({ length: 255 }),
+	name: text(),
+	email: varchar({ length: 320 }),
+	password: varchar({ length: 255 }),
+	resetToken: varchar({ length: 255 }),
+	resetTokenExpiry: timestamp({ mode: 'string' }),
+	loginMethod: varchar({ length: 64 }),
+	role: mysqlEnum(['user','admin','owner','staff']).default('user').notNull(),
+	globalRole: mysqlEnum(['platform_admin','support','none']).default('none').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	lastSignedIn: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	displayName: varchar({ length: 255 }),
+	preferredName: varchar({ length: 255 }),
+	phone: varchar({ length: 20 }),
+	bio: varchar({ length: 160 }),
+	photoUrl: varchar({ length: 500 }),
+	photoUrlSmall: varchar({ length: 500 }),
+	staffId: varchar({ length: 50 }),
+	locationIds: text(),
+},
+(table) => [
+	index("idx_users_openId").on(table.openId),
+]);
+
+export const verificationCodes = mysqlTable("verification_codes", {
+	id: int().autoincrement().notNull(),
+	identifier: varchar({ length: 320 }).notNull(),
+	code: varchar({ length: 6 }).notNull(),
+	type: mysqlEnum(['email','sms','login']).default('email').notNull(),
+	expiresAt: timestamp({ mode: 'string' }).notNull(),
+	isUsed: int().default(0).notNull(),
+	attempts: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const waiverTemplates = mysqlTable("waiver_templates", {
+	id: int().autoincrement().notNull(),
+	programId: int(),
+	title: varchar({ length: 255 }).notNull(),
+	content: text().notNull(),
+	version: int().default(1).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+
+// Billing Application Tables
+export const billingApplications = mysqlTable("billing_applications", {
+	id: int().autoincrement().notNull(),
+	userId: int(),
+	provider: varchar({ length: 50 }),
+	status: mysqlEnum(['draft','submitted','approved','rejected']).default('draft').notNull(),
+	businessName: varchar({ length: 255 }),
+	dbaName: varchar({ length: 255 }),
+	businessAddress: text(),
+	businessPhone: varchar({ length: 20 }),
+	ownerName: varchar({ length: 255 }),
+	ownerCell: varchar({ length: 20 }),
+	managerName: varchar({ length: 255 }),
+	managerCell: varchar({ length: 20 }),
+	hoursOfOperation: varchar({ length: 255 }),
+	daysOfOperation: varchar({ length: 255 }),
+	estimatedMonthlyVolume: int(),
+	specialInstructions: text(),
+	submittedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_billing_applications_user").on(table.userId),
+]);
+
+export const billingDocuments = mysqlTable("billing_documents", {
+	id: int().autoincrement().notNull(),
+	applicationId: int().notNull(),
+	documentType: mysqlEnum(['drivers_license','voided_check','state_ein','address_verification','bank_letter']).notNull(),
+	s3Key: varchar({ length: 500 }).notNull(),
+	s3Url: varchar({ length: 500 }).notNull(),
+	fileName: varchar({ length: 255 }),
+	fileSize: int(),
+	mimeType: varchar({ length: 100 }),
+	verified: int().default(0).notNull(),
+	verifiedBy: int(),
+	verifiedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_billing_documents_application").on(table.applicationId),
+]);
+
+export const paymentMethods = mysqlTable("payment_methods", {
+	id: int().autoincrement().notNull(),
+	userId: int(),
+	studentId: int(),
+	type: mysqlEnum(['card','bank_account','cash','check']).default('card').notNull(),
+	provider: varchar({ length: 50 }),
+	last4: varchar({ length: 4 }),
+	brand: varchar({ length: 50 }),
+	expiryMonth: int(),
+	expiryYear: int(),
+	isDefault: int().default(0).notNull(),
+	stripePaymentMethodId: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_payment_methods_user").on(table.userId),
+	index("idx_payment_methods_student").on(table.studentId),
+]);
+
+export const billingTransactions = mysqlTable("billing_transactions", {
+	id: int().autoincrement().notNull(),
+	userId: int(),
+	studentId: int(),
+	paymentMethodId: int(),
+	amount: int().notNull(),
+	currency: varchar({ length: 3 }).default('USD').notNull(),
+	status: mysqlEnum(['pending','completed','failed','refunded']).default('pending').notNull(),
+	type: mysqlEnum(['payment','refund','adjustment']).default('payment').notNull(),
+	description: text(),
+	stripePaymentIntentId: varchar({ length: 255 }),
+	metadata: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_billing_transactions_user").on(table.userId),
+	index("idx_billing_transactions_student").on(table.studentId),
+]);
+
+
+// Webhook Keys Table
+export const webhookKeys = mysqlTable("webhook_keys", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	apiKey: varchar({ length: 255 }).notNull(),
+	isActive: int().default(1).notNull(),
+	lastUsedAt: timestamp({ mode: 'string' }),
+	usageCount: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_webhook_keys_api_key").on(table.apiKey),
+]);
+
+
+// Campaigns Tables
+export const campaigns = mysqlTable("campaigns", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	type: mysqlEnum(['email','sms','push']).default('email').notNull(),
+	status: mysqlEnum(['draft','scheduled','active','paused','completed']).default('draft').notNull(),
+	subject: varchar({ length: 255 }),
+	content: text(),
+	scheduledAt: timestamp({ mode: 'string' }),
+	sentAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const campaignRecipients = mysqlTable("campaign_recipients", {
+	id: int().autoincrement().notNull(),
+	campaignId: int().notNull(),
+	recipientType: mysqlEnum(['lead','student']).notNull(),
+	recipientId: int().notNull(),
+	status: mysqlEnum(['pending','sent','delivered','opened','clicked','bounced','failed']).default('pending').notNull(),
+	sentAt: timestamp({ mode: 'string' }),
+	openedAt: timestamp({ mode: 'string' }),
+	clickedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_campaign_recipients_campaign").on(table.campaignId),
+]);
+
+// Automation Templates
+export const automationTemplates = mysqlTable("automation_templates", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	category: varchar({ length: 100 }),
+	isActive: int().default(1).notNull(),
+	config: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+export const automationStepExecutions = mysqlTable("automation_step_executions", {
+	id: int().autoincrement().notNull(),
+	enrollmentId: int().notNull(),
+	stepId: int().notNull(),
+	status: mysqlEnum(['pending','completed','failed','skipped']).default('pending').notNull(),
+	executedAt: timestamp({ mode: 'string' }),
+	result: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_automation_step_executions_enrollment").on(table.enrollmentId),
+]);
+
+// Kiosk Tables
+export const kioskCheckIns = mysqlTable("kiosk_check_ins", {
+	id: int().autoincrement().notNull(),
+	studentId: int(),
+	visitorId: int(),
+	checkInType: mysqlEnum(['student','visitor','trial']).default('student').notNull(),
+	checkInTime: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	checkOutTime: timestamp({ mode: 'string' }),
+	classSessionId: int(),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_kiosk_check_ins_student").on(table.studentId),
+]);
+
+export const kioskVisitors = mysqlTable("kiosk_visitors", {
+	id: int().autoincrement().notNull(),
+	firstName: varchar({ length: 255 }).notNull(),
+	lastName: varchar({ length: 255 }).notNull(),
+	email: varchar({ length: 320 }),
+	phone: varchar({ length: 20 }),
+	visitPurpose: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+});
+
+export const kioskWaivers = mysqlTable("kiosk_waivers", {
+	id: int().autoincrement().notNull(),
+	visitorId: int(),
+	studentId: int(),
+	waiverTemplateId: int().notNull(),
+	signatureData: text(),
+	signedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	ipAddress: varchar({ length: 45 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_kiosk_waivers_visitor").on(table.visitorId),
+	index("idx_kiosk_waivers_student").on(table.studentId),
+]);
+
+export const kiosk_locations = mysqlTable("kiosk_locations", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	locationId: int(),
+	isActive: int().default(1).notNull(),
+	settings: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+// Lead Sources
+export const leadSources = mysqlTable("lead_sources", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	type: varchar({ length: 100 }),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+// Message Templates
+export const messageTemplates = mysqlTable("message_templates", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	type: mysqlEnum(['email','sms']).default('email').notNull(),
+	subject: varchar({ length: 255 }),
+	content: text().notNull(),
+	variables: text(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+});
+
+// Attendance Table (alias for studentAttendance)
+export const attendance = mysqlTable("attendance", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	classSessionId: int(),
+	status: mysqlEnum(['present','absent','late','excused']).default('present').notNull(),
+	checkInTime: timestamp({ mode: 'string' }),
+	checkOutTime: timestamp({ mode: 'string' }),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_attendance_student").on(table.studentId),
+	index("idx_attendance_session").on(table.classSessionId),
+]);
+
+// Type exports for insert operations
+export type InsertStaffPin = typeof staffPins.$inferInsert;
+export type InsertStudentMessage = typeof studentMessages.$inferInsert;
+export type InsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;

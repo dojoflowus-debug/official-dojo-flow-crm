@@ -210,14 +210,17 @@ export async function handleSubscriptionRenewed(subscription: Stripe.Subscriptio
     throw new Error('Plan not found');
   }
 
-  // Update subscription period
-  await db.update(organizationSubscriptions)
-    .set({
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      updatedAt: new Date(),
-    })
-    .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
+  // Update subscription period - get period from first subscription item
+  const subscriptionItem = subscription.items.data[0];
+  if (subscriptionItem) {
+    await db.update(organizationSubscriptions)
+      .set({
+        currentPeriodStart: new Date(subscriptionItem.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscriptionItem.current_period_end * 1000),
+        updatedAt: new Date(),
+      })
+      .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
+  }
 
   // Allocate monthly credits
   await allocateMonthlyCredits(orgSub.organizationId, plan.monthlyCredits);

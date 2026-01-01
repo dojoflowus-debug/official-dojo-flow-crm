@@ -2950,3 +2950,33 @@ Transform the basic "Credit Transaction History" page into a comprehensive "Cred
 - [x] Add loading states if needed
 - [x] Test performance improvement
 
+
+## 🔧 Schema Synchronization Fix (2025-12-31)
+
+### Issue
+- [x] Server failing to start due to missing schema exports
+- [x] Multiple tables referenced in code but not defined in schema
+
+### Fixed
+- [x] Added tinyint import to schema.ts
+- [x] Added billingApplications table
+- [x] Added billingDocuments table
+- [x] Added paymentMethods table
+- [x] Added billingTransactions table
+- [x] Added webhookKeys table
+- [x] Added campaigns table
+- [x] Added campaignRecipients table
+- [x] Added automationTemplates table
+- [x] Added automationStepExecutions table
+- [x] Added kioskCheckIns table
+- [x] Added kioskVisitors table
+- [x] Added kioskWaivers table
+- [x] Added kiosk_locations table
+- [x] Added leadSources table
+- [x] Added messageTemplates table
+- [x] Added attendance table
+- [x] Added type exports (InsertStaffPin, InsertStudentMessage, InsertUser, User)
+- [x] Fixed Stripe subscription type access (current_period_end via subscription items)
+- [x] Server now starts successfully
+- [x] Tests passing: 348 passed, 91 failed (mostly env/config related)
+
