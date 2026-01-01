@@ -13,6 +13,10 @@ import PhoneInput from '../components/PhoneInput'
 import StudentModal from '../components/StudentModal'
 import AddStudentModal from '../components/AddStudentModal'
 import NotesDrawer from '../components/NotesDrawer'
+import CommandStudentCard from '../components/CommandStudentCard'
+import NeedsAttentionSection from '../components/NeedsAttentionSection'
+import CommandStatusBar from '../components/CommandStatusBar'
+import MapStatsOverlay from '../components/MapStatsOverlay'
 import Breadcrumb, { BreadcrumbItem } from '../components/Breadcrumb'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -94,6 +98,13 @@ interface Student {
   guardian_relationship?: string
   guardian_phone?: string
   guardian_email?: string
+  // Command center fields
+  days_since_last_class?: number
+  days_since_contact?: number
+  intro_scheduled?: string
+  missed_classes?: number
+  is_at_risk?: boolean
+  is_trial?: boolean
 }
 
 interface Stats {
@@ -860,9 +871,18 @@ export default function StudentsSplitScreen() {
                 className="w-full h-full absolute inset-0"
               />
               
+              {/* Map Stats Overlay - Shows student counts by status */}
+              <MapStatsOverlay
+                activeCount={stats?.active_students || activeCount}
+                trialCount={students.filter(s => s.membership_status === 'Trial').length}
+                atRiskCount={students.filter(s => s.status?.toLowerCase() === 'on hold' || s.membership_status === 'Overdue').length}
+                isDarkMode={isDarkMode}
+                showDensity={true}
+              />
+              
               {/* Floating Search/Filters - Full Map Mode Only */}
               {viewMode === 'fullMap' && (
-                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
                   <div className={`flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm ${
                     isDarkMode ? 'bg-[#1C1C1E]/90 border border-white/10' : 'bg-white/90 border border-slate-200'
                   }`}>
@@ -995,7 +1015,36 @@ export default function StudentsSplitScreen() {
             </div>
 
             {/* Student Cards Scroll Area */}
-            <div className="flex-1 overflow-y-auto mt-4 pr-1 space-y-3">
+            <div className="flex-1 overflow-y-auto mt-4 pr-1 space-y-4">
+              {/* Needs Attention Section */}
+              <NeedsAttentionSection
+                students={filteredStudents.map(s => ({
+                  ...s,
+                  // Mock data for demo - in production this would come from backend
+                  days_since_last_class: Math.floor(Math.random() * 10),
+                  days_since_contact: Math.floor(Math.random() * 7),
+                  missed_classes: Math.floor(Math.random() * 6),
+                  is_at_risk: s.status?.toLowerCase() === 'on hold' || s.membership_status === 'Overdue',
+                  is_trial: s.membership_status === 'Trial',
+                  intro_scheduled: s.status?.toLowerCase() === 'trial' ? new Date().toISOString() : undefined
+                }))}
+                isDarkMode={isDarkMode}
+                onStudentClick={(student) => {
+                  setSelectedStudent(student as Student)
+                  setHighlightedStudentId(student.id)
+                  setIsModalOpen(true)
+                }}
+                onCall={(student) => {
+                  toast.info(`Calling ${student.first_name}...`)
+                }}
+                onSMS={(student) => {
+                  toast.info(`Opening SMS to ${student.first_name}...`)
+                }}
+                onEmail={(student) => {
+                  toast.info(`Opening email to ${student.first_name}...`)
+                }}
+              />
+              
               {filteredStudents.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 mx-auto text-slate-300 mb-4" />
@@ -1004,15 +1053,33 @@ export default function StudentsSplitScreen() {
               ) : (
                 filteredStudents.map((student) => (
                   <div key={student.id} id={`student-card-${student.id}`}>
-                    <StudentCard
-                      student={student}
+                    <CommandStudentCard
+                      student={{
+                        ...student,
+                        // Mock data for demo
+                        days_since_last_class: Math.floor(Math.random() * 10),
+                        days_since_contact: Math.floor(Math.random() * 7),
+                        missed_classes: Math.floor(Math.random() * 6),
+                        is_at_risk: student.status?.toLowerCase() === 'on hold' || student.membership_status === 'Overdue',
+                        is_trial: student.membership_status === 'Trial',
+                        intro_scheduled: student.status?.toLowerCase() === 'trial' ? new Date().toISOString() : undefined
+                      }}
                       isHighlighted={highlightedStudentId === student.id}
-                      schoolLogo={schoolLogo}
                       isDarkMode={isDarkMode}
+                      showActions={true}
                       onClick={() => {
                         setSelectedStudent(student)
                         setHighlightedStudentId(student.id)
                         setIsModalOpen(true)
+                      }}
+                      onCall={(s) => {
+                        toast.info(`Calling ${s.first_name}...`)
+                      }}
+                      onSMS={(s) => {
+                        toast.info(`Opening SMS to ${s.first_name}...`)
+                      }}
+                      onEmail={(s) => {
+                        toast.info(`Opening email to ${s.first_name}...`)
                       }}
                     />
                   </div>
