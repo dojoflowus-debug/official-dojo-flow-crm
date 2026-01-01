@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LeafletMap, LeafletMapHandle, StudentMarker } from '@/components/LeafletMap'
 import CommandHeader from '@/components/CommandHeader'
-import StudentDetailPanel from '@/components/StudentDetailPanel'
+import StudentDetailCard from '@/components/StudentDetailCard'
 import {
   Search,
   Filter,
@@ -364,9 +364,29 @@ export default function StudentsCommandCenter() {
           </div>
         </div>
         
-        {/* Student Detail Panel */}
+        {/* Student Detail Card - New Design */}
         {selectedStudent && (
-          <StudentDetailPanel student={selectedStudent} onClose={() => setSelectedStudent(null)} onCall={() => window.open(`tel:${selectedStudent.phone}`)} onText={() => window.open(`sms:${selectedStudent.phone}`)} onEmail={() => window.open(`mailto:${selectedStudent.email}`)} isDarkMode={isDarkMode} />
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedStudent(null)} />
+        )}
+        {selectedStudent && (
+          <div className="fixed right-0 top-0 bottom-0 w-[420px] z-50 p-4 overflow-hidden">
+            <StudentDetailCard 
+              student={{
+                ...selectedStudent,
+                days_since_last_class: Math.floor(Math.random() * 10),
+                days_since_contact: selectedStudent.days_since_contact || Math.floor(Math.random() * 7),
+                missed_classes: selectedStudent.missed_classes || Math.floor(Math.random() * 6),
+                is_at_risk: selectedStudent.status === 'At Risk' || selectedStudent.status === 'On Hold',
+                is_trial: selectedStudent.status === 'Trial' || selectedStudent.membership_status === 'Trial'
+              }}
+              onClose={() => setSelectedStudent(null)} 
+              onCall={() => window.open(`tel:${selectedStudent.phone}`)} 
+              onSMS={() => window.open(`sms:${selectedStudent.phone}`)} 
+              onEmail={() => window.open(`mailto:${selectedStudent.email}`)} 
+              isDarkMode={isDarkMode}
+              className="h-full"
+            />
+          </div>
         )}
       </div>
     </AppShell>

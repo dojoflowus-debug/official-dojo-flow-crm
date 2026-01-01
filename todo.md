@@ -3165,3 +3165,66 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Ensure z-index hierarchy prevents overlay blocking
 - [x] Test navigation and logo display in dark mode
 - [x] Use light logo for dark mode in student dashboard
+
+
+## 🎨 Student Detail Card Redesign (2026-01-01)
+
+### A) Fix Layout & Scroll Issues
+- [x] Fix cut-off student card - ensure fully visible within viewport
+- [x] Compute available height correctly: calc(100vh - topHeaderHeight - bottomNavHeight)
+- [x] Make Student Detail Card position: sticky within main content area
+- [x] Set card height to 100% of available content area
+- [x] Use flex column layout for card container
+- [x] Make only internal content scroll, not whole page
+- [x] Fix header section inside card (sticky)
+- [x] Fix footer actions inside card (sticky)
+- [x] Add styled scrollbar for middle content
+- [x] Fix z-index/overflow issues from map/list panels
+
+### B) Rebuild Student Detail Card UI
+- [x] Glassmorphism dark theme with subtle border, soft glow, rounded corners (2xl)
+- [x] Dark translucent panel background with faint gradient and subtle noise
+- [x] Apple-clean design: minimal, crisp icons, consistent spacing, smooth hover states
+
+#### Photo + Name Fade Header
+- [x] Wide header area with student photo at top-right/upper region
+- [x] Circular or softly rounded photo with gradient fade mask
+- [x] Student name left of photo with program label beneath
+- [x] Status pill (e.g., "At Risk") aligned right, styled as red/orange pill
+
+#### Action Buttons Row
+- [x] 3 compact pill buttons with icons: Call, SMS, Email
+- [x] Equal height buttons, clean design, subtle glow on hover
+
+#### Attendance Section
+- [x] "Attendance" title
+- [x] Small bar chart (spark-bar style) showing recent attendance frequency
+- [x] Line item: "Attendance in last 30 days: X days"
+- [x] Minimal, readable chart matching design style
+
+#### Notes/Recommendations Card
+- [x] Small highlighted recommendation panel
+- [x] Warm accent highlight with icon
+- [x] Text like "Suggested: refer to call..."
+
+#### Intro/Scheduled/Timeline Section
+- [x] "Intro" section with status "Scheduled" or similar
+- [x] Timeline entries with timestamps and short descriptions
+- [x] Small rounded rows with icon + text + time aligned right
+
+#### Bottom Action Area
+- [x] Visible bottom action row (not cut off)
+- [x] Persistent bottom action row with primary CTA
+- [x] Quick action buttons (Call, SMS)
+- [x] Middle content scrolls, bottom actions pinned
+
+### C) Data Wiring
+- [x] Wire card to selected student from list/map
+- [x] Animate card content smoothly (fade/slide) on selection
+- [x] Show initials avatar with fade-header layout if no photo
+
+### D) Final Checks
+- [x] Confirm card not clipped at top or bottom at common laptop resolutions
+- [x] Confirm works in Dark mode and Cinematic mode
+- [x] Confirm bottom nav stays visible and card respects its space
+

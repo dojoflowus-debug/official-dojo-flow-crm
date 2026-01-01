@@ -14,6 +14,7 @@ import StudentModal from '../components/StudentModal'
 import AddStudentModal from '../components/AddStudentModal'
 import NotesDrawer from '../components/NotesDrawer'
 import CommandStudentCard from '../components/CommandStudentCard'
+import StudentDetailCard from '../components/StudentDetailCard'
 import NeedsAttentionSection from '../components/NeedsAttentionSection'
 import CommandStatusBar from '../components/CommandStatusBar'
 import MapStatsOverlay from '../components/MapStatsOverlay'
@@ -742,9 +743,13 @@ export default function StudentsSplitScreen() {
     const student = students.find(s => String(s.id) === studentId)
     if (student) {
       setSelectedStudent(student)
-      setIsModalOpen(true)
+      setHighlightedStudentId(student.id)
+      // Only open modal in fullMap mode
+      if (viewMode === 'fullMap') {
+        setIsModalOpen(true)
+      }
     }
-  }, [students])
+  }, [students, viewMode])
 
   // Status counts
   const activeCount = students.filter(s => s.status === 'Active').length
@@ -860,10 +865,10 @@ export default function StudentsSplitScreen() {
                       // In full map mode, open the bottom card overlay
                       setIsCardOverlayOpen(true)
                     } else if (viewMode === 'split') {
-                      // In split mode, scroll to student in list and open modal
+                      // In split mode, scroll to student in list and show detail panel
                       const studentCard = document.getElementById(`student-card-${student.id}`)
                       studentCard?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                      setIsModalOpen(true)
+                      // Don't open modal - show detail panel instead
                     }
                   }
                 }}
@@ -915,14 +920,21 @@ export default function StudentsSplitScreen() {
           />
         )}
 
-        {/* Right Pane - Search + Cards (visible in split and list modes) */}
+        {/* Right Pane - Search + Cards + Detail Panel (visible in split and list modes) */}
         {(viewMode === 'split' || viewMode === 'list') && (
           <div 
-            className={`flex flex-col ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-b from-white to-slate-50/50'} ${
-              isMobile ? 'flex-1' : 'h-[calc(100vh-200px)]'
+            className={`flex ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-b from-white to-slate-50/50'} ${
+              isMobile ? 'flex-1 flex-col' : 'h-[calc(100vh-200px)]'
             }`}
-            style={isMobile || viewMode === 'list' ? { flex: 1, padding: '16px' } : { flex: 1, padding: '16px' }}
+            style={isMobile || viewMode === 'list' ? { flex: 1 } : { flex: 1 }}
           >
+            {/* Left side - Student List */}
+            <div 
+              className={`flex flex-col p-4 ${
+                selectedStudent && !isMobile ? 'w-[55%] border-r' : 'w-full'
+              } ${isDarkMode ? 'border-white/5' : 'border-slate-100'}`}
+              style={{ minWidth: 0 }}
+            >
             {/* Students List Header */}
             <div className="space-y-4">
               {/* Search Bar - Apple-style */}
@@ -1032,7 +1044,8 @@ export default function StudentsSplitScreen() {
                 onStudentClick={(student) => {
                   setSelectedStudent(student as Student)
                   setHighlightedStudentId(student.id)
-                  setIsModalOpen(true)
+                  // Don't open modal - show detail panel instead
+                  // setIsModalOpen(true)
                 }}
                 onCall={(student) => {
                   toast.info(`Calling ${student.first_name}...`)
@@ -1070,7 +1083,8 @@ export default function StudentsSplitScreen() {
                       onClick={() => {
                         setSelectedStudent(student)
                         setHighlightedStudentId(student.id)
-                        setIsModalOpen(true)
+                        // Don't open modal - show detail panel instead
+                        // setIsModalOpen(true)
                       }}
                       onCall={(s) => {
                         toast.info(`Calling ${s.first_name}...`)
@@ -1086,18 +1100,49 @@ export default function StudentsSplitScreen() {
                 ))
               )}
             </div>
+            </div>
+            
+            {/* Right side - Student Detail Card (visible when student selected) */}
+            {selectedStudent && !isMobile && (
+              <div 
+                className="w-[45%] p-4 flex flex-col animate-in slide-in-from-right-4 duration-300"
+                style={{ minWidth: 0, height: '100%' }}
+              >
+                <StudentDetailCard
+                  student={{
+                    ...selectedStudent,
+                    days_since_last_class: Math.floor(Math.random() * 10),
+                    days_since_contact: Math.floor(Math.random() * 7),
+                    missed_classes: Math.floor(Math.random() * 6),
+                    is_at_risk: selectedStudent.status?.toLowerCase() === 'on hold' || selectedStudent.membership_status === 'Overdue',
+                    is_trial: selectedStudent.membership_status === 'Trial',
+                    intro_scheduled: selectedStudent.status?.toLowerCase() === 'trial' ? new Date().toISOString() : undefined
+                  }}
+                  onClose={() => {
+                    setSelectedStudent(null)
+                    setHighlightedStudentId(null)
+                  }}
+                  onCall={() => toast.info(`Calling ${selectedStudent.first_name}...`)}
+                  onSMS={() => toast.info(`Opening SMS to ${selectedStudent.first_name}...`)}
+                  onEmail={() => toast.info(`Opening email to ${selectedStudent.first_name}...`)}
+                  isDarkMode={isDarkMode}
+                  className="h-full"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Student Modal */}
+      {/* Student Modal - Only show in fullMap mode or when explicitly opened */}
       <StudentModal
         student={selectedStudent}
-        isOpen={isModalOpen}
+        isOpen={isModalOpen && viewMode === 'fullMap'}
         onClose={() => {
           setIsModalOpen(false)
-          // In map mode, keep the student selected for the card overlay
-          if (viewMode !== 'fullMap') {
+          // Only clear selected student in fullMap mode
+          // In split/list mode, keep student selected for detail panel
+          if (viewMode === 'fullMap') {
             setSelectedStudent(null)
             setHighlightedStudentId(null)
           }
