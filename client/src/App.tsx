@@ -41,6 +41,7 @@ import KaiCommand from "./pages/KaiCommand";
 import CRMDashboard from "./pages/CRMDashboard";
 import StudentsNew from "./pages/StudentsNew";
 import StudentsSplitScreen from "./pages/StudentsSplitScreen";
+import StudentsCommandCenter from "./pages/StudentsCommandCenter";
 import StudentPortal from "./pages/StudentPortal";
 import Leads from "./pages/Leads";
 import TestData from "./pages/TestData";
@@ -200,7 +201,8 @@ function Router() {
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
 
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
-      <Route path="/students" element={<StudentsSplitScreen />} />
+      <Route path="/students" element={<StudentsCommandCenter />} />
+      <Route path="/students-split" element={<StudentsSplitScreen />} />
       <Route path="/students-old" element={<StudentsNew />} />
       <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />
       <Route path="/leads" element={<Leads />} />
