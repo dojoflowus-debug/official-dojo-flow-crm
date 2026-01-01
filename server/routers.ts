@@ -374,7 +374,7 @@ export const appRouter = router({
   onboarding: onboardingRouter,
   kaiOnboarding: kaiOnboardingRouter,
   subscription: subscriptionRouter,
-  credit: creditRouter,
+  credits: creditRouter,
   
   // File upload for attachments
   upload: router({

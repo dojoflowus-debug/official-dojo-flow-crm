@@ -2937,3 +2937,16 @@ Transform the basic "Credit Transaction History" page into a comprehensive "Cred
   - Plans: 5 minutes staleTime (rarely change)
   - Transactions: 30s staleTime
 - [x] Test page load performance
+
+## 🐛 BUG: Slow Loading on Credit Page
+
+### Issue
+- [x] Credit page is loading very slowly
+- [x] Need to investigate and optimize
+
+### Tasks
+- [x] Identify slow queries or components
+- [x] Optimize database queries
+- [x] Add loading states if needed
+- [x] Test performance improvement
+

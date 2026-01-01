@@ -105,10 +105,11 @@ const CreditTransactions = () => {
     }
   }, [dateRange]);
 
-  // Fetch credit balance
+  // Fetch credit balance - use staleTime for instant subsequent loads
   const { data: creditBalance, isLoading: balanceLoading, isError: balanceError } = trpc.credits.getBalance.useQuery(undefined, {
     refetchInterval: 60000,
     retry: false,
+    staleTime: 30000, // Cache for 30 seconds - prevents loading state on navigation
   });
 
   // Fetch subscription data
@@ -254,12 +255,12 @@ const CreditTransactions = () => {
     return allPlans.filter((plan) => plan.monthlyCredits > (subscription.plan?.monthlyCredits || 0));
   }, [allPlans, subscription]);
 
-  // Only show loading briefly, then show content with whatever data we have
-  // Don't block on errors
-  const isLoading = balanceLoading && !balanceError;
+  // Show skeleton only very briefly - don't block on any query
+  // Use staleTime and caching to make subsequent loads instant
+  const isInitialLoad = balanceLoading && !creditBalance && !balanceError;
 
   // Loading skeleton
-  if (isLoading) {
+  if (isInitialLoad) {
     return (
       <BottomNavLayout>
         <div className="p-6">
