@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StudentBottomNav from "@/components/StudentBottomNav";
 import { Button } from "@/components/ui/button";
 import { APP_LOGO } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -389,7 +390,7 @@ export default function StudentBeltTests() {
     .map((r: any) => r.registration.testId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 pb-20">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -637,6 +638,9 @@ export default function StudentBeltTests() {
       {showSuccess && (
         <SuccessModal onClose={() => setShowSuccess(false)} />
       )}
+
+      {/* Bottom Navigation */}
+      <StudentBottomNav />
     </div>
   );
 }

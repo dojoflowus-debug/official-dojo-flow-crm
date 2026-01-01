@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import StudentBottomNav from "@/components/StudentBottomNav";
 import { Button } from "@/components/ui/button";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { 
@@ -416,7 +417,7 @@ export default function StudentSchedule() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] overflow-hidden">
+    <div className="min-h-screen bg-[#0A0E1A] overflow-hidden pb-20">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0A0E1A] via-[#111827] to-[#0A0E1A]" />
@@ -734,6 +735,9 @@ export default function StudentSchedule() {
           )}
         </main>
       </div>
+
+      {/* Bottom Navigation */}
+      <StudentBottomNav />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StudentBottomNav from "@/components/StudentBottomNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,7 +103,7 @@ export default function StudentSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -350,6 +351,9 @@ export default function StudentSettings() {
           </SoftCard>
         </div>
       </main>
+
+      {/* Bottom Navigation */}
+      <StudentBottomNav />
     </div>
   );
 }

@@ -3089,3 +3089,28 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Check students page query
 - [x] Identify discrepancy in counting logic
 - [x] Fix the count to match actual students
+
+## 🐛 BUG: Missing Lower Menu Bar on Student Page
+
+- [ ] Investigate missing lower menu bar on student page
+- [ ] Fix the issue
+- [ ] Verify the fix
+
+
+## 🐛 BUG: Missing Lower Menu Bar on Student Pages
+
+### Issue
+- [x] User reported the permanent navigation bar was removed from student pages
+- [x] Student pages (Dashboard, Schedule, Messages, Payments, etc.) had no bottom navigation
+
+### Fix Applied
+- [x] Created StudentBottomNav component with navigation items: Home, Schedule, Belt Tests, Messages, Payments, Profile
+- [x] Added StudentBottomNav to StudentDashboard.tsx
+- [x] Added StudentBottomNav to StudentSchedule.tsx
+- [x] Added StudentBottomNav to StudentMessages.tsx
+- [x] Added StudentBottomNav to StudentPayments.tsx
+- [x] Added StudentBottomNav to StudentBeltTests.tsx
+- [x] Added StudentBottomNav to StudentSettings.tsx
+- [x] Added StudentBottomNav to StudentProfile.tsx
+- [x] Added StudentBottomNav to StudentPortal.tsx
+- [x] Added pb-20 padding to all student pages to prevent content from being hidden behind the nav bar

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import StudentBottomNav from "@/components/StudentBottomNav";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -136,7 +137,7 @@ export default function StudentPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1115] text-white">
+    <div className="min-h-screen bg-[#0F1115] text-white pb-20">
       {/* Header */}
       <div className="border-b border-white/10 bg-[#18181A]">
         <div className="container py-6">
@@ -540,6 +541,9 @@ export default function StudentPortal() {
           </Tabs>
         )}
       </div>
+
+      {/* Bottom Navigation */}
+      <StudentBottomNav />
     </div>
   );
 }

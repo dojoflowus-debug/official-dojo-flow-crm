@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StudentBottomNav from "@/components/StudentBottomNav";
 import { Button } from "@/components/ui/button";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -318,7 +319,7 @@ export default function StudentDashboard() {
   const nextClass = enrolledClasses && enrolledClasses.length > 0 ? enrolledClasses[0] : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 pb-20">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -634,6 +635,9 @@ export default function StudentDashboard() {
           </Button>
         </div>
       </main>
+
+      {/* Bottom Navigation */}
+      <StudentBottomNav />
     </div>
   );
 }
