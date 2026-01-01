@@ -3114,3 +3114,31 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Added StudentBottomNav to StudentProfile.tsx
 - [x] Added StudentBottomNav to StudentPortal.tsx
 - [x] Added pb-20 padding to all student pages to prevent content from being hidden behind the nav bar
+
+
+## 🔧 FIX: Missing Bottom Navigation Bar Across App
+
+### Issue
+- [x] Bottom Navigation Bar not visible on Students page
+- [x] BottomNav disappears due to page layouts, maps, or scroll containers
+- [x] Content overlaps with BottomNav area
+
+### Requirements
+- [x] Implement GLOBAL BottomNav component always visible on every page
+- [x] Position: fixed at bottom of viewport, full width, z-index >= 9999
+- [x] Reserve space for BottomNav with padding-bottom
+- [x] Define --bottom-nav-height: 72px CSS variable
+- [x] Students page: keep split layout (map left, student list right)
+- [x] Students page: scroll behavior inside right list panel only
+- [x] Leaflet/Map: offset controls and attribution above BottomNav
+- [x] Maintain Apple-like styling: glassmorphism, clean icons, subtle borders
+
+### Implementation Tasks
+- [x] Create global AppShell component with fixed BottomNav
+- [x] Update App.tsx to wrap admin routes with AppShell
+- [x] Update StudentsCommandCenter layout for proper scrolling
+- [x] Add CSS variables for bottom nav height
+- [x] Add Leaflet CSS overrides for control positioning
+- [x] Test BottomNav visibility on all pages
+- [ ] Save checkpoint
+

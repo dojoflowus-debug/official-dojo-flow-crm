@@ -151,6 +151,10 @@
 :root {
   --radius: 1rem;
   
+  /* Bottom Navigation Height */
+  --bottom-nav-height: 72px;
+  --header-height: 72px;
+  
   /* DojoFlow Light Mode - Vibrant Lemon Squeezy-inspired */
   /* Background: Soft warm off-white */
   --background: oklch(0.98 0.005 80); /* #FDFCFB warm white */
@@ -1588,4 +1592,96 @@ body.kai-open .scroll-indicator {
 
 .master-dashboard ::-webkit-scrollbar-thumb:hover {
   background: oklch(1 0 0 / 0.25);
+}
+
+
+/* ============================================
+   AppShell & Bottom Navigation Global Styles
+   ============================================ */
+
+/* Ensure AppShell takes full height */
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+}
+
+/* Bottom nav safe area for content */
+.app-shell-content {
+  padding-bottom: calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ============================================
+   Leaflet Map Overrides for Bottom Navigation
+   ============================================ */
+
+/* Students page specific map container - controls stay within map bounds */
+.students-map-container .leaflet-container {
+  height: 100%;
+}
+
+/* Move Leaflet attribution up within the map container */
+.students-map-container .leaflet-control-attribution {
+  position: absolute !important;
+  bottom: 90px !important;
+  right: 0 !important;
+  background: rgba(0,0,0,0.6) !important;
+  color: rgba(255,255,255,0.7) !important;
+  padding: 2px 8px !important;
+  border-radius: 4px 0 0 0 !important;
+  font-size: 10px !important;
+}
+
+.students-map-container .leaflet-control-attribution a {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+/* Move bottom-left controls (legend) - handled inline in component */
+.students-map-container .leaflet-bottom.leaflet-left {
+  bottom: 90px !important;
+}
+
+/* Move bottom-right controls */
+.students-map-container .leaflet-bottom.leaflet-right {
+  bottom: 90px !important;
+}
+
+/* For pages using AppShell - ensure map controls don't overlap bottom nav */
+.app-shell .leaflet-control-attribution {
+  bottom: 8px !important;
+}
+
+.app-shell .leaflet-bottom {
+  bottom: 8px !important;
+}
+
+/* ============================================
+   Split Layout Styles for Students Page
+   ============================================ */
+
+.split-layout {
+  display: flex;
+  height: calc(100vh - var(--header-height, 72px) - var(--bottom-nav-height, 72px) - env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+}
+
+.split-layout-map {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.split-layout-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Focus Pulse Animation for Focus Mode Button */
+@keyframes focusPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(229,57,53,0.4), 0 0 40px rgba(229,57,53,0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(229,57,53,0.6), 0 0 60px rgba(229,57,53,0.3);
+  }
 }

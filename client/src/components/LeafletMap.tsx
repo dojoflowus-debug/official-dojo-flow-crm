@@ -11,27 +11,32 @@ L.Icon.Default.mergeOptions({
 });
 
 export interface StudentMarker {
-  id: string;
+  id: string | number;
   name: string;
   initials: string;
   lat: number;
   lng: number;
-  status: 'active' | 'inactive' | 'on-hold';
+  status: 'active' | 'inactive' | 'on-hold' | 'Active' | 'Inactive' | 'On Hold' | 'Trial' | 'At Risk';
   photoUrl?: string;
   beltRank?: string;
+  isPulsing?: boolean;
+  isHighlighted?: boolean;
 }
 
 export interface LeafletMapHandle {
   invalidateSize: () => void;
-  panToStudent: (studentId: string, paddingBottom?: number) => void;
+  panToStudent: (studentId: string | number, paddingBottom?: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
   getMap: () => L.Map | null;
 }
 
 interface LeafletMapProps {
   markers?: StudentMarker[];
-  selectedStudentId?: string | null;
-  onMarkerClick?: (studentId: string) => void;
+  selectedStudentId?: string | number | null;
+  onMarkerClick?: (studentId: string | number) => void;
   isDarkMode?: boolean;
+  darkMode?: boolean; // alias for isDarkMode
   className?: string;
   paddingBottom?: number;
 }
@@ -47,10 +52,13 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
   markers = [],
   selectedStudentId,
   onMarkerClick,
-  isDarkMode = false,
+  isDarkMode: isDarkModeProp = false,
+  darkMode: darkModeProp = false,
   className = '',
   paddingBottom = 0,
 }, ref) => {
+  // Support both isDarkMode and darkMode props
+  const isDarkMode = isDarkModeProp || darkModeProp;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -69,9 +77,9 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
         mapRef.current.invalidateSize();
       }
     },
-    panToStudent: (studentId: string, padding: number = 0) => {
+    panToStudent: (studentId: string | number, padding: number = 0) => {
       if (!mapRef.current) return;
-      const student = markersDataRef.current.find(m => m.id === studentId);
+      const student = markersDataRef.current.find(m => String(m.id) === String(studentId));
       if (student) {
         // Calculate the offset to keep marker visible above bottom card
         const map = mapRef.current;
@@ -93,6 +101,16 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
             duration: 0.5,
           });
         }
+      }
+    },
+    zoomIn: () => {
+      if (mapRef.current) {
+        mapRef.current.zoomIn();
+      }
+    },
+    zoomOut: () => {
+      if (mapRef.current) {
+        mapRef.current.zoomOut();
       }
     },
     getMap: () => mapRef.current,
@@ -157,14 +175,19 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
     const bounds = L.latLngBounds([]);
 
     markers.forEach((student) => {
-      const isSelected = student.id === selectedStudentId;
+      const isSelected = String(student.id) === String(selectedStudentId);
       
-      // Get status color
-      const statusColor = student.status === 'active' 
+      // Get status color - handle both lowercase and capitalized status values
+      const normalizedStatus = student.status?.toLowerCase().replace(' ', '-');
+      const statusColor = (normalizedStatus === 'active' || student.status === 'Active')
         ? '#22c55e' 
-        : student.status === 'on-hold' 
+        : (normalizedStatus === 'on-hold' || student.status === 'On Hold')
           ? '#eab308' 
-          : '#ef4444';
+          : (normalizedStatus === 'trial' || student.status === 'Trial')
+            ? '#eab308'
+            : (normalizedStatus === 'at-risk' || student.status === 'At Risk')
+              ? '#ef4444'
+              : '#ef4444';
 
       // Create custom icon
       const iconSize = isSelected ? 44 : 36;
@@ -260,7 +283,7 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
   useEffect(() => {
     if (!mapRef.current || !selectedStudentId) return;
 
-    const selectedMarker = markers.find(m => m.id === selectedStudentId);
+    const selectedMarker = markers.find(m => String(m.id) === String(selectedStudentId));
     if (selectedMarker) {
       const map = mapRef.current;
       const targetLatLng = L.latLng(selectedMarker.lat, selectedMarker.lng);
