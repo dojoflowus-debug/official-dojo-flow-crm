@@ -25,7 +25,7 @@ export const navBadgesRouter = router({
   getActionableCounts: protectedProcedure
     .input(z.object({
       locationId: z.string().optional(), // For multi-location support
-    }))
+    }).optional())
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
       const userRole = ctx.user.role;

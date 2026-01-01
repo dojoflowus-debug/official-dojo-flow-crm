@@ -20,9 +20,16 @@ export const creditRouter = router({
    * Get current credit balance for the organization
    */
   getBalance: protectedProcedure.query(async ({ ctx }) => {
-    const organizationId = ctx.user.organizationId;
+    const organizationId = ctx.currentOrganizationId;
     if (!organizationId) {
-      throw new Error("No organization found for user");
+      // Return empty balance for users without an organization (new accounts)
+      return {
+        creditsRemaining: 0,
+        totalCredits: 0,
+        usedCredits: 0,
+        warningLevel: 'none' as const,
+        thresholds: CREDIT_THRESHOLDS,
+      };
     }
 
     const balance = await getCreditBalance(organizationId);
@@ -53,9 +60,17 @@ export const creditRouter = router({
       operationType: z.enum(['kai_chat', 'sms', 'email', 'phone_call', 'voice_synthesis', 'image_generation']).optional(),
     }))
     .query(async ({ input, ctx }) => {
-      const organizationId = ctx.user.organizationId;
+      const organizationId = ctx.currentOrganizationId;
       if (!organizationId) {
-        throw new Error("No organization found for user");
+        // Return insufficient balance for users without an organization
+        return {
+          sufficient: false,
+          currentBalance: 0,
+          requiredCredits: input.requiredCredits,
+          remainingAfter: -input.requiredCredits,
+          message: 'No organization found. Please complete your account setup.',
+          operationType: input.operationType,
+        };
       }
 
       const result = await checkSufficientBalance(organizationId, input.requiredCredits);
@@ -81,9 +96,9 @@ export const creditRouter = router({
       metadata: z.record(z.any()).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const organizationId = ctx.user.organizationId;
+      const organizationId = ctx.currentOrganizationId;
       if (!organizationId) {
-        throw new Error("No organization found for user");
+        throw new Error("No organization found. Please complete your account setup.");
       }
 
       const result = await deductCredits({

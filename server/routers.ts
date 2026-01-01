@@ -1869,7 +1869,7 @@ export const appRouter = router({
         lastName: z.string().optional(),
         email: z.string().email().optional().nullable(),
         phone: z.string().optional().nullable(),
-        dateOfBirth: z.date().optional().nullable(),
+        dateOfBirth: z.string().optional().nullable(), // Accept string date from frontend
         age: z.number().optional().nullable(),
         beltRank: z.string().optional().nullable(),
         status: z.string().optional(),
@@ -1904,7 +1904,12 @@ export const appRouter = router({
         const cleanedData: Record<string, any> = {};
         for (const [key, value] of Object.entries(updateData)) {
           if (value !== undefined) {
-            cleanedData[key] = value;
+            // Convert dateOfBirth string to Date object
+            if (key === 'dateOfBirth' && value) {
+              cleanedData[key] = new Date(value as string);
+            } else {
+              cleanedData[key] = value;
+            }
           }
         }
         

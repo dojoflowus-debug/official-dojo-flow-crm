@@ -3433,3 +3433,19 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Modal now opens with student data pre-filled for editing
 - [x] After save, students list is refreshed and modal/detail card close
 
+
+
+## 🐛 BUG: dateOfBirth Type Validation and Organization Lookup Errors on /students-old
+
+### Issue
+- [x] dateOfBirth was being sent as Date object instead of string, causing validation error
+- [x] Organization lookup was failing for users without organization
+- [x] navBadges.getActionableCounts was expecting object input but receiving undefined
+
+### Fix Applied
+- [x] Changed students.update input schema to accept string for dateOfBirth instead of Date
+- [x] Added dateOfBirth string-to-Date conversion in update mutation handler
+- [x] Updated StudentsNew.tsx to send dateOfBirth as string instead of Date object
+- [x] Fixed creditRouter to use ctx.currentOrganizationId instead of ctx.user.organizationId
+- [x] Made creditRouter return empty/default values for users without organization (graceful handling)
+- [x] Made navBadges.getActionableCounts input schema optional to handle undefined input
