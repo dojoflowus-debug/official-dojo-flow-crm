@@ -3140,5 +3140,27 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Add CSS variables for bottom nav height
 - [x] Add Leaflet CSS overrides for control positioning
 - [x] Test BottomNav visibility on all pages
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 19f615b6)
 
+
+## 🐛 BUG: Students Page Header Issues
+
+### Issue
+- [x] DojoFlow logo appears incorrect/clipped in top navigation
+- [x] Dashboard navigation link is not clickable on Students page
+
+### Requirements
+- [x] Ensure logo renders only once using global AppShell top bar
+- [x] Fix logo container layout (height 32-36px, display:flex, align-items:center, overflow:visible)
+- [x] Fix theme-based logo variant selection (dark/light mode)
+- [x] Make Dashboard navigation link clickable (proper Link component)
+- [x] Resolve click-blocking overlays on top navigation
+- [x] Set AppShell top nav with proper z-index and pointer-events
+
+### Fix Tasks
+- [x] Investigate AppShell and Students page header implementation
+- [x] Remove duplicate logo/header rendering from Students page
+- [x] Fix logo container CSS
+- [x] Fix Dashboard link to use proper navigation
+- [x] Ensure z-index hierarchy prevents overlay blocking
+- [x] Test navigation and logo display in dark mode
