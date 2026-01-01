@@ -48,7 +48,10 @@ import {
   X,
   User,
   Camera,
-  Upload
+  Upload,
+  Users,
+  UserPlus,
+  ArrowRight
 } from 'lucide-react'
 
 export default function Students({ onLogout, theme, toggleTheme }) {
@@ -675,7 +678,42 @@ export default function Students({ onLogout, theme, toggleTheme }) {
             <CardTitle>All Students ({filteredStudents.length})</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Empty State */}
+            {filteredStudents.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="relative mb-6">
+                  <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="h-12 w-12 text-primary/60" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                    <Plus className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">No students yet</h3>
+                <p className="text-muted-foreground text-center max-w-md mb-6">
+                  Add your first student to start tracking attendance, engagement, and progress. Build your dojo roster today!
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button 
+                    className="bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Your First Student
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.location.href = '/leads'}
+                  >
+                    Import from Leads
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Desktop Table View */}
+            {filteredStudents.length > 0 && (
             <div className="hidden xl:block overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -780,8 +818,10 @@ export default function Students({ onLogout, theme, toggleTheme }) {
                 </tbody>
               </table>
             </div>
+            )}
 
             {/* Tablet/Mobile Card View */}
+            {filteredStudents.length > 0 && (
             <div className="xl:hidden space-y-4">
               {filteredStudents.map((student) => (
                 <div key={student.id} className="border border-border rounded-lg p-4 hover:bg-accent/50 transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] cursor-pointer">
@@ -877,8 +917,21 @@ export default function Students({ onLogout, theme, toggleTheme }) {
                 </div>
               ))}
             </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-20 right-4 sm:bottom-8 sm:right-8 z-50">
+          <Button
+            size="lg"
+            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
+            onClick={() => setShowAddModal(true)}
+            title="Add Student"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
 
         {/* Add Student Modal */}
         <Dialog open={showAddModal} onOpenChange={setShowAddModal}>

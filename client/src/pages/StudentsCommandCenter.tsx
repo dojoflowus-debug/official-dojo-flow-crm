@@ -40,6 +40,9 @@ import {
   ZoomOut,
   Layers,
   Map,
+  Plus,
+  UserPlus,
+  ArrowRight,
 } from 'lucide-react'
 
 interface CommandStudent {
@@ -327,7 +330,37 @@ export default function StudentsCommandCenter() {
               {studentsLoading ? (
                 Array.from({ length: 8 }).map((_, i) => (<Skeleton key={i} className={cn("h-24 rounded-xl", isDarkMode ? "bg-white/5" : "bg-gray-100")} />))
               ) : filteredStudents.length === 0 ? (
-                <div className={cn("text-center py-12", isDarkMode ? "text-white/40" : "text-gray-400")}>No students found</div>
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+                  <div className="relative mb-6">
+                    <div className={cn("w-24 h-24 rounded-full flex items-center justify-center", isDarkMode ? "bg-red-500/10" : "bg-red-50")}>
+                      <Users className={cn("h-12 w-12", isDarkMode ? "text-red-400/60" : "text-red-400")} />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shadow-lg">
+                      <Plus className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+                  <h3 className={cn("text-xl font-semibold mb-2", isDarkMode ? "text-white" : "text-gray-900")}>No students yet</h3>
+                  <p className={cn("text-center max-w-md mb-6", isDarkMode ? "text-white/60" : "text-gray-500")}>
+                    Add your first student to start tracking attendance, engagement, and progress. Build your dojo roster today!
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      className="bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl transition-all"
+                      onClick={() => window.location.href = '/students-old'}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Your First Student
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className={isDarkMode ? "border-white/20 text-white hover:bg-white/10" : ""}
+                      onClick={() => window.location.href = '/leads'}
+                    >
+                      Import from Leads
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 filteredStudents.map(student => {
                   const statusColor = STATUS_COLORS[student.status] || STATUS_COLORS['Active']
@@ -364,6 +397,18 @@ export default function StudentsCommandCenter() {
           </div>
         </div>
         
+        {/* Floating Action Button */}
+        <div className="fixed z-40" style={{ bottom: 'calc(var(--bottomnav-h, 72px) + 16px)', right: '16px' }}>
+          <Button
+            size="lg"
+            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-105 active:scale-95"
+            onClick={() => window.location.href = '/students-old'}
+            title="Add Student"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+
         {/* Student Detail Card - Command Center Panel */}
         {selectedStudent && (
           <>
