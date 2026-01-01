@@ -3260,3 +3260,31 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 ### D) Verification
 - [x] Panel never cut off on typical laptop resolution
 - [x] All sections readable with proper scroll behavior
+
+
+## 🗺️ View on Map Button + Hero Photo Enhancement (2026-01-01)
+
+### A) Hero Photo Styling
+- [x] Increase profile photo to 96px (desktop) and 80px (mobile)
+- [x] Add soft shadow + faint border ring (glass style)
+- [x] Show large initials avatar at same size if no photo
+- [x] Preserve header gradient/fade integration
+
+### B) View on Map Button
+- [x] Add "View on Map" button in action row beside Call/SMS/Email
+- [x] Use map pin icon with secondary/neutral glass button style
+- [x] Add subtle glow on hover, brighter border on active
+
+### C) View on Map Behavior
+- [x] Switch to Split view if currently in List view (panel closes to show map)
+- [x] Animate map to student's coordinates using flyTo
+- [x] Apply temporary highlight to student's marker (pulse ring)
+- [x] Offset map center to keep marker visible under panel
+
+### D) Handle Missing Location
+- [x] Disable View on Map button if no lat/lng
+- [x] Show tooltip "Location not available"
+
+### E) Verification
+- [x] Confirm panel not clipped at laptop resolutions
+- [x] Confirm action row stays visible and doesn't wrap awkwardly

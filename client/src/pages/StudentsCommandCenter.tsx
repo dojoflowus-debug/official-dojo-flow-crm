@@ -386,6 +386,8 @@ export default function StudentsCommandCenter() {
               <StudentDetailCard 
                 student={{
                   ...selectedStudent,
+                  lat: selectedStudent.latitude ? parseFloat(selectedStudent.latitude) : undefined,
+                  lng: selectedStudent.longitude ? parseFloat(selectedStudent.longitude) : undefined,
                   days_since_last_class: Math.floor(Math.random() * 10),
                   days_since_contact: selectedStudent.days_since_contact || Math.floor(Math.random() * 7),
                   missed_classes: selectedStudent.missed_classes || Math.floor(Math.random() * 6),
@@ -395,7 +397,20 @@ export default function StudentsCommandCenter() {
                 onClose={() => setSelectedStudent(null)} 
                 onCall={() => window.open(`tel:${selectedStudent.phone}`)} 
                 onSMS={() => window.open(`sms:${selectedStudent.phone}`)} 
-                onEmail={() => window.open(`mailto:${selectedStudent.email}`)} 
+                onEmail={() => window.open(`mailto:${selectedStudent.email}`)}
+                onViewOnMap={() => {
+                  // Close the detail panel to show the map
+                  setSelectedStudent(null)
+                  // Fly to student on map with highlight effect
+                  setTimeout(() => {
+                    if (mapRef.current && selectedStudent.latitude && selectedStudent.longitude) {
+                      mapRef.current.flyToStudent(String(selectedStudent.id), {
+                        offsetLeft: 0, // No offset needed since panel closes
+                        highlight: true
+                      })
+                    }
+                  }, 100)
+                }}
                 isDarkMode={isDarkMode}
                 className="h-full"
               />

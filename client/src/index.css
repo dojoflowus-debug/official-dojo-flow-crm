@@ -102,6 +102,27 @@
   animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Map marker pulse ring animation */
+@keyframes mapPulseRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  animation: mapPulseRing 0.8s ease-out infinite;
+  transform-origin: center;
+}
+
 /* Radial gradient utility for Kai Command hero */
 .bg-gradient-radial {
   background-image: radial-gradient(circle, var(--tw-gradient-stops));

@@ -609,6 +609,14 @@ export default function StudentsSplitScreen() {
     }
   }
 
+  // Debug log for studentsData
+  console.log('[StudentsSplitScreen] studentsData:', studentsData ? 'loaded' : 'null', 'count:', studentsData?.length)
+  if (studentsData && studentsData.length > 0) {
+    console.log('[StudentsSplitScreen] First student keys:', Object.keys(studentsData[0]).join(', '))
+    console.log('[StudentsSplitScreen] First student latitude:', studentsData[0]?.latitude)
+    console.log('[StudentsSplitScreen] First student longitude:', studentsData[0]?.longitude)
+  }
+  
   // Update local state when data changes
   useEffect(() => {
     if (studentsData) {
@@ -1125,6 +1133,23 @@ export default function StudentsSplitScreen() {
                   onCall={() => toast.info(`Calling ${selectedStudent.first_name}...`)}
                   onSMS={() => toast.info(`Opening SMS to ${selectedStudent.first_name}...`)}
                   onEmail={() => toast.info(`Opening email to ${selectedStudent.first_name}...`)}
+                  onViewOnMap={() => {
+                    // If in list view, switch to split view to show map
+                    if (viewMode === 'list') {
+                      setViewMode('split')
+                    }
+                    // Fly to student on map with highlight effect
+                    // Use timeout to allow view mode switch to complete
+                    setTimeout(() => {
+                      if (mapRef.current && selectedStudent.lat && selectedStudent.lng) {
+                        // Offset left by ~22% to account for the right panel (45% of remaining space)
+                        mapRef.current.flyToStudent(String(selectedStudent.id), {
+                          offsetLeft: 22,
+                          highlight: true
+                        })
+                      }
+                    }, viewMode === 'list' ? 300 : 50)
+                  }}
                   isDarkMode={isDarkMode}
                   className="h-full"
                 />

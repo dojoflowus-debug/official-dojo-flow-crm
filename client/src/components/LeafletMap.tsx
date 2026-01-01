@@ -26,6 +26,7 @@ export interface StudentMarker {
 export interface LeafletMapHandle {
   invalidateSize: () => void;
   panToStudent: (studentId: string | number, paddingBottom?: number) => void;
+  flyToStudent: (studentId: string | number, options?: { offsetLeft?: number; highlight?: boolean }) => void;
   zoomIn: () => void;
   zoomOut: () => void;
   getMap: () => L.Map | null;
@@ -64,6 +65,7 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersDataRef = useRef<StudentMarker[]>([]);
+  const highlightLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Keep markers data in ref for imperative access
   useEffect(() => {
@@ -111,6 +113,83 @@ export const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(({
     zoomOut: () => {
       if (mapRef.current) {
         mapRef.current.zoomOut();
+      }
+    },
+    flyToStudent: (studentId: string | number, options?: { offsetLeft?: number; highlight?: boolean }) => {
+      if (!mapRef.current) return;
+      const student = markersDataRef.current.find(m => String(m.id) === String(studentId));
+      if (!student) return;
+      
+      const map = mapRef.current;
+      const targetLatLng = L.latLng(student.lat, student.lng);
+      const offsetLeft = options?.offsetLeft || 0;
+      
+      // Calculate offset center to account for right panel
+      // Shift the center left so the marker appears more centered in the visible area
+      const containerWidth = map.getContainer().offsetWidth;
+      const offsetPixels = offsetLeft > 0 ? -(containerWidth * (offsetLeft / 100) / 2) : 0;
+      
+      // Fly to with animation
+      map.flyTo(targetLatLng, 15, {
+        animate: true,
+        duration: 0.8,
+        easeLinearity: 0.25
+      });
+      
+      // Apply offset after flyTo completes
+      if (offsetPixels !== 0) {
+        setTimeout(() => {
+          if (mapRef.current) {
+            const currentCenter = mapRef.current.getCenter();
+            const point = mapRef.current.latLngToContainerPoint(currentCenter);
+            const offsetPoint = L.point(point.x + offsetPixels, point.y);
+            const newCenter = mapRef.current.containerPointToLatLng(offsetPoint);
+            mapRef.current.panTo(newCenter, { animate: true, duration: 0.3 });
+          }
+        }, 850);
+      }
+      
+      // Add highlight effect if requested
+      if (options?.highlight) {
+        // Clear any existing highlight
+        if (highlightLayerRef.current) {
+          highlightLayerRef.current.clearLayers();
+        } else {
+          highlightLayerRef.current = L.layerGroup().addTo(map);
+        }
+        
+        // Create pulsing ring effect
+        const pulseRing = L.circleMarker(targetLatLng, {
+          radius: 30,
+          color: '#E53935',
+          weight: 3,
+          opacity: 0.8,
+          fillColor: '#E53935',
+          fillOpacity: 0.15,
+          className: 'pulse-ring'
+        }).addTo(highlightLayerRef.current);
+        
+        // Animate the pulse
+        let pulseCount = 0;
+        const maxPulses = 3;
+        const pulseInterval = setInterval(() => {
+          pulseCount++;
+          if (pulseCount >= maxPulses) {
+            clearInterval(pulseInterval);
+            setTimeout(() => {
+              if (highlightLayerRef.current) {
+                highlightLayerRef.current.clearLayers();
+              }
+            }, 500);
+          }
+        }, 800);
+        
+        // Auto-remove highlight after 3 seconds
+        setTimeout(() => {
+          if (highlightLayerRef.current) {
+            highlightLayerRef.current.clearLayers();
+          }
+        }, 3000);
       }
     },
     getMap: () => mapRef.current,

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   X, 
   Phone, 
@@ -21,7 +22,8 @@ import {
   ListTodo,
   TrendingDown,
   TrendingUp,
-  Activity
+  Activity,
+  MapPin
 } from 'lucide-react'
 
 interface Student {
@@ -42,6 +44,8 @@ interface Student {
   missed_classes?: number
   is_at_risk?: boolean
   is_trial?: boolean
+  lat?: number
+  lng?: number
 }
 
 interface TimelineEntry {
@@ -60,6 +64,7 @@ interface StudentDetailCardProps {
   onCall: () => void
   onSMS: () => void
   onEmail: () => void
+  onViewOnMap?: () => void
   isDarkMode?: boolean
   className?: string
 }
@@ -183,9 +188,15 @@ export default function StudentDetailCard({
   onCall, 
   onSMS, 
   onEmail, 
+  onViewOnMap,
   isDarkMode = true,
   className 
 }: StudentDetailCardProps) {
+  // Check if student has valid location
+  const hasLocation = student.lat != null && student.lng != null && 
+    !isNaN(student.lat) && !isNaN(student.lng) &&
+    student.lat !== 0 && student.lng !== 0
+  
   const [insightsExpanded, setInsightsExpanded] = useState(true)
   const [timelineExpanded, setTimelineExpanded] = useState(true)
   
@@ -327,7 +338,7 @@ export default function StudentDetailCard({
               </div>
             </div>
             
-            {/* Right side - Photo with fade */}
+            {/* Right side - Hero Photo with glass styling */}
             <div className="relative flex-shrink-0">
               {student.photo_url ? (
                 <div className="relative">
@@ -335,29 +346,34 @@ export default function StudentDetailCard({
                     src={student.photo_url} 
                     alt={`${student.first_name} ${student.last_name}`}
                     className={cn(
-                      "w-20 h-20 rounded-2xl object-cover",
-                      "ring-2 ring-white/10"
+                      "w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover",
+                      "ring-2 ring-white/20",
+                      "shadow-xl shadow-black/30"
                     )}
                     style={{
-                      maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)'
+                      maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
                     }}
                   />
+                  {/* Glass overlay for integration */}
                   <div 
-                    className="absolute inset-0 rounded-2xl"
+                    className="absolute inset-0 rounded-2xl pointer-events-none"
                     style={{
                       background: isDarkMode 
-                        ? 'linear-gradient(135deg, transparent 50%, rgba(26,26,28,0.8) 100%)'
-                        : 'linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.8) 100%)'
+                        ? 'linear-gradient(135deg, transparent 60%, rgba(26,26,28,0.6) 100%)'
+                        : 'linear-gradient(135deg, transparent 60%, rgba(255,255,255,0.6) 100%)',
+                      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
                     }}
                   />
                 </div>
               ) : (
                 <div className={cn(
-                  "w-20 h-20 rounded-2xl flex items-center justify-center",
-                  "text-2xl font-bold",
+                  "w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center",
+                  "text-2xl sm:text-3xl font-bold",
+                  "ring-2 ring-white/10",
+                  "shadow-xl shadow-black/20",
                   isDarkMode 
-                    ? "bg-gradient-to-br from-white/10 to-white/5 text-white/60" 
+                    ? "bg-gradient-to-br from-white/15 to-white/5 text-white/70" 
                     : "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-400"
                 )}>
                   {student.first_name[0]}{student.last_name[0]}
@@ -427,6 +443,39 @@ export default function StudentDetailCard({
           <Mail className="h-4 w-4" />
           Email
         </Button>
+        {/* View on Map button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={hasLocation ? onViewOnMap : undefined}
+                disabled={!hasLocation}
+                className={cn(
+                  "flex-1 gap-1.5 h-9 rounded-xl font-medium text-sm transition-all",
+                  hasLocation ? (
+                    isDarkMode 
+                      ? "border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]" 
+                      : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                  ) : (
+                    isDarkMode
+                      ? "border-white/5 text-white/30 cursor-not-allowed"
+                      : "border-gray-100 text-gray-300 cursor-not-allowed"
+                  )
+                )}
+              >
+                <MapPin className="h-4 w-4" />
+                <span className="hidden sm:inline">Map</span>
+              </Button>
+            </TooltipTrigger>
+            {!hasLocation && (
+              <TooltipContent side="bottom">
+                <p>Location not available</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
         <Button 
           size="sm" 
           variant="outline"
