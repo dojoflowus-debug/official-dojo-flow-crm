@@ -3078,3 +3078,14 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Added MapStatsOverlay to map view
 - [x] Updated Student interface with command center fields
 
+
+## 🐛 BUG: Dashboard Student Count Mismatch
+
+### Issue
+- [x] Dashboard icons show different student count than actual students on student page
+
+### Investigation Tasks
+- [x] Check dashboard student count query
+- [x] Check students page query
+- [x] Identify discrepancy in counting logic
+- [x] Fix the count to match actual students

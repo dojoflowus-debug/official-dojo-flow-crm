@@ -234,7 +234,8 @@ export async function getDashboardStats(organizationId?: number | null) {
   const { eq, count, and } = await import("drizzle-orm");
   
   // Filter by organization for multi-tenancy
-  const studentCondition = and(eq(students.status, 'Active'), eq(students.organizationId, organizationId));
+  // Count ALL students for the organization (not just active) to match the Students page
+  const studentCondition = eq(students.organizationId, organizationId);
   const leadCondition = eq(leads.organizationId, organizationId);
   const classCondition = and(eq(classes.isActive, 1), eq(classes.organizationId, organizationId));
   

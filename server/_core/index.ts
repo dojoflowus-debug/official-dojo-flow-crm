@@ -692,13 +692,33 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { students } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const { parse: parseCookieHeader } = await import("cookie");
       
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ error: "Database not available" });
       }
       
-      const allStudents = await db.select().from(students);
+      // Get organization ID from session cookie for multi-tenancy
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // Filter by organization if available, otherwise return all (for backwards compatibility)
+      const allStudents = organizationId 
+        ? await db.select().from(students).where(eq(students.organizationId, organizationId))
+        : await db.select().from(students);
       
       // Transform to snake_case for frontend compatibility
       const transformedStudents = allStudents.map(s => ({
@@ -737,11 +757,44 @@ async function startServer() {
   
   app.get("/api/students/stats", async (req, res) => {
     try {
-      const { getDashboardStats } = await import("../db");
-      const stats = await getDashboardStats();
+      const { getDb } = await import("../db");
+      const { students } = await import("../../drizzle/schema");
+      const { eq, count, and } = await import("drizzle-orm");
+      const { parse: parseCookieHeader } = await import("cookie");
+      
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      // Get organization ID from session cookie for multi-tenancy
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      // Count ALL students for the organization (not just active)
+      const totalStudentsResult = organizationId
+        ? await db.select({ count: count() }).from(students).where(eq(students.organizationId, organizationId))
+        : await db.select({ count: count() }).from(students);
+      
+      // Count only active students for the organization
+      const activeStudentsResult = organizationId
+        ? await db.select({ count: count() }).from(students).where(and(eq(students.organizationId, organizationId), eq(students.status, 'Active')))
+        : await db.select({ count: count() }).from(students).where(eq(students.status, 'Active'));
+      
       res.json({
-        total_students: stats?.total_students || 0,
-        active_students: stats?.total_students || 0,
+        total_students: totalStudentsResult[0]?.count || 0,
+        active_students: activeStudentsResult[0]?.count || 0,
         overdue_payments: 0,
         new_this_month: 0
       });
