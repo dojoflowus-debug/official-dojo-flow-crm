@@ -11,11 +11,17 @@ import {
   Clock,
   AlertTriangle,
   Sparkles,
+  ChevronDown,
   ChevronUp,
   User,
   Bell,
   CheckCircle2,
-  XCircle
+  XCircle,
+  FileText,
+  ListTodo,
+  TrendingDown,
+  TrendingUp,
+  Activity
 } from 'lucide-react'
 
 interface Student {
@@ -40,11 +46,12 @@ interface Student {
 
 interface TimelineEntry {
   id: string
-  type: 'class' | 'call' | 'sms' | 'email' | 'note' | 'intro'
+  type: 'class' | 'call' | 'sms' | 'email' | 'note' | 'intro' | 'payment'
   title: string
   description?: string
   timestamp: Date
   icon?: any
+  group: 'today' | 'this_week' | 'earlier'
 }
 
 interface StudentDetailCardProps {
@@ -67,14 +74,13 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string; 
 }
 
 // Generate mock attendance data for the last 30 days
-function generateAttendanceData(): { day: string; attended: boolean; value: number }[] {
-  const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-  const data: { day: string; attended: boolean; value: number }[] = []
+function generateAttendanceData(): { day: number; attended: boolean; value: number }[] {
+  const data: { day: number; attended: boolean; value: number }[] = []
   
-  for (let i = 0; i < 7; i++) {
-    const attended = Math.random() > 0.3
+  for (let i = 0; i < 30; i++) {
+    const attended = Math.random() > 0.35
     data.push({
-      day: days[i],
+      day: i + 1,
       attended,
       value: attended ? Math.floor(Math.random() * 40) + 60 : Math.floor(Math.random() * 20)
     })
@@ -82,43 +88,93 @@ function generateAttendanceData(): { day: string; attended: boolean; value: numb
   return data
 }
 
-// Generate mock timeline entries
+// Generate mock timeline entries grouped by time
 function generateTimelineEntries(student: Student): TimelineEntry[] {
   const entries: TimelineEntry[] = []
   const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
   
-  // Add intro scheduled if exists
+  // Today entries
   if (student.intro_scheduled) {
     entries.push({
       id: 'intro-1',
       type: 'intro',
-      title: 'Intro class scheduled for today',
-      description: `Distributed Class, Rem: Jose S.`,
-      timestamp: new Date(student.intro_scheduled),
-      icon: Calendar
+      title: 'Intro class scheduled',
+      description: `Youth Program • Instructor: Jose S.`,
+      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+      icon: Calendar,
+      group: 'today'
     })
   }
   
-  // Add some mock entries
   entries.push({
     id: 'note-1',
     type: 'note',
-    title: 'Today',
-    description: `Specified refers in to call two today`,
-    timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-    icon: Sparkles
+    title: 'AI recommendation generated',
+    description: `Schedule follow-up call to discuss progress`,
+    timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000),
+    icon: Sparkles,
+    group: 'today'
+  })
+  
+  // This week entries
+  entries.push({
+    id: 'class-1',
+    type: 'class',
+    title: 'Attended class',
+    description: `Youth BJJ • 45 min session`,
+    timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+    icon: CheckCircle2,
+    group: 'this_week'
   })
   
   entries.push({
     id: 'call-1',
     type: 'call',
-    title: 'Recommend/Suggest follow-up',
-    description: `RecommendAgent follow-up`,
-    timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-    icon: Phone
+    title: 'Outbound call',
+    description: `Discussed belt promotion timeline`,
+    timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+    icon: Phone,
+    group: 'this_week'
+  })
+  
+  // Earlier entries
+  entries.push({
+    id: 'payment-1',
+    type: 'payment',
+    title: 'Payment received',
+    description: `Monthly membership • $149`,
+    timestamp: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+    icon: CheckCircle2,
+    group: 'earlier'
+  })
+  
+  entries.push({
+    id: 'sms-1',
+    type: 'sms',
+    title: 'SMS sent',
+    description: `Reminder for upcoming class`,
+    timestamp: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+    icon: MessageSquare,
+    group: 'earlier'
   })
   
   return entries
+}
+
+// Get next best action based on student data
+function getNextBestAction(student: Student): { action: string; urgency: 'high' | 'medium' | 'low' } {
+  if (student.is_at_risk || (student.missed_classes && student.missed_classes >= 4)) {
+    return { action: 'Call to re-engage before churn', urgency: 'high' }
+  }
+  if (student.days_since_contact && student.days_since_contact >= 5) {
+    return { action: `Follow up - no contact in ${student.days_since_contact} days`, urgency: 'medium' }
+  }
+  if (student.is_trial) {
+    return { action: 'Convert trial to membership', urgency: 'medium' }
+  }
+  return { action: 'Schedule progress check-in', urgency: 'low' }
 }
 
 export default function StudentDetailCard({ 
@@ -130,7 +186,8 @@ export default function StudentDetailCard({
   isDarkMode = true,
   className 
 }: StudentDetailCardProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [insightsExpanded, setInsightsExpanded] = useState(true)
+  const [timelineExpanded, setTimelineExpanded] = useState(true)
   
   // Determine status color
   const statusKey = student.is_at_risk ? 'At Risk' : student.is_trial ? 'Trial' : student.status
@@ -139,28 +196,47 @@ export default function StudentDetailCard({
   // Generate attendance data
   const attendanceData = useMemo(() => generateAttendanceData(), [student.id])
   const attendanceDays = attendanceData.filter(d => d.attended).length
+  const attendanceRate = Math.round((attendanceDays / 30) * 100)
   
   // Generate timeline entries
   const timelineEntries = useMemo(() => generateTimelineEntries(student), [student])
+  const todayEntries = timelineEntries.filter(e => e.group === 'today')
+  const weekEntries = timelineEntries.filter(e => e.group === 'this_week')
+  const earlierEntries = timelineEntries.filter(e => e.group === 'earlier')
   
-  // Smart recommendation based on student data
-  const recommendation = useMemo(() => {
-    if (student.is_at_risk || (student.missed_classes && student.missed_classes >= 4)) {
-      return {
-        text: `Suggested: refer in to call two today`,
-        subtext: 'RecommendAgent follow-up',
-        type: 'warning'
-      }
+  // Get next best action
+  const nextAction = useMemo(() => getNextBestAction(student), [student])
+  
+  // Calculate risk drivers
+  const riskDrivers = useMemo(() => {
+    const drivers: { label: string; value: string; severity: 'high' | 'medium' | 'low' }[] = []
+    
+    if (student.missed_classes && student.missed_classes >= 2) {
+      drivers.push({
+        label: 'Missed Classes',
+        value: `${student.missed_classes} in 30 days`,
+        severity: student.missed_classes >= 4 ? 'high' : 'medium'
+      })
     }
+    
     if (student.days_since_contact && student.days_since_contact >= 3) {
-      return {
-        text: `No contact in ${student.days_since_contact} days`,
-        subtext: 'Call to follow-up',
-        type: 'info'
-      }
+      drivers.push({
+        label: 'Days Since Contact',
+        value: `${student.days_since_contact} days`,
+        severity: student.days_since_contact >= 7 ? 'high' : 'medium'
+      })
     }
-    return null
-  }, [student])
+    
+    if (attendanceRate < 50) {
+      drivers.push({
+        label: 'Attendance Rate',
+        value: `${attendanceRate}%`,
+        severity: attendanceRate < 30 ? 'high' : 'medium'
+      })
+    }
+    
+    return drivers
+  }, [student, attendanceRate])
   
   // Handle ESC key to close
   useEffect(() => {
@@ -174,7 +250,7 @@ export default function StudentDetailCard({
   return (
     <div 
       className={cn(
-        "flex flex-col h-full rounded-2xl overflow-hidden",
+        "flex flex-col rounded-2xl overflow-hidden",
         "border backdrop-blur-xl",
         "shadow-2xl",
         isDarkMode 
@@ -185,6 +261,8 @@ export default function StudentDetailCard({
         className
       )}
       style={{
+        height: '100%',
+        maxHeight: '100%',
         // Subtle noise texture via CSS
         backgroundImage: isDarkMode 
           ? `radial-gradient(ellipse at top right, rgba(231,60,60,0.05) 0%, transparent 50%),
@@ -192,8 +270,8 @@ export default function StudentDetailCard({
           : undefined
       }}
     >
-      {/* ===== HEADER SECTION - Photo + Name Fade ===== */}
-      <div className="relative flex-shrink-0">
+      {/* ===== SECTION A: HERO HEADER (PINNED) ===== */}
+      <div className="flex-shrink-0 relative">
         {/* Background gradient for fade effect */}
         <div 
           className={cn(
@@ -207,8 +285,8 @@ export default function StudentDetailCard({
         {/* Header content */}
         <div className="relative z-10 p-4 pb-3">
           <div className="flex items-start gap-4">
-            {/* Left side - Name and program */}
-            <div className="flex-1 min-w-0 pt-2">
+            {/* Left side - Name, program, status */}
+            <div className="flex-1 min-w-0 pt-1">
               <h2 className={cn(
                 "text-xl font-bold truncate",
                 isDarkMode ? "text-white" : "text-gray-900"
@@ -219,7 +297,7 @@ export default function StudentDetailCard({
                 "text-sm mt-0.5",
                 isDarkMode ? "text-white/60" : "text-gray-500"
               )}>
-                {student.program || 'youth program'}
+                {student.program || 'Youth Program'} • {student.belt_rank}
               </p>
               
               {/* Status pill */}
@@ -236,6 +314,17 @@ export default function StudentDetailCard({
               >
                 {student.is_at_risk ? 'At Risk' : student.is_trial ? 'Trial' : student.status}
               </Badge>
+              
+              {/* Next best action one-liner */}
+              <div className={cn(
+                "mt-3 flex items-center gap-2 text-sm",
+                nextAction.urgency === 'high' ? "text-red-400" : 
+                nextAction.urgency === 'medium' ? "text-amber-400" : 
+                isDarkMode ? "text-white/60" : "text-gray-500"
+              )}>
+                <Sparkles className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">{nextAction.action}</span>
+              </div>
             </div>
             
             {/* Right side - Photo with fade */}
@@ -250,18 +339,16 @@ export default function StudentDetailCard({
                       "ring-2 ring-white/10"
                     )}
                     style={{
-                      // Fade mask for photo
-                      maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)'
+                      maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)'
                     }}
                   />
-                  {/* Gradient overlay for smooth blend */}
                   <div 
                     className="absolute inset-0 rounded-2xl"
                     style={{
                       background: isDarkMode 
-                        ? 'linear-gradient(135deg, transparent 40%, rgba(26,26,28,0.8) 100%)'
-                        : 'linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.8) 100%)'
+                        ? 'linear-gradient(135deg, transparent 50%, rgba(26,26,28,0.8) 100%)'
+                        : 'linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.8) 100%)'
                     }}
                   />
                 </div>
@@ -278,7 +365,7 @@ export default function StudentDetailCard({
               )}
             </div>
             
-            {/* Close button - positioned top right */}
+            {/* Close button */}
             <button
               onClick={onClose}
               className={cn(
@@ -294,19 +381,20 @@ export default function StudentDetailCard({
         </div>
       </div>
       
-      {/* ===== ACTION BUTTONS ROW ===== */}
+      {/* ===== SECTION B: QUICK ACTIONS ROW (PINNED) ===== */}
       <div className={cn(
         "flex-shrink-0 px-4 py-3 flex items-center gap-2",
-        "border-b",
-        isDarkMode ? "border-white/10" : "border-gray-100"
+        "border-y",
+        isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-gray-100 bg-gray-50/50"
       )}>
         <Button 
           size="sm" 
           onClick={onCall}
           className={cn(
-            "flex-1 gap-2 h-9 rounded-xl font-medium text-sm",
-            "bg-white/10 hover:bg-white/15 text-white border border-white/10",
-            "transition-all hover:shadow-lg hover:shadow-white/5"
+            "flex-1 gap-1.5 h-9 rounded-xl font-medium text-sm",
+            "bg-green-600/90 hover:bg-green-500 text-white",
+            "shadow-lg shadow-green-600/20 hover:shadow-green-500/30",
+            "transition-all"
           )}
         >
           <Phone className="h-4 w-4" />
@@ -316,9 +404,10 @@ export default function StudentDetailCard({
           size="sm" 
           onClick={onSMS}
           className={cn(
-            "flex-1 gap-2 h-9 rounded-xl font-medium text-sm",
-            "bg-white/10 hover:bg-white/15 text-white border border-white/10",
-            "transition-all hover:shadow-lg hover:shadow-white/5"
+            "flex-1 gap-1.5 h-9 rounded-xl font-medium text-sm",
+            "bg-blue-600/90 hover:bg-blue-500 text-white",
+            "shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30",
+            "transition-all"
           )}
         >
           <MessageSquare className="h-4 w-4" />
@@ -328,222 +417,295 @@ export default function StudentDetailCard({
           size="sm" 
           onClick={onEmail}
           className={cn(
-            "flex-1 gap-2 h-9 rounded-xl font-medium text-sm",
-            "bg-white/10 hover:bg-white/15 text-white border border-white/10",
-            "transition-all hover:shadow-lg hover:shadow-white/5"
+            "flex-1 gap-1.5 h-9 rounded-xl font-medium text-sm",
+            isDarkMode 
+              ? "bg-white/10 hover:bg-white/15 text-white border border-white/10" 
+              : "bg-white hover:bg-gray-50 text-gray-700 border border-gray-200",
+            "transition-all"
           )}
         >
           <Mail className="h-4 w-4" />
           Email
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline"
+          className={cn(
+            "gap-1.5 h-9 px-3 rounded-xl font-medium text-sm",
+            isDarkMode 
+              ? "border-white/10 text-white/70 hover:bg-white/10 hover:text-white" 
+              : "border-gray-200 text-gray-600 hover:bg-gray-50"
+          )}
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline"
+          className={cn(
+            "gap-1.5 h-9 px-3 rounded-xl font-medium text-sm",
+            isDarkMode 
+              ? "border-white/10 text-white/70 hover:bg-white/10 hover:text-white" 
+              : "border-gray-200 text-gray-600 hover:bg-gray-50"
+          )}
+        >
+          <ListTodo className="h-4 w-4" />
         </Button>
       </div>
       
       {/* ===== SCROLLABLE CONTENT AREA ===== */}
       <div 
         className={cn(
-          "flex-1 overflow-y-auto",
-          "scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+          "flex-1 overflow-y-auto min-h-0",
+          // Custom scrollbar styling
+          "scrollbar-thin",
+          isDarkMode 
+            ? "scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-white/20" 
+            : "scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400"
         )}
-        style={{ minHeight: 0 }}
       >
-        <div className="p-4 space-y-5">
+        <div className="p-4 space-y-4">
           
-          {/* ===== ATTENDANCE SECTION ===== */}
-          <div>
-            <h3 className={cn(
-              "text-sm font-semibold mb-3 flex items-center gap-2",
-              isDarkMode ? "text-white" : "text-gray-900"
-            )}>
-              Attendance
-              <ChevronUp className={cn(
-                "h-4 w-4 transition-transform",
-                isDarkMode ? "text-white/40" : "text-gray-400"
-              )} />
-            </h3>
+          {/* ===== SECTION C: INSIGHTS ===== */}
+          <div className={cn(
+            "rounded-xl border overflow-hidden",
+            isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
+          )}>
+            {/* Insights Header */}
+            <button
+              onClick={() => setInsightsExpanded(!insightsExpanded)}
+              className={cn(
+                "w-full px-4 py-3 flex items-center justify-between",
+                "transition-colors",
+                isDarkMode ? "hover:bg-white/5" : "hover:bg-gray-100"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <Activity className={cn("h-4 w-4", isDarkMode ? "text-white/60" : "text-gray-500")} />
+                <span className={cn("font-semibold text-sm", isDarkMode ? "text-white" : "text-gray-900")}>
+                  Insights
+                </span>
+              </div>
+              {insightsExpanded ? (
+                <ChevronUp className={cn("h-4 w-4", isDarkMode ? "text-white/40" : "text-gray-400")} />
+              ) : (
+                <ChevronDown className={cn("h-4 w-4", isDarkMode ? "text-white/40" : "text-gray-400")} />
+              )}
+            </button>
             
-            {/* Spark Bar Chart */}
-            <div className="flex items-end gap-1 h-16 mb-2">
-              {attendanceData.map((day, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <div 
-                    className={cn(
-                      "w-full rounded-t transition-all",
-                      day.attended 
-                        ? "bg-gradient-to-t from-red-500 to-red-400" 
-                        : isDarkMode ? "bg-white/10" : "bg-gray-200"
-                    )}
-                    style={{ height: `${day.value}%` }}
-                  />
-                  <span className={cn(
-                    "text-[10px] font-medium",
-                    isDarkMode ? "text-white/40" : "text-gray-400"
-                  )}>
-                    {day.day}
-                  </span>
+            {insightsExpanded && (
+              <div className={cn("px-4 pb-4 space-y-4", "border-t", isDarkMode ? "border-white/5" : "border-gray-100")}>
+                
+                {/* Attendance Chart */}
+                <div className="pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={cn("text-xs font-medium", isDarkMode ? "text-white/60" : "text-gray-500")}>
+                      30-Day Attendance
+                    </span>
+                    <span className={cn(
+                      "text-sm font-semibold",
+                      attendanceRate >= 70 ? "text-green-400" : 
+                      attendanceRate >= 50 ? "text-amber-400" : "text-red-400"
+                    )}>
+                      {attendanceRate}%
+                    </span>
+                  </div>
+                  
+                  {/* Spark Bar Chart */}
+                  <div className="flex items-end gap-[2px] h-10">
+                    {attendanceData.map((day, i) => (
+                      <div 
+                        key={i}
+                        className={cn(
+                          "flex-1 rounded-t transition-all",
+                          day.attended 
+                            ? "bg-gradient-to-t from-red-500/80 to-red-400" 
+                            : isDarkMode ? "bg-white/10" : "bg-gray-200"
+                        )}
+                        style={{ height: `${Math.max(day.value, 10)}%` }}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Attendance Stats Row */}
+                  <div className="flex items-center justify-between mt-2 text-xs">
+                    <span className={isDarkMode ? "text-white/40" : "text-gray-400"}>
+                      {attendanceDays} classes attended
+                    </span>
+                    <span className={isDarkMode ? "text-white/40" : "text-gray-400"}>
+                      {30 - attendanceDays} missed
+                    </span>
+                  </div>
                 </div>
-              ))}
-            </div>
-            
-            {/* Attendance stat line */}
-            <div className={cn(
-              "flex items-center gap-2 text-sm",
-              isDarkMode ? "text-white/60" : "text-gray-500"
-            )}>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-500" />
-                Attendance in Healing
-              </span>
-              <span className={cn(
-                "ml-auto font-medium",
-                isDarkMode ? "text-white/80" : "text-gray-700"
-              )}>
-                {attendanceDays}.53 hrs
-              </span>
-            </div>
-          </div>
-          
-          {/* ===== RECOMMENDATION CARD ===== */}
-          {recommendation && (
-            <div className={cn(
-              "p-3 rounded-xl border",
-              isDarkMode 
-                ? "bg-amber-500/10 border-amber-500/20" 
-                : "bg-amber-50 border-amber-200"
-            )}>
-              <div className="flex items-start gap-2">
-                <Sparkles className={cn(
-                  "h-4 w-4 mt-0.5 flex-shrink-0",
-                  isDarkMode ? "text-amber-400" : "text-amber-600"
-                )} />
-                <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    "text-sm font-medium",
-                    isDarkMode ? "text-amber-300" : "text-amber-800"
+                
+                {/* Risk Drivers (if any) */}
+                {riskDrivers.length > 0 && (
+                  <div className="space-y-2">
+                    <span className={cn("text-xs font-medium", isDarkMode ? "text-white/60" : "text-gray-500")}>
+                      Risk Drivers
+                    </span>
+                    <div className="space-y-1.5">
+                      {riskDrivers.map((driver, i) => (
+                        <div 
+                          key={i}
+                          className={cn(
+                            "flex items-center justify-between px-3 py-2 rounded-lg",
+                            driver.severity === 'high' 
+                              ? isDarkMode ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200"
+                              : isDarkMode ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"
+                          )}
+                        >
+                          <span className={cn(
+                            "text-sm",
+                            driver.severity === 'high' ? "text-red-400" : "text-amber-400"
+                          )}>
+                            {driver.label}
+                          </span>
+                          <span className={cn(
+                            "text-sm font-medium",
+                            driver.severity === 'high' ? "text-red-400" : "text-amber-400"
+                          )}>
+                            {driver.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Engagement Score */}
+                <div className={cn(
+                  "flex items-center justify-between px-3 py-2.5 rounded-lg",
+                  isDarkMode ? "bg-white/5" : "bg-gray-100"
+                )}>
+                  <div className="flex items-center gap-2">
+                    {attendanceRate >= 60 ? (
+                      <TrendingUp className="h-4 w-4 text-green-400" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-400" />
+                    )}
+                    <span className={cn("text-sm", isDarkMode ? "text-white/70" : "text-gray-600")}>
+                      Engagement Score
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "text-sm font-semibold",
+                    attendanceRate >= 70 ? "text-green-400" : 
+                    attendanceRate >= 50 ? "text-amber-400" : "text-red-400"
                   )}>
-                    {recommendation.text}
-                  </p>
-                  <p className={cn(
-                    "text-xs mt-0.5",
-                    isDarkMode ? "text-amber-400/60" : "text-amber-600"
-                  )}>
-                    {recommendation.subtext}
-                  </p>
+                    {attendanceRate >= 70 ? 'High' : attendanceRate >= 50 ? 'Medium' : 'Low'}
+                  </span>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           
-          {/* ===== INTRO / SCHEDULED SECTION ===== */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className={cn(
-                "text-sm font-semibold",
-                isDarkMode ? "text-white" : "text-gray-900"
-              )}>
-                Intro
-              </h3>
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "text-xs",
-                  isDarkMode 
-                    ? "bg-white/5 border-white/10 text-white/60" 
-                    : "bg-gray-50 border-gray-200 text-gray-500"
-                )}
-              >
-                Scheduled
-              </Badge>
-            </div>
+          {/* ===== SECTION D: TIMELINE FEED ===== */}
+          <div className={cn(
+            "rounded-xl border overflow-hidden",
+            isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
+          )}>
+            {/* Timeline Header */}
+            <button
+              onClick={() => setTimelineExpanded(!timelineExpanded)}
+              className={cn(
+                "w-full px-4 py-3 flex items-center justify-between",
+                "transition-colors",
+                isDarkMode ? "hover:bg-white/5" : "hover:bg-gray-100"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className={cn("h-4 w-4", isDarkMode ? "text-white/60" : "text-gray-500")} />
+                <span className={cn("font-semibold text-sm", isDarkMode ? "text-white" : "text-gray-900")}>
+                  Timeline
+                </span>
+              </div>
+              {timelineExpanded ? (
+                <ChevronUp className={cn("h-4 w-4", isDarkMode ? "text-white/40" : "text-gray-400")} />
+              ) : (
+                <ChevronDown className={cn("h-4 w-4", isDarkMode ? "text-white/40" : "text-gray-400")} />
+              )}
+            </button>
             
-            {/* Timeline entries */}
-            <div className="space-y-3">
-              {timelineEntries.map((entry) => (
-                <div 
-                  key={entry.id}
-                  className={cn(
-                    "flex items-start gap-3 p-3 rounded-xl transition-all",
-                    isDarkMode 
-                      ? "bg-white/5 hover:bg-white/8" 
-                      : "bg-gray-50 hover:bg-gray-100"
-                  )}
-                >
-                  {/* Icon */}
-                  <div className={cn(
-                    "p-2 rounded-lg flex-shrink-0",
-                    entry.type === 'intro' 
-                      ? "bg-blue-500/20 text-blue-400"
-                      : entry.type === 'note'
-                      ? "bg-amber-500/20 text-amber-400"
-                      : "bg-white/10 text-white/60"
-                  )}>
-                    {entry.icon ? <entry.icon className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+            {timelineExpanded && (
+              <div className={cn("px-4 pb-4 space-y-4", "border-t", isDarkMode ? "border-white/5" : "border-gray-100")}>
+                
+                {/* Today */}
+                {todayEntries.length > 0 && (
+                  <div className="pt-3">
+                    <span className={cn("text-xs font-medium uppercase tracking-wider", isDarkMode ? "text-white/40" : "text-gray-400")}>
+                      Today
+                    </span>
+                    <div className="mt-2 space-y-2">
+                      {todayEntries.map((entry) => (
+                        <TimelineItem key={entry.id} entry={entry} isDarkMode={isDarkMode} />
+                      ))}
+                    </div>
                   </div>
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      "text-sm font-medium",
-                      isDarkMode ? "text-white" : "text-gray-900"
-                    )}>
-                      {entry.title}
-                    </p>
-                    {entry.description && (
-                      <p className={cn(
-                        "text-xs mt-0.5",
-                        isDarkMode ? "text-white/50" : "text-gray-500"
-                      )}>
-                        {entry.description}
-                      </p>
-                    )}
+                )}
+                
+                {/* This Week */}
+                {weekEntries.length > 0 && (
+                  <div>
+                    <span className={cn("text-xs font-medium uppercase tracking-wider", isDarkMode ? "text-white/40" : "text-gray-400")}>
+                      This Week
+                    </span>
+                    <div className="mt-2 space-y-2">
+                      {weekEntries.map((entry) => (
+                        <TimelineItem key={entry.id} entry={entry} isDarkMode={isDarkMode} />
+                      ))}
+                    </div>
                   </div>
-                  
-                  {/* Time */}
-                  <span className={cn(
-                    "text-xs flex-shrink-0",
-                    isDarkMode ? "text-white/40" : "text-gray-400"
-                  )}>
-                    {entry.timestamp.toLocaleTimeString('en-US', { 
-                      hour: 'numeric', 
-                      minute: '2-digit',
-                      hour12: true 
-                    })}
-                  </span>
-                </div>
-              ))}
-            </div>
+                )}
+                
+                {/* Earlier */}
+                {earlierEntries.length > 0 && (
+                  <div>
+                    <span className={cn("text-xs font-medium uppercase tracking-wider", isDarkMode ? "text-white/40" : "text-gray-400")}>
+                      Earlier
+                    </span>
+                    <div className="mt-2 space-y-2">
+                      {earlierEntries.map((entry) => (
+                        <TimelineItem key={entry.id} entry={entry} isDarkMode={isDarkMode} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
       
-      {/* ===== BOTTOM ACTION AREA (PINNED) ===== */}
+      {/* ===== BOTTOM CTA BAR (PINNED) ===== */}
       <div className={cn(
         "flex-shrink-0 p-4 border-t",
         "backdrop-blur-sm",
         isDarkMode 
-          ? "bg-[#1a1a1c]/80 border-white/10" 
-          : "bg-white/80 border-gray-100"
+          ? "bg-[#1a1a1c]/90 border-white/10" 
+          : "bg-white/90 border-gray-100"
       )}>
         <div className="flex items-center gap-2">
           <Button 
             onClick={onCall}
             className={cn(
-              "flex-1 gap-2 h-10 rounded-xl font-medium",
+              "flex-1 gap-2 h-11 rounded-xl font-medium",
               "bg-green-600 hover:bg-green-500 text-white",
               "shadow-lg shadow-green-600/25 hover:shadow-green-500/30",
               "transition-all"
             )}
           >
             <Phone className="h-4 w-4" />
-            Call
+            Call Now
           </Button>
           <Button 
             onClick={onSMS}
             variant="outline"
             className={cn(
-              "gap-2 h-10 px-4 rounded-xl font-medium",
+              "gap-2 h-11 px-5 rounded-xl font-medium",
               isDarkMode 
                 ? "border-white/20 text-white hover:bg-white/10" 
-                : "border-gray-200"
+                : "border-gray-200 text-gray-700 hover:bg-gray-50"
             )}
           >
             <MessageSquare className="h-4 w-4" />
@@ -559,6 +721,89 @@ export default function StudentDetailCard({
           Press ESC to close
         </p>
       </div>
+    </div>
+  )
+}
+
+// Timeline Item Component
+function TimelineItem({ entry, isDarkMode }: { entry: TimelineEntry; isDarkMode: boolean }) {
+  const Icon = entry.icon || Calendar
+  
+  const getIconColors = () => {
+    switch (entry.type) {
+      case 'intro':
+      case 'class':
+        return isDarkMode ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-600"
+      case 'call':
+        return isDarkMode ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-600"
+      case 'sms':
+        return isDarkMode ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-600"
+      case 'email':
+        return isDarkMode ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-100 text-indigo-600"
+      case 'note':
+        return isDarkMode ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600"
+      case 'payment':
+        return isDarkMode ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
+      default:
+        return isDarkMode ? "bg-white/10 text-white/60" : "bg-gray-100 text-gray-500"
+    }
+  }
+  
+  const formatTime = (date: Date) => {
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const days = Math.floor(diff / (24 * 60 * 60 * 1000))
+    
+    if (days === 0) {
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    } else if (days === 1) {
+      return 'Yesterday'
+    } else if (days < 7) {
+      return `${days}d ago`
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+  }
+  
+  return (
+    <div 
+      className={cn(
+        "flex items-start gap-3 p-3 rounded-xl transition-all",
+        isDarkMode 
+          ? "bg-white/[0.03] hover:bg-white/[0.06]" 
+          : "bg-white hover:bg-gray-50"
+      )}
+    >
+      {/* Icon */}
+      <div className={cn("p-2 rounded-lg flex-shrink-0", getIconColors())}>
+        <Icon className="h-4 w-4" />
+      </div>
+      
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <p className={cn(
+          "text-sm font-medium",
+          isDarkMode ? "text-white" : "text-gray-900"
+        )}>
+          {entry.title}
+        </p>
+        {entry.description && (
+          <p className={cn(
+            "text-xs mt-0.5 truncate",
+            isDarkMode ? "text-white/50" : "text-gray-500"
+          )}>
+            {entry.description}
+          </p>
+        )}
+      </div>
+      
+      {/* Time */}
+      <span className={cn(
+        "text-xs flex-shrink-0",
+        isDarkMode ? "text-white/40" : "text-gray-400"
+      )}>
+        {formatTime(entry.timestamp)}
+      </span>
     </div>
   )
 }

@@ -364,29 +364,43 @@ export default function StudentsCommandCenter() {
           </div>
         </div>
         
-        {/* Student Detail Card - New Design */}
+        {/* Student Detail Card - Command Center Panel */}
         {selectedStudent && (
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedStudent(null)} />
-        )}
-        {selectedStudent && (
-          <div className="fixed right-0 top-0 bottom-0 w-[420px] z-50 p-4 overflow-hidden">
-            <StudentDetailCard 
-              student={{
-                ...selectedStudent,
-                days_since_last_class: Math.floor(Math.random() * 10),
-                days_since_contact: selectedStudent.days_since_contact || Math.floor(Math.random() * 7),
-                missed_classes: selectedStudent.missed_classes || Math.floor(Math.random() * 6),
-                is_at_risk: selectedStudent.status === 'At Risk' || selectedStudent.status === 'On Hold',
-                is_trial: selectedStudent.status === 'Trial' || selectedStudent.membership_status === 'Trial'
-              }}
-              onClose={() => setSelectedStudent(null)} 
-              onCall={() => window.open(`tel:${selectedStudent.phone}`)} 
-              onSMS={() => window.open(`sms:${selectedStudent.phone}`)} 
-              onEmail={() => window.open(`mailto:${selectedStudent.email}`)} 
-              isDarkMode={isDarkMode}
-              className="h-full"
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/50 z-40" 
+              onClick={() => setSelectedStudent(null)} 
+              style={{ top: 'var(--topbar-h, 56px)' }}
             />
-          </div>
+            
+            {/* Panel Container - positioned below topbar and above bottom nav */}
+            <div 
+              className="fixed right-0 w-[420px] z-50 p-4 pt-2"
+              style={{ 
+                top: 'calc(var(--topbar-h, 56px) + 8px)',
+                height: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px) - 16px)',
+                maxHeight: 'calc(100vh - var(--topbar-h, 56px) - var(--bottomnav-h, 72px) - 16px)',
+              }}
+            >
+              <StudentDetailCard 
+                student={{
+                  ...selectedStudent,
+                  days_since_last_class: Math.floor(Math.random() * 10),
+                  days_since_contact: selectedStudent.days_since_contact || Math.floor(Math.random() * 7),
+                  missed_classes: selectedStudent.missed_classes || Math.floor(Math.random() * 6),
+                  is_at_risk: selectedStudent.status === 'At Risk' || selectedStudent.status === 'On Hold',
+                  is_trial: selectedStudent.status === 'Trial' || selectedStudent.membership_status === 'Trial'
+                }}
+                onClose={() => setSelectedStudent(null)} 
+                onCall={() => window.open(`tel:${selectedStudent.phone}`)} 
+                onSMS={() => window.open(`sms:${selectedStudent.phone}`)} 
+                onEmail={() => window.open(`mailto:${selectedStudent.email}`)} 
+                isDarkMode={isDarkMode}
+                className="h-full"
+              />
+            </div>
+          </>
         )}
       </div>
     </AppShell>

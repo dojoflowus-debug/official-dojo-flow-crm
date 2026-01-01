@@ -151,9 +151,10 @@
 :root {
   --radius: 1rem;
   
-  /* Bottom Navigation Height */
+  /* Fixed UI Chrome Heights */
   --bottom-nav-height: 72px;
-  --header-height: 72px;
+  --topbar-h: 56px;
+  --bottomnav-h: 72px;
   
   /* DojoFlow Light Mode - Vibrant Lemon Squeezy-inspired */
   /* Background: Soft warm off-white */

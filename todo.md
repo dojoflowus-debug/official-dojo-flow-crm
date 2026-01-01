@@ -3228,3 +3228,35 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Confirm works in Dark mode and Cinematic mode
 - [x] Confirm bottom nav stays visible and card respects its space
 
+
+
+## 🐛 BUG: Student Detail Panel Still Clipped at Top (2026-01-01)
+
+### A) Fix Clipping (Required)
+- [x] Define CSS variables for fixed UI chrome: --topbar-h and --bottomnav-h
+- [x] Position Student Detail panel below top bar: top: var(--topbar-h)
+- [x] Set panel height: calc(100vh - var(--topbar-h) - var(--bottomnav-h))
+- [x] Use position: fixed with proper top offset within main content area
+- [x] Remove/adjust overflow:hidden on parent wrappers causing clipping
+- [x] Implement flex column layout with pinned header and footer
+- [x] Make only middle content scroll with styled scrollbar
+
+### B) Improve Information Hierarchy (Required)
+- [x] Rebuild panel into four clear sections:
+  - [x] A) Hero header (photo + name + program + status pill + next best action)
+  - [x] B) Quick actions row (Call, SMS, Email, Add Note, Create Task)
+  - [x] C) Insights section (Attendance chart, missed classes, engagement, risk drivers)
+  - [x] D) Timeline feed grouped by Today/This Week/Earlier
+- [x] Remove duplicate Attendance/Intro blocks
+- [x] Each module appears once with expandable details if needed
+
+### C) Style Consistency
+- [x] Dark glassmorphism styling
+- [x] Crisp Apple-like spacing
+- [x] Subtle borders and smooth hover states
+- [x] Clean icons throughout
+- [x] Bottom CTA bar sits above bottom nav without overlap
+
+### D) Verification
+- [x] Panel never cut off on typical laptop resolution
+- [x] All sections readable with proper scroll behavior
