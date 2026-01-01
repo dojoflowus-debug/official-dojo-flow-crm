@@ -3288,3 +3288,68 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 ### E) Verification
 - [x] Confirm panel not clipped at laptop resolutions
 - [x] Confirm action row stays visible and doesn't wrap awkwardly
+
+
+## 🎨 Student Detail Panel UX Fixes (2026-01-01)
+
+### Core Issues Identified
+- [ ] No visible "Edit Profile" action - users can view but cannot act on profile
+- [ ] Bottom CTA being clipped by layout math - positioned too low, competing with bottom nav
+- [ ] Right panel trying to do too much vertically without defined zones
+
+### Proposed Layout Structure (4 Fixed Zones)
+```
+┌──────────────────────────────┐
+│ HEADER (fixed)               │
+│ Photo | Name | Status | Edit │  ← Always visible
+├──────────────────────────────┤
+│ ACTIONS (fixed)              │
+│ Call | SMS | Email | Map     │
+├──────────────────────────────┤
+│ SCROLLABLE CONTENT           │
+│ - Insights                   │
+│ - Attendance                 │
+│ - Risk Drivers               │
+│ - Timeline                   │
+├──────────────────────────────┤
+│ PRIMARY CTA (fixed)          │
+│ Call Now | SMS               │
+└──────────────────────────────┘
+```
+
+### 1. Add Edit Profile Button
+- [x] Add "Edit Profile" button (✏️ icon) in top-right of student header
+- [x] Opens profile editor drawer or modal (NOT buried in menu)
+- [x] Tooltip: "Update contact info, program, tags, and notes"
+- [x] Add Quick Edit hover - pencil icon fades in on photo/name hover
+
+### 2. Restructure Panel into 4 Fixed Zones
+- [x] Header zone: photo, name, program, status, Edit button (fixed)
+- [x] Actions zone: Call, SMS, Email, View on Map buttons (fixed)
+- [x] Content zone: Insights, Attendance, Risk Drivers, Timeline (scrollable)
+- [x] CTA zone: Primary action buttons (fixed)
+
+### 3. Fix Bottom CTA Area
+- [x] Pinned Action Bar - always visible above global bottom nav
+- [x] Height ~72px with blurred glass + slight gradient background
+- [x] Primary button: "Call Now", Secondary button: "SMS"
+- [x] Optional: "More" dropdown for additional actions
+
+### 4. Fix Scroll Behavior
+- [x] Panel height = calc(100vh - topNavHeight - bottomNavHeight)
+- [x] Only content section scrolls (.insights-scroll-container)
+- [x] Header and bottom CTA remain pinned
+- [x] CSS: flex-direction: column, flex-shrink: 0 for fixed zones
+
+### 5. UX Enhancements
+- [x] Add contextual actions under name: "View full profile", "View billing", "View attendance history"
+- [x] Smart CTA logic: highlight Call if no contact in 7 days, show "Re-engage" if missed classes
+- [x] Add visual hierarchy and spacing between sections
+- [x] Remove duplicate or repeated info blocks
+
+### Verification
+- [x] No clipping at any viewport size
+- [x] No hidden buttons
+- [x] Clear hierarchy
+- [x] Easy future expansion
+- [ ] Test on desktop and mobile

@@ -411,6 +411,13 @@ export default function StudentsCommandCenter() {
                     }
                   }, 100)
                 }}
+                onEditProfile={() => {
+                  // TODO: Open edit profile modal/drawer
+                  // For now, show a toast or navigate to edit page
+                  console.log('Edit profile clicked for student:', selectedStudent.id)
+                  // Could navigate to: /students/${selectedStudent.id}/edit
+                  // Or open a modal with edit form
+                }}
                 isDarkMode={isDarkMode}
                 className="h-full"
               />

@@ -23,8 +23,19 @@ import {
   TrendingDown,
   TrendingUp,
   Activity,
-  MapPin
+  MapPin,
+  Pencil,
+  CreditCard,
+  History,
+  MoreHorizontal
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Student {
   id: number
@@ -65,6 +76,7 @@ interface StudentDetailCardProps {
   onSMS: () => void
   onEmail: () => void
   onViewOnMap?: () => void
+  onEditProfile?: () => void
   isDarkMode?: boolean
   className?: string
 }
@@ -169,17 +181,23 @@ function generateTimelineEntries(student: Student): TimelineEntry[] {
 }
 
 // Get next best action based on student data
-function getNextBestAction(student: Student): { action: string; urgency: 'high' | 'medium' | 'low' } {
+function getNextBestAction(student: Student): { action: string; urgency: 'high' | 'medium' | 'low'; ctaType: 'call' | 'sms' | 'email' | 'schedule' } {
   if (student.is_at_risk || (student.missed_classes && student.missed_classes >= 4)) {
-    return { action: 'Call to re-engage before churn', urgency: 'high' }
+    return { action: 'Call to re-engage before churn', urgency: 'high', ctaType: 'call' }
+  }
+  if (student.days_since_contact && student.days_since_contact >= 7) {
+    return { action: `Follow up - no contact in ${student.days_since_contact} days`, urgency: 'high', ctaType: 'call' }
   }
   if (student.days_since_contact && student.days_since_contact >= 5) {
-    return { action: `Follow up - no contact in ${student.days_since_contact} days`, urgency: 'medium' }
+    return { action: `Send check-in message`, urgency: 'medium', ctaType: 'sms' }
   }
   if (student.is_trial) {
-    return { action: 'Convert trial to membership', urgency: 'medium' }
+    return { action: 'Convert trial to membership', urgency: 'medium', ctaType: 'call' }
   }
-  return { action: 'Schedule progress check-in', urgency: 'low' }
+  if (student.missed_classes && student.missed_classes >= 2) {
+    return { action: 'Re-engage - missed recent classes', urgency: 'medium', ctaType: 'sms' }
+  }
+  return { action: 'Schedule progress check-in', urgency: 'low', ctaType: 'schedule' }
 }
 
 export default function StudentDetailCard({ 
@@ -189,6 +207,7 @@ export default function StudentDetailCard({
   onSMS, 
   onEmail, 
   onViewOnMap,
+  onEditProfile,
   isDarkMode = true,
   className 
 }: StudentDetailCardProps) {
@@ -199,6 +218,7 @@ export default function StudentDetailCard({
   
   const [insightsExpanded, setInsightsExpanded] = useState(true)
   const [timelineExpanded, setTimelineExpanded] = useState(true)
+  const [showEditHover, setShowEditHover] = useState(false)
   
   // Determine status color
   const statusKey = student.is_at_risk ? 'At Risk' : student.is_trial ? 'Trial' : student.status
@@ -215,7 +235,7 @@ export default function StudentDetailCard({
   const weekEntries = timelineEntries.filter(e => e.group === 'this_week')
   const earlierEntries = timelineEntries.filter(e => e.group === 'earlier')
   
-  // Get next best action
+  // Get next best action with smart CTA logic
   const nextAction = useMemo(() => getNextBestAction(student), [student])
   
   // Calculate risk drivers
@@ -258,6 +278,19 @@ export default function StudentDetailCard({
     return () => window.removeEventListener('keydown', handleEsc)
   }, [onClose])
 
+  // Get primary CTA based on smart logic
+  const getPrimaryCTA = () => {
+    if (nextAction.ctaType === 'call' || nextAction.urgency === 'high') {
+      return { label: 'Call Now', action: onCall, icon: Phone, color: 'bg-green-600 hover:bg-green-500 shadow-green-600/25' }
+    }
+    if (nextAction.ctaType === 'sms') {
+      return { label: 'Send SMS', action: onSMS, icon: MessageSquare, color: 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/25' }
+    }
+    return { label: 'Call Now', action: onCall, icon: Phone, color: 'bg-green-600 hover:bg-green-500 shadow-green-600/25' }
+  }
+
+  const primaryCTA = getPrimaryCTA()
+
   return (
     <div 
       className={cn(
@@ -281,7 +314,7 @@ export default function StudentDetailCard({
           : undefined
       }}
     >
-      {/* ===== SECTION A: HERO HEADER (PINNED) ===== */}
+      {/* ===== ZONE 1: HEADER (FIXED) ===== */}
       <div className="flex-shrink-0 relative">
         {/* Background gradient for fade effect */}
         <div 
@@ -297,13 +330,27 @@ export default function StudentDetailCard({
         <div className="relative z-10 p-4 pb-3">
           <div className="flex items-start gap-4">
             {/* Left side - Name, program, status */}
-            <div className="flex-1 min-w-0 pt-1">
-              <h2 className={cn(
-                "text-xl font-bold truncate",
-                isDarkMode ? "text-white" : "text-gray-900"
-              )}>
-                {student.first_name} {student.last_name}
-              </h2>
+            <div 
+              className="flex-1 min-w-0 pt-1 cursor-pointer group"
+              onMouseEnter={() => setShowEditHover(true)}
+              onMouseLeave={() => setShowEditHover(false)}
+              onClick={onEditProfile}
+            >
+              <div className="flex items-center gap-2">
+                <h2 className={cn(
+                  "text-xl font-bold truncate",
+                  isDarkMode ? "text-white" : "text-gray-900"
+                )}>
+                  {student.first_name} {student.last_name}
+                </h2>
+                {/* Quick Edit hover indicator */}
+                <div className={cn(
+                  "transition-opacity duration-200",
+                  showEditHover ? "opacity-100" : "opacity-0"
+                )}>
+                  <Pencil className={cn("h-4 w-4", isDarkMode ? "text-white/60" : "text-gray-400")} />
+                </div>
+              </div>
               <p className={cn(
                 "text-sm mt-0.5",
                 isDarkMode ? "text-white/60" : "text-gray-500"
@@ -341,7 +388,7 @@ export default function StudentDetailCard({
             {/* Right side - Hero Photo with glass styling */}
             <div className="relative flex-shrink-0">
               {student.photo_url ? (
-                <div className="relative">
+                <div className="relative group">
                   <img 
                     src={student.photo_url} 
                     alt={`${student.first_name} ${student.last_name}`}
@@ -365,39 +412,123 @@ export default function StudentDetailCard({
                       boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
                     }}
                   />
+                  {/* Edit overlay on hover */}
+                  <button
+                    onClick={onEditProfile}
+                    className={cn(
+                      "absolute inset-0 rounded-2xl flex items-center justify-center",
+                      "bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity",
+                      "cursor-pointer"
+                    )}
+                  >
+                    <Pencil className="h-6 w-6 text-white" />
+                  </button>
                 </div>
               ) : (
-                <div className={cn(
-                  "w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center",
-                  "text-2xl sm:text-3xl font-bold",
-                  "ring-2 ring-white/10",
-                  "shadow-xl shadow-black/20",
-                  isDarkMode 
-                    ? "bg-gradient-to-br from-white/15 to-white/5 text-white/70" 
-                    : "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-400"
-                )}>
+                <div 
+                  className={cn(
+                    "w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center relative group cursor-pointer",
+                    "text-2xl sm:text-3xl font-bold",
+                    "ring-2 ring-white/10",
+                    "shadow-xl shadow-black/20",
+                    isDarkMode 
+                      ? "bg-gradient-to-br from-white/15 to-white/5 text-white/70" 
+                      : "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-400"
+                  )}
+                  onClick={onEditProfile}
+                >
                   {student.first_name[0]}{student.last_name[0]}
+                  {/* Edit overlay on hover */}
+                  <div className={cn(
+                    "absolute inset-0 rounded-2xl flex items-center justify-center",
+                    "bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                  )}>
+                    <Pencil className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               )}
             </div>
             
-            {/* Close button */}
-            <button
-              onClick={onClose}
+            {/* Top-right action buttons */}
+            <div className="absolute top-3 right-3 flex items-center gap-1">
+              {/* Edit Profile button */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onEditProfile}
+                      className={cn(
+                        "p-2 rounded-full transition-all",
+                        isDarkMode 
+                          ? "text-white/60 hover:text-white hover:bg-white/10" 
+                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                      )}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Edit Profile</p>
+                    <p className="text-xs text-muted-foreground">Update contact info, program, tags, and notes</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className={cn(
+                  "p-2 rounded-full transition-all",
+                  isDarkMode 
+                    ? "text-white/40 hover:text-white hover:bg-white/10" 
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                )}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Contextual Quick Links */}
+          <div className={cn(
+            "mt-3 flex items-center gap-3 text-xs",
+            isDarkMode ? "text-white/50" : "text-gray-500"
+          )}>
+            <button 
+              onClick={onEditProfile}
               className={cn(
-                "absolute top-3 right-3 p-1.5 rounded-full transition-all",
-                isDarkMode 
-                  ? "text-white/40 hover:text-white hover:bg-white/10" 
-                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                "flex items-center gap-1 hover:underline transition-colors",
+                isDarkMode ? "hover:text-white/70" : "hover:text-gray-700"
               )}
             >
-              <X className="h-4 w-4" />
+              <User className="h-3 w-3" />
+              View full profile
+            </button>
+            <span className="text-white/20">•</span>
+            <button 
+              className={cn(
+                "flex items-center gap-1 hover:underline transition-colors",
+                isDarkMode ? "hover:text-white/70" : "hover:text-gray-700"
+              )}
+            >
+              <CreditCard className="h-3 w-3" />
+              View billing
+            </button>
+            <span className="text-white/20">•</span>
+            <button 
+              className={cn(
+                "flex items-center gap-1 hover:underline transition-colors",
+                isDarkMode ? "hover:text-white/70" : "hover:text-gray-700"
+              )}
+            >
+              <History className="h-3 w-3" />
+              Attendance history
             </button>
           </div>
         </div>
       </div>
       
-      {/* ===== SECTION B: QUICK ACTIONS ROW (PINNED) ===== */}
+      {/* ===== ZONE 2: ACTIONS ROW (FIXED) ===== */}
       <div className={cn(
         "flex-shrink-0 px-4 py-3 flex items-center gap-2",
         "border-y",
@@ -453,7 +584,7 @@ export default function StudentDetailCard({
                 onClick={hasLocation ? onViewOnMap : undefined}
                 disabled={!hasLocation}
                 className={cn(
-                  "flex-1 gap-1.5 h-9 rounded-xl font-medium text-sm transition-all",
+                  "gap-1.5 h-9 px-3 rounded-xl font-medium text-sm transition-all",
                   hasLocation ? (
                     isDarkMode 
                       ? "border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]" 
@@ -466,7 +597,6 @@ export default function StudentDetailCard({
                 )}
               >
                 <MapPin className="h-4 w-4" />
-                <span className="hidden sm:inline">Map</span>
               </Button>
             </TooltipTrigger>
             {!hasLocation && (
@@ -476,33 +606,62 @@ export default function StudentDetailCard({
             )}
           </Tooltip>
         </TooltipProvider>
-        <Button 
-          size="sm" 
-          variant="outline"
-          className={cn(
-            "gap-1.5 h-9 px-3 rounded-xl font-medium text-sm",
-            isDarkMode 
-              ? "border-white/10 text-white/70 hover:bg-white/10 hover:text-white" 
-              : "border-gray-200 text-gray-600 hover:bg-gray-50"
-          )}
-        >
-          <FileText className="h-4 w-4" />
-        </Button>
-        <Button 
-          size="sm" 
-          variant="outline"
-          className={cn(
-            "gap-1.5 h-9 px-3 rounded-xl font-medium text-sm",
-            isDarkMode 
-              ? "border-white/10 text-white/70 hover:bg-white/10 hover:text-white" 
-              : "border-gray-200 text-gray-600 hover:bg-gray-50"
-          )}
-        >
-          <ListTodo className="h-4 w-4" />
-        </Button>
+        
+        {/* More actions dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className={cn(
+                "gap-1.5 h-9 px-3 rounded-xl font-medium text-sm",
+                isDarkMode 
+                  ? "border-white/10 text-white/70 hover:bg-white/10 hover:text-white" 
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+              )}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className={cn(
+            isDarkMode ? "bg-[#1a1a1c] border-white/10" : ""
+          )}>
+            <DropdownMenuItem onClick={onEditProfile} className={cn(
+              isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+            )}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem className={cn(
+              isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+            )}>
+              <FileText className="h-4 w-4 mr-2" />
+              Add Note
+            </DropdownMenuItem>
+            <DropdownMenuItem className={cn(
+              isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+            )}>
+              <ListTodo className="h-4 w-4 mr-2" />
+              Create Task
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className={isDarkMode ? "bg-white/10" : ""} />
+            <DropdownMenuItem className={cn(
+              isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+            )}>
+              <CreditCard className="h-4 w-4 mr-2" />
+              View Billing
+            </DropdownMenuItem>
+            <DropdownMenuItem className={cn(
+              isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+            )}>
+              <History className="h-4 w-4 mr-2" />
+              Attendance History
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
-      {/* ===== SCROLLABLE CONTENT AREA ===== */}
+      {/* ===== ZONE 3: SCROLLABLE CONTENT ===== */}
       <div 
         className={cn(
           "flex-1 overflow-y-auto min-h-0",
@@ -515,7 +674,7 @@ export default function StudentDetailCard({
       >
         <div className="p-4 space-y-4">
           
-          {/* ===== SECTION C: INSIGHTS ===== */}
+          {/* ===== INSIGHTS SECTION ===== */}
           <div className={cn(
             "rounded-xl border overflow-hidden",
             isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
@@ -649,7 +808,7 @@ export default function StudentDetailCard({
             )}
           </div>
           
-          {/* ===== SECTION D: TIMELINE FEED ===== */}
+          {/* ===== TIMELINE FEED ===== */}
           <div className={cn(
             "rounded-xl border overflow-hidden",
             isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"
@@ -726,26 +885,44 @@ export default function StudentDetailCard({
         </div>
       </div>
       
-      {/* ===== BOTTOM CTA BAR (PINNED) ===== */}
+      {/* ===== ZONE 4: PRIMARY CTA BAR (FIXED) ===== */}
       <div className={cn(
         "flex-shrink-0 p-4 border-t",
-        "backdrop-blur-sm",
+        // Glassmorphism styling with blur and gradient
+        "backdrop-blur-xl",
         isDarkMode 
-          ? "bg-[#1a1a1c]/90 border-white/10" 
-          : "bg-white/90 border-gray-100"
-      )}>
+          ? "bg-gradient-to-t from-[#1a1a1c] via-[#1a1a1c]/95 to-[#1a1a1c]/90 border-white/10" 
+          : "bg-gradient-to-t from-white via-white/95 to-white/90 border-gray-100",
+        // Subtle glow effect
+        isDarkMode && "shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.5)]"
+      )}
+      style={{ minHeight: '72px' }}
+      >
+        {/* Smart CTA hint */}
+        {nextAction.urgency !== 'low' && (
+          <div className={cn(
+            "mb-3 px-3 py-2 rounded-lg flex items-center gap-2 text-xs",
+            nextAction.urgency === 'high' 
+              ? isDarkMode ? "bg-red-500/10 border border-red-500/20 text-red-400" : "bg-red-50 text-red-600"
+              : isDarkMode ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-600"
+          )}>
+            <Sparkles className="h-3.5 w-3.5 flex-shrink-0" />
+            <span>{nextAction.action}</span>
+          </div>
+        )}
+        
         <div className="flex items-center gap-2">
           <Button 
-            onClick={onCall}
+            onClick={primaryCTA.action}
             className={cn(
               "flex-1 gap-2 h-11 rounded-xl font-medium",
-              "bg-green-600 hover:bg-green-500 text-white",
-              "shadow-lg shadow-green-600/25 hover:shadow-green-500/30",
-              "transition-all"
+              primaryCTA.color,
+              "text-white shadow-lg",
+              "transition-all hover:scale-[1.02] active:scale-[0.98]"
             )}
           >
-            <Phone className="h-4 w-4" />
-            Call Now
+            <primaryCTA.icon className="h-4 w-4" />
+            {primaryCTA.label}
           </Button>
           <Button 
             onClick={onSMS}
@@ -753,13 +930,53 @@ export default function StudentDetailCard({
             className={cn(
               "gap-2 h-11 px-5 rounded-xl font-medium",
               isDarkMode 
-                ? "border-white/20 text-white hover:bg-white/10" 
-                : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                ? "border-white/20 text-white hover:bg-white/10 hover:border-white/30" 
+                : "border-gray-200 text-gray-700 hover:bg-gray-50",
+              "transition-all"
             )}
           >
             <MessageSquare className="h-4 w-4" />
             SMS
           </Button>
+          
+          {/* More dropdown for additional actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline"
+                className={cn(
+                  "h-11 px-3 rounded-xl",
+                  isDarkMode 
+                    ? "border-white/20 text-white/70 hover:bg-white/10" 
+                    : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                )}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className={cn(
+              isDarkMode ? "bg-[#1a1a1c] border-white/10" : ""
+            )}>
+              <DropdownMenuItem onClick={onEmail} className={cn(
+                isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+              )}>
+                <Mail className="h-4 w-4 mr-2" />
+                Send Email
+              </DropdownMenuItem>
+              <DropdownMenuItem className={cn(
+                isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+              )}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule Follow-up
+              </DropdownMenuItem>
+              <DropdownMenuItem className={cn(
+                isDarkMode ? "text-white/80 focus:bg-white/10 focus:text-white" : ""
+              )}>
+                <Bell className="h-4 w-4 mr-2" />
+                Set Reminder
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         {/* ESC hint */}
