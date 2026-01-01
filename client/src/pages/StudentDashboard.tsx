@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import StudentBottomNav from "@/components/StudentBottomNav";
 import { Button } from "@/components/ui/button";
-import { APP_LOGO, APP_TITLE } from "@/const";
+import { APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { 
   Calendar,
@@ -324,9 +324,7 @@ export default function StudentDashboard() {
       <header className="bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {APP_LOGO && (
-              <img src={APP_LOGO} alt={APP_TITLE} className="h-8 w-auto" />
-            )}
+            <img src="/Darkdojoflow.png" alt={APP_TITLE} className="h-8 w-auto" />
             <span className="text-lg font-semibold text-gray-900">Student Portal</span>
             {isKioskMode && (
               <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">

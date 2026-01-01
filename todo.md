@@ -3164,3 +3164,4 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Fix Dashboard link to use proper navigation
 - [x] Ensure z-index hierarchy prevents overlay blocking
 - [x] Test navigation and logo display in dark mode
+- [x] Use light logo for dark mode in student dashboard
