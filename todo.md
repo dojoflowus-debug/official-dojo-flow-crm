@@ -2980,3 +2980,62 @@ Transform the basic "Credit Transaction History" page into a comprehensive "Cred
 - [x] Server now starts successfully
 - [x] Tests passing: 348 passed, 91 failed (mostly env/config related)
 
+
+
+## 🎨 Pipeline Page Redesign - Command Center (2025-12-31)
+
+### Goal
+Transform from "Dashboard with pipeline" to "Pipeline command center with dashboards supporting it"
+
+### New Hierarchy
+- [x] Pipeline becomes HERO (top, full-width, 1.5-2x height)
+- [x] Active Leads Board (kanban columns)
+- [x] Metrics/Insights as support layer (command bar)
+
+### Hero Pipeline Strip
+- [x] Full-width pipeline at TOP of page
+- [x] Increased height (1.5-2x current)
+- [x] Thicker stage bars with chevron/arrow design
+- [x] Subtle glow on active/selected stage
+- [x] Animated pulse on active stage
+- [x] Show count + dollar value per stage
+- [x] Icons for each stage
+- [ ] Hover preview of cards in stage (future)
+- [x] Gradient colors per stage (green → yellow → orange → red)
+
+### Interactive Pipeline Behavior
+- [x] Click stage to filter lead cards instantly
+- [x] Highlight selected stage, dim others
+- [x] Visual dominance on selection
+
+### Command Bar Metrics
+- [x] Compress metrics into horizontal bar below pipeline
+- [x] Format: 🔥 New Leads: 4 | ⏳ Aging: 0 | 💰 Pipeline: $2,000 | ⚠️ Alerts: 1
+- [x] Soft glass styling
+- [x] At-a-glance operational health
+
+### Kanban Lead Board
+- [x] Columns for each pipeline stage
+- [x] Lead cards organized by stage
+- [x] Horizontal scroll for stages
+- [x] Stage headers with icon, count, value
+
+### Enhanced Lead Cards
+- [x] Vertical colored edge matching pipeline stage
+- [x] Status icon with glow effect
+- [x] Subtle motion on hover
+- [x] "Next Action" CTA button (Call / Text / Schedule)
+- [x] Lead score badge
+- [x] Source badge
+- [x] Contact info (phone, email)
+- [x] Pipeline value display
+
+### Visual Priority
+- [x] Pipeline = brightest contrast (hero)
+- [x] Lead cards = medium contrast
+- [x] Stats = soft glass (support)
+
+### Optional: Kai Insight Layer
+- [x] Floating insight pill near pipeline (shows when aging leads exist)
+- [x] AI-powered suggestions (e.g., "X leads are aging in the pipeline")
+

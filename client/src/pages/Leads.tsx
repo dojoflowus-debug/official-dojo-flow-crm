@@ -3,11 +3,10 @@ import { useSearchParams } from 'react-router-dom'
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
-import SignatureStageRail from '../components/SignatureStageRail'
-import SignatureLeadCard from '../components/SignatureLeadCard'
-import LeadStatTiles from '../components/LeadStatTiles'
-import LeadDrawer from '../components/LeadDrawer'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import HeroPipelineStrip from '@/components/HeroPipelineStrip';
+import PipelineCommandBar from '@/components/PipelineCommandBar';
+import KanbanBoard from '@/components/KanbanBoard';
+import LeadDrawer from '@/components/LeadDrawer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -17,39 +16,56 @@ import {
   Search,
   Plus,
   Settings,
-  Users,
-  Inbox,
-  Zap,
-  Focus
+  Focus,
+  Sparkles
 } from 'lucide-react'
-import LeadSourceSettings from '../components/LeadSourceSettings'
+import LeadSourceSettings from '@/components/LeadSourceSettings'
+
+// Stage mapping from old to new
+const stageMapping: Record<string, string> = {
+  'new_lead': 'new_lead',
+  'attempting_contact': 'contacted',
+  'contact_made': 'contacted',
+  'intro_scheduled': 'intro_scheduled',
+  'offer_presented': 'trial_presented',
+  'enrolled': 'trial_presented',
+  'nurture': 'contacted',
+  'lost_winback': 'lost_winback',
+};
+
+// New stage definitions
+const newStages = [
+  { id: 'new_lead', label: 'New Leads' },
+  { id: 'contacted', label: 'Contacted' },
+  { id: 'intro_scheduled', label: 'Intro Scheduled' },
+  { id: 'trial_presented', label: 'Trial Presented' },
+  { id: 'lost_winback', label: 'Lost / Winback' },
+];
+
+// Old stages for drawer compatibility
+const oldStages = [
+  { id: 'new_lead', label: 'New Lead' },
+  { id: 'attempting_contact', label: 'Attempting Contact' },
+  { id: 'contact_made', label: 'Contact Made' },
+  { id: 'intro_scheduled', label: 'Intro Scheduled' },
+  { id: 'offer_presented', label: 'Offer Presented' },
+  { id: 'enrolled', label: 'Enrolled' },
+  { id: 'nurture', label: 'Nurture' },
+  { id: 'lost_winback', label: 'Lost / Winback' },
+];
 
 export default function Leads({ onLogout, theme, toggleTheme }) {
   const [searchParams] = useSearchParams()
   const { theme: currentTheme } = useTheme()
   const isDarkMode = currentTheme === 'dark' || currentTheme === 'cinematic'
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedStage, setSelectedStage] = useState(() => {
-    // Check URL params for filter preset
-    const filter = searchParams.get('filter')
-    if (filter === 'needs-followup') {
-      return 'new_lead' // Will activate the 'new' filter
-    }
-    return 'new_lead'
-  })
+  const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isResolveMode, setIsResolveMode] = useState(false)
-  const [activeFilter, setActiveFilter] = useState<'new' | 'aging' | 'value' | 'kai' | null>(() => {
-    // Check URL params for filter preset
-    const filter = searchParams.get('filter')
-    if (filter === 'needs-followup') {
-      return 'new' // Activate the 'new' filter to show recent leads
-    }
-    return null
-  })
+  const [activeFilter, setActiveFilter] = useState<'new' | 'aging' | 'value' | 'alerts' | null>(null)
   const [newLead, setNewLead] = useState({
     first_name: '',
     last_name: '',
@@ -90,77 +106,59 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
     }
   })
 
-  // Pipeline stages
-  const stages = [
-    { id: 'new_lead', label: 'New Lead' },
-    { id: 'attempting_contact', label: 'Attempting Contact' },
-    { id: 'contact_made', label: 'Contact Made' },
-    { id: 'intro_scheduled', label: 'Intro Scheduled' },
-    { id: 'offer_presented', label: 'Offer Presented' },
-    { id: 'enrolled', label: 'Enrolled' },
-    { id: 'nurture', label: 'Nurture' },
-    { id: 'lost_winback', label: 'Lost / Winback' },
-  ]
-
-  // Calculate stats
+  // Calculate stats for command bar
   const stats = useMemo(() => {
-    if (!leads) return { newToday: 0, aging: 0, pipelineValue: 0, kaiAlerts: 0 };
+    if (!leads) return { newLeads: 0, aging: 0, pipelineValue: 0, alerts: 0 };
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    let newToday = 0;
+    let newLeads = 0;
     let aging = 0;
-    let kaiAlerts = 0;
+    let alerts = 0;
+    let totalValue = 0;
     
-    // Count across all stages
     Object.values(leads).forEach((stageLeads: any[]) => {
       stageLeads.forEach((lead: any) => {
         const createdDate = new Date(lead.created_at || lead.updated_at);
         const ageDays = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
         
-        // New today
-        if (createdDate >= today) newToday++;
-        
-        // Aging (6+ days)
+        if (createdDate >= today) newLeads++;
         if (ageDays >= 6) aging++;
+        if (ageDays >= 10) alerts++;
         
-        // Kai alerts (simulate - every 3rd aging lead)
-        if (ageDays >= 6 && Math.random() > 0.7) kaiAlerts++;
+        totalValue += lead.pipeline_value || 500;
       });
     });
     
-    // Estimate pipeline value ($500 per lead average)
-    const totalLeads = Object.values(leads).reduce((sum: number, arr: any[]) => sum + arr.length, 0);
-    const pipelineValue = totalLeads * 500;
-    
-    return { newToday, aging, pipelineValue, kaiAlerts: Math.max(kaiAlerts, 1) };
+    return { newLeads, aging, pipelineValue: totalValue, alerts: Math.max(alerts, 0) };
   }, [leads]);
 
-  // Calculate stage health
-  const stageHealth = useMemo(() => {
-    if (!leads) return {};
+  // Calculate stage counts and values for hero pipeline
+  const { stageCounts, stageValues } = useMemo(() => {
+    if (!leads) return { stageCounts: {}, stageValues: {} };
     
-    const health: Record<string, 'green' | 'yellow' | 'red'> = {};
+    const counts: Record<string, number> = {};
+    const values: Record<string, number> = {};
     
-    stages.forEach(stage => {
-      const stageLeads = leads[stage.id] || [];
-      let redCount = 0;
-      let yellowCount = 0;
-      
-      stageLeads.forEach((lead: any) => {
-        const createdDate = new Date(lead.created_at || lead.updated_at);
-        const ageDays = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (ageDays >= 11) redCount++;
-        else if (ageDays >= 6) yellowCount++;
-      });
-      
-      if (redCount > 0) health[stage.id] = 'red';
-      else if (yellowCount > 0) health[stage.id] = 'yellow';
-      else health[stage.id] = 'green';
+    // Initialize
+    newStages.forEach(stage => {
+      counts[stage.id] = 0;
+      values[stage.id] = 0;
     });
     
-    return health;
+    // Aggregate from old stages to new stages
+    Object.entries(leads).forEach(([oldStageId, stageLeads]: [string, any[]]) => {
+      const newStageId = stageMapping[oldStageId] || oldStageId;
+      if (counts[newStageId] !== undefined) {
+        counts[newStageId] += stageLeads.length;
+        stageLeads.forEach(lead => {
+          values[newStageId] += lead.pipeline_value || 500;
+        });
+      }
+    });
+    
+    return { stageCounts: counts, stageValues: values };
   }, [leads]);
 
   // Handle Add Lead
@@ -190,74 +188,21 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
     setSelectedLead(null)
   }
 
-  // Handle filter click from stat tiles
-  const handleFilterClick = (filter: 'new' | 'aging' | 'value' | 'kai' | null) => {
-    setActiveFilter(filter);
-    // Could also auto-select appropriate stage based on filter
+  // Handle stage selection from hero pipeline
+  const handleStageSelect = (stageId: string) => {
+    setSelectedStage(selectedStage === stageId ? null : stageId);
   }
 
-  // Filter leads based on search query and active filter
-  const filterLeads = (leadsArray: any[]) => {
-    let filtered = leadsArray;
-    
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(lead => {
-        const fullName = `${lead.first_name} ${lead.last_name}`.toLowerCase()
-        return (
-          fullName.includes(query) ||
-          lead.email?.toLowerCase().includes(query) ||
-          lead.phone?.includes(query)
-        )
-      });
-    }
-    
-    // Stat tile filters
-    if (activeFilter === 'new') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      filtered = filtered.filter(lead => {
-        const createdDate = new Date(lead.created_at || lead.updated_at);
-        return createdDate >= today;
-      });
-    } else if (activeFilter === 'aging') {
-      filtered = filtered.filter(lead => {
-        const createdDate = new Date(lead.created_at || lead.updated_at);
-        const ageDays = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        return ageDays >= 6;
-      });
-    }
-    
-    return filtered;
+  // Handle filter click from command bar
+  const handleFilterClick = (filter: 'new' | 'aging' | 'value' | 'alerts' | null) => {
+    setActiveFilter(activeFilter === filter ? null : filter);
   }
-
-  // Get leads for selected stage
-  const getLeadsForStage = () => {
-    if (!leads) return []
-    const stageLeads = leads[selectedStage] || []
-    return filterLeads(stageLeads)
-  }
-
-  // Calculate stage counts
-  const getStageCounts = () => {
-    if (!leads) return {}
-    const counts: Record<string, number> = {}
-    stages.forEach(stage => {
-      counts[stage.id] = (leads[stage.id] || []).length
-    })
-    return counts
-  }
-
-  const stageLeads = getLeadsForStage()
-  const stageCounts = getStageCounts()
-  const currentStageLabel = stages.find(s => s.id === selectedStage)?.label || 'Leads'
 
   return (
     <BottomNavLayout>
-      <div className={`min-h-screen transition-all duration-[180ms] ease-out ${isDarkMode ? 'bg-[#0F1115]' : 'bg-[#F6F7F9]'} ${isResolveMode ? (isDarkMode ? 'bg-[#0A0B0D]' : 'bg-[#E8E9EB]') : ''}`}>
+      <div className={`min-h-screen transition-all duration-[180ms] ease-out ${isDarkMode ? 'bg-[#0A0A0A]' : 'bg-[#F6F7F9]'}`}>
         {/* Breadcrumb Navigation */}
-        <div className={`border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A]/80 backdrop-blur-sm border-white/10' : 'bg-white/80 backdrop-blur-sm border-slate-200/50'}`}>
+        <div className={`border-b px-6 py-2 ${isDarkMode ? 'bg-[#111111]/80 backdrop-blur-sm border-white/10' : 'bg-white/80 backdrop-blur-sm border-slate-200/50'}`}>
           <Breadcrumb
             items={[
               { label: 'Dashboard', href: '/dashboard' },
@@ -267,15 +212,15 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
         </div>
 
         {/* Header */}
-        <div className={`border-b ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-white border-slate-200/50'}`}>
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+        <div className={`border-b ${isDarkMode ? 'bg-[#111111] border-white/10' : 'bg-white border-slate-200/50'}`}>
+          <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className={`text-3xl md:text-4xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                <h1 className={`text-2xl md:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                   Leads
                 </h1>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
-                  Your revenue radar • Command center
+                <p className={`text-sm mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>
+                  Your revenue funnel • Command center
                 </p>
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -310,189 +255,152 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           </div>
         </div>
 
-        {/* Stat Tiles */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 px-4 md:px-6 py-4 max-w-7xl mx-auto">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className={`rounded-2xl p-5 ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-white shadow-sm'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <Skeleton className="h-5 w-5 rounded" />
+        {/* HERO: Pipeline Strip */}
+        <div className={`${isDarkMode ? 'bg-gradient-to-b from-[#111111] to-[#0A0A0A]' : 'bg-gradient-to-b from-white to-slate-50'}`}>
+          <div className="max-w-[1600px] mx-auto">
+            {isLoading ? (
+              <div className="px-6 py-6">
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Skeleton key={i} className="h-[120px] flex-1 rounded-lg" />
+                  ))}
                 </div>
-                <Skeleton className="h-8 w-20 mb-2" />
-                <Skeleton className="h-4 w-24" />
               </div>
-            ))}
+            ) : (
+              <HeroPipelineStrip
+                selectedStage={selectedStage}
+                onStageSelect={handleStageSelect}
+                stageCounts={stageCounts}
+                stageValues={stageValues}
+                isDarkMode={isDarkMode}
+              />
+            )}
           </div>
-        ) : (
-          <div className="max-w-7xl mx-auto">
-            <LeadStatTiles
-              newLeadsToday={stats.newToday}
+        </div>
+
+        {/* Command Bar */}
+        <div className="max-w-[1600px] mx-auto">
+          {isLoading ? (
+            <div className="px-6 py-3">
+              <Skeleton className="h-12 w-full rounded-xl" />
+            </div>
+          ) : (
+            <PipelineCommandBar
+              newLeads={stats.newLeads}
               agingLeads={stats.aging}
               pipelineValue={stats.pipelineValue}
-              kaiAlerts={stats.kaiAlerts}
+              alerts={stats.alerts}
+              isDarkMode={isDarkMode}
               onFilterClick={handleFilterClick}
               activeFilter={activeFilter}
-              isDarkMode={isDarkMode}
-              isResolveMode={isResolveMode}
             />
+          )}
+        </div>
+
+        {/* Search Bar */}
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
+              <Input
+                type="text"
+                placeholder="Search leads..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`pl-11 h-10 rounded-xl ${isDarkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-white/40' : 'bg-white border-slate-200 text-slate-700 placeholder:text-slate-400'}`}
+              />
+            </div>
+
+            {/* Stage filter info */}
+            {selectedStage && (
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
+                  Filtering: <span className="font-medium">{newStages.find(s => s.id === selectedStage)?.label}</span>
+                </span>
+                <button
+                  onClick={() => setSelectedStage(null)}
+                  className="px-2 py-1 rounded-lg text-xs font-medium bg-[#E53935]/20 text-[#E53935] hover:bg-[#E53935]/30 transition-colors"
+                >
+                  Clear ×
+                </button>
+              </div>
+            )}
+
+            {activeFilter && (
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
+                  Filter: <span className="font-medium capitalize">{activeFilter}</span>
+                </span>
+                <button
+                  onClick={() => setActiveFilter(null)}
+                  className="px-2 py-1 rounded-lg text-xs font-medium bg-[#E53935]/20 text-[#E53935] hover:bg-[#E53935]/30 transition-colors"
+                >
+                  Clear ×
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Kai Insight Banner */}
+        {stats.aging > 0 && (
+          <div className="max-w-[1600px] mx-auto px-4 md:px-6 pb-4">
+            <div className={`
+              flex items-center gap-3 px-4 py-3 rounded-xl
+              ${isDarkMode 
+                ? 'bg-purple-500/10 border border-purple-500/20' 
+                : 'bg-purple-50 border border-purple-200'
+              }
+            `}>
+              <Sparkles className="w-5 h-5 text-purple-500 flex-shrink-0" />
+              <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                <span className="font-medium">{stats.aging} leads</span> are aging in the pipeline — consider SMS follow-up to re-engage.
+              </p>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto text-purple-500 hover:text-purple-600 hover:bg-purple-500/10"
+              >
+                Ask Kai
+              </Button>
+            </div>
           </div>
         )}
 
-        {/* Stage Rail */}
-        <div className={`${isDarkMode ? 'bg-[#18181A]/50' : 'bg-white/50'} backdrop-blur-sm`}>
+        {/* Kanban Board */}
+        <div className="max-w-[1600px] mx-auto">
           {isLoading ? (
-            <div className="py-6 px-6">
-              <div className="flex items-center gap-3 max-w-7xl mx-auto overflow-x-auto pb-2">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                  <div key={i} className="flex-shrink-0">
-                    <div className={`rounded-xl p-4 min-w-[140px] ${isDarkMode ? 'bg-[#18181A]' : 'bg-white'}`}>
-                      <Skeleton className="h-6 w-6 mx-auto mb-2 rounded" />
-                      <Skeleton className="h-4 w-24 mx-auto mb-1" />
-                      <Skeleton className="h-6 w-8 mx-auto" />
-                    </div>
+            <div className="px-6 pb-8">
+              <div className="flex gap-4 overflow-x-auto">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="flex-shrink-0 w-[300px]">
+                    <Skeleton className="h-12 w-full rounded-t-xl mb-0" />
+                    <Skeleton className="h-[400px] w-full rounded-b-xl" />
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="max-w-7xl mx-auto">
-              <SignatureStageRail
-                selectedStage={selectedStage}
-                onStageSelect={setSelectedStage}
-                stageCounts={stageCounts}
-                stageHealth={stageHealth}
-                isDarkMode={isDarkMode}
-                isResolveMode={isResolveMode}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
-          <div className="relative max-w-md">
-            <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
-            <Input
-              type="text"
-              placeholder="Search leads..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`pl-12 h-12 rounded-xl ${isDarkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-white/40' : 'bg-slate-100 border-0 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#E53935]/20'}`}
+            <KanbanBoard
+              leads={leads || {}}
+              selectedStage={selectedStage}
+              isDarkMode={isDarkMode}
+              onLeadClick={(lead) => {
+                setSelectedLead(lead)
+                setIsDrawerOpen(true)
+              }}
+              onAddLead={() => setShowAddModal(true)}
+              onCall={(lead) => {
+                if (lead.phone) window.location.href = `tel:${lead.phone}`
+              }}
+              onText={(lead) => {
+                if (lead.phone) window.location.href = `sms:${lead.phone}`
+              }}
+              onSchedule={(lead) => {
+                setSelectedLead(lead)
+                setIsDrawerOpen(true)
+              }}
             />
-          </div>
-        </div>
-
-        {/* Lead Cards Grid */}
-        <div className="max-w-7xl mx-auto px-4 md:px-6 pb-8">
-          {/* Stage Title */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                {currentStageLabel}
-              </h2>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-white/10 text-white/70' : 'bg-slate-100 text-slate-600'}`}>
-                {stageLeads.length} leads
-              </span>
-              {activeFilter && (
-                <button
-                  onClick={() => setActiveFilter(null)}
-                  className="px-3 py-1 rounded-full text-xs font-medium bg-[#E53935]/20 text-[#E53935] hover:bg-[#E53935]/30 transition-colors"
-                >
-                  Clear filter ×
-                </button>
-              )}
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                <div key={i} className={`rounded-2xl p-5 ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-white shadow-sm'}`}>
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <Skeleton className="h-6 w-32 mb-2" />
-                      <Skeleton className="h-4 w-20" />
-                    </div>
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                  </div>
-                  
-                  {/* Source */}
-                  <Skeleton className="h-4 w-24 mb-3" />
-                  
-                  {/* Contact Info */}
-                  <div className="space-y-2 mb-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Skeleton className="h-9 flex-1 rounded-lg" />
-                    <Skeleton className="h-9 flex-1 rounded-lg" />
-                    <Skeleton className="h-9 flex-1 rounded-lg" />
-                  </div>
-                  
-                  {/* Move Button */}
-                  <Skeleton className="h-10 w-full rounded-lg mt-3" />
-                </div>
-              ))}
-            </div>
-          ) : stageLeads.length === 0 ? (
-            /* Empty State */
-            <div className={`rounded-2xl p-12 text-center ${isDarkMode ? 'bg-[#18181A] border border-white/10' : 'bg-white shadow-sm'}`}>
-              <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${isDarkMode ? 'bg-white/10' : 'bg-slate-100'}`}>
-                <Inbox className={`w-10 h-10 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
-              </div>
-              <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>
-                {activeFilter ? 'No leads match this filter' : 'Your pipeline is clear'}
-              </h3>
-              <p className={`text-sm mb-6 ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>
-                {activeFilter ? 'Try adjusting your filter or search criteria.' : "Let's bring in new leads to grow your dojo."}
-              </p>
-              {!activeFilter && (
-                <Button 
-                  onClick={() => setShowAddModal(true)}
-                  className="bg-[#E53935] hover:bg-[#C62828] text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Lead
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {stageLeads.map((lead, index) => (
-                <SignatureLeadCard
-                  key={lead.id}
-                  lead={lead}
-                  hasKaiSuggestion={index < stats.kaiAlerts}
-                  isDarkMode={isDarkMode}
-                  isResolveMode={isResolveMode}
-                  index={index}
-                  onClick={() => {
-                    setSelectedLead(lead)
-                    setIsDrawerOpen(true)
-                  }}
-                  onCall={() => {
-                    if (lead.phone) window.location.href = `tel:${lead.phone}`
-                  }}
-                  onText={() => {
-                    if (lead.phone) window.location.href = `sms:${lead.phone}`
-                  }}
-                  onSchedule={() => {
-                    setSelectedLead(lead)
-                    setIsDrawerOpen(true)
-                  }}
-                  onMoveToStage={() => {
-                    setSelectedLead(lead)
-                    setIsDrawerOpen(true)
-                  }}
-                />
-              ))}
-            </div>
           )}
         </div>
 
@@ -506,8 +414,8 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           }}
           onMoveToStage={handleMoveToStage}
           onDelete={handleDeleteLead}
-          stages={stages}
-          currentStage={selectedStage}
+          stages={oldStages}
+          currentStage={selectedLead?.status || 'new_lead'}
         />
 
         {/* Lead Source Settings Modal */}
@@ -518,8 +426,8 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
 
         {/* Add Lead Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${isDarkMode ? 'bg-[#18181A]' : 'bg-white'}`}>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${isDarkMode ? 'bg-[#1A1A1C]' : 'bg-white'}`}>
               <div className={`px-6 py-5 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
                 <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                   Add New Lead
@@ -535,7 +443,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                       value={newLead.first_name}
                       onChange={(e) => setNewLead({ ...newLead, first_name: e.target.value })}
                       placeholder="John"
-                      className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
+                      className={isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}
                     />
                   </div>
                   <div>
@@ -546,7 +454,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                       value={newLead.last_name}
                       onChange={(e) => setNewLead({ ...newLead, last_name: e.target.value })}
                       placeholder="Doe"
-                      className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
+                      className={isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}
                     />
                   </div>
                 </div>
@@ -560,7 +468,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                     value={newLead.email}
                     onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
                     placeholder="john@example.com"
-                    className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
+                    className={isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}
                   />
                 </div>
 
@@ -573,7 +481,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                     value={newLead.phone}
                     onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
                     placeholder="(555) 123-4567"
-                    className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
+                    className={isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}
                   />
                 </div>
 
@@ -585,7 +493,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                     value={newLead.source}
                     onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
                     placeholder="Website, Referral, etc."
-                    className={isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}
+                    className={isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}
                   />
                 </div>
 
