@@ -3449,3 +3449,47 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Fixed creditRouter to use ctx.currentOrganizationId instead of ctx.user.organizationId
 - [x] Made creditRouter return empty/default values for users without organization (graceful handling)
 - [x] Made navBadges.getActionableCounts input schema optional to handle undefined input
+
+
+## 🐛 BUG: Add Student Form Database Insert Error (2026-01-01)
+
+### Issue
+- [x] Error: Failed query: insert into students - schema mismatch
+- [x] Form data doesn't match database schema
+- [x] Required fields missing or nullable fields incorrectly enforced
+
+### Root Cause Analysis
+- [x] Check students table schema for required vs nullable fields
+- [x] Verify form data matches database column expectations
+- [x] Identify missing fields in form submission
+
+### Root Cause Found
+- dateOfBirth was being passed as Date object but schema uses `mode: 'string'` for timestamps
+- Fixed by converting Date to MySQL datetime string format (YYYY-MM-DD HH:MM:SS)
+
+### Fix Tasks
+- [x] Fix database schema - make optional fields nullable with proper defaults
+- [x] Update student creation procedure to handle optional fields
+- [x] Ensure proper defaults for createdAt, updatedAt, status
+- [x] Test student creation end-to-end
+
+### Multi-Step Wizard Implementation
+- [ ] Create multi-step "Add Student" wizard (5 steps)
+- [ ] Step 1: Basic Info (name, email, phone, DOB)
+- [ ] Step 2: Guardian Info (conditional - only if student < 18)
+- [ ] Step 3: Program & Enrollment (program, status, start date)
+- [ ] Step 4: Address & Location (with auto-geocode)
+- [ ] Step 5: Review & Create summary
+
+### Post-Creation Behavior
+- [ ] Close modal automatically after success
+- [ ] Refresh students list
+- [ ] Select newly created student
+- [ ] Center map on their location
+- [ ] Show success toast
+
+### UX Improvements
+- [ ] Disable submit until required fields are valid
+- [ ] Show inline validation errors
+- [ ] Add progress indicator (Step 1 of 5, etc.)
+- [ ] Handle empty state with "Add your first student" CTA

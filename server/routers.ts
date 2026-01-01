@@ -1809,10 +1809,12 @@ export const appRouter = router({
           throw new Error('No organization found. Please complete your account setup.');
         }
         
-        // Parse date string to Date object if provided
-        let dateOfBirth: Date | null = null;
+        // Format date string for database (schema uses mode: 'string' for timestamps)
+        let dateOfBirthStr: string | null = null;
         if (input.dateOfBirth) {
-          dateOfBirth = new Date(input.dateOfBirth);
+          const date = new Date(input.dateOfBirth);
+          // Format as MySQL datetime string: YYYY-MM-DD HH:MM:SS
+          dateOfBirthStr = date.toISOString().slice(0, 19).replace('T', ' ');
         }
         
         // Geocode address if provided
@@ -1841,7 +1843,7 @@ export const appRouter = router({
           lastName: input.lastName,
           email: input.email || null,
           phone: input.phone || null,
-          dateOfBirth: dateOfBirth,
+          dateOfBirth: dateOfBirthStr,
           age: input.age || null,
           beltRank: input.beltRank || 'White Belt',
           status: (input.status as 'Active' | 'Inactive' | 'On Hold') || 'Active',
