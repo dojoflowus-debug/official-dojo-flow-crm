@@ -24,6 +24,7 @@ import {
 import { LeafletMap, LeafletMapHandle, StudentMarker } from '@/components/LeafletMap'
 import CommandHeader from '@/components/CommandHeader'
 import StudentDetailCard from '@/components/StudentDetailCard'
+import StudentModal from '@/components/StudentModal'
 import {
   Search,
   Filter,
@@ -115,6 +116,11 @@ export default function StudentsCommandCenter() {
   const [beltFilter, setBeltFilter] = useState<string>('all')
   const [mapLayer, setMapLayer] = useState<MapLayer>('all')
   const [showHeatmap, setShowHeatmap] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingStudent, setEditingStudent] = useState<CommandStudent | null>(null)
+  
+  // Get utils for invalidating queries after student update
+  const utils = trpc.useUtils()
   
   const { data: studentsData, isLoading: studentsLoading } = trpc.students.list.useQuery()
   
@@ -457,11 +463,9 @@ export default function StudentsCommandCenter() {
                   }, 100)
                 }}
                 onEditProfile={() => {
-                  // TODO: Open edit profile modal/drawer
-                  // For now, show a toast or navigate to edit page
-                  console.log('Edit profile clicked for student:', selectedStudent.id)
-                  // Could navigate to: /students/${selectedStudent.id}/edit
-                  // Or open a modal with edit form
+                  // Open the edit profile modal
+                  setEditingStudent(selectedStudent)
+                  setEditModalOpen(true)
                 }}
                 isDarkMode={isDarkMode}
                 className="h-full"
@@ -470,6 +474,41 @@ export default function StudentsCommandCenter() {
           </>
         )}
       </div>
+      
+      {/* Edit Student Modal */}
+      {editingStudent && (
+        <StudentModal
+          student={{
+            id: editingStudent.id,
+            first_name: editingStudent.first_name,
+            last_name: editingStudent.last_name,
+            email: editingStudent.email,
+            phone: editingStudent.phone,
+            date_of_birth: '',
+            belt_rank: editingStudent.belt_rank,
+            status: editingStudent.status,
+            membership_status: editingStudent.membership_status,
+            photo_url: editingStudent.photo_url,
+            program: editingStudent.program,
+            latitude: editingStudent.latitude,
+            longitude: editingStudent.longitude,
+          }}
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false)
+            setEditingStudent(null)
+          }}
+          onStudentUpdated={() => {
+            // Refresh the students list
+            utils.students.list.invalidate()
+            // Close the modal
+            setEditModalOpen(false)
+            setEditingStudent(null)
+            // Also close the detail card
+            setSelectedStudent(null)
+          }}
+        />
+      )}
     </AppShell>
   )
 }

@@ -3415,4 +3415,21 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Add floating action button (FAB) for quick student creation
 - [x] Ensure user can find "Add Student" action within 3 seconds of landing
 - [x] Test all new UX elements
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: 614a0d6c)
+
+
+## 🐛 BUG: Edit Profile Button Not Working in Students Command Center
+
+### Issue
+- [x] Edit Profile button in StudentDetailCard was only logging to console
+- [x] No modal was opening when clicking Edit Profile
+
+### Fix Applied
+- [x] Added StudentModal import to StudentsCommandCenter.tsx
+- [x] Added editModalOpen and editingStudent state variables
+- [x] Added trpc.useUtils() for query invalidation
+- [x] Updated onEditProfile handler to open StudentModal with selected student data
+- [x] Added StudentModal component at end of file with proper props
+- [x] Modal now opens with student data pre-filled for editing
+- [x] After save, students list is refreshed and modal/detail card close
+
