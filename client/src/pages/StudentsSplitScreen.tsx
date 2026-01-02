@@ -1167,6 +1167,10 @@ export default function StudentsSplitScreen() {
                       }
                     }, viewMode === 'list' ? 300 : 50)
                   }}
+                  onEditProfile={() => {
+                    // Open the student modal for editing
+                    setIsModalOpen(true)
+                  }}
                   isDarkMode={isDarkMode}
                   className="h-full"
                 />

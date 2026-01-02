@@ -3705,3 +3705,43 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] No console errors after fix
 - [x] Page is responsive and interactive
 
+
+## 🐛 BUG: Student Photo Upload Not Working
+
+### Issue
+- [ ] User reports they cannot add photos to student profiles
+- [ ] Vincent Holmes photo was added previously without issues
+- [ ] Now no photos can be added at all
+- [ ] User suspects the issue is with the student card component
+
+### Investigation Tasks
+- [ ] Check student card component for photo upload functionality
+- [ ] Check photo upload mutation/procedure
+- [ ] Identify root cause
+- [ ] Fix the issue
+- [ ] Test photo uploads work correctly
+
+
+
+## 🐛 BUG: Student Photo Upload Not Working (2026-01-02)
+
+### Issue
+- [x] User reports they cannot add photos to student profiles
+- [x] Vincent Holmes photo was added previously but now new photos cannot be added
+
+### Investigation
+- [x] Checked StudentModal component - photo upload mutation is correctly defined
+- [x] Checked StudentDetailCard component - onEditProfile prop is defined but not passed
+- [x] Found root cause: StudentDetailCard in StudentsSplitScreen.tsx was missing onEditProfile handler
+
+### Root Cause
+**Missing onEditProfile handler in StudentDetailCard:**
+- The StudentDetailCard component in StudentsSplitScreen.tsx was not receiving the onEditProfile prop
+- When user clicked "View full profile", the handler was undefined so nothing happened
+- The student modal could not be opened from the split view, preventing photo uploads
+
+### Fix Applied
+- [x] Added `onEditProfile={() => { setIsModalOpen(true) }}` to StudentDetailCard in StudentsSplitScreen.tsx
+- [x] Verified photo upload now works correctly
+- [x] Tested with Vincent Holmes student - photo uploaded successfully to S3
+- [x] Database confirmed photoUrl is being saved correctly
