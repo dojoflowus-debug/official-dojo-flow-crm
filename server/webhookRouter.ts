@@ -82,7 +82,7 @@ export const webhookRouter = router({
           await db
             .update(webhookKeys)
             .set({
-              lastUsedAt: new Date(),
+              lastUsedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
               usageCount: keyRecord.usageCount + 1,
             })
             .where(eq(webhookKeys.id, keyRecord.id));
@@ -117,7 +117,7 @@ export const webhookRouter = router({
               utmCampaign: input.utm_campaign,
               utmContent: input.utm_content,
               utmTerm: input.utm_term,
-              updatedAt: new Date(),
+              updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
             })
             .where(eq(leads.id, existingLead.id));
           
@@ -136,7 +136,7 @@ export const webhookRouter = router({
           message: "Database connection failed",
         });
       }
-      const [newLead] = await db
+      const result = await db
         .insert(leads)
         .values({
           firstName,
@@ -153,6 +153,7 @@ export const webhookRouter = router({
           status: "New Lead",
         })
         .$returningId();
+      const newLead = result[0] as { id: number };
       
       // Trigger notifications asynchronously (don't wait)
       const { notifyNewLead } = await import("./services/notifications.js");

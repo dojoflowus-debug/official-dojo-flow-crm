@@ -3609,3 +3609,20 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Fix school logo upload
 - [x] Test both upload features
 
+
+
+## 🐛 BUG: Photo and Logo Upload Still Not Working
+
+### Issue
+- [ ] User reports photos still cannot be uploaded
+- [ ] User reports logo still cannot be uploaded
+
+### Investigation Tasks
+- [ ] Check current upload implementation in routers.ts
+- [ ] Verify S3 storage configuration
+- [ ] Check file upload mutation handlers
+- [ ] Test upload flow end-to-end
+- [ ] Fix photo upload functionality
+- [ ] Fix logo upload functionality
+- [ ] Save checkpoint
+
