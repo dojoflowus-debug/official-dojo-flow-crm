@@ -333,6 +333,24 @@
   --sidebar-ring: oklch(0.65 0.25 30);
 }
 
+/* Light mode global styles - Clean, professional, daytime aesthetic */
+.light-mode body,
+.light body,
+html.light,
+html.light-mode {
+  background: oklch(0.98 0.005 80); /* Warm off-white */
+  background-attachment: fixed;
+}
+
+/* Dark mode global styles */
+.dark-mode body,
+.dark body,
+html.dark,
+html.dark-mode {
+  background: oklch(0 0 0); /* Pure black */
+  background-attachment: fixed;
+}
+
 /* Cinematic mode global styles */
 .cinematic-mode body,
 .cinematic body,

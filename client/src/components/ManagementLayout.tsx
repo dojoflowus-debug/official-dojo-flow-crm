@@ -130,7 +130,7 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
   return (
     <div className={cn(
       "min-h-screen flex flex-col",
-      isDark ? "bg-[#0a0a0b]" : "bg-gray-50"
+      isDark ? "bg-[#0a0a0b]" : "bg-[#F7F8FA]"
     )}>
       {/* Low Credit Banner */}
       <LowCreditBanner />

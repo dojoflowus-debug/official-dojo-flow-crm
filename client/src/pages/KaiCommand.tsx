@@ -1959,11 +1959,60 @@ export default function KaiCommand() {
     : 'opacity-100 translate-y-0';
   const autoHideTransition = 'transition-all duration-300 ease-out';
 
+  // Get theme-aware background class for Kai Command
+  const getKaiCommandBgClass = () => {
+    if (isCinematic) return 'bg-[#0A0A0B]';
+    if (isDark) return 'bg-[#0A0A0B]';
+    return 'bg-[#F5F6F8]'; // Light mode: soft gray background
+  };
+
+  // Get theme-aware sidebar background
+  const getSidebarBgClass = () => {
+    if (isCinematic) return 'bg-[#0A0A0B] border-white/5';
+    if (isDark) return 'bg-[#0A0A0B] border-white/5';
+    return 'bg-white border-slate-200'; // Light mode: white sidebar
+  };
+
+  // Get theme-aware text colors
+  const getTextClass = (variant: 'primary' | 'secondary' | 'muted') => {
+    if (isCinematic || isDark) {
+      switch (variant) {
+        case 'primary': return 'text-white';
+        case 'secondary': return 'text-white/70';
+        case 'muted': return 'text-white/40';
+      }
+    }
+    // Light mode
+    switch (variant) {
+      case 'primary': return 'text-slate-900';
+      case 'secondary': return 'text-slate-600';
+      case 'muted': return 'text-slate-400';
+    }
+  };
+
+  // Get theme-aware border class
+  const getBorderClass = () => {
+    if (isCinematic || isDark) return 'border-white/5';
+    return 'border-slate-200';
+  };
+
+  // Get theme-aware input styling
+  const getInputClass = () => {
+    if (isCinematic || isDark) return 'bg-white/5 border-white/10 text-white placeholder:text-white/30';
+    return 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400';
+  };
+
+  // Get theme-aware hover class
+  const getHoverClass = () => {
+    if (isCinematic || isDark) return 'hover:bg-white/5';
+    return 'hover:bg-slate-50';
+  };
+
   return (
     <BottomNavLayout hiddenInFocusMode={isFocusMode} isUIHidden={isUIHidden}>
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden bg-[#0A0A0B] ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${getKaiCommandBgClass()} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -1974,46 +2023,46 @@ export default function KaiCommand() {
             pointerEvents: isFocusMode ? 'none' : 'auto',
             zIndex: 20
           }}
-          className={`conversation-panel bg-[#0A0A0B] border-white/5 border rounded-sm flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_24px_rgba(0,0,0,0.7)] overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
+          className={`conversation-panel ${getSidebarBgClass()} border rounded-sm flex flex-col flex-shrink-0 m-4 mr-0 ${isDark || isCinematic ? 'shadow-[0_4px_24px_rgba(0,0,0,0.7)]' : 'shadow-lg'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
         >
           {/* Header - Tactical Command Style */}
-          <div className="p-4 border-b border-white/5">
+          <div className={`p-4 border-b ${getBorderClass()}`}>
             {/* Search + New Op Button Row */}
             <div className="flex items-center gap-3 mb-3">
               {/* Search - Full Width */}
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${getTextClass('muted')}`} />
                 <Input
                   placeholder="Search ops..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 w-full bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-sm focus:border-white/20"
+                  className={`pl-9 h-9 w-full ${getInputClass()} rounded-sm focus:border-primary/50`}
                 />
               </div>
               
               {/* New Operation Button */}
               <button
                 onClick={handleNewChat}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-white/10 text-[11px] font-medium uppercase tracking-wider text-white/70 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-150"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border ${isDark || isCinematic ? 'border-white/10 text-white/70 bg-white/5 hover:bg-white/10 hover:border-white/20' : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 hover:border-slate-300'} text-[11px] font-medium uppercase tracking-wider transition-all duration-150`}
               >
-                <Plus className="w-3.5 h-3.5 text-white/50" />
+                <Plus className={`w-3.5 h-3.5 ${getTextClass('muted')}`} />
                 NEW OP
               </button>
             </div>
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full h-8 bg-white/5 rounded-sm p-0.5">
-                <TabsTrigger value="active" className="flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50">ACTIVE</TabsTrigger>
-                <TabsTrigger value="archived" className="flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50">ARCHIVED</TabsTrigger>
-                <TabsTrigger value="all" className="flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50">ALL</TabsTrigger>
+              <TabsList className={`w-full h-8 ${isDark || isCinematic ? 'bg-white/5' : 'bg-slate-100'} rounded-sm p-0.5`}>
+                <TabsTrigger value="active" className={`flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm ${isDark || isCinematic ? 'data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50' : 'data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-500'}`}>ACTIVE</TabsTrigger>
+                <TabsTrigger value="archived" className={`flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm ${isDark || isCinematic ? 'data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50' : 'data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-500'}`}>ARCHIVED</TabsTrigger>
+                <TabsTrigger value="all" className={`flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm ${isDark || isCinematic ? 'data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50' : 'data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-500'}`}>ALL</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
           {/* Status Filters */}
-          <div className="px-4 py-4 border-b border-white/5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3 text-white/40">STATUS FILTERS</h3>
+          <div className={`px-4 py-4 border-b ${getBorderClass()}`}>
+            <h3 className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${getTextClass('muted')}`}>STATUS FILTERS</h3>
             <div className="space-y-1">
               {smartCollections.map((collection) => {
                 const isActive = activeCollection === collection.id;
@@ -2025,15 +2074,15 @@ export default function KaiCommand() {
                   }}
                   className={`w-full flex items-center justify-between px-2 py-1.5 rounded-sm transition-colors ${
                     isActive
-                      ? 'bg-white/10 border-l-2 border-l-red-500'
-                      : 'hover:bg-white/5 border-l-2 border-l-transparent'
+                      ? `${isDark || isCinematic ? 'bg-white/10' : 'bg-red-50'} border-l-2 border-l-red-500`
+                      : `${getHoverClass()} border-l-2 border-l-transparent`
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <collection.icon className={`w-3.5 h-3.5 ${collection.color}`} />
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-white/70">{collection.label}</span>
+                    <span className={`text-[11px] font-medium uppercase tracking-wider ${getTextClass('secondary')}`}>{collection.label}</span>
                   </div>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${collection.id === 'urgent' ? 'bg-red-500/20 text-red-500' : collection.id === 'pending' ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-white/50'}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${collection.id === 'urgent' ? 'bg-red-500/20 text-red-500' : collection.id === 'pending' ? 'bg-amber-500/20 text-amber-500' : isDark || isCinematic ? 'bg-white/10 text-white/50' : 'bg-slate-100 text-slate-500'}`}>
                     {collection.count}
                   </span>
                 </button>
@@ -2046,17 +2095,17 @@ export default function KaiCommand() {
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="px-4 pt-4 pb-2">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-white/40">OPERATIONS LOG</h3>
-                <span className="text-[10px] font-mono text-white/30">{filteredConversations.length}</span>
+                <h3 className={`text-[10px] font-bold uppercase tracking-widest ${getTextClass('muted')}`}>OPERATIONS LOG</h3>
+                <span className={`text-[10px] font-mono ${getTextClass('muted')}`}>{filteredConversations.length}</span>
               </div>
               {activeCollection && (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-white/40">
+                  <span className={`text-[10px] ${getTextClass('muted')}`}>
                     Filter: {smartCollections.find(c => c.id === activeCollection)?.label}
                   </span>
                   <button
                     onClick={() => setActiveCollection(null)}
-                    className="text-[10px] px-1.5 py-0.5 rounded-sm transition-colors text-white/50 hover:bg-white/10"
+                    className={`text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${isDark || isCinematic ? 'text-white/50 hover:bg-white/10' : 'text-slate-500 hover:bg-slate-100'}`}
                   >
                     CLEAR
                   </button>
@@ -2068,7 +2117,7 @@ export default function KaiCommand() {
               {/* Today */}
               {todayConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-[9px] font-bold uppercase tracking-widest mb-2 text-white/30">TODAY</h4>
+                  <h4 className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${getTextClass('muted')}`}>TODAY</h4>
                   {todayConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
@@ -2095,7 +2144,7 @@ export default function KaiCommand() {
               {/* Yesterday */}
               {yesterdayConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-[9px] font-bold uppercase tracking-widest mb-2 text-white/30">YESTERDAY</h4>
+                  <h4 className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${getTextClass('muted')}`}>YESTERDAY</h4>
                   {yesterdayConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
@@ -2122,7 +2171,7 @@ export default function KaiCommand() {
               {/* Older */}
               {olderConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-[9px] font-bold uppercase tracking-widest mb-2 text-white/30">ARCHIVE</h4>
+                  <h4 className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${getTextClass('muted')}`}>ARCHIVE</h4>
                   {olderConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
@@ -2175,7 +2224,7 @@ export default function KaiCommand() {
         {/* Row 2: Scrollable content (flex-1) */}
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
-          className="flex-1 flex flex-col relative min-w-0 overflow-hidden bg-[#0A0A0B]"
+          className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#F5F6F8]'}`}
           style={{ zIndex: 10 }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -2186,17 +2235,17 @@ export default function KaiCommand() {
           {isDragging && (
             <div 
               className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
-              style={{ background: 'rgba(10,10,11,0.95)' }}
+              style={{ background: isDark || isCinematic ? 'rgba(10,10,11,0.95)' : 'rgba(245,246,248,0.95)' }}
             >
-              <div className="flex flex-col items-center gap-4 p-8 rounded-sm border border-dashed border-white/30 bg-white/5">
-                <div className="w-16 h-16 rounded-sm flex items-center justify-center bg-white/10">
-                  <Upload className="w-8 h-8 text-white/70" />
+              <div className={`flex flex-col items-center gap-4 p-8 rounded-sm border border-dashed ${isDark || isCinematic ? 'border-white/30 bg-white/5' : 'border-slate-300 bg-white'}`}>
+                <div className={`w-16 h-16 rounded-sm flex items-center justify-center ${isDark || isCinematic ? 'bg-white/10' : 'bg-slate-100'}`}>
+                  <Upload className={`w-8 h-8 ${getTextClass('secondary')}`} />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold uppercase tracking-wider text-white">
+                  <p className={`text-sm font-bold uppercase tracking-wider ${getTextClass('primary')}`}>
                     DROP FILES TO UPLOAD
                   </p>
-                  <p className="text-[10px] mt-1 text-white/50 uppercase tracking-wider">
+                  <p className={`text-[10px] mt-1 ${getTextClass('muted')} uppercase tracking-wider`}>
                     Spreadsheets, images, PDFs, documents
                   </p>
                 </div>
@@ -2288,7 +2337,7 @@ export default function KaiCommand() {
             } : {}}
           >
             <p 
-              className={`text-[10px] uppercase tracking-widest font-medium ${isCinematic ? 'text-white/70' : isDark ? 'text-white/40' : 'text-white/40'}`}
+              className={`text-[10px] uppercase tracking-widest font-medium ${isCinematic ? 'text-white/70' : isDark ? 'text-white/40' : 'text-slate-400'}`}
               style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
             >
               COMMAND CENTER • OPERATIONAL STATUS: ACTIVE • ALL SYSTEMS NOMINAL
@@ -2458,7 +2507,7 @@ export default function KaiCommand() {
                       textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                       color: '#FFFFFF',
                       opacity: 1
-                    } : { color: 'white', letterSpacing: '0.1em' }}
+                    } : { color: isDark ? 'white' : '#1e293b', letterSpacing: '0.1em' }}
                   >
                     KAI COMMAND
                   </h2>
@@ -2476,7 +2525,7 @@ export default function KaiCommand() {
                       {isCinematic ? cinematicTaglines[currentTaglineIndex] : 'Select a directive below or issue a custom command.'}
                     </p>
                   ) : (
-                    <p className="text-center max-w-md mb-6 text-[11px] uppercase tracking-widest text-white/40">
+                    <p className={`text-center max-w-md mb-6 text-[11px] uppercase tracking-widest ${getTextClass('muted')}`}>
                       Select a directive below or issue a custom command.
                     </p>
                   )}
@@ -2492,38 +2541,38 @@ export default function KaiCommand() {
                         {/* Priority Action 1 */}
                         <button 
                           onClick={() => handlePromptClick('"Flag students with 14+ days absence. Execute recovery protocol."')}
-                          className="w-full flex items-center gap-3 p-3 rounded-sm bg-[#0A0A0B] border border-red-500/30 hover:border-red-500/60 transition-all group"
+                          className={`w-full flex items-center gap-3 p-3 rounded-sm ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} border border-red-500/30 hover:border-red-500/60 transition-all group shadow-sm`}
                         >
                           <div className="w-1 h-8 bg-red-500 rounded-full" />
                           <div className="flex-1 text-left">
                             <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">ALERT: INACTIVE MEMBERS</div>
-                            <div className="text-xs text-white/60 group-hover:text-white/80 transition-colors">14+ days absence detected</div>
+                            <div className={`text-xs ${isDark ? 'text-white/60 group-hover:text-white/80' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}>14+ days absence detected</div>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" />
+                          <ChevronRight className={`w-4 h-4 ${isDark ? 'text-white/30 group-hover:text-white/50' : 'text-slate-300 group-hover:text-slate-500'} transition-colors`} />
                         </button>
                         {/* Priority Action 2 */}
                         <button 
                           onClick={() => handlePromptClick('"Identify high-risk students. Recommend intervention."')}
-                          className="w-full flex items-center gap-3 p-3 rounded-sm bg-[#0A0A0B] border border-red-500/30 hover:border-red-500/60 transition-all group"
+                          className={`w-full flex items-center gap-3 p-3 rounded-sm ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} border border-red-500/30 hover:border-red-500/60 transition-all group shadow-sm`}
                         >
                           <div className="w-1 h-8 bg-red-500 rounded-full" />
                           <div className="flex-1 text-left">
                             <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">THREAT: CHURN RISK</div>
-                            <div className="text-xs text-white/60 group-hover:text-white/80 transition-colors">High-risk students identified</div>
+                            <div className={`text-xs ${isDark ? 'text-white/60 group-hover:text-white/80' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}>High-risk students identified</div>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" />
+                          <ChevronRight className={`w-4 h-4 ${isDark ? 'text-white/30 group-hover:text-white/50' : 'text-slate-300 group-hover:text-slate-500'} transition-colors`} />
                         </button>
                         {/* Priority Action 3 */}
                         <button 
                           onClick={() => handlePromptClick('"Surface overdue accounts. Generate collection sequence."')}
-                          className="w-full flex items-center gap-3 p-3 rounded-sm bg-[#0A0A0B] border border-amber-500/30 hover:border-amber-500/60 transition-all group"
+                          className={`w-full flex items-center gap-3 p-3 rounded-sm ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} border border-amber-500/30 hover:border-amber-500/60 transition-all group shadow-sm`}
                         >
                           <div className="w-1 h-8 bg-amber-500 rounded-full" />
                           <div className="flex-1 text-left">
                             <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500">ALERT: REVENUE LEAK</div>
-                            <div className="text-xs text-white/60 group-hover:text-white/80 transition-colors">Overdue accounts require action</div>
+                            <div className={`text-xs ${isDark ? 'text-white/60 group-hover:text-white/80' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}>Overdue accounts require action</div>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" />
+                          <ChevronRight className={`w-4 h-4 ${isDark ? 'text-white/30 group-hover:text-white/50' : 'text-slate-300 group-hover:text-slate-500'} transition-colors`} />
                         </button>
                       </div>
                     </div>
@@ -2537,9 +2586,9 @@ export default function KaiCommand() {
                     {canScrollLeft && (
                       <button
                         onClick={() => scrollCarousel('left')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20"
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
                       >
-                        <ChevronLeft className="w-4 h-4 text-white/70" />
+                        <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>
                     )}
                     
@@ -2547,9 +2596,9 @@ export default function KaiCommand() {
                     {canScrollRight && (
                       <button
                         onClick={() => scrollCarousel('right')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20"
+                        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
                       >
-                        <ChevronRight className="w-4 h-4 text-white/70" />
+                        <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>
                     )}
                     
@@ -2600,7 +2649,7 @@ export default function KaiCommand() {
                               ? `rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-white/5`
                               : isDark 
                                 ? `bg-[#0A0A0B] rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-[#111113]`
-                                : `bg-[#0A0A0B] rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-[#111113]`
+                                : `bg-white rounded-sm border ${severity === 'info' ? 'border-slate-200 hover:border-slate-300' : styles.border + ' ' + styles.hoverBorder} hover:bg-slate-50 shadow-sm`
                             }`}
                           style={(isCinematic || isFocusMode) ? { 
                             animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
@@ -2637,7 +2686,7 @@ export default function KaiCommand() {
                             
                             {/* Command text */}
                             <p 
-                              className="text-xs leading-relaxed text-white/70 group-hover:text-white/90 transition-colors"
+                              className={`text-xs leading-relaxed ${isDark || isCinematic ? 'text-white/70 group-hover:text-white/90' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}
                               style={(isCinematic || isFocusMode) ? { 
                                 textShadow: '0 1px 2px rgba(0,0,0,0.9)'
                               } : {}}
@@ -3005,7 +3054,7 @@ export default function KaiCommand() {
                   textShadow: '0 1px 3px rgba(0,0,0,0.9)', 
                   color: 'rgba(255,255,255,0.4)',
                   opacity: 1
-                } : isDark ? { color: 'rgba(255,255,255,0.30)' } : { color: 'rgba(255,255,255,0.30)' }}
+                } : isDark ? { color: 'rgba(255,255,255,0.30)' } : { color: 'rgba(100,116,139,0.6)' }}
               >
                 Verify critical intel before execution
               </p>
@@ -3180,16 +3229,16 @@ function ConversationCard({
       onClick={onClick}
       className={`relative rounded-sm border p-3 pl-4 mb-2 transition-all cursor-pointer overflow-hidden ${
         isSelected 
-          ? 'bg-white/10 border-white/20' 
-          : 'bg-[#0A0A0B] border-white/5 hover:bg-white/5 hover:border-white/10'
+          ? isDark ? 'bg-white/10 border-white/20' : 'bg-red-50 border-red-200'
+          : isDark ? 'bg-[#0A0A0B] border-white/5 hover:bg-white/5 hover:border-white/10' : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'
       }`}
     >
       {/* Severity Indicator Bar - Left Edge */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${getSeverityBarColor()}`} />
       <div className="flex items-start justify-between mb-1">
-        <h5 className="text-xs font-medium truncate flex-1 pr-2 text-white/90">{conversation.title}</h5>
+        <h5 className={`text-xs font-medium truncate flex-1 pr-2 ${isDark ? 'text-white/90' : 'text-slate-800'}`}>{conversation.title}</h5>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[10px] font-mono text-white/30">{conversation.timestamp}</span>
+          <span className={`text-[10px] font-mono ${isDark ? 'text-white/30' : 'text-slate-400'}`}>{conversation.timestamp}</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 

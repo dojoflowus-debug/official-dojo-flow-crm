@@ -3902,3 +3902,21 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Verify no reinterpretation of command/alert/priority globally
 - [x] Verify Kai Command UI not merged into Students or Settings
 - [x] Verify user must explicitly choose to enter Kai Command mode
+
+## 🎨 CRITICAL: Light Mode Fix (UI Reset)
+
+### Issue
+- [x] Light Mode is selected but Dark Mode styles are still rendering
+- [x] Dark gradients and surfaces appearing in Light Mode
+- [x] Theme toggle not fully resetting color variables
+
+### Fix Tasks
+- [x] Fix Light Mode design tokens - restore light backgrounds, dark text, subtle shadows
+- [x] Isolate Kai Command cinematic styles from global theme system
+- [x] Fix theme toggle to fully reset all color variables on switch
+- [x] Ensure chat canvas uses light colors in Light Mode
+- [x] Ensure left rail uses light colors in Light Mode
+- [x] Verify Light Mode works on Students, Leads, Settings pages
+- [x] Remove dark gradient leaks from Light Mode
+- [x] Test theme switching behavior
+- [x] Save checkpoint
