@@ -3784,3 +3784,17 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Escape key to close
 - [x] Focus trap when open
 - [x] Matches existing DojoFlow aesthetic
+
+
+## 🎛️ Account Command Panel (Premium UI)
+
+### Design Requirements
+- [x] Create premium glassmorphic Account Command Panel component
+- [x] Profile header with avatar, name, role, email
+- [x] Primary actions (School Profile, Staff, Billing, Integrations)
+- [x] System controls (Theme toggle, Credits, Notifications)
+- [x] Footer actions (Help, Sign Out)
+- [x] Dark cinematic theme with glass blur
+- [x] ~440px width, single panel design
+- [x] Apple Control Center × Raycast × Linear inspired
+- [x] Integrate panel into application
