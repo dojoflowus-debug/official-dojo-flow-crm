@@ -3946,3 +3946,21 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Add settings gear icon trigger in header
 - [x] Test modal opening and navigation between sections
 - [x] Verify Account section shows "Coming Soon" placeholder
+
+
+## 🎨 Redesign Settings Modal to Match Manus App Style
+
+### Issue
+- Current DojoFlow settings modal has diagonal cut-off design elements
+- Need to match Manus app's clean modal design (second screenshot)
+
+### Design Changes Required
+- [x] Remove diagonal cut-off design elements from modal
+- [x] Implement clean white/dark modal background without angular shapes
+- [x] Clean sidebar navigation with proper icon alignment
+- [x] Professional card-based sections with proper spacing
+- [x] Clean typography matching Manus style
+- [x] Proper section headers and content layout
+- [x] Add subtle borders and shadows instead of angular cuts
+- [x] Match the clean, professional look of Manus settings modal
+- [x] Test modal appearance and functionality

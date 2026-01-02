@@ -5,21 +5,28 @@ import { useTheme, Theme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { trpc } from '@/lib/trpc'
 import {
-  Building2,
-  Users,
+  User,
+  Settings,
+  BarChart3,
   CreditCard,
+  Calendar,
+  Mail,
+  Database,
   Puzzle,
+  HelpCircle,
+  ExternalLink,
+  X,
+  ChevronRight,
   Sun,
   Moon,
   Sparkles,
   Zap,
-  Bell,
-  HelpCircle,
-  LogOut,
-  ChevronRight,
-  X,
   Shield,
-  Command,
+  Bell,
+  Building2,
+  Users,
+  LogOut,
+  Cloud,
 } from 'lucide-react'
 
 interface AccountCommandPanelProps {
@@ -27,6 +34,27 @@ interface AccountCommandPanelProps {
   onClose: () => void
   anchorRef: React.RefObject<HTMLElement>
 }
+
+type SectionId = 'account' | 'settings' | 'usage' | 'billing' | 'scheduled' | 'mail' | 'data' | 'cloud' | 'connectors' | 'integrations'
+
+interface NavItem {
+  id: SectionId
+  label: string
+  icon: typeof User
+}
+
+const navItems: NavItem[] = [
+  { id: 'account', label: 'Account', icon: User },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'usage', label: 'Usage', icon: BarChart3 },
+  { id: 'billing', label: 'Billing', icon: CreditCard },
+  { id: 'scheduled', label: 'Scheduled tasks', icon: Calendar },
+  { id: 'mail', label: 'Mail Dojo', icon: Mail },
+  { id: 'data', label: 'Data controls', icon: Database },
+  { id: 'cloud', label: 'Cloud browser', icon: Cloud },
+  { id: 'connectors', label: 'Connectors', icon: Puzzle },
+  { id: 'integrations', label: 'Integrations', icon: Puzzle },
+]
 
 const themeOptions: { id: Theme; label: string; icon: typeof Sun }[] = [
   { id: 'light', label: 'Light', icon: Sun },
@@ -39,6 +67,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const panelRef = useRef<HTMLDivElement>(null)
+  const [activeSection, setActiveSection] = useState<SectionId>('usage')
   const [isAnimating, setIsAnimating] = useState(false)
   
   // Fetch credit balance
@@ -144,302 +173,449 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   
   if (!isOpen && !isAnimating) return null
 
-  const primaryActions = [
-    {
-      icon: Building2,
-      label: 'School Profile',
-      description: 'Manage dojo details',
-      path: '/settings/school',
-      gradient: 'from-amber-500 to-orange-600',
-      glow: 'shadow-amber-500/20',
-    },
-    {
-      icon: Users,
-      label: 'Staff & Roles',
-      description: 'Team management',
-      path: '/staff',
-      gradient: 'from-blue-500 to-cyan-500',
-      glow: 'shadow-blue-500/20',
-    },
-    {
-      icon: CreditCard,
-      label: 'Billing',
-      description: 'Plans & invoices',
-      path: '/billing',
-      gradient: 'from-emerald-500 to-green-500',
-      glow: 'shadow-emerald-500/20',
-    },
-    {
-      icon: Puzzle,
-      label: 'Integrations',
-      description: 'Connected services',
-      path: '/settings/integrations',
-      gradient: 'from-purple-500 to-pink-500',
-      glow: 'shadow-purple-500/20',
-    },
+  // Sample usage data for the Usage section
+  const usageData = [
+    { details: 'DOJO FLOW', date: '2026-01-02 17:33', credits: -361002 },
+    { details: 'Upgrade plan', date: '2026-01-02 11:50', credits: 85000 },
+    { details: 'Understanding Uploaded Files and Their Contents', date: '2026-01-02 11:39', credits: -491 },
+    { details: 'This task has been deleted', date: '2025-12-31 21:11', credits: -763 },
   ]
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'usage':
+        return (
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Usage</h2>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-500" />
+              </button>
+            </div>
+            
+            {/* Plan Info */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-1">
+                <div>
+                  <h3 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">DojoFlow Pro</h3>
+                  <p className="text-sm text-zinc-500">Renewal date: Feb 2, 2026</p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors">
+                    Manage
+                  </button>
+                  <button className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors">
+                    Add credits
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Credits Stats */}
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-zinc-500" />
+                  <span className="text-sm text-zinc-600 dark:text-zinc-300">Credits</span>
+                  <span className="w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] text-zinc-500">?</span>
+                </div>
+                <span className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 tabular-nums">
+                  {creditBalance?.balance?.toLocaleString() ?? '72,913'}
+                </span>
+              </div>
+              
+              <div className="pl-6 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Free credits</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">74</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Monthly credits</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">{creditBalance?.balance?.toLocaleString() ?? '72,839'} / 85,000</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-zinc-500" />
+                  <span className="text-sm text-zinc-600 dark:text-zinc-300">Daily refresh credits</span>
+                  <span className="w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] text-zinc-500">?</span>
+                </div>
+                <span className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 tabular-nums">115</span>
+              </div>
+              <p className="pl-6 text-xs text-zinc-500">Refresh to 300 at 23:00 every day</p>
+            </div>
+            
+            {/* Website Usage & Billing */}
+            <div className="flex-1">
+              <button 
+                onClick={() => handleNavigate('/billing/credits')}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-5 h-5 text-zinc-500" />
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Website usage & billing</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+              </button>
+              
+              {/* Usage Table */}
+              <div className="mt-4 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Details</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Date</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Credits change</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-zinc-900">
+                    {usageData.map((item, index) => (
+                      <tr key={index} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <td className="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 max-w-[200px] truncate">{item.details}</td>
+                        <td className="px-4 py-3 text-sm text-zinc-500">{item.date}</td>
+                        <td className={`px-4 py-3 text-sm text-right tabular-nums ${item.credits > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                          {item.credits > 0 ? '+' : ''}{item.credits.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Pagination */}
+              <div className="flex items-center justify-center gap-2 mt-4 text-sm">
+                <button className="px-2 py-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">&lt; Previous</button>
+                <button className="px-2 py-1 text-zinc-800 dark:text-zinc-100 bg-zinc-200 dark:bg-zinc-700 rounded">1</button>
+                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">2</button>
+                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">3</button>
+                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">4</button>
+                <span className="text-zinc-400">...</span>
+                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">21</button>
+                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">22</button>
+                <button className="px-3 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Next &gt;</button>
+              </div>
+            </div>
+          </div>
+        )
+      
+      case 'account':
+        return (
+          <div className="h-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Account</h2>
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                <X className="w-5 h-5 text-zinc-500" />
+              </button>
+            </div>
+            
+            {/* Profile Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                <Avatar className="h-16 w-16 rounded-xl">
+                  <AvatarImage src={user?.avatar} className="rounded-xl" />
+                  <AvatarFallback className="rounded-xl text-lg font-bold bg-gradient-to-br from-red-500 to-orange-600 text-white">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">{getDisplayName()}</h3>
+                  <p className="text-sm text-zinc-500">{user?.email || 'owner@dojoflow.com'}</p>
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <Shield className="w-3 h-3 text-amber-500" />
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{getUserRole()}</span>
+                  </div>
+                </div>
+                <button className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors">
+                  Edit
+                </button>
+              </div>
+              
+              {/* Quick Actions */}
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => handleNavigate('/settings/school')}
+                  className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left group"
+                >
+                  <Building2 className="w-5 h-5 text-amber-500 mb-2" />
+                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100">School Profile</h4>
+                  <p className="text-xs text-zinc-500">Manage dojo details</p>
+                </button>
+                <button 
+                  onClick={() => handleNavigate('/staff')}
+                  className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left group"
+                >
+                  <Users className="w-5 h-5 text-blue-500 mb-2" />
+                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100">Staff & Roles</h4>
+                  <p className="text-xs text-zinc-500">Team management</p>
+                </button>
+              </div>
+              
+              {/* Theme Selector */}
+              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
+                    {theme === 'light' ? (
+                      <Sun className="w-4 h-4 text-amber-500" />
+                    ) : theme === 'dark' ? (
+                      <Moon className="w-4 h-4 text-indigo-400" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 text-purple-400" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Theme</span>
+                </div>
+                
+                <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-200 dark:bg-zinc-700">
+                  {themeOptions.map((t) => {
+                    const isActive = theme === t.id
+                    const Icon = t.icon
+                    
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTheme(t.id)}
+                        className={`
+                          flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
+                          text-xs font-medium transition-all duration-200
+                          ${isActive 
+                            ? 'bg-white dark:bg-zinc-600 text-zinc-800 dark:text-zinc-100 shadow-sm'
+                            : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                          }
+                        `}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        <span>{t.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              
+              {/* Sign Out */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20 transition-all duration-200"
+              >
+                <LogOut className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-medium text-red-500">Sign Out</span>
+              </button>
+            </div>
+          </div>
+        )
+      
+      case 'settings':
+        return (
+          <div className="h-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Settings</h2>
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                <X className="w-5 h-5 text-zinc-500" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => handleNavigate('/settings/notifications')}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-sky-500" />
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Notifications</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+              </button>
+              
+              <button 
+                onClick={() => handleNavigate('/settings/integrations')}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Puzzle className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Integrations</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+              </button>
+              
+              <button 
+                onClick={() => handleNavigate('/security')}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-emerald-500" />
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Security & Privacy</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+              </button>
+            </div>
+          </div>
+        )
+      
+      case 'billing':
+        return (
+          <div className="h-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Billing</h2>
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                <X className="w-5 h-5 text-zinc-500" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-500/10 dark:to-green-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-zinc-500">Current Plan</span>
+                  <span className="px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 rounded-full">Active</span>
+                </div>
+                <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100 mb-1">DojoFlow Pro</h3>
+                <p className="text-sm text-zinc-500">Next billing: Feb 2, 2026</p>
+              </div>
+              
+              <button 
+                onClick={() => handleNavigate('/billing')}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <CreditCard className="w-5 h-5 text-zinc-500" />
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Manage subscription</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+              </button>
+              
+              <button 
+                onClick={() => handleNavigate('/billing/credits')}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Zap className="w-5 h-5 text-emerald-500" />
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">AI Credits</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    {creditBalance?.balance?.toLocaleString() ?? '72,913'}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+                </div>
+              </button>
+            </div>
+          </div>
+        )
+      
+      default:
+        return (
+          <div className="h-full flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center mb-4">
+              <Settings className="w-8 h-8 text-zinc-400" />
+            </div>
+            <h3 className="text-lg font-medium text-zinc-700 dark:text-zinc-300 mb-2">Coming Soon</h3>
+            <p className="text-sm text-zinc-500 max-w-[200px]">This section is under development and will be available soon.</p>
+          </div>
+        )
+    }
+  }
   
   return (
     <>
-      {/* Cinematic Backdrop */}
+      {/* Backdrop */}
       <div 
         className={`
-          fixed inset-0 z-[9998] transition-all duration-500
+          fixed inset-0 z-[9998] transition-all duration-300
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ 
-          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.85) 100%)',
-          backdropFilter: 'blur(8px)',
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
         }}
         onClick={onClose}
       />
       
-      {/* Command Panel */}
+      {/* Modal */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Account Command Panel"
+        aria-label="Settings"
         onKeyDown={handleKeyDown}
         onTransitionEnd={() => {
           if (!isOpen) setIsAnimating(false)
         }}
         className={`
-          fixed z-[9999] w-[440px] max-w-[calc(100vw-32px)]
+          fixed z-[9999] 
           top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-          rounded-3xl overflow-hidden
-          transition-all duration-500 ease-out
+          w-[800px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-96px)]
+          rounded-2xl overflow-hidden
+          transition-all duration-300 ease-out
           ${isOpen 
             ? 'opacity-100 scale-100' 
             : 'opacity-0 scale-95 pointer-events-none'
           }
         `}
         style={{
-          background: 'linear-gradient(165deg, rgba(24, 24, 27, 0.97) 0%, rgba(9, 9, 11, 0.99) 100%)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          boxShadow: `
-            0 0 0 1px rgba(255, 255, 255, 0.08),
-            0 0 80px -20px rgba(0, 0, 0, 0.8),
-            0 0 60px -30px rgba(239, 68, 68, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05)
-          `,
+          background: 'var(--modal-bg, #ffffff)',
+          border: '1px solid var(--modal-border, rgba(0, 0, 0, 0.1))',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         }}
       >
-        {/* Glass texture overlays */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.04),transparent_60%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.3))] pointer-events-none" />
-        
-        {/* Subtle noise texture */}
-        <div 
-          className="absolute inset-0 opacity-[0.015] pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }}
-        />
-
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 z-10 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 group"
-          aria-label="Close panel"
-        >
-          <X className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-        </button>
-
-        {/* Keyboard hint */}
-        <div className="absolute top-5 left-5 flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">
-          <Command className="w-3 h-3 text-zinc-600" />
-          <span className="text-[10px] font-medium text-zinc-600 tracking-wide">ESC</span>
-        </div>
-
-        {/* Content */}
-        <div className="relative pt-14 pb-2">
-          
-          {/* Profile Header */}
-          <div className="px-6 pb-5">
-            <div className="flex items-center gap-4">
-              {/* Avatar with glow */}
-              <div className="relative">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 blur-xl opacity-40" />
-                <Avatar className="relative h-[72px] w-[72px] rounded-2xl ring-2 ring-white/10">
-                  <AvatarImage src={user?.avatar} className="rounded-2xl" />
-                  <AvatarFallback className="rounded-2xl text-xl font-bold bg-gradient-to-br from-red-500 to-orange-600 text-white">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                {/* Status indicator */}
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-[3px] border-zinc-900 flex items-center justify-center">
-                  <Sparkles className="w-2.5 h-2.5 text-white" />
+        <div className="flex h-full bg-white dark:bg-zinc-900">
+          {/* Left Sidebar */}
+          <div className="w-[220px] h-full flex flex-col border-r border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
+            {/* Logo/Brand */}
+            <div className="p-5 border-b border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
                 </div>
-              </div>
-              
-              {/* User Info */}
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-white truncate tracking-tight">
-                  {getDisplayName()}
-                </h2>
-                <p className="text-sm text-zinc-500 truncate mt-0.5">
-                  {user?.email || 'owner@dojoflow.com'}
-                </p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
-                    <Shield className="w-3 h-3 text-amber-400" />
-                    <span className="text-xs font-medium text-amber-400">{getUserRole()}</span>
-                  </span>
-                </div>
+                <span className="text-base font-semibold text-zinc-800 dark:text-zinc-100">dojoflow</span>
               </div>
             </div>
-          </div>
-
-          {/* Gradient divider */}
-          <div className="mx-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          {/* Primary Actions Grid */}
-          <div className="px-4 py-4">
-            <div className="grid grid-cols-2 gap-2.5">
-              {primaryActions.map((action) => (
-                <button
-                  key={action.path}
-                  onClick={() => handleNavigate(action.path)}
-                  className="group relative p-4 rounded-2xl text-left transition-all duration-300 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] hover:border-white/[0.08] hover:-translate-y-0.5"
-                >
-                  {/* Hover glow */}
-                  <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${action.gradient} blur-xl -z-10`} style={{ opacity: 0.1 }} />
-                  
-                  <div className="relative">
-                    {/* Icon container */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-gradient-to-br ${action.gradient} shadow-lg ${action.glow}`}>
-                      <action.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
-                      {action.label}
-                    </h3>
-                    <p className="text-xs text-zinc-600 group-hover:text-zinc-500 transition-colors mt-0.5">
-                      {action.description}
-                    </p>
-                  </div>
-                  <ChevronRight className="absolute top-4 right-3 w-4 h-4 text-zinc-700 group-hover:text-zinc-500 group-hover:translate-x-0.5 transition-all" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Gradient divider */}
-          <div className="mx-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          {/* System Controls */}
-          <div className="px-4 py-3">
-            <p className="px-2 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">System</p>
             
-            {/* Theme Selector */}
-            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] mb-2">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-lg bg-white/[0.05] flex items-center justify-center">
-                  {theme === 'light' ? (
-                    <Sun className="w-4 h-4 text-amber-400" />
-                  ) : theme === 'dark' ? (
-                    <Moon className="w-4 h-4 text-indigo-400" />
-                  ) : (
-                    <Sparkles className="w-4 h-4 text-purple-400" />
-                  )}
-                </div>
-                <span className="text-sm font-medium text-zinc-300">Theme</span>
-              </div>
-              
-              {/* Theme Toggle Pills */}
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-black/30">
-                {themeOptions.map((t) => {
-                  const isActive = theme === t.id
-                  const Icon = t.icon
-                  
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => setTheme(t.id)}
-                      className={`
-                        flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
-                        text-xs font-medium transition-all duration-200
-                        ${isActive 
-                          ? 'bg-white/10 text-white shadow-lg'
-                          : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]'
-                        }
-                      `}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span>{t.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Credits */}
-            <button
-              onClick={() => handleNavigate('/billing/credits')}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-200 group mb-2"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-emerald-400" />
-                </div>
-                <span className="text-sm font-medium text-zinc-300">AI Credits</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-emerald-400 tabular-nums">
-                  {creditBalance?.balance?.toLocaleString() ?? '2,450'}
-                </span>
-                <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </button>
-
-            {/* Notifications */}
-            <button
-              onClick={() => handleNavigate('/settings/notifications')}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-200 group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center relative">
-                  <Bell className="w-4 h-4 text-sky-400" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-zinc-900" />
-                </div>
-                <span className="text-sm font-medium text-zinc-300">Notifications</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
-                  3
-                </span>
-                <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </button>
-          </div>
-
-          {/* Gradient divider */}
-          <div className="mx-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          {/* Footer Actions */}
-          <div className="px-4 py-4">
-            <div className="flex items-center gap-2.5">
-              <button
+            {/* Navigation */}
+            <nav className="flex-1 py-2 overflow-y-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon
+                const isActive = activeSection === item.id
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveSection(item.id)}
+                    className={`
+                      w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors
+                      ${isActive 
+                        ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100' 
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'
+                      }
+                    `}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </button>
+                )
+              })}
+            </nav>
+            
+            {/* Footer Links */}
+            <div className="p-3 border-t border-zinc-200 dark:border-zinc-700">
+              <button 
                 onClick={() => handleNavigate('/help')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-200 group"
+                className="w-full flex items-center gap-3 px-3 py-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
               >
-                <HelpCircle className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-                <span className="text-sm font-medium text-zinc-400 group-hover:text-zinc-200 transition-colors">Help Center</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-500/[0.08] hover:bg-red-500/[0.15] border border-red-500/20 hover:border-red-500/30 transition-all duration-200 group"
-              >
-                <LogOut className="w-4 h-4 text-red-400 group-hover:text-red-300 transition-colors" />
-                <span className="text-sm font-medium text-red-400 group-hover:text-red-300 transition-colors">Sign Out</span>
+                <HelpCircle className="w-4 h-4" />
+                <span className="text-sm">Get help</span>
+                <ExternalLink className="w-3 h-3 ml-auto" />
               </button>
             </div>
+          </div>
+          
+          {/* Right Content Panel */}
+          <div className="flex-1 p-6 overflow-y-auto bg-white dark:bg-zinc-900">
+            {renderContent()}
           </div>
         </div>
-
-        {/* Bottom accent gradient */}
-        <div className="h-1 bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 opacity-70" />
       </div>
     </>
   )
