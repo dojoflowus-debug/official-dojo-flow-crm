@@ -3529,3 +3529,39 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Ensure program assignment determines Trial vs Active status (membershipStatus field)
 - [x] Store guardian info separately in schema (guardianName, guardianPhone, guardianEmail, guardianRelationship)
 
+
+## 🎓 Student Address & Photo Fields
+
+### Database Schema
+- [ ] Add address field to students table
+- [ ] Add photoUrl field to students table
+- [ ] Push schema changes with drizzle
+
+### Backend API
+- [ ] Update student creation procedure to accept address and photoUrl
+- [ ] Update student update procedure to handle address and photoUrl
+- [ ] Add photo upload endpoint using S3 storage
+
+### Frontend UI
+- [ ] Add address input field to student creation form
+- [ ] Add photo upload component to student creation form
+- [ ] Display address in student detail view
+- [ ] Display photo in student detail view
+- [ ] Add address editing in student edit modal
+- [ ] Add photo editing in student edit modal
+- [ ] Show photo thumbnail in student list cards
+
+
+## 📸 Student Photo & Address Fields (2026-01-01)
+
+### Task
+- [x] Add photoUrl to students.update procedure input schema
+- [x] Add photo upload to AddStudentWizard (file upload + URL input)
+- [x] Add photo preview to AddStudentWizard review step
+- [x] Include photoUrl in studentData submission
+- [x] Verify Edit Student modal already has photo upload (confirmed)
+- [x] Verify address fields already exist in AddStudentWizard (confirmed)
+- [x] Verify address fields already exist in Edit Student modal (confirmed)
+- [x] Test Add Student wizard with photo upload
+- [x] Save checkpoint
+

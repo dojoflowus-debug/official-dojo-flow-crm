@@ -1894,6 +1894,8 @@ export const appRouter = router({
         guardianRelationship: z.string().optional().nullable(),
         guardianPhone: z.string().optional().nullable(),
         guardianEmail: z.string().email().optional().nullable(),
+        // Photo URL
+        photoUrl: z.string().optional().nullable(),
       }))
       .mutation(async ({ input }) => {
         const { getDb } = await import("./db");

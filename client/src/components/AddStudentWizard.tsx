@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Check, ChevronRight, ChevronLeft, User, Users, GraduationCap, MapPin, ClipboardCheck } from 'lucide-react'
+import { Loader2, Check, ChevronRight, ChevronLeft, User, Users, GraduationCap, MapPin, ClipboardCheck, Camera, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import AddressAutocomplete from './AddressAutocomplete'
 import PhoneInput from './PhoneInput'
@@ -44,6 +44,9 @@ interface FormData {
   zipCode: string
   latitude: string
   longitude: string
+  
+  // Photo
+  photoUrl: string
 }
 
 const initialFormData: FormData = {
@@ -65,7 +68,8 @@ const initialFormData: FormData = {
   state: '',
   zipCode: '',
   latitude: '',
-  longitude: ''
+  longitude: '',
+  photoUrl: ''
 }
 
 const PROGRAMS = [
@@ -238,7 +242,11 @@ export default function AddStudentWizard({ open, onOpenChange, onStudentCreated 
           membership_status: formData.status === 'Trial' ? 'Trial' : 'Paid',
           latitude: formData.latitude || null,
           longitude: formData.longitude || null,
-          photo_url: null
+          photo_url: formData.photoUrl || null,
+          street_address: formData.streetAddress || null,
+          city: formData.city || null,
+          state: formData.state || null,
+          zip_code: formData.zipCode || null
         })
       }
 
@@ -278,6 +286,7 @@ export default function AddStudentWizard({ open, onOpenChange, onStudentCreated 
         zipCode: formData.zipCode.trim() || null,
         latitude: formData.latitude || null,
         longitude: formData.longitude || null,
+        photoUrl: formData.photoUrl || null,
         guardianName: isMinor ? formData.guardianName.trim() || null : null,
         guardianPhone: isMinor ? formData.guardianPhone.trim() || null : null,
         guardianEmail: isMinor ? formData.guardianEmail.trim() || null : null,
@@ -362,6 +371,52 @@ export default function AddStudentWizard({ open, onOpenChange, onStudentCreated 
                 onChange={(value) => handleInputChange('phone', value)}
                 placeholder="(555) 123-4567"
               />
+            </div>
+            
+            {/* Photo Upload */}
+            <div className="space-y-2">
+              <Label>Student Photo</Label>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  {formData.photoUrl ? (
+                    <img 
+                      src={formData.photoUrl} 
+                      alt="Student" 
+                      className="w-20 h-20 rounded-full object-cover border-2 border-border"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                      <Camera className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Input
+                    id="photo-file"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onloadend = () => {
+                          handleInputChange('photoUrl', reader.result as string)
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                    className="text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">Or paste an image URL:</p>
+                  <Input
+                    id="photo-url"
+                    type="url"
+                    placeholder="https://example.com/photo.jpg"
+                    value={formData.photoUrl && !formData.photoUrl.startsWith('data:') ? formData.photoUrl : ''}
+                    onChange={(e) => handleInputChange('photoUrl', e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )
@@ -581,6 +636,17 @@ export default function AddStudentWizard({ open, onOpenChange, onStudentCreated 
         return (
           <div className="space-y-4">
             <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+              {/* Photo Preview */}
+              {formData.photoUrl && (
+                <div className="flex justify-center">
+                  <img 
+                    src={formData.photoUrl} 
+                    alt="Student" 
+                    className="w-24 h-24 rounded-full object-cover border-2 border-border"
+                  />
+                </div>
+              )}
+              
               <div>
                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Basic Information</h4>
                 <p className="font-semibold">{formData.firstName} {formData.lastName}</p>
