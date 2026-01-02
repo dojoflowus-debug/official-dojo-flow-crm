@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -25,7 +25,7 @@ export default function Billing() {
   );
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout title="Billing">
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex items-center justify-between">
           <div>
@@ -217,6 +217,6 @@ export default function Billing() {
           </CardContent>
         </Card>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }

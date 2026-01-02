@@ -3852,3 +3852,53 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] No generic "help me" phrasing
 - [x] No symmetric productivity-style grids (asymmetric Priority Actions + carousel)
 
+
+
+## 🔒 CONTEXT LOCK: Management Platform Restoration (2025-01-02)
+
+### Critical Issue
+- Kai Command/Operations Console was hijacking the default Management UI
+- Users need stable, predictable SaaS navigation for daily dojo management
+- Kai Command should be ON-DEMAND only, not the default experience
+
+### Mode Separation (Critical)
+- [x] Create ManagementLayout component for standard SaaS navigation
+- [x] Update App.tsx to use ManagementLayout for management pages (Students, Leads, Classes, Staff, Billing, Settings)
+- [x] Ensure /students route uses Management layout, not Command Center
+- [x] Isolate KaiCommand to dedicated on-demand overlay/route (not default)
+- [x] Ensure Kai Command only appears when explicitly triggered (Ask Kai button, ⌘K/Ctrl+K, or dedicated action)
+
+### Management Shell UI
+- [x] Create stable top bar with DojoFlow logo and navigation
+- [x] Implement bottom navigation for desktop + tablet
+- [x] Remove alert-driven command language from Management pages
+- [x] Ensure predictable SaaS navigation throughout
+
+### Core Management Pages (Restore Standard UI)
+- [x] Students page - restore list view, map view, add student flow (not Command Center)
+- [x] Leads page - restore pipeline view
+- [x] Classes page - restore schedule management
+- [x] Staff page - restore team management
+- [x] Billing page - restore invoices and payments
+- [x] Settings page - restore configuration hub
+
+### Account & Settings Panel (Management Mode)
+- [x] Create AccountSettingsDropdown component (not command panel style)
+- [x] Include: Profile, School Profile, Staff & Permissions, Billing & Subscription
+- [x] Include: Integrations, Theme toggle, Credits, Notifications
+- [x] Include: Help & Support, Sign Out (isolated at bottom)
+- [x] Ensure panel does NOT look like mission console
+- [x] Remove alerts/priority language from settings
+
+### Kai Command Mode (Preserve but Isolate)
+- [x] Keep Kai Command at /kai route
+- [x] Create KaiCommandOverlay for ⌘K/Ctrl+K shortcut
+- [x] Preserve existing Kai Command design
+- [x] Ensure mode feels like entering different "mode"
+- [x] UI changes only allowed inside Kai Command mode
+
+### Hard Constraints Verification
+- [x] Verify no auto-switch between layouts
+- [x] Verify no reinterpretation of command/alert/priority globally
+- [x] Verify Kai Command UI not merged into Students or Settings
+- [x] Verify user must explicitly choose to enter Kai Command mode

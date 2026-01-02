@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
-import BottomNavLayout from '@/components/BottomNavLayout'
+import ManagementLayout from '@/components/ManagementLayout'
 import {
   Settings,
   Palette,
@@ -196,7 +196,7 @@ export default function SettingsHub() {
   const hasResults = allFilteredCards.length > 0
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout title="Settings">
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
@@ -451,6 +451,6 @@ export default function SettingsHub() {
         </Card>
       </div>
     </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }
