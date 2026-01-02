@@ -17,6 +17,8 @@ import {
   Loader2,
   Save,
   MapPin,
+  Camera,
+  ImagePlus,
 } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 
@@ -197,6 +199,11 @@ export default function StudentModal({
   const [logoUploadSuccess, setLogoUploadSuccess] = useState(false)
   const [logoLoadError, setLogoLoadError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState<{ dataUrl: string; fileName: string; fileSize: number } | null>(null)
+  const [showPhotoPreview, setShowPhotoPreview] = useState(false)
+  const [photoUploadSuccess, setPhotoUploadSuccess] = useState(false)
   
   // Form state for editable fields
   const [formData, setFormData] = useState({
@@ -382,6 +389,80 @@ export default function StudentModal({
     setLogoPreview(null)
   }
   
+  // Handle photo file selection - show preview first
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string
+        setPhotoPreview({ dataUrl, fileName: file.name, fileSize: file.size })
+        setShowPhotoPreview(true)
+      }
+      reader.readAsDataURL(file)
+    }
+    // Reset input so same file can be selected again
+    if (e.target) e.target.value = ''
+  }
+  
+  // Check if photo file size exceeds limit
+  const isPhotoTooLarge = photoPreview ? photoPreview.fileSize > MAX_LOGO_SIZE : false
+  
+  // Upload student photo mutation
+  const uploadPhotoMutation = trpc.students.uploadPhoto.useMutation({
+    onSuccess: async (data) => {
+      // After uploading, update the student's photo_url
+      if (student && data.url) {
+        await updateStudentMutation.mutateAsync({
+          id: student.id,
+          photoUrl: data.url,
+        })
+      }
+      setIsUploadingPhoto(false)
+      setPhotoUploadSuccess(true)
+      onStudentUpdated?.()
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setPhotoUploadSuccess(false)
+      }, 3000)
+    },
+    onError: () => {
+      setIsUploadingPhoto(false)
+      setSaveError('Failed to upload photo')
+    }
+  })
+  
+  // Confirm photo upload after preview
+  const handleConfirmPhotoUpload = () => {
+    if (!photoPreview || !student) return
+    setIsUploadingPhoto(true)
+    setShowPhotoPreview(false)
+    
+    // Extract base64 data and mime type from data URL
+    const dataUrl = photoPreview.dataUrl
+    const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/)
+    if (!matches) {
+      setIsUploadingPhoto(false)
+      setSaveError('Invalid image format')
+      return
+    }
+    const mimeType = matches[1]
+    const base64Data = matches[2]
+    
+    uploadPhotoMutation.mutate({
+      base64Data,
+      mimeType,
+      fileName: photoPreview.fileName,
+    })
+    setPhotoPreview(null)
+  }
+  
+  // Cancel photo preview
+  const handleCancelPhotoPreview = () => {
+    setShowPhotoPreview(false)
+    setPhotoPreview(null)
+  }
+  
   // Handle form field changes
   const handleFieldChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -482,7 +563,7 @@ export default function StudentModal({
         >
           <div
             className={`
-              bg-white rounded-[26px] shadow-2xl overflow-hidden
+              bg-white rounded-[26px] shadow-2xl flex flex-col
               transition-transform duration-[400ms] ease-in-out
               ${isFlipping ? (activeView === 'profile' ? 'rotate-y-90' : '-rotate-y-90') : 'rotate-y-0'}
               ${isFullMapMode ? 'h-full' : ''}
@@ -490,34 +571,61 @@ export default function StudentModal({
             style={{
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 12px 24px -8px rgba(0, 0, 0, 0.15)',
               transformStyle: 'preserve-3d',
-              maxHeight: isFullMapMode ? '100%' : '90vh',
+              maxHeight: isFullMapMode ? '100%' : '85vh',
             }}
           >
             {/* Header with Tabs */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-center gap-3">
-                {/* School Logo - renders as image or fallback placeholder */}
-                {schoolLogo && !logoLoadError ? (
-                  <img 
-                    src={schoolLogo} 
-                    alt="School Logo" 
-                    className="h-8 w-8 object-contain rounded"
-                    onError={() => setLogoLoadError(true)}
-                    onLoad={() => setLogoLoadError(false)}
-                  />
-                ) : (
-                  /* Placeholder icon - martial arts dojo symbol */
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
-                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {/* Torii gate / dojo symbol */}
-                      <path d="M4 6h16" />
-                      <path d="M6 6v12" />
-                      <path d="M18 6v12" />
-                      <path d="M2 4h20" />
-                      <path d="M8 10h8" />
-                    </svg>
-                  </div>
-                )}
+                {/* School Logo - clickable to upload new logo */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="relative group"
+                  title="Click to change logo"
+                >
+                  {schoolLogo && !logoLoadError ? (
+                    <div className="relative">
+                      <img 
+                        src={schoolLogo} 
+                        alt="School Logo" 
+                        className="h-10 w-10 object-contain rounded-lg border-2 border-gray-100 shadow-sm group-hover:border-red-300 transition-colors"
+                        onError={() => setLogoLoadError(true)}
+                        onLoad={() => setLogoLoadError(false)}
+                      />
+                      <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <ImagePlus className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    /* Placeholder icon - martial arts dojo symbol */
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm group-hover:from-red-600 group-hover:to-red-700 transition-colors relative">
+                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        {/* Torii gate / dojo symbol */}
+                        <path d="M4 6h16" />
+                        <path d="M6 6v12" />
+                        <path d="M18 6v12" />
+                        <path d="M2 4h20" />
+                        <path d="M8 10h8" />
+                      </svg>
+                      <div className="absolute inset-0 bg-black/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <ImagePlus className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-white/80 rounded-lg flex items-center justify-center">
+                      <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                    </div>
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoSelect}
+                  className="hidden"
+                />
                 {/* Logo Upload Success Message */}
                 {logoUploadSuccess && (
                   <div className="flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium animate-fade-in">
@@ -564,13 +672,13 @@ export default function StudentModal({
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+            <div className="p-6 overflow-y-auto flex-1">
               {activeView === 'profile' ? (
                 /* ========== PROFILE VIEW ========== */
                 <div className="space-y-5">
                   <div className="flex gap-5">
-                    <div className="relative flex-shrink-0">
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-4 border-gray-50 shadow-md">
+                    <div className="relative flex-shrink-0 group">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-4 border-gray-50 shadow-md relative">
                         {student.photo_url ? (
                           <img src={student.photo_url} alt={fullName} className="w-full h-full object-cover" />
                         ) : (
@@ -578,10 +686,37 @@ export default function StudentModal({
                             {student.first_name[0]}{student.last_name[0]}
                           </div>
                         )}
+                        {/* Photo upload overlay */}
+                        <button
+                          onClick={() => photoInputRef.current?.click()}
+                          disabled={isUploadingPhoto}
+                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          {isUploadingPhoto ? (
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                          ) : (
+                            <Camera className="w-6 h-6 text-white" />
+                          )}
+                        </button>
                       </div>
+                      <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoSelect}
+                        className="hidden"
+                      />
                       <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md ${attendanceInfo.color}`}>
                         {attendanceInfo.category}
                       </div>
+                      {/* Photo upload success indicator */}
+                      {photoUploadSuccess && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-md animate-bounce">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -670,30 +805,6 @@ export default function StudentModal({
               ) : (
                 /* ========== DETAILS VIEW (EDITABLE) ========== */
                 <div className="space-y-5">
-                  {/* Change Logo Button */}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
-                    >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        'Change Logo'
-                      )}
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoSelect}
-                      className="hidden"
-                    />
-                  </div>
                   
                   {/* Student Name (read-only header) */}
                   <div className="text-center pb-2">
@@ -715,7 +826,7 @@ export default function StudentModal({
                           value={formData.phone}
                           onChange={(e) => handleFieldChange('phone', e.target.value)}
                           placeholder="(555) 123-4567"
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                         />
                       </div>
                       <div>
@@ -725,7 +836,7 @@ export default function StudentModal({
                           value={formData.email}
                           onChange={(e) => handleFieldChange('email', e.target.value)}
                           placeholder="email@example.com"
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -735,7 +846,7 @@ export default function StudentModal({
                         type="date"
                         value={formData.dateOfBirth}
                         onChange={(e) => handleFieldChange('dateOfBirth', e.target.value)}
-                        className="mt-1 h-9"
+                        className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                       />
                     </div>
                   </div>
@@ -749,7 +860,7 @@ export default function StudentModal({
                         value={formData.streetAddress}
                         onChange={(e) => handleFieldChange('streetAddress', e.target.value)}
                         placeholder="123 Main St"
-                        className="mt-1 h-9"
+                        className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-3">
@@ -759,7 +870,7 @@ export default function StudentModal({
                           value={formData.city}
                           onChange={(e) => handleFieldChange('city', e.target.value)}
                           placeholder="City"
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                         />
                       </div>
                       <div>
@@ -768,7 +879,7 @@ export default function StudentModal({
                           value={formData.state}
                           onChange={(e) => handleFieldChange('state', e.target.value)}
                           placeholder="State"
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                         />
                       </div>
                       <div>
@@ -777,7 +888,7 @@ export default function StudentModal({
                           value={formData.zipCode}
                           onChange={(e) => handleFieldChange('zipCode', e.target.value)}
                           placeholder="12345"
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -796,7 +907,7 @@ export default function StudentModal({
                             value={formData.guardianName}
                             onChange={(e) => handleFieldChange('guardianName', e.target.value)}
                             placeholder="Guardian name"
-                            className="mt-1 h-9"
+                            className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                           />
                         </div>
                         <div>
@@ -805,7 +916,7 @@ export default function StudentModal({
                             value={formData.guardianRelationship}
                             onValueChange={(value) => handleFieldChange('guardianRelationship', value)}
                           >
-                            <SelectTrigger className="mt-1 h-9">
+                            <SelectTrigger className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400">
                               <SelectValue placeholder="Select..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -823,7 +934,7 @@ export default function StudentModal({
                             value={formData.guardianPhone}
                             onChange={(e) => handleFieldChange('guardianPhone', e.target.value)}
                             placeholder="(555) 123-4567"
-                            className="mt-1 h-9"
+                            className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                           />
                         </div>
                         <div>
@@ -833,7 +944,7 @@ export default function StudentModal({
                             value={formData.guardianEmail}
                             onChange={(e) => handleFieldChange('guardianEmail', e.target.value)}
                             placeholder="email@example.com"
-                            className="mt-1 h-9"
+                            className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400"
                           />
                         </div>
                       </div>
@@ -850,7 +961,7 @@ export default function StudentModal({
                           value={formData.program}
                           onValueChange={(value) => handleFieldChange('program', value)}
                         >
-                          <SelectTrigger className="mt-1 h-9">
+                          <SelectTrigger className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400">
                             <SelectValue placeholder="Select program..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -866,7 +977,7 @@ export default function StudentModal({
                           value={formData.membershipStatus}
                           onValueChange={(value) => handleFieldChange('membershipStatus', value)}
                         >
-                          <SelectTrigger className="mt-1 h-9">
+                          <SelectTrigger className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400">
                             <SelectValue placeholder="Select..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -884,7 +995,7 @@ export default function StudentModal({
                           value={formData.beltRank}
                           onValueChange={(value) => handleFieldChange('beltRank', value)}
                         >
-                          <SelectTrigger className="mt-1 h-9">
+                          <SelectTrigger className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400">
                             <SelectValue placeholder="Select belt..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -900,7 +1011,7 @@ export default function StudentModal({
                           value={formData.status}
                           onValueChange={(value) => handleFieldChange('status', value)}
                         >
-                          <SelectTrigger className="mt-1 h-9">
+                          <SelectTrigger className="mt-1 h-9 bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400">
                             <SelectValue placeholder="Select status..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -1036,6 +1147,99 @@ export default function StudentModal({
                   </>
                 ) : (
                   'Confirm Upload'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Photo Preview Modal */}
+      {showPhotoPreview && photoPreview && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60"
+            onClick={handleCancelPhotoPreview}
+          />
+          
+          {/* Preview Card */}
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Preview Photo</h3>
+            
+            {/* Photo Preview */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <img 
+                  src={photoPreview.dataUrl} 
+                  alt="Photo preview" 
+                  className="w-32 h-32 object-cover rounded-full border-4 border-gray-200"
+                />
+              </div>
+            </div>
+            
+            {/* File name and size */}
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-500 truncate">
+                {photoPreview.fileName}
+              </p>
+              <p className={`text-xs mt-1 ${isPhotoTooLarge ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                {formatFileSize(photoPreview.fileSize)}
+              </p>
+            </div>
+            
+            {/* File size warning */}
+            {isPhotoTooLarge && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-red-800">File too large</p>
+                    <p className="text-xs text-red-600 mt-0.5">Please select an image under 2MB</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Preview in context */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <p className="text-xs text-gray-500 mb-2 text-center">How it will appear on the student card:</p>
+              <div className="flex items-center justify-center gap-3">
+                <img 
+                  src={photoPreview.dataUrl} 
+                  alt="Photo preview small" 
+                  className="w-12 h-12 object-cover rounded-full"
+                />
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-gray-900">{student?.first_name} {student?.last_name}</p>
+                  <p className="text-xs text-gray-500">{student?.program || 'General'}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleCancelPhotoPreview}
+              >
+                Cancel
+              </Button>
+              <Button
+                className={`flex-1 text-white ${isPhotoTooLarge ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'}`}
+                onClick={handleConfirmPhotoUpload}
+                disabled={isUploadingPhoto || isPhotoTooLarge}
+              >
+                {isUploadingPhoto ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  'Upload Photo'
                 )}
               </Button>
             </div>

@@ -3565,3 +3565,21 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Test Add Student wizard with photo upload
 - [x] Save checkpoint
 
+
+
+## 🐛 Student Card Modal Issues (2026-01-01)
+
+### Issues Reported
+- Ghost text visibility on student card modal
+- Bottom of student card being cut off (modal height/scroll)
+- Unable to add photo to student card
+- Cannot add logo on student card
+
+### Fix Tasks
+- [x] Fix ghost text visibility on student card modal
+- [x] Fix bottom of student card being cut off (modal height/scroll)
+- [x] Add photo upload functionality to student card
+- [x] Add dojo logo display on student card (clickable in header)
+- [x] Redesign student card modal for better UX
+- [x] Test all fixes
+- [ ] Save checkpoint
