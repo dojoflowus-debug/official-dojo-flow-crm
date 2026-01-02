@@ -873,19 +873,29 @@ async function startServer() {
         return res.status(400).json({ error: "No organization found. Please log in again." });
       }
       
-      const { name, email, phone, date_of_birth, belt_rank, status, membership_status, street_address, city, state, zip_code } = req.body;
+      const { 
+        first_name, last_name, name, email, phone, date_of_birth, belt_rank, status, 
+        membership_status, street_address, city, state, zip_code, program,
+        latitude, longitude, guardian_name, guardian_relationship, guardian_phone, guardian_email
+      } = req.body;
       
-      // Parse name into firstName and lastName
-      const nameParts = (name || '').trim().split(/\s+/);
-      const firstName = nameParts[0] || 'Unknown';
-      const lastName = nameParts.slice(1).join(' ') || firstName;
+      // Support both first_name/last_name and name field
+      let firstName = first_name;
+      let lastName = last_name;
+      if (!firstName && name) {
+        const nameParts = (name || '').trim().split(/\s+/);
+        firstName = nameParts[0] || 'Unknown';
+        lastName = nameParts.slice(1).join(' ') || firstName;
+      }
+      firstName = firstName || 'Unknown';
+      lastName = lastName || firstName;
       
       const result = await db.insert(students).values({
         firstName,
         lastName,
         email: email || null,
         phone: phone || null,
-        dateOfBirth: date_of_birth ? new Date(date_of_birth) : null,
+        dateOfBirth: date_of_birth || null,
         beltRank: belt_rank || 'White',
         status: status || 'Active',
         membershipStatus: membership_status || 'Standard',
@@ -893,6 +903,13 @@ async function startServer() {
         city: city || null,
         state: state || null,
         zipCode: zip_code || null,
+        latitude: latitude || null,
+        longitude: longitude || null,
+        program: program || null,
+        guardianName: guardian_name || null,
+        guardianRelationship: guardian_relationship || null,
+        guardianPhone: guardian_phone || null,
+        guardianEmail: guardian_email || null,
         organizationId: organizationId,
       });
       

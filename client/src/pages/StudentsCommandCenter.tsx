@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { trpc } from '@/lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useToast } from '@/hooks/use-toast'
 import AppShell from '@/components/AppShell'
+import AddStudentWizard from '@/components/AddStudentWizard'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -106,6 +108,7 @@ function getPriority(student: CommandStudent): number {
 
 export default function StudentsCommandCenter() {
   const { theme } = useTheme()
+  const { toast } = useToast()
   const isDarkMode = theme === 'dark' || theme === 'cinematic'
   const mapRef = useRef<LeafletMapHandle>(null)
   
@@ -118,6 +121,7 @@ export default function StudentsCommandCenter() {
   const [showHeatmap, setShowHeatmap] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState<CommandStudent | null>(null)
+  const [showAddWizard, setShowAddWizard] = useState(false)
   
   // Get utils for invalidating queries after student update
   const utils = trpc.useUtils()
@@ -408,7 +412,7 @@ export default function StudentsCommandCenter() {
           <Button
             size="lg"
             className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-105 active:scale-95"
-            onClick={() => window.location.href = '/students-old'}
+            onClick={() => setShowAddWizard(true)}
             title="Add Student"
           >
             <Plus className="h-6 w-6" />
@@ -509,6 +513,50 @@ export default function StudentsCommandCenter() {
           }}
         />
       )}
+
+      {/* Add Student Wizard */}
+      <AddStudentWizard
+        open={showAddWizard}
+        onOpenChange={setShowAddWizard}
+        onStudentCreated={(newStudent) => {
+          // Refresh the students list
+          utils.students.list.invalidate()
+          // Show success toast
+          toast({
+            title: 'Student Added',
+            description: `${newStudent.first_name} ${newStudent.last_name} has been added to your roster.`,
+          })
+          // Select the newly created student if they have coordinates
+          if (newStudent.latitude && newStudent.longitude) {
+            const processed = {
+              id: newStudent.id,
+              first_name: newStudent.first_name,
+              last_name: newStudent.last_name,
+              email: newStudent.email || '',
+              phone: newStudent.phone || '',
+              belt_rank: newStudent.belt_rank || 'White Belt',
+              status: newStudent.status as CommandStudent['status'],
+              membership_status: newStudent.membership_status || newStudent.status,
+              latitude: newStudent.latitude,
+              longitude: newStudent.longitude,
+              photo_url: newStudent.photo_url,
+              program: newStudent.program,
+              days_since_contact: 0,
+              missed_classes: 0,
+              estimated_value: 150,
+            }
+            setSelectedStudent(processed)
+            // Center map on new student
+            if (mapRef.current) {
+              mapRef.current.flyTo(
+                parseFloat(newStudent.latitude),
+                parseFloat(newStudent.longitude),
+                15
+              )
+            }
+          }
+        }}
+      />
     </AppShell>
   )
 }

@@ -1788,6 +1788,8 @@ export const appRouter = router({
         city: z.string().optional().nullable(),
         state: z.string().optional().nullable(),
         zipCode: z.string().optional().nullable(),
+        latitude: z.string().optional().nullable(),
+        longitude: z.string().optional().nullable(),
         photoUrl: z.string().optional().nullable(),
         guardianName: z.string().optional().nullable(),
         guardianEmail: z.string().email().optional().nullable(),
@@ -1817,10 +1819,12 @@ export const appRouter = router({
           dateOfBirthStr = date.toISOString().slice(0, 19).replace('T', ' ');
         }
         
-        // Geocode address if provided
-        let latitude: string | null = null;
-        let longitude: string | null = null;
-        if (input.streetAddress || input.city || input.state || input.zipCode) {
+        // Use provided coordinates or geocode address if needed
+        let latitude: string | null = input.latitude || null;
+        let longitude: string | null = input.longitude || null;
+        
+        // Only geocode if coordinates not provided but address is
+        if (!latitude && !longitude && (input.streetAddress || input.city || input.state || input.zipCode)) {
           try {
             const coords = await geocodeAddress({
               streetAddress: input.streetAddress || undefined,

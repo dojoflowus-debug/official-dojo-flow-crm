@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import SimpleLayout from '../components/SimpleLayout'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
+import AddStudentWizard from '../components/AddStudentWizard'
+import { useToast } from '@/hooks/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,6 +58,7 @@ import {
 
 export default function Students({ onLogout, theme, toggleTheme }) {
   const [searchParams] = useSearchParams()
+  const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilterMenu, setShowFilterMenu] = useState(false)
   const [statusFilter, setStatusFilter] = useState(() => {
@@ -68,6 +71,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
   })
   const [membershipFilter, setMembershipFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showAddWizard, setShowAddWizard] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -160,6 +164,31 @@ export default function Students({ onLogout, theme, toggleTheme }) {
       [field]: value
     }))
   }
+
+  // Callback when student is created via wizard
+  const handleStudentCreated = useCallback(async (newStudent) => {
+    // Refresh students list
+    await fetchStudents(false)
+    await fetchStats()
+    
+    // Select the newly created student
+    if (newStudent && newStudent.id) {
+      // Find the student in the refreshed list
+      const response = await fetch('/api/students')
+      if (response.ok) {
+        const allStudents = await response.json()
+        const createdStudent = allStudents.find(s => s.id === newStudent.id)
+        if (createdStudent) {
+          setSelectedStudent(createdStudent)
+        }
+      }
+    }
+    
+    toast({
+      title: 'Student Added',
+      description: `${newStudent.first_name} ${newStudent.last_name} has been added to your roster.`,
+    })
+  }, [toast])
 
   const handleAddStudent = async () => {
     // Validate form
@@ -517,7 +546,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
           </div>
           <Button 
             className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => setShowAddWizard(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Student
@@ -696,7 +725,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button 
                     className="bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
-                    onClick={() => setShowAddModal(true)}
+                    onClick={() => setShowAddWizard(true)}
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
                     Add Your First Student
@@ -926,7 +955,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
           <Button
             size="lg"
             className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => setShowAddWizard(true)}
             title="Add Student"
           >
             <Plus className="h-6 w-6" />
@@ -1675,6 +1704,13 @@ export default function Students({ onLogout, theme, toggleTheme }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Add Student Wizard */}
+        <AddStudentWizard
+          open={showAddWizard}
+          onOpenChange={setShowAddWizard}
+          onStudentCreated={handleStudentCreated}
+        />
       </div>
     </SimpleLayout>
   )

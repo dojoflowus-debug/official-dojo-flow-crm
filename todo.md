@@ -3484,8 +3484,8 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 ### Post-Creation Behavior
 - [ ] Close modal automatically after success
 - [ ] Refresh students list
-- [ ] Select newly created student
-- [ ] Center map on their location
+- [x] Select newly created student (when coordinates available)
+- [x] Center map on their location (when coordinates available)
 - [ ] Show success toast
 
 ### UX Improvements
@@ -3493,3 +3493,39 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [ ] Show inline validation errors
 - [ ] Add progress indicator (Step 1 of 5, etc.)
 - [ ] Handle empty state with "Add your first student" CTA
+
+
+## 🔧 Fix Student Creation Flow End-to-End (2026-01-01)
+
+### Multi-Step Add Student Wizard
+- [x] Create AddStudentWizard component with 4 steps
+- [x] Step 1: Basic Info (name, email, phone, DOB)
+- [x] Step 2: Guardian Info (conditional - only if student < 18)
+- [x] Step 3: Program & Enrollment (program, status, start date, belt rank)
+- [x] Step 4: Address & Location (address, city, state, zip)
+- [x] Step 5: Review & Create
+- [x] Add progress indicator (Step X of Y)
+- [x] Add inline validation errors
+- [x] Disable submit until required fields valid
+
+### Database Fixes
+- [x] Ensure optional fields are nullable in DB schema
+- [x] Set defaults for status, createdAt, updatedAt (DB has defaults)
+- [x] Prevent insert failure when optional fields are empty
+- [x] Fix status enum mismatch (DB uses Active/Inactive/On Hold, not Trial)
+
+### Post-Create Behavior
+- [x] Close modal automatically after creation
+- [x] Refresh students list
+- [x] Select newly created student (when coordinates available)
+- [x] Center map on their location (when coordinates available)
+- [x] Show success toast
+
+### Empty State Handling
+- [x] Show "Add your first student" CTA when no students
+- [x] Clicking CTA opens the wizard directly
+
+### Data Integrity
+- [x] Ensure program assignment determines Trial vs Active status (membershipStatus field)
+- [x] Store guardian info separately in schema (guardianName, guardianPhone, guardianEmail, guardianRelationship)
+
