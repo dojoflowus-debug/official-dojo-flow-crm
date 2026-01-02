@@ -3798,3 +3798,57 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] ~440px width, single panel design
 - [x] Apple Control Center × Raycast × Linear inspired
 - [x] Integrate panel into application
+
+
+## 🎯 Kai Command Tactical Redesign
+
+### Design Intent
+Transform Kai Command from "office productivity" look to tactical command center aesthetic.
+
+### Required Changes
+- [ ] Replace soft rounded cards with mission tiles
+- [ ] Implement dark base + white text + limited alert colors
+- [ ] Create Priority Actions stack (top 3 only)
+- [ ] Add severity indicators (left-edge bars, icons)
+- [ ] Change Kai copy to command-style language (alerts, directives, outcomes)
+- [ ] Remove pastel colors, rainbow borders, productivity-style grids
+- [ ] Apply military command board / mission control aesthetic
+
+### Prohibited Elements
+- No pastel colors
+- No rainbow card borders
+- No generic "help me" phrasing
+- No symmetric productivity-style grids
+
+
+
+## 🎯 Kai Command Tactical Redesign (2026-01-02)
+
+### Design Intent
+Transform Kai Command from "office productivity" look to tactical command center aesthetic.
+
+### Completed Changes
+- [x] Replace soft rounded cards with mission tiles (sharp edges, minimal rounding)
+- [x] Apply dark base (#0A0A0B) throughout interface
+- [x] Add severity indicators (left-edge bars) - red for critical, amber for warning, white for info
+- [x] Introduce Priority Actions stack (top 3 critical items)
+- [x] Update all copy to command-style language (ALERT, THREAT, DIRECTIVE, INTEL, SITREP, COMMS)
+- [x] Update status banner: "COMMAND CENTER • OPERATIONAL STATUS: ACTIVE • ALL SYSTEMS NOMINAL"
+- [x] Update sidebar with tactical styling (STATUS FILTERS, OPERATIONS LOG)
+- [x] Update conversation cards with severity indicators and tactical styling
+- [x] Update composer placeholder: "Issue directive... Type @ to assign"
+- [x] Update disclaimer: "Verify critical intel before execution"
+- [x] Update taglines to tactical command language
+- [x] Update carousel arrows with tactical styling
+
+### Visual Inspiration Applied
+- Military command boards
+- Mission control dashboards
+- Tactical ops consoles
+
+### Prohibited Elements (Removed)
+- [x] No pastel colors
+- [x] No rainbow card borders
+- [x] No generic "help me" phrasing
+- [x] No symmetric productivity-style grids (asymmetric Priority Actions + carousel)
+

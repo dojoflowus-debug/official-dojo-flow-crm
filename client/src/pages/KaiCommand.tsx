@@ -813,73 +813,74 @@ export default function KaiCommand() {
   const insightsCount = conversations.filter(c => !c.archivedAt && c.category === 'kai').length;
   const pendingCount = conversations.filter(c => !c.archivedAt && c.status === 'attention').length;
   
+  // Tactical status filters
   const smartCollections = [
-    { id: 'urgent', label: 'Urgent', count: urgentCount, icon: AlertCircle, color: 'text-[#ED393D]' },
-    { id: 'insights', label: 'Kai Insights', count: insightsCount, icon: Sparkles, color: 'text-[#A855F7]' },
-    { id: 'pending', label: 'Pending Tasks', count: pendingCount, icon: CheckSquare, color: 'text-[#14B8A6]' }
+    { id: 'urgent', label: 'CRITICAL', count: urgentCount, icon: AlertCircle, color: 'text-red-500' },
+    { id: 'insights', label: 'INTEL', count: insightsCount, icon: Sparkles, color: 'text-white/70' },
+    { id: 'pending', label: 'PENDING', count: pendingCount, icon: CheckSquare, color: 'text-amber-500' }
   ];
 
-  // Quick command prompts - 10 tiles for the carousel
+  // Mission tiles - tactical command prompts with severity levels
   const quickCommands = [
     {
-      id: 'goals',
-      header: 'GROW KIDS PROGRAM',
-      text: '"Help me grow my kids program to 150 students."',
-      color: 'red'
-    },
-    {
-      id: 'health',
-      header: 'REVIEW ATTENDANCE',
-      text: '"Show attendance and missed classes for this week."',
-      color: 'red'
-    },
-    {
-      id: 'billing',
-      header: 'RESOLVE LATE PAYMENTS',
-      text: '"Who is late on payments, and how can we fix it?"',
-      color: 'orange'
+      id: 'at-risk',
+      header: 'ALERT: INACTIVE MEMBERS',
+      text: '"Flag students with 14+ days absence. Execute recovery protocol."',
+      severity: 'critical' // red left bar
     },
     {
       id: 'retention',
-      header: 'IDENTIFY AT-RISK STUDENTS',
-      text: '"Show me which students are at high risk of quitting."',
-      color: 'orange'
+      header: 'THREAT: CHURN RISK',
+      text: '"Identify high-risk students. Recommend intervention."',
+      severity: 'critical'
+    },
+    {
+      id: 'billing',
+      header: 'ALERT: REVENUE LEAK',
+      text: '"Surface overdue accounts. Generate collection sequence."',
+      severity: 'warning' // amber left bar
     },
     {
       id: 'enrollments',
-      header: 'FOLLOW UP ON LEADS',
-      text: '"Show me all leads that need follow-up today."',
-      color: 'green'
+      header: 'DIRECTIVE: LEAD PURSUIT',
+      text: '"Queue leads requiring follow-up. Prioritize by conversion probability."',
+      severity: 'warning'
     },
     {
-      id: 'at-risk',
-      header: 'RECOVER INACTIVE MEMBERS',
-      text: '"Who hasn\'t attended in 14+ days?"',
-      color: 'red'
+      id: 'health',
+      header: 'INTEL: ATTENDANCE SCAN',
+      text: '"Report attendance anomalies. Flag no-shows."',
+      severity: 'info' // white/neutral left bar
     },
     {
       id: 'class-quality',
-      header: 'ANALYZE CLASS CAPACITY',
-      text: '"Which classes are over- or under-capacity?"',
-      color: 'blue'
+      header: 'INTEL: CAPACITY ANALYSIS',
+      text: '"Audit class utilization. Identify bottlenecks."',
+      severity: 'info'
     },
     {
-      id: 'parent-comms',
-      header: 'DRAFT PARENT MESSAGE',
-      text: '"Draft a message to parents about upcoming events."',
-      color: 'purple'
+      id: 'goals',
+      header: 'OBJECTIVE: GROWTH TARGET',
+      text: '"Model pathway to 150 students. Define milestones."',
+      severity: 'info'
     },
     {
       id: 'staff-perf',
-      header: 'REVIEW INSTRUCTOR PERFORMANCE',
-      text: '"Which instructors have the highest retention this month?"',
-      color: 'orange'
+      header: 'INTEL: INSTRUCTOR METRICS',
+      text: '"Rank instructors by retention. Surface top performers."',
+      severity: 'info'
     },
     {
       id: 'financial',
-      header: 'VIEW FINANCIAL SUMMARY',
-      text: '"Give me revenue, expenses, and projections for this month."',
-      color: 'green'
+      header: 'SITREP: FINANCIAL STATUS',
+      text: '"Compile revenue, burn rate, and 30-day projection."',
+      severity: 'info'
+    },
+    {
+      id: 'parent-comms',
+      header: 'COMMS: PARENT BROADCAST',
+      text: '"Draft parent notification. Specify event parameters."',
+      severity: 'info'
     }
   ];
 
@@ -1796,20 +1797,23 @@ export default function KaiCommand() {
     }
   };
 
+  // Tactical category colors - dark base with accent text
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'kai': return 'bg-[#DBEAFE] text-[#3B82F6]';
-      case 'growth': return 'bg-[#D1FAE5] text-[#10B981]';
-      case 'billing': return 'bg-[#EDE9FE] text-[#8B5CF6]';
-      default: return 'bg-slate-100 text-slate-600';
+      case 'kai': return 'bg-white/5 text-white/70 border border-white/10';
+      case 'growth': return 'bg-white/5 text-white/70 border border-white/10';
+      case 'billing': return 'bg-white/5 text-white/70 border border-white/10';
+      case 'operations': return 'bg-white/5 text-white/70 border border-white/10';
+      default: return 'bg-white/5 text-white/50 border border-white/10';
     }
   };
 
+  // Tactical status colors - severity-based
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'attention': return 'bg-amber-100 text-amber-700';
-      case 'urgent': return 'bg-red-100 text-red-700';
-      default: return 'bg-slate-100 text-slate-600';
+      case 'attention': return 'bg-amber-500/10 text-amber-500 border border-amber-500/30';
+      case 'urgent': return 'bg-red-500/10 text-red-500 border border-red-500/30';
+      default: return 'bg-white/5 text-white/50 border border-white/10';
     }
   };
 
@@ -1841,13 +1845,13 @@ export default function KaiCommand() {
   const yesterdayConversations = filteredConversations.filter(c => c.date === 'yesterday');
   const olderConversations = filteredConversations.filter(c => c.date === 'older');
 
-  // Cinematic mode taglines that rotate
+  // Tactical command center taglines
   const cinematicTaglines = [
-    "Growth begins with clarity.",
-    "What would you like to optimize today?",
-    "I'll show you the path forward.",
-    "Your dojo's potential, unlocked.",
-    "Let's build something great together."
+    "Standing by for your directive.",
+    "All systems operational. Awaiting orders.",
+    "Intel ready. What's the mission?",
+    "Command center active. Status: green.",
+    "Ready to execute. Define your objective."
   ];
   const [currentTaglineIndex, setCurrentTaglineIndex] = useState(0);
   const [taglineVisible, setTaglineVisible] = useState(true);
@@ -1959,7 +1963,7 @@ export default function KaiCommand() {
     <BottomNavLayout hiddenInFocusMode={isFocusMode} isUIHidden={isUIHidden}>
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-[#F7F8FA]'} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden bg-[#0A0A0B] ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -1970,87 +1974,66 @@ export default function KaiCommand() {
             pointerEvents: isFocusMode ? 'none' : 'auto',
             zIndex: 20
           }}
-          className={`conversation-panel ${isDark ? 'bg-[#121214] border-[rgba(255,255,255,0.05)]' : 'bg-white border-[#E5E6E8]'} border rounded-[18px] flex flex-col flex-shrink-0 m-4 mr-0 ${isDark ? 'shadow-[0_4px_24px_rgba(0,0,0,0.55)]' : 'shadow-[0_4px_12px_rgba(0,0,0,0.04)]'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
+          className={`conversation-panel bg-[#0A0A0B] border-white/5 border rounded-sm flex flex-col flex-shrink-0 m-4 mr-0 shadow-[0_4px_24px_rgba(0,0,0,0.7)] overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
         >
-          {/* Header - Clean Layout */}
-          <div className={`p-4 border-b ${isDark ? 'border-[rgba(255,255,255,0.05)]' : 'border-slate-200'}`}>
-            {/* Search + Chat Button Row */}
+          {/* Header - Tactical Command Style */}
+          <div className="p-4 border-b border-white/5">
+            {/* Search + New Op Button Row */}
             <div className="flex items-center gap-3 mb-3">
               {/* Search - Full Width */}
               <div className="relative flex-1">
-                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                 <Input
-                  placeholder="Search history, tags, @r"
+                  placeholder="Search ops..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`pl-9 h-9 w-full ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] text-white placeholder:text-[rgba(255,255,255,0.45)]' : 'bg-white border-slate-200'}`}
+                  className="pl-9 h-9 w-full bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-sm focus:border-white/20"
                 />
               </div>
               
-              {/* Apple-style Chat Button */}
+              {/* New Operation Button */}
               <button
                 onClick={handleNewChat}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[18px] border text-[13px] font-medium transition-all duration-150 hover:translate-y-[-1px] hover:scale-[1.03] focus-visible:translate-y-[-1px] focus-visible:scale-[1.03] ${isDark ? 'border-[rgba(255,255,255,0.10)] text-white' : 'border-[#E3E5EB] text-[#25262B]'}`}
-                style={{
-                  background: isDark ? '#18181A' : 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)',
-                  boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.08)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = isDark ? '#1F1F22' : 'linear-gradient(to bottom, #FFFFFF, #ECEEF3)';
-                  e.currentTarget.style.boxShadow = isDark ? '0 3px 12px rgba(0,0,0,0.4)' : '0 3px 10px rgba(0,0,0,0.12)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = isDark ? '#18181A' : 'linear-gradient(to bottom, #F8F8FB, #ECEEF3)';
-                  e.currentTarget.style.boxShadow = isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.08)';
-                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-white/10 text-[11px] font-medium uppercase tracking-wider text-white/70 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-150"
               >
-                <Plus className={`w-4 h-4 ${isDark ? 'text-[rgba(255,255,255,0.65)]' : 'text-[#555A60]'}`} />
-                Chat
+                <Plus className="w-3.5 h-3.5 text-white/50" />
+                NEW OP
               </button>
             </div>
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className={`w-full h-9 ${isDark ? 'bg-[#18181A]' : 'bg-slate-100'}`}>
-                <TabsTrigger value="active" className={`flex-1 text-xs ${isDark ? 'data-[state=active]:bg-[rgba(255,255,255,0.08)] data-[state=active]:text-white text-[rgba(255,255,255,0.65)]' : 'data-[state=active]:bg-white'}`}>Active</TabsTrigger>
-                <TabsTrigger value="archived" className={`flex-1 text-xs ${isDark ? 'data-[state=active]:bg-[rgba(255,255,255,0.08)] data-[state=active]:text-white text-[rgba(255,255,255,0.65)]' : 'data-[state=active]:bg-white'}`}>Archived</TabsTrigger>
-                <TabsTrigger value="all" className={`flex-1 text-xs ${isDark ? 'data-[state=active]:bg-[rgba(255,255,255,0.08)] data-[state=active]:text-white text-[rgba(255,255,255,0.65)]' : 'data-[state=active]:bg-white'}`}>All</TabsTrigger>
+              <TabsList className="w-full h-8 bg-white/5 rounded-sm p-0.5">
+                <TabsTrigger value="active" className="flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50">ACTIVE</TabsTrigger>
+                <TabsTrigger value="archived" className="flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50">ARCHIVED</TabsTrigger>
+                <TabsTrigger value="all" className="flex-1 text-[10px] uppercase tracking-wider font-medium rounded-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50">ALL</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
-          {/* Smart Collections */}
-          <div className={`px-4 py-4 border-b ${isDark ? 'border-[rgba(255,255,255,0.05)]' : 'border-slate-100'}`}>
-            <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Smart Collections</h3>
-            <div className="space-y-2">
+          {/* Status Filters */}
+          <div className="px-4 py-4 border-b border-white/5">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3 text-white/40">STATUS FILTERS</h3>
+            <div className="space-y-1">
               {smartCollections.map((collection) => {
                 const isActive = activeCollection === collection.id;
                 return (
                 <button
                   key={collection.id}
                   onClick={() => {
-                    // Toggle collection filter: if already active, clear it; otherwise set it
                     setActiveCollection(isActive ? null : collection.id);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
+                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded-sm transition-colors ${
                     isActive
-                      ? isDark
-                        ? 'bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.15)]'
-                        : 'bg-slate-100 border border-slate-200'
-                      : isDark
-                        ? 'hover:bg-[rgba(255,255,255,0.08)]'
-                        : 'hover:bg-slate-50'
+                      ? 'bg-white/10 border-l-2 border-l-red-500'
+                      : 'hover:bg-white/5 border-l-2 border-l-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {collection.id === 'insights' ? (
-                      <img src="/kai-avatar.png" alt="Kai" className="w-4 h-4 rounded-full" />
-                    ) : (
-                      <collection.icon className={`w-4 h-4 ${collection.color}`} />
-                    )}
-                    <span className={`text-sm ${isDark ? 'text-white' : 'text-slate-700'}`}>{collection.label}</span>
+                    <collection.icon className={`w-3.5 h-3.5 ${collection.color}`} />
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-white/70">{collection.label}</span>
                   </div>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDark ? 'text-[rgba(255,255,255,0.65)] bg-[#18181A]' : 'text-slate-500 bg-slate-200'}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${collection.id === 'urgent' ? 'bg-red-500/20 text-red-500' : collection.id === 'pending' ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-white/50'}`}>
                     {collection.count}
                   </span>
                 </button>
@@ -2059,27 +2042,23 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* Recent Conversations with visible scrollbar */}
+          {/* Operations Log */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="px-4 pt-4 pb-2">
               <div className="flex items-center justify-between mb-2">
-                <h3 className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}>Recent Conversations</h3>
-                <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>{filteredConversations.length}</span>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-white/40">OPERATIONS LOG</h3>
+                <span className="text-[10px] font-mono text-white/30">{filteredConversations.length}</span>
               </div>
               {activeCollection && (
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>
-                    Filtered by: {smartCollections.find(c => c.id === activeCollection)?.label}
+                  <span className="text-[10px] text-white/40">
+                    Filter: {smartCollections.find(c => c.id === activeCollection)?.label}
                   </span>
                   <button
                     onClick={() => setActiveCollection(null)}
-                    className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
-                      isDark
-                        ? 'text-[rgba(255,255,255,0.65)] hover:bg-[rgba(255,255,255,0.08)]'
-                        : 'text-slate-500 hover:bg-slate-100'
-                    }`}
+                    className="text-[10px] px-1.5 py-0.5 rounded-sm transition-colors text-white/50 hover:bg-white/10"
                   >
-                    Clear
+                    CLEAR
                   </button>
                 </div>
               )}
@@ -2089,7 +2068,7 @@ export default function KaiCommand() {
               {/* Today */}
               {todayConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className={`text-xs font-medium uppercase mb-2 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>Today</h4>
+                  <h4 className="text-[9px] font-bold uppercase tracking-widest mb-2 text-white/30">TODAY</h4>
                   {todayConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
@@ -2116,7 +2095,7 @@ export default function KaiCommand() {
               {/* Yesterday */}
               {yesterdayConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className={`text-xs font-medium uppercase mb-2 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>Yesterday</h4>
+                  <h4 className="text-[9px] font-bold uppercase tracking-widest mb-2 text-white/30">YESTERDAY</h4>
                   {yesterdayConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
@@ -2143,7 +2122,7 @@ export default function KaiCommand() {
               {/* Older */}
               {olderConversations.length > 0 && (
                 <div className="mb-4">
-                  <h4 className={`text-xs font-medium uppercase mb-2 ${isDark ? 'text-[rgba(255,255,255,0.45)]' : 'text-slate-400'}`}>Older</h4>
+                  <h4 className="text-[9px] font-bold uppercase tracking-widest mb-2 text-white/30">ARCHIVE</h4>
                   {olderConversations.map((conv) => (
                     <ConversationCard 
                       key={conv.id} 
@@ -2196,7 +2175,7 @@ export default function KaiCommand() {
         {/* Row 2: Scrollable content (flex-1) */}
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
-          className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark ? 'bg-[#0C0C0D]' : 'bg-white'}`}
+          className="flex-1 flex flex-col relative min-w-0 overflow-hidden bg-[#0A0A0B]"
           style={{ zIndex: 10 }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -2207,22 +2186,18 @@ export default function KaiCommand() {
           {isDragging && (
             <div 
               className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
-              style={{ background: isDark ? 'rgba(12,12,13,0.95)' : 'rgba(255,255,255,0.95)' }}
+              style={{ background: 'rgba(10,10,11,0.95)' }}
             >
-              <div className={`flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-dashed ${
-                isDark ? 'border-red-500/50 bg-red-500/10' : 'border-red-400/50 bg-red-50'
-              }`}>
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                  isDark ? 'bg-red-500/20' : 'bg-red-100'
-                }`}>
-                  <Upload className={`w-8 h-8 ${isDark ? 'text-red-400' : 'text-red-500'}`} />
+              <div className="flex flex-col items-center gap-4 p-8 rounded-sm border border-dashed border-white/30 bg-white/5">
+                <div className="w-16 h-16 rounded-sm flex items-center justify-center bg-white/10">
+                  <Upload className="w-8 h-8 text-white/70" />
                 </div>
                 <div className="text-center">
-                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    Drop files here
+                  <p className="text-sm font-bold uppercase tracking-wider text-white">
+                    DROP FILES TO UPLOAD
                   </p>
-                  <p className={`text-sm mt-1 ${isDark ? 'text-white/60' : 'text-slate-500'}`}>
-                    Spreadsheets, images, PDFs, and documents
+                  <p className="text-[10px] mt-1 text-white/50 uppercase tracking-wider">
+                    Spreadsheets, images, PDFs, documents
                   </p>
                 </div>
               </div>
@@ -2313,10 +2288,10 @@ export default function KaiCommand() {
             } : {}}
           >
             <p 
-              className={`text-xs uppercase tracking-wide font-medium ${isCinematic ? 'text-white/90' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`}
+              className={`text-[10px] uppercase tracking-widest font-medium ${isCinematic ? 'text-white/70' : isDark ? 'text-white/40' : 'text-white/40'}`}
               style={isCinematic ? { textShadow: '0 2px 4px rgba(0,0,0,0.75)' } : {}}
             >
-              KAI COMMAND USES A STRUCTURED, PROFESSIONAL CONVERSATION FORMAT — DESIGNED FOR CLARITY, ACCURACY, AND OPERATIONAL DECISION-MAKING.
+              COMMAND CENTER • OPERATIONAL STATUS: ACTIVE • ALL SYSTEMS NOMINAL
             </p>
             <div className="flex items-center gap-1">
               <DropdownMenu>
@@ -2477,15 +2452,15 @@ export default function KaiCommand() {
                     </div>
                   </div>
                   <h2 
-                    className={`${(isCinematic || isFocusMode) ? 'text-4xl' : 'text-3xl'} font-semibold mb-2 transition-all duration-500 ${isCinematic ? 'animate-[cinematicBreathing_4s_ease-in-out_infinite]' : ''}`}
+                    className={`${(isCinematic || isFocusMode) ? 'text-4xl' : 'text-2xl'} font-bold mb-2 transition-all duration-500 tracking-tight ${isCinematic ? 'animate-[cinematicBreathing_4s_ease-in-out_infinite]' : ''}`}
                     style={(isCinematic || isFocusMode) ? { 
                       animation: isCinematic ? 'cinematicTextSlideUp 0.5s ease-out 0.2s both, cinematicBreathing 4s ease-in-out 0.7s infinite' : 'none',
                       textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                       color: '#FFFFFF',
                       opacity: 1
-                    } : isDark ? { color: 'white' } : { color: '#0f172a' }}
+                    } : { color: 'white', letterSpacing: '0.1em' }}
                   >
-                    Hi, I'm Kai.
+                    KAI COMMAND
                   </h2>
                   {/* Rotating taglines in cinematic mode, static text otherwise */}
                   {(isCinematic || isFocusMode) ? (
@@ -2498,15 +2473,63 @@ export default function KaiCommand() {
                         opacity: 1
                       }}
                     >
-                      {isCinematic ? cinematicTaglines[currentTaglineIndex] : 'Tell me about your dojo and what you want to improve—growth, retention, or operations—and I\'ll show you the numbers.'}
+                      {isCinematic ? cinematicTaglines[currentTaglineIndex] : 'Select a directive below or issue a custom command.'}
                     </p>
                   ) : (
-                    <p className={`text-center max-w-md mb-8 ${isDark ? 'text-[rgba(255,255,255,0.65)]' : 'text-slate-600'}`}>
-                      Tell me about your dojo and what you want to improve—growth, retention, or operations—and I'll show you the numbers.
+                    <p className="text-center max-w-md mb-6 text-[11px] uppercase tracking-widest text-white/40">
+                      Select a directive below or issue a custom command.
                     </p>
                   )}
                   
-                  {/* Quick Commands Carousel */}
+                  {/* Priority Actions Stack - Top 3 Critical Items */}
+                  {!isCinematic && !isFocusMode && (
+                    <div className="w-full max-w-xl mb-8">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-red-500">PRIORITY ACTIONS</span>
+                      </div>
+                      <div className="space-y-2">
+                        {/* Priority Action 1 */}
+                        <button 
+                          onClick={() => handlePromptClick('"Flag students with 14+ days absence. Execute recovery protocol."')}
+                          className="w-full flex items-center gap-3 p-3 rounded-sm bg-[#0A0A0B] border border-red-500/30 hover:border-red-500/60 transition-all group"
+                        >
+                          <div className="w-1 h-8 bg-red-500 rounded-full" />
+                          <div className="flex-1 text-left">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">ALERT: INACTIVE MEMBERS</div>
+                            <div className="text-xs text-white/60 group-hover:text-white/80 transition-colors">14+ days absence detected</div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" />
+                        </button>
+                        {/* Priority Action 2 */}
+                        <button 
+                          onClick={() => handlePromptClick('"Identify high-risk students. Recommend intervention."')}
+                          className="w-full flex items-center gap-3 p-3 rounded-sm bg-[#0A0A0B] border border-red-500/30 hover:border-red-500/60 transition-all group"
+                        >
+                          <div className="w-1 h-8 bg-red-500 rounded-full" />
+                          <div className="flex-1 text-left">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">THREAT: CHURN RISK</div>
+                            <div className="text-xs text-white/60 group-hover:text-white/80 transition-colors">High-risk students identified</div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" />
+                        </button>
+                        {/* Priority Action 3 */}
+                        <button 
+                          onClick={() => handlePromptClick('"Surface overdue accounts. Generate collection sequence."')}
+                          className="w-full flex items-center gap-3 p-3 rounded-sm bg-[#0A0A0B] border border-amber-500/30 hover:border-amber-500/60 transition-all group"
+                        >
+                          <div className="w-1 h-8 bg-amber-500 rounded-full" />
+                          <div className="flex-1 text-left">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500">ALERT: REVENUE LEAK</div>
+                            <div className="text-xs text-white/60 group-hover:text-white/80 transition-colors">Overdue accounts require action</div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Mission Directives Carousel */}
                   <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
                     style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
                   >
@@ -2514,9 +2537,9 @@ export default function KaiCommand() {
                     {canScrollLeft && (
                       <button
                         onClick={() => scrollCarousel('left')}
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:bg-[#1F1F22]' : 'bg-white shadow-lg border border-slate-200 hover:bg-slate-50'}`}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20"
                       >
-                        <ChevronLeft className={`w-5 h-5 ${isDark ? 'text-white' : 'text-slate-600'}`} />
+                        <ChevronLeft className="w-4 h-4 text-white/70" />
                       </button>
                     )}
                     
@@ -2524,90 +2547,104 @@ export default function KaiCommand() {
                     {canScrollRight && (
                       <button
                         onClick={() => scrollCarousel('right')}
-                        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-[#18181A] border-[rgba(255,255,255,0.10)] shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:bg-[#1F1F22]' : 'bg-white shadow-lg border border-slate-200 hover:bg-slate-50'}`}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20"
                       >
-                        <ChevronRight className={`w-5 h-5 ${isDark ? 'text-white' : 'text-slate-600'}`} />
+                        <ChevronRight className="w-4 h-4 text-white/70" />
                       </button>
                     )}
                     
-                    {/* Scrollable Container */}
+                    {/* Mission Tiles - Tactical Grid */}
                     <div
                       ref={carouselRef}
                       onScroll={updateScrollButtons}
-                      className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-1"
+                      className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-1"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                       {sortedQuickCommands.map((command, index) => {
-                        // Get color-specific border and title color classes
-                        const getColorBorder = (color: string) => {
-                          const colorMap: Record<string, string> = {
-                            red: 'border-red-500',
-                            blue: 'border-blue-500',
-                            orange: 'border-orange-500',
-                            purple: 'border-purple-500',
-                            green: 'border-green-500'
-                          };
-                          return colorMap[color] || 'border-white/30';
+                        // Severity-based styling for tactical look
+                        const getSeverityStyles = (severity: string) => {
+                          switch (severity) {
+                            case 'critical':
+                              return {
+                                bar: 'bg-red-500',
+                                header: 'text-red-500',
+                                border: 'border-red-500/30',
+                                hoverBorder: 'hover:border-red-500/60'
+                              };
+                            case 'warning':
+                              return {
+                                bar: 'bg-amber-500',
+                                header: 'text-amber-500',
+                                border: 'border-amber-500/30',
+                                hoverBorder: 'hover:border-amber-500/60'
+                              };
+                            default: // info
+                              return {
+                                bar: 'bg-white/40',
+                                header: 'text-white/90',
+                                border: 'border-white/10',
+                                hoverBorder: 'hover:border-white/30'
+                              };
+                          }
                         };
                         
-                        const getTitleColor = (color: string) => {
-                          const colorMap: Record<string, string> = {
-                            red: 'text-red-500',
-                            blue: 'text-blue-500',
-                            orange: 'text-orange-500',
-                            purple: 'text-purple-500',
-                            green: 'text-green-500'
-                          };
-                          return colorMap[color] || 'text-white';
-                        };
+                        const severity = (command as any).severity || 'info';
+                        const styles = getSeverityStyles(severity);
                         
                         return (
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 ${(isCinematic || isFocusMode) ? 'w-[160px]' : 'w-[200px]'} border-[3px] ${(isCinematic || isFocusMode) ? 'rounded-[16px] p-4' : 'rounded-[20px] p-5'} text-left transition-all duration-300 group snap-start ${
-                            (isCinematic || isFocusMode)
-                              ? `${(command as any).color ? getColorBorder((command as any).color) : 'border-white/30'} hover:border-[rgba(255,76,76,0.5)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_40px_rgba(255,76,76,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/70' : ''}`
+                          className={`relative flex-shrink-0 w-[220px] text-left transition-all duration-200 group snap-start overflow-hidden
+                            ${(isCinematic || isFocusMode)
+                              ? `rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-white/5`
                               : isDark 
-                                ? `bg-[#18181A] ${(command as any).color ? getColorBorder((command as any).color) : 'border-[rgba(255,255,255,0.05)]'} hover:bg-[#1F1F22] hover:border-[rgba(255,255,255,0.15)] shadow-[0_4px_14px_rgba(0,0,0,0.3)] ${favorites.has(command.id) ? 'border-[#FF4C4C]/50' : ''}`
-                                : `bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:border-[#E53935]/30 ${(command as any).color ? getColorBorder((command as any).color) : 'border-slate-100'} ${favorites.has(command.id) ? 'border-[#E53935]/50 bg-red-50/30' : ''}`
-                          }`}
+                                ? `bg-[#0A0A0B] rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-[#111113]`
+                                : `bg-[#0A0A0B] rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-[#111113]`
+                            }`}
                           style={(isCinematic || isFocusMode) ? { 
                             animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
-                            background: 'transparent'
-                            /* NO blur on cards - text must be crisp */
+                            background: 'rgba(10, 10, 11, 0.95)'
                           } : {}}
                         >
-                          {/* Favorite Star */}
-                          <div
-                            onClick={(e) => toggleFavorite(command.id, e)}
-                            className={`absolute top-3 right-3 p-1 rounded-full transition-colors cursor-pointer ${(isCinematic || isFocusMode) ? 'hover:bg-white/20' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : 'hover:bg-slate-100'}`}
-                          >
-                            <Star
-                              className={`w-4 h-4 transition-colors ${
-                                favorites.has(command.id)
-                                  ? 'fill-[#FF4C4C] text-[#FF4C4C]'
-                                  : (isCinematic || isFocusMode) ? 'text-white/50 hover:text-white/80' : isDark ? 'text-[rgba(255,255,255,0.35)] hover:text-[rgba(255,255,255,0.55)]' : 'text-slate-300 hover:text-slate-400'
-                              }`}
-                            />
-                          </div>
+                          {/* Severity Indicator Bar - Left Edge */}
+                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${styles.bar}`} />
                           
-                          <div 
-                            className={`text-xs font-semibold uppercase tracking-wide mb-2 pr-6 ${(command as any).color ? getTitleColor((command as any).color) : 'text-[#FF4C4C]'}`}
-                            style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 3px rgba(0,0,0,0.9)' } : {}}
-                          >
-                            {command.header}
+                          {/* Content */}
+                          <div className="pl-4 pr-3 py-3">
+                            {/* Header with severity icon */}
+                            <div className="flex items-start justify-between mb-2">
+                              <div 
+                                className={`text-[10px] font-bold uppercase tracking-wider ${styles.header}`}
+                                style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 2px rgba(0,0,0,0.9)' } : {}}
+                              >
+                                {command.header}
+                              </div>
+                              {/* Favorite/Pin indicator */}
+                              <div
+                                onClick={(e) => toggleFavorite(command.id, e)}
+                                className="p-0.5 rounded transition-colors cursor-pointer hover:bg-white/10"
+                              >
+                                <Star
+                                  className={`w-3 h-3 transition-colors ${
+                                    favorites.has(command.id)
+                                      ? 'fill-red-500 text-red-500'
+                                      : 'text-white/20 hover:text-white/40'
+                                  }`}
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Command text */}
+                            <p 
+                              className="text-xs leading-relaxed text-white/70 group-hover:text-white/90 transition-colors"
+                              style={(isCinematic || isFocusMode) ? { 
+                                textShadow: '0 1px 2px rgba(0,0,0,0.9)'
+                              } : {}}
+                            >
+                              {command.text}
+                            </p>
                           </div>
-                          <p 
-                            className={`text-sm leading-relaxed`}
-                            style={(isCinematic || isFocusMode) ? { 
-                              textShadow: '0 1px 3px rgba(0,0,0,0.9)', 
-                              color: '#FFFFFF',
-                              opacity: 1
-                            } : isDark ? { color: 'rgba(255,255,255,0.75)' } : { color: '#475569' }}
-                          >
-                            {command.text}
-                          </p>
                         </button>
                         );
                       })}
@@ -2946,7 +2983,7 @@ export default function KaiCommand() {
                     console.log('Mentions:', mentions);
                     handleSendMessage();
                   }}
-                  placeholder="Message Kai… Type @ to mention"
+                  placeholder="Issue directive... Type @ to assign"
                   theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
                   variant="apple"
                 />
@@ -2963,14 +3000,14 @@ export default function KaiCommand() {
                 </Button>
               </div>
               <p 
-                className={`text-xs text-center mt-2 relative z-10`}
+                className={`text-[10px] text-center mt-2 relative z-10 uppercase tracking-wider`}
                 style={(isCinematic || isFocusMode) ? { 
                   textShadow: '0 1px 3px rgba(0,0,0,0.9)', 
-                  color: '#FFFFFF',
+                  color: 'rgba(255,255,255,0.4)',
                   opacity: 1
-                } : isDark ? { color: 'rgba(255,255,255,0.45)' } : { color: '#94a3b8' }}
+                } : isDark ? { color: 'rgba(255,255,255,0.30)' } : { color: 'rgba(255,255,255,0.30)' }}
               >
-                Kai can make mistakes. Consider checking important information.
+                Verify critical intel before execution
               </p>
             </div>
           </div>
@@ -3098,7 +3135,7 @@ export default function KaiCommand() {
   );
 }
 
-// Conversation Card Component
+// Conversation Card Component - Tactical Mission Tile
 function ConversationCard({ 
   conversation, 
   getCategoryColor,
@@ -3131,23 +3168,28 @@ function ConversationCard({
   const [renameValue, setRenameValue] = useState(conversation.title);
   const isArchived = !!conversation.archivedAt;
   
+  // Severity bar color based on status
+  const getSeverityBarColor = () => {
+    if (conversation.status === 'urgent') return 'bg-red-500';
+    if (conversation.status === 'attention') return 'bg-amber-500';
+    return 'bg-white/20';
+  };
+  
   return (
     <div 
       onClick={onClick}
-      className={`rounded-lg border p-3 mb-2 transition-all cursor-pointer ${
+      className={`relative rounded-sm border p-3 pl-4 mb-2 transition-all cursor-pointer overflow-hidden ${
         isSelected 
-          ? isDark 
-            ? 'bg-[rgba(255,255,255,0.08)] border-l-2 border-l-[#FF4C4C] border-[rgba(255,255,255,0.10)]' 
-            : 'bg-slate-100 border-slate-300 shadow-sm'
-          : isDark 
-            ? 'bg-[#18181A] border-[rgba(255,255,255,0.05)] hover:bg-[#1F1F22]' 
-            : 'bg-white border-slate-200 hover:shadow-sm'
+          ? 'bg-white/10 border-white/20' 
+          : 'bg-[#0A0A0B] border-white/5 hover:bg-white/5 hover:border-white/10'
       }`}
     >
+      {/* Severity Indicator Bar - Left Edge */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 ${getSeverityBarColor()}`} />
       <div className="flex items-start justify-between mb-1">
-        <h5 className={`text-sm font-medium truncate flex-1 pr-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{conversation.title}</h5>
+        <h5 className="text-xs font-medium truncate flex-1 pr-2 text-white/90">{conversation.title}</h5>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs text-slate-400">{conversation.timestamp}</span>
+          <span className="text-[10px] font-mono text-white/30">{conversation.timestamp}</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -3314,18 +3356,18 @@ function ConversationCard({
         </AlertDialogContent>
       </AlertDialog>
       {conversation.preview && (
-        <p className="text-xs text-slate-500 line-clamp-2 mb-2">{conversation.preview}</p>
+        <p className="text-[10px] text-white/40 line-clamp-2 mb-2">{conversation.preview}</p>
       )}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className={`text-xs px-2 py-0.5 rounded-full ${getCategoryColor(conversation.category)}`}>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${getCategoryColor(conversation.category)}`}>
           {conversation.category}
         </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(conversation.status)}`}>
-          {conversation.status}
+        <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${getStatusColor(conversation.status)}`}>
+          {conversation.status === 'neutral' ? 'NORMAL' : conversation.status === 'attention' ? 'ATTENTION' : conversation.status === 'urgent' ? 'URGENT' : conversation.status}
         </span>
-        <span className="text-xs text-slate-400 ml-auto flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          In Progress
+        <span className="text-[9px] text-white/30 ml-auto flex items-center gap-1 uppercase tracking-wider">
+          <Clock className="w-2.5 h-2.5" />
+          ACTIVE
         </span>
       </div>
     </div>
