@@ -3745,3 +3745,42 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Verified photo upload now works correctly
 - [x] Tested with Vincent Holmes student - photo uploaded successfully to S3
 - [x] Database confirmed photoUrl is being saved correctly
+
+
+## 🎨 Account Command Panel - User Menu Redesign (2026-01-02)
+
+### Layout
+- [x] Slide-down/popover panel anchored to avatar (width ~380-420px)
+- [x] Glassmorphism background with soft shadow
+- [x] Smooth animation on open/close
+- [x] Keyboard accessible (Escape to close, Tab navigation)
+- [x] Mobile responsive
+
+### Top Section (Identity)
+- [x] Large avatar (80-96px)
+- [x] User name (prominent)
+- [x] Role badge (Owner/Admin)
+- [x] Email address
+- [x] Edit profile icon button
+
+### Main Actions
+- [x] School Profile link with icon
+- [x] Staff & Permissions link with icon
+- [x] Billing & Subscription link with icon
+- [x] Integrations link with icon
+
+### System Controls
+- [x] Theme selector (Light / Dark / Cinematic) with toggle buttons
+- [x] Credits display with current balance
+- [x] Notifications link with badge count
+
+### Footer
+- [x] Help & Support link
+- [x] Sign Out button with distinct styling (red accent)
+
+### UX Requirements
+- [x] Smooth slide-down animation
+- [x] Click outside to close
+- [x] Escape key to close
+- [x] Focus trap when open
+- [x] Matches existing DojoFlow aesthetic

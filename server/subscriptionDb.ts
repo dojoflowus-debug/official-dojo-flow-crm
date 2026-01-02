@@ -71,7 +71,7 @@ export async function upsertOrganizationSubscription(data: InsertOrganizationSub
       trialEndsAt: data.trialEndsAt,
       stripeSubscriptionId: data.stripeSubscriptionId,
       stripeCustomerId: data.stripeCustomerId,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     }
   });
 }
@@ -85,9 +85,9 @@ export async function cancelOrganizationSubscription(organizationId: number, rea
   await db.update(organizationSubscriptions)
     .set({
       status: "cancelled",
-      cancelledAt: new Date(),
+      cancelledAt: new Date().toISOString(),
       cancellationReason: reason,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     })
     .where(eq(organizationSubscriptions.organizationId, organizationId));
 }
@@ -119,8 +119,8 @@ export async function initializeCreditBalance(organizationId: number, initialCre
     periodUsed: 0,
     totalPurchased: 0,
     totalUsed: 0,
-    lastResetAt: now,
-    nextResetAt: nextReset,
+    lastResetAt: now.toISOString(),
+    nextResetAt: nextReset.toISOString(),
     lowCreditThreshold: 50,
     lowCreditAlertSent: 0
   });
@@ -157,7 +157,7 @@ export async function deductCredits(
       balance: newBalance,
       periodUsed: newPeriodUsed,
       totalUsed: newTotalUsed,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     })
     .where(eq(aiCreditBalance.organizationId, organizationId));
 
@@ -204,7 +204,7 @@ export async function addCredits(
     .set({
       balance: newBalance,
       totalPurchased: newTotalPurchased,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     })
     .where(eq(aiCreditBalance.organizationId, organizationId));
 
@@ -240,11 +240,11 @@ export async function getCreditTransactions(
   const conditions = [eq(aiCreditTransactions.organizationId, organizationId)];
   
   if (options?.startDate) {
-    conditions.push(gte(aiCreditTransactions.createdAt, options.startDate));
+    conditions.push(gte(aiCreditTransactions.createdAt, options.startDate.toISOString()));
   }
 
   if (options?.endDate) {
-    conditions.push(lte(aiCreditTransactions.createdAt, options.endDate));
+    conditions.push(lte(aiCreditTransactions.createdAt, options.endDate.toISOString()));
   }
 
   if (options?.taskType) {
@@ -298,8 +298,8 @@ export async function completeCreditTopUp(topUpId: number): Promise<void> {
   await db.update(creditTopUps)
     .set({
       status: 'completed',
-      completedAt: new Date(),
-      updatedAt: new Date()
+      completedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     })
     .where(eq(creditTopUps.id, topUpId));
 
@@ -339,10 +339,10 @@ export async function resetMonthlyCredits(organizationId: number, newAllowance: 
       balance: newBalance,
       periodAllowance: newAllowance,
       periodUsed: 0,
-      lastResetAt: now,
-      nextResetAt: nextReset,
+      lastResetAt: now.toISOString(),
+      nextResetAt: nextReset.toISOString(),
       lowCreditAlertSent: 0,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     })
     .where(eq(aiCreditBalance.organizationId, organizationId));
 

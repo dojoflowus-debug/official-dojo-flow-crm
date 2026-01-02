@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,18 +28,12 @@ import { useFocusMode } from '@/contexts/FocusModeContext'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { EnvironmentSelectorModal } from '@/components/EnvironmentSelectorModal'
 import { trpc } from '@/lib/trpc'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import ThemeToggle from '@/components/ThemeToggle'
 import { BadgeCount } from '@/components/ui/badge-count'
 import { ScrollableNav } from '@/components/ScrollableNav'
 import LowCreditBanner from '@/components/LowCreditBanner'
+import AccountCommandPanel from '@/components/AccountCommandPanel'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -123,6 +117,10 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   
   // Hover state for Apple dock bubble effect
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  
+  // Account Command Panel state
+  const [isAccountPanelOpen, setIsAccountPanelOpen] = useState(false)
+  const avatarButtonRef = useRef<HTMLButtonElement>(null)
   
   useEffect(() => {
     const handleScroll = () => {
@@ -389,41 +387,27 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                 <span className={`absolute top-1 right-1 h-2 w-2 rounded-full ${isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}`} />
               </Button>
 
-              {/* User Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`flex items-center gap-2 rounded-full px-2 py-1 ${isDark ? 'hover:bg-[#2A2B2F]' : 'hover:bg-gray-100'}`}
-                  >
-                    <Avatar className={`h-8 w-8 ${isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}`}>
-                      <AvatarFallback className="text-white text-sm font-medium">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <ChevronDown className={`h-4 w-4 hidden sm:block ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className={`w-56 ${isDark ? 'bg-[#1A1B1F] border-[#2A2B2F]' : 'bg-white border-[#E2E3E6]'}`}
-                >
-                  <div className={`px-3 py-2 ${isDark ? 'text-white' : 'text-[#262626]'}`}>
-                    <p className="text-sm font-medium">{getDisplayName()}</p>
-                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {user?.email || 'user@example.com'}
-                    </p>
-                  </div>
-                  <DropdownMenuSeparator className={isDark ? 'bg-[#2A2B2F]' : 'bg-[#E2E3E6]'} />
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className={`cursor-pointer ${isDark ? 'text-gray-300 hover:bg-[#2A2B2F]' : 'text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* User Menu - Account Command Panel Trigger */}
+              <Button
+                ref={avatarButtonRef}
+                variant="ghost"
+                onClick={() => setIsAccountPanelOpen(!isAccountPanelOpen)}
+                className={`flex items-center gap-2 rounded-full px-2 py-1 transition-all duration-200 ${isDark ? 'hover:bg-[#2A2B2F]' : 'hover:bg-gray-100'} ${isAccountPanelOpen ? (isDark ? 'bg-[#2A2B2F] ring-2 ring-[#FF4F4F]/50' : 'bg-gray-100 ring-2 ring-[#E53935]/50') : ''}`}
+              >
+                <Avatar className={`h-8 w-8 ${isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}`}>
+                  <AvatarFallback className="text-white text-sm font-medium">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <ChevronDown className={`h-4 w-4 hidden sm:block transition-transform duration-200 ${isAccountPanelOpen ? 'rotate-180' : ''} ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+              </Button>
+              
+              {/* Account Command Panel */}
+              <AccountCommandPanel
+                isOpen={isAccountPanelOpen}
+                onClose={() => setIsAccountPanelOpen(false)}
+                anchorRef={avatarButtonRef}
+              />
             </div>
           </div>
         </header>
