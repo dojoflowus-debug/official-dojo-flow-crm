@@ -3582,4 +3582,30 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [x] Add dojo logo display on student card (clickable in header)
 - [x] Redesign student card modal for better UX
 - [x] Test all fixes
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: aeb46771)
+
+## 🐛 BUG: Profile Picture & School Logo Upload Not Working
+
+### Issue
+- [x] User cannot add profile picture
+- [x] User cannot add school logo
+
+### Root Cause
+- Photo upload button overlay was hidden (opacity-0) and only visible on hover
+- Click events were not properly triggering the file input
+- Modal was closing when clicking on avatar area
+
+### Fix Applied
+- Made the entire avatar a clickable button with visible camera icon overlay
+- Added always-visible overlay with subtle opacity (bg-black/30) that becomes more visible on hover
+- Added red ring on hover to indicate clickability
+- Same fix applied to school logo upload button
+
+### Investigation Tasks
+- [x] Check current upload implementation
+- [x] Verify S3 storage helpers are working
+- [x] Check file upload endpoints
+- [x] Fix profile picture upload
+- [x] Fix school logo upload
+- [x] Test both upload features
+

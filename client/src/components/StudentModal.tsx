@@ -581,20 +581,21 @@ export default function StudentModal({
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="relative group"
-                  title="Click to change logo"
+                  className="relative group hover:ring-2 hover:ring-red-400 hover:ring-offset-1 rounded-lg transition-all"
+                  title="Click to change school logo"
                 >
                   {schoolLogo && !logoLoadError ? (
                     <div className="relative">
                       <img 
                         src={schoolLogo} 
                         alt="School Logo" 
-                        className="h-10 w-10 object-contain rounded-lg border-2 border-gray-100 shadow-sm group-hover:border-red-300 transition-colors"
+                        className="h-10 w-10 object-contain rounded-lg border-2 border-gray-100 shadow-sm transition-colors"
                         onError={() => setLogoLoadError(true)}
                         onLoad={() => setLogoLoadError(false)}
                       />
-                      <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <ImagePlus className="w-4 h-4 text-white" />
+                      {/* Always visible overlay with camera icon */}
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 rounded-lg transition-all flex items-center justify-center">
+                        <ImagePlus className="w-4 h-4 text-white opacity-70 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </div>
                   ) : (
@@ -608,8 +609,9 @@ export default function StudentModal({
                         <path d="M2 4h20" />
                         <path d="M8 10h8" />
                       </svg>
-                      <div className="absolute inset-0 bg-black/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <ImagePlus className="w-4 h-4 text-white" />
+                      {/* Always visible overlay with plus icon */}
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 rounded-lg transition-all flex items-center justify-center">
+                        <ImagePlus className="w-4 h-4 text-white opacity-70 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </div>
                   )}
@@ -678,7 +680,12 @@ export default function StudentModal({
                 <div className="space-y-5">
                   <div className="flex gap-5">
                     <div className="relative flex-shrink-0 group">
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-4 border-gray-50 shadow-md relative">
+                      <button
+                        onClick={() => photoInputRef.current?.click()}
+                        disabled={isUploadingPhoto}
+                        className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-4 border-gray-50 shadow-md cursor-pointer hover:ring-2 hover:ring-red-400 hover:ring-offset-2 transition-all"
+                        title="Click to change photo"
+                      >
                         {student.photo_url ? (
                           <img src={student.photo_url} alt={fullName} className="w-full h-full object-cover" />
                         ) : (
@@ -686,19 +693,17 @@ export default function StudentModal({
                             {student.first_name[0]}{student.last_name[0]}
                           </div>
                         )}
-                        {/* Photo upload overlay */}
-                        <button
-                          onClick={() => photoInputRef.current?.click()}
-                          disabled={isUploadingPhoto}
-                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        {/* Photo upload overlay - always visible with subtle opacity, more visible on hover */}
+                        <div
+                          className="absolute inset-0 bg-black/30 group-hover:bg-black/50 flex items-center justify-center transition-all"
                         >
                           {isUploadingPhoto ? (
                             <Loader2 className="w-6 h-6 text-white animate-spin" />
                           ) : (
-                            <Camera className="w-6 h-6 text-white" />
+                            <Camera className="w-6 h-6 text-white opacity-70 group-hover:opacity-100 transition-opacity" />
                           )}
-                        </button>
-                      </div>
+                        </div>
+                      </button>
                       <input
                         ref={photoInputRef}
                         type="file"
