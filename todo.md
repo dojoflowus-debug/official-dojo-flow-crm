@@ -3922,3 +3922,27 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Save checkpoint
 
 - [x] Fix light mode - ensure full light theme applies to sidebar and main content area
+
+## 🎨 Settings Menu Redesign - Manus Style
+
+### Task
+- [ ] Create Manus-style settings modal component
+- [ ] Add left sidebar navigation (Account, Settings, etc.)
+- [ ] Add right content panel for selected section
+- [ ] Match dark theme styling from Manus screenshot
+- [ ] Integrate into header settings icon click
+- [ ] Test modal open/close behavior
+- [ ] Save checkpoint
+
+
+## 🎨 Manus-Style Settings Modal (2026-01-02)
+
+### Task
+- [x] Create ManusSettingsModal component with left sidebar navigation
+- [x] Add sections: Account, Settings, Usage, Billing, Scheduled tasks, Mail Dojo, Data controls, Connectors, Integrations, Get help
+- [x] Implement Usage section with credits display, daily refresh, transaction history
+- [x] Add pagination for usage history
+- [x] Style to match Manus design (dark theme, subtle borders, clean typography)
+- [x] Add settings gear icon trigger in header
+- [x] Test modal opening and navigation between sections
+- [x] Verify Account section shows "Coming Soon" placeholder

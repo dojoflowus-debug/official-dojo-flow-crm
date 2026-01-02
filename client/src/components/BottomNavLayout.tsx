@@ -34,6 +34,7 @@ import { BadgeCount } from '@/components/ui/badge-count'
 import { ScrollableNav } from '@/components/ScrollableNav'
 import LowCreditBanner from '@/components/LowCreditBanner'
 import AccountCommandPanel from '@/components/AccountCommandPanel'
+import ManusSettingsModal from '@/components/ManusSettingsModal'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -121,6 +122,9 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   // Account Command Panel state
   const [isAccountPanelOpen, setIsAccountPanelOpen] = useState(false)
   const avatarButtonRef = useRef<HTMLButtonElement>(null)
+  
+  // Manus Settings Modal state
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   
   useEffect(() => {
     const handleScroll = () => {
@@ -377,6 +381,17 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                 </Button>
               )}
 
+              {/* Settings Icon - Opens Manus Style Modal */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsSettingsModalOpen(true)}
+                className={`relative rounded-full ${isDark ? 'hover:bg-[#2A2B2F]' : 'hover:bg-gray-100'}`}
+                title="Settings"
+              >
+                <Settings className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+              </Button>
+
               {/* Notifications */}
               <Button
                 variant="ghost"
@@ -407,6 +422,12 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                 isOpen={isAccountPanelOpen}
                 onClose={() => setIsAccountPanelOpen(false)}
                 anchorRef={avatarButtonRef}
+              />
+              
+              {/* Manus Settings Modal */}
+              <ManusSettingsModal
+                isOpen={isSettingsModalOpen}
+                onClose={() => setIsSettingsModalOpen(false)}
               />
             </div>
           </div>
