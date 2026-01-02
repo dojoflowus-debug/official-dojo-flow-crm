@@ -186,7 +186,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   const getBgClass = () => {
     if (isCinematic) return 'bg-gradient-to-b from-[#0C0C0D] to-[#1A1A1C]'
     if (isDark) return 'bg-[#0F0F11]'
-    return 'bg-[#F7F8FA]'
+    return 'bg-[#FAFBFC]' // Light mode: clean white-ish background
   }
 
   // Get header styles based on theme - Apple-style design

@@ -3920,3 +3920,5 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Remove dark gradient leaks from Light Mode
 - [x] Test theme switching behavior
 - [x] Save checkpoint
+
+- [x] Fix light mode - ensure full light theme applies to sidebar and main content area

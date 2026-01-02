@@ -1963,14 +1963,14 @@ export default function KaiCommand() {
   const getKaiCommandBgClass = () => {
     if (isCinematic) return 'bg-[#0A0A0B]';
     if (isDark) return 'bg-[#0A0A0B]';
-    return 'bg-[#F5F6F8]'; // Light mode: soft gray background
+    return 'bg-[#FAFBFC]'; // Light mode: clean white-ish background
   };
 
   // Get theme-aware sidebar background
   const getSidebarBgClass = () => {
     if (isCinematic) return 'bg-[#0A0A0B] border-white/5';
     if (isDark) return 'bg-[#0A0A0B] border-white/5';
-    return 'bg-white border-slate-200'; // Light mode: white sidebar
+    return 'bg-white border-slate-200 shadow-sm'; // Light mode: white sidebar with subtle shadow
   };
 
   // Get theme-aware text colors
@@ -2224,7 +2224,7 @@ export default function KaiCommand() {
         {/* Row 2: Scrollable content (flex-1) */}
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
-          className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#F5F6F8]'}`}
+          className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
           style={{ zIndex: 10 }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -2235,7 +2235,7 @@ export default function KaiCommand() {
           {isDragging && (
             <div 
               className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
-              style={{ background: isDark || isCinematic ? 'rgba(10,10,11,0.95)' : 'rgba(245,246,248,0.95)' }}
+              style={{ background: isDark || isCinematic ? 'rgba(10,10,11,0.95)' : 'rgba(250,251,252,0.95)' }}
             >
               <div className={`flex flex-col items-center gap-4 p-8 rounded-sm border border-dashed ${isDark || isCinematic ? 'border-white/30 bg-white/5' : 'border-slate-300 bg-white'}`}>
                 <div className={`w-16 h-16 rounded-sm flex items-center justify-center ${isDark || isCinematic ? 'bg-white/10' : 'bg-slate-100'}`}>

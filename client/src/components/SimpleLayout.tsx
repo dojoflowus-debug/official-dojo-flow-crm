@@ -454,7 +454,7 @@ export default function SimpleLayout({ children }) {
   }
 
   return (
-    <div className={`flex h-screen ${isDarkMode ? 'bg-[#0F1115]' : 'bg-[#F7F8FA]'}`}>
+    <div className={`flex h-screen ${isDarkMode ? 'bg-[#0F1115]' : 'bg-[#FAFBFC]'}`}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
