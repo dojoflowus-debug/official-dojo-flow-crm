@@ -613,13 +613,26 @@ export default function StudentsSplitScreen() {
   console.log('[StudentsSplitScreen] studentsData:', studentsData ? 'loaded' : 'null', 'count:', studentsData?.length)
   if (studentsData && studentsData.length > 0) {
     console.log('[StudentsSplitScreen] First student keys:', Object.keys(studentsData[0]).join(', '))
-    console.log('[StudentsSplitScreen] First student latitude:', studentsData[0]?.latitude)
-    console.log('[StudentsSplitScreen] First student longitude:', studentsData[0]?.longitude)
+    console.log('[StudentsSplitScreen] First student dateOfBirth:', studentsData[0]?.dateOfBirth)
+    console.log('[StudentsSplitScreen] First student guardianName:', studentsData[0]?.guardianName)
+    console.log('[StudentsSplitScreen] First student streetAddress:', studentsData[0]?.streetAddress)
+    console.log('[StudentsSplitScreen] First student phone:', studentsData[0]?.phone)
+    console.log('[StudentsSplitScreen] First student email:', studentsData[0]?.email)
   }
   
   // Update local state when data changes
   useEffect(() => {
+    // CRITICAL DEBUG: Log immediately when useEffect runs
+    console.error('=== STUDENTS DATA USEEFFECT TRIGGERED ===')
+    console.error('studentsData:', studentsData)
+    console.error('studentsData length:', studentsData?.length)
+    
     if (studentsData) {
+      // Debug: log the raw API data
+      console.error('[StudentsSplitScreen] Raw API data for first student:', JSON.stringify(studentsData[0]))
+      console.error('[StudentsSplitScreen] dateOfBirth from API:', studentsData[0]?.dateOfBirth)
+      console.error('[StudentsSplitScreen] guardianName from API:', studentsData[0]?.guardianName)
+      
       // Transform data to match expected format
       const transformedStudents = studentsData.map((s: any) => ({
         id: s.id,
@@ -1089,6 +1102,10 @@ export default function StudentsSplitScreen() {
                       isDarkMode={isDarkMode}
                       showActions={true}
                       onClick={() => {
+                        console.error('=== STUDENT CLICKED ===')
+                        console.error('student.date_of_birth:', student.date_of_birth)
+                        console.error('student.guardian_name:', student.guardian_name)
+                        console.error('Full student:', JSON.stringify(student))
                         setSelectedStudent(student)
                         setHighlightedStudentId(student.id)
                         // Don't open modal - show detail panel instead

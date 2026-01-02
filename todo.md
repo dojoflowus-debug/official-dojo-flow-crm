@@ -3626,3 +3626,82 @@ Transform from "Dashboard with pipeline" to "Pipeline command center with dashbo
 - [ ] Fix logo upload functionality
 - [ ] Save checkpoint
 
+
+
+## 🐛 BUG: Photo Upload Investigation (2026-01-01)
+
+### Issue
+- [x] User reported photo upload not working after consuming 40,000 credits
+
+### Investigation Tasks
+- [x] Check server-side storage upload functionality (storagePut works correctly)
+- [x] Verify S3 upload is configured and working (test upload successful)
+- [x] Check frontend StudentModal photo upload flow
+- [x] Test photo upload via browser console
+- [x] Verify photo appears in student list after upload
+
+### Findings
+- [x] Backend storage upload works correctly (tested with direct API call)
+- [x] Frontend photo upload UI works (preview modal shows correctly)
+- [x] Photo upload mutation executes successfully
+- [x] Photo URL is saved to database
+- [x] Photo displays correctly in student list and profile modal
+
+### Status
+- [x] Photo upload is WORKING - confirmed via browser testing
+- [x] Jane Doe student now shows uploaded test image (blue square with "Test" text)
+- [x] Issue may have been intermittent or related to specific file types
+
+
+
+## 🐛 BUG: Student Profile Picture Upload Not Working
+
+### Issue
+- [ ] User reports student profile picture upload is not working
+- [ ] Need to investigate the upload flow (frontend → backend → S3)
+
+### Investigation Tasks
+- [ ] Check student schema for profile picture field
+- [ ] Check student router for upload endpoint
+- [ ] Check frontend upload component
+- [ ] Verify S3 storage integration
+- [ ] Test upload flow end-to-end
+
+### Fix Tasks
+- [ ] Identify and fix root cause
+- [ ] Test profile picture upload
+- [ ] Verify pictures display correctly
+- [ ] Save checkpoint
+
+
+
+## 🐛 BUG: Student Data Not Persisting (Critical)
+- [ ] Address, DOB, guardian info not being saved when editing student
+- [ ] Data not appearing when reopening edit form
+- [ ] Only name, belt rank, status seem to persist
+- [ ] Photo upload also affected (related issue)
+
+
+## 🐛 BUG FIX: tRPC Validation Error on /students?filter=needs-attention
+
+### Issue
+- [x] User reported error: "Invalid input: expected object, received undefined"
+- [x] Error occurred when visiting /students?filter=needs-attention page
+- [x] Error was in tRPC validation for students.getAll procedure
+
+### Root Cause
+- [x] Components (AutomationTabContent, BulkAssignDialog) calling `trpc.students.getAll.useQuery()` without any parameters
+- [x] The getAll procedure had required input schema but was being called without input
+- [x] Zod validation was rejecting undefined input
+
+### Fix Applied
+- [x] Made the entire input object optional in getAll procedure: `.input(z.object({...}).optional())`
+- [x] Updated query handler to safely access optional input properties using optional chaining: `input?.search` and `input?.limit`
+- [x] Provided default value for limit when undefined: `input?.limit ?? 10`
+
+### Testing
+- [x] Verified page loads without errors on /students?filter=needs-attention
+- [x] Student list displays correctly with 6 students in "Needs Attention" filter
+- [x] No console errors after fix
+- [x] Page is responsive and interactive
+

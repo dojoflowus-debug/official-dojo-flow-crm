@@ -235,6 +235,12 @@ export default function StudentModal({
   })
   const schoolLogo = brandData?.logoSquare || null
   
+  // Fetch full student data when modal opens to ensure we have all fields
+  const { data: fullStudentData } = trpc.students.getById.useQuery(
+    { id: student?.id || 0 },
+    { enabled: isOpen && !!student?.id }
+  )
+  
   // Upload logo mutation
   const uploadLogoMutation = trpc.setupWizard.uploadLogo.useMutation({
     onSuccess: () => {
@@ -266,28 +272,29 @@ export default function StudentModal({
     }
   })
   
-  // Initialize form data when student changes
+  // Initialize form data when student changes - use full student data if available
   useEffect(() => {
-    if (student) {
+    const dataToUse = fullStudentData || student
+    if (dataToUse) {
       setFormData({
-        phone: student.phone || '',
-        email: student.email || '',
-        streetAddress: student.street_address || '',
-        city: student.city || '',
-        state: student.state || '',
-        zipCode: student.zip_code || '',
-        dateOfBirth: student.date_of_birth ? new Date(student.date_of_birth).toISOString().split('T')[0] : '',
-        guardianName: student.guardian_name || '',
-        guardianRelationship: student.guardian_relationship || '',
-        guardianPhone: student.guardian_phone || '',
-        guardianEmail: student.guardian_email || '',
-        program: student.program || '',
-        membershipStatus: student.membership_status || '',
-        beltRank: student.belt_rank || '',
-        status: student.status || 'Active',
+        phone: dataToUse.phone || '',
+        email: dataToUse.email || '',
+        streetAddress: dataToUse.streetAddress || dataToUse.street_address || '',
+        city: dataToUse.city || '',
+        state: dataToUse.state || '',
+        zipCode: dataToUse.zipCode || dataToUse.zip_code || '',
+        dateOfBirth: dataToUse.dateOfBirth || dataToUse.date_of_birth ? new Date(dataToUse.dateOfBirth || dataToUse.date_of_birth).toISOString().split('T')[0] : '',
+        guardianName: dataToUse.guardianName || dataToUse.guardian_name || '',
+        guardianRelationship: dataToUse.guardianRelationship || dataToUse.guardian_relationship || '',
+        guardianPhone: dataToUse.guardianPhone || dataToUse.guardian_phone || '',
+        guardianEmail: dataToUse.guardianEmail || dataToUse.guardian_email || '',
+        program: dataToUse.program || '',
+        membershipStatus: dataToUse.membershipStatus || dataToUse.membership_status || '',
+        beltRank: dataToUse.beltRank || dataToUse.belt_rank || '',
+        status: dataToUse.status || 'Active',
       })
     }
-  }, [student])
+  }, [student, fullStudentData])
 
   // Animation on open
   useEffect(() => {

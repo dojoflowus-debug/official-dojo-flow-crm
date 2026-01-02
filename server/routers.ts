@@ -1626,12 +1626,37 @@ export const appRouter = router({
         return allStudents;
       }),
     
+    // Get single student by ID
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) {
+          return null;
+        }
+        
+        const [student] = await db.select().from(students).where(
+          and(
+            eq(students.id, input.id),
+            eq(students.organizationId, orgId)
+          )
+        );
+        return student || null;
+      }),
+    
     // Get all students with search support (for mention dropdown, etc.)
     getAll: protectedProcedure
       .input(z.object({
         search: z.string().optional(),
         limit: z.number().optional().default(10),
-      }))
+      }).optional())
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
@@ -1646,9 +1671,13 @@ export const appRouter = router({
           return []; // No organization = empty list (data isolation)
         }
         
+        // Handle undefined input (when called without parameters)
+        const search = input?.search;
+        const limit = input?.limit ?? 10;
+        
         let result;
-        if (input.search && input.search.length > 0) {
-          const searchPattern = `%${input.search}%`;
+        if (search && search.length > 0) {
+          const searchPattern = `%${search}%`;
           result = await db.select().from(students).where(
             and(
               eq(students.organizationId, orgId),
@@ -1658,11 +1687,11 @@ export const appRouter = router({
                 like(students.email, searchPattern)
               )
             )
-          ).limit(input.limit);
+          ).limit(limit);
         } else {
           result = await db.select().from(students)
             .where(eq(students.organizationId, orgId))
-            .limit(input.limit);
+            .limit(limit);
         }
         
         return result;
