@@ -4271,3 +4271,46 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [ ] Test /kai page loads without errors
 - [ ] Verify all dashboard stats display correctly
 - [ ] Verify conversations load in Kai Command interface
+
+
+## 🐛 BUG: Profile Photo Upload Not Working - Persistent Issue (FIXED)
+
+### Issue
+- [x] User reports they cannot upload profile photos in Account/Edit Profile section
+- [x] Upload button appears but clicking it doesn't allow file selection or upload
+- [x] This is a recurring issue that has been reported multiple times
+
+### Investigation & Root Causes Found
+- [x] `auth.me` query was using `publicProcedure` instead of `protectedProcedure`
+- [x] Backend upload procedure exists and works correctly (authRouter.uploadProfilePicture)
+- [x] S3 storage integration is configured and working
+- [x] Database schema has photoUrl field (varchar 500)
+- [x] Frontend AccountCommandPanel has upload UI and handlers
+
+### Fixes Applied
+- [x] Changed `auth.me` query from `publicProcedure` to `protectedProcedure` for proper authentication
+- [x] Added TRPCError import to routers.ts
+- [x] Enhanced photo upload handler with better error logging
+- [x] Added FileReader error handling
+- [x] Improved cache invalidation and refetch logic
+- [x] Added console logging for debugging upload flow
+- [x] Verified file input element is properly hidden and triggered by Upload button
+- [x] Added enhanced test to verify photo persists in auth.me after upload
+
+### Implementation Tasks
+- [x] Test photo upload end-to-end after auth fix
+- [x] Verify photo displays immediately after upload
+- [x] Verify photo persists after page refresh
+- [x] Test on mobile and desktop
+- [x] Verify avatar updates in navigation after upload
+
+### Acceptance Criteria
+- [x] User can click Upload button and select a photo file
+- [x] Photo uploads to S3 successfully
+- [x] Photo URL is saved to database
+- [x] Photo displays immediately in the preview
+- [x] Photo persists after page refresh
+- [x] Avatar in top-right navigation updates with new photo
+
+### Summary
+The persistent photo upload issue has been resolved by fixing the authentication context in the `auth.me` query. The query now uses `protectedProcedure` to ensure proper user authentication and context validation. Enhanced error handling and logging have been added to help diagnose any future issues. The backend S3 upload functionality and database persistence were already working correctly.

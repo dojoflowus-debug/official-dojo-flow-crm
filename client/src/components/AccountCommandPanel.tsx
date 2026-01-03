@@ -141,24 +141,42 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
     // @ts-ignore - onSuccess can be async
     async onSuccess(data) {
       console.log('[Upload] Photo uploaded successfully:', data.photoUrl);
+      
+      // Use cache busting to prevent CDN caching issues
+      const cachedBustedUrl = `${data.photoUrl}?t=${Date.now()}`
+      
+      // Update preview immediately
+      setProfilePicturePreview(cachedBustedUrl)
+      setAvatarImageBroken(false)
+      
+      // Update the cache with the new photoUrl
+      if (user) {
+        const updatedUser = {
+          ...user,
+          photoUrl: data.photoUrl,
+          photoUrlSmall: data.photoUrl,
+          updatedAt: new Date(),
+        };
+        utils.auth.me.setData(undefined, updatedUser);
+        console.log('[Upload] Cache updated with new photoUrl:', updatedUser);
+      }
+      
+      // Refetch to ensure we have the latest data from server
+      try {
+        await utils.auth.me.refetch();
+        console.log('[Upload] Cache refetched successfully');
+      } catch (error) {
+        console.error('[Upload] Error refetching cache:', error);
+      }
+      
+      // Show success toast
       toast({
         title: 'Profile picture updated',
         description: 'Your profile picture has been successfully updated.',
       })
-      // Use cache busting to prevent CDN caching issues
-      const cachedBustedUrl = `${data.photoUrl}?t=${Date.now()}`
-      setProfilePicturePreview(cachedBustedUrl)
-      setAvatarImageBroken(false)
-      // Update the cache directly with the new photoUrl (with cache busting)
-      if (user) {
-        const updatedUser = { ...user, photoUrl: data.photoUrl, photoUrlSmall: data.photoUrl };
-        utils.auth.me.setData(undefined, updatedUser);
-        console.log('[Upload] Cache updated with new photoUrl:', updatedUser);
-      }
-      // Also refetch to ensure we have the latest data
-      await utils.auth.me.refetch();
     },
     onError: (error) => {
+      console.error('[Upload] Error uploading photo:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to upload profile picture',
@@ -214,11 +232,31 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
     
     // Read file and convert to base64
     const reader = new FileReader()
+    reader.onerror = () => {
+      console.error('[Upload] FileReader error:', reader.error);
+      toast({
+        title: 'Error reading file',
+        description: 'Failed to read the selected file',
+        variant: 'destructive',
+      })
+    }
     reader.onload = (e) => {
       const base64Data = e.target?.result as string
+      if (!base64Data) {
+        console.error('[Upload] Failed to convert file to base64');
+        toast({
+          title: 'Error',
+          description: 'Failed to process the image',
+          variant: 'destructive',
+        })
+        return
+      }
+      
+      console.log('[Upload] File converted to base64, size:', base64Data.length);
       setProfilePicturePreview(base64Data)
       
       // Upload to server
+      console.log('[Upload] Starting upload mutation...');
       uploadProfilePictureMutation.mutate({
         imageData: base64Data,
         mimeType: file.type,

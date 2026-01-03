@@ -34,6 +34,7 @@ import { masterDashboardRouter } from "./masterDashboardRouter";
 import { ownerProfileRouter } from "./ownerProfileRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import * as bcrypt from "bcryptjs";
 import { getActiveStaffPins, updateStaffPinLastUsed, createStaffPin, getAllStaffPins, updateStaffPin, toggleStaffPinActive, deleteStaffPin } from "./db";
 
@@ -530,14 +531,17 @@ export const appRouter = router({
     }),
     
     // Legacy endpoints
-    me: publicProcedure.query(async (opts) => {
-      if (!opts.ctx.user) return null;
-      
+    me: protectedProcedure.query(async (opts) => {
       // Fetch full user data including photoUrl
       const { getUserByOpenId } = await import("./db");
       const fullUser = await getUserByOpenId(opts.ctx.user.openId);
       
-      if (!fullUser) return opts.ctx.user;
+      if (!fullUser) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
       
       // Return the full user object with all fields including photoUrl
       return fullUser;

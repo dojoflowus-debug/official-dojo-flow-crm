@@ -64,3 +64,19 @@ describe('Profile Picture Upload', () => {
     // photoUrl is added dynamically by the me procedure
   });
 });
+
+  it('should upload and verify photo persists in auth.me', async () => {
+    const redPixelPNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    const base64Data = `data:image/png;base64,${redPixelPNG}`;
+
+    const uploadResult = await caller.auth.uploadProfilePicture({
+      imageData: base64Data,
+      mimeType: 'image/png',
+    });
+
+    expect(uploadResult.success).toBe(true);
+    expect(uploadResult.photoUrl).toBeDefined();
+
+    const userAfterUpload = await caller.auth.me();
+    expect(userAfterUpload?.photoUrl).toBe(uploadResult.photoUrl);
+  });
