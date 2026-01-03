@@ -7,6 +7,9 @@ import {
   deleteOwnerProfile,
 } from "./ownerProfileDb";
 import { TRPCError } from "@trpc/server";
+import { getDb } from "./db";
+import { users } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export const ownerProfileRouter = router({
   /**
@@ -50,16 +53,30 @@ export const ownerProfileRouter = router({
       // Check if profile exists
       const existing = await getOwnerProfileByOrgId(organizationId);
 
+      let result;
       if (existing) {
         // Update existing profile
-        return await updateOwnerProfile(organizationId, input);
+        result = await updateOwnerProfile(organizationId, input);
       } else {
         // Create new profile
-        return await createOwnerProfile({
+        result = await createOwnerProfile({
           organizationId,
           ...input,
         });
       }
+
+      // Sync profilePhotoUrl to users table so Avatar component can display it
+      if (input.profilePhotoUrl) {
+        const db = await getDb();
+        if (db) {
+          await db
+            .update(users)
+            .set({ photoUrl: input.profilePhotoUrl })
+            .where(eq(users.id, ctx.user.id));
+        }
+      }
+
+      return result;
     }),
 
   /**

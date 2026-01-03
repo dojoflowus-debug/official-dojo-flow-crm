@@ -4314,3 +4314,25 @@ Transform Kai Command from "office productivity" look to tactical command center
 
 ### Summary
 The persistent photo upload issue has been resolved by fixing the authentication context in the `auth.me` query. The query now uses `protectedProcedure` to ensure proper user authentication and context validation. Enhanced error handling and logging have been added to help diagnose any future issues. The backend S3 upload functionality and database persistence were already working correctly.
+
+
+## 🐛 BUG: Owner Avatar Photo Not Displaying
+
+### Issue
+- [x] Owner profile photo upload not showing in Avatar component
+- [x] Only initials (VH) appear instead of uploaded photo
+
+### Root Cause Found
+**Two separate photo storage locations not synced:**
+- `ownerProfiles.profilePhotoUrl` - where photo upload saves
+- `users.photoUrl` - where Avatar component reads from
+- These were never synced, so photo never appeared
+
+### Fix Applied
+- [x] Updated `ownerProfileRouter.upsertProfile()` to sync `profilePhotoUrl` to `users.photoUrl`
+- [x] Created vitest tests to verify sync logic (3 tests passing)
+- [x] Test: Sync photoUrl when creating profile
+- [x] Test: Sync photoUrl when updating profile
+- [x] Test: Don't sync if photoUrl is empty
+- [x] Verified dev server running with fix
+- [x] Save checkpoint with avatar photo fix
