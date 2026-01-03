@@ -4127,3 +4127,14 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Add upload button for profile picture (already implemented)
 - [x] Separate profile picture from app logo display (already separated)
 - [x] Test profile picture upload and display (all 5 tests passing)
+
+
+## 📸 Profile Picture Upload Feature
+
+### Task
+- [x] Add profilePictureUrl field to users table schema (already exists: photoUrl, photoUrlSmall)
+- [x] Create backend procedure for profile picture upload (uploadProfilePicture, deleteProfilePicture)
+- [x] Add profile picture upload UI to Edit Profile dialog
+- [x] Display profile picture in user avatar throughout app
+- [x] Test profile picture upload and display (all tests passing)
+- [ ] Save checkpoint

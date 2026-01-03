@@ -35,6 +35,8 @@ import {
   LogOut,
   Cloud,
   Loader2,
+  Camera,
+  Trash2,
 } from 'lucide-react'
 interface AccountCommandPanelProps {
   isOpen: boolean
@@ -87,6 +89,10 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
     bio: user?.bio || '',
   })
   
+  // Profile picture state
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(user?.photoUrl || null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
   // Update form when user data changes
   useEffect(() => {
     if (user) {
@@ -96,6 +102,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         phone: user.phone || '',
         bio: user.bio || '',
       })
+      setProfilePicturePreview(user.photoUrl || null)
     }
   }, [user])
   
@@ -121,6 +128,91 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   
   const handleSaveProfile = () => {
     updateProfileMutation.mutate(profileForm)
+  }
+  
+  // Upload profile picture mutation
+  const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation({
+    onSuccess: (data) => {
+      toast({
+        title: 'Profile picture updated',
+        description: 'Your profile picture has been successfully updated.',
+      })
+      setProfilePicturePreview(data.photoUrl)
+      // Refresh user data
+      window.location.reload()
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to upload profile picture',
+        variant: 'destructive',
+      })
+    },
+  })
+  
+  // Delete profile picture mutation
+  const deleteProfilePictureMutation = trpc.auth.deleteProfilePicture.useMutation({
+    onSuccess: () => {
+      toast({
+        title: 'Profile picture removed',
+        description: 'Your profile picture has been removed.',
+      })
+      setProfilePicturePreview(null)
+      // Refresh user data
+      window.location.reload()
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove profile picture',
+        variant: 'destructive',
+      })
+    },
+  })
+  
+  // Handle profile picture file selection
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please select an image file',
+        variant: 'destructive',
+      })
+      return
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please select an image smaller than 5MB',
+        variant: 'destructive',
+      })
+      return
+    }
+    
+    // Read file and convert to base64
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const base64Data = e.target?.result as string
+      setProfilePicturePreview(base64Data)
+      
+      // Upload to server
+      uploadProfilePictureMutation.mutate({
+        imageData: base64Data,
+        mimeType: file.type,
+      })
+    }
+    reader.readAsDataURL(file)
+  }
+  
+  // Handle delete profile picture
+  const handleDeleteProfilePicture = () => {
+    deleteProfilePictureMutation.mutate()
   }
   
   // Fetch credit balance
@@ -400,6 +492,58 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                   </div>
                   
                   <div className="space-y-4">
+                    {/* Profile Picture */}
+                    <div className="space-y-2">
+                      <Label>Profile Picture</Label>
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-20 w-20">
+                          <AvatarImage src={profilePicturePreview || undefined} alt={user?.name || 'User'} />
+                          <AvatarFallback className="text-lg">{getUserInitials()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadProfilePictureMutation.isPending}
+                          >
+                            {uploadProfilePictureMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Camera className="h-4 w-4 mr-2" />
+                            )}
+                            Upload
+                          </Button>
+                          {profilePicturePreview && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDeleteProfilePicture}
+                              disabled={deleteProfilePictureMutation.isPending}
+                            >
+                              {deleteProfilePictureMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4 mr-2" />
+                              )}
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePictureChange}
+                          className="hidden"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Recommended: Square image, at least 200x200px, max 5MB
+                      </p>
+                    </div>
                     {/* Name */}
                     <div className="space-y-2">
                       <Label htmlFor="name">Name</Label>
