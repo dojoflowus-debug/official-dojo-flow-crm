@@ -30,6 +30,8 @@ export const authRouter = router({
       name: user.name,
       email: user.email,
       role: user.role,
+      photoUrl: user.photoUrl,
+      photoUrlSmall: user.photoUrlSmall,
       createdAt: user.createdAt,
       lastSignedIn: user.lastSignedIn,
     };

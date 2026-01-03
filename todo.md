@@ -4116,3 +4116,14 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Write vitest tests for profile procedures
 - [x] Test complete flow in browser
 - [ ] Save checkpoint
+
+
+## 📸 User Profile Picture Management
+
+### Task
+- [x] Add profilePictureUrl field to users table (already exists: photoUrl, photoUrlSmall)
+- [x] Create backend procedure for profile picture upload (already exists in authRouter)
+- [x] Update account settings UI to show profile picture (already implemented in ProfileSettings)
+- [x] Add upload button for profile picture (already implemented)
+- [x] Separate profile picture from app logo display (already separated)
+- [x] Test profile picture upload and display (all 5 tests passing)
