@@ -305,16 +305,13 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
       setIsAnimating(true)
       // Prevent background scrolling when modal is open
       document.body.style.overflow = 'hidden'
-      document.body.style.pointerEvents = 'none'
     } else {
       // Restore scrolling when modal closes
       document.body.style.overflow = 'auto'
-      document.body.style.pointerEvents = 'auto'
     }
     
     return () => {
       document.body.style.overflow = 'auto'
-      document.body.style.pointerEvents = 'auto'
     }
   }, [isOpen])
   
@@ -858,7 +855,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
       {/* Fog/Blur Overlay Background */}
       <div 
         className={`
-          fixed inset-0 z-[9998] transition-all duration-300
+          fixed inset-0 z-40 transition-all duration-300
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ 
@@ -881,7 +878,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           if (!isOpen) setIsAnimating(false)
         }}
         className={`
-          fixed z-[9999] 
+          fixed z-50 
           top-6 left-1/2 -translate-x-1/2
           w-[800px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-48px)]
           rounded-2xl overflow-hidden
@@ -892,6 +889,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           }
         `}
         style={{
+          pointerEvents: isOpen ? 'auto' : 'none',
           background: 'var(--modal-bg, #ffffff)',
           border: '1px solid var(--modal-border, rgba(255, 255, 255, 0.1))',
           boxShadow: `
