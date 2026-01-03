@@ -806,6 +806,22 @@ export const organizations = mysqlTable("organizations", {
 	settings: text(),
 });
 
+export const ownerProfiles = mysqlTable("owner_profiles", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	bio: text(),
+	specialties: text(),
+	certifications: text(),
+	yearsExperience: int(),
+	profilePhotoUrl: varchar({ length: 500 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("organizationId").on(table.organizationId),
+]);
+
 export const planEntitlements = mysqlTable("plan_entitlements", {
 	id: int().autoincrement().notNull(),
 	planId: int().notNull(),

@@ -14,6 +14,7 @@ import {
   MapPin,
   Clock,
   Building2,
+  User,
   LayoutGrid,
   Users,
   Mail,
@@ -51,6 +52,14 @@ const SETTINGS_CARDS: SettingCard[] = [
     href: '/setup-wizard',
     category: 'general',
     status: 'incomplete'
+  },
+  {
+    id: 'owner-profile',
+    title: 'Owner Profile',
+    description: 'Manage your instructor profile visible to students',
+    icon: User,
+    href: '/settings/owner-profile',
+    category: 'general'
   },
   {
     id: 'locations',

@@ -4100,4 +4100,19 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Add image preview and crop functionality
 - [x] Update DashboardLayout to display owner avatar
 - [x] Test profile picture upload and display (all 5 tests passing)
+- [x] Save checkpoint (version: 27f87e11)
+
+
+## 👤 Owner Profile Management
+
+### Task
+- [x] Add owner_profiles table to database schema (bio, specialties, certifications, years_experience, profile_photo_url)
+- [x] Create backend procedures for owner profile CRUD operations
+- [x] Add "Owner Profile" section to Settings sidebar
+- [x] Create owner profile form with fields: name, bio, specialties, certifications, years of experience, profile photo upload
+- [x] Implement profile photo upload to S3
+- [x] Add save/cancel buttons with validation
+- [ ] Display owner profile on public-facing pages (if needed)
+- [x] Write vitest tests for profile procedures
+- [x] Test complete flow in browser
 - [ ] Save checkpoint

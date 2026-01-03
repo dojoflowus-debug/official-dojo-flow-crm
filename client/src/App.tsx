@@ -66,6 +66,7 @@ import MarketingTest from "./pages/MarketingTest";
 import SubscriptionDashboard from "./pages/SubscriptionDashboard";
 import CreditTransactions from "./pages/CreditTransactions";
 import ProfileSettings from "./pages/ProfileSettings";
+import OwnerProfile from "./pages/OwnerProfile";
 import SetupWizard from "./pages/SetupWizard";
 import SettingsHub from "./pages/SettingsHub";
 import VirtualReceptionist from "./pages/VirtualReceptionist";
@@ -250,6 +251,7 @@ function Router() {
       <Route path="/settings/kiosk" element={<KioskSettings />} />
       <Route path="/settings/floor-plans" element={<FloorPlanBuilder />} />
       <Route path="/settings/profile" element={<ProfileSettings />} />
+      <Route path="/settings/owner-profile" element={<OwnerProfile />} />
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/campaigns/create" element={<CampaignCreate />} />
       <Route path="/campaigns/:id" element={<CampaignDetail />} />

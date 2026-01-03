@@ -31,6 +31,7 @@ import { creditRouter } from "./creditRouter";
 import { platformRouter } from "./platformRouter";
 import { platformAdminAuthRouter } from "./platformAdminAuth";
 import { masterDashboardRouter } from "./masterDashboardRouter";
+import { ownerProfileRouter } from "./ownerProfileRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as bcrypt from "bcryptjs";
@@ -375,6 +376,7 @@ export const appRouter = router({
   kaiOnboarding: kaiOnboardingRouter,
   subscription: subscriptionRouter,
   credits: creditRouter,
+  ownerProfile: ownerProfileRouter,
   
   // File upload for attachments
   upload: router({
