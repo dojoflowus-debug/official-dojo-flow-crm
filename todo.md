@@ -3964,3 +3964,17 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Add subtle borders and shadows instead of angular cuts
 - [x] Match the clean, professional look of Manus settings modal
 - [x] Test modal appearance and functionality
+
+## 🐛 BUG FIX: AccountCommandPanel Dropdown Positioning (2026-01-02)
+
+### Issue
+- [x] Modal was being cut off at the top when opened
+- [x] "Monthly credits" header was not visible
+
+### Fix Applied
+- [x] Changed positioning from `top-1/2 -translate-y-1/2` (centered) to `top-6` (24px from top)
+- [x] Kept horizontal centering with `left-1/2 -translate-x-1/2`
+- [x] Adjusted max-height for better viewport fit
+- [x] Modal now displays fully within viewport bounds
+- [x] Tested and verified fix works correctly
+
