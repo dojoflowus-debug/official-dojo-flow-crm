@@ -4137,4 +4137,33 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Add profile picture upload UI to Edit Profile dialog
 - [x] Display profile picture in user avatar throughout app
 - [x] Test profile picture upload and display (all tests passing)
-- [ ] Save checkpoint
+- [x] Save checkpoint (version: f57a0243)
+
+
+## 🐛 BUG: Profile Photo Upload Resets Screen Without Saving
+
+### Issue
+- [x] When owner uploads profile photo, screen resets
+- [x] Photo changes are not saved to database
+- [x] Need to investigate upload flow and state management
+
+### Investigation Tasks
+- [x] Check profile photo upload implementation
+- [x] Verify S3 upload is working
+- [x] Check if database update is happening
+- [x] Identify why screen resets
+- [x] Fix state management issue
+- [x] Test photo upload end-to-end
+
+### Root Cause
+**window.location.reload() causing full page reset:**
+- AccountCommandPanel was calling `window.location.reload()` after successful upload
+- This caused full page refresh, making it appear like nothing happened
+- Backend upload and database update were working correctly
+
+### Fix Applied
+- [x] Replace `window.location.reload()` with `utils.auth.me.invalidate()`
+- [x] Use tRPC cache invalidation for smooth state updates
+- [x] Apply same fix to updateProfile and deleteProfilePicture mutations
+- [x] Verify backend tests pass (5/5 tests passing)
+- [x] Ready for user testing

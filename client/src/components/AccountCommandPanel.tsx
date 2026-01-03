@@ -106,6 +106,9 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
     }
   }, [user])
   
+  // Get tRPC utils for cache invalidation
+  const utils = trpc.useUtils()
+  
   // Update profile mutation
   const updateProfileMutation = trpc.auth.updateProfile.useMutation({
     onSuccess: (data) => {
@@ -114,8 +117,8 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         description: 'Your profile has been successfully updated.',
       })
       setIsEditingProfile(false)
-      // Refresh user data
-      window.location.reload()
+      // Refresh user data via cache invalidation
+      utils.auth.me.invalidate()
     },
     onError: (error) => {
       toast({
@@ -138,8 +141,8 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         description: 'Your profile picture has been successfully updated.',
       })
       setProfilePicturePreview(data.photoUrl)
-      // Refresh user data
-      window.location.reload()
+      // Refresh user data via cache invalidation
+      utils.auth.me.invalidate()
     },
     onError: (error) => {
       toast({
@@ -158,8 +161,8 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         description: 'Your profile picture has been removed.',
       })
       setProfilePicturePreview(null)
-      // Refresh user data
-      window.location.reload()
+      // Refresh user data via cache invalidation
+      utils.auth.me.invalidate()
     },
     onError: (error) => {
       toast({
