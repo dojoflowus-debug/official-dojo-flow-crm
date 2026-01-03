@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useTheme, Theme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { trpc } from '@/lib/trpc'
+import { BrandLogo } from '@/components/BrandLogo'
 import {
   User,
   Settings,
@@ -496,15 +497,16 @@ export function ManusSettingsModal({ isOpen, onClose }: ManusSettingsModalProps)
   
   return (
     <>
-      {/* Backdrop */}
+      {/* Fog/Blur Overlay Background */}
       <div 
         className={`
           fixed inset-0 z-[9998] transition-all duration-300
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ 
-          background: 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(4px)',
+          background: 'rgba(0, 0, 0, 0.65)', // 65% opacity for fog effect
+          backdropFilter: 'blur(12px)', // 12px blur for cinematic look
+          WebkitBackdropFilter: 'blur(12px)', // Safari support
         }}
         onClick={onClose}
       />
@@ -530,9 +532,13 @@ export function ManusSettingsModal({ isOpen, onClose }: ManusSettingsModalProps)
           }
         `}
         style={{
-          background: '#1a1a1d',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          background: 'rgba(26, 26, 29, 0.98)', // Near-solid dark background
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: `
+            0 25px 50px -12px rgba(0, 0, 0, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 0 40px rgba(0, 0, 0, 0.3)
+          `, // Strong shadow + subtle glow for focus effect
         }}
       >
         <div className="flex h-full">
@@ -541,14 +547,9 @@ export function ManusSettingsModal({ isOpen, onClose }: ManusSettingsModalProps)
             className="w-[220px] h-full flex flex-col border-r border-white/[0.06]"
             style={{ background: '#141416' }}
           >
-            {/* Logo/Brand */}
+            {/* Logo/Brand - Using official DojoFlow branding */}
             <div className="p-5 border-b border-white/[0.06]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-base font-semibold text-white">dojoflow</span>
-              </div>
+              <BrandLogo size="md" forceVariant="light" />
             </div>
             
             {/* Navigation */}

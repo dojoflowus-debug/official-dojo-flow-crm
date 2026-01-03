@@ -3978,3 +3978,33 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Modal now displays fully within viewport bounds
 - [x] Tested and verified fix works correctly
 
+
+
+## 🎨 UI FIX: Brand Logo + Modal Fog Overlay (2026-01-02)
+
+### Brand Logo (Single Source of Truth)
+- [x] Create BrandLogo component as single source of truth for DojoFlow logo
+- [x] Ensure BrandLogo shows red swirl icon + DojoFlow wordmark
+- [x] Update global header to use BrandLogo component
+- [x] Update Settings/Account modal header to use BrandLogo component
+- [x] Support light/dark mode variants (dark version for light mode, light version for dark/cinematic)
+- [x] Apply BrandLogo to loading states and empty states where applicable
+
+### Modal Fog/Blur Overlay
+- [x] Implement full-screen overlay for modals with 55-70% opacity dimming
+- [x] Add backdrop blur (8-14px) for fogged, cinematic look
+- [x] Apply overlay to Account modal
+- [x] Apply overlay to Settings modal
+- [x] Apply overlay to Usage modal
+- [x] Apply overlay to Billing modal
+- [x] Apply overlay to Add Credits / Manage Plan dialogs
+- [x] Disable background interaction when modal is open
+- [x] Keep modal sharply in focus with stronger shadow + slight border glow
+- [x] Ensure ESC key closes modals
+- [x] Ensure clicking outside modal closes it
+- [x] Maintain consistent overlay behavior for all modal types
+
+### Layering & Consistency
+- [x] Ensure overlay is above dashboard content but below modal
+- [x] Test light/dark mode logo variants
+- [x] Verify all modals have consistent fog/blur effect

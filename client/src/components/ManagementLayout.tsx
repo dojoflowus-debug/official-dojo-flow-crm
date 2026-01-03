@@ -38,6 +38,7 @@ import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import LowCreditBanner from '@/components/LowCreditBanner'
 import KaiCommandOverlay from '@/components/KaiCommandOverlay'
+import { BrandLogo } from '@/components/BrandLogo'
 
 // Management navigation items - standard SaaS structure
 const MANAGEMENT_NAV = [
@@ -124,8 +125,7 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
     return currentNav?.name || 'Dashboard'
   }
 
-  // Select logo based on theme
-  const logoSrc = isDark ? '/Darkdojoflow.png' : '/Lightdojoflow.png'
+  // Logo variant based on theme - using BrandLogo component
 
   return (
     <div className={cn(
@@ -144,17 +144,9 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
       )}>
         {/* Left: Logo + Navigation */}
         <div className="flex items-center gap-6">
-          {/* Logo */}
+          {/* Logo - Using official DojoFlow branding */}
           <Link to="/students" className="flex items-center gap-2 shrink-0">
-            <img 
-              src={logoSrc}
-              alt="DojoFlow" 
-              className="h-8 w-auto"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.src = '/logo-icon.png'
-              }}
-            />
+            <BrandLogo size="md" />
           </Link>
           
           {/* Desktop Navigation */}

@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/_core/hooks/useAuth'
 import { Sparkles, Coins, Sun, Moon, Clapperboard, LogOut, Settings, User } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 
 interface CommandStats {
   active: number
@@ -30,9 +31,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
-  // Select logo based on theme - use appropriate logo for dark/light themes
-  // Darkdojoflow.png is for dark backgrounds, Lightdojoflow.png is for light backgrounds
-  const logoSrc = isDarkMode ? '/Darkdojoflow.png' : '/Lightdojoflow.png'
+  // Logo variant based on theme - using BrandLogo component
 
   return (
     <header 
@@ -48,39 +47,13 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
       }}
     >
       <div className="flex items-center gap-4">
-        {/* Logo container with explicit sizing and flex alignment */}
+        {/* Logo - Using official DojoFlow branding */}
         <Link 
           to="/kai" 
           className="flex items-center gap-2 overflow-visible"
           style={{ display: 'flex', alignItems: 'center', height: '36px' }}
         >
-          <div 
-            className="flex items-center justify-center overflow-visible"
-            style={{ 
-              height: '36px', 
-              width: 'auto',
-              minHeight: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <img 
-              src={logoSrc}
-              alt="DojoFlow" 
-              className="object-contain"
-              style={{ 
-                height: '36px', 
-                width: 'auto',
-                maxHeight: '36px',
-              }}
-              onError={(e) => {
-                // Fallback to logo-icon.png if theme-specific doesn't exist
-                const target = e.target as HTMLImageElement
-                target.src = '/logo-icon.png'
-              }}
-            />
-          </div>
+          <BrandLogo size="md" />
         </Link>
         
         <div className={cn("h-6 w-px", isDarkMode ? "bg-white/10" : "bg-gray-200")} />

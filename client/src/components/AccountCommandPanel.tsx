@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useTheme, Theme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { trpc } from '@/lib/trpc'
+import { BrandLogo } from '@/components/BrandLogo'
 import {
   User,
   Settings,
@@ -520,15 +521,16 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   
   return (
     <>
-      {/* Backdrop */}
+      {/* Fog/Blur Overlay Background */}
       <div 
         className={`
           fixed inset-0 z-[9998] transition-all duration-300
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ 
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(4px)',
+          background: 'rgba(0, 0, 0, 0.65)', // 65% opacity for fog effect
+          backdropFilter: 'blur(12px)', // 12px blur for cinematic look
+          WebkitBackdropFilter: 'blur(12px)', // Safari support
         }}
         onClick={onClose}
       />
@@ -556,21 +558,20 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         `}
         style={{
           background: 'var(--modal-bg, #ffffff)',
-          border: '1px solid var(--modal-border, rgba(0, 0, 0, 0.1))',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          border: '1px solid var(--modal-border, rgba(255, 255, 255, 0.1))',
+          boxShadow: `
+            0 25px 50px -12px rgba(0, 0, 0, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 0 40px rgba(0, 0, 0, 0.3)
+          `, // Strong shadow + subtle glow for focus effect
         }}
       >
         <div className="flex h-full bg-white dark:bg-zinc-900">
           {/* Left Sidebar */}
           <div className="w-[220px] h-full flex flex-col border-r border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
-            {/* Logo/Brand */}
+            {/* Logo/Brand - Using official DojoFlow branding */}
             <div className="p-5 border-b border-zinc-200 dark:border-zinc-700">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-base font-semibold text-zinc-800 dark:text-zinc-100">dojoflow</span>
-              </div>
+              <BrandLogo size="md" />
             </div>
             
             {/* Navigation */}

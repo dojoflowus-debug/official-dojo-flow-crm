@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Menu, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CookieNotice } from '@/components/CookieNotice';
+import { BrandLogo } from '@/components/BrandLogo';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -83,12 +84,9 @@ export default function MainLayout({
               to="/"
               className="flex items-center cursor-pointer transition-opacity hover:opacity-80 duration-200"
             >
-              <img 
-                src="/logo-light.png" 
-                alt="DojoFlow" 
-                className={`transition-all duration-300 ${
-                  isScrolled || !transparentHeader ? 'h-7' : 'h-8'
-                }`}
+              <BrandLogo 
+                size={isScrolled || !transparentHeader ? 'sm' : 'md'} 
+                forceVariant="light" 
               />
             </Link>
             
@@ -154,7 +152,7 @@ export default function MainLayout({
         <div className="flex flex-col h-full">
           {/* Mobile Menu Header */}
           <div className="flex items-center justify-between px-6 h-20 border-b border-white/10">
-            <img src="/logo-light.png" alt="DojoFlow" className="h-7" />
+            <BrandLogo size="sm" forceVariant="light" />
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
@@ -279,7 +277,7 @@ export default function MainLayout({
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 {/* Logo */}
                 <div className="flex items-center">
-                  <img src="/logo-light.png" alt="DojoFlow" className="h-8" />
+                  <BrandLogo size="md" forceVariant="light" />
                 </div>
                 
                 {/* Legal Links */}
