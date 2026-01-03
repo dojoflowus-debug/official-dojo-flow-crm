@@ -28,13 +28,14 @@ import { useFocusMode } from '@/contexts/FocusModeContext'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { EnvironmentSelectorModal } from '@/components/EnvironmentSelectorModal'
 import { trpc } from '@/lib/trpc'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import ThemeToggle from '@/components/ThemeToggle'
 import { BadgeCount } from '@/components/ui/badge-count'
 import { ScrollableNav } from '@/components/ScrollableNav'
 import LowCreditBanner from '@/components/LowCreditBanner'
 import AccountCommandPanel from '@/components/AccountCommandPanel'
 import ManusSettingsModal from '@/components/ManusSettingsModal'
+import { getUserAvatarUrl, getUserInitials as getInitials } from '@/lib/avatarHelper'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -121,6 +122,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   
   // Account Command Panel state
   const [isAccountPanelOpen, setIsAccountPanelOpen] = useState(false)
+  const [avatarImageBroken, setAvatarImageBroken] = useState(false)
   const avatarButtonRef = useRef<HTMLButtonElement>(null)
   
   // Manus Settings Modal state
@@ -169,14 +171,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    // Try name first, then email prefix
-    const displayName = user?.name || user?.email?.split('@')[0]
-    if (!displayName) return 'U'
-    const names = displayName.split(' ')
-    if (names.length >= 2) {
-      return `${names[0][0]}${names[1][0]}`.toUpperCase()
-    }
-    return displayName.substring(0, 2).toUpperCase()
+    return getInitials(user)
   }
 
   // Get display name with fallback
@@ -410,6 +405,14 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                 className={`flex items-center gap-2 rounded-full px-2 py-1 transition-all duration-200 ${isDark ? 'hover:bg-[#2A2B2F]' : 'hover:bg-gray-100'} ${isAccountPanelOpen ? (isDark ? 'bg-[#2A2B2F] ring-2 ring-[#FF4F4F]/50' : 'bg-gray-100 ring-2 ring-[#E53935]/50') : ''}`}
               >
                 <Avatar className={`h-8 w-8 ${isDark ? 'bg-[#FF4F4F]' : 'bg-[#E53935]'}`}>
+                  {!avatarImageBroken && getUserAvatarUrl(user) && (
+                    <AvatarImage 
+                      src={getUserAvatarUrl(user) || undefined}
+                      alt={user?.name || 'User avatar'}
+                      onError={() => setAvatarImageBroken(true)}
+                      className="object-cover"
+                    />
+                  )}
                   <AvatarFallback className="text-white text-sm font-medium">
                     {getUserInitials()}
                   </AvatarFallback>

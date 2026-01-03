@@ -5,6 +5,7 @@ import { useTheme, Theme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { trpc } from '@/lib/trpc'
 import { BrandLogo } from '@/components/BrandLogo'
+import { getUserAvatarUrl, getUserInitials as getInitials } from '@/lib/avatarHelper'
 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -90,19 +91,21 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   })
   
   // Profile picture state
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(user?.photoUrl || null)
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(getUserAvatarUrl(user) || null)
+  const [avatarImageBroken, setAvatarImageBroken] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Update form when user data changes
   useEffect(() => {
     if (user) {
+      setProfilePicturePreview(getUserAvatarUrl(user) || null)
+      setAvatarImageBroken(false)
       setProfileForm({
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
         bio: user.bio || '',
       })
-      setProfilePicturePreview(user.photoUrl || null)
     }
   }, [user])
   
@@ -142,8 +145,11 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         title: 'Profile picture updated',
         description: 'Your profile picture has been successfully updated.',
       })
-      setProfilePicturePreview(data.photoUrl)
-      // Update the cache directly with the new photoUrl
+      // Use cache busting to prevent CDN caching issues
+      const cachedBustedUrl = `${data.photoUrl}?t=${Date.now()}`
+      setProfilePicturePreview(cachedBustedUrl)
+      setAvatarImageBroken(false)
+      // Update the cache directly with the new photoUrl (with cache busting)
       if (user) {
         const updatedUser = { ...user, photoUrl: data.photoUrl, photoUrlSmall: data.photoUrl };
         utils.auth.me.setData(undefined, updatedUser);
@@ -233,6 +239,11 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   })
   
   // Get user initials for avatar
+  const getUserInitialsLocal = () => {
+    return getInitials(user)
+  }
+
+  // Legacy function for backward compatibility
   const getUserInitials = () => {
     const displayName = user?.name || user?.email?.split('@')[0]
     if (!displayName) return 'U'
@@ -288,10 +299,22 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose, anchorRef])
   
-  // Animation control
+  // Animation control + scroll prevention
   useEffect(() => {
     if (isOpen) {
       setIsAnimating(true)
+      // Prevent background scrolling when modal is open
+      document.body.style.overflow = 'hidden'
+      document.body.style.pointerEvents = 'none'
+    } else {
+      // Restore scrolling when modal closes
+      document.body.style.overflow = 'auto'
+      document.body.style.pointerEvents = 'auto'
+    }
+    
+    return () => {
+      document.body.style.overflow = 'auto'
+      document.body.style.pointerEvents = 'auto'
     }
   }, [isOpen])
   
@@ -474,9 +497,11 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
               {!isEditingProfile ? (
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
                   <Avatar className="h-16 w-16 rounded-xl">
-                    <AvatarImage src={user?.photoUrl} className="rounded-xl" />
+                    {getUserAvatarUrl(user) && (
+                      <AvatarImage src={getUserAvatarUrl(user) || undefined} className="rounded-xl" />
+                    )}
                     <AvatarFallback className="rounded-xl text-lg font-bold bg-gradient-to-br from-red-500 to-orange-600 text-white">
-                      {getUserInitials()}
+                      {getUserInitialsLocal()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -508,8 +533,14 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                       <Label>Profile Picture</Label>
                       <div className="flex items-center gap-4">
                         <Avatar className="h-20 w-20">
-                          <AvatarImage src={profilePicturePreview || undefined} alt={user?.name || 'User'} />
-                          <AvatarFallback className="text-lg">{getUserInitials()}</AvatarFallback>
+                          {!avatarImageBroken && profilePicturePreview && (
+                            <AvatarImage 
+                              src={profilePicturePreview}
+                              alt={user?.name || 'User'}
+                              onError={() => setAvatarImageBroken(true)}
+                            />
+                          )}
+                          <AvatarFallback className="text-lg">{getUserInitialsLocal()}</AvatarFallback>
                         </Avatar>
                         <div className="flex gap-2">
                           <Button
@@ -831,9 +862,10 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ 
-          background: 'rgba(0, 0, 0, 0.65)', // 65% opacity for fog effect
-          backdropFilter: 'blur(12px)', // 12px blur for cinematic look
-          WebkitBackdropFilter: 'blur(12px)', // Safari support
+          background: 'rgba(0, 0, 0, 0.65)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          pointerEvents: isOpen ? 'auto' : 'none',
         }}
         onClick={onClose}
       />

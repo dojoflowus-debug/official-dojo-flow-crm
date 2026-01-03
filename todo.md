@@ -4214,3 +4214,38 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Check if AvatarImage component is loading the image correctly - simplified rendering
 - [x] Verify CORS or image loading issues - image URL may not be accessible from browser
 - [ ] Final fix: Ensure image URL is properly formatted and accessible
+
+
+## 🐛 BUG: Owner Profile Photo Not Displaying in BottomNavLayout Avatar
+
+### Issue
+- [x] After uploading a profile picture, the top-right avatar in BottomNavLayout still shows fallback initials (e.g., "VH") instead of the uploaded photo
+- [x] Photo displays correctly in AccountCommandPanel but not in navigation avatar
+
+### Root Cause Investigation
+- [x] Identify the canonical user object and photoUrl field used by AccountCommandPanel
+- [x] Check if photoUrl is being returned from the "current user" endpoint
+- [x] Verify user state is being updated after successful upload
+- [x] Check for cache issues preventing image display
+
+### Implementation Tasks
+- [x] Create getUserAvatarUrl(user) helper function for consistent avatar URL logic
+- [x] Update BottomNavLayout.tsx to use the helper function
+- [x] Add onError handling to show fallback initials if image fails to load
+- [x] Implement cache busting: append ?t=${Date.now()} to image URL after upload
+- [x] Ensure user state updates immediately after upload without hard refresh
+- [ ] Test avatar updates in real-time after profile picture upload
+- [ ] Verify persistence: hard refresh still shows the photo
+
+### Related Improvements
+- [ ] Fix DojoFlow logo consistency - use single import path everywhere
+- [x] Improve modal overlay behavior - add full-screen blur + darken when panel opens
+- [x] Disable background scrolling when modal is open
+- [x] Remove background visibility when Account/Usage panel is open
+
+### Acceptance Criteria
+- [x] Upload a new profile image in Account panel
+- [ ] Close the panel
+- [ ] Top-right avatar immediately switches from initials to photo
+- [ ] Hard refresh still shows the photo (proves persistence)
+- [ ] Avatar displays correctly in both AccountCommandPanel and BottomNavLayout
