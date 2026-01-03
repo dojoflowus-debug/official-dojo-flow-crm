@@ -488,6 +488,9 @@ export const appRouter = router({
     // Organization selection for multi-org users
     selectOrganization: authRouter.selectOrganization,
     
+    // Update user profile
+    updateProfile: authRouter.updateProfile,
+    
     // Kiosk settings endpoint (uses raw mysql2 to bypass Drizzle connection issues)
     getKioskSettings: publicProcedure.query(async () => {
       try {

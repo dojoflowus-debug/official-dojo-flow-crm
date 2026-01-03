@@ -1,10 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useTheme, Theme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { trpc } from '@/lib/trpc'
 import { BrandLogo } from '@/components/BrandLogo'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
 import {
   User,
   Settings,
@@ -28,8 +34,8 @@ import {
   Users,
   LogOut,
   Cloud,
+  Loader2,
 } from 'lucide-react'
-
 interface AccountCommandPanelProps {
   isOpen: boolean
   onClose: () => void
@@ -70,6 +76,52 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   const panelRef = useRef<HTMLDivElement>(null)
   const [activeSection, setActiveSection] = useState<SectionId>('usage')
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
+  const { toast } = useToast()
+  
+  // Edit profile form state
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    bio: user?.bio || '',
+  })
+  
+  // Update form when user data changes
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
+      })
+    }
+  }, [user])
+  
+  // Update profile mutation
+  const updateProfileMutation = trpc.auth.updateProfile.useMutation({
+    onSuccess: (data) => {
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been successfully updated.',
+      })
+      setIsEditProfileOpen(false)
+      // Refresh user data
+      window.location.reload()
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update profile',
+        variant: 'destructive',
+      })
+    },
+  })
+  
+  const handleSaveProfile = () => {
+    updateProfileMutation.mutate(profileForm)
+  }
   
   // Fetch credit balance
   const { data: creditBalance } = trpc.credits.getBalance.useQuery(undefined, {
@@ -331,7 +383,10 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                     <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{getUserRole()}</span>
                   </div>
                 </div>
-                <button className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors">
+                <button 
+                  onClick={() => setIsEditProfileOpen(true)}
+                  className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                >
                   Edit
                 </button>
               </div>
@@ -618,6 +673,90 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           </div>
         </div>
       </div>
+      
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your personal information
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={profileForm.name}
+                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                placeholder="Your name"
+              />
+            </div>
+            
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={profileForm.email}
+                onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                placeholder="your@email.com"
+              />
+            </div>
+            
+            {/* Phone */}
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+            
+            {/* Bio */}
+            <div className="space-y-2">
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                value={profileForm.bio}
+                onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                placeholder="Tell us about yourself (max 160 characters)"
+                maxLength={160}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                {profileForm.bio.length}/160 characters
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditProfileOpen(false)}
+              disabled={updateProfileMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveProfile}
+              disabled={updateProfileMutation.isPending}
+            >
+              {updateProfileMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -2,7 +2,7 @@ import { router, protectedProcedure } from "./_core/trpc";
 import { getUserByOpenId, getDb } from "./db";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { organizationUsers, organizations } from "../drizzle/schema";
+import { organizationUsers, organizations, users } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { getSessionCookieOptions } from "./_core/cookies";
 
@@ -92,6 +92,80 @@ export const authRouter = router({
         organizationId: input.organizationId,
         organizationName: membership.organizationName,
         role: membership.role,
+      };
+    }),
+
+  /**
+   * Update user profile
+   * Allows users to update their name, email, phone, and bio
+   */
+  updateProfile: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Name is required").optional(),
+        email: z.string().email("Invalid email address").optional(),
+        phone: z.string().optional(),
+        bio: z.string().max(160, "Bio must be 160 characters or less").optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      // Check if email is being changed and if it's already taken
+      if (input.email) {
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, input.email))
+          .limit(1);
+
+        if (existingUser && existingUser.id !== ctx.user.id) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "This email is already in use",
+          });
+        }
+      }
+
+      // Update user profile
+      await db
+        .update(users)
+        .set({
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.email !== undefined && { email: input.email }),
+          ...(input.phone !== undefined && { phone: input.phone }),
+          ...(input.bio !== undefined && { bio: input.bio }),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, ctx.user.id));
+
+      // Fetch updated user
+      const updatedUser = await getUserByOpenId(ctx.user.openId);
+
+      if (!updatedUser) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch updated user",
+        });
+      }
+
+      return {
+        success: true,
+        user: {
+          id: updatedUser.id,
+          openId: updatedUser.openId,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          bio: updatedUser.bio,
+          role: updatedUser.role,
+        },
       };
     }),
 });
