@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, email, CASE WHEN photoUrl IS NOT NULL THEN 'HAS_PHOTO' ELSE 'NO_PHOTO' END as photo_status FROM users LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, email, CASE WHEN photoUrl IS NOT NULL THEN 'HAS_PHOTO' ELSE 'NO_PHOTO' END as photo_status FROM users LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "sensei30002003@gmail.com",
+      "photo_status": "HAS_PHOTO"
+    },
+    {
+      "id": "690017",
+      "email": "export-test-1765925647226@test.com",
+      "photo_status": "NO_PHOTO"
+    },
+    {
+      "id": "2070001",
+      "email": "admin@dojoflow.com",
+      "photo_status": "NO_PHOTO"
+    },
+    {
+      "id": "2550002",
+      "email": "vincent.holmes00@gmail.com",
+      "photo_status": "NO_PHOTO"
+    },
+    {
+      "id": "2580004",
+      "email": "solbittech@gmail.com",
+      "photo_status": "HAS_PHOTO"
+    },
+    {
+      "id": "2640005",
+      "email": "testuser@dojoflow.com",
+      "photo_status": "NO_PHOTO"
+    },
+    {
+      "id": "2670119",
+      "email": "test-owner-1767132616415@example.com",
+      "photo_status": "NO_PHOTO"
+    },
+    {
+      "id": "3180180",
+      "email": "test-owner-1767276894394@example.com",
+      "photo_status": "NO_PHOTO"
+    },
+    {
+      "id": "3270120",
+      "email": "dojoflowus@gmail.com",
+      "photo_status": "NO_PHOTO"
+    },
+    {
+      "id": "3300205",
+      "email": "test-owner-1767324966917@example.com",
+      "photo_status": "NO_PHOTO"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tphoto_status\n1\tsensei30002003@gmail.com\tHAS_PHOTO\n690017\texport-test-1765925647226@test.com\tNO_PHOTO\n2070001\tadmin@dojoflow.com\tNO_PHOTO\n2550002\tvincent.holmes00@gmail.com\tNO_PHOTO\n2580004\tsolbittech@gmail.com\tHAS_PHOTO\n2640005\ttestuser@dojoflow.com\tNO_PHOTO\n2670119\ttest-owner-1767132616415@example.com\tNO_PHOTO\n3180180\ttest-owner-1767276894394@example.com\tNO_PHOTO\n3270120\tdojoflowus@gmail.com\tNO_PHOTO\n3300205\ttest-owner-1767324966917@example.com\tNO_PHOTO\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

@@ -135,14 +135,22 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   
   // Upload profile picture mutation
   const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation({
-    onSuccess: (data) => {
+    // @ts-ignore - onSuccess can be async
+    async onSuccess(data) {
+      console.log('[Upload] Photo uploaded successfully:', data.photoUrl);
       toast({
         title: 'Profile picture updated',
         description: 'Your profile picture has been successfully updated.',
       })
       setProfilePicturePreview(data.photoUrl)
-      // Refresh user data via cache invalidation
-      utils.auth.me.invalidate()
+      // Update the cache directly with the new photoUrl
+      if (user) {
+        const updatedUser = { ...user, photoUrl: data.photoUrl, photoUrlSmall: data.photoUrl };
+        utils.auth.me.setData(undefined, updatedUser);
+        console.log('[Upload] Cache updated with new photoUrl:', updatedUser);
+      }
+      // Also refetch to ensure we have the latest data
+      await utils.auth.me.refetch();
     },
     onError: (error) => {
       toast({

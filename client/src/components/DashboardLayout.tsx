@@ -48,6 +48,19 @@ export default function DashboardLayout({
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
+  
+  // Debug avatar display
+  React.useEffect(() => {
+    if (user) {
+      console.log('[DashboardLayout] User data:', {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        photoUrl: user.photoUrl,
+        hasPhotoUrl: !!user.photoUrl
+      });
+    }
+  }, [user]);
 
   // Get user initials for avatar
   const getUserInitials = () => {
@@ -252,9 +265,7 @@ function DashboardLayoutContent({
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <Avatar className="h-9 w-9 border shrink-0">
-                    {user?.photoUrl && (
-                      <AvatarImage src={user.photoUrl} alt={getDisplayName()} />
-                    )}
+                    <AvatarImage src={user?.photoUrl || ''} alt={getDisplayName()} />
                     <AvatarFallback className="text-xs font-medium">
                       {getUserInitials()}
                     </AvatarFallback>

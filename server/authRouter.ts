@@ -203,7 +203,7 @@ export const authRouter = router({
         const extension = input.mimeType.split("/")[1] || "png";
         const fileKey = `profile-pictures/${ctx.user.id}-${timestamp}-${randomSuffix}.${extension}`;
 
-        // Upload to S3
+        // Upload to S3 - storagePut returns a public URL
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
 
         // Update user record with photo URL

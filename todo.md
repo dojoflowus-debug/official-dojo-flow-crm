@@ -4194,4 +4194,23 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Changed `user?.avatar` to `user?.photoUrl` in AccountCommandPanel.tsx line 469
 - [x] Test profile picture upload end-to-end
 - [x] Verify photo displays immediately after upload
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+
+## 🐛 BUG: Avatar Photo Not Displaying
+
+### Issue
+- [x] Profile photo saves successfully (confirmed in database)
+- [ ] Photo doesn't display - image URL loading issue
+- [x] Investigated avatar rendering logic - found multiple issues
+
+### Investigation Tasks
+- [x] Check where avatar is being rendered (DashboardLayout, StudentDrawer, etc.)
+- [x] Verify photo URL is being saved correctly in database
+- [x] Check if Avatar component is using correct photo URL
+- [x] Identify why fallback to initials is happening - cache not being refreshed
+- [x] Fix avatar rendering to show uploaded photo - added await for invalidate and refetch
+- [x] User reports avatar still not displaying - investigating further
+- [x] Check if AvatarImage component is loading the image correctly - simplified rendering
+- [x] Verify CORS or image loading issues - image URL may not be accessible from browser
+- [ ] Final fix: Ensure image URL is properly formatted and accessible

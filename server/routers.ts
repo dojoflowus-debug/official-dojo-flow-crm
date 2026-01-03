@@ -539,11 +539,8 @@ export const appRouter = router({
       
       if (!fullUser) return opts.ctx.user;
       
-      return {
-        ...opts.ctx.user,
-        photoUrl: fullUser.photoUrl,
-        photoUrlSmall: fullUser.photoUrlSmall,
-      };
+      // Return the full user object with all fields including photoUrl
+      return fullUser;
     }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
