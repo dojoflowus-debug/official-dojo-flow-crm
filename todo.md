@@ -4060,3 +4060,16 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Implement profile edit UI
 - [x] Test profile editing functionality
 - [x] Save checkpoint
+
+
+## 🐛 BUG: Login Error - useCallback is not defined
+
+### Issue
+- [x] User reports login fails with "ReferenceError: useCallback is not defined"
+- [x] Error occurs when attempting to log in
+
+### Investigation Tasks
+- [x] Check which file is missing useCallback import
+- [x] Add missing React import
+- [x] Test login flow after fix
+- [ ] Save checkpoint
