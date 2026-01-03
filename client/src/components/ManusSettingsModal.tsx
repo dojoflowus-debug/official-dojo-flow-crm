@@ -504,95 +504,104 @@ export function ManusSettingsModal({ isOpen, onClose }: ManusSettingsModalProps)
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ 
-          background: 'rgba(0, 0, 0, 0.65)', // 65% opacity for fog effect
-          backdropFilter: 'blur(12px)', // 12px blur for cinematic look
-          WebkitBackdropFilter: 'blur(12px)', // Safari support
+          background: 'rgba(0, 0, 0, 0.65)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
         }}
         onClick={onClose}
       />
       
-      {/* Modal */}
+      {/* Modal Container - Flexbox centering for true vertical alignment */}
       <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Settings"
-        onTransitionEnd={() => {
-          if (!isOpen) setIsAnimating(false)
-        }}
         className={`
-          fixed z-[9999] 
-          top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-          w-[800px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-96px)]
-          rounded-2xl overflow-hidden
-          transition-all duration-300 ease-out
-          ${isOpen 
-            ? 'opacity-100 scale-100' 
-            : 'opacity-0 scale-95 pointer-events-none'
-          }
+          fixed inset-0 z-[9999] 
+          flex items-center justify-center
+          p-6
+          pointer-events-none
+          ${isOpen ? '' : 'hidden'}
         `}
-        style={{
-          background: 'rgba(26, 26, 29, 0.98)', // Near-solid dark background
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: `
-            0 25px 50px -12px rgba(0, 0, 0, 0.6),
-            0 0 0 1px rgba(255, 255, 255, 0.05),
-            0 0 40px rgba(0, 0, 0, 0.3)
-          `, // Strong shadow + subtle glow for focus effect
-        }}
+        style={{ height: '100vh', width: '100vw' }}
       >
-        <div className="flex h-full">
-          {/* Left Sidebar */}
-          <div 
-            className="w-[220px] h-full flex flex-col border-r border-white/[0.06]"
-            style={{ background: '#141416' }}
-          >
-            {/* Logo/Brand - Using official DojoFlow branding */}
-            <div className="p-5 border-b border-white/[0.06]">
-              <BrandLogo size="md" forceVariant="light" />
+        <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Settings"
+          onTransitionEnd={() => {
+            if (!isOpen) setIsAnimating(false)
+          }}
+          className={`
+            pointer-events-auto
+            w-[800px] max-w-full
+            rounded-2xl
+            transition-all duration-300 ease-out
+            ${isOpen 
+              ? 'opacity-100 scale-100' 
+              : 'opacity-0 scale-95'
+            }
+          `}
+          style={{
+            height: 'min(600px, 80vh)',
+            maxHeight: '80vh',
+            overflow: 'hidden',
+            background: 'rgba(26, 26, 29, 0.98)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 40px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <div className="flex h-full">
+            {/* Left Sidebar */}
+            <div 
+              className="w-[220px] h-full flex flex-col border-r border-white/[0.06]"
+              style={{ background: '#141416' }}
+            >
+              {/* Logo/Brand */}
+              <div className="p-5 border-b border-white/[0.06]">
+                <BrandLogo size="md" forceVariant="light" />
+              </div>
+              
+              {/* Navigation */}
+              <nav className="flex-1 py-2 overflow-y-auto">
+                {navItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = activeSection === item.id
+                  
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveSection(item.id)}
+                      className={`
+                        w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors
+                        ${isActive 
+                          ? 'bg-white/[0.08] text-white' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]'
+                        }
+                      `}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </nav>
+              
+              {/* Footer Links */}
+              <div className="p-3 border-t border-white/[0.06]">
+                <button 
+                  onClick={() => handleNavigate('/help')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  <span className="text-sm">Get help</span>
+                  <ExternalLink className="w-3 h-3 ml-auto" />
+                </button>
+              </div>
             </div>
             
-            {/* Navigation */}
-            <nav className="flex-1 py-2 overflow-y-auto">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = activeSection === item.id
-                
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveSection(item.id)}
-                    className={`
-                      w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors
-                      ${isActive 
-                        ? 'bg-white/[0.08] text-white' 
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]'
-                      }
-                    `}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                )
-              })}
-            </nav>
-            
-            {/* Footer Links */}
-            <div className="p-3 border-t border-white/[0.06]">
-              <button 
-                onClick={() => handleNavigate('/help')}
-                className="w-full flex items-center gap-3 px-3 py-2 text-zinc-500 hover:text-zinc-300 transition-colors"
-              >
-                <HelpCircle className="w-4 h-4" />
-                <span className="text-sm">Get help</span>
-                <ExternalLink className="w-3 h-3 ml-auto" />
-              </button>
+            {/* Right Content Panel */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              {renderContent()}
             </div>
-          </div>
-          
-          {/* Right Content Panel */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            {renderContent()}
           </div>
         </div>
       </div>

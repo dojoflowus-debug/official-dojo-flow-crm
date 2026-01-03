@@ -4008,3 +4008,42 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Ensure overlay is above dashboard content but below modal
 - [x] Test light/dark mode logo variants
 - [x] Verify all modals have consistent fog/blur effect
+
+
+## 🎯 Modal Vertical Positioning Fix
+
+### Modal Centering
+- [ ] Adjust Account/Usage modal vertical positioning to center in viewport
+- [ ] Remove top-alignment, use true vertical centering
+- [ ] Ensure visible space above and below modal
+- [ ] Modal should feel anchored in center, not pinned to top
+
+### Height & Scrolling
+- [ ] Set modal max-height to 80-85% of viewport
+- [ ] Enable internal content scrolling when needed
+- [ ] Ensure modal container does not overflow off-screen
+
+### Background Visibility
+- [ ] Maintain fogged background visibility above and below modal
+- [ ] Keep blur/dim overlay consistent
+- [ ] Ensure users can recognize underlying dashboard
+
+
+## 🎯 Modal Vertical Positioning Fix (2026-01-02)
+
+### Task
+- [x] Adjust Account/Usage modal to be vertically centered in viewport
+- [x] Ensure modal doesn't touch top edge of screen
+- [x] Maintain fogged/blurred background visibility
+- [x] Set modal max-height to 80% of viewport
+- [x] Ensure internal content scrolls if needed
+- [x] Keep modal as highest visual focus with dimmed background
+
+### Implementation
+- [x] Changed modal container from transform-based centering to flexbox centering
+- [x] Added explicit height: 100vh and width: 100vw to modal container
+- [x] Used `flex items-center justify-center` for true centering
+- [x] Set modal height to `min(600px, 80vh)` for balanced sizing
+- [x] Verified modal is perfectly centered (0px vertical/horizontal offset)
+- [x] Background blur overlay remains visible around modal
+
