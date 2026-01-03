@@ -1689,7 +1689,11 @@ export default function KaiCommand() {
         // Refresh conversations list
         utils.kai.getConversations.invalidate();
       } catch (error) {
-        console.error('Failed to create conversation:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to create conversation';
+        console.error('[handleSendMessage] Auto-create failed:', errorMessage, error);
+        toast.error(`Failed to create conversation: ${errorMessage}`);
+        setIsLoading(false);
+        return;
       }
     }
     
@@ -1701,7 +1705,11 @@ export default function KaiCommand() {
           content: currentInput
         });
       } catch (error) {
-        console.error('Failed to save user message:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to save message';
+        console.error('[handleSendMessage] Failed to save message:', errorMessage, error);
+        toast.error(`Failed to save message: ${errorMessage}`);
+        setIsLoading(false);
+        return;
       }
     }
 
