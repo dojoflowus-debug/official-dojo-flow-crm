@@ -1018,7 +1018,7 @@ export const appRouter = router({
 
   // CRM Dashboard APIs
   dashboard: router({
-    stats: protectedProcedure.query(async ({ ctx }) => {
+    stats: protectedProcedure.input(z.object({})).query(async ({ ctx }) => {
       const { getDashboardStats } = await import("./db");
       const stats = await getDashboardStats(ctx.currentOrganizationId);
       return stats || {
@@ -1029,7 +1029,7 @@ export const appRouter = router({
       };
     }),
     
-    getLeads: protectedProcedure.query(async ({ ctx }) => {
+    getLeads: protectedProcedure.input(z.object({})).query(async ({ ctx }) => {
       const { getDb } = await import("./db");
       const { leads } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
@@ -2115,6 +2115,7 @@ export const appRouter = router({
   kai: router({
     // Get all conversations for the current user (excludes soft-deleted)
     getConversations: protectedProcedure
+      .input(z.object({}))
       .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { kaiConversations } = await import("../drizzle/schema");

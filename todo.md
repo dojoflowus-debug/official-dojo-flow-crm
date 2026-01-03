@@ -4249,3 +4249,25 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [ ] Top-right avatar immediately switches from initials to photo
 - [ ] Hard refresh still shows the photo (proves persistence)
 - [ ] Avatar displays correctly in both AccountCommandPanel and BottomNavLayout
+
+
+## 🐛 BUG: tRPC Validation Error on /kai Page - "Invalid input: expected object, received undefined"
+
+### Issue
+- [x] Error occurs on /kai page when loading dashboard stats
+- [x] tRPC procedures missing input schema validation
+- [x] Procedures expect object input but receive undefined
+
+### Root Cause
+- [x] `dashboard.stats` procedure defined without `.input()` schema
+- [x] `dashboard.getLeads` procedure defined without `.input()` schema
+- [x] `kai.getConversations` procedure defined without `.input()` schema
+- [x] tRPC requires all queries to have input schema, even if empty object
+
+### Fix Applied
+- [x] Added `.input(z.object({}))` to `dashboard.stats` procedure
+- [x] Added `.input(z.object({}))` to `dashboard.getLeads` procedure
+- [x] Added `.input(z.object({}))` to `kai.getConversations` procedure
+- [ ] Test /kai page loads without errors
+- [ ] Verify all dashboard stats display correctly
+- [ ] Verify conversations load in Kai Command interface
