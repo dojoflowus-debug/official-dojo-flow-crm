@@ -4167,3 +4167,31 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Apply same fix to updateProfile and deleteProfilePicture mutations
 - [x] Verify backend tests pass (5/5 tests passing)
 - [x] Ready for user testing
+
+
+## 🐛 BUG: Profile Picture Upload Changes Not Taking Effect (Second Report)
+
+### Issue
+- [x] Owner reports profile picture upload still not working after previous fix
+- [x] Changes don't take effect after saving
+
+### Investigation Tasks
+- [x] Check browser console for errors
+- [x] Verify S3 upload is completing successfully
+- [x] Check if database update is persisting
+- [x] Verify cache invalidation is working
+- [x] Check if UI is re-rendering with new data
+- [x] Test complete upload flow
+
+### Root Cause
+**Field name mismatch in AccountCommandPanel:**
+- Avatar display was using `user?.avatar` (line 469)
+- Backend returns `user?.photoUrl` from auth.me query
+- Upload was working correctly, but UI wasn't displaying the updated photo
+- Preview state was updated but main profile view used wrong field
+
+### Fix Applied
+- [x] Changed `user?.avatar` to `user?.photoUrl` in AccountCommandPanel.tsx line 469
+- [x] Test profile picture upload end-to-end
+- [x] Verify photo displays immediately after upload
+- [ ] Save checkpoint

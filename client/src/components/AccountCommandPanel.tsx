@@ -466,7 +466,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
               {!isEditingProfile ? (
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
                   <Avatar className="h-16 w-16 rounded-xl">
-                    <AvatarImage src={user?.avatar} className="rounded-xl" />
+                    <AvatarImage src={user?.photoUrl} className="rounded-xl" />
                     <AvatarFallback className="rounded-xl text-lg font-bold bg-gradient-to-br from-red-500 to-orange-600 text-white">
                       {getUserInitials()}
                     </AvatarFallback>
