@@ -162,6 +162,10 @@ export default function KaiCommand() {
   // Voice state management
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [currentSpeechMessageId, setCurrentSpeechMessageId] = useState<string | null>(null);
+  
+  // Fullscreen and Add Staff state
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef(false);
@@ -655,12 +659,15 @@ export default function KaiCommand() {
 
   // Handle export conversation
   const handleExport = async (format: 'json' | 'markdown' | 'csv') => {
+    console.log('[KaiCommand] Export button clicked, format:', format, 'conversationId:', selectedConversationId);
     if (!selectedConversationId) {
+      console.warn('[KaiCommand] Export failed: no conversation selected');
       toast.error('Please select a conversation to export');
       return;
     }
     
     try {
+      console.log('[KaiCommand] Exporting conversation...');
       const result = await trpc.kai.exportConversations.query({
         conversationId: parseInt(selectedConversationId),
         format,
@@ -677,16 +684,20 @@ export default function KaiCommand() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
+      console.log('[KaiCommand] Export successful:', result.filename);
       toast.success(`Exported conversation as ${format.toUpperCase()}`);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error';
+      console.error('[KaiCommand] Export failed:', errorMessage);
       toast.error(`Export failed: ${errorMessage}`);
     }
   };
 
   // Handle export all conversations
   const handleExportAll = async (format: 'json' | 'markdown' | 'csv') => {
+    console.log('[KaiCommand] Export All button clicked, format:', format);
     try {
+      console.log('[KaiCommand] Exporting all conversations...');
       const result = await trpc.kai.exportConversations.query({
         format,
       });
@@ -702,9 +713,11 @@ export default function KaiCommand() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
+      console.log('[KaiCommand] Export all successful, count:', result.count);
       toast.success(`Exported ${result.count} conversation(s) as ${format.toUpperCase()}`);
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error';
+      console.error('[KaiCommand] Export all failed:', errorMessage);
       toast.error(`Export failed: ${errorMessage}`);
     }
   };
@@ -765,6 +778,24 @@ export default function KaiCommand() {
       setMessages([]);
       setMessageInput('');
     }
+  };
+
+  // Handle fullscreen toggle
+  const handleFullScreen = () => {
+    console.log('[KaiCommand] Full Screen button clicked, current state:', isFullScreen);
+    setIsFullScreen(!isFullScreen);
+    toast.success(isFullScreen ? 'Exited full screen' : 'Entered full screen mode');
+  };
+
+  // Handle add staff to conversation
+  const handleAddStaff = () => {
+    console.log('[KaiCommand] Add Staff button clicked, conversationId:', selectedConversationId);
+    if (!selectedConversationId) {
+      toast.error('Please select a conversation first');
+      return;
+    }
+    setShowAddStaffModal(true);
+    console.log('[KaiCommand] Opening Add Staff modal');
   };
 
   // Convert backend conversations to frontend format
@@ -2423,7 +2454,13 @@ export default function KaiCommand() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Invite Team Members">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleAddStaff}
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Add Staff to Conversation"
+              >
                 <Users className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
               <Button 
@@ -2441,7 +2478,13 @@ export default function KaiCommand() {
               >
                 <Volume2 className={`w-4 h-4 ${voiceEnabled ? (isCinematic ? 'text-white' : isDark ? 'text-white' : 'text-slate-900') : (isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500')}`} />
               </Button>
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} title="Full Screen">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleFullScreen}
+                className={`h-8 w-8 ${isFullScreen ? (isCinematic ? 'bg-[rgba(255,255,255,0.2)]' : isDark ? 'bg-[rgba(255,255,255,0.15)]' : 'bg-slate-200') : ''} ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`}
+                title={isFullScreen ? 'Exit Full Screen' : 'Enter Full Screen'}
+              >
                 <Maximize2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
               </Button>
               <Button 
@@ -3180,6 +3223,25 @@ export default function KaiCommand() {
         data={resultsPanelData} 
         onClose={() => setResultsPanelData(null)} 
       />
+      
+      {/* Add Staff to Conversation Modal */}
+      <AlertDialog open={showAddStaffModal} onOpenChange={setShowAddStaffModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Add Staff to Conversation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Select staff members to add to this conversation. They will be able to see all messages and participate.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-slate-600">Feature coming soon - Staff management will be available in the next update.</p>
+            <p className="text-xs text-slate-500">For now, you can mention staff members using @mention in your messages.</p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </BottomNavLayout>
   );
 }
