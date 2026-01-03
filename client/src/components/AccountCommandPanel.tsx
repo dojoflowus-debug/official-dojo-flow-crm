@@ -5,7 +5,7 @@ import { useTheme, Theme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { trpc } from '@/lib/trpc'
 import { BrandLogo } from '@/components/BrandLogo'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -76,7 +76,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
   const panelRef = useRef<HTMLDivElement>(null)
   const [activeSection, setActiveSection] = useState<SectionId>('usage')
   const [isAnimating, setIsAnimating] = useState(false)
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
   const { toast } = useToast()
   
   // Edit profile form state
@@ -106,7 +106,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         title: 'Profile updated',
         description: 'Your profile has been successfully updated.',
       })
-      setIsEditProfileOpen(false)
+      setIsEditingProfile(false)
       // Refresh user data
       window.location.reload()
     },
@@ -358,7 +358,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
       
       case 'account':
         return (
-          <div className="h-full">
+          <div className="h-full overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Account</h2>
               <button onClick={onClose} className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
@@ -368,28 +368,121 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
             
             {/* Profile Section */}
             <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
-                <Avatar className="h-16 w-16 rounded-xl">
-                  <AvatarImage src={user?.avatar} className="rounded-xl" />
-                  <AvatarFallback className="rounded-xl text-lg font-bold bg-gradient-to-br from-red-500 to-orange-600 text-white">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">{getDisplayName()}</h3>
-                  <p className="text-sm text-zinc-500">{user?.email || 'owner@dojoflow.com'}</p>
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <Shield className="w-3 h-3 text-amber-500" />
-                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{getUserRole()}</span>
+              {!isEditingProfile ? (
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                  <Avatar className="h-16 w-16 rounded-xl">
+                    <AvatarImage src={user?.avatar} className="rounded-xl" />
+                    <AvatarFallback className="rounded-xl text-lg font-bold bg-gradient-to-br from-red-500 to-orange-600 text-white">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">{getDisplayName()}</h3>
+                    <p className="text-sm text-zinc-500">{user?.email || 'owner@dojoflow.com'}</p>
+                    {user?.phone && <p className="text-sm text-zinc-500">{user.phone}</p>}
+                    {user?.bio && <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">{user.bio}</p>}
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <Shield className="w-3 h-3 text-amber-500" />
+                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{getUserRole()}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setIsEditingProfile(true)}
+                    className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                  >
+                    Edit
+                  </button>
+                </div>
+              ) : (
+                <div className="p-6 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">Edit Profile</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Name</Label>
+                      <Input
+                        id="name"
+                        value={profileForm.name}
+                        onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                        placeholder="Your name"
+                      />
+                    </div>
+                    
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                    
+                    {/* Phone */}
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                    
+                    {/* Bio */}
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">Bio</Label>
+                      <Textarea
+                        id="bio"
+                        value={profileForm.bio}
+                        onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                        placeholder="Tell us about yourself (max 160 characters)"
+                        maxLength={160}
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {profileForm.bio.length}/160 characters
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingProfile(false)
+                        // Reset form to current user data
+                        if (user) {
+                          setProfileForm({
+                            name: user.name || '',
+                            email: user.email || '',
+                            phone: user.phone || '',
+                            bio: user.bio || '',
+                          })
+                        }
+                      }}
+                      disabled={updateProfileMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSaveProfile}
+                      disabled={updateProfileMutation.isPending}
+                    >
+                      {updateProfileMutation.isPending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Save Changes
+                    </Button>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setIsEditProfileOpen(true)}
-                  className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
-                >
-                  Edit
-                </button>
-              </div>
+              )}
               
               {/* Quick Actions */}
               <div className="grid grid-cols-2 gap-3">
@@ -674,89 +767,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         </div>
       </div>
       
-      {/* Edit Profile Dialog */}
-      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>
-              Update your personal information
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={profileForm.name}
-                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                placeholder="Your name"
-              />
-            </div>
-            
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profileForm.email}
-                onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                placeholder="your@email.com"
-              />
-            </div>
-            
-            {/* Phone */}
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={profileForm.phone}
-                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                placeholder="(555) 123-4567"
-              />
-            </div>
-            
-            {/* Bio */}
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={profileForm.bio}
-                onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                placeholder="Tell us about yourself (max 160 characters)"
-                maxLength={160}
-                rows={3}
-              />
-              <p className="text-xs text-muted-foreground">
-                {profileForm.bio.length}/160 characters
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsEditProfileOpen(false)}
-              disabled={updateProfileMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveProfile}
-              disabled={updateProfileMutation.isPending}
-            >
-              {updateProfileMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Save Changes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </>
   )
 }

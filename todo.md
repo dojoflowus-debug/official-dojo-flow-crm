@@ -4072,4 +4072,19 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Check which file is missing useCallback import
 - [x] Add missing React import
 - [x] Test login flow after fix
+- [x] Save checkpoint (version: 5d02b54b)
+
+
+## 🐛 BUG: User Profile Edit Dialog Overlapping Account Dashboard
+
+### Issue
+- [ ] Edit Profile dialog appears as modal overlay on top of Account dashboard
+- [ ] User cannot interact with profile form because it's underneath the Account content
+- [ ] Profile editing should be integrated directly into Account page, not a separate popup
+
+### Fix Tasks
+- [x] Remove EditProfileDialog modal component
+- [x] Integrate profile editing form directly into Account page
+- [x] Make profile form inline and always visible
+- [x] Test profile editing functionality
 - [ ] Save checkpoint
