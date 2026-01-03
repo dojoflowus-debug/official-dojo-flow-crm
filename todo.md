@@ -4087,4 +4087,17 @@ Transform Kai Command from "office productivity" look to tactical command center
 - [x] Integrate profile editing form directly into Account page
 - [x] Make profile form inline and always visible
 - [x] Test profile editing functionality
+- [x] Save checkpoint (version: 62b91ca9)
+
+
+## 👤 Owner Profile Picture Upload
+
+### Task
+- [x] Add avatarUrl field to owners table (photoUrl field already exists in users table)
+- [x] Create updateOwnerProfile tRPC procedure (uploadProfilePicture and deleteProfilePicture)
+- [x] Add S3 upload for profile pictures
+- [x] Create profile picture upload UI in settings
+- [x] Add image preview and crop functionality
+- [x] Update DashboardLayout to display owner avatar
+- [x] Test profile picture upload and display (all 5 tests passing)
 - [ ] Save checkpoint

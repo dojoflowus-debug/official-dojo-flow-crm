@@ -491,6 +491,10 @@ export const appRouter = router({
     // Update user profile
     updateProfile: authRouter.updateProfile,
     
+    // Profile picture management
+    uploadProfilePicture: authRouter.uploadProfilePicture,
+    deleteProfilePicture: authRouter.deleteProfilePicture,
+    
     // Kiosk settings endpoint (uses raw mysql2 to bypass Drizzle connection issues)
     getKioskSettings: publicProcedure.query(async () => {
       try {
@@ -524,7 +528,21 @@ export const appRouter = router({
     }),
     
     // Legacy endpoints
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(async (opts) => {
+      if (!opts.ctx.user) return null;
+      
+      // Fetch full user data including photoUrl
+      const { getUserByOpenId } = await import("./db");
+      const fullUser = await getUserByOpenId(opts.ctx.user.openId);
+      
+      if (!fullUser) return opts.ctx.user;
+      
+      return {
+        ...opts.ctx.user,
+        photoUrl: fullUser.photoUrl,
+        photoUrlSmall: fullUser.photoUrlSmall,
+      };
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });

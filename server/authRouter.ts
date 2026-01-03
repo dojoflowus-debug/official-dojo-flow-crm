@@ -5,6 +5,7 @@ import { TRPCError } from "@trpc/server";
 import { organizationUsers, organizations, users } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { storagePut } from "./storage";
 
 /**
  * Authentication Router
@@ -168,4 +169,89 @@ export const authRouter = router({
         },
       };
     }),
+
+  /**
+   * Upload profile picture
+   * Accepts base64 encoded image and uploads to S3
+   */
+  uploadProfilePicture: protectedProcedure
+    .input(
+      z.object({
+        imageData: z.string(), // base64 encoded image
+        mimeType: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      try {
+        // Convert base64 to buffer
+        const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, "base64");
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const extension = input.mimeType.split("/")[1] || "png";
+        const fileKey = `profile-pictures/${ctx.user.id}-${timestamp}-${randomSuffix}.${extension}`;
+
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+        // Update user record with photo URL
+        await db
+          .update(users)
+          .set({
+            photoUrl: url,
+            photoUrlSmall: url, // For now, use same URL for both
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, ctx.user.id));
+
+        return {
+          success: true,
+          photoUrl: url,
+        };
+      } catch (error) {
+        console.error("Error uploading profile picture:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to upload profile picture",
+        });
+      }
+    }),
+
+  /**
+   * Delete profile picture
+   * Removes profile picture from user account
+   */
+  deleteProfilePicture: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Database connection failed",
+      });
+    }
+
+    // Update user record to remove photo URLs
+    await db
+      .update(users)
+      .set({
+        photoUrl: null,
+        photoUrlSmall: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, ctx.user.id));
+
+    return {
+      success: true,
+    };
+  }),
 });
