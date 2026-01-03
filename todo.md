@@ -4336,3 +4336,26 @@ The persistent photo upload issue has been resolved by fixing the authentication
 - [x] Test: Don't sync if photoUrl is empty
 - [x] Verified dev server running with fix
 - [x] Save checkpoint with avatar photo fix
+
+
+## 🐛 BUG: User Profile Photo Not Displaying in Account Dropdown (FIXED)
+
+### Issue
+- [x] User profile photo is not showing in Account dropdown (BottomNavLayout)
+- [x] Photo upload functionality works in Edit Profile modal
+- [x] Avatar falls back to initials instead of displaying uploaded photo
+- [x] Photo appears to be uploaded but not retrieved or displayed
+
+### Root Cause
+**Missing photoUrl fields in useAuth hook:**
+- The AuthUser interface did not include photoUrl and photoUrlSmall fields
+- The useAuth hook was not passing these fields to the user state
+- Backend was correctly returning these fields from getCurrentUser procedure
+- Frontend was unable to display the photo because it was not in the user object
+
+### Fix Applied
+- [x] Added photoUrl and photoUrlSmall optional fields to AuthUser interface
+- [x] Updated useAuth hook to include these fields in user state
+- [x] Fixed getUserInitials call to properly pass user parameter
+- [x] Tested photo display in Account dropdown - now showing correctly
+- [x] Verified photo persists after page reload

@@ -414,7 +414,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                     />
                   )}
                   <AvatarFallback className="text-white text-sm font-medium">
-                    {getUserInitials()}
+                    {getInitials(user)}
                   </AvatarFallback>
                 </Avatar>
                 <ChevronDown className={`h-4 w-4 hidden sm:block transition-transform duration-200 ${isAccountPanelOpen ? 'rotate-180' : ''} ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />

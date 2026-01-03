@@ -8,6 +8,8 @@ export interface AuthUser {
   email: string | null;
   role: "user" | "admin";
   setupCompleted: boolean;
+  photoUrl?: string | null;
+  photoUrlSmall?: string | null;
 }
 
 /**
@@ -53,6 +55,8 @@ export function useAuth() {
           email: currentUser.email,
           role: currentUser.role,
           setupCompleted: dojoSettings?.setupCompleted === 1,
+          photoUrl: currentUser.photoUrl,
+          photoUrlSmall: currentUser.photoUrlSmall,
         });
       } else {
         setUser(null);
