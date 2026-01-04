@@ -760,8 +760,11 @@ export default function KaiCommand() {
 
   // Handle starting a new chat
   const handleNewChat = async () => {
+    console.log('[KaiCommand] handleNewChat called');
     try {
+      console.log('[KaiCommand] Creating new conversation...');
       const result = await createConversationMutation.mutateAsync({});
+      console.log('[KaiCommand] New conversation created:', result);
       // Refresh conversations list
       utils.kai.getConversations.invalidate();
       // Select the new conversation
@@ -770,13 +773,15 @@ export default function KaiCommand() {
       setMessages([]);
       // Clear any input
       setMessageInput('');
+      console.log('[KaiCommand] New conversation selected and UI cleared');
     } catch (error) {
-      console.error('Failed to create conversation:', error);
+      console.error('[KaiCommand] Failed to create conversation:', error);
       // Fallback to local-only conversation
       const newId = `new-${Date.now()}`;
       setSelectedConversationId(newId);
       setMessages([]);
       setMessageInput('');
+      console.log('[KaiCommand] Fallback conversation created:', newId);
     }
   };
 
@@ -2082,10 +2087,15 @@ export default function KaiCommand() {
               {/* New Operation Button */}
               <button
                 onClick={handleNewChat}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border ${isDark || isCinematic ? 'border-white/10 text-white/70 bg-white/5 hover:bg-white/10 hover:border-white/20' : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 hover:border-slate-300'} text-[11px] font-medium uppercase tracking-wider transition-all duration-150`}
+                disabled={createConversationMutation.isPending}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border ${isDark || isCinematic ? 'border-white/10 text-white/70 bg-white/5 hover:bg-white/10 hover:border-white/20' : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 hover:border-slate-300'} text-[11px] font-medium uppercase tracking-wider transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <Plus className={`w-3.5 h-3.5 ${getTextClass('muted')}`} />
-                NEW OP
+                {createConversationMutation.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Plus className={`w-3.5 h-3.5 ${getTextClass('muted')}`} />
+                )}
+                {createConversationMutation.isPending ? 'CREATING...' : 'NEW OP'}
               </button>
             </div>
 
