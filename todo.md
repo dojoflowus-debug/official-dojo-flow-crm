@@ -4658,3 +4658,22 @@ Implemented comprehensive fixes to ensure conversations are properly created and
 - [x] Fixed base64 format to include proper data URL prefix
 - [x] Updated both handlePhotoSelect and handleFileDrop functions
 - [x] Tested upload flow - now correctly reaches backend
+
+## 🗑️ Delete All Messages Feature (2026-01-04)
+
+### Implementation Complete
+- [x] Add deleteAllMessages tRPC procedure in server/routers.ts
+- [x] Create Delete All button (trash icon) in Kai Command toolbar
+- [x] Add confirmation dialog before deletion to prevent accidents
+- [x] Implement success toast notification after deletion
+- [x] Clear messages from UI and refresh conversation list
+- [x] Verify dev server running with no TypeScript errors
+
+### Feature Details
+The Delete All Messages feature allows users to clear all messages from a conversation in one action:
+- Button appears in the Kai Command toolbar next to the "Add Staff" button
+- Disabled when no conversation is selected or when there are no messages
+- Shows a confirmation dialog before deleting to prevent accidental deletion
+- Updates the conversation preview and last message timestamp
+- Provides visual feedback with success toast notification
+- Refreshes the conversation list to reflect the changes

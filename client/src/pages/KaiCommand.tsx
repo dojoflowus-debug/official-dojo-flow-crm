@@ -505,8 +505,15 @@ export default function KaiCommand() {
       console.error('[extractConversation] Mutation error:', error);
     }
   });
+  const deleteAllMessagesMutation = trpc.kai.deleteAllMessages.useMutation({
+    onError: (error) => {
+      console.error('[deleteAllMessages] Mutation error:', error);
+      toast.error('Failed to delete messages');
+    }
+  });
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const utils = trpc.useUtils();
 
   // Handle delete conversation with optimistic update
@@ -809,6 +816,40 @@ export default function KaiCommand() {
       toast.error(`Couldn't extract. ${error?.message || 'Unknown error'}`);
     } finally {
       setIsExtracting(false);
+    }
+  };
+
+  // Handle delete all messages from conversation
+  const handleDeleteAllMessages = async () => {
+    if (!selectedConversationId) {
+      toast.error('Please select a conversation');
+      return;
+    }
+    
+    setIsDeleteAllDialogOpen(true);
+  };
+
+  // Confirm and execute delete all messages
+  const confirmDeleteAllMessages = async () => {
+    if (!selectedConversationId) return;
+    
+    try {
+      await deleteAllMessagesMutation.mutateAsync({
+        conversationId: parseInt(selectedConversationId)
+      });
+      
+      // Clear messages from UI
+      setMessages([]);
+      
+      // Refresh conversations to update preview
+      utils.kai.getConversations.invalidate();
+      utils.kai.getMessages.invalidate({ conversationId: parseInt(selectedConversationId) });
+      
+      toast.success('All messages deleted from conversation');
+      setIsDeleteAllDialogOpen(false);
+    } catch (error: any) {
+      console.error('Failed to delete all messages:', error);
+      toast.error(`Failed to delete messages. ${error?.message || 'Unknown error'}`);
     }
   };
 
@@ -2586,6 +2627,16 @@ export default function KaiCommand() {
               <Button 
                 variant="ghost" 
                 size="icon" 
+                onClick={handleDeleteAllMessages}
+                className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
+                title="Delete All Messages"
+                disabled={!selectedConversationId || messages.length === 0}
+              >
+                <Trash2 className={`w-4 h-4 ${isCinematic ? 'text-white' : isDark ? 'text-[rgba(255,255,255,0.55)]' : 'text-slate-500'}`} />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 onClick={handleAddStaff}
                 className={`h-8 w-8 ${isCinematic ? 'hover:bg-[rgba(255,255,255,0.15)]' : isDark ? 'hover:bg-[rgba(255,255,255,0.08)]' : ''}`} 
                 title="Add Staff to Conversation"
@@ -3368,6 +3419,27 @@ export default function KaiCommand() {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Delete All Messages Confirmation Dialog */}
+      <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Messages</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete all messages from this conversation? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteAllMessages}
+            >
+              Delete All Messages
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

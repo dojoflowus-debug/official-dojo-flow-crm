@@ -3161,6 +3161,46 @@ Return the data as a structured JSON object.`
           count: exportData.length,
         };
       }),
+
+    // Delete all messages from a conversation
+    deleteAllMessages: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and, isNull } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation and it's not deleted
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
+        
+        if (!conversation) {
+          throw new Error("Conversation not found or deleted");
+        }
+        
+        // Delete all messages in the conversation
+        await db.delete(kaiMessages)
+          .where(eq(kaiMessages.conversationId, input.conversationId));
+        
+        // Update conversation to reset preview and last message time
+        await db.update(kaiConversations)
+          .set({ 
+            preview: null,
+            lastMessageAt: new Date()
+          })
+          .where(eq(kaiConversations.id, input.conversationId));
+        
+        return { success: true, conversationId: input.conversationId };
+      }),
   }),
 
   // Subscription and credits management
