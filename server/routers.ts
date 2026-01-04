@@ -2128,6 +2128,8 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
+        console.log('[kai.getConversations] Fetching conversations for user:', ctx.user.id);
+        
         // Filter out soft-deleted conversations (deletedAt is null)
         const conversations = await db.select()
           .from(kaiConversations)
@@ -2137,6 +2139,7 @@ export const appRouter = router({
           ))
           .orderBy(desc(kaiConversations.lastMessageAt));
         
+        console.log('[kai.getConversations] Found conversations:', conversations.length);
         return conversations;
       }),
 
@@ -2188,6 +2191,7 @@ export const appRouter = router({
           participantIds: JSON.stringify([ctx.user.id]),
         });
         
+        console.log('[kai.createConversation] Conversation created with ID:', result.insertId);
         return { id: result.insertId };
       }),
 
@@ -2206,6 +2210,8 @@ export const appRouter = router({
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+        
+        console.log('[kai.addMessage] Adding message to conversation:', input.conversationId, 'role:', input.role);
         
         // Verify user owns this conversation
         const [conversation] = await db.select()
@@ -2226,6 +2232,8 @@ export const appRouter = router({
           metadata: input.metadata,
         });
         
+        console.log('[kai.addMessage] Message saved with ID:', result.insertId);
+        
         // Update conversation with preview and timestamp
         const preview = input.content.substring(0, 200);
         await db.update(kaiConversations)
@@ -2239,6 +2247,7 @@ export const appRouter = router({
           })
           .where(eq(kaiConversations.id, input.conversationId));
         
+        console.log('[kai.addMessage] Conversation updated');
         return { id: result.insertId };
       }),
 

@@ -764,18 +764,33 @@ export default function KaiCommand() {
     try {
       console.log('[KaiCommand] Creating new conversation...');
       const result = await createConversationMutation.mutateAsync({});
-      console.log('[KaiCommand] New conversation created:', result);
-      // Refresh conversations list
-      utils.kai.getConversations.invalidate();
+      console.log('[KaiCommand] New conversation created with ID:', result.id);
+      
+      // Wait a moment for the mutation to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Refresh conversations list and wait for it to complete
+      await utils.kai.getConversations.invalidate();
+      console.log('[KaiCommand] Conversations list invalidated');
+      
       // Select the new conversation
-      setSelectedConversationId(result.id.toString());
+      const conversationId = result.id.toString();
+      setSelectedConversationId(conversationId);
+      console.log('[KaiCommand] Selected conversation:', conversationId);
+      
       // Clear messages for fresh start
       setMessages([]);
       // Clear any input
       setMessageInput('');
-      console.log('[KaiCommand] New conversation selected and UI cleared');
+      
+      // Show success toast
+      toast.success('New conversation created');
+      console.log('[KaiCommand] New conversation setup complete');
     } catch (error) {
-      console.error('[KaiCommand] Failed to create conversation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[KaiCommand] Failed to create conversation:', errorMessage, error);
+      toast.error(`Failed to create conversation: ${errorMessage}`);
+      
       // Fallback to local-only conversation
       const newId = `new-${Date.now()}`;
       setSelectedConversationId(newId);
@@ -833,21 +848,38 @@ export default function KaiCommand() {
 
   // Load messages when conversation changes
   useEffect(() => {
-    if (messagesQuery.data) {
+    console.log('[KaiCommand] messagesQuery.data changed:', messagesQuery.data);
+    if (messagesQuery.data && messagesQuery.data.length > 0) {
       const loadedMessages: Message[] = messagesQuery.data.map(m => ({
         id: m.id.toString(),
         role: m.role as 'user' | 'assistant',
         content: m.content,
         timestamp: new Date(m.createdAt)
       }));
+      console.log('[KaiCommand] Loaded messages:', loadedMessages);
       setMessages(loadedMessages);
+    } else if (messagesQuery.data && messagesQuery.data.length === 0) {
+      console.log('[KaiCommand] No messages for this conversation');
+      setMessages([]);
     }
   }, [messagesQuery.data]);
 
+  // Log conversations query changes
+  useEffect(() => {
+    console.log('[KaiCommand] conversationsQuery state:', {
+      isLoading: conversationsQuery.isLoading,
+      isError: conversationsQuery.isError,
+      data: conversationsQuery.data,
+      error: conversationsQuery.error
+    });
+  }, [conversationsQuery.data, conversationsQuery.isLoading, conversationsQuery.isError]);
+
   // Smart collections with dynamic counts based on actual data
+  console.log('[KaiCommand] conversations array:', conversations);
   const urgentCount = conversations.filter(c => !c.archivedAt && c.status === 'urgent').length;
   const insightsCount = conversations.filter(c => !c.archivedAt && c.category === 'kai').length;
   const pendingCount = conversations.filter(c => !c.archivedAt && c.status === 'attention').length;
+  console.log('[KaiCommand] collection counts:', { urgentCount, insightsCount, pendingCount });
   
   // Tactical status filters
   const smartCollections = [
@@ -987,6 +1019,14 @@ export default function KaiCommand() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-select first conversation on initial load
+  useEffect(() => {
+    if (!selectedConversationId && conversations.length > 0) {
+      console.log('[KaiCommand] Auto-selecting first conversation:', conversations[0].id);
+      setSelectedConversationId(conversations[0].id);
+    }
+  }, [conversations, selectedConversationId]);
 
   // Parallax scroll effect for cinematic backgrounds
   useEffect(() => {
@@ -1704,11 +1744,13 @@ export default function KaiCommand() {
     
     if (conversationId) {
       try {
-        await addMessageMutation.mutateAsync({
+        console.log('[handleSendMessage] Saving user message to conversation:', conversationId);
+        const messageResult = await addMessageMutation.mutateAsync({
           conversationId,
           role: 'user',
           content: currentInput
         });
+        console.log('[handleSendMessage] User message saved:', messageResult);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to save message';
         console.error('[handleSendMessage] Failed to save message:', errorMessage, error);
@@ -1716,6 +1758,8 @@ export default function KaiCommand() {
         setIsLoading(false);
         return;
       }
+    } else {
+      console.warn('[handleSendMessage] No conversation ID available to save message');
     }
 
     // Determine if this is a solo conversation (1 human + Kai)
@@ -1795,16 +1839,22 @@ export default function KaiCommand() {
         // Save AI response to database
         if (conversationId) {
           try {
-            await addMessageMutation.mutateAsync({
+            console.log('[handleSendMessage] Saving AI message to conversation:', conversationId);
+            const aiMessageResult = await addMessageMutation.mutateAsync({
               conversationId,
               role: 'assistant',
               content: response.response
             });
+            console.log('[handleSendMessage] AI message saved:', aiMessageResult);
             // Refresh conversations to update preview
-            utils.kai.getConversations.invalidate();
+            await utils.kai.getConversations.invalidate();
+            console.log('[handleSendMessage] Conversations list refreshed');
           } catch (error) {
-            console.error('Failed to save AI message:', error);
+            console.error('[handleSendMessage] Failed to save AI message:', error);
+            toast.error('Failed to save AI response to database');
           }
+        } else {
+          console.warn('[handleSendMessage] No conversation ID available to save AI message');
         }
       } catch (error) {
         const aiMessage: Message = {
