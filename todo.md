@@ -4602,3 +4602,24 @@ Implemented comprehensive fixes to ensure conversations are properly created and
 - [ ] Check console for NewChat clicked log
 - [ ] Check Network tab for API response
 - [ ] Refresh page and verify conversation still appears
+
+
+## 🐛 BUG: NEW OP Button Not Creating Conversations (2026-01-03)
+
+### Issue
+- [x] User reports "NEW OP" button is not creating new conversations
+- [x] Kai Command interface shows but conversation creation is broken
+- [x] Need to investigate backend and frontend
+
+### Investigation Tasks
+- [x] Check backend conversation creation endpoint
+- [x] Verify tRPC procedure for creating conversations
+- [x] Check database schema for conversations table
+- [x] Verify frontend button handler and mutation
+- [x] Test conversation creation flow end-to-end
+
+### Fix Tasks
+- [x] Fix backend conversation creation logic (changed getConversations input from z.object({}) to z.void())
+- [x] Fix frontend button interaction
+- [x] Add proper error handling and user feedback
+- [x] Test the fix in browser - VERIFIED: Multiple conversations created successfully

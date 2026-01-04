@@ -2119,7 +2119,7 @@ export const appRouter = router({
   kai: router({
     // Get all conversations for the current user (excludes soft-deleted)
     getConversations: protectedProcedure
-      .input(z.object({}))
+      .input(z.void())
       .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { kaiConversations } = await import("../drizzle/schema");
