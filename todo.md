@@ -4637,3 +4637,24 @@ Implemented comprehensive fixes to ensure conversations are properly created and
 - [x] Write vitest tests for bulk delete procedure
 - [ ] Test end-to-end in browser
 - [ ] Save checkpoint
+
+
+## 🐛 BUG: Staff Photo Upload Failing (FIXED)
+
+### Issue
+- [x] User cannot upload staff member profile photos
+- [x] Error message appears when trying to upload
+- [x] Upload dialog shows "Change" button and "Take Photo" option
+- [x] Max file size: 5MB
+
+### Root Cause Found
+- [x] Staff.tsx was calling wrong tRPC procedure path
+- [x] Missing fileSize parameter in upload mutation
+- [x] Base64 format was missing the data URL prefix
+
+### Fixes Applied
+- [x] Changed tRPC mutation path to trpc.upload.uploadAttachment
+- [x] Added fileSize parameter to upload request
+- [x] Fixed base64 format to include proper data URL prefix
+- [x] Updated both handlePhotoSelect and handleFileDrop functions
+- [x] Tested upload flow - now correctly reaches backend

@@ -72,7 +72,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   
   // tRPC mutations for photo upload
-  const uploadFileMutation = trpc.files.upload.useMutation()
+  const uploadFileMutation = trpc.upload.uploadAttachment.useMutation()
   const updatePhotoMutation = trpc.staff.updatePhoto.useMutation()
   
   const [staffMembers, setStaffMembers] = useState([])
@@ -171,7 +171,9 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
       const result = await uploadFileMutation.mutateAsync({
         fileName: `staff-photo-${Date.now()}-${file.name}`,
         fileType: file.type,
-        fileData: base64,
+        fileData: `data:${file.type};base64,${base64}`,
+        fileSize: file.size,
+        context: 'general',
       })
       
       // Update form data with the uploaded URL
@@ -237,7 +239,9 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
       const result = await uploadFileMutation.mutateAsync({
         fileName: `staff-photo-${Date.now()}-${file.name}`,
         fileType: file.type,
-        fileData: base64,
+        fileData: `data:${file.type};base64,${base64}`,
+        fileSize: file.size,
+        context: 'general',
       })
       
       handleInputChange('photo_url', result.url)
