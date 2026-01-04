@@ -5,15 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Send, User, Clock, CheckCircle2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MessageSquare, Send, User, Clock, CheckCircle2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Conversations() {
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
   const [messageText, setMessageText] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
-  const { data: conversations, isLoading } = trpc.conversations.getAll.useQuery({ status: "open" });
+  const { data: conversations, isLoading, refetch } = trpc.conversations.getAll.useQuery({ status: "open" });
   const { data: stats } = trpc.conversations.getStats.useQuery();
   
   const selectedConversation = trpc.conversations.getById.useQuery(
@@ -38,9 +50,51 @@ export default function Conversations() {
     },
   });
 
+  const deleteMultipleMutation = trpc.conversations.deleteMultiple.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Deleted ${data.deletedCount} conversation${data.deletedCount > 1 ? "s" : ""}`);
+      setSelectedIds(new Set());
+      setShowDeleteConfirm(false);
+      if (selectedIds.has(selectedConversationId!)) {
+        setSelectedConversationId(null);
+      }
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const handleSelectConversation = (id: number) => {
     setSelectedConversationId(id);
     markAsReadMutation.mutate({ conversationId: id });
+  };
+
+  const handleToggleSelect = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleSelectAll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (conversations && conversations.length > 0) {
+      if (selectedIds.size === conversations.length) {
+        setSelectedIds(new Set());
+      } else {
+        setSelectedIds(new Set(conversations.map(c => c.id)));
+      }
+    }
+  };
+
+  const handleDeleteMultiple = () => {
+    if (selectedIds.size === 0) return;
+    deleteMultipleMutation.mutate({ conversationIds: Array.from(selectedIds) });
   };
 
   const handleSendMessage = () => {
@@ -77,6 +131,37 @@ export default function Conversations() {
             </div>
           )}
 
+          {/* Bulk Delete Controls */}
+          {selectedIds.size > 0 && (
+            <div className="p-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
+              <div className="text-sm font-semibold">
+                {selectedIds.size} selected
+              </div>
+              <Button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleteMultipleMutation.isPending}
+                variant="destructive"
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            </div>
+          )}
+
+          {/* Conversations List Header with Select All */}
+          {conversations && conversations.length > 0 && (
+            <div className="p-4 border-b border-zinc-800 flex items-center gap-3">
+              <Checkbox
+                checked={selectedIds.size === conversations.length && conversations.length > 0}
+                onCheckedChange={handleSelectAll}
+                className="cursor-pointer"
+              />
+              <span className="text-sm text-gray-400">Select All</span>
+            </div>
+          )}
+
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
@@ -87,34 +172,41 @@ export default function Conversations() {
                   <div
                     key={conversation.id}
                     onClick={() => handleSelectConversation(conversation.id)}
-                    className={`p-4 cursor-pointer hover:bg-zinc-900 transition-colors ${
+                    className={`p-4 cursor-pointer hover:bg-zinc-900 transition-colors flex items-start gap-3 ${
                       selectedConversationId === conversation.id ? "bg-zinc-900" : ""
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center">
-                          <User className="w-5 h-5" />
+                    <Checkbox
+                      checked={selectedIds.has(conversation.id)}
+                      onCheckedChange={(e) => handleToggleSelect(conversation.id, e as any)}
+                      className="cursor-pointer mt-1"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0">
+                            <User className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-white truncate">{conversation.participantName}</div>
+                            <div className="text-xs text-gray-400 truncate">{conversation.participantPhone}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-white">{conversation.participantName}</div>
-                          <div className="text-xs text-gray-400">{conversation.participantPhone}</div>
-                        </div>
+                        {conversation.unreadCount > 0 && (
+                          <Badge variant="destructive" className="bg-red-600 flex-shrink-0">
+                            {conversation.unreadCount}
+                          </Badge>
+                        )}
                       </div>
-                      {conversation.unreadCount > 0 && (
-                        <Badge variant="destructive" className="bg-red-600">
-                          {conversation.unreadCount}
-                        </Badge>
+                      <div className="text-sm text-gray-400 line-clamp-2 mb-1">
+                        {conversation.lastMessagePreview || "No messages yet"}
+                      </div>
+                      {conversation.lastMessageAt && (
+                        <div className="text-xs text-gray-500">
+                          {format(new Date(conversation.lastMessageAt), "MMM d, h:mm a")}
+                        </div>
                       )}
                     </div>
-                    <div className="text-sm text-gray-400 line-clamp-2 mb-1">
-                      {conversation.lastMessagePreview || "No messages yet"}
-                    </div>
-                    {conversation.lastMessageAt && (
-                      <div className="text-xs text-gray-500">
-                        {format(new Date(conversation.lastMessageAt), "MMM d, h:mm a")}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -219,6 +311,31 @@ export default function Conversations() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Delete Conversations</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Are you sure you want to delete {selectedIds.size} conversation{selectedIds.size > 1 ? "s" : ""}? 
+              This action cannot be undone and will also delete all messages in these conversations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel className="bg-zinc-800 text-white hover:bg-zinc-700 border-zinc-700">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMultiple}
+              disabled={deleteMultipleMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteMultipleMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

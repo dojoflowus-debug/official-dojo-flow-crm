@@ -4623,3 +4623,17 @@ Implemented comprehensive fixes to ensure conversations are properly created and
 - [x] Fix frontend button interaction
 - [x] Add proper error handling and user feedback
 - [x] Test the fix in browser - VERIFIED: Multiple conversations created successfully
+
+
+## 🗑️ Bulk Delete Conversations Feature
+
+### Task
+- [x] Add deleteMultiple procedure to conversationsRouter
+- [x] Implement frontend UI with checkboxes for each conversation
+- [x] Add "Select All" checkbox in conversations list header
+- [x] Add bulk delete button that appears when items are selected
+- [x] Show confirmation dialog before deleting multiple conversations
+- [x] Display success toast with count of deleted conversations
+- [x] Write vitest tests for bulk delete procedure
+- [ ] Test end-to-end in browser
+- [ ] Save checkpoint

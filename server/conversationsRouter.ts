@@ -319,4 +319,29 @@ export const conversationsRouter = router({
       
       return stats;
     }),
+
+  // Delete multiple conversations
+  deleteMultiple: protectedProcedure
+    .input(z.object({
+      conversationIds: z.array(z.number()).min(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      // Delete messages associated with these conversations
+      for (const conversationId of input.conversationIds) {
+        await db.delete(messages)
+          .where(eq(messages.conversationId, conversationId));
+      }
+      
+      // Delete conversations
+      await db.delete(conversations)
+        .where(or(...input.conversationIds.map(id => eq(conversations.id, id))));
+      
+      return { 
+        success: true,
+        deletedCount: input.conversationIds.length,
+      };
+    }),
 });
