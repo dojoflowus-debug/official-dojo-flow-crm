@@ -1589,3 +1589,15 @@ export type InsertStaffPin = typeof staffPins.$inferInsert;
 export type InsertStudentMessage = typeof studentMessages.$inferInsert;
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Subscription and Credit Type Exports
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+export type OrganizationSubscription = typeof organizationSubscriptions.$inferSelect;
+export type InsertOrganizationSubscription = typeof organizationSubscriptions.$inferInsert;
+export type AiCreditBalance = typeof aiCreditBalance.$inferSelect;
+export type InsertAiCreditBalance = typeof aiCreditBalance.$inferInsert;
+export type AiCreditTransaction = typeof aiCreditTransactions.$inferSelect;
+export type InsertAiCreditTransaction = typeof aiCreditTransactions.$inferInsert;
+export type CreditTopUp = typeof creditTopUps.$inferSelect;
+export type InsertCreditTopUp = typeof creditTopUps.$inferInsert;

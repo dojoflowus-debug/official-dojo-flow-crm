@@ -363,7 +363,7 @@ export async function createCreditTopUpCheckout(params: {
   await db.update(creditTopUps)
     .set({
       stripePaymentIntentId: session.payment_intent as string || session.id,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(creditTopUps.id, topUpId));
 

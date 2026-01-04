@@ -84,8 +84,8 @@ export const subscriptionRouter = router({
         planId: input.planId,
         status: 'active',
         billingCycle: input.billingCycle,
-        currentPeriodStart: now,
-        currentPeriodEnd: periodEnd
+        currentPeriodStart: now.toISOString(),
+        currentPeriodEnd: periodEnd.toISOString()
       });
 
       // Initialize or reset credit balance with new plan's allowance

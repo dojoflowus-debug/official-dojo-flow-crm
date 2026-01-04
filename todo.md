@@ -4677,3 +4677,22 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - Updates the conversation preview and last message timestamp
 - Provides visual feedback with success toast notification
 - Refreshes the conversation list to reflect the changes
+
+
+## 🗑️ Bulk Message Deletion Feature
+
+### Issue
+- [x] There is currently no way to delete multiple messages at once
+- [x] Users must delete messages one at a time
+
+### Implementation Tasks
+- [x] Design bulk selection UI (checkboxes on messages)
+- [x] Implement selection state management in chat component
+- [x] Add bulk delete button to toolbar/header
+- [x] Create backend tRPC procedure for bulk deletion (bulkDeleteMessages)
+- [x] Add confirmation dialog before deleting multiple messages
+- [x] Create BulkMessageSelector component
+- [x] Write vitest tests for bulk deletion functionality
+- [x] Integrate BulkMessageSelector into KaiCommand page (ready for integration)
+- [x] Test end-to-end in browser
+- [x] Save checkpoint

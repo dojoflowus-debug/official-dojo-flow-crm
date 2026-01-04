@@ -3201,6 +3201,77 @@ Return the data as a structured JSON object.`
         
         return { success: true, conversationId: input.conversationId };
       }),
+
+    // Bulk delete specific messages from a conversation
+    bulkDeleteMessages: protectedProcedure
+      .input(z.object({
+        conversationId: z.number(),
+        messageIds: z.array(z.number()).min(1).max(100)
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and, isNull, inArray } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation and it's not deleted
+        const [conversation] = await db.select()
+          .from(kaiConversations)
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id),
+            isNull(kaiConversations.deletedAt)
+          ))
+          .limit(1);
+        
+        if (!conversation) {
+          throw new Error("Conversation not found or deleted");
+        }
+        
+        // Verify all messages belong to this conversation
+        const messagesToDelete = await db.select()
+          .from(kaiMessages)
+          .where(and(
+            eq(kaiMessages.conversationId, input.conversationId),
+            inArray(kaiMessages.id, input.messageIds)
+          ));
+        
+        if (messagesToDelete.length === 0) {
+          throw new Error("No messages found to delete");
+        }
+        
+        // Delete the selected messages
+        await db.delete(kaiMessages)
+          .where(and(
+            eq(kaiMessages.conversationId, input.conversationId),
+            inArray(kaiMessages.id, input.messageIds)
+          ));
+        
+        // Get the remaining messages to update preview
+        const remainingMessages = await db.select()
+          .from(kaiMessages)
+          .where(eq(kaiMessages.conversationId, input.conversationId))
+          .orderBy(kaiMessages.createdAt);
+        
+        // Update conversation preview with the last remaining message
+        const lastMessage = remainingMessages[remainingMessages.length - 1];
+        const preview = lastMessage ? lastMessage.content.substring(0, 200) : null;
+        
+        await db.update(kaiConversations)
+          .set({ 
+            preview,
+            lastMessageAt: lastMessage ? new Date(lastMessage.createdAt) : new Date()
+          })
+          .where(eq(kaiConversations.id, input.conversationId));
+        
+        return { 
+          success: true, 
+          conversationId: input.conversationId,
+          deletedCount: messagesToDelete.length
+        };
+      }),
   }),
 
   // Subscription and credits management
