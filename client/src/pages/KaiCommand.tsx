@@ -197,7 +197,11 @@ export default function KaiCommand() {
   const addStudentNoteMutation = trpc.students.addNote.useMutation();
   
   // TTS generation mutation
-  const generateSpeechMutation = trpc.kai.generateSpeech.useMutation();
+  const generateSpeechMutation = trpc.kai.generateSpeech.useMutation({
+    onError: (error) => {
+      console.error('[generateSpeech] Mutation error:', error);
+    }
+  });
   
   // Handle saving note to student card
   const handleSaveToStudentCard = async (studentId: number, studentName: string, noteContent: string) => {
@@ -436,21 +440,71 @@ export default function KaiCommand() {
 
   // tRPC queries and mutations for Kai
   const kaiChatMutation = trpc.kai.chat.useMutation();
-  const statsQuery = trpc.dashboard.stats.useQuery();
-  const conversationsQuery = trpc.kai.getConversations.useQuery();
+
+  const conversationsQuery = trpc.kai.getConversations.useQuery(undefined, {
+    onSuccess: (data) => {
+      console.log('[Convos] loading for user:', user?.id);
+      console.log('[Convos] Total conversations returned:', data?.length);
+    },
+    onError: (error) => {
+      console.error('[Convos] Failed to load conversations:', error);
+      toast.error('Failed to load conversations');
+    }
+  });
   const messagesQuery = trpc.kai.getMessages.useQuery(
     { conversationId: selectedConversationId ? parseInt(selectedConversationId) : 0 },
     { enabled: !!selectedConversationId && !selectedConversationId.startsWith('new-') }
   );
-  const createConversationMutation = trpc.kai.createConversation.useMutation();
-  const addMessageMutation = trpc.kai.addMessage.useMutation();
-  const deleteConversationMutation = trpc.kai.deleteConversation.useMutation();
-  const archiveConversationMutation = trpc.kai.archiveConversation.useMutation();
-  const unarchiveConversationMutation = trpc.kai.unarchiveConversation.useMutation();
-  const renameConversationMutation = trpc.kai.renameConversation.useMutation();
-  const updateConversationMutation = trpc.kai.updateConversation.useMutation();
-  const summarizeConversationMutation = trpc.kai.summarizeConversation.useMutation();
-  const extractConversationMutation = trpc.kai.extractConversation.useMutation();
+  const createConversationMutation = trpc.kai.createConversation.useMutation({
+    onError: (error) => {
+      console.error('[createConversation] Mutation error:', error);
+    }
+  });
+  
+  const addMessageMutation = trpc.kai.addMessage.useMutation({
+    onSuccess: (data) => {
+      console.log('[handleSendMessage] Message saved with ID:', data.id);
+    },
+    onError: (error) => {
+      console.error('[handleSendMessage] Failed to save message:', error);
+      toast.error('Failed to save message');
+    }
+  });
+  const deleteConversationMutation = trpc.kai.deleteConversation.useMutation({
+    onError: (error) => {
+      console.error('[deleteConversation] Mutation error:', error);
+    }
+  });
+  const archiveConversationMutation = trpc.kai.archiveConversation.useMutation({
+    onError: (error) => {
+      console.error('[archiveConversation] Mutation error:', error);
+    }
+  });
+  const unarchiveConversationMutation = trpc.kai.unarchiveConversation.useMutation({
+    onError: (error) => {
+      console.error('[unarchiveConversation] Mutation error:', error);
+    }
+  });
+  const renameConversationMutation = trpc.kai.renameConversation.useMutation({
+    onError: (error) => {
+      console.error('[renameConversation] Mutation error:', error);
+    }
+  });
+  const updateConversationMutation = trpc.kai.updateConversation.useMutation({
+    onError: (error) => {
+      console.error('[updateConversation] Mutation error:', error);
+    }
+  });
+  const summarizeConversationMutation = trpc.kai.summarizeConversation.useMutation({
+    onError: (error) => {
+      console.error('[summarizeConversation] Mutation error:', error);
+    }
+  });
+  const extractConversationMutation = trpc.kai.extractConversation.useMutation({
+    onError: (error) => {
+      console.error('[extractConversation] Mutation error:', error);
+    }
+  });
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const utils = trpc.useUtils();
@@ -760,18 +814,24 @@ export default function KaiCommand() {
 
   // Handle starting a new chat
   const handleNewChat = async () => {
-    console.log('[KaiCommand] handleNewChat called');
+    console.log('[NewChat] clicked');
+    console.log('[NewChat] userId:', user?.id);
+    console.log('[NewChat] organizationId:', user?.organizationId);
+    console.log('[NewChat] mutation pending:', createConversationMutation.isPending);
     try {
-      console.log('[KaiCommand] Creating new conversation...');
+      console.log('[NewChat] Creating new conversation...');
       const result = await createConversationMutation.mutateAsync({});
-      console.log('[KaiCommand] New conversation created with ID:', result.id);
+      console.log('[NewChat] API response:', result);
+      console.log('[NewChat] New conversation created with ID:', result.id);
       
       // Wait a moment for the mutation to complete
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Refresh conversations list and wait for it to complete
       await utils.kai.getConversations.invalidate();
-      console.log('[KaiCommand] Conversations list invalidated');
+      console.log('[NewChat] Conversations list invalidated');
+      const allConversations = await utils.kai.getConversations.getData();
+      console.log('[NewChat] Total conversations after creation:', allConversations?.length);
       
       // Select the new conversation
       const conversationId = result.id.toString();
@@ -785,10 +845,11 @@ export default function KaiCommand() {
       
       // Show success toast
       toast.success('New conversation created');
-      console.log('[KaiCommand] New conversation setup complete');
+      console.log('[NewChat] SUCCESS: New conversation setup complete');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[KaiCommand] Failed to create conversation:', errorMessage, error);
+      console.error('[NewChat] FAILED:', errorMessage, error);
+      console.error('[NewChat] Full error object:', error);
       toast.error(`Failed to create conversation: ${errorMessage}`);
       
       // Fallback to local-only conversation

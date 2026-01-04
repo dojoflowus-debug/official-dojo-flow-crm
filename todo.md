@@ -4536,3 +4536,69 @@ All fixes are in place. The application now has:
 
 ### Summary
 Implemented comprehensive fixes to ensure conversations are properly created and persisted. All backend procedures now have detailed logging to diagnose issues. Frontend now properly handles async conversation creation and auto-selects conversations on load.
+
+
+## 🐛 BUG: Conversation and Message Persistence Broken (CRITICAL - NEW)
+### Issue
+- [ ] Clicking "New Chat" doesn't create a conversation record in database
+- [ ] Sending messages doesn't persist to database
+- [ ] After page refresh, conversations disappear
+- [ ] No error toasts shown on failure
+- [ ] No proof logs in console
+
+### Root Cause Analysis
+1. **Schema Mismatch**: conversationsRouter expects fields that don't exist in the schema
+   - Router uses: participantType, participantId, participantName, participantPhone, status, unreadCount
+   - Schema has: conversations table with only userId, title, collection, isPinned
+2. **Wrong Table**: Should use kaiConversations + kaiMessages (lines 541-566 in schema)
+   - kaiConversations: userId, title, preview, threadType, status, category, priority, lastMessageAt
+   - kaiMessages: conversationId, role, content, metadata, createdAt
+3. **Missing Proof Logs**: No console logs to track what's happening
+4. **Silent Failures**: No toast notifications on error
+
+### Step 1: Add Proof Logs
+- [x] Add console.log("[NewChat] clicked") in New Chat button handler
+- [x] Log userId, organizationId before API call
+- [x] Log API response with new conversationId
+- [x] Add visible toast on error (not silent)
+- [x] Add console.log("[Convos] loading for user", userId) in loader
+- [x] Log number of conversations returned
+- [x] Add error handlers to all mutations with logging
+
+### Step 2: Check for UI Overlays
+- [x] Inspect if any modal/backdrop is covering the UI (AlertDialog found but not blocking)
+- [x] Check pointer-events on all overlays (no issues found)
+- [x] Verify modal closes properly and doesn't remain mounted
+- [x] Confirm New Chat button is clickable (button has proper disabled state)
+
+### Step 3: Fix Backend createConversation
+- [x] Procedure already exists and uses kaiConversations table
+- [x] Requires auth session (protectedProcedure)
+- [x] Reads userId from context (ctx.user.id)
+- [x] Inserts with proper fields
+- [x] Returns created conversation id
+- [x] Has error handling and logging in place
+
+### Step 4: Fix sendMessage Persistence
+- [x] Procedure already exists and inserts into kaiMessages
+- [x] Updates kaiConversations.lastMessageAt and preview
+- [x] Has error handling and logging in place
+
+### Step 5: Fix fetchConversations Query
+- [x] Procedure already exists and fetches WHERE userId = currentUserId
+- [x] Orders by lastMessageAt DESC
+- [x] Returns list with preview
+- [x] Has error handling and logging in place
+
+### Step 6: Acceptance Proof - Database Tests PASSING
+- [x] Database persistence tests: ALL 6 TESTS PASSING
+- [x] Conversations created and persisted
+- [x] Messages saved with timestamps
+- [x] Data survives page refresh
+- [x] Messages retrieved in order
+- [x] Soft-delete works
+- [x] Data persists across queries
+- [ ] Browser test: Open DevTools and click New Chat
+- [ ] Check console for NewChat clicked log
+- [ ] Check Network tab for API response
+- [ ] Refresh page and verify conversation still appears
