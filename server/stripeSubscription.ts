@@ -10,7 +10,7 @@ import { organizationSubscriptions, aiCreditBalance, subscriptionPlans, creditTo
 import { eq, and } from 'drizzle-orm';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-11-17.clover' as any,
 });
 
 /**
@@ -29,18 +29,22 @@ export async function createSubscriptionCheckout(params: {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  const plan = await db.query.subscriptionPlans.findFirst({
-    where: eq(subscriptionPlans.id, planId),
-  });
+  const planResults = await db.select().from(subscriptionPlans)
+    .where(eq(subscriptionPlans.id, planId))
+    .limit(1);
+  
+  const plan = planResults[0];
 
   if (!plan) {
     throw new Error('Subscription plan not found');
   }
 
   // Check if organization already has a Stripe customer ID
-  const existingSub = await db.query.organizationSubscriptions.findFirst({
-    where: eq(organizationSubscriptions.organizationId, organizationId),
-  });
+  const existingSub = await db.select().from(organizationSubscriptions)
+    .where(eq(organizationSubscriptions.organizationId, organizationId))
+    .limit(1);
+  
+  const existingSubRecord = existingSub[0];
 
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'subscription',
@@ -51,7 +55,7 @@ export async function createSubscriptionCheckout(params: {
           currency: 'usd',
           product_data: {
             name: plan.name,
-            description: plan.description || undefined,
+            description: plan.name || undefined,
           },
           recurring: {
             interval: 'month',
@@ -75,8 +79,8 @@ export async function createSubscriptionCheckout(params: {
   }
 
   // Use existing customer if available
-  if (existingSub?.stripeCustomerId) {
-    sessionParams.customer = existingSub.stripeCustomerId;
+  if (existingSubRecord?.stripeCustomerId) {
+    sessionParams.customer = existingSubRecord.stripeCustomerId;
   }
 
   const session = await stripe.checkout.sessions.create(sessionParams);
@@ -106,18 +110,22 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  const plan = await db.query.subscriptionPlans.findFirst({
-    where: eq(subscriptionPlans.id, pId),
-  });
+  const planResults = await db.select().from(subscriptionPlans)
+    .where(eq(subscriptionPlans.id, pId))
+    .limit(1);
+  
+  const plan = planResults[0];
 
   if (!plan) {
     throw new Error('Plan not found');
   }
 
   // Check if subscription already exists
-  const existing = await db.query.organizationSubscriptions.findFirst({
-    where: eq(organizationSubscriptions.organizationId, orgId),
-  });
+  const existingResults = await db.select().from(organizationSubscriptions)
+    .where(eq(organizationSubscriptions.organizationId, orgId))
+    .limit(1);
+  
+  const existing = existingResults[0];
 
   if (existing) {
     // Update existing subscription
@@ -127,9 +135,9 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
         status: 'active',
         stripeSubscriptionId: subscriptionId,
         stripeCustomerId: customerId,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-        updatedAt: new Date(),
+        currentPeriodStart: new Date().toISOString(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(organizationSubscriptions.organizationId, orgId));
   } else {
@@ -140,10 +148,10 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       status: 'active',
       stripeSubscriptionId: subscriptionId,
       stripeCustomerId: customerId,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      currentPeriodStart: new Date().toISOString(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
   }
 
@@ -160,16 +168,18 @@ async function allocateMonthlyCredits(organizationId: number, credits: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  const existing = await db.query.aiCreditBalance.findFirst({
-    where: eq(aiCreditBalance.organizationId, organizationId),
-  });
+  const existingResults = await db.select().from(aiCreditBalance)
+    .where(eq(aiCreditBalance.organizationId, organizationId))
+    .limit(1);
+  
+  const existing = existingResults[0];
 
   if (existing) {
     // Add credits to existing balance
     await db.update(aiCreditBalance)
       .set({
         balance: existing.balance + credits,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(aiCreditBalance.organizationId, organizationId));
   } else {
@@ -177,8 +187,8 @@ async function allocateMonthlyCredits(organizationId: number, credits: number) {
     await db.insert(aiCreditBalance).values({
       organizationId,
       balance: credits,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
   }
 }
@@ -193,18 +203,22 @@ export async function handleSubscriptionRenewed(subscription: Stripe.Subscriptio
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  const orgSub = await db.query.organizationSubscriptions.findFirst({
-    where: eq(organizationSubscriptions.stripeCustomerId, customerId),
-  });
+  const orgSubResults = await db.select().from(organizationSubscriptions)
+    .where(eq(organizationSubscriptions.stripeCustomerId, customerId))
+    .limit(1);
+  
+  const orgSub = orgSubResults[0];
 
   if (!orgSub) {
     throw new Error('Organization subscription not found');
   }
 
   // Get plan details
-  const plan = await db.query.subscriptionPlans.findFirst({
-    where: eq(subscriptionPlans.id, orgSub.planId),
-  });
+  const planResults = await db.select().from(subscriptionPlans)
+    .where(eq(subscriptionPlans.id, orgSub.planId))
+    .limit(1);
+  
+  const plan = planResults[0];
 
   if (!plan) {
     throw new Error('Plan not found');
@@ -215,9 +229,9 @@ export async function handleSubscriptionRenewed(subscription: Stripe.Subscriptio
   if (subscriptionItem) {
     await db.update(organizationSubscriptions)
       .set({
-        currentPeriodStart: new Date(subscriptionItem.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscriptionItem.current_period_end * 1000),
-        updatedAt: new Date(),
+        currentPeriodStart: new Date(subscriptionItem.current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date(subscriptionItem.current_period_end * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
   }
@@ -238,9 +252,11 @@ export async function handleSubscriptionCanceled(subscription: Stripe.Subscripti
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  const orgSub = await db.query.organizationSubscriptions.findFirst({
-    where: eq(organizationSubscriptions.stripeCustomerId, customerId),
-  });
+  const orgSubResults = await db.select().from(organizationSubscriptions)
+    .where(eq(organizationSubscriptions.stripeCustomerId, customerId))
+    .limit(1);
+  
+  const orgSub = orgSubResults[0];
 
   if (!orgSub) {
     throw new Error('Organization subscription not found');
@@ -250,8 +266,8 @@ export async function handleSubscriptionCanceled(subscription: Stripe.Subscripti
   await db.update(organizationSubscriptions)
     .set({
       status: 'cancelled',
-      cancelledAt: new Date(),
-      updatedAt: new Date(),
+      cancelledAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
 
@@ -268,9 +284,11 @@ export async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  const orgSub = await db.query.organizationSubscriptions.findFirst({
-    where: eq(organizationSubscriptions.stripeCustomerId, customerId),
-  });
+  const orgSubResults = await db.select().from(organizationSubscriptions)
+    .where(eq(organizationSubscriptions.stripeCustomerId, customerId))
+    .limit(1);
+  
+  const orgSub = orgSubResults[0];
 
   if (!orgSub) {
     throw new Error('Organization subscription not found');
@@ -280,7 +298,7 @@ export async function handlePaymentFailed(invoice: Stripe.Invoice) {
   await db.update(organizationSubscriptions)
     .set({
       status: 'past_due',
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
 
@@ -305,9 +323,11 @@ export async function createCreditTopUpCheckout(params: {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  const existingSub = await db.query.organizationSubscriptions.findFirst({
-    where: eq(organizationSubscriptions.organizationId, organizationId),
-  });
+  const existingSub = await db.select().from(organizationSubscriptions)
+    .where(eq(organizationSubscriptions.organizationId, organizationId))
+    .limit(1);
+  
+  const existingSubRecord = existingSub[0];
 
   // Create top-up record
   const topUpResult = await db.insert(creditTopUps).values({
@@ -319,7 +339,7 @@ export async function createCreditTopUpCheckout(params: {
     purchasedBy: userId ?? null,
   });
   
-  const topUpId = Number(topUpResult.insertId);
+  const topUpId = (topUpResult as any).insertId || 0;
 
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
@@ -353,8 +373,8 @@ export async function createCreditTopUpCheckout(params: {
   }
 
   // Use existing customer if available
-  if (existingSub?.stripeCustomerId) {
-    sessionParams.customer = existingSub.stripeCustomerId;
+  if (existingSubRecord?.stripeCustomerId) {
+    sessionParams.customer = existingSubRecord.stripeCustomerId;
   }
 
   const session = await stripe.checkout.sessions.create(sessionParams);
@@ -392,26 +412,29 @@ export async function handleCreditTopUpComplete(session: Stripe.Checkout.Session
   if (!db) throw new Error('Database not available');
 
   // Update top-up status
+  const now = new Date().toISOString();
   await db.update(creditTopUps)
     .set({
       status: 'completed',
-      completedAt: new Date(),
-      updatedAt: new Date(),
+      completedAt: now,
+      updatedAt: now,
     })
     .where(eq(creditTopUps.id, parseInt(topUpId)));
 
   // Add credits to balance
   const creditAmount = parseInt(credits);
-  const existing = await db.query.aiCreditBalance.findFirst({
-    where: eq(aiCreditBalance.organizationId, parseInt(organizationId)),
-  });
+  const existingResults = await db.select().from(aiCreditBalance)
+    .where(eq(aiCreditBalance.organizationId, parseInt(organizationId)))
+    .limit(1);
+  
+  const existing = existingResults[0];
 
   if (existing) {
     await db.update(aiCreditBalance)
       .set({
         balance: existing.balance + creditAmount,
         totalPurchased: existing.totalPurchased + creditAmount,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(aiCreditBalance.organizationId, parseInt(organizationId)));
   } else {

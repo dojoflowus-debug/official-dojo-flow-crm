@@ -5065,3 +5065,93 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Preserve sign-in button functionality
 - [x] Test all interactive elements
 - [x] Verify color contrast and accessibility
+
+
+## 📊 Student Dashboard Page Redesign (New)
+
+### Phase 1: Design Analysis & Setup
+- [x] Review design reference image for all components and layout
+- [x] Identify all metric cards and their data sources
+- [x] Plan database queries needed for metrics
+- [x] Design responsive layout for desktop/tablet/mobile
+
+### Phase 2: Student Metrics Cards
+- [x] Create MetricsCard component for reusable metric display
+- [ ] Implement Total Students card (245)
+- [ ] Implement Active Students card (185)
+- [ ] Implement At Risk Students card (25)
+- [ ] Implement Inactive Students card (25)
+- [ ] Implement Inactive count card (15)
+- [ ] Implement AI Idle card (88)
+- [ ] Implement Mod Granny card (10)
+- [ ] Add trend indicators (up/down arrows with percentages)
+- [ ] Add color-coded status indicators for each metric
+- [ ] Create tRPC procedure to fetch all metrics in one query
+
+### Phase 3: Student List View
+- [ ] Create StudentList component with table/grid layout
+- [ ] Implement search bar for student names/emails
+- [ ] Add filter dropdown for status (Active, At Risk, Inactive, etc.)
+- [ ] Add segments dropdown for filtering by program/cohort
+- [ ] Implement pagination or infinite scroll
+- [ ] Add student row with: avatar, name, status badge, program, enrollment date
+- [ ] Create tRPC procedure for paginated student list with filters
+- [ ] Add loading skeleton for list items
+- [ ] Implement empty state when no students match filters
+
+### Phase 4: Analytics Charts
+- [ ] Create Enrollments & Cancellations bar chart (monthly data)
+- [ ] Create Retention vs. Dropout Rate line chart
+- [ ] Implement chart legend and tooltips
+- [ ] Add date range selector for analytics
+- [ ] Create tRPC procedures to fetch chart data
+- [ ] Use Chart.js or Recharts for visualization
+- [ ] Add export chart as image functionality
+
+### Phase 5: Google Maps Integration
+- [ ] Integrate Google Maps component into right panel
+- [ ] Add student location markers on map
+- [ ] Implement marker clustering for dense areas
+- [ ] Add student profile popup on marker click
+- [ ] Implement location-based filtering
+- [ ] Add search by location feature
+- [ ] Create heatmap visualization for student density
+- [ ] Add map controls (zoom, pan, satellite view)
+
+### Phase 6: Student Detail Panel
+- [ ] Create StudentDetailPanel component (right sidebar)
+- [ ] Display student avatar and basic info
+- [ ] Add status badge and enrollment details
+- [ ] Show program and belt rank information
+- [ ] Display contact information (phone, email)
+- [ ] Add attendance percentage and last contact date
+- [ ] Show payment status and balance
+- [ ] Add action buttons (Message, Call, Log Note, More)
+- [ ] Implement close button and ESC key handler
+- [ ] Create tRPC procedure to fetch full student details
+
+### Phase 7: View Toggles and Features
+- [ ] Add List/Map toggle buttons in header
+- [ ] Implement Segments dropdown for filtering
+- [ ] Add Analytics toggle button
+- [ ] Create Show Attendance Heatmap toggle
+- [ ] Add At Risk Density toggle for map
+- [ ] Implement "Add Student" button with modal
+- [ ] Add bulk actions (select multiple students)
+- [ ] Create export student list as CSV
+
+### Phase 8: Testing & Refinement
+- [ ] Write vitest tests for metrics procedures
+- [ ] Write vitest tests for student list procedures
+- [ ] Write vitest tests for analytics procedures
+- [ ] Test responsive design on mobile/tablet
+- [ ] Verify dark theme consistency
+- [ ] Test map interactions and performance
+- [ ] Test search and filter functionality
+- [ ] Test accessibility (keyboard navigation, screen readers)
+
+### Phase 9: Checkpoint & Delivery
+- [ ] Verify all components working correctly
+- [ ] Check performance with large datasets
+- [ ] Create final checkpoint
+- [ ] Prepare for publish
