@@ -302,6 +302,13 @@
       "when": 1767632044673,
       "tag": "0042_clumsy_hedge_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "5",
+      "when": 1767649795542,
+      "tag": "0043_naive_bromley",
+      "breakpoints": true
     }
   ]
 }

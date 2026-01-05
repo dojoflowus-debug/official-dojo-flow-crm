@@ -1,5 +1,6 @@
-import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 
 /**
  * Setup Wizard Router - 8-Step Configuration
@@ -999,5 +1000,263 @@ export const setupWizardRouter = router({
       team: teamData,
       memberJourney: journeyData[0] || null,
     };
+  }),
+
+  // Onboarding Status Check - Trigger modal for first-time users
+  checkOnboardingStatus: protectedProcedure.query(async ({ ctx }) => {
+    const { getDb } = await import("./db");
+    const { organizations, programs, classes: classesTable, setupProgress } = await import("../drizzle/schema");
+    const { eq, count } = await import("drizzle-orm");
+    
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    if (!ctx.user?.organizationId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    
+    // Get organization
+    const org = await db.select().from(organizations).where(eq(organizations.id, ctx.user.organizationId)).limit(1);
+    if (!org.length) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Organization not found' });
+    }
+    
+    // Check if setup is needed
+    const hasLogo = !!org[0].logoUrl;
+    const programCount = await db.select({ count: count() }).from(programs).where(eq(programs.organizationId, ctx.user.organizationId));
+    const classCount = await db.select({ count: count() }).from(classesTable).where(eq(classesTable.organizationId, ctx.user.organizationId));
+    
+    const needsSetup = !hasLogo || programCount[0].count === 0 || classCount[0].count === 0;
+    
+    // Get setup progress
+    const progress = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
+    const currentProgress = progress[0];
+    
+    // Check if snoozed
+    const now = new Date();
+    const isSnoozed = currentProgress?.snoozeUntil && new Date(currentProgress.snoozeUntil) > now;
+    
+    return {
+      needsSetup,
+      hasLogo,
+      programCount: programCount[0].count,
+      classCount: classCount[0].count,
+      isCompleted: currentProgress?.isCompleted || false,
+      isSnoozed: !!isSnoozed,
+      currentStep: currentProgress?.currentStep || 1,
+    };
+  }),
+
+  // Snooze setup for 24 hours
+  snoozeSetup: protectedProcedure.input(z.object({
+    hours: z.number().min(1).max(168).default(24),
+  })).mutation(async ({ ctx, input }) => {
+    const { getDb } = await import("./db");
+    const { setupProgress } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    if (!ctx.user?.organizationId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    
+    const snoozeUntil = new Date(Date.now() + input.hours * 60 * 60 * 1000);
+    
+    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
+    
+    if (existing.length === 0) {
+      await db.insert(setupProgress).values({
+        organizationId: ctx.user.organizationId,
+        snoozeUntil,
+        currentStep: 1,
+      });
+    } else {
+      await db.update(setupProgress).set({
+        snoozeUntil,
+        updatedAt: new Date(),
+      }).where(eq(setupProgress.organizationId, ctx.user.organizationId));
+    }
+    
+    return { success: true, snoozeUntil };
+  }),
+
+  // Update setup progress
+  updateProgress: protectedProcedure.input(z.object({
+    currentStep: z.number().min(1).max(8),
+    stepsCompleted: z.array(z.number()).optional(),
+  })).mutation(async ({ ctx, input }) => {
+    const { getDb } = await import("./db");
+    const { setupProgress } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    if (!ctx.user?.organizationId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    
+    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
+    
+    const updateData = {
+      currentStep: input.currentStep,
+      stepsCompleted: input.stepsCompleted ? JSON.stringify(input.stepsCompleted) : undefined,
+      updatedAt: new Date(),
+    };
+    
+    if (existing.length === 0) {
+      await db.insert(setupProgress).values({
+        organizationId: ctx.user.organizationId,
+        ...updateData,
+      });
+    } else {
+      await db.update(setupProgress).set(updateData).where(eq(setupProgress.organizationId, ctx.user.organizationId));
+    }
+    
+    return { success: true };
+  }),
+
+  // Complete setup
+  completeSetup: protectedProcedure.mutation(async ({ ctx }) => {
+    const { getDb } = await import("./db");
+    const { setupProgress, dojoSettings } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    if (!ctx.user?.organizationId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    
+    const now = new Date();
+    
+    // Update setup progress
+    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
+    
+    if (existing.length === 0) {
+      await db.insert(setupProgress).values({
+        organizationId: ctx.user.organizationId,
+        isCompleted: 1,
+        completedAt: now,
+        currentStep: 8,
+      });
+    } else {
+      await db.update(setupProgress).set({
+        isCompleted: 1,
+        completedAt: now,
+        currentStep: 8,
+        updatedAt: now,
+      }).where(eq(setupProgress.organizationId, ctx.user.organizationId));
+    }
+    
+    // Mark dojo settings as setup completed
+    const settings = await db.select().from(dojoSettings).limit(1);
+    if (settings.length > 0) {
+      await db.update(dojoSettings).set({
+        setupCompleted: 1,
+        updatedAt: new Date(),
+      });
+    }
+    
+    return { success: true, completedAt: now };
+  }),
+
+  // Upload file for import
+  uploadFile: protectedProcedure.input(z.object({
+    filename: z.string(),
+    mimeType: z.string(),
+    importType: z.enum(['programs', 'classes', 'pricing', 'staff', 'locations']),
+  })).mutation(async ({ ctx, input }) => {
+    const { getDb } = await import("./db");
+    const { setupImports } = await import("../drizzle/schema");
+    
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    if (!ctx.user?.organizationId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    
+    // Create import record
+    const result = await db.insert(setupImports).values({
+      organizationId: ctx.user.organizationId,
+      importType: input.importType,
+      filename: input.filename,
+      mimeType: input.mimeType,
+      status: 'pending',
+      totalRows: 0,
+      processedRows: 0,
+    });
+    
+    return {
+      success: true,
+      importId: result.insertId,
+    };
+  }),
+
+  // Get import history
+  getImportHistory: protectedProcedure.input(z.object({
+    importType: z.enum(['programs', 'classes', 'pricing', 'staff', 'locations']).optional(),
+    limit: z.number().min(1).max(50).default(10),
+  })).query(async ({ ctx, input }) => {
+    const { getDb } = await import("./db");
+    const { setupImports } = await import("../drizzle/schema");
+    const { eq, and, desc, limit } = await import("drizzle-orm");
+    
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    if (!ctx.user?.organizationId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    
+    const where = input.importType 
+      ? and(eq(setupImports.organizationId, ctx.user.organizationId), eq(setupImports.importType, input.importType))
+      : eq(setupImports.organizationId, ctx.user.organizationId);
+    
+    const imports = await db.select().from(setupImports)
+      .where(where)
+      .orderBy(desc(setupImports.createdAt))
+      .limit(input.limit);
+    
+    return imports;
+  }),
+
+  // Undo last import (soft delete)
+  undoLastImport: protectedProcedure.input(z.object({
+    importId: z.number(),
+  })).mutation(async ({ ctx, input }) => {
+    const { getDb } = await import("./db");
+    const { setupImports, setupImportRows } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    if (!ctx.user?.organizationId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    
+    // Verify ownership
+    const importRecord = await db.select().from(setupImports).where(eq(setupImports.id, input.importId)).limit(1);
+    if (!importRecord.length || importRecord[0].organizationId !== ctx.user.organizationId) {
+      throw new TRPCError({ code: 'FORBIDDEN' });
+    }
+    
+    // Mark as cancelled
+    await db.update(setupImports).set({
+      status: 'cancelled',
+      updatedAt: new Date(),
+    }).where(eq(setupImports.id, input.importId));
+    
+    // Mark rows as skipped
+    await db.update(setupImportRows).set({
+      status: 'skipped',
+    }).where(eq(setupImportRows.importId, input.importId));
+    
+    return { success: true };
   }),
 });

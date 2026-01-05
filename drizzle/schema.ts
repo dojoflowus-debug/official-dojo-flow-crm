@@ -1609,6 +1609,84 @@ export const attendance = mysqlTable("attendance", {
 		index("idx_attendance_session").on(table.classSessionId),
 	]);
 
+// Setup Wizard Tables
+export const setupImports = mysqlTable("setup_imports", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	importType: mysqlEnum(['programs','classes','pricing','staff','locations']).notNull(),
+	status: mysqlEnum(['pending','processing','completed','failed','cancelled']).default('pending').notNull(),
+	totalRows: int().default(0).notNull(),
+	processedRows: int().default(0).notNull(),
+	filename: varchar({ length: 500 }).notNull(),
+	mimeType: varchar({ length: 100 }).notNull(),
+	metadata: text(),
+	errorMessage: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_org_import").on(table.organizationId, table.importType),
+	index("idx_import_status").on(table.status),
+]);
+
+export const setupImportRows = mysqlTable("setup_import_rows", {
+	id: int().autoincrement().notNull(),
+	importId: int().notNull(),
+	rowNumber: int().notNull(),
+	rowData: text().notNull(),
+	status: mysqlEnum(['pending','processed','failed','skipped']).default('pending').notNull(),
+	errorMessage: text(),
+	createdEntityId: int(),
+	createdEntityType: mysqlEnum(['program','class','pricing_plan','staff','location']),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_import_row").on(table.importId),
+]);
+
+export const setupImportMappings = mysqlTable("setup_import_mappings", {
+	id: int().autoincrement().notNull(),
+	importId: int().notNull(),
+	columnName: varchar({ length: 255 }).notNull(),
+	targetField: varchar({ length: 255 }).notNull(),
+	dataType: mysqlEnum(['text','number','date','enum','boolean']).default('text').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_mapping_import").on(table.importId),
+]);
+
+export const setupConflicts = mysqlTable("setup_conflicts", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	importId: int(),
+	conflictType: mysqlEnum(['overlapping_class','duplicate_name','invalid_data','belt_rank_mismatch','capacity_invalid']).notNull(),
+	details: text().notNull(),
+	affectedIds: text(),
+	resolvedAt: timestamp({ mode: 'string' }),
+	resolution: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_org_conflict").on(table.organizationId),
+	index("idx_conflict_type").on(table.conflictType),
+]);
+
+export const setupProgress = mysqlTable("setup_progress", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	currentStep: int().default(1).notNull(),
+	stepsCompleted: text(),
+	snoozeUntil: timestamp({ mode: 'string' }),
+	isCompleted: int().default(0).notNull(),
+	completedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_org_progress").on(table.organizationId),
+]);
+
 // Type exports for insert operations
 export type InsertStaffPin = typeof staffPins.$inferInsert;
 export type InsertStudentMessage = typeof studentMessages.$inferInsert;
@@ -1626,6 +1704,18 @@ export type AiCreditTransaction = typeof aiCreditTransactions.$inferSelect;
 export type InsertAiCreditTransaction = typeof aiCreditTransactions.$inferInsert;
 export type CreditTopUp = typeof creditTopUps.$inferSelect;
 export type InsertCreditTopUp = typeof creditTopUps.$inferInsert;
+
+// Setup Wizard Type Exports
+export type SetupImport = typeof setupImports.$inferSelect;
+export type InsertSetupImport = typeof setupImports.$inferInsert;
+export type SetupImportRow = typeof setupImportRows.$inferSelect;
+export type InsertSetupImportRow = typeof setupImportRows.$inferInsert;
+export type SetupImportMapping = typeof setupImportMappings.$inferSelect;
+export type InsertSetupImportMapping = typeof setupImportMappings.$inferInsert;
+export type SetupConflict = typeof setupConflicts.$inferSelect;
+export type InsertSetupConflict = typeof setupConflicts.$inferInsert;
+export type SetupProgress = typeof setupProgress.$inferSelect;
+export type InsertSetupProgress = typeof setupProgress.$inferInsert;
 
 // Conversation and Message Type Exports
 export type Conversation = typeof conversations.$inferSelect;

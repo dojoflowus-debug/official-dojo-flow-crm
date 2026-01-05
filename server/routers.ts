@@ -2195,7 +2195,7 @@ export const appRouter = router({
           status: "active",
           category: "kai",
           priority: "neutral",
-          lastMessageAt: new Date(),
+          lastMessageAt: new Date().toISOString(),
           participantIds: JSON.stringify([ctx.user.id]),
         });
         

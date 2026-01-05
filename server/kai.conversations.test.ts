@@ -24,8 +24,15 @@ describe('Kai Conversations Database', () => {
     if (!db) throw new Error('Database not available');
 
     const [result] = await db.insert(kaiConversations).values({
+      organizationId: 120001,
       userId: testUserId,
       title: 'Test Conversation',
+      threadType: 'kai_direct',
+      status: 'active',
+      category: 'kai',
+      priority: 'neutral',
+      lastMessageAt: new Date().toISOString(),
+      participantIds: JSON.stringify([testUserId]),
     });
 
     expect(result.insertId).toBeDefined();
@@ -52,6 +59,7 @@ describe('Kai Conversations Database', () => {
 
     const [result] = await db.insert(kaiMessages).values({
       conversationId: testConversationId,
+      organizationId: 120001,
       role: 'user',
       content: 'Hello, this is a test message',
     });

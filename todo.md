@@ -4863,3 +4863,205 @@ The Delete All Messages feature allows users to clear all messages from a conver
   - lastMessageAt: new Date()
 - [x] Test conversation creation to verify fix works
 - [x] Verified through browser testing - conversation creation now works without errors
+
+
+## 🐛 BUG: /kai Page Database Errors (2026-01-05)
+
+### Issue
+- [x] Error 1: SELECT query failing on kai_conversations table
+- [x] Error 2: Input validation error - undefined object passed to procedure
+- [x] Error 3-6: INSERT failures on kai_conversations table
+
+### Investigation Tasks
+- [x] Check database schema for kai_conversations table
+- [x] Verify all required columns exist
+- [x] Check tRPC procedure input validation
+- [x] Fix schema mismatches
+- [x] Update migrations if needed
+- [x] Test /kai page after fixes
+
+### Root Causes Found & Fixed
+- [x] Missing `organizationId` column in kai_conversations table - FIXED by adding column via SQL
+- [x] Date type mismatch in createConversation - FIXED by using `.toISOString()`
+- [x] Test file missing organizationId in inserts - FIXED by updating test
+- [x] Database queries now working correctly with all required fields
+
+
+## 🧙 Dojo Setup Wizard - First-Time User Onboarding
+
+### Phase 1: Database Schema
+- [ ] Add onboarding_snooze_until field to organizations table
+- [ ] Create setup_imports table (batchId, organizationId, importType, status, metadata, createdAt)
+- [ ] Create setup_import_rows table (importId, rowData, status, errorMessage)
+- [ ] Create setup_import_mappings table (importId, columnName, targetField, dataType)
+- [ ] Create setup_conflicts table (organizationId, conflictType, details, resolvedAt)
+
+### Phase 2: Backend Procedures
+- [ ] Create setupWizard.checkOnboardingStatus procedure (check logoUrl, programs.count, classes.count)
+- [ ] Create setupWizard.snoozeSetup procedure (set onboarding_snooze_until to 24h from now)
+- [ ] Create setupWizard.updateProgress procedure (track step completion)
+- [ ] Create setupWizard.uploadFile procedure (handle file upload to S3)
+- [ ] Create setupWizard.parseSpreadsheet procedure (xlsx/csv parsing with column detection)
+- [ ] Create setupWizard.validateMapping procedure (validate column mapping)
+- [ ] Create setupWizard.previewImport procedure (show preview tables before import)
+- [ ] Create setupWizard.confirmImport procedure (write to DB, create Programs/Classes/PricingPlans)
+- [ ] Create setupWizard.detectConflicts procedure (check for overlapping classes, duplicate names)
+- [ ] Create setupWizard.undoLastImport procedure (soft delete by batchId)
+- [ ] Create setupWizard.getImportHistory procedure (list previous imports with undo option)
+- [ ] Write vitest tests for all procedures
+
+### Phase 3: File Upload & Parsing
+- [ ] Create file upload utility (handle xlsx, csv, pdf, png, jpg)
+- [ ] Create spreadsheet parser (xlsx/csv → structured rows)
+- [ ] Create column detection algorithm (auto-detect Programs, Classes, Pricing columns)
+- [ ] Create data validation (check required fields, data types)
+- [ ] Create preview generator (show sample rows before import)
+
+### Phase 4: Column Mapping UI
+- [ ] Create ColumnMappingDialog component
+- [ ] Add column selector dropdowns for each detected column
+- [ ] Add data type selector (text, number, date, enum)
+- [ ] Add preview table showing mapped data
+- [ ] Add validation feedback (missing required fields, type mismatches)
+- [ ] Add "Auto-detect" button to re-run detection algorithm
+
+### Phase 5: Multi-Step Wizard Modal
+- [ ] Create SetupWizardModal component with full-screen layout
+- [ ] Add left panel: Kai chat interface (reuse AIChatBox component)
+- [ ] Add right panel: Setup checklist + previews
+- [ ] Add top progress bar with steps: Basics, Branding, Programs, Schedule, Pricing, Staff, Locations, Review & Publish
+- [ ] Implement Step 1: Basics (business name, timezone, estimated students)
+- [ ] Implement Step 2: Branding (logo upload, primary/secondary colors)
+- [ ] Implement Step 3: Programs (add programs or upload spreadsheet)
+- [ ] Implement Step 4: Schedule (add classes or upload spreadsheet)
+- [ ] Implement Step 5: Pricing (add pricing plans or upload spreadsheet)
+- [ ] Implement Step 6: Staff (add instructors)
+- [ ] Implement Step 7: Locations (add dojo locations)
+- [ ] Implement Step 8: Review & Publish (show all data, confirm before publishing)
+- [ ] Add "Skip" button on every step (never trap user)
+- [ ] Add "Estimated setup time: 3–7 minutes" message
+- [ ] Add progress indicator showing completion percentage
+
+### Phase 6: Conflict Detection & Validation
+- [ ] Implement overlapping class detection (same time, same day, same program)
+- [ ] Implement duplicate name detection (programs, classes, instructors)
+- [ ] Implement belt rank validation (check against allowed values)
+- [ ] Implement capacity validation (max class size > 0)
+- [ ] Show "Kai detected conflicts" warnings with resolution options
+- [ ] Add conflict resolution UI (merge, rename, skip)
+
+### Phase 7: Undo & Import Management
+- [ ] Implement "Undo last import" feature (soft delete by batchId)
+- [ ] Show import history with timestamps and row counts
+- [ ] Add ability to view previous imports
+- [ ] Add ability to re-import with different mapping
+- [ ] Implement batch status tracking (pending, processing, completed, failed)
+
+### Phase 8: Integration with Kai Command
+- [ ] Add modal trigger in Kai Command (check onboarding status on mount)
+- [ ] Show trigger modal: "Want me to set up your dojo now?"
+- [ ] Add buttons: "Yes, set up my dojo", "Remind me later", "I'll do it manually"
+- [ ] Add "Finish setup" chip in Kai Command when snoozed
+- [ ] Add "Run setup again" option in Settings
+- [ ] Hide modal forever once setup is complete (unless user clicks "Run setup again")
+
+### Phase 9: Default Templates
+- [ ] Create "Karate starter pack" template (programs, classes, pricing)
+- [ ] Create "Kickboxing starter pack" template
+- [ ] Add "Create default templates" option in wizard
+- [ ] Implement template application (create Programs/Classes/Pricing from template)
+
+### Phase 10: Testing & Validation
+- [ ] Write vitest tests for all backend procedures
+- [ ] Write integration tests for file upload + parsing + import flow
+- [ ] Test column mapping with various spreadsheet formats
+- [ ] Test conflict detection with overlapping classes
+- [ ] Test undo functionality
+- [ ] Test wizard UI on desktop and mobile
+- [ ] Test Kai chat integration
+- [ ] Test all error states and validation messages
+
+### Phase 11: Documentation & Polish
+- [ ] Add inline help text for each wizard step
+- [ ] Create user guide for file format requirements
+- [ ] Add example spreadsheet templates for download
+- [ ] Test end-to-end flow with new account
+- [ ] Verify modal shows/hides correctly based on onboarding state
+- [ ] Save checkpoint with complete wizard
+
+
+## ✅ COMPLETED: Dojo Setup Wizard - First-Time User Onboarding
+
+### Database Schema - COMPLETED
+- [x] Add setupImports table (batchId, organizationId, importType, status, metadata, createdAt)
+- [x] Add setupImportRows table (importId, rowData, status, errorMessage)
+- [x] Add setupImportMappings table (importId, columnName, targetField, dataType)
+- [x] Add setupConflicts table (organizationId, conflictType, details, resolvedAt)
+- [x] Add setupProgress table (organizationId, currentStep, stepsCompleted, snoozeUntil, isCompleted)
+
+### Backend Procedures - COMPLETED
+- [x] Create setupWizard.checkOnboardingStatus procedure (check logoUrl, programs.count, classes.count)
+- [x] Create setupWizard.snoozeSetup procedure (set onboarding_snooze_until to 24h from now)
+- [x] Create setupWizard.updateProgress procedure (track step completion)
+- [x] Create setupWizard.uploadFile procedure (handle file upload to S3)
+- [x] Create setupWizard.getImportHistory procedure (list previous imports with undo option)
+- [x] Create setupWizard.undoLastImport procedure (soft delete by batchId)
+- [x] Create setupWizard.completeSetup procedure (mark setup as complete)
+
+### File Upload & Parsing - COMPLETED
+- [x] Create setupWizardUtils.ts with parseSpreadsheet function
+- [x] Create column detection algorithm (auto-detect Programs, Classes, Pricing columns)
+- [x] Create data validation (check required fields, data types)
+- [x] Create preview generator (show sample rows before import)
+- [x] Create conflict detection (overlapping classes, duplicate names, invalid data)
+
+### Frontend Components - COMPLETED
+- [x] Create SetupWizardModal - main wizard container with progress bar
+- [x] Create SetupWizardSteps - 8-step components (Basics, Branding, Programs, Schedule, Pricing, Staff, Locations, Review)
+- [x] Create ColumnMappingDialog - column mapping UI with preview
+- [x] Create FileDropzone - drag-and-drop file upload component
+- [x] Create ConflictDetectionPanel - conflict display and resolution UI
+- [x] Create ImportHistoryPanel - import history with undo functionality
+- [x] Create SetupWizardTrigger - modal trigger for first-time users
+
+### Integration - IN PROGRESS
+- [ ] Integrate SetupWizardTrigger into Kai Command component
+- [ ] Add "Run setup again" option in Settings
+- [ ] Add "Finish setup" chip in Kai Command when snoozed
+- [ ] Hide modal forever once setup is complete
+
+### Testing & Validation - PENDING
+- [ ] Write vitest tests for setupWizardUtils parsing and validation
+- [ ] Write vitest tests for backend procedures
+- [ ] Write integration tests for file upload + parsing + import flow
+- [ ] Test column mapping with various spreadsheet formats
+- [ ] Test conflict detection with overlapping classes
+- [ ] Test undo functionality
+- [ ] Test wizard UI on desktop and mobile
+- [ ] Test Kai chat integration
+- [ ] Test all error states and validation messages
+
+### Documentation & Polish - PENDING
+- [ ] Add inline help text for each wizard step
+- [ ] Create user guide for file format requirements
+- [ ] Add example spreadsheet templates for download
+- [ ] Test end-to-end flow with new account
+- [ ] Verify modal shows/hides correctly based on onboarding state
+
+
+## 🎨 Website Redesign: Phenomenon Studio Style (2026-01-05)
+
+### Design Implementation
+- [x] Update global CSS theme with dark background (#0a0a0a) and lime green accents (#00ff00)
+- [x] Configure Tailwind colors for dark mode with green highlights
+- [x] Redesign Home page hero section with asymmetric layout
+- [x] Create curved divider components (SVG wave shapes)
+- [x] Update navigation styling with green accent highlights
+- [x] Create statistics display component
+- [x] Create testimonials/quotes section
+- [x] Create client logos grid section
+- [x] Update button styles (primary orange, secondary outlined green)
+- [x] Implement responsive design for mobile
+- [x] Preserve sign-in button functionality
+- [x] Test all interactive elements
+- [x] Verify color contrast and accessibility
