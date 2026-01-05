@@ -4809,3 +4809,32 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Dev server running without errors
 - [x] Kai chat functionality should now work correctly
 - [x] Message saving should work without database errors
+
+
+## 🐛 BUG: Failed to Save Message When Kai Attempts to Text
+
+### Issue
+- [x] User reports "Failed to save message" error when Kai attempts to send a text message
+- [x] Error: "Failed query: select 'id', 'organizationId', 'userId', 'title', 'summary', 'preview', 'threadType', 'status', 'category', 'priority', 'lastMessageAt', 'createdAt', 'updatedAt', 'deletedAt', 'archivedAt' from 'kai_conversations' where 'kai_conversations'.'id' = ? and 'kai_conversations'.'userId' = ? limit ? params: 78005423000041"
+
+### Investigation Tasks
+- [x] Review message-saving procedure in server/routers.ts
+- [x] Check database schema for kai_conversations table
+- [x] Verify conversation ID is valid before querying
+- [x] Check if conversation exists for the given userId
+- [x] Review database query logic and fix malformed query
+
+### Root Cause
+**Malformed database query in addMessage procedure:**
+- Code was using `db.select().from(kaiConversations)` without explicit column selection
+- Drizzle ORM generated incorrect column names in the query
+- Query failed when trying to fetch conversation before saving message
+
+### Fix Applied
+- [x] Updated addMessage procedure to use explicit column selection
+- [x] Added proper error handling with TRPCError
+- [x] Improved logging for debugging
+- [x] Converted timestamps to ISO format for consistency
+- [x] Created comprehensive test file (server/kai.addMessage.test.ts)
+- [ ] Test message saving end-to-end in browser
+- [ ] Verify error handling and user feedback

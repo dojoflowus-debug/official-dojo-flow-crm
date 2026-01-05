@@ -2208,49 +2208,78 @@ export const appRouter = router({
         const { getDb } = await import("./db");
         const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
         const { eq, and } = await import("drizzle-orm");
+        const { TRPCError } = await import("@trpc/server");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
-        console.log('[kai.addMessage] Adding message to conversation:', input.conversationId, 'role:', input.role);
+        console.log('[kai.addMessage] Adding message to conversation:', input.conversationId, 'userId:', ctx.user.id, 'orgId:', ctx.user.organizationId);
         
-        // Verify user owns this conversation
-        const [conversation] = await db.select()
-          .from(kaiConversations)
-          .where(and(
-            eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.userId, ctx.user.id)
-          ))
-          .limit(1);
-        
-        if (!conversation) throw new Error("Conversation not found");
-        
-        // Insert the message
-        const [result] = await db.insert(kaiMessages).values({
-          conversationId: input.conversationId,
-          organizationId: ctx.user.organizationId,
-          role: input.role,
-          content: input.content,
-          metadata: input.metadata,
-        });
-        
-        console.log('[kai.addMessage] Message saved with ID:', result.insertId);
-        
-        // Update conversation with preview and timestamp
-        const preview = input.content.substring(0, 200);
-        await db.update(kaiConversations)
-          .set({
-            preview,
-            lastMessageAt: new Date(),
-            // Auto-update title from first user message if still "New Conversation"
-            ...(conversation.title === "New Conversation" && input.role === "user" 
-              ? { title: input.content.substring(0, 50) + (input.content.length > 50 ? "..." : "") }
-              : {}),
+        try {
+          // Verify user owns this conversation - use select() with proper column selection
+          const conversations = await db.select({
+            id: kaiConversations.id,
+            organizationId: kaiConversations.organizationId,
+            userId: kaiConversations.userId,
+            title: kaiConversations.title,
+            preview: kaiConversations.preview,
+            lastMessageAt: kaiConversations.lastMessageAt,
           })
-          .where(eq(kaiConversations.id, input.conversationId));
-        
-        console.log('[kai.addMessage] Conversation updated');
-        return { id: result.insertId };
+            .from(kaiConversations)
+            .where(and(
+              eq(kaiConversations.id, input.conversationId),
+              eq(kaiConversations.userId, ctx.user.id)
+            ))
+            .limit(1);
+          
+          const conversation = conversations[0];
+          if (!conversation) {
+            console.error('[kai.addMessage] Conversation not found for id:', input.conversationId, 'userId:', ctx.user.id);
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Conversation not found or you do not have access to it',
+            });
+          }
+          
+          console.log('[kai.addMessage] Conversation found:', conversation.id);
+          
+          // Insert the message
+          const [result] = await db.insert(kaiMessages).values({
+            conversationId: input.conversationId,
+            organizationId: ctx.user.organizationId,
+            role: input.role,
+            content: input.content,
+            metadata: input.metadata,
+          });
+          
+          console.log('[kai.addMessage] Message saved with ID:', result.insertId);
+          
+          // Update conversation with preview and timestamp
+          const preview = input.content.substring(0, 200);
+          const updateData: any = {
+            preview,
+            lastMessageAt: new Date().toISOString(),
+          };
+          
+          // Auto-update title from first user message if still "New Conversation"
+          if (conversation.title === "New Conversation" && input.role === "user") {
+            updateData.title = input.content.substring(0, 50) + (input.content.length > 50 ? "..." : "");
+          }
+          
+          await db.update(kaiConversations)
+            .set(updateData)
+            .where(eq(kaiConversations.id, input.conversationId));
+          
+          console.log('[kai.addMessage] Conversation updated');
+          return { id: result.insertId };
+        } catch (error) {
+          console.error('[kai.addMessage] Error:', error);
+          if (error instanceof TRPCError) throw error;
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Failed to save message: ${error instanceof Error ? error.message : String(error)}`,
+          });
+        }
       }),
 
     // Update conversation (title, status, category, priority)
