@@ -2186,6 +2186,7 @@ export const appRouter = router({
         if (!db) throw new Error("Database not available");
         
         const [result] = await db.insert(kaiConversations).values({
+          organizationId: ctx.user.organizationId,
           userId: ctx.user.id,
           title: input?.title || "New Conversation",
           participantIds: JSON.stringify([ctx.user.id]),
@@ -2227,6 +2228,7 @@ export const appRouter = router({
         // Insert the message
         const [result] = await db.insert(kaiMessages).values({
           conversationId: input.conversationId,
+          organizationId: ctx.user.organizationId,
           role: input.role,
           content: input.content,
           metadata: input.metadata,
@@ -3271,6 +3273,101 @@ Return the data as a structured JSON object.`
           conversationId: input.conversationId,
           deletedCount: messagesToDelete.length
         };
+      }),
+
+    // Update conversation summary
+    updateSummary: protectedProcedure
+      .input(z.object({
+        conversationId: z.number(),
+        summary: z.string().max(1200),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Verify user owns this conversation
+        await db.update(kaiConversations)
+          .set({
+            summary: input.summary,
+            updatedAt: new Date(),
+          })
+          .where(and(
+            eq(kaiConversations.id, input.conversationId),
+            eq(kaiConversations.userId, ctx.user.id)
+          ));
+        
+        return { success: true };
+      }),
+
+    // Generate summary using LLM
+    generateSummary: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Get all messages in conversation
+        const conversationMessages = await db
+          .select()
+          .from(kaiMessages)
+          .where(eq(kaiMessages.conversationId, input.conversationId))
+          .orderBy(kaiMessages.createdAt);
+        
+        if (conversationMessages.length === 0) {
+          return { summary: "" };
+        }
+        
+        // Format messages for LLM
+        const formattedMessages = conversationMessages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+        
+        // Generate summary using LLM
+        try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a conversation summarizer. Create a concise summary (under 1200 chars) of the conversation including: goals discussed, key decisions made, and pending follow-ups.",
+              },
+              {
+                role: "user",
+                content: `Please summarize this conversation:\n\n${formattedMessages
+                  .map((m) => `${m.role}: ${m.content}`)
+                  .join("\n\n")}`,
+              },
+            ],
+          });
+          
+          const summary =
+            response.choices?.[0]?.message?.content || "Conversation summary";
+          const truncatedSummary = summary.substring(0, 1200);
+          
+          // Update conversation with summary
+          await db
+            .update(kaiConversations)
+            .set({
+              summary: truncatedSummary,
+              updatedAt: new Date(),
+            })
+            .where(eq(kaiConversations.id, input.conversationId));
+          
+          return { summary: truncatedSummary };
+        } catch (error) {
+          console.error("Failed to generate summary:", error);
+          return { summary: "Unable to generate summary" };
+        }
       }),
   }),
 

@@ -272,14 +272,20 @@ export const classes = mysqlTable("classes", {
 });
 
 export const conversations = mysqlTable("conversations", {
-	id: int().autoincrement().notNull(),
-	userId: int().notNull(),
+	id: int().autoincrement().notNull().primaryKey(),
+	organizationId: int().notNull(),
+	createdByUserId: int().notNull(),
 	title: varchar({ length: 255 }),
-	collection: varchar({ length: 100 }),
-	isPinned: tinyint().default(0),
+	summary: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-});
+	lastMessageAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_conversations_org").on(table.organizationId),
+	index("idx_conversations_user").on(table.createdByUserId),
+	index("idx_conversations_last_message").on(table.lastMessageAt),
+]);
 
 export const creditTopUps = mysqlTable("credit_top_ups", {
 	id: int().autoincrement().notNull(),
@@ -540,8 +546,10 @@ export const floorPlans = mysqlTable("floor_plans", {
 
 export const kaiConversations = mysqlTable("kai_conversations", {
 	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
 	userId: int().notNull(),
 	title: varchar({ length: 500 }).default('New Conversation').notNull(),
+	summary: text(),
 	preview: text(),
 	threadType: mysqlEnum(['kai_direct','group']).default('kai_direct').notNull(),
 	status: mysqlEnum(['active','archived']).default('active').notNull(),
@@ -553,17 +561,28 @@ export const kaiConversations = mysqlTable("kai_conversations", {
 	deletedAt: timestamp({ mode: 'string' }),
 	archivedAt: timestamp({ mode: 'string' }),
 	participantIds: text(),
-});
+},
+(table) => [
+	index("idx_kai_conversations_org").on(table.organizationId),
+	index("idx_kai_conversations_user").on(table.userId),
+	index("idx_kai_conversations_last_message").on(table.lastMessageAt),
+]);
 
 export const kaiMessages = mysqlTable("kai_messages", {
 	id: int().autoincrement().notNull(),
 	conversationId: int().notNull(),
+	organizationId: int().notNull(),
 	role: mysqlEnum(['user','assistant','system']).notNull(),
 	content: text().notNull(),
 	metadata: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	attachments: text(),
-});
+},
+(table) => [
+	index("idx_kai_messages_conversation").on(table.conversationId),
+	index("idx_kai_messages_org_conversation").on(table.organizationId, table.conversationId),
+	index("idx_kai_messages_created").on(table.createdAt),
+]);
 
 export const leadActivities = mysqlTable("lead_activities", {
 	id: int().autoincrement().notNull(),
@@ -714,13 +733,19 @@ export const messageThreads = mysqlTable("message_threads", {
 });
 
 export const messages = mysqlTable("messages", {
-	id: int().autoincrement().notNull(),
+	id: int().autoincrement().notNull().primaryKey(),
 	conversationId: int().notNull(),
-	role: mysqlEnum(['user','assistant']).notNull(),
+	organizationId: int().notNull(),
+	role: mysqlEnum(['user','assistant','system']).notNull(),
 	content: text().notNull(),
-	attachments: json(),
+	metadata: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-});
+},
+(table) => [
+	index("idx_messages_conversation").on(table.conversationId),
+	index("idx_messages_org_conversation").on(table.organizationId, table.conversationId),
+	index("idx_messages_created").on(table.createdAt),
+]);
 
 export const onboardingProgress = mysqlTable("onboarding_progress", {
 	id: int().autoincrement().notNull(),
@@ -1579,10 +1604,10 @@ export const attendance = mysqlTable("attendance", {
 	notes: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 },
-(table) => [
-	index("idx_attendance_student").on(table.studentId),
-	index("idx_attendance_session").on(table.classSessionId),
-]);
+	(table) => [
+		index("idx_attendance_student").on(table.studentId),
+		index("idx_attendance_session").on(table.classSessionId),
+	]);
 
 // Type exports for insert operations
 export type InsertStaffPin = typeof staffPins.$inferInsert;
@@ -1601,3 +1626,9 @@ export type AiCreditTransaction = typeof aiCreditTransactions.$inferSelect;
 export type InsertAiCreditTransaction = typeof aiCreditTransactions.$inferInsert;
 export type CreditTopUp = typeof creditTopUps.$inferSelect;
 export type InsertCreditTopUp = typeof creditTopUps.$inferInsert;
+
+// Conversation and Message Type Exports
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;

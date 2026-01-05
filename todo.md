@@ -4696,3 +4696,91 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Integrate BulkMessageSelector into KaiCommand page (ready for integration)
 - [x] Test end-to-end in browser
 - [x] Save checkpoint
+
+
+## 🗣️ Kai Persistent Conversation Management (NEW)
+
+### Database Schema
+- [ ] Add conversations table with id, organizationId, createdByUserId, title, summary, createdAt, updatedAt, lastMessageAt
+- [ ] Add messages table with id, conversationId, organizationId, role, content, createdAt, metadata
+- [ ] Create indexes on (organizationId, conversationId, createdAt) for messages table
+- [ ] Run pnpm db:push to apply migrations
+
+### Backend Procedures
+- [ ] Implement createConversation() procedure
+- [ ] Implement listConversations() procedure with sorting by lastMessageAt desc
+- [ ] Implement getConversation(conversationId) procedure that includes summary
+- [ ] Implement getMessages(conversationId, limit=40) procedure
+- [ ] Implement addMessage(conversationId, role, content, metadata?) procedure
+- [ ] Implement updateConversationLastMessageAt() helper
+- [ ] Implement summarizeConversation() function (keep under 1200 chars)
+- [ ] Implement auto-title generation from first user message
+
+### Frontend State Management
+- [ ] Update Kai component to use activeConversationId state
+- [ ] Remove ephemeral "New Conversation" placeholder UI
+- [ ] Add useEffect to load conversations list on mount
+- [ ] Add useEffect to load messages when activeConversationId changes
+- [ ] Implement conversation selection handler
+
+### Message Sending Flow
+- [ ] Update send message handler to check if activeConversationId is null
+- [ ] If null, call createConversation() ONCE and set activeConversationId
+- [ ] Call addMessage(user) with user message
+- [ ] Fetch getMessages(limit=30) and conversation.summary
+- [ ] Call AI with system prompt containing app rules + conversation.summary
+- [ ] Include last 30 messages as context in AI request
+- [ ] Save assistant reply with addMessage(assistant)
+- [ ] Update conversations.lastMessageAt
+- [ ] Every 5 messages, call summarizeConversation()
+
+### UI Updates
+- [ ] Update left rail to display real conversations from listConversations()
+- [ ] Add "New Conversation" button that explicitly creates conversation and routes to it
+- [ ] Remove any placeholder conversation entries
+- [ ] Display conversation title in header
+- [ ] Add conversation selection highlighting
+
+### Testing & Validation
+- [ ] Send 10 messages in same conversation: verify no new conversation entries created
+- [ ] Refresh page: verify conversation + history load correctly
+- [ ] Verify Kai references earlier details from conversation (from summary/history)
+- [ ] Verify conversation titles update (auto-title from first user message)
+- [ ] Check Network tab: conversationId should not change on send
+- [ ] Check DB: verify messages are being inserted
+- [ ] Verify getMessages returns expected results
+- [ ] Verify AI request payload contains prior turns
+
+### Deployment
+- [ ] Create checkpoint after all features implemented
+- [ ] Verify all tests pass
+
+
+## IMPLEMENTATION STATUS UPDATE
+
+### Completed
+- [x] Updated kaiConversations schema to include organizationId and summary field
+- [x] Updated kaiMessages schema to include organizationId field
+- [x] Added database indexes for efficient querying
+- [x] Implemented kai.createConversation() with organizationId support
+- [x] Implemented kai.addMessage() with organizationId support
+- [x] Implemented kai.updateSummary() procedure
+- [x] Implemented kai.generateSummary() using LLM
+- [x] Frontend already loads conversations on mount
+- [x] Frontend already loads messages when conversation selected
+- [x] Auto-create conversation on first message send
+- [x] Auto-title from first user message
+
+### Ready for Testing
+- Persistent conversation storage with organizationId
+- Message history loading on page refresh
+- Conversation list sorted by lastMessageAt
+- Auto-titling from first user message
+- Summary generation every 5 messages (ready to integrate)
+
+### Next Steps
+- Integrate summary generation into message sending flow (every 5 messages)
+- Add summary to AI system prompt for context
+- Test persistence across page refreshes
+- Verify no duplicate conversations created
+- Test with 10+ messages in single conversation
