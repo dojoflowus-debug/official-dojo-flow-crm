@@ -2189,6 +2189,13 @@ export const appRouter = router({
           organizationId: ctx.user.organizationId,
           userId: ctx.user.id,
           title: input?.title || "New Conversation",
+          summary: null,
+          preview: null,
+          threadType: "kai_direct",
+          status: "active",
+          category: "kai",
+          priority: "neutral",
+          lastMessageAt: new Date(),
           participantIds: JSON.stringify([ctx.user.id]),
         });
         

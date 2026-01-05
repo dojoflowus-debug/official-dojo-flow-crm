@@ -4838,3 +4838,28 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Created comprehensive test file (server/kai.addMessage.test.ts)
 - [ ] Test message saving end-to-end in browser
 - [ ] Verify error handling and user feedback
+
+
+## 🐛 BUG: Failed to Create Conversation Error
+
+### Issue
+- [x] User reports "Failed to create conversation" error when creating a new chat
+- [x] Error: Failed query insert into 'kai_conversations' with schema mismatch
+- [x] Database insertion failing due to missing or incorrect columns
+
+### Root Cause Found
+- [x] createConversation mutation was only inserting 4 fields (organizationId, userId, title, participantIds)
+- [x] Database schema has many columns with default values that weren't being explicitly set
+- [x] Drizzle was trying to use database defaults for columns that don't have them defined
+
+### Fix Applied
+- [x] Updated createConversation to explicitly set all columns with defaults:
+  - summary: null
+  - preview: null
+  - threadType: "kai_direct"
+  - status: "active"
+  - category: "kai"
+  - priority: "neutral"
+  - lastMessageAt: new Date()
+- [x] Test conversation creation to verify fix works
+- [x] Verified through browser testing - conversation creation now works without errors
