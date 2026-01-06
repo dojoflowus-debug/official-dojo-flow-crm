@@ -330,6 +330,13 @@
       "when": 1767667379405,
       "tag": "0046_strange_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "5",
+      "when": 1767711428543,
+      "tag": "0047_glossy_earthquake",
+      "breakpoints": true
     }
   ]
 }

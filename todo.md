@@ -5346,3 +5346,69 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Kai Command interface fully functional
 - [x] All conversations and operations display correctly
 - [x] Save checkpoint with fixes (version: 4d750f56)
+
+
+## 🧙 Kai Setup Mode - 8-Step Onboarding Wizard (NEW)
+
+### Database Schema
+- [x] Add onboarding fields to organizations table:
+  - [x] onboardingStatus: enum (not_started | in_progress | completed | skipped)
+  - [x] onboardingStep: integer (1-8)
+  - [x] onboardingChecklist: JSON (tracks completed steps)
+  - [x] onboardingCompletedAt: datetime nullable
+- [x] Run migrations
+
+### Backend tRPC Procedures
+- [x] Create setupModeRouter with procedures:
+  - [x] getStatus (returns current status, step, checklist)
+  - [x] saveStep (saves data for current step, auto-increments)
+  - [x] skipSetup (sets status to skipped, allows dashboard access)
+  - [x] completeSetup (sets status to completed, marks all steps done)
+  - [x] resumeSetup (returns last step for resume functionality)
+- [x] Write vitest tests for all procedures
+
+### Frontend Setup Wizard Component
+- [x] Create KaiSetupMode component at /kai-setup route
+- [x] Implement 8-step flow:
+  - [x] Step 1: School Identity (name, logo, phone, email, address, timezone)
+  - [x] Step 2: Programs (select programs, age groups)
+  - [x] Step 3: Class Schedule (add classes, CSV/Excel upload, handwritten schedule photos)
+  - [x] Step 4: Pricing & Billing (plans, trial offer, enrollment fee, billing rules)
+  - [x] Step 5: Staff (add staff members + roles)
+  - [x] Step 6: Students Import (CSV import or skip)
+  - [x] Step 7: Communication (sender phone/email, messaging defaults)
+  - [x] Step 8: Review & Launch (summary + "Activate School" button)
+- [x] Add progress indicator (Step X of 8)
+- [x] Add Back / Save & Continue / Skip buttons
+- [x] Implement autosave for each step
+- [x] Add resume functionality after page refresh
+- [x] Style with ADHD-friendly design (clean, minimal, one step at a time)
+
+### Routing Guard
+- [x] Create ProtectedSetupRoute component to guard dashboard routes
+- [x] If onboardingStatus = not_started or in_progress → redirect to /kai-setup
+- [x] If onboardingStatus = completed → allow all routes
+- [x] If onboardingStatus = skipped → allow all routes + show banner reminder
+- [ ] Apply guard to /dashboard, /kai-command, /settings routes
+
+### Setup Reminder Banner
+- [x] Create SetupReminderBanner component
+- [x] Show persistent banner when status = skipped
+- [x] Display "Finish setup" message with resume button
+- [x] Allow dismiss (temporarily)
+- [ ] Add to header/top of dashboard
+
+### Integration with School Creation
+- [ ] Update school creation flow to initialize onboarding
+- [ ] Set onboardingStatus = not_started on new school creation
+- [ ] Redirect to /kai-setup immediately after school creation
+- [ ] Prevent access to dashboards until setup completed or skipped
+
+### Testing & Delivery
+- [x] Write comprehensive vitest tests
+- [ ] Test complete 8-step onboarding flow
+- [ ] Test routing guards block dashboard access
+- [ ] Test skip functionality and banner display
+- [ ] Test resume functionality after page refresh
+- [ ] Test all form validations and data persistence
+- [ ] Save checkpoint

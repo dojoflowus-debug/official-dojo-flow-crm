@@ -829,6 +829,10 @@ export const organizations = mysqlTable("organizations", {
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 	lastActivity: timestamp({ mode: 'string' }),
 	settings: text(),
+	onboardingStatus: mysqlEnum(['not_started','in_progress','completed','skipped']).default('not_started').notNull(),
+	onboardingStep: int().default(1).notNull(),
+	onboardingChecklist: json().default(sql`(JSON_OBJECT())`).notNull(),
+	onboardingCompletedAt: timestamp({ mode: 'string' }),
 });
 
 export const ownerProfiles = mysqlTable("owner_profiles", {

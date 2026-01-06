@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `organizations` ADD COLUMN `onboardingStatus` enum('not_started','in_progress','completed','skipped') DEFAULT 'not_started' NOT NULL;\nALTER TABLE `organizations` ADD COLUMN `onboardingStep` int DEFAULT 1 NOT NULL;\nALTER TABLE `organizations` ADD COLUMN `onboardingChecklist` json DEFAULT (JSON_OBJECT()) NOT NULL;\nALTER TABLE `organizations` ADD COLUMN `onboardingCompletedAt` timestamp;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE `organizations` ADD COLUMN `onboardingStatus` enum('not_started','in_progress','completed','skipped') DEFAULT 'not_started' NOT NULL;\nALTER TABLE `organizations` ADD COLUMN `onboardingStep` int DEFAULT 1 NOT NULL;\nALTER TABLE `organizations` ADD COLUMN `onboardingChecklist` json DEFAULT (JSON_OBJECT()) NOT NULL;\nALTER TABLE `organizations` ADD COLUMN `onboardingCompletedAt` timestamp;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 3770 (HY000) at line 3: Default value expression of column 'onboardingChecklist' contains a disallowed function: `JSON_OBJECT`."
+  ]
+}

@@ -212,7 +212,7 @@ ${item.alertType === "out_of_stock"
 
   for (const email of emails) {
     await sendEmail({
-      to: email,
+      to: { email },
       subject,
       html: message,
     });

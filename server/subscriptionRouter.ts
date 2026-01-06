@@ -10,13 +10,13 @@ import {
   cancelOrganizationSubscription,
   getCreditBalance,
   initializeCreditBalance,
-  deductCredits,
   addCredits,
   getCreditTransactions,
   createCreditTopUp,
   completeCreditTopUp,
   resetMonthlyCredits
 } from "./subscriptionDb";
+import { deductCredits } from "./creditConsumption";
 import { createSubscriptionCheckout } from "./stripeSubscription";
 
 export const subscriptionRouter = router({
@@ -173,11 +173,11 @@ export const subscriptionRouter = router({
       if (!result.success) {
         throw new TRPCError({ 
           code: "PRECONDITION_FAILED", 
-          message: "Insufficient credits. Please purchase more credits or upgrade your plan." 
+          message: result.error || "Insufficient credits. Please purchase more credits or upgrade your plan." 
         });
       }
 
-      return { success: true };
+      return { success: true, newBalance: result.newBalance };
     }),
 
   /**
