@@ -2147,39 +2147,59 @@ export const appRouter = router({
 
     // Get messages for a specific conversation
     getMessages: protectedProcedure
-      .input(z.object({ conversationId: z.number() }))
+      .input(z.object({ conversationId: z.number().positive() }))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
-        const { eq, and } = await import("drizzle-orm");
+        const { eq, and, desc, isNull } = await import("drizzle-orm");
+        const { TRPCError } = await import("@trpc/server");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
-        // Verify user owns this conversation
-        const [conversation] = await db.select()
-          .from(kaiConversations)
-          .where(and(
-            eq(kaiConversations.id, input.conversationId),
-            eq(kaiConversations.userId, ctx.user.id)
-          ))
-          .limit(1);
-        
-        if (!conversation) throw new Error("Conversation not found");
-        
-        const messages = await db.select()
-          .from(kaiMessages)
-          .where(eq(kaiMessages.conversationId, input.conversationId))
-          .orderBy(kaiMessages.createdAt);
-        
-        return messages;
+        try {
+          // Verify user owns this conversation
+          const [conversation] = await db.select()
+            .from(kaiConversations)
+            .where(and(
+              eq(kaiConversations.id, input.conversationId),
+              eq(kaiConversations.userId, ctx.user.id)
+            ))
+            .limit(1);
+          
+          if (!conversation) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Conversation not found',
+            });
+          }
+          
+          // Select all columns from kaiMessages (Drizzle will handle schema mapping)
+          // CRITICAL: Filter out deleted messages
+          const messages = await db.select()
+            .from(kaiMessages)
+            .where(and(
+              eq(kaiMessages.conversationId, input.conversationId),
+              isNull(kaiMessages.deletedAt)
+            ))
+            .orderBy(kaiMessages.createdAt);
+          
+          return messages;
+        } catch (error) {
+          console.error('[kai.getMessages] Error:', error);
+          if (error instanceof TRPCError) throw error;
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Failed to fetch messages: ${error instanceof Error ? error.message : String(error)}`,
+          });
+        }
       }),
 
     // Create a new conversation
     createConversation: protectedProcedure
       .input(z.object({
         title: z.string().optional(),
-      }).optional())
+      }).nullish())
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { kaiConversations } = await import("../drizzle/schema");
@@ -2929,10 +2949,16 @@ Return the data as a structured JSON object.`
           content: z.string(),
         })).optional(),
         organizationId: z.number().optional(), // For credit consumption
-      }))
+      }).strict())
       .mutation(async ({ input }) => {
+        // Validate input is not undefined
+        if (!input) {
+          throw new Error('Input is required for kai.chat mutation');
+        }
+        
         const { message, avatarName = 'Kai', conversationHistory = [], organizationId } = input;
         
+        console.log('[Kai Chat] Input received:', { message, avatarName, hasHistory: conversationHistory.length > 0, organizationId });
         console.log('[Kai Chat] User message:', message);
         
         // Check credit balance before processing (if organizationId provided)
@@ -3256,19 +3282,24 @@ Return the data as a structured JSON object.`
           throw new Error("Conversation not found or deleted");
         }
         
-        // Delete all messages in the conversation
-        await db.delete(kaiMessages)
-          .where(eq(kaiMessages.conversationId, input.conversationId));
+        // Soft-delete all messages in the conversation (set deletedAt timestamp)
+        const now = new Date();
+        const result = await db.update(kaiMessages)
+          .set({ deletedAt: now })
+          .where(and(
+            eq(kaiMessages.conversationId, input.conversationId),
+            isNull(kaiMessages.deletedAt)
+          ));
         
         // Update conversation to reset preview and last message time
         await db.update(kaiConversations)
           .set({ 
             preview: null,
-            lastMessageAt: new Date()
+            lastMessageAt: now
           })
           .where(eq(kaiConversations.id, input.conversationId));
         
-        return { success: true, conversationId: input.conversationId };
+        return { success: true, conversationId: input.conversationId, deletedCount: result.rowsAffected };
       }),
 
     // Bulk delete specific messages from a conversation
@@ -3299,29 +3330,36 @@ Return the data as a structured JSON object.`
           throw new Error("Conversation not found or deleted");
         }
         
-        // Verify all messages belong to this conversation
+        // Verify all messages belong to this conversation and are not deleted
         const messagesToDelete = await db.select()
           .from(kaiMessages)
           .where(and(
             eq(kaiMessages.conversationId, input.conversationId),
-            inArray(kaiMessages.id, input.messageIds)
+            inArray(kaiMessages.id, input.messageIds),
+            isNull(kaiMessages.deletedAt)
           ));
         
         if (messagesToDelete.length === 0) {
           throw new Error("No messages found to delete");
         }
         
-        // Delete the selected messages
-        await db.delete(kaiMessages)
+        // Soft-delete the selected messages
+        const now = new Date();
+        await db.update(kaiMessages)
+          .set({ deletedAt: now })
           .where(and(
             eq(kaiMessages.conversationId, input.conversationId),
-            inArray(kaiMessages.id, input.messageIds)
+            inArray(kaiMessages.id, input.messageIds),
+            isNull(kaiMessages.deletedAt)
           ));
         
-        // Get the remaining messages to update preview
+        // Get the remaining non-deleted messages to update preview
         const remainingMessages = await db.select()
           .from(kaiMessages)
-          .where(eq(kaiMessages.conversationId, input.conversationId))
+          .where(and(
+            eq(kaiMessages.conversationId, input.conversationId),
+            isNull(kaiMessages.deletedAt)
+          ))
           .orderBy(kaiMessages.createdAt);
         
         // Update conversation preview with the last remaining message

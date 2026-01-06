@@ -1,0 +1,1 @@
+ALTER TABLE `kai_messages` ADD `deletedAt` timestamp;

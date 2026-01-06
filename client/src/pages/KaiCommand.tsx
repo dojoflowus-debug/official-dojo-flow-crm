@@ -452,7 +452,7 @@ export default function KaiCommand() {
     }
   });
   const messagesQuery = trpc.kai.getMessages.useQuery(
-    { conversationId: selectedConversationId ? parseInt(selectedConversationId) : 0 },
+    { conversationId: selectedConversationId && !selectedConversationId.startsWith('new-') ? parseInt(selectedConversationId) : 0 },
     { enabled: !!selectedConversationId && !selectedConversationId.startsWith('new-') }
   );
   const createConversationMutation = trpc.kai.createConversation.useMutation({
@@ -1820,7 +1820,7 @@ export default function KaiCommand() {
     setAttachments([]); // Clear attachments after sending
     setIsLoading(true);
 
-    // Auto-create conversation if we're in a new conversation
+        // Auto-create conversation if we're in a new conversation
     let conversationId = selectedConversationId && !selectedConversationId.startsWith('new-') 
       ? parseInt(selectedConversationId) 
       : null;

@@ -576,6 +576,7 @@ export const kaiMessages = mysqlTable("kai_messages", {
 	metadata: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	attachments: text(),
+	deletedAt: timestamp({ mode: 'string' }),
 },
 (table) => [
 	index("idx_kai_messages_conversation").on(table.conversationId),
