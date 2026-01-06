@@ -287,7 +287,7 @@ export default function PublicLanding() {
       {/* Hero Section - Cinematic Kai Command Module */}
       <section 
         ref={heroRef}
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        className="relative h-screen flex items-center justify-center overflow-hidden"
       >
         {/* Cinematic Hero Video Background */}
         <video
@@ -314,9 +314,9 @@ export default function PublicLanding() {
         {/* Additional vignette for depth */}
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/30 to-black/70 pointer-events-none" />
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 sm:py-16 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-0 h-full flex items-center justify-center">
           {/* Kai Command Center */}
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl mx-auto w-full">
             {/* Kai Emblem/Orb - Central Focus */}
             <div className="flex justify-center mb-8 sm:mb-12 md:mb-16 animate-[fadeSlideUp_0.7s_ease-out_0.2s_forwards]">
               <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 flex items-center justify-center">

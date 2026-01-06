@@ -5430,3 +5430,36 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [ ] Test hero responsiveness across devices
 - [ ] Verify visual continuity with Kai Command aesthetic
 - [ ] Ensure no content visible below hero on initial load - Bottom gradient fade implemented
+
+
+## 🎨 HERO BANNER FULL REBUILD (2026-01-06) ✅ COMPLETE
+
+### Core Requirements
+- [x] Remove ALL green elements from hero
+- [x] Remove ALL card layouts from hero
+- [x] Remove ALL multi-option boxes from hero
+- [x] Create full-screen (100vh+) hero container
+- [x] Design dark cinematic background (dojo/energy/motion)
+- [x] Implement Kai visual focus (emblem/orb as central element)
+- [x] Add DojoFlow logo to hero
+- [x] Write powerful primary headline ("This is your command center" or similar)
+- [x] Add supporting line introducing Kai
+- [x] Implement primary CTA ("Enter Kai" or "Talk to Kai")
+- [x] Add secondary CTA (optional, subtle)
+
+### Design & Styling
+- [x] Apply DojoFlow red as primary accent
+- [x] Apply steel/muted amber as secondary colors
+- [x] Ensure white + soft gray text only
+- [x] Add subtle ambient motion/animations
+- [x] Test responsive design (mobile and desktop)
+
+### Acceptance Criteria
+- [x] Hero fills entire screen (100vh+)
+- [x] Current hero layout is completely gone
+- [x] No green exists in hero
+- [x] No cards exist in hero
+- [x] Kai is the visual focus
+- [x] Feels calm, powerful, and premium
+- [x] Clearly leads into Kai onboarding
+- [x] Establishes DojoFlow as operating system for martial arts schools
