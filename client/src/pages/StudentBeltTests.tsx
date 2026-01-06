@@ -18,6 +18,7 @@ import {
   Lock
 } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
+import { useNavigate } from "react-router-dom";
 
 // Belt colors for visual display
 const beltColors: Record<string, { bg: string; border: string; text: string }> = {
@@ -392,7 +393,7 @@ export default function StudentBeltTests() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 pb-20">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 

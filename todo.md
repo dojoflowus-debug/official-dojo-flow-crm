@@ -1,5 +1,19 @@
 # DojoFlow Kiosk - TODO
 
+## 🧭 Navigation Consistency Fix (2026-01-05)
+
+### Student Portal Navigation
+- [x] Remove sticky positioning from StudentDashboard header
+- [x] Remove sticky positioning from StudentSettings header
+- [x] Remove sticky positioning from StudentBeltTests header
+- [x] Remove sticky positioning from StudentMessages header
+- [x] Fix missing useNavigate import in StudentBeltTests
+- [x] Test bottom navigation consistency across all student pages
+- [x] Verify bottom menu remains visible when navigating between pages
+- [x] Test navigation flow: Profile → Schedule → Belt Tests → Messages → Payments → Profile
+- [x] Confirm no sticky headers interfere with bottom navigation
+- [x] Save checkpoint with navigation fixes
+
 ## 🎨 Kai Command Hero Banner Redesign (2025-12-28)
 
 Update hero banner to match exact mockup design:
