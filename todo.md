@@ -5679,3 +5679,23 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Enhanced visibility with improved shadow and background opacity
 - [x] Test bottom menu bar visibility and functionality
 - [x] Verify responsive design for kiosk displays
+
+
+## 🔧 Fix: Kiosk Page 404 Error (2026-01-06)
+
+### Issue
+- [x] Clicking "Kiosk" in bottom navigation returned 404 error
+- [x] Route was missing or navigation link was incorrect
+
+### Root Cause
+- [x] BottomNavLayout.tsx was linking to `/kiosk-dashboard` instead of `/kiosk`
+- [x] The `/kiosk` route exists in App.tsx and renders KioskDashboard correctly
+
+### Solution
+- [x] Fixed navigation link in BottomNavLayout.tsx line 46
+- [x] Changed `href: '/kiosk-dashboard'` to `href: '/kiosk'`
+- [x] Verified dev server is running and changes are hot-reloaded
+- [x] Confirmed KioskDashboard component is properly wired to /kiosk route
+
+### Status
+✅ **RESOLVED** - Kiosk navigation now works correctly
