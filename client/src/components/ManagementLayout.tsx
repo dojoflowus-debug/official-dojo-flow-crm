@@ -183,19 +183,19 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
         {/* Right: Actions + Profile */}
         <div className="flex items-center gap-3">
           {/* Ask Kai Button */}
-          <button onClick={() => setKaiOverlayOpen(true)}>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className={cn(
-                "gap-2 border-red-500/30 hover:border-red-500/50",
-                isDark
-                  ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                  : "bg-red-50 text-red-600 hover:bg-red-100"
-              )}
-            >
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Ask Kai</span>
+          <Button 
+            onClick={() => setKaiOverlayOpen(true)}
+            variant="outline" 
+            size="sm"
+            className={cn(
+              "gap-2 border-red-500/30 hover:border-red-500/50",
+              isDark
+                ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                : "bg-red-50 text-red-600 hover:bg-red-100"
+            )}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Ask Kai</span>
               <kbd className={cn(
                 "hidden md:inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium",
                 isDark
@@ -204,8 +204,7 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
               )}>
                 <Command className="h-3 w-3" />K
               </kbd>
-            </Button>
-          </button>
+          </Button>
           
           {/* Credits */}
           <Link to="/billing/credits">

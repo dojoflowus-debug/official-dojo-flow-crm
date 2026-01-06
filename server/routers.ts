@@ -1062,8 +1062,8 @@ export const appRouter = router({
       const db = await getDb();
       if (!db) throw new Error('Database not available');
       
-      // Get all lead sources ordered by displayOrder
-      const sources = await db.select().from(leadSources).orderBy(leadSources.displayOrder);
+      // Get all lead sources ordered by creation date
+      const sources = await db.select().from(leadSources).orderBy(leadSources.createdAt);
       return sources;
     }),
     
