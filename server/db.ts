@@ -1425,3 +1425,400 @@ export async function getStudentById(studentId: number) {
     return null;
   }
 }
+
+
+/**
+ * KIOSK DESIGNER DATABASE HELPERS
+ */
+
+/**
+ * Get all kiosk devices for an organization
+ */
+export async function getKioskDevices(organizationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    const devices = await db.select()
+      .from(schema.kioskDevices)
+      .where(eq(schema.kioskDevices.organizationId, organizationId));
+    
+    return devices;
+  } catch (error) {
+    console.error("Error getting kiosk devices:", error);
+    return [];
+  }
+}
+
+/**
+ * Get a single kiosk device by ID
+ */
+export async function getKioskDeviceById(deviceId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const [device] = await db.select()
+      .from(schema.kioskDevices)
+      .where(eq(schema.kioskDevices.id, deviceId))
+      .limit(1);
+    
+    return device || null;
+  } catch (error) {
+    console.error("Error getting kiosk device:", error);
+    return null;
+  }
+}
+
+/**
+ * Create a new kiosk device
+ */
+export async function createKioskDevice(data: schema.InsertKioskDevice) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const result = await db.insert(schema.kioskDevices).values(data);
+    const deviceId = (result as any).insertId;
+    return await getKioskDeviceById(deviceId);
+  } catch (error) {
+    console.error("Error creating kiosk device:", error);
+    return null;
+  }
+}
+
+/**
+ * Update kiosk device status
+ */
+export async function updateKioskDeviceStatus(deviceId: number, status: string, onlineStatus: number = 0) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  try {
+    await db.update(schema.kioskDevices)
+      .set({ 
+        status: status as any,
+        onlineStatus,
+        lastSyncAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(schema.kioskDevices.id, deviceId));
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating kiosk device status:", error);
+    return false;
+  }
+}
+
+/**
+ * Get all kiosk themes for an organization
+ */
+export async function getKioskThemes(organizationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    const themes = await db.select()
+      .from(schema.kioskThemes)
+      .where(eq(schema.kioskThemes.organizationId, organizationId))
+      .orderBy(desc(schema.kioskThemes.isDefault), desc(schema.kioskThemes.updatedAt));
+    
+    return themes;
+  } catch (error) {
+    console.error("Error getting kiosk themes:", error);
+    return [];
+  }
+}
+
+/**
+ * Get a single kiosk theme by ID with its assets
+ */
+export async function getKioskThemeById(themeId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const [theme] = await db.select()
+      .from(schema.kioskThemes)
+      .where(eq(schema.kioskThemes.id, themeId))
+      .limit(1);
+    
+    if (!theme) return null;
+    
+    const assets = await db.select()
+      .from(schema.kioskThemeAssets)
+      .where(eq(schema.kioskThemeAssets.themeId, themeId));
+    
+    return { ...theme, assets };
+  } catch (error) {
+    console.error("Error getting kiosk theme:", error);
+    return null;
+  }
+}
+
+/**
+ * Create a new kiosk theme
+ */
+export async function createKioskTheme(data: schema.InsertKioskTheme) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const result = await db.insert(schema.kioskThemes).values(data);
+    const themeId = (result as any).insertId;
+    return await getKioskThemeById(themeId);
+  } catch (error) {
+    console.error("Error creating kiosk theme:", error);
+    return null;
+  }
+}
+
+/**
+ * Update kiosk theme
+ */
+export async function updateKioskTheme(themeId: number, data: Partial<schema.InsertKioskTheme>) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  try {
+    await db.update(schema.kioskThemes)
+      .set({ ...data, updatedAt: new Date().toISOString() })
+      .where(eq(schema.kioskThemes.id, themeId));
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating kiosk theme:", error);
+    return false;
+  }
+}
+
+/**
+ * Delete a kiosk theme
+ */
+export async function deleteKioskTheme(themeId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  try {
+    // Delete assets first
+    await db.delete(schema.kioskThemeAssets)
+      .where(eq(schema.kioskThemeAssets.themeId, themeId));
+    
+    // Delete theme
+    await db.delete(schema.kioskThemes)
+      .where(eq(schema.kioskThemes.id, themeId));
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting kiosk theme:", error);
+    return false;
+  }
+}
+
+/**
+ * Set a theme as active (only one active per org)
+ */
+export async function setActiveKioskTheme(organizationId: number, themeId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  try {
+    // Deactivate all themes for this org
+    await db.update(schema.kioskThemes)
+      .set({ isActive: 0 })
+      .where(eq(schema.kioskThemes.organizationId, organizationId));
+    
+    // Activate the selected theme
+    await db.update(schema.kioskThemes)
+      .set({ isActive: 1, updatedAt: new Date().toISOString() })
+      .where(eq(schema.kioskThemes.id, themeId));
+    
+    return true;
+  } catch (error) {
+    console.error("Error setting active kiosk theme:", error);
+    return false;
+  }
+}
+
+/**
+ * Add or update theme assets
+ */
+export async function upsertKioskThemeAsset(data: schema.InsertKioskThemeAsset) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    // Check if asset already exists
+    const [existing] = await db.select()
+      .from(schema.kioskThemeAssets)
+      .where(
+        eq(schema.kioskThemeAssets.themeId, data.themeId!) &&
+        eq(schema.kioskThemeAssets.assetType, data.assetType!)
+      )
+      .limit(1);
+    
+    if (existing) {
+      // Update existing asset
+      await db.update(schema.kioskThemeAssets)
+        .set({ ...data, updatedAt: new Date().toISOString() })
+        .where(eq(schema.kioskThemeAssets.id, existing.id));
+      
+      return existing.id;
+    } else {
+      // Create new asset
+      const result = await db.insert(schema.kioskThemeAssets).values(data);
+      return (result as any).insertId;
+    }
+  } catch (error) {
+    console.error("Error upserting kiosk theme asset:", error);
+    return null;
+  }
+}
+
+/**
+ * Get active theme for a device
+ */
+export async function getActiveThemeForDevice(deviceId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const [assignment] = await db.select()
+      .from(schema.kioskAssignments)
+      .where(eq(schema.kioskAssignments.deviceId, deviceId))
+      .orderBy(desc(schema.kioskAssignments.assignedAt))
+      .limit(1);
+    
+    if (!assignment) return null;
+    
+    return await getKioskThemeById(assignment.themeId);
+  } catch (error) {
+    console.error("Error getting active theme for device:", error);
+    return null;
+  }
+}
+
+/**
+ * Create a kiosk deployment
+ */
+export async function createKioskDeployment(data: schema.InsertKioskDeployment) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const result = await db.insert(schema.kioskDeployments).values(data);
+    const deploymentId = (result as any).insertId;
+    
+    const [deployment] = await db.select()
+      .from(schema.kioskDeployments)
+      .where(eq(schema.kioskDeployments.id, deploymentId))
+      .limit(1);
+    
+    return deployment || null;
+  } catch (error) {
+    console.error("Error creating kiosk deployment:", error);
+    return null;
+  }
+}
+
+/**
+ * Get recent deployments for a device
+ */
+export async function getDeviceDeployments(deviceId: number, limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    const deployments = await db.select()
+      .from(schema.kioskDeployments)
+      .where(eq(schema.kioskDeployments.deviceId, deviceId))
+      .orderBy(desc(schema.kioskDeployments.createdAt))
+      .limit(limit);
+    
+    return deployments;
+  } catch (error) {
+    console.error("Error getting device deployments:", error);
+    return [];
+  }
+}
+
+/**
+ * Create a kiosk schedule
+ */
+export async function createKioskSchedule(data: schema.InsertKioskSchedule) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const result = await db.insert(schema.kioskSchedules).values(data);
+    const scheduleId = (result as any).insertId;
+    
+    const [schedule] = await db.select()
+      .from(schema.kioskSchedules)
+      .where(eq(schema.kioskSchedules.id, scheduleId))
+      .limit(1);
+    
+    return schedule || null;
+  } catch (error) {
+    console.error("Error creating kiosk schedule:", error);
+    return null;
+  }
+}
+
+/**
+ * Get schedules for a theme
+ */
+export async function getThemeSchedules(themeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    const schedules = await db.select()
+      .from(schema.kioskSchedules)
+      .where(eq(schema.kioskSchedules.themeId, themeId))
+      .orderBy(desc(schema.kioskSchedules.startDate));
+    
+    return schedules;
+  } catch (error) {
+    console.error("Error getting theme schedules:", error);
+    return [];
+  }
+}
+
+/**
+ * Update kiosk schedule
+ */
+export async function updateKioskSchedule(scheduleId: number, data: Partial<schema.InsertKioskSchedule>) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  try {
+    await db.update(schema.kioskSchedules)
+      .set({ ...data, updatedAt: new Date().toISOString() })
+      .where(eq(schema.kioskSchedules.id, scheduleId));
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating kiosk schedule:", error);
+    return false;
+  }
+}
+
+/**
+ * Delete kiosk schedule
+ */
+export async function deleteKioskSchedule(scheduleId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  try {
+    await db.delete(schema.kioskSchedules)
+      .where(eq(schema.kioskSchedules.id, scheduleId));
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting kiosk schedule:", error);
+    return false;
+  }
+}

@@ -5587,3 +5587,71 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [ ] Optimize performance (lazy load, pagination)
 - [ ] Cross-browser testing
 - [ ] Save checkpoint
+
+
+## 🎨 Kiosk Designer & Deployment Page (NEW FEATURE)
+
+### Database Schema
+- [x] Create kiosk_devices table (id, organization_id, location, device_name, status, last_sync, online_status)
+- [x] Create kiosk_themes table (id, organization_id, name, description, is_active, created_at, updated_at)
+- [x] Create kiosk_theme_assets table (id, theme_id, asset_type, asset_url, asset_data)
+- [x] Create kiosk_assignments table (id, device_id, theme_id, assigned_at)
+- [x] Create kiosk_deployments table (id, device_id, theme_id, deployed_at, status)
+- [x] Create kiosk_schedules table (id, theme_id, start_date, end_date, is_recurring, cron_expression)
+- [x] Run database migrations (pnpm db:push)
+
+### Backend Implementation
+- [x] Create database query helpers in server/db.ts for kiosk operations
+- [x] Add tRPC procedures for theme management (create, read, update, delete, list)
+- [x] Add tRPC procedures for device management (list, update status)
+- [x] Add tRPC procedures for deployment (deploy to device, get device status)
+- [x] Add tRPC procedures for scheduling (create schedule, update schedule, delete schedule)
+- [x] Add tRPC procedures for preview data (get current theme config)
+- [ ] Write vitest tests for all backend procedures
+
+### Frontend - Left Control Panel
+- [x] Create KioskDesigner page component (client/src/pages/KioskDesigner.tsx)
+- [x] Build Branding section (logo upload, background upload, school name toggle, slogan input)
+- [x] Build Colors section (primary color picker, accent color picker, button style selector, theme mode selector)
+- [x] Build Layout Options section (clock toggle, instructor photo toggle, student card style, background motion toggle)
+- [x] Build Kiosk Behavior section (idle message, auto-return timer, sound toggle, welcome voice toggle, check-in flow selector)
+- [x] Build Theme Manager section (create, duplicate, save, delete, set active theme)
+- [x] Style left panel with glass morphism effect
+
+### Frontend - Center Live Preview
+- [x] Create KioskPreview component showing device mockup
+- [x] Implement portrait/landscape rotation toggle
+- [x] Implement day/night preview mode
+- [x] Implement idle screen preview
+- [x] Implement check-in flow preview
+- [x] Add real-time preview updates as controls change
+- [x] Style device frame mockup
+
+### Frontend - Right Panel
+- [x] Create Theme Library section with theme cards
+- [x] Add preview thumbnail, active badge, schedule button, edit button to each theme card
+- [x] Create Deployment Center section
+- [x] Display connected kiosks/devices with status
+- [x] Add deployment actions (deploy to all, deploy to selected, restart, preview link, copy URL/QR)
+- [x] Show device online/offline status and last sync time
+
+### Real-time Updates & Integration
+- [ ] Implement real-time preview update when controls change
+- [ ] Connect theme selection to preview
+- [ ] Implement theme scheduling logic
+- [ ] Add device heartbeat/status monitoring
+- [ ] Implement deploy to device functionality
+
+### Testing & Polish
+- [ ] Write vitest tests for all backend procedures
+- [ ] Test theme creation and switching
+- [ ] Test device deployment workflow
+- [ ] Test scheduling functionality
+- [ ] Test preview updates
+- [ ] Cross-browser testing
+- [ ] Mobile responsiveness check
+- [ ] Performance optimization
+
+### Deployment & Delivery
+- [ ] Create checkpoint for Kiosk Designer feature
+- [ ] Deliver to user with status report

@@ -1948,3 +1948,135 @@ export type StudentTuition = typeof studentTuition.$inferSelect;
 export type InsertStudentTuition = typeof studentTuition.$inferInsert;
 export type StudentCancellationRequest = typeof studentCancellationRequests.$inferSelect;
 export type InsertStudentCancellationRequest = typeof studentCancellationRequests.$inferInsert;
+
+
+/**
+ * Kiosk Devices - Physical/virtual kiosk devices deployed at locations
+ */
+export const kioskDevices = mysqlTable("kiosk_devices", {
+	id: int().autoincrement().notNull().primaryKey(),
+	organizationId: int().notNull(),
+	deviceName: varchar({ length: 255 }).notNull(),
+	location: varchar({ length: 255 }).notNull(),
+	deviceType: mysqlEnum(['physical', 'virtual', 'web']).default('physical').notNull(),
+	status: mysqlEnum(['active', 'inactive', 'maintenance', 'offline']).default('offline').notNull(),
+	lastSyncAt: timestamp({ mode: 'string' }),
+	onlineStatus: int().default(0).notNull(), // 1 = online, 0 = offline
+	ipAddress: varchar({ length: 50 }),
+	deviceId: varchar({ length: 255 }).unique(), // unique device identifier
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_org_devices").on(table.organizationId),
+	index("idx_device_status").on(table.status),
+]);
+
+/**
+ * Kiosk Themes - Design themes for kiosks (default, holiday, event-based)
+ */
+export const kioskThemes = mysqlTable("kiosk_themes", {
+	id: int().autoincrement().notNull().primaryKey(),
+	organizationId: int().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	isActive: int().default(0).notNull(),
+	isDefault: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_org_themes").on(table.organizationId),
+	index("idx_theme_active").on(table.isActive),
+]);
+
+/**
+ * Kiosk Theme Assets - Customization data for themes (colors, images, text, etc.)
+ */
+export const kioskThemeAssets = mysqlTable("kiosk_theme_assets", {
+	id: int().autoincrement().notNull().primaryKey(),
+	themeId: int().notNull(),
+	assetType: mysqlEnum(['logo', 'background_image', 'background_video', 'overlay_graphic', 'color_primary', 'color_accent', 'button_style', 'welcome_text', 'idle_message', 'holiday_message', 'theme_mode', 'other']).notNull(),
+	assetKey: varchar({ length: 255 }).notNull(), // e.g., "primary_color", "logo_url"
+	assetValue: text().notNull(), // JSON or URL or color value
+	assetUrl: varchar({ length: 500 }), // S3 URL if applicable
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_theme_assets").on(table.themeId),
+	index("idx_asset_type").on(table.assetType),
+]);
+
+/**
+ * Kiosk Assignments - Maps themes to devices
+ */
+export const kioskAssignments = mysqlTable("kiosk_assignments", {
+	id: int().autoincrement().notNull().primaryKey(),
+	deviceId: int().notNull(),
+	themeId: int().notNull(),
+	assignedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	assignedBy: int(), // user ID who assigned
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_device_assignments").on(table.deviceId),
+	index("idx_theme_assignments").on(table.themeId),
+]);
+
+/**
+ * Kiosk Deployments - Track theme deployments to devices
+ */
+export const kioskDeployments = mysqlTable("kiosk_deployments", {
+	id: int().autoincrement().notNull().primaryKey(),
+	deviceId: int().notNull(),
+	themeId: int().notNull(),
+	deploymentStatus: mysqlEnum(['pending', 'in_progress', 'deployed', 'failed', 'rolled_back']).default('pending').notNull(),
+	deployedAt: timestamp({ mode: 'string' }),
+	deployedBy: int(), // user ID who deployed
+	errorMessage: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_deployment_device").on(table.deviceId),
+	index("idx_deployment_theme").on(table.themeId),
+	index("idx_deployment_status").on(table.deploymentStatus),
+]);
+
+/**
+ * Kiosk Schedules - Schedule theme changes (e.g., Halloween theme Oct 25-31)
+ */
+export const kioskSchedules = mysqlTable("kiosk_schedules", {
+	id: int().autoincrement().notNull().primaryKey(),
+	themeId: int().notNull(),
+	startDate: timestamp({ mode: 'string' }).notNull(),
+	endDate: timestamp({ mode: 'string' }).notNull(),
+	isRecurring: int().default(0).notNull(),
+	cronExpression: varchar({ length: 255 }), // for recurring schedules
+	autoRevert: int().default(1).notNull(), // auto-revert to previous theme after end date
+	revertThemeId: int(), // theme to revert to (if null, revert to default)
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_schedule_theme").on(table.themeId),
+	index("idx_schedule_dates").on(table.startDate, table.endDate),
+	index("idx_schedule_active").on(table.isActive),
+]);
+
+// Type Exports for Kiosk Designer
+export type KioskDevice = typeof kioskDevices.$inferSelect;
+export type InsertKioskDevice = typeof kioskDevices.$inferInsert;
+export type KioskTheme = typeof kioskThemes.$inferSelect;
+export type InsertKioskTheme = typeof kioskThemes.$inferInsert;
+export type KioskThemeAsset = typeof kioskThemeAssets.$inferSelect;
+export type InsertKioskThemeAsset = typeof kioskThemeAssets.$inferInsert;
+export type KioskAssignment = typeof kioskAssignments.$inferSelect;
+export type InsertKioskAssignment = typeof kioskAssignments.$inferInsert;
+export type KioskDeployment = typeof kioskDeployments.$inferSelect;
+export type InsertKioskDeployment = typeof kioskDeployments.$inferInsert;
+export type KioskSchedule = typeof kioskSchedules.$inferSelect;
+export type InsertKioskSchedule = typeof kioskSchedules.$inferInsert;

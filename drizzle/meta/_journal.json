@@ -344,6 +344,13 @@
       "when": 1767731041533,
       "tag": "0048_simple_justice",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "5",
+      "when": 1767731801417,
+      "tag": "0049_minor_leper_queen",
+      "breakpoints": true
     }
   ]
 }

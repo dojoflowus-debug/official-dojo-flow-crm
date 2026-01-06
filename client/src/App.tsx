@@ -98,6 +98,7 @@ import AISetup from "./pages/AISetup";
 import Security from "./pages/Security";
 import TestSimple from "./pages/TestSimple";
 import PublicChat from "./pages/PublicChat";
+import { KioskDesigner } from "./pages/KioskDesigner";
 import PublicHome from "./pages/PublicHome";
 import PublicLanding from "./pages/PublicLanding";
 import WelcomeDashboard from "./pages/WelcomeDashboard";
@@ -275,6 +276,8 @@ function Router() {
       <Route path="/test-simple" element={<TestSimple />} />
       <Route path="/receptionist" element={<VirtualReceptionist />} />
       <Route path="/test-page" element={<VirtualReceptionist />} />
+      <Route path="/kiosk-designer" element={<ProtectedRoute><KioskDesigner /></ProtectedRoute>} />
+      <Route path="/kiosk" element={<ProtectedRoute><KioskDesigner /></ProtectedRoute>} />
       <Route path="/404" element={<NotFound />} />
       {/* Final fallback route */}
       <Route path="*" element={<NotFound />} />
