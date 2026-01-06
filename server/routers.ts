@@ -2118,6 +2118,246 @@ export const appRouter = router({
         
         return { success: true };
       }),
+    
+    // Enhanced Students Dashboard Procedures
+    
+    // Get students with pagination, search, and filters
+    getListWithFilters: protectedProcedure
+      .input(z.object({
+        page: z.number().default(1),
+        limit: z.number().default(20),
+        search: z.string().optional(),
+        status: z.string().optional(),
+        program: z.string().optional(),
+        beltRank: z.string().optional(),
+        sortBy: z.enum(['name', 'enrollment', 'lastContact', 'status']).default('name'),
+        sortOrder: z.enum(['asc', 'desc']).default('asc'),
+      }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        const { eq, and, or, like, sql, desc, asc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return { students: [], total: 0 };
+        
+        // Build where conditions
+        const conditions = [eq(students.organizationId, orgId)];
+        
+        if (input.search) {
+          const searchPattern = `%${input.search}%`;
+          conditions.push(
+            or(
+              like(students.firstName, searchPattern),
+              like(students.lastName, searchPattern),
+              like(students.email, searchPattern),
+              like(students.phone, searchPattern)
+            )
+          );
+        }
+        
+        if (input.status) {
+          conditions.push(eq(students.status, input.status));
+        }
+        
+        if (input.program) {
+          conditions.push(eq(students.program, input.program));
+        }
+        
+        if (input.beltRank) {
+          conditions.push(eq(students.beltRank, input.beltRank));
+        }
+        
+        // Get total count
+        const countResult = await db.select({ count: sql`COUNT(*) as count` })
+          .from(students)
+          .where(and(...conditions));
+        const total = countResult[0]?.count || 0;
+        
+        // Determine sort column
+        let sortColumn = students.firstName;
+        if (input.sortBy === 'enrollment') sortColumn = students.createdAt;
+        if (input.sortBy === 'status') sortColumn = students.status;
+        
+        const sortFn = input.sortOrder === 'desc' ? desc : asc;
+        
+        // Get paginated results
+        const offset = (input.page - 1) * input.limit;
+        const result = await db.select()
+          .from(students)
+          .where(and(...conditions))
+          .orderBy(sortFn(sortColumn))
+          .limit(input.limit)
+          .offset(offset);
+        
+        return { students: result, total };
+      }),
+    
+    // Get student analytics and KPI metrics
+    getAnalytics: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getDb } = await import("./db");
+        const { students, studentAttendance, classEnrollments, studentCancellationRequests, studentTuition } = await import("../drizzle/schema");
+        const { eq, and, sql, gte, lte, count, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return null;
+        
+        // Get student counts by status
+        const statusCounts = await db.select({
+          status: students.status,
+          count: count().as('count')
+        })
+        .from(students)
+        .where(eq(students.organizationId, orgId))
+        .groupBy(students.status);
+        
+        // Get total students
+        const totalResult = await db.select({ count: count().as('count') })
+          .from(students)
+          .where(eq(students.organizationId, orgId));
+        
+        // Get active students (last 30 days)
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const activeResult = await db.select({ count: count().as('count') })
+          .from(students)
+          .where(and(
+            eq(students.organizationId, orgId),
+            eq(students.status, 'Active')
+          ));
+        
+        // Get at-risk students (delinquent tuition or high absences)
+        const atRiskResult = await db.select({ count: count().as('count') })
+          .from(students)
+          .where(and(
+            eq(students.organizationId, orgId),
+            eq(students.status, 'At Risk')
+          ));
+        
+        // Get inactive students
+        const inactiveResult = await db.select({ count: count().as('count') })
+          .from(students)
+          .where(and(
+            eq(students.organizationId, orgId),
+            eq(students.status, 'Inactive')
+          ));
+        
+        // Get pending/trial students
+        const pendingResult = await db.select({ count: count().as('count') })
+          .from(students)
+          .where(and(
+            eq(students.organizationId, orgId),
+            eq(students.status, 'On Hold')
+          ));
+        
+        // Get cancellation requests this month
+        const thisMonth = new Date();
+        thisMonth.setDate(1);
+        const cancellationResult = await db.select({ count: count().as('count') })
+          .from(studentCancellationRequests)
+          .where(gte(studentCancellationRequests.requestDate, thisMonth.toISOString()));
+        
+        // Get delinquent tuition count
+        const delinquentResult = await db.select({ count: count().as('count') })
+          .from(studentTuition)
+          .where(and(
+            eq(studentTuition.status, 'overdue')
+          ));
+        
+        return {
+          total: totalResult[0]?.count || 0,
+          active: activeResult[0]?.count || 0,
+          atRisk: atRiskResult[0]?.count || 0,
+          inactive: inactiveResult[0]?.count || 0,
+          pending: pendingResult[0]?.count || 0,
+          cancellations: cancellationResult[0]?.count || 0,
+          delinquent: delinquentResult[0]?.count || 0,
+          statusBreakdown: statusCounts,
+        };
+      }),
+    
+    // Get students by segment
+    getBySegment: protectedProcedure
+      .input(z.object({ segmentId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { studentSegmentMembers, students } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const members = await db.select({ studentId: studentSegmentMembers.studentId })
+          .from(studentSegmentMembers)
+          .where(eq(studentSegmentMembers.segmentId, input.segmentId));
+        
+        const studentIds = members.map(m => m.studentId);
+        if (studentIds.length === 0) return [];
+        
+        const result = await db.select()
+          .from(students)
+          .where(eq(students.organizationId, ctx.currentOrganizationId));
+        
+        return result.filter(s => studentIds.includes(s.id));
+      }),
+    
+    // Get student detail with related data
+    getDetail: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { students, studentAttendance, studentContacts, studentTuition, studentMessages } = await import("../drizzle/schema");
+        const { eq, and, desc } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) return null;
+        
+        // Get student
+        const [student] = await db.select()
+          .from(students)
+          .where(and(
+            eq(students.id, input.id),
+            eq(students.organizationId, orgId)
+          ));
+        
+        if (!student) return null;
+        
+        // Get attendance
+        const attendance = await db.select()
+          .from(studentAttendance)
+          .where(eq(studentAttendance.studentId, input.id))
+          .orderBy(desc(studentAttendance.classDate))
+          .limit(10);
+        
+        // Get last contact
+        const lastContact = await db.select()
+          .from(studentContacts)
+          .where(eq(studentContacts.studentId, input.id))
+          .orderBy(desc(studentContacts.contactDate))
+          .limit(1);
+        
+        // Get tuition
+        const tuition = await db.select()
+          .from(studentTuition)
+          .where(eq(studentTuition.studentId, input.id))
+          .orderBy(desc(studentTuition.dueDate));
+        
+        return {
+          student,
+          attendance: attendance || [],
+          lastContact: lastContact[0] || null,
+          tuition: tuition || [],
+        };
+      }),
   }),
 
   kai: router({

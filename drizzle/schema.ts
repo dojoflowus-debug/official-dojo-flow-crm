@@ -1838,3 +1838,113 @@ export type KaiOperationLog = typeof kaiOperationsLog.$inferSelect;
 export type InsertKaiOperationLog = typeof kaiOperationsLog.$inferInsert;
 export type KaiSystemStatus = typeof kaiSystemStatus.$inferSelect;
 export type InsertKaiSystemStatus = typeof kaiSystemStatus.$inferInsert;
+
+
+/**
+ * Student Segments - for grouping students by criteria
+ * Used in Students Dashboard for segmentation and bulk actions
+ */
+export const studentSegments = mysqlTable("student_segments", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	criteria: text(), // JSON criteria for segment (status, program, belt rank, date ranges, etc.)
+	studentCount: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_segment_org").on(table.organizationId),
+	index("idx_segment_active").on(table.isActive),
+]);
+
+/**
+ * Student Segment Members - junction table for students in segments
+ */
+export const studentSegmentMembers = mysqlTable("student_segment_members", {
+	id: int().autoincrement().notNull(),
+	segmentId: int().notNull(),
+	studentId: int().notNull(),
+	addedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_member_segment").on(table.segmentId),
+	index("idx_member_student").on(table.studentId),
+]);
+
+/**
+ * Student Contacts - tracks last contact date and method
+ * Extends studentMessages/studentNotes with structured contact tracking
+ */
+export const studentContacts = mysqlTable("student_contacts", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	contactDate: timestamp({ mode: 'string' }).notNull(),
+	contactType: mysqlEnum(['call', 'sms', 'email', 'in_person', 'message']).notNull(),
+	notes: text(),
+	contactedBy: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_contact_student").on(table.studentId),
+	index("idx_contact_date").on(table.contactDate),
+]);
+
+/**
+ * Student Tuition - tracks tuition payments and status
+ * For billing dashboard in Students view
+ */
+export const studentTuition = mysqlTable("student_tuition", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	amount: int().notNull(), // in cents
+	dueDate: timestamp({ mode: 'string' }).notNull(),
+	paidDate: timestamp({ mode: 'string' }),
+	status: mysqlEnum(['pending', 'paid', 'overdue', 'cancelled']).default('pending').notNull(),
+	paymentMethod: varchar({ length: 100 }),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_tuition_student").on(table.studentId),
+	index("idx_tuition_status").on(table.status),
+	index("idx_tuition_due_date").on(table.dueDate),
+]);
+
+/**
+ * Student Cancellation Requests - tracks student cancellations
+ * For analytics and follow-up in Students Dashboard
+ */
+export const studentCancellationRequests = mysqlTable("student_cancellation_requests", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	requestDate: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	cancellationDate: timestamp({ mode: 'string' }),
+	reason: text(),
+	status: mysqlEnum(['pending', 'approved', 'rejected', 'completed']).default('pending').notNull(),
+	notes: text(),
+	processedBy: varchar({ length: 255 }),
+	processedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_cancellation_student").on(table.studentId),
+	index("idx_cancellation_status").on(table.status),
+	index("idx_cancellation_date").on(table.requestDate),
+]);
+
+// Type Exports for Students Dashboard
+export type StudentSegment = typeof studentSegments.$inferSelect;
+export type InsertStudentSegment = typeof studentSegments.$inferInsert;
+export type StudentSegmentMember = typeof studentSegmentMembers.$inferSelect;
+export type InsertStudentSegmentMember = typeof studentSegmentMembers.$inferInsert;
+export type StudentContact = typeof studentContacts.$inferSelect;
+export type InsertStudentContact = typeof studentContacts.$inferInsert;
+export type StudentTuition = typeof studentTuition.$inferSelect;
+export type InsertStudentTuition = typeof studentTuition.$inferInsert;
+export type StudentCancellationRequest = typeof studentCancellationRequests.$inferSelect;
+export type InsertStudentCancellationRequest = typeof studentCancellationRequests.$inferInsert;

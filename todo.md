@@ -5493,3 +5493,97 @@ The Delete All Messages feature allows users to clear all messages from a conver
 ### Delivery
 - [ ] Create checkpoint with Real Results section
 - [ ] Deliver to user for review
+
+
+---
+
+## 📊 Students Dashboard v2 (NEW FEATURE)
+
+### Database Schema Extension
+- [x] Add students table (id, organizationId, name, email, phone, address, status, belt_rank, program, enrollment_date, created_at)
+- [x] Add student_absences table (id, studentId, date, reason, created_at)
+- [x] Add student_events table (id, studentId, eventId, registered_date, attended, created_at)
+- [x] Add student_contacts table (id, studentId, date, type, notes, created_at)
+- [x] Add student_tuition table (id, studentId, amount, due_date, paid_date, status, created_at)
+- [x] Add student_segments table (id, organizationId, name, criteria, created_at)
+- [x] Add student_segment_members table (id, segmentId, studentId)
+- [x] Push schema migrations with drizzle
+
+### tRPC Procedures
+- [x] Create students.getListWithFilters (with pagination, search, filters, sorting)
+- [x] Create students.getDetail (with full profile, absences, events, contacts, tuition)
+- [x] Create students.getAnalytics (KPI metrics, charts data)
+- [x] Create students.getBySegment (filter by segment)
+- [ ] Create students.create (add new student)
+- [ ] Create students.update (edit student details)
+- [ ] Create students.delete (soft delete)
+
+### Students Page - List View
+- [x] Create StudentsDashboard.tsx component
+- [x] Build sticky KPI bar (Total, Active, At Risk, Inactive)
+- [x] Implement view switcher (List / Map / Segments / Analytics tabs)
+- [x] Build student table with columns: name, status, program, belt rank, contact
+- [x] Add search by name/email/phone
+- [x] Add filters: status (active/at risk/inactive), program
+- [x] Add sorting by name, enrollment date
+- [x] Implement pagination (20 items per page)
+- [x] Add "Add Student" button
+- [x] Style with calm, dark theme design
+
+### Students Page - Map View
+- [ ] Integrate Google Maps component
+- [ ] Plot student locations on map
+- [ ] Add student markers with status indicators (color-coded)
+- [ ] Implement map clustering for dense areas
+- [ ] Add click handler to open student drawer
+- [ ] Add search/filter integration with map
+- [ ] Show student count by location
+
+### Students Page - Detail Drawer
+- [x] Create student detail drawer (right sidebar)
+- [x] Display student avatar, name, status badge
+- [x] Show key info: program, belt rank, enrollment date
+- [x] Add sticky header with close (X) button
+- [x] Display sections: Contact, Recent Attendance
+- [x] Add action buttons: Message, Call, Edit Student
+- [x] Implement smooth open/close animation
+- [x] Close on ESC key or backdrop click
+
+### Students Page - Analytics View
+- [x] Create analytics data aggregation procedures
+- [x] Build KPI cards: status distribution, key metrics
+- [ ] Implement enrollment & cancellations chart (monthly bar chart)
+- [ ] Implement retention vs dropout rate chart (line chart)
+- [ ] Add segment breakdown view
+- [ ] Show at-risk students list with reasons
+- [ ] Show delinquent tuition list with amounts
+- [ ] Show recent cancellation requests
+
+### Students Page - Segments View
+- [ ] Create segments list view
+- [ ] Add create/edit segment modal
+- [ ] Implement segment criteria builder (status, program, belt rank, date ranges)
+- [ ] Show student count per segment
+- [ ] Add bulk actions for segments (message, email, export)
+
+### Integration & Navigation
+- [x] Add /students route to App.tsx
+- [ ] Add "Students" link to bottom navigation
+- [ ] Ensure bottom nav stays consistent across all pages
+- [ ] Add breadcrumb navigation
+- [ ] Implement route protection (admin/staff only)
+
+### Testing
+- [ ] Write vitest tests for students procedures
+- [ ] Write vitest tests for analytics procedures
+- [ ] Test list view filtering and sorting
+- [ ] Test map view rendering
+- [ ] Test drawer open/close
+- [ ] Test responsive design on mobile
+
+### Polish & Delivery
+- [ ] Verify dark theme consistency
+- [ ] Test responsive design (mobile/tablet/desktop)
+- [ ] Optimize performance (lazy load, pagination)
+- [ ] Cross-browser testing
+- [ ] Save checkpoint
