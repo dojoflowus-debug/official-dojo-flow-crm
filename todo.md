@@ -5412,3 +5412,21 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [ ] Test resume functionality after page refresh
 - [ ] Test all form validations and data persistence
 - [ ] Save checkpoint
+
+
+## 🎬 Hero Banner Redesign: "Gate Into the Kingdom" (2026-01-06)
+
+### Requirements
+- [x] Remove all green styling from hero (text, highlights, accents) - Updated global color system
+- [x] Implement full-screen 100vh+ hero layout (nothing below visible on load) - Created new hero in Home.tsx
+- [x] Design and implement cinematic background (dojo/training/energy aesthetic) - Atmospheric fog effects
+- [x] Add subtle motion effects (fog, particles, light sweep, breathing glow) - Pulse animations
+- [x] Redesign hero messaging (primary headline, secondary line, authoritative tone) - "Meet Kai" + system message
+- [x] Implement Kai emblem/orb as central visual focus - Spinning orb with Zap icon
+- [x] Create primary CTA ("Talk to Kai" or "Enter Command") - "Talk to Kai" button
+- [x] Create secondary CTA ("Watch demo") - "Watch Demo" button
+- [x] Remove excessive prompt cards from hero - Moved to separate section below
+- [x] Implement new color system (near-black, DojoFlow red, muted steel/amber, white/soft gray) - Updated index.css
+- [ ] Test hero responsiveness across devices
+- [ ] Verify visual continuity with Kai Command aesthetic
+- [ ] Ensure no content visible below hero on initial load - Bottom gradient fade implemented

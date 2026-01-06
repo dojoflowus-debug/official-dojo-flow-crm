@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Home() {
@@ -70,60 +70,98 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section - Asymmetric Layout */}
-      <section className="relative pt-32 pb-20 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Text Content */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <p className="label-uppercase text-xs">Product Design and Development</p>
-              <h1 
-                className={`text-5xl md:text-6xl lg:text-7xl font-bold leading-tight transition-all duration-700 ${
-                  animationStage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                }`}
-              >
-                Empowering startups to launch, scale, and succeed faster
-              </h1>
-            </div>
+      {/* ===== HERO SECTION: Gate Into the Kingdom ===== */}
+      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-background pt-20">
+        {/* Cinematic Background Layer */}
+        <div className="absolute inset-0 z-0">
+          {/* Dark gradient base */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background opacity-100" />
+          
+          {/* Subtle atmospheric effect - dojo/training environment */}
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/40" />
+          
+          {/* Fog effect - breathing motion */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse-slow" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: "1s" }} />
+          </div>
 
-            <p 
-              className={`text-lg text-muted-foreground max-w-md transition-all duration-700 ${
-                animationStage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-            >
-              From MVP to market dominance – your reliable partner in UI/UX design and development
-            </p>
+          {/* Subtle light sweep - cinematic feel */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent/20 to-transparent animate-pulse" />
+        </div>
 
-            {/* CTA Buttons */}
-            <div 
-              className={`flex flex-col sm:flex-row gap-4 transition-all duration-700 ${
-                animationStage >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-            >
-              <Button 
-                onClick={() => handleCardClick(1)}
-                className="bg-destructive hover:bg-destructive/90 text-white font-semibold px-8 py-6 text-base uppercase tracking-wider"
-              >
-                Let's Talk
-              </Button>
-              <Button 
-                variant="outline"
-                className="border-2 border-accent text-accent hover:bg-accent/10 font-semibold px-8 py-6 text-base uppercase tracking-wider border-dashed"
-              >
-                View Our Cases <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
+        {/* Content Container */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-20 text-center space-y-12">
+          {/* Kai Emblem/Orb - Central Focus */}
+          <div className={`flex justify-center transition-all duration-700 ${
+            animationStage >= 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}>
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-accent/30 animate-spin" style={{ animationDuration: "8s" }} />
+              
+              {/* Middle ring */}
+              <div className="absolute inset-2 rounded-full border border-accent/20" />
+              
+              {/* Inner orb with breathing effect */}
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-accent/40 to-accent/20 flex items-center justify-center shadow-lg shadow-accent/20 animate-pulse-slow">
+                <Zap className="w-8 h-8 text-accent" />
+              </div>
             </div>
           </div>
 
-          {/* Right: Visual Element - Placeholder */}
-          <div className="relative h-96 lg:h-full min-h-96 rounded-2xl bg-card border border-border overflow-hidden flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent" />
-            <div className="text-center z-10">
-              <Play className="w-16 h-16 text-accent mx-auto mb-4 opacity-50" />
-              <p className="text-muted-foreground">Project Showcase</p>
-            </div>
+          {/* Primary Headline - Authoritative & Powerful */}
+          <div className={`space-y-4 transition-all duration-700 ${
+            animationStage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight text-foreground">
+              Meet Kai
+            </h1>
+            <p className="text-xl md:text-2xl text-muted-foreground font-light tracking-wide">
+              Your intelligent command center for dojo operations
+            </p>
+          </div>
+
+          {/* Secondary Message - System-like Authority */}
+          <p className={`text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed transition-all duration-700 ${
+            animationStage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
+            Kai is an AI system designed to understand your dojo's unique challenges. From student management to instructor coordination, Kai learns your environment and delivers intelligent solutions in real time.
+          </p>
+
+          {/* CTA Buttons - Clear Actions */}
+          <div className={`flex flex-col sm:flex-row gap-4 justify-center items-center transition-all duration-700 ${
+            animationStage >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
+            {/* Primary CTA */}
+            <Button 
+              onClick={() => handleCardClick(1)}
+              className="bg-accent hover:bg-accent/90 text-background font-bold px-10 py-7 text-lg uppercase tracking-wider shadow-lg shadow-accent/30 transition-all hover:shadow-accent/50"
+            >
+              Talk to Kai
+            </Button>
+            
+            {/* Secondary CTA */}
+            <Button 
+              variant="outline"
+              className="border-2 border-accent text-accent hover:bg-accent/10 font-semibold px-10 py-7 text-lg uppercase tracking-wider transition-all"
+            >
+              Watch Demo <Play className="ml-2 w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Subtle Scroll Hint */}
+          <div className={`pt-8 transition-all duration-700 ${
+            animationStage >= 3 ? 'opacity-100' : 'opacity-0'
+          }`}>
+            <p className="text-xs text-muted-foreground/50 uppercase tracking-widest animate-bounce">
+              Scroll to explore
+            </p>
           </div>
         </div>
+
+        {/* Bottom gradient fade - ensures content below is hidden on load */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-20" />
       </section>
 
       {/* Wave Divider */}

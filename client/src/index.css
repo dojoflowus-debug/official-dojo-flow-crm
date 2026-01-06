@@ -120,93 +120,93 @@
   --topbar-h: 56px;
   --bottomnav-h: 72px;
   
-  /* Phenomenon Studio Theme - Dark with Lime Green Accents */
-  /* Background: Very dark navy/black */
-  --background: oklch(0.05 0 0); /* #0a0a0a */
-  --foreground: oklch(1 0 0); /* #FFFFFF */
+  /* DojoFlow Theme - Dark with Red & Amber Accents */
+  /* Background: Near-black / Charcoal */
+  --background: oklch(0.04 0 0); /* #0d0d0d */
+  --foreground: oklch(0.98 0 0); /* #fafafa */
   
   /* Panels: Slightly lighter dark */
-  --card: oklch(0.08 0 0); /* #141414 */
-  --card-foreground: oklch(1 0 0);
+  --card: oklch(0.09 0 0); /* #171717 */
+  --card-foreground: oklch(0.98 0 0);
   
-  --popover: oklch(0.08 0 0);
-  --popover-foreground: oklch(1 0 0);
+  --popover: oklch(0.09 0 0);
+  --popover-foreground: oklch(0.98 0 0);
   
-  /* Primary: Bright Lime Green #00ff00 */
-  --primary: oklch(0.85 0.25 130); /* Bright lime green */
-  --primary-foreground: oklch(0.05 0 0); /* Dark text on green */
+  /* Primary: DojoFlow Red */
+  --primary: oklch(0.62 0.22 15); /* DojoFlow Red */
+  --primary-foreground: oklch(1 0 0); /* White text on red */
   
-  /* Secondary: Light gray for inputs */
-  --secondary: oklch(0.15 0 0); /* #262626 */
+  /* Secondary: Muted Steel / Amber */
+  --secondary: oklch(0.50 0.08 70); /* Muted steel/amber */
   --secondary-foreground: oklch(1 0 0);
   
   --muted: oklch(0.12 0 0); /* #1f1f1f */
-  --muted-foreground: oklch(0.65 0 0); /* #a3a3a3 */
+  --muted-foreground: oklch(0.60 0 0); /* #999999 */
   
-  /* Accent: Lime green for highlights */
-  --accent: oklch(0.85 0.25 130); /* Bright lime green */
-  --accent-foreground: oklch(0.05 0 0);
+  /* Accent: DojoFlow Red */
+  --accent: oklch(0.62 0.22 15); /* DojoFlow Red */
+  --accent-foreground: oklch(1 0 0);
   
-  /* Destructive: Warm orange/red */
-  --destructive: oklch(0.70 0.22 30); /* Warm orange */
+  /* Destructive: DojoFlow Red */
+  --destructive: oklch(0.62 0.22 15); /* DojoFlow Red */
   --destructive-foreground: oklch(1 0 0);
   
   /* Borders: Subtle white with opacity */
   --border: oklch(1 0 0 / 0.08); /* rgba(255,255,255,0.08) */
   --input: oklch(1 0 0 / 0.10); /* rgba(255,255,255,0.10) */
-  --ring: oklch(0.85 0.25 130); /* Lime green focus ring */
+  --ring: oklch(0.62 0.22 15); /* DojoFlow Red focus ring */
   
-  --chart-1: oklch(0.85 0.25 130); /* Lime green */
-  --chart-2: oklch(0.70 0.22 30); /* Orange */
+  --chart-1: oklch(0.62 0.22 15); /* DojoFlow Red */
+  --chart-2: oklch(0.50 0.08 70); /* Muted steel/amber */
   --chart-3: oklch(0.75 0.18 200); /* Cyan */
   --chart-4: oklch(0.65 0.18 280); /* Purple */
   --chart-5: oklch(0.80 0.12 50); /* Yellow */
   
   /* Sidebar */
-  --sidebar: oklch(0.05 0 0); /* #0a0a0a */
-  --sidebar-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.85 0.25 130); /* Lime green */
-  --sidebar-primary-foreground: oklch(0.05 0 0);
+  --sidebar: oklch(0.04 0 0); /* #0d0d0d */
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.62 0.22 15); /* DojoFlow Red */
+  --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(1 0 0 / 0.08);
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(1 0 0 / 0.05);
-  --sidebar-ring: oklch(0.85 0.25 130);
+  --sidebar-ring: oklch(0.62 0.22 15);
 }
 
 .dark {
-  /* Phenomenon Studio Dark Mode (already set in root) */
-  --background: oklch(0.05 0 0);
-  --foreground: oklch(1 0 0);
-  --card: oklch(0.08 0 0);
-  --card-foreground: oklch(1 0 0);
-  --popover: oklch(0.08 0 0);
-  --popover-foreground: oklch(1 0 0);
-  --primary: oklch(0.85 0.25 130);
-  --primary-foreground: oklch(0.05 0 0);
-  --secondary: oklch(0.15 0 0);
+  /* DojoFlow Dark Mode with Red & Amber */
+  --background: oklch(0.04 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.09 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.09 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.62 0.22 15);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.50 0.08 70);
   --secondary-foreground: oklch(1 0 0);
   --muted: oklch(0.12 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.85 0.25 130);
-  --accent-foreground: oklch(0.05 0 0);
-  --destructive: oklch(0.70 0.22 30);
+  --muted-foreground: oklch(0.60 0 0);
+  --accent: oklch(0.62 0.22 15);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.62 0.22 15);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(1 0 0 / 0.08);
   --input: oklch(1 0 0 / 0.10);
-  --ring: oklch(0.85 0.25 130);
-  --chart-1: oklch(0.85 0.25 130);
-  --chart-2: oklch(0.70 0.22 30);
+  --ring: oklch(0.62 0.22 15);
+  --chart-1: oklch(0.62 0.22 15);
+  --chart-2: oklch(0.50 0.08 70);
   --chart-3: oklch(0.75 0.18 200);
   --chart-4: oklch(0.65 0.18 280);
   --chart-5: oklch(0.80 0.12 50);
-  --sidebar: oklch(0.05 0 0);
-  --sidebar-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.85 0.25 130);
-  --sidebar-primary-foreground: oklch(0.05 0 0);
+  --sidebar: oklch(0.04 0 0);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.62 0.22 15);
+  --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(1 0 0 / 0.08);
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(1 0 0 / 0.05);
-  --sidebar-ring: oklch(0.85 0.25 130);
+  --sidebar-ring: oklch(0.62 0.22 15);
 }
 
 /* Light mode global styles */
