@@ -12,7 +12,7 @@ export default function Kiosk() {
 
   // Fetch kiosk runtime configuration
   const { data: kioskConfig, isLoading, error } = trpc.kiosk.getKioskRuntime.useQuery(
-    { slug: locationSlug! },
+    { slug: locationSlug || '' },
     { enabled: !!locationSlug }
   );
 
@@ -68,6 +68,24 @@ export default function Kiosk() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-white text-xl">Loading kiosk...</div>
+      </div>
+    );
+  }
+
+  // Missing slug state
+  if (!locationSlug) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+        <Card className="max-w-md p-8 text-center space-y-4">
+          <AlertCircle className="h-16 w-16 mx-auto text-red-500" />
+          <h1 className="text-2xl font-bold">Invalid Kiosk URL</h1>
+          <p className="text-muted-foreground">
+            The kiosk location could not be found. Please check the URL and try again.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Please contact your administrator for assistance.
+          </p>
+        </Card>
       </div>
     );
   }

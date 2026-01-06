@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,14 @@ export default function KioskDashboard() {
 
   const filteredLocations = locations?.filter(location =>
     location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    location.slug.toLowerCase().includes(searchTerm.toLowerCase())
+    (location.kioskSlug || '').toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const handleOpenKiosk = (slug: string) => {
+  const handleOpenKiosk = (slug?: string | null) => {
+    if (!slug) {
+      toast.error('Kiosk is not configured for this location');
+      return;
+    }
     navigate(`/kiosk/${slug}`);
   };
 
@@ -119,7 +123,7 @@ export default function KioskDashboard() {
                   <div className="flex-1 min-w-0">
                     <CardTitle className="truncate">{location.name}</CardTitle>
                     <CardDescription className="text-xs mt-1">
-                      {location.slug}
+                      {location.kioskSlug || 'Not configured'}
                     </CardDescription>
                   </div>
                   <Badge variant="secondary" className="shrink-0">
@@ -147,7 +151,7 @@ export default function KioskDashboard() {
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
                   <Button
-                    onClick={() => handleOpenKiosk(location.slug)}
+                    onClick={() => handleOpenKiosk(location.kioskSlug)}
                     className="flex-1 gap-2"
                     size="sm"
                   >

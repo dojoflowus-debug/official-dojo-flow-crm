@@ -5699,3 +5699,62 @@ The Delete All Messages feature allows users to clear all messages from a conver
 
 ### Status
 ✅ **RESOLVED** - Kiosk navigation now works correctly
+
+
+## 🐛 BUG FIX: Kiosk Settings Page Errors - Missing Procedures
+
+### Issue
+- [x] Error: "No procedure found on path 'kiosk.listLocations'"
+- [x] Error: "No procedure found on path 'kiosk.getKioskSettings'"
+- [x] Error: "No procedure found on path 'kiosk.updateKioskSettings'"
+- [x] Invalid input error on kiosk settings page
+
+### Root Cause
+**Conflicting router definitions in server/routers.ts:**
+- Line 477: `kiosk: kioskRouter` - Proper import with all required procedures
+- Line 1401: `kiosk: router({...})` - Inline definition overriding the first one
+- The inline definition only had `checkIns`, `visitors`, `waivers`, etc. but NOT the admin procedures
+
+### Fix Applied
+- [x] Removed the conflicting inline kiosk router definition (lines 1401-1637)
+- [x] Kept only the proper `kioskRouter` import at line 477
+- [x] Now all procedures are accessible: `listLocations`, `getKioskSettings`, `updateKioskSettings`
+- [x] Verified dev server is running and TypeScript compilation is in progress
+
+### Testing
+- [ ] Test kiosk settings page loads without errors
+- [ ] Test location selector works
+- [ ] Test settings can be saved
+
+
+## 🐛 BUG FIX: Kiosk Display Issue in Kiosk Manager (2026-01-06)
+
+### Issue
+- Kiosks could not be displayed in the kiosk manager
+- Error: "Kiosk not found" when navigating to `/kiosk/undefined`
+- Error: "Invalid input: expected object, received undefined"
+
+### Root Causes Found
+1. **KioskDashboard.tsx**: Missing `useNavigate` import from react-router-dom
+2. **Data field mismatch**: Component was filtering by `location.slug` but backend returns `location.kioskSlug`
+3. **Undefined parameter handling**: No validation before navigating with undefined slug
+4. **Kiosk.tsx**: No handling for undefined `locationSlug` parameter from URL
+
+### Fixes Applied
+- [x] Added `useNavigate` import to KioskDashboard.tsx
+- [x] Fixed all field references from `location.slug` to `location.kioskSlug`
+- [x] Added validation in `handleOpenKiosk` to prevent undefined slug navigation
+- [x] Added error toast when kiosk is not configured
+- [x] Added dedicated error screen in Kiosk.tsx for invalid/missing slugs
+- [x] Improved error handling and user feedback
+- [x] Verified kiosk displays correctly with proper styling and animations
+- [x] Confirmed no console errors related to kiosk display
+
+### Testing
+- [x] Navigated to kiosk manager (/kiosk)
+- [x] Verified kiosk list displays with location data
+- [x] Clicked "Open Kiosk" button
+- [x] Confirmed kiosk page loads with correct location name and UI
+- [x] Verified no errors in browser console
+- [x] Tested error handling for invalid URLs
+

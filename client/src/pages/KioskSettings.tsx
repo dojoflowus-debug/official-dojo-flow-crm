@@ -36,7 +36,7 @@ export default function KioskSettings() {
 
   // Fetch kiosk settings for selected location
   const { data: kioskData, isLoading: settingsLoading, refetch } = trpc.kiosk.getKioskSettings.useQuery(
-    { locationId: selectedLocationId! },
+    selectedLocationId !== null ? { locationId: selectedLocationId } : { locationId: 0 },
     { enabled: selectedLocationId !== null }
   );
 
