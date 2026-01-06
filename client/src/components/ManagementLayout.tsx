@@ -39,6 +39,7 @@ import { cn } from '@/lib/utils'
 import LowCreditBanner from '@/components/LowCreditBanner'
 import KaiCommandOverlay from '@/components/KaiCommandOverlay'
 import { BrandLogo } from '@/components/BrandLogo'
+import AppShell from '@/components/AppShell'
 
 // Management navigation items - standard SaaS structure
 const MANAGEMENT_NAV = [
@@ -128,10 +129,11 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
   // Logo variant based on theme - using BrandLogo component
 
   return (
-    <div className={cn(
-      "min-h-screen flex flex-col",
-      isDark ? "bg-[#0a0a0b]" : "bg-[#FAFBFC]"
-    )}>
+    <AppShell hideBottomNav={false}>
+      <div className={cn(
+        "min-h-screen flex flex-col",
+        isDark ? "bg-[#0a0a0b]" : "bg-[#FAFBFC]"
+      )}>
       {/* Low Credit Banner */}
       <LowCreditBanner />
       
@@ -428,6 +430,7 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
         isOpen={kaiOverlayOpen} 
         onClose={() => setKaiOverlayOpen(false)} 
       />
-    </div>
+      </div>
+    </AppShell>
   )
 }
