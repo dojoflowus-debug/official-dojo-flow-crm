@@ -2196,22 +2196,42 @@ export const appRouter = router({
           });
         }
         
-        const [result] = await db.insert(kaiConversations).values({
-          organizationId: ctx.currentOrganizationId,
-          userId: ctx.user.id,
-          title: input?.title || "New Conversation",
-          summary: null,
-          preview: null,
-          threadType: "kai_direct",
-          status: "active",
-          category: "kai",
-          priority: "neutral",
-          lastMessageAt: new Date().toISOString(),
-          participantIds: JSON.stringify([ctx.user.id]),
-        });
-        
-        console.log('[kai.createConversation] Conversation created with ID:', result.insertId, 'orgId:', ctx.currentOrganizationId);
-        return { id: result.insertId };
+        try {
+          const payload = {
+            organizationId: ctx.currentOrganizationId,
+            userId: ctx.user.id,
+            title: input?.title || "New Conversation",
+            preview: null,
+            threadType: "kai_direct",
+            status: "active",
+            category: "kai",
+            priority: "neutral",
+            lastMessageAt: new Date().toISOString(),
+            participantIds: JSON.stringify([ctx.user.id]),
+          };
+          
+          console.log('[kai.createConversation] Inserting conversation with payload:', JSON.stringify(payload, null, 2));
+          
+          const [result] = await db.insert(kaiConversations).values(payload);
+          
+          console.log('[kai.createConversation] Conversation created with ID:', result.insertId, 'orgId:', ctx.currentOrganizationId);
+          return { id: result.insertId };
+        } catch (error: any) {
+          console.error('[kai.createConversation] Database error:', {
+            message: error?.message,
+            code: error?.code,
+            errno: error?.errno,
+            sqlState: error?.sqlState,
+            sql: error?.sql,
+            stack: error?.stack,
+          });
+          
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Failed to create conversation: ${error?.message || 'Unknown error'}`,
+            cause: error,
+          });
+        }
       }),
 
     // Add a message to a conversation

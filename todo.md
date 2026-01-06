@@ -5260,3 +5260,60 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [ ] Verify all TypeScript errors resolved
 - [ ] Create checkpoint
 - [ ] Prepare for publishing
+
+
+## 🐛 BUG FIX: Conversation Creation Failing (2026-01-06)
+
+### Issue
+- Conversation creation was failing with error: "Unknown column 'summary' in 'field list'"
+- User could not create new conversations in Kai Command interface
+
+### Root Cause Analysis
+- **Schema Mismatch**: `drizzle/schema.ts` defined a `summary` field on `kaiConversations` table
+- **Actual Database**: The real database table did NOT have a `summary` column
+- **Result**: Insert queries were trying to insert into a non-existent column, causing failures
+
+### Actual kai_conversations Table Structure (Verified)
+```
+- id: int(11) AUTO_INCREMENT
+- organizationId: int(11) NOT NULL (default: 120001)
+- userId: int(11) NOT NULL
+- title: varchar(500) NOT NULL (default: 'New Conversation')
+- preview: text (nullable)
+- threadType: enum('kai_direct','group') NOT NULL (default: 'kai_direct')
+- status: enum('active','archived') NOT NULL (default: 'active')
+- category: enum('kai','growth','billing','operations','general') NOT NULL (default: 'kai')
+- priority: enum('neutral','attention','urgent') NOT NULL (default: 'neutral')
+- lastMessageAt: timestamp NOT NULL (default: CURRENT_TIMESTAMP)
+- createdAt: timestamp NOT NULL (default: CURRENT_TIMESTAMP)
+- updatedAt: timestamp NOT NULL (default: CURRENT_TIMESTAMP)
+- deletedAt: timestamp (nullable)
+- archivedAt: timestamp (nullable)
+- participantIds: text (nullable)
+```
+
+### Fixes Applied
+- [x] Removed `summary: null` from `createConversation` insert payload in `server/routers.ts`
+- [x] Updated `drizzle/schema.ts` to remove the `summary` field definition
+- [x] Added comprehensive error logging to `createConversation` procedure
+- [x] Verified insert works with corrected payload
+- [x] Test script confirmed successful insert: ID 870001 created successfully
+
+### Verification
+- [x] Created test script (`test-conversation-insert.mjs`) to verify data and schema
+- [x] Confirmed organizationId 120001 exists in database
+- [x] Confirmed userId 2580004 exists and is member of organization
+- [x] Verified kai_conversations table structure
+- [x] Tested insert with corrected payload - SUCCESS
+- [x] Dev server restarted with enhanced error logging
+
+### Status
+- ✅ **FIXED**: Conversation creation now works without errors
+- ✅ **TESTED**: Direct database insert verified successful
+- ⏳ **PENDING**: UI test to confirm "New Conversation" button works in browser
+- ⏳ **PENDING**: Verify conversations persist after page refresh
+
+### Next Steps
+- Test conversation creation through Kai Command UI
+- Verify conversations persist after page refresh
+- Clean up test script after verification

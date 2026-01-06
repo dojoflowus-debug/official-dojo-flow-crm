@@ -549,7 +549,6 @@ export const kaiConversations = mysqlTable("kai_conversations", {
 	organizationId: int().notNull(),
 	userId: int().notNull(),
 	title: varchar({ length: 500 }).default('New Conversation').notNull(),
-	summary: text(),
 	preview: text(),
 	threadType: mysqlEnum(['kai_direct','group']).default('kai_direct').notNull(),
 	status: mysqlEnum(['active','archived']).default('active').notNull(),
