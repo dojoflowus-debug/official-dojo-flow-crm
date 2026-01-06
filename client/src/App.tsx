@@ -134,6 +134,7 @@ import MasterBilling from "./pages/MasterBilling";
 import MasterSupport from "./pages/MasterSupport";
 import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
+import KioskDashboard from "./pages/KioskDashboard";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -219,7 +220,8 @@ function Router() {
       <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />
       <Route path="/leads" element={<Leads />} />
       <Route path="/test-data" element={<TestData />} />
-      {/* Kiosk removed - Kai Command is the central focus */}
+      {/* Kiosk Dashboard - Manager for all kiosks */}
+      <Route path="/kiosk" element={<KioskDashboard />} />
       <Route path="/classes" element={<Classes />} />
       <Route path="/floor-plans" element={<FloorPlans />} />
       <Route path="/programs" element={<Programs />} />

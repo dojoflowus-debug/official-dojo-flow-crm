@@ -5655,3 +5655,13 @@ The Delete All Messages feature allows users to clear all messages from a conver
 ### Deployment & Delivery
 - [ ] Create checkpoint for Kiosk Designer feature
 - [ ] Deliver to user with status report
+
+
+## 🧭 Kiosk Menu Navigation (2026-01-06)
+
+### Task
+- [x] Add Kiosk menu item to DashboardLayout sidebar navigation
+- [x] Wire Kiosk route to /kiosk page
+- [x] Implement role-based access control (admin/staff only)
+- [x] Create KioskDashboard page component
+- [x] Verify existing kiosk implementation
