@@ -6,10 +6,14 @@ export interface AuthUser {
   openId: string;
   name: string | null;
   email: string | null;
-  role: "user" | "admin";
+  role: "user" | "admin" | "owner" | "staff";
   setupCompleted: boolean;
   photoUrl?: string | null;
   photoUrlSmall?: string | null;
+  globalRole?: "platform_admin" | "support" | "none";
+  activeOrgId?: number | null;
+  phone?: string | null;
+  bio?: string | null;
 }
 
 /**

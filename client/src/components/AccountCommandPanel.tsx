@@ -438,7 +438,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                   <span className="w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] text-zinc-500">?</span>
                 </div>
                 <span className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 tabular-nums">
-                  {creditBalance?.balance?.toLocaleString() ?? '72,913'}
+                  {creditBalance?.creditsRemaining?.toLocaleString() ?? '72,913'}
                 </span>
               </div>
               
@@ -449,7 +449,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Monthly credits</span>
-                  <span className="text-zinc-700 dark:text-zinc-300">{creditBalance?.balance?.toLocaleString() ?? '72,839'} / 85,000</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">{creditBalance?.creditsRemaining?.toLocaleString() ?? '72,839'} / 85,000</span>
                 </div>
               </div>
               
@@ -866,7 +866,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {creditBalance?.balance?.toLocaleString() ?? '72,913'}
+                    {creditBalance?.creditsRemaining?.toLocaleString() ?? '72,913'}
                   </span>
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
                 </div>

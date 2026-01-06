@@ -230,8 +230,8 @@ export async function getDashboardStats(organizationId?: number | null) {
     };
   }
   
-  const { students, leads, classes } = await import("../drizzle/schema");
-  const { eq, count, and } = await import("drizzle-orm");
+  const { students, leads, classes, attendance } = await import("../drizzle/schema");
+  const { eq, count, and, gte, lte } = await import("drizzle-orm");
   
   // Filter by organization for multi-tenancy
   // Count ALL students for the organization (not just active) to match the Students page
@@ -243,8 +243,30 @@ export async function getDashboardStats(organizationId?: number | null) {
   const totalLeads = await db.select({ count: count() }).from(leads).where(leadCondition);
   const todaysClasses = await db.select().from(classes).where(classCondition).limit(10);
   
+  const activeStudentsResult = await db.select({ count: count() }).from(students).where(
+    and(
+      eq(students.organizationId, organizationId),
+      eq(students.status, 'Active')
+    )
+  );
+  
+  // Today's attendance (check-ins)
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  
+  const todayAttendanceResult = await db.select({ count: count() }).from(attendance).where(
+    and(
+      gte(attendance.checkInTime, todayStart.toISOString()),
+      lte(attendance.checkInTime, todayEnd.toISOString()),
+      eq(attendance.status, 'present')
+    )
+  );
+  
   return {
     total_students: totalStudents[0]?.count || 0,
+    active_students: activeStudentsResult[0]?.count || 0,
+    todays_attendance: todayAttendanceResult[0]?.count || 0,
     monthly_revenue: 12500, // TODO: Calculate from billing data
     total_leads: totalLeads[0]?.count || 0,
     todays_classes: todaysClasses.map(c => ({

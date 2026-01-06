@@ -31,7 +31,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/kai" },
   { icon: Users, label: "Students", path: "/students" },
-  { icon: Monitor, label: "Kiosk", path: "/kiosk", requiredRole: "admin" },
+  { icon: Monitor, label: "Kiosk", path: "/kiosk", allowedRoles: ["admin", "owner", "staff"] },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -240,9 +240,9 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {menuItems.map((item: any) => {
                 const isActive = location.pathname === item.path;
-                const hasAccess = !item.requiredRole || (user?.role === item.requiredRole || user?.role === 'admin');
+                const hasAccess = !item.allowedRoles || item.allowedRoles.includes(user?.role);
                 
                 if (!hasAccess) return null;
                 

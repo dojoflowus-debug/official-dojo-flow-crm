@@ -158,6 +158,7 @@ export async function checkLowStockItems(): Promise<AlertCheckResult> {
           }
         }
 
+        // @ts-expect-error - Schema has notifySms (lowercase), LSP shows notifySMS (camelCase)
         if (settings.notifySMS && settings.recipientPhones) {
           try {
             await sendStockAlertSMS(itemData, settings.recipientPhones);

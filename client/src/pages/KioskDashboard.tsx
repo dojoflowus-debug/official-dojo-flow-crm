@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +9,14 @@ import { Monitor, Plus, Settings, ExternalLink, AlertCircle } from 'lucide-react
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+const LAST_KIOSK_KEY = 'last-used-kiosk-slug';
+
 export default function KioskDashboard() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastKioskSlug, setLastKioskSlug] = useState<string | null>(() => {
+    return localStorage.getItem(LAST_KIOSK_KEY);
+  });
 
   // Fetch all locations with kiosk configurations
   const { data: locations, isLoading, error } = trpc.kiosk.listLocations.useQuery();
@@ -26,7 +31,27 @@ export default function KioskDashboard() {
       toast.error('Kiosk is not configured for this location');
       return;
     }
+    localStorage.setItem(LAST_KIOSK_KEY, slug);
+    setLastKioskSlug(slug);
     navigate(`/kiosk/${slug}`);
+  };
+
+  const handleCopyKioskLink = (slug?: string | null) => {
+    if (!slug) {
+      toast.error('Kiosk link not available');
+      return;
+    }
+    const link = `${window.location.origin}/kiosk/${slug}`;
+    navigator.clipboard.writeText(link);
+    toast.success('Kiosk link copied to clipboard');
+  };
+
+  const handleOpenLastKiosk = () => {
+    if (!lastKioskSlug) {
+      toast.error('No recent kiosk found');
+      return;
+    }
+    navigate(`/kiosk/${lastKioskSlug}`);
   };
 
   const handleManageSettings = (locationId: number) => {
@@ -44,14 +69,26 @@ export default function KioskDashboard() {
             Manage and access your front-desk check-in kiosks
           </p>
         </div>
-        <Button
-          onClick={() => navigate('/settings/kiosk')}
-          variant="outline"
-          className="gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Configure Kiosks
-        </Button>
+        <div className="flex gap-2">
+          {lastKioskSlug && (
+            <Button
+              onClick={handleOpenLastKiosk}
+              variant="default"
+              className="gap-2"
+            >
+              <Monitor className="h-4 w-4" />
+              Open Last Kiosk
+            </Button>
+          )}
+          <Button
+            onClick={() => navigate('/settings/kiosk')}
+            variant="outline"
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Configure Kiosks
+          </Button>
+        </div>
       </div>
 
       {/* Info Alert */}
@@ -156,7 +193,16 @@ export default function KioskDashboard() {
                     size="sm"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    Open Kiosk
+                    Open
+                  </Button>
+                  <Button
+                    onClick={() => handleCopyKioskLink(location.kioskSlug)}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    title="Copy kiosk link"
+                  >
+                    📋
                   </Button>
                   <Button
                     onClick={() => handleManageSettings(location.id)}

@@ -5758,3 +5758,16 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Verified no errors in browser console
 - [x] Tested error handling for invalid URLs
 
+
+
+## Phase 3: Owner Command Center Metrics Wiring (IN PROGRESS)
+
+- [ ] Wire Active Students metric (org + location scoped)
+- [ ] Wire Today's Attendance metric (live check-ins)
+- [ ] Wire New Leads metric (date-range filtered)
+- [ ] Wire Enrollments metric (real rule)
+- [ ] Wire Trials metric (or document clearly)
+- [ ] Implement Alerts Panel (2+ real types: lead follow-up, at-risk students)
+- [ ] Test all metrics with real data
+- [ ] Verify filters work correctly
+- [ ] Create aggregator shape for Phase 4 (Kai integration)

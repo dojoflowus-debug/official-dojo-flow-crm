@@ -78,6 +78,7 @@ import ThemesTest from "./pages/ThemesTest";
 import ThemesMinimal from "./pages/ThemesMinimal";
 import SettingsTest from "./pages/SettingsTest";
 import CommunicationSettings from "./pages/CommunicationSettings";
+import { OwnerCommandCenter } from "./pages/OwnerCommandCenter";
 import WebhookSettings from "./pages/WebhookSettings";
 import KioskSettings from "./pages/KioskSettings";
 import Campaigns from "./pages/Campaigns";
@@ -151,6 +152,7 @@ function Router() {
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/onboarding/setup" element={<OwnerOnboarding />} />
       <Route path="/owner/dashboard" element={<Navigate to="/kai" replace />} />
+      <Route path="/dashboard/command-center" element={<OwnerCommandCenter />} />
       <Route path="/welcome" element={<WelcomeDashboard />} />
       <Route path="/staff/login" element={<StaffAuth />} />
       <Route path="/student-login" element={<StudentAuthNew />} />
@@ -164,13 +166,19 @@ function Router() {
       <Route path="/kai-onboarding" element={<KaiHeroOnboarding />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />
+      <Route path="/test-brand" element={<TestBrand />} />
+      
+      {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
+      {/* Kiosk Manager Dashboard */}
+      <Route path="/kiosk" element={<KioskDashboard />} />
+      
+      {/* Kiosk Runtime - Tablet Interface */}
       <Route path="/kiosk/:locationSlug" element={<Kiosk />} />
       <Route path="/kiosk/:locationSlug/staff-login" element={<KioskStaffAuth />} />
+      <Route path="/kiosk/:locationSlug/member-login" element={<KioskMemberLogin />} />
       <Route path="/kiosk/:locationSlug/student-login" element={<KioskStudentAuth />} />
-      <Route path="/test-brand" element={<TestBrand />} />
-      <Route path="/kiosk/checkin" element={<KioskCheckIn />} />
-      <Route path="/kiosk/member-login" element={<KioskMemberLogin />} />
-      <Route path="/kiosk/new-student" element={<KioskNewStudent />} />
+      <Route path="/kiosk/:locationSlug/checkin" element={<KioskCheckIn />} />
+      <Route path="/kiosk/:locationSlug/new-student" element={<KioskNewStudent />} />
       <Route path="/enrollment" element={<EnrollmentStart />} />
       <Route path="/enrollment/form" element={<EnrollmentForm />} />
       <Route path="/enrollment/kai" element={<KaiEnrollment />} />
@@ -220,8 +228,6 @@ function Router() {
       <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />
       <Route path="/leads" element={<Leads />} />
       <Route path="/test-data" element={<TestData />} />
-      {/* Kiosk Dashboard - Manager for all kiosks */}
-      <Route path="/kiosk" element={<KioskDashboard />} />
       <Route path="/classes" element={<Classes />} />
       <Route path="/floor-plans" element={<FloorPlans />} />
       <Route path="/programs" element={<Programs />} />
@@ -279,7 +285,7 @@ function Router() {
       <Route path="/receptionist" element={<VirtualReceptionist />} />
       <Route path="/test-page" element={<VirtualReceptionist />} />
       <Route path="/kiosk-designer" element={<ProtectedRoute><KioskDesigner /></ProtectedRoute>} />
-      <Route path="/kiosk" element={<ProtectedRoute><KioskDesigner /></ProtectedRoute>} />
+      <Route path="/settings/kiosk/designer" element={<ProtectedRoute><KioskDesigner /></ProtectedRoute>} />
       <Route path="/404" element={<NotFound />} />
       {/* Final fallback route */}
       <Route path="*" element={<NotFound />} />
