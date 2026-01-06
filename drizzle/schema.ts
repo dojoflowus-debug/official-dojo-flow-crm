@@ -1722,3 +1722,115 @@ export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
+
+
+// ============================================================================
+// KAI COMMAND - Operational Status Dashboard
+// ============================================================================
+
+/**
+ * Incidents table - tracks operational incidents and issues
+ * Used for the KAI Command dashboard to display critical events
+ */
+export const kaiIncidents = mysqlTable("kai_incidents", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	title: varchar({ length: 255 }).notNull(),
+	description: text(),
+	severity: mysqlEnum(['critical', 'high', 'medium', 'low']).default('medium').notNull(),
+	status: mysqlEnum(['open', 'acknowledged', 'in_progress', 'resolved', 'closed']).default('open').notNull(),
+	category: mysqlEnum(['system', 'infrastructure', 'security', 'performance', 'other']).default('other').notNull(),
+	assignedTo: int(),
+	createdBy: int(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	resolvedAt: timestamp({ mode: 'string' }),
+	deletedAt: timestamp({ mode: 'string' }),
+},
+(table) => [
+	index("idx_kai_incidents_org").on(table.organizationId),
+	index("idx_kai_incidents_status").on(table.status),
+	index("idx_kai_incidents_severity").on(table.severity),
+	index("idx_kai_incidents_created").on(table.createdAt),
+]);
+
+/**
+ * Alerts table - real-time alerts and notifications
+ * Used to display priority actions and system alerts
+ */
+export const kaiAlerts = mysqlTable("kai_alerts", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	type: mysqlEnum(['warning', 'error', 'info', 'success']).default('info').notNull(),
+	title: varchar({ length: 255 }).notNull(),
+	message: text(),
+	severity: mysqlEnum(['critical', 'high', 'medium', 'low']).default('medium').notNull(),
+	dismissed: int().default(0).notNull(),
+	dismissedAt: timestamp({ mode: 'string' }),
+	dismissedBy: int(),
+	actionUrl: varchar({ length: 500 }),
+	metadata: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_kai_alerts_org").on(table.organizationId),
+	index("idx_kai_alerts_dismissed").on(table.dismissed),
+	index("idx_kai_alerts_severity").on(table.severity),
+	index("idx_kai_alerts_created").on(table.createdAt),
+]);
+
+/**
+ * Operations log - audit trail of operational events
+ * Used to display the operations log in KAI Command dashboard
+ */
+export const kaiOperationsLog = mysqlTable("kai_operations_log", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	action: varchar({ length: 255 }).notNull(),
+	actionType: mysqlEnum(['create', 'update', 'delete', 'execute', 'query', 'other']).default('other').notNull(),
+	details: text(),
+	status: mysqlEnum(['success', 'pending', 'failed']).default('pending').notNull(),
+	performedBy: int(),
+	relatedIncidentId: int(),
+	metadata: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_kai_operations_org").on(table.organizationId),
+	index("idx_kai_operations_type").on(table.actionType),
+	index("idx_kai_operations_status").on(table.status),
+	index("idx_kai_operations_created").on(table.createdAt),
+]);
+
+/**
+ * System status table - tracks health of monitored systems
+ * Used to display system status in KAI Command dashboard
+ */
+export const kaiSystemStatus = mysqlTable("kai_system_status", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	systemName: varchar({ length: 255 }).notNull(),
+	status: mysqlEnum(['healthy', 'degraded', 'offline', 'unknown']).default('unknown').notNull(),
+	uptime: int(),
+	lastCheckedAt: timestamp({ mode: 'string' }),
+	responseTime: int(),
+	metadata: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_kai_system_org").on(table.organizationId),
+	index("idx_kai_system_status").on(table.status),
+	index("idx_kai_system_checked").on(table.lastCheckedAt),
+]);
+
+// KAI Command Type Exports
+export type KaiIncident = typeof kaiIncidents.$inferSelect;
+export type InsertKaiIncident = typeof kaiIncidents.$inferInsert;
+export type KaiAlert = typeof kaiAlerts.$inferSelect;
+export type InsertKaiAlert = typeof kaiAlerts.$inferInsert;
+export type KaiOperationLog = typeof kaiOperationsLog.$inferSelect;
+export type InsertKaiOperationLog = typeof kaiOperationsLog.$inferInsert;
+export type KaiSystemStatus = typeof kaiSystemStatus.$inferSelect;
+export type InsertKaiSystemStatus = typeof kaiSystemStatus.$inferInsert;

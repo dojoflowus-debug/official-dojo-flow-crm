@@ -32,6 +32,7 @@ import { platformRouter } from "./platformRouter";
 import { platformAdminAuthRouter } from "./platformAdminAuth";
 import { masterDashboardRouter } from "./masterDashboardRouter";
 import { ownerProfileRouter } from "./ownerProfileRouter";
+import { kaiCommandRouter } from "./kaiCommandRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -363,6 +364,7 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  kaiCommand: kaiCommandRouter,
   
   // Platform Admin CRM (internal only)
   platform: platformRouter,
@@ -2181,12 +2183,21 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { kaiConversations } = await import("../drizzle/schema");
+        const { TRPCError } = await import("@trpc/server");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
+        // Ensure organizationId is always present
+        if (!ctx.currentOrganizationId) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'No organization context. Please select an organization first.',
+          });
+        }
+        
         const [result] = await db.insert(kaiConversations).values({
-          organizationId: ctx.currentOrganizationId || 0,
+          organizationId: ctx.currentOrganizationId,
           userId: ctx.user.id,
           title: input?.title || "New Conversation",
           summary: null,
@@ -2199,7 +2210,7 @@ export const appRouter = router({
           participantIds: JSON.stringify([ctx.user.id]),
         });
         
-        console.log('[kai.createConversation] Conversation created with ID:', result.insertId);
+        console.log('[kai.createConversation] Conversation created with ID:', result.insertId, 'orgId:', ctx.currentOrganizationId);
         return { id: result.insertId };
       }),
 
@@ -2250,10 +2261,10 @@ export const appRouter = router({
           
           console.log('[kai.addMessage] Conversation found:', conversation.id);
           
-          // Insert the message
+          // Insert the message with explicit organizationId from conversation
           const [result] = await db.insert(kaiMessages).values({
             conversationId: input.conversationId,
-            organizationId: ctx.currentOrganizationId || 0,
+            organizationId: conversation.organizationId,
             role: input.role,
             content: input.content,
             metadata: input.metadata,

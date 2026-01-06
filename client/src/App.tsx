@@ -39,6 +39,7 @@ import StudentResetPassword from "./pages/StudentResetPassword";
 import StudentRegister from "./pages/StudentRegister";
 import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
+import KaiCommandDashboard from "./pages/KaiCommandDashboard";
 import CRMDashboard from "./pages/CRMDashboard";
 import StudentsNew from "./pages/StudentsNew";
 import StudentsSplitScreen from "./pages/StudentsSplitScreen";
@@ -154,6 +155,8 @@ function Router() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/kai" element={<KaiCommand />} />
+      <Route path="/kai-command" element={<KaiCommandDashboard />} />
+      <Route path="/command" element={<KaiCommandDashboard />} />
       <Route path="/kai-onboarding" element={<KaiHeroOnboarding />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       <Route path="/checkin" element={<CheckIn />} />

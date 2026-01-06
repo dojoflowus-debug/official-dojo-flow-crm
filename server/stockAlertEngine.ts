@@ -101,8 +101,11 @@ export async function checkLowStockItems(): Promise<AlertCheckResult> {
 
         if (existingAlert) {
           // Check if we should send another notification (cooldown period)
+          const lastAlertTime = typeof existingAlert.lastAlertSent === 'string' 
+            ? new Date(existingAlert.lastAlertSent).getTime()
+            : existingAlert.lastAlertSent.getTime();
           const hoursSinceLastAlert = 
-            (Date.now() - existingAlert.lastAlertSent.getTime()) / (1000 * 60 * 60);
+            (Date.now() - lastAlertTime) / (1000 * 60 * 60);
           
           if (hoursSinceLastAlert < settings.alertCooldownHours) {
             console.log(`[StockAlert] Skipping ${item.name} - cooldown period active`);
@@ -233,8 +236,8 @@ async function sendStockAlertSMS(item: LowStockItem, recipients: string): Promis
   for (const phone of phones) {
     await sendSMS({
       to: phone,
-      message,
-    });
+      body: message,
+    }).catch(err => console.error(`[StockAlert] Failed to send SMS to ${phone}:`, err));
   }
 }
 
@@ -299,7 +302,7 @@ export async function resolveAlert(alertId: number, resolvedBy?: number, notes?:
     .update(stockAlerts)
     .set({
       isResolved: 1,
-      resolvedAt: new Date(),
+      resolvedAt: new Date().toISOString(),
       resolvedBy,
       resolutionNotes: notes,
     })

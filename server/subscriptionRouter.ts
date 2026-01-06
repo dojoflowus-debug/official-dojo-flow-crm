@@ -162,16 +162,15 @@ export const subscriptionRouter = router({
       userId: z.number().optional()
     }))
     .mutation(async ({ input }) => {
-      const success = await deductCredits(
-        input.organizationId,
-        input.amount,
-        input.taskType,
-        input.description,
-        input.metadata,
-        input.userId
-      );
+      const result = await deductCredits({
+        organizationId: input.organizationId,
+        amount: input.amount,
+        taskType: input.taskType,
+        description: input.description,
+        metadata: input.metadata,
+      });
 
-      if (!success) {
+      if (!result.success) {
         throw new TRPCError({ 
           code: "PRECONDITION_FAILED", 
           message: "Insufficient credits. Please purchase more credits or upgrade your plan." 
