@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { ArrowRight, Play, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RealResults } from "@/components/RealResults";
 
 export default function Home() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -216,6 +217,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Real Results Section */}
+      <RealResults />
 
       {/* Testimonials Section */}
       <section className="bg-card py-20 px-4">
