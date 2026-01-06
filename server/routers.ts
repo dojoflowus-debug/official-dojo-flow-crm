@@ -2186,7 +2186,7 @@ export const appRouter = router({
         if (!db) throw new Error("Database not available");
         
         const [result] = await db.insert(kaiConversations).values({
-          organizationId: ctx.user.organizationId,
+          organizationId: ctx.currentOrganizationId || 0,
           userId: ctx.user.id,
           title: input?.title || "New Conversation",
           summary: null,
@@ -2220,7 +2220,7 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
-        console.log('[kai.addMessage] Adding message to conversation:', input.conversationId, 'userId:', ctx.user.id, 'orgId:', ctx.user.organizationId);
+        console.log('[kai.addMessage] Adding message to conversation:', input.conversationId, 'userId:', ctx.user.id, 'orgId:', ctx.currentOrganizationId);
         
         try {
           // Verify user owns this conversation - use select() with proper column selection
@@ -2253,7 +2253,7 @@ export const appRouter = router({
           // Insert the message
           const [result] = await db.insert(kaiMessages).values({
             conversationId: input.conversationId,
-            organizationId: ctx.user.organizationId,
+            organizationId: ctx.currentOrganizationId || 0,
             role: input.role,
             content: input.content,
             metadata: input.metadata,
