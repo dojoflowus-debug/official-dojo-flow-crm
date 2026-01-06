@@ -95,7 +95,7 @@ export function OwnerCommandCenter() {
           <KPITile
             icon={Target}
             label={`New Leads (${dateRange})`}
-            value={stats?.total_leads || 0}
+            value={stats?.new_leads || 0}
             trend={0}
             link="/leads"
             isLoading={statsLoading}
