@@ -5665,3 +5665,17 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Implement role-based access control (admin/staff only)
 - [x] Create KioskDashboard page component
 - [x] Verify existing kiosk implementation
+
+
+## 🔧 Fix: Sidebar Not Visible - Implement Bottom Menu Bar for Kiosk
+
+### Issue
+- [x] Sidebar navigation is not visible in current layout
+- [x] Need to implement bottom menu bar for kiosk/touch interface
+
+### Tasks
+- [x] Create KioskBottomNav component with bottom menu bar (already exists as BottomNavLayout)
+- [x] Update BottomNavLayout to always show navigation (disabled scroll-hide behavior)
+- [x] Enhanced visibility with improved shadow and background opacity
+- [x] Test bottom menu bar visibility and functionality
+- [x] Verify responsive design for kiosk displays

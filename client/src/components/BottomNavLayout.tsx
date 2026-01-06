@@ -113,7 +113,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
     }
   )
   
-  // Scroll detection for collapsible bottom nav
+  // Scroll detection for collapsible bottom nav - DISABLED for kiosk (always visible)
   const [isNavVisible, setIsNavVisible] = useState(true)
   const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(null)
   
@@ -128,32 +128,11 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
   // Manus Settings Modal state
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   
+  // KIOSK MODE: Keep navigation always visible
   useEffect(() => {
-    const handleScroll = () => {
-      // Hide nav immediately when scrolling starts
-      setIsNavVisible(false)
-      
-      // Clear existing timeout
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
-      }
-      
-      // Set new timeout to show nav after scrolling stops
-      const timeout = setTimeout(() => {
-        setIsNavVisible(true)
-      }, 300) // Show nav 300ms after scrolling stops
-      
-      setScrollTimeout(timeout)
-    }
-    
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
-      }
-    }
-  }, [scrollTimeout])
+    // Navigation is always visible in kiosk mode
+    setIsNavVisible(true)
+  }, [])
   
   // Get current page title
   const currentPageTitle = PAGE_TITLES[location.pathname] || 'DojoFlow'
@@ -442,12 +421,12 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
         {children}
       </main>
 
-      {/* Bottom Navigation Bar - Always Dark Dock - Hidden in Focus Mode */}
+      {/* Bottom Navigation Bar - Always Visible for Kiosk - Hidden in Focus Mode */}
       <nav 
         className={`
           fixed left-0 right-0 z-[1500] h-16
           transition-all duration-300 ease-in-out
-          ${hiddenInFocusMode ? 'translate-y-full opacity-0 pointer-events-none' : (isNavVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}
+          ${hiddenInFocusMode ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}
           bottom-0
           ${isCinematic 
             ? 'border-t border-white/[0.06]' 
@@ -457,15 +436,15 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
         `}
         style={{
           background: isCinematic 
-            ? 'rgba(5,5,8,0.75)' 
+            ? 'rgba(5,5,8,0.95)' 
             : isDark 
-              ? '#111217' 
-              : '#050608',
+              ? '#0a0a0d' 
+              : '#000000',
           boxShadow: isCinematic 
-            ? '0 -6px 22px rgba(0,0,0,0.85), 0 0 14px rgba(255,90,60,0.18)' 
+            ? '0 -8px 32px rgba(0,0,0,0.95), 0 0 20px rgba(255,90,60,0.25)' 
             : isDark 
-              ? '0 -2px 10px rgba(0,0,0,0.6)' 
-              : '0 -2px 8px rgba(0,0,0,0.35)'
+              ? '0 -4px 16px rgba(0,0,0,0.8)' 
+              : '0 -4px 12px rgba(0,0,0,0.5)'
         }}
       >
         <ScrollableNav 
