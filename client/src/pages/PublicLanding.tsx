@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/MainLayout";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus, Menu, X, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus, Menu, X, MessageCircle, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -38,10 +38,7 @@ export default function PublicLanding() {
   const [selectedCategory, setSelectedCategory] = useState<PromptCategory | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
-  const [hoveredCard, setHoveredCard] = useState<PromptCategory | null>(null);
-  const [focusedCard, setFocusedCard] = useState<PromptCategory | null>(null);
-  const [inputFocused, setInputFocused] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showKaiOnboarding, setShowKaiOnboarding] = useState(false);
@@ -215,98 +212,7 @@ export default function PublicLanding() {
     }
   };
 
-  const promptCards = [
-    {
-      category: "growth" as PromptCategory,
-      title: "GROW KIDS PROGRAM",
-      prompt: "Help me grow my kids program to 150 students.",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "health" as PromptCategory,
-      title: "REVIEW ATTENDANCE",
-      prompt: "Show attendance and missed classes for this week.",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "billing" as PromptCategory,
-      title: "RESOLVE LATE PAYMENTS",
-      prompt: "Who is late on payments, and how can we fix it?",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "retention" as PromptCategory,
-      title: "IDENTIFY AT-RISK STUDENTS",
-      prompt: "Show me which students are at high risk of quitting.",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "enrollments" as PromptCategory,
-      title: "FOLLOW UP ON LEADS",
-      prompt: "Show me all leads that need follow-up today.",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "at-risk" as PromptCategory,
-      title: "RECOVER INACTIVE MEMBERS",
-      prompt: "Who hasn't attended in 14+ days?",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "class-quality" as PromptCategory,
-      title: "ANALYZE CLASS CAPACITY",
-      prompt: "Which classes are over- or under-capacity?",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "parent-comms" as PromptCategory,
-      title: "DRAFT PARENT MESSAGE",
-      prompt: "Draft a message to parents about upcoming events.",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "staff-perf" as PromptCategory,
-      title: "REVIEW INSTRUCTOR PERFORMANCE",
-      prompt: "Which instructors have the highest retention this month?",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    },
-    {
-      category: "financial" as PromptCategory,
-      title: "VIEW FINANCIAL SUMMARY",
-      prompt: "Give me revenue, expenses, and projections for this month.",
-      gradient: "from-transparent to-transparent",
-      hoverGradient: "hover:from-transparent hover:to-transparent",
-      borderColor: "border-red-500",
-      titleColor: "text-red-400"
-    }
-  ];
+
 
   const features = [
     {
@@ -411,223 +317,66 @@ export default function PublicLanding() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 sm:py-16 md:py-20">
           {/* Kai Command Center */}
           <div className="max-w-6xl mx-auto">
-            {/* Headline */}
-            <div className="text-center mb-8 sm:mb-10 md:mb-14 space-y-3 sm:space-y-4 md:space-y-5">
-              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight drop-shadow-2xl flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 relative">
-                <img src="/kai-icon-hero.png" alt="Kai" className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 drop-shadow-2xl" />
-                <span className="relative">
-                  Hi, I'm Kai.
-                  {/* Soft ambient light pulse behind text */}
-                  <div 
-                    className="absolute inset-0 -z-10 blur-3xl opacity-40"
-                    style={{
-                      background: 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.6) 0%, transparent 70%)',
-                      animation: 'ambientPulse 4s ease-in-out infinite'
-                    }}
-                  />
-                </span>
+            {/* Kai Emblem/Orb - Central Focus */}
+            <div className="flex justify-center mb-8 sm:mb-12 md:mb-16 animate-[fadeSlideUp_0.7s_ease-out_0.2s_forwards]">
+              <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 flex items-center justify-center">
+                {/* Outer glow ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-red-500/40 animate-spin" style={{ animationDuration: "8s" }} />
+                
+                {/* Middle ring */}
+                <div className="absolute inset-2 rounded-full border border-red-500/30" />
+                
+                {/* Inner orb with breathing effect */}
+                <div className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-red-500/40 to-red-600/20 flex items-center justify-center shadow-lg shadow-red-500/30 animate-pulse-slow">
+                  <img src="/kai-icon-hero.png" alt="Kai" className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 drop-shadow-lg" />
+                </div>
+              </div>
+            </div>
+
+            {/* Primary Headline - Authoritative & Powerful */}
+            <div className="text-center mb-6 sm:mb-8 md:mb-10 space-y-3 sm:space-y-4 md:space-y-5 animate-[fadeSlideUp_0.7s_ease-out_0.4s_forwards]">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight text-white tracking-tight drop-shadow-2xl">
+                This is your command center.
               </h1>
-              <p className="text-lg sm:text-xl md:text-3xl lg:text-4xl text-slate-200 font-light tracking-wide px-4 sm:px-0">
-                What would you like to optimize today?
+              <p className="text-lg sm:text-xl md:text-2xl text-slate-200 font-light tracking-wide px-4 sm:px-0">
+                Kai is your AI operations assistant for martial arts schools.
               </p>
-              
-              {/* Talk to Kai CTA Button */}
-              <button
+            </div>
+
+            {/* Secondary Message - System-like Authority */}
+            <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-10 sm:mb-12 md:mb-14 px-4 sm:px-0 animate-[fadeSlideUp_0.7s_ease-out_0.6s_forwards]">
+              From student management to instructor coordination, Kai learns your environment and delivers intelligent solutions in real time.
+            </p>
+
+            {/* CTA Buttons - Clear Actions */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-[fadeSlideUp_0.7s_ease-out_0.8s_forwards]">
+              {/* Primary CTA */}
+              <button 
                 onClick={() => setShowKaiOnboarding(true)}
-                className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 mt-4 sm:mt-6 rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-base sm:text-lg font-semibold transition-all duration-300 shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] hover:scale-105"
+                className="group inline-flex items-center gap-2 sm:gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-base sm:text-lg font-bold uppercase tracking-wider transition-all duration-300 shadow-lg shadow-red-500/40 hover:shadow-red-500/60 hover:scale-105"
               >
-                <MessageCircle className="w-5 h-5 group-hover:animate-pulse" />
+                <MessageCircle className="w-5 h-5" />
                 Talk to Kai
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-            </div>
-
-            {/* Prompt Cards Carousel - Horizontal scrolling with navigation */}
-            <div className="relative mb-8 sm:mb-10 md:mb-14">
-              {/* Carousel Navigation Buttons */}
-              <button
-                onClick={() => {
-                  const carousel = document.getElementById('prompt-carousel');
-                  if (carousel) carousel.scrollBy({ left: -320, behavior: 'smooth' });
-                }}
-                className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-black/70 hover:border-white/40 transition-all duration-300 shadow-lg"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => {
-                  const carousel = document.getElementById('prompt-carousel');
-                  if (carousel) carousel.scrollBy({ left: 320, behavior: 'smooth' });
-                }}
-                className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 items-center justify-center text-white hover:bg-black/70 hover:border-white/40 transition-all duration-300 shadow-lg"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-
-              {/* Scrollable Carousel Container */}
-              <div 
-                id="prompt-carousel"
-                className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x snap-mandatory scrollbar-hide"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {promptCards.map((card, index) => (
-                  <button
-                    key={card.category}
-                    onClick={() => handleCardClick(card.category)}
-                    onMouseEnter={() => setHoveredCard(card.category)}
-                    onMouseLeave={() => setHoveredCard(null)}
-                    onFocus={() => setFocusedCard(card.category)}
-                    onBlur={() => setFocusedCard(null)}
-                    className={`group relative flex-shrink-0 w-[200px] sm:w-[240px] md:w-[280px] p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${card.gradient} backdrop-blur-xl border-2 sm:border-[3px] transition-all duration-500 text-left shadow-2xl snap-start ${
-                      index === 0 && !hoveredCard && !focusedCard ? 'border-red-400' : 'border-red-500'
-                    } ${
-                      hoveredCard === card.category || focusedCard === card.category
-                        ? 'border-red-400 scale-[1.03] translate-y-[-4px] shadow-[0_0_60px_rgba(239,68,68,0.4)]'
-                        : hoveredCard || focusedCard
-                        ? 'opacity-60 scale-[0.98]'
-                        : 'hover:border-red-400 hover:scale-[1.03] hover:translate-y-[-4px] hover:shadow-[0_0_60px_rgba(239,68,68,0.4)]'
-                    }`}
-                    style={{
-                      boxShadow: hoveredCard === card.category || focusedCard === card.category
-                        ? '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 60px rgba(239,68,68,0.4)'
-                        : '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
-                    }}
-                  >
-                    {/* Stronger glow border effect */}
-                    <div 
-                      className="absolute inset-0 rounded-2xl transition-opacity duration-500" 
-                      style={{
-                        background: 'radial-gradient(circle at center, rgba(239, 68, 68, 0.3) 0%, transparent 70%)',
-                        filter: 'blur(20px)',
-                        opacity: hoveredCard === card.category || focusedCard === card.category ? 1 : 0
-                      }} 
-                    />
-                    
-                    {/* Animated outline pulse on focus */}
-                    {focusedCard === card.category && (
-                      <div 
-                        className="absolute inset-0 rounded-2xl border-2 border-red-400"
-                        style={{
-                          animation: 'outlinePulse 2s ease-in-out infinite'
-                        }}
-                      />
-                    )}
-                    
-                    {/* Star icon top-right OR Recommended badge */}
-                    {index === 0 && !hoveredCard && !focusedCard ? (
-                      <div className="absolute top-2 right-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 border border-red-400/50 text-[10px] font-semibold text-red-300 backdrop-blur-sm">
-                          <Star className="w-2.5 h-2.5 fill-red-400 text-red-400" />
-                          Top
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="absolute top-2 right-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
-                        <Star className="w-3.5 h-3.5 text-white drop-shadow-lg" />
-                      </div>
-                    )}
-
-                    {/* Card content */}
-                    <div className="relative space-y-2 pr-8">
-                      <div 
-                        className={`text-[10px] font-bold uppercase tracking-widest ${card.titleColor} drop-shadow-md transition-all duration-300`}
-                        style={{
-                          filter: hoveredCard === card.category || focusedCard === card.category ? 'brightness(1.3)' : 'brightness(1)'
-                        }}
-                      >
-                        {card.title}
-                      </div>
-                      <div 
-                        className="text-sm font-medium text-white leading-snug drop-shadow-lg transition-all duration-300 line-clamp-2"
-                        style={{
-                          filter: hoveredCard === card.category || focusedCard === card.category ? 'brightness(1.2)' : 'brightness(1)'
-                        }}
-                      >
-                        {card.prompt}
-                      </div>
-                    </div>
-
-                    {/* Enhanced glassmorphism overlay on hover */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/0 to-white/0 group-hover:from-white/10 group-hover:to-white/5 transition-all duration-500 pointer-events-none" />
-                  </button>
-                ))}
-              </div>
-
-              {/* Scroll Indicator Dots */}
-              <div className="flex justify-center gap-1.5 mt-4">
-                {Array.from({ length: Math.ceil(promptCards.length / 3) }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      const carousel = document.getElementById('prompt-carousel');
-                      if (carousel) carousel.scrollTo({ left: i * 320 * 3, behavior: 'smooth' });
-                    }}
-                    className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors"
-                    aria-label={`Go to page ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Chat Input Bar - Enhanced glassmorphism with glow */}
-            <div className="max-w-4xl mx-auto px-2 sm:px-0">
-              <div 
-                className="relative backdrop-blur-2xl border-2 rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 shadow-2xl transition-all duration-300"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  borderColor: inputFocused ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)',
-                  boxShadow: inputFocused || inputValue
-                    ? '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 30px rgba(239,68,68,0.3)'
-                    : '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.1)',
-                  transform: inputFocused ? 'scale(1.02)' : 'scale(1)'
-                }}
-              >
-                {/* Subtle top highlight */}
-                <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                
-                {/* Reactive glow when typing */}
-                {(inputFocused || inputValue) && (
-                  <div 
-                    className="absolute inset-0 rounded-3xl -z-10"
-                    style={{
-                      background: 'radial-gradient(circle at center, rgba(239, 68, 68, 0.2) 0%, transparent 70%)',
-                      filter: 'blur(20px)',
-                      animation: 'inputGlow 2s ease-in-out infinite'
-                    }}
-                  />
-                )}
-                
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <input
-                    type="text"
-                    placeholder="Talk to Kai..."
-                    className="flex-1 bg-transparent text-white placeholder:text-slate-300 outline-none text-base sm:text-lg md:text-xl font-light tracking-wide transition-all duration-300 cursor-pointer"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onFocus={() => {
-                      setInputFocused(true);
-                      setShowKaiOnboarding(true);
-                    }}
-                    onBlur={() => setInputFocused(false)}
-                    onClick={() => setShowKaiOnboarding(true)}
-                    readOnly
-                  />
-                  <button 
-                    onClick={() => setShowKaiOnboarding(true)}
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 flex-shrink-0"
-                  >
-                    <MessageCircle className="w-6 h-6 text-white" />
-                  </button>
-                </div>
-              </div>
               
-              {/* Text hint below input */}
-              <p className="text-center text-sm text-slate-400 mt-3 font-light">
-                Click to start a conversation with Kai
+              {/* Secondary CTA */}
+              <button 
+                className="group inline-flex items-center gap-2 sm:gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-lg border-2 border-red-500 text-red-400 hover:text-red-300 hover:border-red-400 text-base sm:text-lg font-bold uppercase tracking-wider transition-all duration-300 hover:bg-red-500/10"
+              >
+                Watch Demo
+                <Play className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Subtle Scroll Hint */}
+            <div className="pt-12 sm:pt-16 md:pt-20 animate-[fadeSlideUp_0.7s_ease-out_1s_forwards]">
+              <p className="text-xs text-slate-400/70 uppercase tracking-widest animate-bounce text-center">
+                Scroll to explore
               </p>
             </div>
+
+
           </div>
         </div>
       </section>
