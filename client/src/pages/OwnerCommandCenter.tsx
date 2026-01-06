@@ -114,13 +114,12 @@ export function OwnerCommandCenter() {
 
           {/* New Enrollments */}
           <KPITile
-            icon={DollarSign}
-            label={`New Enrollments (${dateRange})`}
-            value={0}
+            icon={Users}
+            label="New Enrollments"
+            value={stats?.new_enrollments || 0}
             trend={0}
             link="/students"
             isLoading={statsLoading}
-            notAvailable={true}
           />
         </div>
 

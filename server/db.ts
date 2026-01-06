@@ -271,11 +271,22 @@ export async function getDashboardStats(organizationId?: number | null) {
     )
   );
   
+  // New enrollments (approved, this week)
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const { enrollments } = await import("../drizzle/schema");
+  const newEnrollmentsResult = await db.select({ count: count() }).from(enrollments).where(
+    and(
+      eq(enrollments.status, 'approved'),
+      gte(enrollments.createdAt, weekAgo.toISOString())
+    )
+  );
+  
   return {
     total_students: totalStudents[0]?.count || 0,
     active_students: activeStudentsResult[0]?.count || 0,
     todays_attendance: todayAttendanceResult[0]?.count || 0,
     new_leads: newLeadsResult[0]?.count || 0,
+    new_enrollments: newEnrollmentsResult[0]?.count || 0,
     monthly_revenue: 12500, // TODO: Calculate from billing data
     total_leads: totalLeads[0]?.count || 0,
     todays_classes: todaysClasses.map(c => ({
