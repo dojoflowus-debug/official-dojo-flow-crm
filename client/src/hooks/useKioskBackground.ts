@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 
+// Default background - used as ultimate fallback
+const DEFAULT_BACKGROUND_URL = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80';
+
 interface KioskBackground {
   type?: string;
   presetKey?: string | null;
@@ -16,6 +19,8 @@ interface KioskBackground {
 export function useKioskBackground(locationId: number) {
   const [background, setBackground] = useState<KioskBackground | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // Fetch location background
   const { data: fetchedBackground, isLoading: isFetching } =
@@ -23,7 +28,14 @@ export function useKioskBackground(locationId: number) {
 
   useEffect(() => {
     if (fetchedBackground) {
-      setBackground(fetchedBackground);
+      // Ensure we always have a valid background with fallback URL
+      const validatedBackground: KioskBackground = {
+        ...fetchedBackground,
+        imageUrl: fetchedBackground.imageUrl || fetchedBackground.presetKey || DEFAULT_BACKGROUND_URL,
+      };
+      setBackground(validatedBackground);
+      setImageLoaded(false);
+      setImageError(null);
       setIsLoading(false);
     }
   }, [fetchedBackground]);
@@ -31,6 +43,32 @@ export function useKioskBackground(locationId: number) {
   useEffect(() => {
     setIsLoading(isFetching);
   }, [isFetching]);
+
+  // Preload image to detect errors early
+  useEffect(() => {
+    if (!background?.imageUrl) return;
+
+    const img = new Image();
+    const handleLoad = () => {
+      setImageLoaded(true);
+      setImageError(null);
+    };
+    const handleError = () => {
+      console.warn(`[KioskBackground] Failed to load image: ${background.imageUrl}`);
+      setImageError(`Failed to load image: ${background.imageUrl}`);
+      setImageLoaded(false);
+      // Keep the URL but mark as error - UI will handle fallback
+    };
+
+    img.addEventListener('load', handleLoad);
+    img.addEventListener('error', handleError);
+    img.src = background.imageUrl;
+
+    return () => {
+      img.removeEventListener('load', handleLoad);
+      img.removeEventListener('error', handleError);
+    };
+  }, [background?.imageUrl]);
 
   /**
    * Apply background to an element
@@ -128,6 +166,8 @@ export function useKioskBackground(locationId: number) {
   return {
     background,
     isLoading,
+    imageLoaded,
+    imageError,
     applyBackground,
     applyBackgroundWithOverlay,
     getBackgroundStyles,

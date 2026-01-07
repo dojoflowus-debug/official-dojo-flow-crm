@@ -1947,7 +1947,22 @@ export async function updateKioskBackgroundImage(locationId: number, imageUrl: s
   const db = await getDb();
   if (!db) return false;
   try {
-    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    // Get raw settings from database without merging defaults
+    const location = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
+    if (location.length === 0) return false;
+    
+    let currentSettings: KioskSettings = getDefaultKioskSettings();
+    if (location[0].kioskSettings) {
+      try {
+        const parsed = typeof location[0].kioskSettings === 'string' 
+          ? JSON.parse(location[0].kioskSettings) 
+          : location[0].kioskSettings;
+        currentSettings = parsed;
+      } catch (e) {
+        console.error("[Database] Failed to parse settings:", e);
+      }
+    }
+    
     const updatedSettings: KioskSettings = {
       ...currentSettings,
       background: {
@@ -1971,10 +1986,31 @@ export async function resetKioskBackground(locationId: number, presetKey: string
   const db = await getDb();
   if (!db) return false;
   try {
-    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    // Get raw settings from database without merging defaults
+    const location = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
+    if (location.length === 0) return false;
+    
+    let currentSettings: KioskSettings = getDefaultKioskSettings();
+    if (location[0].kioskSettings) {
+      try {
+        const parsed = typeof location[0].kioskSettings === 'string' 
+          ? JSON.parse(location[0].kioskSettings) 
+          : location[0].kioskSettings;
+        currentSettings = parsed;
+      } catch (e) {
+        console.error("[Database] Failed to parse settings:", e);
+      }
+    }
+    
     const updatedSettings: KioskSettings = {
       ...currentSettings,
-      background: { type: 'preset', presetKey, blur: 0, dim: 0, vignette: false }
+      background: {
+        type: 'preset',
+        presetKey,
+        blur: 0,
+        dim: 0,
+        vignette: false,
+      },
     };
     await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
     return true;
@@ -1988,7 +2024,21 @@ export async function updateKioskBackgroundEffects(locationId: number, blur: num
   const db = await getDb();
   if (!db) return false;
   try {
-    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const location = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
+    if (location.length === 0) return false;
+    
+    let currentSettings: KioskSettings = getDefaultKioskSettings();
+    if (location[0].kioskSettings) {
+      try {
+        const parsed = typeof location[0].kioskSettings === 'string' 
+          ? JSON.parse(location[0].kioskSettings) 
+          : location[0].kioskSettings;
+        currentSettings = parsed;
+      } catch (e) {
+        console.error("[Database] Failed to parse settings:", e);
+      }
+    }
+    
     const updatedSettings: KioskSettings = {
       ...currentSettings,
       background: {
@@ -2119,16 +2169,34 @@ export async function getLocationBackgroundWithFallback(
   if (!db) return getDefaultKioskSettings().background;
 
   try {
-    // Get location's background settings
-    const locationSettings = await getKioskSettingsByLocationId(locationId);
-    if (locationSettings.background?.presetKey || locationSettings.background?.imageUrl) {
-      return locationSettings.background;
+    // Get location's background settings (without defaults merged in)
+    const location = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
+    if (location.length > 0 && location[0].kioskSettings) {
+      try {
+        const settings = typeof location[0].kioskSettings === 'string' 
+          ? JSON.parse(location[0].kioskSettings) 
+          : location[0].kioskSettings;
+        
+        // Priority: custom imageUrl first, then presetKey, then default
+            console.log('[DEBUG] parsed settings keys:', Object.keys(settings));
+        console.log('[DEBUG] getLocationBackgroundWithFallback - background:', JSON.stringify(settings.background));
+        if (settings.background?.imageUrl) {
+          console.log('[DEBUG] Returning custom imageUrl');
+          return settings.background;
+        }
+        if (settings.background?.presetKey) {
+          console.log('[DEBUG] Returning presetKey');
+          return settings.background;
+        }
+      } catch (e) {
+        console.error("[Database] Failed to parse location background:", e);
+      }
     }
 
     // Fallback to org default if available
     if (organizationId) {
       const orgSettings = await getOrganizationKioskSettings(organizationId);
-      if (orgSettings?.background?.presetKey || orgSettings?.background?.imageUrl) {
+      if (orgSettings?.background?.imageUrl || orgSettings?.background?.presetKey) {
         return orgSettings.background;
       }
     }

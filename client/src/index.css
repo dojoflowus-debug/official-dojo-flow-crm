@@ -412,3 +412,35 @@ h3 {
     font-size: 1.25rem;
   }
 }
+
+
+/* ===== Kiosk Background Layers ===== */
+/* 
+ * Layer structure for kiosk backgrounds:
+ * z-index -2: Background image (with blur)
+ * z-index -1: Dim overlay
+ * z-index 0+: Content (children)
+ */
+
+.kiosk-bg-image {
+  /* Fallback color prevents black screen if image fails */
+  background-color: #1a1a1a;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  /* Ensure it doesn't interfere with content */
+  pointer-events: none;
+}
+
+.kiosk-bg-dim {
+  /* Dim overlay on top of image, below content */
+  pointer-events: none;
+  transition: background-color 0.3s ease;
+}
+
+/* Ensure content is always visible above backgrounds */
+.kiosk-content {
+  position: relative;
+  z-index: 1;
+}

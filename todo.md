@@ -5990,3 +5990,39 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - Pagination working (1-10 of 61 schools)
 - Filters for Status and Plans available
 - Search functionality working
+
+
+## 🐛 BUG: Kiosk Black Screen After Background Upload (2026-01-07) - FIXED
+
+### Issue
+- [x] After uploading background image to kiosk settings, kiosk renders black/blank screen
+- [x] Blur/dim sliders still work (overlay renders), but background image not visible
+- [x] Settings page shows upload box but no preview or status feedback
+
+### Debug Tasks
+- [x] Check database for saved background URL (main-dojo location)
+- [x] Verify image URL is accessible and public (open in browser tab)
+- [x] Confirm kiosk is reading correct locationSlug (main-dojo)
+- [x] Check KioskBackgroundProvider implementation for image loading logic
+- [x] Verify blur/dim layers don't hide background image
+
+### Fix Tasks
+- [x] Add image preloading with fallback to default URL
+- [x] Ensure bgUrl = customUrl || presetUrl || DEFAULT_BG_URL (never falsy)
+- [x] Add onError handler to fallback to previous/default on load failure
+- [x] Fix layer structure: background → dim overlay → content
+- [x] Add cache busting with timestamp query param (bgUrl + '?v=' + updatedAt)
+- [x] Ensure blur only affects background layer, not content
+
+### UX Improvements
+- [x] Add thumbnail preview on settings page after selection
+- [x] Show "Uploaded successfully" status message
+- [x] Show filename of uploaded image
+- [x] Show error message if upload fails
+- [x] Don't save customUrl if upload fails
+
+### Testing
+- [ ] Upload new image → Save → kiosk keeps rendering (no black screen)
+- [ ] Invalid URL → kiosk falls back to default with warning
+- [ ] Switching backgrounds is instant once image loads
+- [ ] Works across all kiosk routes (/kiosk/:locationSlug/*)

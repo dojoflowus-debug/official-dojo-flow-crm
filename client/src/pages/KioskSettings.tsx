@@ -25,6 +25,7 @@ import {
   ExternalLink,
   AlertCircle,
 } from 'lucide-react';
+
 import { toast } from 'sonner';
 
 export default function KioskSettings() {
@@ -59,15 +60,23 @@ export default function KioskSettings() {
   const uploadBackgroundMutation = trpc.kiosk.uploadBackgroundImage.useMutation({
     onSuccess: (data) => {
       setBackgroundImageUrl(data.url);
+      setUploadStatus('success');
+      setUploadError(null);
       toast.success('Background uploaded', {
         description: data.message,
       });
+      // Reset status after 3 seconds
+      setTimeout(() => setUploadStatus('idle'), 3000);
       refetch();
     },
     onError: (error) => {
+      setUploadStatus('error');
+      setUploadError(error.message);
       toast.error('Upload failed', {
         description: error.message,
       });
+      // Reset status after 5 seconds
+      setTimeout(() => setUploadStatus('idle'), 5000);
     },
   });
 
@@ -87,6 +96,9 @@ export default function KioskSettings() {
   const [facialRecognition, setFacialRecognition] = useState(false);
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | undefined>(undefined);
   const [uploadingBackground, setUploadingBackground] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadFileName, setUploadFileName] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Auto-select first location
   useEffect(() => {
@@ -146,6 +158,33 @@ export default function KioskSettings() {
   const handleBackgroundImageUpload = async (file: File) => {
     if (!selectedLocationId) return;
     
+    // Validate file size (max 8MB)
+    if (file.size > 8 * 1024 * 1024) {
+      setUploadStatus('error');
+      setUploadError('File size exceeds 8MB limit');
+      toast.error('File too large', {
+        description: 'Maximum file size is 8MB',
+      });
+      setTimeout(() => setUploadStatus('idle'), 5000);
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setUploadStatus('error');
+      setUploadError('Invalid file type. Please use JPG, PNG, or WebP');
+      toast.error('Invalid file type', {
+        description: 'Please use JPG, PNG, or WebP format',
+      });
+      setTimeout(() => setUploadStatus('idle'), 5000);
+      return;
+    }
+    
+    setUploadStatus('uploading');
+    setUploadFileName(file.name);
+    setUploadError(null);
+    
     try {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -160,9 +199,12 @@ export default function KioskSettings() {
       };
       reader.readAsDataURL(file);
     } catch (error) {
+      setUploadStatus('error');
+      setUploadError('Failed to read file');
       toast.error('Error', {
         description: 'Failed to read file',
       });
+      setTimeout(() => setUploadStatus('idle'), 5000);
     }
   };
 
@@ -412,10 +454,25 @@ export default function KioskSettings() {
 
                   <div className="space-y-2">
                     <Label>Background Image</Label>
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center space-y-3">
                       {backgroundImageUrl ? (
                         <div className="space-y-3">
                           <img src={backgroundImageUrl} alt="Background preview" className="w-full h-32 object-cover rounded" />
+                          <div className="text-sm text-muted-foreground">
+                            {uploadFileName && <p>File: {uploadFileName}</p>}
+                          </div>
+                          {uploadStatus === 'success' && (
+                            <div className="flex items-center justify-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
+                              <Check size={16} />
+                              <span>Uploaded successfully</span>
+                            </div>
+                          )}
+                          {uploadStatus === 'error' && uploadError && (
+                            <div className="flex items-center justify-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                              <AlertCircle size={16} />
+                              <span>{uploadError}</span>
+                            </div>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -429,9 +486,9 @@ export default function KioskSettings() {
                               };
                               input.click();
                             }}
-                            disabled={uploadBackgroundMutation.isPending}
+                            disabled={uploadBackgroundMutation.isPending || uploadStatus === 'uploading'}
                           >
-                            {uploadBackgroundMutation.isPending ? 'Uploading...' : 'Change Image'}
+                            {uploadStatus === 'uploading' ? 'Uploading...' : 'Change Image'}
                           </Button>
                         </div>
                       ) : (
@@ -446,10 +503,16 @@ export default function KioskSettings() {
                             };
                             input.click();
                           }}
-                          className="cursor-pointer"
+                          className="cursor-pointer space-y-2"
                         >
                           <p className="text-sm text-muted-foreground">Click to upload background image</p>
-                          <p className="text-xs text-muted-foreground mt-1">JPG, PNG, or WebP (max 8MB)</p>
+                          <p className="text-xs text-muted-foreground">JPG, PNG, or WebP (max 8MB)</p>
+                          {uploadStatus === 'error' && uploadError && (
+                            <div className="flex items-center justify-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded mt-2">
+                              <AlertCircle size={16} />
+                              <span>{uploadError}</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

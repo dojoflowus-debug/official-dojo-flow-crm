@@ -26,12 +26,16 @@ export function KioskBackgroundSettings({ locationId, locationSlug }: KioskBackg
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const { data: settingsData } = trpc.kioskSettings.getSettings.useQuery({ locationSlug });
+  const utils = trpc.useUtils();
+  
   const uploadMutation = trpc.kioskSettings.uploadBackgroundImage.useMutation({
     onSuccess: (data) => {
       toast.success('Background image uploaded');
       setPreviewUrl(data.url);
       setBlur(0);
       setDim(0);
+      utils.kioskSettings.getSettings.invalidate({ locationSlug });
+      utils.kiosk.getLocationBackground.invalidate({ locationId });
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to upload image');
@@ -41,6 +45,8 @@ export function KioskBackgroundSettings({ locationId, locationSlug }: KioskBackg
   const updateEffectsMutation = trpc.kioskSettings.updateBackgroundEffects.useMutation({
     onSuccess: () => {
       toast.success('Background effects updated');
+      utils.kioskSettings.getSettings.invalidate({ locationSlug });
+      utils.kiosk.getLocationBackground.invalidate({ locationId });
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update effects');
@@ -53,6 +59,8 @@ export function KioskBackgroundSettings({ locationId, locationSlug }: KioskBackg
       setPreviewUrl(null);
       setBlur(0);
       setDim(0);
+      utils.kioskSettings.getSettings.invalidate({ locationSlug });
+      utils.kiosk.getLocationBackground.invalidate({ locationId });
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to reset background');

@@ -109,7 +109,7 @@ export default function Kiosk() {
   }
 
   const { settings, locationName } = kioskConfig;
-  const { appearance, behavior } = settings || { appearance: {}, behavior: {} };
+  const { appearance, behavior, background } = settings || { appearance: {}, behavior: {}, background: {} };
 
   // Provide safe defaults for appearance properties
   const safeAppearance = {
@@ -127,16 +127,33 @@ export default function Kiosk() {
     autoReturn: behavior?.autoReturn ?? true,
   };
 
+  // Get background image URL from background settings
+  // Priority: custom imageUrl > preset URL > default
+  let backgroundImageUrl = '/kiosk-welcome-bg.jpg';
+  if (background?.imageUrl) {
+    backgroundImageUrl = background.imageUrl;
+  } else if (background?.presetKey) {
+    // Map preset keys to actual URLs
+    const presetUrls: Record<string, string> = {
+      'dojo-warm-lights': '/kiosk-welcome-bg.jpg',
+      // Add more presets as needed
+    };
+    backgroundImageUrl = presetUrls[background.presetKey] || '/kiosk-welcome-bg.jpg';
+  }
+
+  // Use background blur/dim settings if available, otherwise fall back to appearance
+  const backgroundBlur = background?.blur ?? safeAppearance.backgroundBlur;
+  const backgroundDim = background?.dim ?? safeAppearance.backgroundIntensity;
+
   // Dynamic styles based on theme and settings
-  const backgroundImageUrl = safeAppearance.backgroundImageUrl || '/kiosk-welcome-bg.jpg';
   const backgroundStyle = {
     backgroundImage: `url(${backgroundImageUrl})`,
-    filter: `blur(${safeAppearance.backgroundBlur}px)`,
+    filter: `blur(${backgroundBlur}px)`,
     transform: 'scale(1.05)',
   };
 
   const vignetteStyle = {
-    background: `radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,${safeAppearance.backgroundIntensity / 200}) 70%, rgba(0,0,0,${safeAppearance.backgroundIntensity / 100}) 100%)`,
+    background: `radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,${backgroundDim / 200}) 70%, rgba(0,0,0,${backgroundDim / 100}) 100%)`,
   };
 
   return (
