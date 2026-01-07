@@ -1076,7 +1076,7 @@ export const appRouter = router({
     toggle: publicProcedure
       .input(z.object({
         id: z.number(),
-        enabled: z.number().min(0).max(1),
+        isActive: z.number().min(0).max(1),
       }))
       .mutation(async ({ input }) => {
         const { getDb } = await import("./db");
@@ -1087,7 +1087,7 @@ export const appRouter = router({
         if (!db) throw new Error('Database not available');
         
         await db.update(leadSources)
-          .set({ enabled: input.enabled })
+          .set({ isActive: input.isActive })
           .where(eq(leadSources.id, input.id));
         
         return { success: true };
@@ -1095,7 +1095,9 @@ export const appRouter = router({
   }),
 
   leads: router({
-    getByStatus: protectedProcedure.query(async ({ ctx }) => {
+    getByStatus: protectedProcedure
+      .input(z.object({}).optional())
+      .query(async ({ ctx, input }) => {
       const { getDb } = await import("./db");
       const { leads } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");

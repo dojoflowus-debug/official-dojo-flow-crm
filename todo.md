@@ -387,12 +387,31 @@ Update hero banner to match exact mockup design:
 - [x] Verify icon path is correct
 - [x] Fix icon display - icon is showing on dev server
 - [x] Test on live site - needs checkpoint and publish
+## 🐛 BUG: Leads Page tRPC Errors (2026-01-07)
+
+### Issue
+- [ ] Error 1: "Invalid input: expected object, received undefined" on /leads?filter=needs-followup
+- [ ] Error 2: "Failed query: select ... from lead_sources" - table schema mismatch
+- [ ] leadSources table has different schema than expected by router
+
+### Root Cause
+- leadSources table schema in 0012_lumpy_swordsman.sql has columns: sourceKey, icon, enabled, displayOrder
+- leadSources table schema in 0042_clumsy_hedge_knight.sql has columns: name, type, isActive
+- Router is querying for columns that don't exist in the current schema
+- tRPC procedures missing input validation causing undefined errors
+
+### Fix Tasks
+- [x] Update leadSources router to match current schema (name, type, isActive)
+- [x] Add input validation to all tRPC procedures
+- [x] Test Leads page with filter=needs-followup
+- [x] Verify leadSources queries work correctly
+
 ## 🐛 BUG: Kiosk Page "Cannot read properties of undefined (reading 'idleTimeout')" Error (2026-01-07)
 
 ### Issue
 - [x] User reports error when opening kiosk page at /kiosk/main-dojo
 - [x] Error: "Cannot read properties of undefined (reading 'idleTimeout')"
-- [x] Error occurs in Kiosk component at line 23 (useEffect)
+- [x] Error o...rs in Kiosk component at line 23 (useEffect)
 - [x] tRPC validation error: "Invalid input: expected object, received undefined"
 
 ### Root Cause Found

@@ -52,17 +52,17 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
 
   const [localStates, setLocalStates] = useState<Record<number, boolean>>({});
 
-  const handleToggle = async (id: number, currentEnabled: number) => {
-    const newEnabled = currentEnabled === 1 ? 0 : 1;
+  const handleToggle = async (id: number, currentIsActive: number) => {
+    const newIsActive = currentIsActive === 1 ? 0 : 1;
     
     // Optimistically update local state
-    setLocalStates(prev => ({ ...prev, [id]: newEnabled === 1 }));
+    setLocalStates(prev => ({ ...prev, [id]: newIsActive === 1 }));
     
     try {
-      await toggleMutation.mutateAsync({ id, enabled: newEnabled });
+      await toggleMutation.mutateAsync({ id, isActive: newIsActive });
     } catch (error) {
       // Revert on error
-      setLocalStates(prev => ({ ...prev, [id]: currentEnabled === 1 }));
+      setLocalStates(prev => ({ ...prev, [id]: currentIsActive === 1 }));
     }
   };
 
@@ -132,7 +132,7 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
                 {sources?.map((source) => {
                   const isEnabled = localStates[source.id] !== undefined 
                     ? localStates[source.id] 
-                    : source.enabled === 1;
+                    : source.isActive === 1;
 
                   return (
                     <Card
@@ -158,7 +158,7 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
                         
                         <Switch
                           checked={isEnabled}
-                          onCheckedChange={() => handleToggle(source.id, source.enabled)}
+                          onCheckedChange={() => handleToggle(source.id, source.isActive)}
                           className={`
                             data-[state=checked]:bg-red-500 
                             data-[state=unchecked]:bg-slate-700
