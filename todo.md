@@ -388,6 +388,24 @@ Update hero banner to match exact mockup design:
 - [x] Fix icon display - icon is showing on dev server
 - [x] Test on live site - needs checkpoint and publish
 
+## 🐛 BUG: TypeError When Updating Kiosk Theme Settings
+
+### Issue
+- [x] User reports error when changing kiosk theme setting: "Cannot read properties of undefined (reading 'accentColor')"
+- [x] Error occurs when updating theme in Kiosk Settings page
+
+### Root Cause
+- [x] Backend was parsing JSON settings without schema validation
+- [x] If stored JSON was missing nested properties, parsed object would be incomplete
+- [x] Frontend tried to access undefined properties causing TypeError
+
+### Fix Applied
+- [x] Add schema validation after JSON parsing in kioskRouter.ts
+- [x] Use `kioskSettingsSchema.parse()` to validate and apply defaults
+- [x] Fall back to defaultKioskSettings if parsing fails
+- [x] Create comprehensive test suite (16 tests passing)
+- [x] Verify all edge cases: partial settings, missing properties, corrupted JSON
+- [x] Save checkpoint
 
 ## 💳 Phase 4: Credit Consumption System
 
@@ -396,7 +414,7 @@ Update hero banner to match exact mockup design:
   - [x] Kai chat message (1 credit per message)
   - [x] SMS send (1 credit per message)
   - [x] Email send (2 credits per email)
-  - [x] Phone call (10 credits per minute)
+  - [x] Phone call (...[content truncated])
 - [x] Design credit deduction flow with transaction logging
 - [x] Plan balance check strategy (pre-check before operation)
 

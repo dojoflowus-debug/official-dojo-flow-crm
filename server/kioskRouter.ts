@@ -88,9 +88,13 @@ export const kioskRouter = router({
 
       if (loc.kioskSettings) {
         try {
-          settings = JSON.parse(loc.kioskSettings);
+          const parsed = JSON.parse(loc.kioskSettings);
+          // Validate and merge with defaults to ensure all required fields exist
+          settings = kioskSettingsSchema.parse(parsed);
         } catch (e) {
           console.error("Failed to parse kiosk settings:", e);
+          // Use defaults if parsing or validation fails
+          settings = defaultKioskSettings;
         }
       }
 
