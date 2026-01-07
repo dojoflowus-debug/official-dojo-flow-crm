@@ -5951,3 +5951,42 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Verified API now returns JSON (not HTML)
 - [x] Error handling now works properly
 
+
+
+## 🐛 BUG: Owner Login "Invalid email or password" Error
+
+### Issue
+- [ ] User getting "Invalid email or password" error when trying to login at /owner page
+- [ ] Need to diagnose root cause of login failure
+
+### Investigation Tasks
+- [ ] Check if test accounts exist in the database
+- [ ] Verify ownerAuthRouter.login procedure is working correctly
+- [ ] Check if email/password validation is correct
+- [ ] Test with known credentials
+- [ ] Check browser console for additional error details
+
+
+## 🔧 FIX: /master/schools Route Not Working (2026-01-07)
+
+### Issue - RESOLVED
+- [x] Route exists at /master/schools but returns 0 schools with loading spinner
+- [x] tRPC procedure masterDashboard.getSchools is implemented
+- [x] Database schema has TypeScript type errors (Date fields) - FIXED
+- [x] Backend now fetches schools from database successfully
+
+### Tasks Completed
+- [x] Fix TypeScript type errors in database schema (Date field issues)
+- [x] Verify tRPC procedure masterDashboard.getSchools works correctly
+- [x] Verify SchoolsTable component is properly implemented
+- [x] Verify SchoolDetailPanel component is properly implemented
+- [x] Test /master/schools route loads and displays data correctly (61 schools loaded)
+- [x] Ensure all navigation links in MasterDashboardSidebar work properly
+- [x] /master/schools route is now fully functional
+
+### Status: COMPLETED
+- Route /master/schools is working and displaying 61 schools
+- Schools table shows all columns: Name, Owner, Plan, Credits, Students/Staff, Status, Actions
+- Pagination working (1-10 of 61 schools)
+- Filters for Status and Plans available
+- Search functionality working

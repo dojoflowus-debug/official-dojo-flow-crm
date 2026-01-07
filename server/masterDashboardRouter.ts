@@ -342,8 +342,8 @@ export const masterDashboardRouter = router({
             subUserCount: Number(subUserCountResult?.count) || 0,
             programs: programsList,
             timezone: org.timezone,
-            trialEndsAt: org.trialEndsAt?.toISOString() || null,
-            joinedDate: org.createdAt.toISOString(),
+            trialEndsAt: org.trialEndsAt ? new Date(org.trialEndsAt).toISOString() : null,
+            joinedDate: new Date(org.createdAt).toISOString(),
           };
         })
       );
@@ -370,7 +370,30 @@ export const masterDashboardRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const [org] = await db
-        .select()
+        .select({
+          id: organizations.id,
+          name: organizations.name,
+          address: organizations.address,
+          city: organizations.city,
+          state: organizations.state,
+          zipCode: organizations.zipCode,
+          timezone: organizations.timezone,
+          programs: organizations.programs,
+          estimatedStudents: organizations.estimatedStudents,
+          launchDate: organizations.launchDate,
+          logoUrl: organizations.logoUrl,
+          planId: organizations.planId,
+          subscriptionStatus: organizations.subscriptionStatus,
+          trialEndsAt: organizations.trialEndsAt,
+          createdAt: organizations.createdAt,
+          updatedAt: organizations.updatedAt,
+          lastActivity: organizations.lastActivity,
+          settings: organizations.settings,
+          onboardingStatus: organizations.onboardingStatus,
+          onboardingStep: organizations.onboardingStep,
+          onboardingChecklist: organizations.onboardingChecklist,
+          onboardingCompletedAt: organizations.onboardingCompletedAt,
+        })
         .from(organizations)
         .where(eq(organizations.id, input.schoolId));
 
