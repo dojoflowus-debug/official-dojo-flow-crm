@@ -6045,3 +6045,26 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Create curated list of 12 preset images from /client/public
 - [x] Implement 3-column grid with hover effects and labels
 - [x] Add toast notifications for preset selection
+
+
+## 🐛 BUG: /settings/kiosk TRPCClientError (2026-01-07)
+
+### Issue
+- [x] TRPCClientError when accessing /settings/kiosk
+- [x] getKioskSettings query called with undefined input
+- [x] getPublicPresetBackgrounds query may have input issues
+- [x] Need to implement preset gallery with existing public images
+
+### Root Cause
+- getKioskSettings query requires locationId input but may be called before selectedLocationId is set
+- Missing enabled gating on queries
+- Preset gallery not fully implemented
+
+### Fix Tasks
+- [x] Add enabled: !!selectedLocationId gating to getKioskSettings query
+- [x] Ensure getKioskSettings always receives { locationId } object input
+- [x] Verify getPublicPresetBackgrounds query works without input
+- [x] Implement preset gallery UI with thumbnail grid
+- [x] Add preset selection that saves presetKey and applies immediately
+- [x] Test kiosk settings page end-to-end
+- [ ] Save checkpoint with kiosk fixes

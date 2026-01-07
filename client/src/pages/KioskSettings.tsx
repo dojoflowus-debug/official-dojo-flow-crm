@@ -37,12 +37,14 @@ export default function KioskSettings() {
 
   // Fetch kiosk settings for selected location
   const { data: kioskData, isLoading: settingsLoading, refetch } = trpc.kiosk.getKioskSettings.useQuery(
-    { locationId: selectedLocationId || 0 },
-    { enabled: selectedLocationId !== null }
+    selectedLocationId ? { locationId: selectedLocationId } : { locationId: 0 },
+    { enabled: !!selectedLocationId }
   );
 
   // Fetch preset backgrounds
-  const { data: presetBackgrounds } = trpc.kiosk.getPublicPresetBackgrounds.useQuery();
+  const { data: presetBackgrounds } = trpc.kiosk.getPublicPresetBackgrounds.useQuery(undefined, {
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour
+  });
 
   // Update kiosk settings mutation
   const updateSettings = trpc.kiosk.updateKioskSettings.useMutation({
@@ -233,8 +235,9 @@ export default function KioskSettings() {
     });
   };
 
-  const handlePresetSelect = (presetUrl: string) => {
+  const handlePresetSelect = (presetUrl: string, presetKey?: string) => {
     setBackgroundImageUrl(presetUrl);
+    setSelectedPresetKey(presetKey || null);
     setShowPresetGallery(false);
     toast.success("Preset selected", {
       description: "Background preset applied. Click Save to persist.",
@@ -486,8 +489,12 @@ export default function KioskSettings() {
                         {presetBackgrounds.map((preset) => (
                           <div
                             key={preset.key}
-                            onClick={() => handlePresetSelect(preset.imageUrl)}
-                            className="cursor-pointer group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-primary transition-all"
+                            onClick={() => handlePresetSelect(preset.imageUrl, preset.key)}
+                            className={`cursor-pointer group relative overflow-hidden rounded-lg border-2 transition-all ${
+                              selectedPresetKey === preset.key
+                                ? 'border-primary bg-primary/10'
+                                : 'border-transparent hover:border-primary'
+                            }`}
                           >
                             <img
                               src={preset.imageUrl}
@@ -499,6 +506,11 @@ export default function KioskSettings() {
                                 {preset.label}
                               </span>
                             </div>
+                            {selectedPresetKey === preset.key && (
+                              <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

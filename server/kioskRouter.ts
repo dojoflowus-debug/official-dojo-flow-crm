@@ -289,6 +289,7 @@ export const kioskRouter = router({
   getPublicPresetBackgrounds: publicProcedure.query(async ({ ctx }) => {
     // Curated list of preset backgrounds from public folder
     const presets = [
+      // Training & Martial Arts
       {
         key: 'martial-arts-class',
         label: 'Martial Arts Class',
@@ -308,23 +309,37 @@ export const kioskRouter = router({
         category: 'training',
       },
       {
-        key: 'ballet-class',
-        label: 'Ballet Class',
-        imageUrl: '/ballet-class.jpg',
-        category: 'dance',
+        key: 'kids-martial-arts',
+        label: 'Kids Martial Arts',
+        imageUrl: '/kids-martial-arts.jpeg',
+        category: 'training',
       },
       {
-        key: 'barre-class',
-        label: 'Barre Class',
-        imageUrl: '/barre-class.jpg',
-        category: 'dance',
+        key: 'belt-ceremony',
+        label: 'Belt Ceremony',
+        imageUrl: '/belt-ceremony.jpg',
+        category: 'events',
       },
+      // Wellness & Yoga
       {
         key: 'yoga-class',
         label: 'Yoga Class',
         imageUrl: '/yoga-class.jpg',
         category: 'wellness',
       },
+      {
+        key: 'yoga-studio-interior',
+        label: 'Yoga Studio Interior',
+        imageUrl: '/yoga-studio-interior.jpg',
+        category: 'wellness',
+      },
+      {
+        key: 'yoga-studio-modern',
+        label: 'Modern Yoga Studio',
+        imageUrl: '/yoga-studio-modern.jpg',
+        category: 'wellness',
+      },
+      // Fitness
       {
         key: 'fitness-gym-interior',
         label: 'Fitness Gym',
@@ -338,17 +353,24 @@ export const kioskRouter = router({
         category: 'fitness',
       },
       {
-        key: 'kids-martial-arts',
-        label: 'Kids Martial Arts',
-        imageUrl: '/kids-martial-arts.jpeg',
-        category: 'training',
+        key: 'fitness-hiit-class',
+        label: 'HIIT Class',
+        imageUrl: '/fitness-hiit-class.png',
+        category: 'fitness',
       },
       {
-        key: 'belt-ceremony',
-        label: 'Belt Ceremony',
-        imageUrl: '/belt-ceremony.jpg',
-        category: 'events',
+        key: 'fitness-group-class',
+        label: 'Group Fitness Class',
+        imageUrl: '/fitness-group-class.webp',
+        category: 'fitness',
       },
+      {
+        key: 'fitness-class',
+        label: 'Fitness Class',
+        imageUrl: '/fitness-class.webp',
+        category: 'fitness',
+      },
+      // Ambiance & Environment
       {
         key: 'env-zen-bamboo',
         label: 'Zen Bamboo',
@@ -360,6 +382,37 @@ export const kioskRouter = router({
         label: 'Modern White',
         imageUrl: '/env-modern-white.jpg',
         category: 'ambiance',
+      },
+      {
+        key: 'env-luxury-dojo',
+        label: 'Luxury Dojo',
+        imageUrl: '/env-luxury-dojo.jpg',
+        category: 'ambiance',
+      },
+      {
+        key: 'env-neon-dojo',
+        label: 'Neon Dojo',
+        imageUrl: '/env-neon-dojo.jpg',
+        category: 'ambiance',
+      },
+      {
+        key: 'env-samurai-dojo',
+        label: 'Samurai Dojo',
+        imageUrl: '/env-samurai-dojo.jpg',
+        category: 'ambiance',
+      },
+      // Welcome Screens
+      {
+        key: 'kiosk-welcome-bg',
+        label: 'Kiosk Welcome',
+        imageUrl: '/kiosk-welcome-bg.jpg',
+        category: 'welcome',
+      },
+      {
+        key: 'login-hero-dojoflow',
+        label: 'DojoFlow Hero',
+        imageUrl: '/login-hero-dojoflow.jpg',
+        category: 'welcome',
       },
     ];
     return presets;
