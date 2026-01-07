@@ -5924,3 +5924,30 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Build admin settings UI for kiosk customization
 - [x] Implement background image upload to S3
 - [x] Update kiosk page to load customizable settings
+
+
+## 🐛 BUG FIX: TRPCClientError on /owner page - Missing Zod Import
+
+### Issue
+- [x] User reported TRPCClientError on /owner page
+- [x] Error: "Unexpected token '<', "<!doctype "... is not valid JSON"
+- [x] Indicated HTML response instead of JSON from tRPC endpoint
+
+### Root Cause Found
+- [x] ownerAuthRouter.ts was missing `import { z } from "zod"`
+- [x] File used z.object() and other Zod validators but didn't import z
+- [x] Caused runtime error when procedures tried to validate input
+
+### Fix Applied
+- [x] Added `import { z } from "zod"` to ownerAuthRouter.ts
+- [x] Verified server recompiled successfully
+- [x] Tested login endpoint - now returns proper JSON responses
+- [x] No more HTML error responses
+
+### Testing
+- [x] Navigated to /owner page
+- [x] Filled in test credentials
+- [x] Clicked Log In button
+- [x] Verified API now returns JSON (not HTML)
+- [x] Error handling now works properly
+
