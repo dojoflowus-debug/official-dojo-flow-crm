@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,9 +37,12 @@ export default function KioskSettings() {
 
   // Fetch kiosk settings for selected location
   const { data: kioskData, isLoading: settingsLoading, refetch } = trpc.kiosk.getKioskSettings.useQuery(
-    selectedLocationId !== null ? { locationId: selectedLocationId } : { locationId: 0 },
+    { locationId: selectedLocationId || 0 },
     { enabled: selectedLocationId !== null }
   );
+
+  // Fetch preset backgrounds
+  const { data: presetBackgrounds } = trpc.kiosk.getPublicPresetBackgrounds.useQuery();
 
   // Update kiosk settings mutation
   const updateSettings = trpc.kiosk.updateKioskSettings.useMutation({
@@ -99,6 +102,8 @@ export default function KioskSettings() {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadFileName, setUploadFileName] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [selectedPresetKey, setSelectedPresetKey] = useState<string | null>(null);
+  const [showPresetGallery, setShowPresetGallery] = useState(false);
 
   // Auto-select first location
   useEffect(() => {
@@ -225,6 +230,14 @@ export default function KioskSettings() {
     
     toast.info("Settings reset", {
       description: "Kiosk settings have been reset to defaults. Click Save to apply.",
+    });
+  };
+
+  const handlePresetSelect = (presetUrl: string) => {
+    setBackgroundImageUrl(presetUrl);
+    setShowPresetGallery(false);
+    toast.success("Preset selected", {
+      description: "Background preset applied. Click Save to persist.",
     });
   };
 
@@ -452,8 +465,46 @@ export default function KioskSettings() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Background Image</Label>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Background Image</Label>
+                      <p className="text-sm text-muted-foreground mb-3">Choose a preset or upload a custom image</p>
+                    </div>
+
+                    {/* Preset Gallery Toggle */}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowPresetGallery(!showPresetGallery)}
+                    >
+                      {showPresetGallery ? 'Hide Presets' : 'Browse Presets'}
+                    </Button>
+
+                    {/* Preset Gallery */}
+                    {showPresetGallery && presetBackgrounds && presetBackgrounds.length > 0 && (
+                      <div className="grid grid-cols-3 gap-3 p-4 bg-muted rounded-lg">
+                        {presetBackgrounds.map((preset) => (
+                          <div
+                            key={preset.key}
+                            onClick={() => handlePresetSelect(preset.imageUrl)}
+                            className="cursor-pointer group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-primary transition-all"
+                          >
+                            <img
+                              src={preset.imageUrl}
+                              alt={preset.label}
+                              className="w-full h-24 object-cover group-hover:opacity-75 transition-opacity"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                              <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity text-center px-1">
+                                {preset.label}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Current Background Preview */}
                     <div className="border-2 border-dashed rounded-lg p-6 text-center space-y-3">
                       {backgroundImageUrl ? (
                         <div className="space-y-3">

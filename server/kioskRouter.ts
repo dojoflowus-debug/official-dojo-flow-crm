@@ -283,6 +283,89 @@ export const kioskRouter = router({
   }),
 
   /**
+   * Get public preset backgrounds from /client/public folder
+   * Returns curated list of images suitable for kiosk backgrounds
+   */
+  getPublicPresetBackgrounds: publicProcedure.query(async ({ ctx }) => {
+    // Curated list of preset backgrounds from public folder
+    const presets = [
+      {
+        key: 'martial-arts-class',
+        label: 'Martial Arts Class',
+        imageUrl: '/martial-arts-class.jpg',
+        category: 'training',
+      },
+      {
+        key: 'hero-martial-arts',
+        label: 'Hero Martial Arts',
+        imageUrl: '/hero-martial-arts.jpg',
+        category: 'training',
+      },
+      {
+        key: 'taekwondo-class',
+        label: 'Taekwondo Class',
+        imageUrl: '/taekwondo-class.jpg',
+        category: 'training',
+      },
+      {
+        key: 'ballet-class',
+        label: 'Ballet Class',
+        imageUrl: '/ballet-class.jpg',
+        category: 'dance',
+      },
+      {
+        key: 'barre-class',
+        label: 'Barre Class',
+        imageUrl: '/barre-class.jpg',
+        category: 'dance',
+      },
+      {
+        key: 'yoga-class',
+        label: 'Yoga Class',
+        imageUrl: '/yoga-class.jpg',
+        category: 'wellness',
+      },
+      {
+        key: 'fitness-gym-interior',
+        label: 'Fitness Gym',
+        imageUrl: '/fitness-gym-interior.jpg',
+        category: 'fitness',
+      },
+      {
+        key: 'personal-training',
+        label: 'Personal Training',
+        imageUrl: '/personal-training.jpg',
+        category: 'fitness',
+      },
+      {
+        key: 'kids-martial-arts',
+        label: 'Kids Martial Arts',
+        imageUrl: '/kids-martial-arts.jpeg',
+        category: 'training',
+      },
+      {
+        key: 'belt-ceremony',
+        label: 'Belt Ceremony',
+        imageUrl: '/belt-ceremony.jpg',
+        category: 'events',
+      },
+      {
+        key: 'env-zen-bamboo',
+        label: 'Zen Bamboo',
+        imageUrl: '/env-zen-bamboo.jpg',
+        category: 'ambiance',
+      },
+      {
+        key: 'env-modern-white',
+        label: 'Modern White',
+        imageUrl: '/env-modern-white.jpg',
+        category: 'ambiance',
+      },
+    ];
+    return presets;
+  }),
+
+  /**
    * Get location background with fallback logic
    */
   getLocationBackground: publicProcedure

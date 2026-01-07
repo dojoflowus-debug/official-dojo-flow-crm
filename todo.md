@@ -6026,3 +6026,22 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [ ] Invalid URL → kiosk falls back to default with warning
 - [ ] Switching backgrounds is instant once image loads
 - [ ] Works across all kiosk routes (/kiosk/:locationSlug/*)
+
+
+## 🐛 FIX: /settings/kiosk TRPCClientError - Undefined Input
+
+### Issue
+- [x] TRPCClientError on /settings/kiosk: "Invalid input: expected object, received undefined"
+- [x] Kiosk background queries/mutations not passing proper object inputs
+
+### Tasks
+- [x] Fix tRPC procedures to accept { locationId } object input
+- [x] Gate kiosk background query with enabled: !!selectedLocationId
+- [x] Implement preset gallery UI with thumbnail grid (12 presets)
+- [x] Add preset selection and save functionality
+- [x] Test error resolution and preset gallery
+- [x] Verify settings persist after save
+- [x] Add getPublicPresetBackgrounds procedure to kioskRouter
+- [x] Create curated list of 12 preset images from /client/public
+- [x] Implement 3-column grid with hover effects and labels
+- [x] Add toast notifications for preset selection
