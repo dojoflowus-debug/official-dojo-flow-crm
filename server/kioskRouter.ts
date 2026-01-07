@@ -270,4 +270,161 @@ export const kioskRouter = router({
         : null,
     }));
   }),
+
+  /**
+   * Get all preset backgrounds
+   */
+  getPresetBackgrounds: publicProcedure.query(async ({ ctx }) => {
+    const { getPresetBackgrounds } = await import("./db");
+    const backgrounds = await getPresetBackgrounds();
+    return backgrounds;
+  }),
+
+  /**
+   * Get location background with fallback logic
+   */
+  getLocationBackground: publicProcedure
+    .input(z.object({ locationId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { getLocationBackgroundWithFallback } = await import("./db");
+      const background = await getLocationBackgroundWithFallback(input.locationId);
+      return background;
+    }),
+
+  /**
+   * Update location background settings (protected)
+   */
+  updateLocationBackground: protectedProcedure
+    .input(
+      z.object({
+        locationId: z.number(),
+        source: z.enum(["preset", "custom"]),
+        presetKey: z.string().optional().nullable(),
+        customUrl: z.string().optional().nullable(),
+        blur: z.number().min(0).max(24).optional(),
+        dim: z.number().min(0).max(70).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
+
+      const { updateLocationBackground } = await import("./db");
+      const success = await updateLocationBackground(input.locationId, {
+        source: input.source,
+        presetKey: input.presetKey,
+        customUrl: input.customUrl,
+        blur: input.blur ?? 0,
+        dim: input.dim ?? 0,
+      });
+
+      if (!success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update background settings",
+        });
+      }
+
+      return { success: true, message: "Background updated successfully" };
+    }),
+
+  /**
+   * Upload custom background image
+   */
+  uploadCustomBackground: protectedProcedure
+    .input(
+      z.object({
+        locationId: z.number(),
+        fileData: z.string(), // base64 encoded
+        fileName: z.string(),
+        mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
+
+      try {
+        // Import storage utilities
+        const { storagePut } = await import("./storage");
+
+        // Decode base64 and convert to buffer
+        const buffer = Buffer.from(input.fileData, "base64");
+
+        // Validate file size (5-8MB)
+        const maxSize = 8 * 1024 * 1024; // 8MB
+        if (buffer.length > maxSize) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "File size exceeds 8MB limit",
+          });
+        }
+
+        // Generate unique file key
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const fileKey = `kiosk-backgrounds/location-${input.locationId}/${timestamp}-${randomSuffix}.jpg`;
+
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+        // Update location background settings
+        const { updateLocationBackground } = await import("./db");
+        const success = await updateLocationBackground(input.locationId, {
+          source: "custom",
+          customUrl: url,
+          blur: 0,
+          dim: 0,
+        });
+
+        if (!success) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to save background settings",
+          });
+        }
+
+        return { success: true, url, message: "Background uploaded successfully" };
+      } catch (error) {
+        console.error("[kioskRouter] uploadCustomBackground error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to upload background",
+        });
+      }
+    }),
+
+  /**
+   * Remove custom background and revert to preset
+   */
+  removeCustomBackground: protectedProcedure
+    .input(z.object({ locationId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
+
+      const { removeCustomBackground } = await import("./db");
+      const success = await removeCustomBackground(input.locationId);
+
+      if (!success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to remove custom background",
+        });
+      }
+
+      return { success: true, message: "Custom background removed" };
+    }),
 });

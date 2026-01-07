@@ -5810,3 +5810,73 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [ ] Test all metrics with real data
 - [ ] Verify filters work correctly
 - [ ] Create aggregator shape for Phase 4 (Kai integration)
+
+
+## 🎨 Kiosk Background Library + Custom Upload (2026-01-07)
+
+### Database Schema
+- [x] Add background settings to location.kioskSettings JSON
+- [x] Create preset_backgrounds table with metadata (key, name, category, image_url)
+- [x] Run migrations with pnpm db:push
+
+### Preset Background Library
+- [x] Design and curate 12-20 preset backgrounds (dojo, gym, gradients, patterns)
+- [x] Create preset_backgrounds seed data with keys and URLs
+- [x] Generate/source high-quality background images
+- [x] Upload preset images to S3
+- [x] Document preset keys and categories
+
+### Backend Procedures
+- [x] Create trpc.kiosk.getBackgrounds procedure (list presets)
+- [x] Create trpc.kiosk.setBackground procedure (save location background)
+- [x] Create trpc.kiosk.getLocationBackground procedure (fetch with fallback logic)
+- [x] Create trpc.kiosk.uploadCustomBackground procedure (S3 upload)
+- [x] Create trpc.kiosk.removeCustomBackground procedure
+- [x] Implement fallback logic: location → org default → global default
+- [ ] Write vitest tests for all procedures
+
+### Kiosk Settings UI (Designer)
+- [x] Create BackgroundSettings component in kiosk designer
+- [x] Add "Preset Backgrounds" gallery grid (12-20 tiles with thumbnails)
+- [ ] Add search/filter for presets (optional: categories)
+- [x] Add "Custom Background" upload card with drag-drop
+- [x] Add "Selected Background" preview panel
+- [x] Add blur slider (0-24)
+- [x] Add dim overlay slider (0-70%)
+- [x] Add Save button to persist settings
+- [x] Add Remove custom background button
+- [x] Implement real-time preview updates while adjusting controls
+- [x] Show loading state during upload
+- [x] Show success/error toasts
+
+### Custom Upload Integration
+- [x] Implement file validation (JPG/PNG/WebP only)
+- [x] Implement file size validation (5-8MB max)
+- [x] Create upload handler with S3 integration
+- [ ] Show upload progress
+- [x] Handle upload errors gracefully
+- [x] Persist custom image URL in location settings
+
+### Background Application Across Kiosk Routes
+- [x] Create BackgroundProvider context for kiosk routes
+- [x] Create useKioskBackground hook to fetch and apply background
+- [ ] Apply background to /kiosk/:locationSlug (home)
+- [ ] Apply background to /kiosk/:locationSlug/member-login
+- [ ] Apply background to /kiosk/:locationSlug/student-login
+- [ ] Apply background to /kiosk/:locationSlug/checkin
+- [ ] Apply background to /kiosk/:locationSlug/new-student
+- [ ] Apply background to all other kiosk subroutes
+- [x] Implement CSS blur and dim overlay application
+- [ ] Ensure background persists across route navigation
+
+### Testing & Acceptance
+- [ ] Test selecting preset background → kiosk updates immediately
+- [ ] Test uploading custom image → kiosk uses it and overrides preset
+- [ ] Test removing custom image → returns to previously selected preset
+- [ ] Test settings persist after page refresh
+- [ ] Test per-location backgrounds (Location A and B have different backgrounds)
+- [ ] Test fallback logic (org default, then global default)
+- [ ] Test blur and dim controls work correctly
+- [ ] Test on mobile and desktop viewports
+- [ ] Create vitest integration test for full flow
+- [ ] Save checkpoint with background feature complete

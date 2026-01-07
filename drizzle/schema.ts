@@ -2077,7 +2077,32 @@ export const kioskSchedules = mysqlTable("kiosk_schedules", {
 	index("idx_schedule_active").on(table.isActive),
 ]);
 
+/**
+ * Preset Kiosk Backgrounds - Library of curated background images
+ */
+export const presetBackgrounds = mysqlTable("preset_backgrounds", {
+	id: int().autoincrement().notNull().primaryKey(),
+	key: varchar({ length: 100 }).notNull().unique(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	category: varchar({ length: 50 }).default('neutral').notNull(), // dojo, gym, gradient, pattern, nature, etc.
+	imageUrl: varchar({ length: 500 }).notNull(),
+	thumbnailUrl: varchar({ length: 500 }),
+	blurDefault: int().default(0).notNull(),
+	dimDefault: int().default(0).notNull(),
+	sortOrder: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_category").on(table.category),
+	index("idx_active").on(table.isActive),
+]);
+
 // Type Exports for Kiosk Designer
+export type PresetBackground = typeof presetBackgrounds.$inferSelect;
+export type InsertPresetBackground = typeof presetBackgrounds.$inferInsert;
 export type KioskDevice = typeof kioskDevices.$inferSelect;
 export type InsertKioskDevice = typeof kioskDevices.$inferInsert;
 export type KioskTheme = typeof kioskThemes.$inferSelect;
@@ -2090,3 +2115,5 @@ export type KioskDeployment = typeof kioskDeployments.$inferSelect;
 export type InsertKioskDeployment = typeof kioskDeployments.$inferInsert;
 export type KioskSchedule = typeof kioskSchedules.$inferSelect;
 export type InsertKioskSchedule = typeof kioskSchedules.$inferInsert;
+export type PresetBackground = typeof presetBackgrounds.$inferSelect;
+export type InsertPresetBackground = typeof presetBackgrounds.$inferInsert;

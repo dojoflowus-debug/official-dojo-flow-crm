@@ -2020,3 +2020,163 @@ export async function updateLocationKioskTheme(locationId: number, mode: string,
     return false;
   }
 }
+
+
+// ===== Kiosk Background Management =====
+
+/**
+ * Get all active preset backgrounds
+ */
+export async function getPresetBackgrounds() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const { presetBackgrounds } = await import("../drizzle/schema");
+    const backgrounds = await db
+      .select()
+      .from(presetBackgrounds)
+      .where(eq(presetBackgrounds.isActive, 1))
+      .orderBy(presetBackgrounds.sortOrder);
+    return backgrounds;
+  } catch (error) {
+    console.error("[Database] Failed to get preset backgrounds:", error);
+    return [];
+  }
+}
+
+/**
+ * Get a specific preset background by key
+ */
+export async function getPresetBackgroundByKey(key: string) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const { presetBackgrounds } = await import("../drizzle/schema");
+    const result = await db
+      .select()
+      .from(presetBackgrounds)
+      .where(eq(presetBackgrounds.key, key))
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get preset background:", error);
+    return null;
+  }
+}
+
+/**
+ * Update location background settings
+ */
+export async function updateLocationBackground(
+  locationId: number,
+  backgroundSettings: {
+    source: "preset" | "custom";
+    presetKey?: string | null;
+    customUrl?: string | null;
+    blur?: number;
+    dim?: number;
+  }
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const updatedSettings: KioskSettings = {
+      ...currentSettings,
+      background: {
+        type: backgroundSettings.source,
+        presetKey: backgroundSettings.presetKey || null,
+        imageUrl: backgroundSettings.customUrl || undefined,
+        blur: backgroundSettings.blur ?? 0,
+        dim: backgroundSettings.dim ?? 0,
+        vignette: currentSettings.background?.vignette ?? false,
+      },
+    };
+    await db
+      .update(schema.locations)
+      .set({
+        kioskSettings: JSON.stringify(updatedSettings),
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(schema.locations.id, locationId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update background:", error);
+    return false;
+  }
+}
+
+/**
+ * Get location background with fallback logic
+ * Returns: location background → org default → global default
+ */
+export async function getLocationBackgroundWithFallback(
+  locationId: number,
+  organizationId?: number | null
+) {
+  const db = await getDb();
+  if (!db) return getDefaultKioskSettings().background;
+
+  try {
+    // Get location's background settings
+    const locationSettings = await getKioskSettingsByLocationId(locationId);
+    if (locationSettings.background?.presetKey || locationSettings.background?.imageUrl) {
+      return locationSettings.background;
+    }
+
+    // Fallback to org default if available
+    if (organizationId) {
+      const orgSettings = await getOrganizationKioskSettings(organizationId);
+      if (orgSettings?.background?.presetKey || orgSettings?.background?.imageUrl) {
+        return orgSettings.background;
+      }
+    }
+
+    // Fallback to global default
+    return getDefaultKioskSettings().background;
+  } catch (error) {
+    console.error("[Database] Failed to get background with fallback:", error);
+    return getDefaultKioskSettings().background;
+  }
+}
+
+/**
+ * Get organization-level kiosk settings (if stored separately)
+ * For now, returns null - can be extended if org-level settings are added
+ */
+async function getOrganizationKioskSettings(organizationId: number) {
+  // TODO: Implement if organization-level kiosk settings table is added
+  return null;
+}
+
+/**
+ * Remove custom background and revert to preset
+ */
+export async function removeCustomBackground(locationId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const updatedSettings: KioskSettings = {
+      ...currentSettings,
+      background: {
+        type: "preset",
+        presetKey: "dojo-warm-lights", // Default preset
+        blur: 0,
+        dim: 0,
+        vignette: false,
+      },
+    };
+    await db
+      .update(schema.locations)
+      .set({
+        kioskSettings: JSON.stringify(updatedSettings),
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(schema.locations.id, locationId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to remove custom background:", error);
+    return false;
+  }
+}
