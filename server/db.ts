@@ -1945,11 +1945,21 @@ export async function updateKioskSettings(locationId: number, settings: Partial<
 
 export async function updateKioskBackgroundImage(locationId: number, imageUrl: string, blur: number = 0, dim: number = 0): Promise<boolean> {
   const db = await getDb();
-  if (!db) return false;
+  if (!db) {
+    console.error('[DEBUG] updateKioskBackgroundImage - DB not available');
+    return false;
+  }
   try {
+    console.log('[DEBUG] updateKioskBackgroundImage - START', { locationId, imageUrl, blur, dim });
+    
     // Get raw settings from database without merging defaults
     const location = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
-    if (location.length === 0) return false;
+    if (location.length === 0) {
+      console.error('[DEBUG] updateKioskBackgroundImage - Location not found:', locationId);
+      return false;
+    }
+    
+    console.log('[DEBUG] updateKioskBackgroundImage - Current DB kioskSettings:', location[0].kioskSettings);
     
     let currentSettings: KioskSettings = getDefaultKioskSettings();
     if (location[0].kioskSettings) {
@@ -1974,7 +1984,20 @@ export async function updateKioskBackgroundImage(locationId: number, imageUrl: s
         dim: Math.min(Math.max(dim, 0), 70),
       }
     };
-    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    
+    console.log('[DEBUG] updateKioskBackgroundImage - Updated settings to save:', JSON.stringify(updatedSettings.background));
+    
+    const now = new Date().toISOString();
+    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: now }).where(eq(schema.locations.id, locationId));
+    
+    console.log('[DEBUG] updateKioskBackgroundImage - DB update complete, updatedAt:', now);
+    
+    // Verify the write
+    const verifyLocation = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
+    if (verifyLocation.length > 0) {
+      console.log('[DEBUG] updateKioskBackgroundImage - VERIFICATION: DB now contains:', verifyLocation[0].kioskSettings);
+    }
+    
     return true;
   } catch (error) {
     console.error("[Database] Failed to update background image:", error);
@@ -2166,28 +2189,44 @@ export async function getLocationBackgroundWithFallback(
   organizationId?: number | null
 ) {
   const db = await getDb();
-  if (!db) return getDefaultKioskSettings().background;
+  if (!db) {
+    console.error('[DEBUG] getLocationBackgroundWithFallback - DB not available');
+    return getDefaultKioskSettings().background;
+  }
 
   try {
+    console.log('[DEBUG] getLocationBackgroundWithFallback - START', { locationId, organizationId });
+    
     // Get location's background settings (without defaults merged in)
     const location = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
+    
+    if (location.length === 0) {
+      console.log('[DEBUG] getLocationBackgroundWithFallback - Location not found:', locationId);
+    } else {
+      console.log('[DEBUG] getLocationBackgroundWithFallback - Location found, kioskSettings exists:', !!location[0].kioskSettings);
+    }
+    
     if (location.length > 0 && location[0].kioskSettings) {
       try {
         const settings = typeof location[0].kioskSettings === 'string' 
           ? JSON.parse(location[0].kioskSettings) 
           : location[0].kioskSettings;
         
+        console.log('[DEBUG] getLocationBackgroundWithFallback - Parsed settings keys:', Object.keys(settings));
+        console.log('[DEBUG] getLocationBackgroundWithFallback - Full background object:', JSON.stringify(settings.background));
+        
         // Priority: custom imageUrl first, then presetKey, then default
-            console.log('[DEBUG] parsed settings keys:', Object.keys(settings));
-        console.log('[DEBUG] getLocationBackgroundWithFallback - background:', JSON.stringify(settings.background));
         if (settings.background?.imageUrl) {
-          console.log('[DEBUG] Returning custom imageUrl');
+          console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING custom imageUrl:', settings.background.imageUrl);
+          console.log('[DEBUG] getLocationBackgroundWithFallback - Full background:', JSON.stringify(settings.background));
           return settings.background;
         }
         if (settings.background?.presetKey) {
-          console.log('[DEBUG] Returning presetKey');
+          console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING presetKey:', settings.background.presetKey);
           return settings.background;
         }
+        
+        console.log('[DEBUG] getLocationBackgroundWithFallback - No imageUrl or presetKey found, falling back');
       } catch (e) {
         console.error("[Database] Failed to parse location background:", e);
       }
@@ -2195,13 +2234,16 @@ export async function getLocationBackgroundWithFallback(
 
     // Fallback to org default if available
     if (organizationId) {
+      console.log('[DEBUG] getLocationBackgroundWithFallback - Checking org settings for organizationId:', organizationId);
       const orgSettings = await getOrganizationKioskSettings(organizationId);
       if (orgSettings?.background?.imageUrl || orgSettings?.background?.presetKey) {
+        console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING org background');
         return orgSettings.background;
       }
     }
 
     // Fallback to global default
+    console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING global default');
     return getDefaultKioskSettings().background;
   } catch (error) {
     console.error("[Database] Failed to get background with fallback:", error);

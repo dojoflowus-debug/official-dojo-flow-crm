@@ -27,12 +27,19 @@ export function useKioskBackground(locationId: number) {
     trpc.kiosk.getLocationBackground.useQuery({ locationId });
 
   useEffect(() => {
+    console.log('[DEBUG] useKioskBackground - fetchedBackground changed', { 
+      locationId, 
+      fetchedBackground,
+      isFetching 
+    });
+    
     if (fetchedBackground) {
       // Ensure we always have a valid background with fallback URL
       const validatedBackground: KioskBackground = {
         ...fetchedBackground,
         imageUrl: fetchedBackground.imageUrl || fetchedBackground.presetKey || DEFAULT_BACKGROUND_URL,
       };
+      console.log('[DEBUG] useKioskBackground - Setting validated background', { validatedBackground });
       setBackground(validatedBackground);
       setImageLoaded(false);
       setImageError(null);
@@ -41,15 +48,22 @@ export function useKioskBackground(locationId: number) {
   }, [fetchedBackground]);
 
   useEffect(() => {
+    console.log('[DEBUG] useKioskBackground - isFetching changed', { isFetching });
     setIsLoading(isFetching);
   }, [isFetching]);
 
   // Preload image to detect errors early
   useEffect(() => {
-    if (!background?.imageUrl) return;
+    if (!background?.imageUrl) {
+      console.log('[DEBUG] useKioskBackground - No imageUrl to preload');
+      return;
+    }
 
+    console.log('[DEBUG] useKioskBackground - Preloading image:', background.imageUrl);
+    
     const img = new Image();
     const handleLoad = () => {
+      console.log('[DEBUG] useKioskBackground - Image loaded successfully:', background.imageUrl);
       setImageLoaded(true);
       setImageError(null);
     };

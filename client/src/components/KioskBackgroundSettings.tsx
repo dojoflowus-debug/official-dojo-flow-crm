@@ -30,46 +30,60 @@ export function KioskBackgroundSettings({ locationId, locationSlug }: KioskBackg
   
   const uploadMutation = trpc.kioskSettings.uploadBackgroundImage.useMutation({
     onSuccess: (data) => {
+      console.log('[DEBUG] KioskBackgroundSettings - uploadMutation onSuccess', { url: data.url, fileKey: data.fileKey });
       toast.success('Background image uploaded');
       setPreviewUrl(data.url);
       setBlur(0);
       setDim(0);
+      console.log('[DEBUG] KioskBackgroundSettings - Invalidating queries', { locationSlug, locationId });
       utils.kioskSettings.getSettings.invalidate({ locationSlug });
       utils.kiosk.getLocationBackground.invalidate({ locationId });
+      console.log('[DEBUG] KioskBackgroundSettings - Queries invalidated');
     },
     onError: (error) => {
+      console.error('[DEBUG] KioskBackgroundSettings - uploadMutation onError', error);
       toast.error(error.message || 'Failed to upload image');
     },
   });
 
   const updateEffectsMutation = trpc.kioskSettings.updateBackgroundEffects.useMutation({
     onSuccess: () => {
+      console.log('[DEBUG] KioskBackgroundSettings - updateEffectsMutation onSuccess');
       toast.success('Background effects updated');
       utils.kioskSettings.getSettings.invalidate({ locationSlug });
       utils.kiosk.getLocationBackground.invalidate({ locationId });
+      console.log('[DEBUG] KioskBackgroundSettings - Effects queries invalidated');
     },
     onError: (error) => {
+      console.error('[DEBUG] KioskBackgroundSettings - updateEffectsMutation onError', error);
       toast.error(error.message || 'Failed to update effects');
     },
   });
 
   const resetMutation = trpc.kioskSettings.resetBackground.useMutation({
     onSuccess: () => {
+      console.log('[DEBUG] KioskBackgroundSettings - resetMutation onSuccess');
       toast.success('Background reset to default');
       setPreviewUrl(null);
       setBlur(0);
       setDim(0);
       utils.kioskSettings.getSettings.invalidate({ locationSlug });
       utils.kiosk.getLocationBackground.invalidate({ locationId });
+      console.log('[DEBUG] KioskBackgroundSettings - Reset queries invalidated');
     },
     onError: (error) => {
+      console.error('[DEBUG] KioskBackgroundSettings - resetMutation onError', error);
       toast.error(error.message || 'Failed to reset background');
     },
   });
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('[DEBUG] KioskBackgroundSettings - No file selected');
+      return;
+    }
+    console.log('[DEBUG] KioskBackgroundSettings - File selected', { name: file.name, size: file.size, type: file.type });
 
     if (file.size > 8 * 1024 * 1024) {
       toast.error('File size must be less than 8MB');
@@ -84,6 +98,7 @@ export function KioskBackgroundSettings({ locationId, locationSlug }: KioskBackg
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64Data = event.target?.result as string;
+      console.log('[DEBUG] KioskBackgroundSettings - File read as base64, calling uploadMutation', { locationId, fileName: file.name, blur, dim });
       uploadMutation.mutate({
         locationId,
         fileName: file.name,
