@@ -13,6 +13,7 @@ const kioskSettingsSchema = z.object({
     logoDark: z.string().optional(),
     headline: z.string().default("Welcome to Training"),
     subtext: z.string().default("Sign in or get started below"),
+    backgroundImageUrl: z.string().optional(), // S3 URL for custom background
     backgroundIntensity: z.number().min(0).max(100).default(70),
     backgroundBlur: z.number().min(0).max(10).default(3),
   }),
@@ -35,6 +36,7 @@ export const defaultKioskSettings: KioskSettings = {
     accentColor: "#ef4444",
     headline: "Welcome to Training",
     subtext: "Sign in or get started below",
+    backgroundImageUrl: undefined, // Will use default if not set
     backgroundIntensity: 70,
     backgroundBlur: 3,
   },
@@ -398,6 +400,73 @@ export const kioskRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error instanceof Error ? error.message : "Failed to upload background",
+        });
+      }
+    }),
+
+  /**
+   * Upload background image and save to appearance settings
+   */
+  uploadBackgroundImage: protectedProcedure
+    .input(
+      z.object({
+        locationId: z.number(),
+        fileData: z.string(), // base64 encoded
+        mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
+
+      try {
+        const { storagePut } = await import("./storage");
+        const { updateKioskSettings } = await import("./db");
+
+        // Decode base64 and convert to buffer
+        const buffer = Buffer.from(input.fileData, "base64");
+
+        // Validate file size (8MB max)
+        const maxSize = 8 * 1024 * 1024;
+        if (buffer.length > maxSize) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "File size exceeds 8MB limit",
+          });
+        }
+
+        // Generate unique file key
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const fileKey = `kiosk-backgrounds/location-${input.locationId}/${timestamp}-${randomSuffix}.jpg`;
+
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+        // Update kiosk settings with background image URL
+        const success = await updateKioskSettings(input.locationId, {
+          appearance: {
+            backgroundImageUrl: url,
+          },
+        });
+
+        if (!success) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to save background settings",
+          });
+        }
+
+        return { success: true, url, message: "Background image uploaded successfully" };
+      } catch (error) {
+        console.error("[kioskRouter] uploadBackgroundImage error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to upload background image",
         });
       }
     }),

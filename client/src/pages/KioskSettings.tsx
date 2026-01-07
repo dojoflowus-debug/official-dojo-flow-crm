@@ -55,6 +55,22 @@ export default function KioskSettings() {
     },
   });
 
+  // Upload background image mutation
+  const uploadBackgroundMutation = trpc.kiosk.uploadBackgroundImage.useMutation({
+    onSuccess: (data) => {
+      setBackgroundImageUrl(data.url);
+      toast.success('Background uploaded', {
+        description: data.message,
+      });
+      refetch();
+    },
+    onError: (error) => {
+      toast.error('Upload failed', {
+        description: error.message,
+      });
+    },
+  });
+
   // Local state for form
   const [kioskEnabled, setKioskEnabled] = useState(false);
   const [theme, setTheme] = useState<"default" | "modern" | "minimal" | "bold">("default");
@@ -69,6 +85,8 @@ export default function KioskSettings() {
   const [autoReturn, setAutoReturn] = useState(true);
   const [kaiEnrollment, setKaiEnrollment] = useState(false);
   const [facialRecognition, setFacialRecognition] = useState(false);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | undefined>(undefined);
+  const [uploadingBackground, setUploadingBackground] = useState(false);
 
   // Auto-select first location
   useEffect(() => {
@@ -85,6 +103,7 @@ export default function KioskSettings() {
       setAccentColor(kioskData.settings.appearance.accentColor);
       setHeadline(kioskData.settings.appearance.headline);
       setSubtext(kioskData.settings.appearance.subtext);
+      setBackgroundImageUrl(kioskData.settings.appearance.backgroundImageUrl);
       setBackgroundIntensity([kioskData.settings.appearance.backgroundIntensity]);
       setBackgroundBlur([kioskData.settings.appearance.backgroundBlur]);
       setShowMemberLogin(kioskData.settings.behavior.showMemberLogin);
@@ -108,6 +127,7 @@ export default function KioskSettings() {
           accentColor,
           headline,
           subtext,
+          backgroundImageUrl,
           backgroundIntensity: backgroundIntensity[0],
           backgroundBlur: backgroundBlur[0],
         },
@@ -123,6 +143,29 @@ export default function KioskSettings() {
     });
   };
 
+  const handleBackgroundImageUpload = async (file: File) => {
+    if (!selectedLocationId) return;
+    
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string;
+        const base64Data = base64.split(',')[1];
+        
+        uploadBackgroundMutation.mutate({
+          locationId: selectedLocationId,
+          fileData: base64Data,
+          mimeType: (file.type as 'image/jpeg' | 'image/png' | 'image/webp') || 'image/jpeg',
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast.error('Error', {
+        description: 'Failed to read file',
+      });
+    }
+  };
+
   const handleReset = () => {
     setTheme("default");
     setAccentColor("#ef4444");
@@ -130,6 +173,7 @@ export default function KioskSettings() {
     setSubtext("Sign in or get started below");
     setBackgroundIntensity([70]);
     setBackgroundBlur([3]);
+    setBackgroundImageUrl(undefined);
     setShowMemberLogin(true);
     setShowNewStudent(true);
     setIdleTimeout(30);
@@ -364,6 +408,51 @@ export default function KioskSettings() {
                       onChange={(e) => setSubtext(e.target.value)}
                       placeholder="Sign in or get started below"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Background Image</Label>
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                      {backgroundImageUrl ? (
+                        <div className="space-y-3">
+                          <img src={backgroundImageUrl} alt="Background preview" className="w-full h-32 object-cover rounded" />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/jpeg,image/png,image/webp';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) handleBackgroundImageUpload(file);
+                              };
+                              input.click();
+                            }}
+                            disabled={uploadBackgroundMutation.isPending}
+                          >
+                            {uploadBackgroundMutation.isPending ? 'Uploading...' : 'Change Image'}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/jpeg,image/png,image/webp';
+                            input.onchange = (e) => {
+                              const file = (e.target as HTMLInputElement).files?.[0];
+                              if (file) handleBackgroundImageUpload(file);
+                            };
+                            input.click();
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <p className="text-sm text-muted-foreground">Click to upload background image</p>
+                          <p className="text-xs text-muted-foreground mt-1">JPG, PNG, or WebP (max 8MB)</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2">

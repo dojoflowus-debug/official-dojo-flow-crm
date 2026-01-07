@@ -1933,6 +1933,7 @@ export async function updateKioskSettings(locationId: number, settings: Partial<
       ...currentSettings,
       theme: settings.theme ? { ...currentSettings.theme, ...settings.theme } : currentSettings.theme,
       background: settings.background ? { ...currentSettings.background, ...settings.background } : currentSettings.background,
+      appearance: settings.appearance ? { ...currentSettings.appearance, ...settings.appearance } : currentSettings.appearance,
     };
     await db.update(schema.locations).set({ kioskSettings: JSON.stringify(mergedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
     return true;

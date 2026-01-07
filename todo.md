@@ -5880,3 +5880,28 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [ ] Test on mobile and desktop viewports
 - [ ] Create vitest integration test for full flow
 - [ ] Save checkpoint with background feature complete
+
+
+## 🎨 Kiosk Page Customization (2026-01-07)
+
+### Feature: Make Kiosk Check-In Page Fully Customizable
+- [ ] Examine current kiosk page structure and styling
+- [ ] Create database schema for kiosk settings (background image, title, subtitle, colors)
+- [ ] Add database helpers for kiosk settings CRUD
+- [ ] Create tRPC procedures for kiosk settings (get, update)
+- [ ] Build admin settings UI for kiosk customization
+- [ ] Implement background image upload to S3
+- [ ] Update kiosk page to load customizable settings
+- [ ] Test customization workflow end-to-end
+
+
+## 🎨 Kiosk Page Customization (2026-01-07) - COMPLETED
+
+### Feature: Make Kiosk Check-In Page Fully Customizable
+- [x] Examine current kiosk page structure and styling
+- [x] Create database schema for kiosk settings (background image, title, subtitle, colors)
+- [x] Add database helpers for kiosk settings CRUD
+- [x] Create tRPC procedures for kiosk settings (get, update, uploadBackgroundImage)
+- [x] Build admin settings UI for kiosk customization
+- [x] Implement background image upload to S3
+- [x] Update kiosk page to load customizable settings

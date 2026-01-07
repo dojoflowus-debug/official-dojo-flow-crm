@@ -128,8 +128,9 @@ export default function Kiosk() {
   };
 
   // Dynamic styles based on theme and settings
+  const backgroundImageUrl = safeAppearance.backgroundImageUrl || '/kiosk-welcome-bg.jpg';
   const backgroundStyle = {
-    backgroundImage: 'url(/kiosk-welcome-bg.jpg)',
+    backgroundImage: `url(${backgroundImageUrl})`,
     filter: `blur(${safeAppearance.backgroundBlur}px)`,
     transform: 'scale(1.05)',
   };
