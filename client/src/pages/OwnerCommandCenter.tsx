@@ -105,11 +105,10 @@ export function OwnerCommandCenter() {
           <KPITile
             icon={TrendingUp}
             label="Trials Scheduled"
-            value={0}
+            value={stats?.trials_scheduled || 0}
             trend={0}
             link="/leads"
             isLoading={statsLoading}
-            notAvailable={true}
           />
 
           {/* New Enrollments */}

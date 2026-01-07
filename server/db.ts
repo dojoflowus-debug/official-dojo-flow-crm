@@ -281,11 +281,20 @@ export async function getDashboardStats(organizationId?: number | null) {
     )
   );
   
+  // Trials scheduled (leads in trial_scheduled stage)
+  const trialsScheduledResult = await db.select({ count: count() }).from(leads).where(
+    and(
+      eq(leads.organizationId, organizationId),
+      eq(leads.stage, 'trial_scheduled')
+    )
+  );
+  
   return {
     total_students: totalStudents[0]?.count || 0,
     active_students: activeStudentsResult[0]?.count || 0,
     todays_attendance: todayAttendanceResult[0]?.count || 0,
     new_leads: newLeadsResult[0]?.count || 0,
+    trials_scheduled: trialsScheduledResult[0]?.count || 0,
     new_enrollments: newEnrollmentsResult[0]?.count || 0,
     monthly_revenue: 12500, // TODO: Calculate from billing data
     total_leads: totalLeads[0]?.count || 0,
