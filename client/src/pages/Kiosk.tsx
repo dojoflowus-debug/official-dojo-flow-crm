@@ -109,17 +109,33 @@ export default function Kiosk() {
   }
 
   const { settings, locationName } = kioskConfig;
-  const { appearance, behavior } = settings;
+  const { appearance, behavior } = settings || { appearance: {}, behavior: {} };
+
+  // Provide safe defaults for appearance properties
+  const safeAppearance = {
+    backgroundBlur: appearance?.backgroundBlur ?? 3,
+    backgroundIntensity: appearance?.backgroundIntensity ?? 70,
+    headline: appearance?.headline ?? 'Welcome to Training',
+    subtext: appearance?.subtext ?? 'Sign in or get started below',
+    accentColor: appearance?.accentColor ?? '#ef4444',
+  };
+
+  const safeBehavior = {
+    showMemberLogin: behavior?.showMemberLogin ?? true,
+    showNewStudent: behavior?.showNewStudent ?? true,
+    idleTimeout: behavior?.idleTimeout ?? 30,
+    autoReturn: behavior?.autoReturn ?? true,
+  };
 
   // Dynamic styles based on theme and settings
   const backgroundStyle = {
     backgroundImage: 'url(/kiosk-welcome-bg.jpg)',
-    filter: `blur(${appearance.backgroundBlur}px)`,
+    filter: `blur(${safeAppearance.backgroundBlur}px)`,
     transform: 'scale(1.05)',
   };
 
   const vignetteStyle = {
-    background: `radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,${appearance.backgroundIntensity / 200}) 70%, rgba(0,0,0,${appearance.backgroundIntensity / 100}) 100%)`,
+    background: `radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,${safeAppearance.backgroundIntensity / 200}) 70%, rgba(0,0,0,${safeAppearance.backgroundIntensity / 100}) 100%)`,
   };
 
   return (
@@ -163,17 +179,17 @@ export default function Kiosk() {
         {/* Main Headline */}
         <div className="text-center mb-12">
           <h1 className="text-white text-5xl md:text-6xl font-bold mb-3 tracking-tight">
-            {appearance.headline}
+            {safeAppearance.headline}
           </h1>
           <p className="text-white/80 text-xl">
-            {appearance.subtext}
+            {safeAppearance.subtext}
           </p>
         </div>
 
         {/* Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {/* Member Login Card */}
-          {behavior.showMemberLogin && (
+          {safeBehavior.showMemberLogin && (
             <div
               onClick={() => navigate(`/kiosk/${locationSlug}/student-login`)}
               className="group relative bg-gradient-to-br from-slate-900/70 to-slate-800/70 backdrop-blur-md rounded-3xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/10"
@@ -183,12 +199,12 @@ export default function Kiosk() {
                 <div className="relative">
                   <div 
                     className="absolute inset-0 rounded-full blur-xl group-hover:blur-2xl transition-all"
-                    style={{ backgroundColor: `${appearance.accentColor}30` }}
+                    style={{ backgroundColor: `${safeAppearance.accentColor}30` }}
                   />
                   <div 
                     className="relative p-6 rounded-full shadow-lg"
                     style={{ 
-                      background: `linear-gradient(to bottom right, ${appearance.accentColor}, ${appearance.accentColor}dd)` 
+                      background: `linear-gradient(to bottom right, ${safeAppearance.accentColor}, ${safeAppearance.accentColor}dd)` 
                     }}
                   >
                     <CheckCircle2 className="h-12 w-12 text-white" strokeWidth={2.5} />
@@ -211,7 +227,7 @@ export default function Kiosk() {
                 <div 
                   className="w-full py-3 rounded-2xl text-white text-center font-semibold shadow-lg transition-all"
                   style={{ 
-                    background: `linear-gradient(to right, ${appearance.accentColor}, ${appearance.accentColor}dd)` 
+                    background: `linear-gradient(to right, ${safeAppearance.accentColor}, ${safeAppearance.accentColor}dd)` 
                   }}
                 >
                   Member Login
@@ -224,7 +240,7 @@ export default function Kiosk() {
           )}
 
           {/* New Student Card */}
-          {behavior.showNewStudent && (
+          {safeBehavior.showNewStudent && (
             <div
               onClick={() => navigate('/enrollment')}
               className="group relative bg-gradient-to-br from-slate-900/70 to-slate-800/70 backdrop-blur-md rounded-3xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/10"

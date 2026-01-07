@@ -387,6 +387,27 @@ Update hero banner to match exact mockup design:
 - [x] Verify icon path is correct
 - [x] Fix icon display - icon is showing on dev server
 - [x] Test on live site - needs checkpoint and publish
+## 🐛 BUG: Kiosk Page "Cannot read properties of undefined (reading 'idleTimeout')" Error (2026-01-07)
+
+### Issue
+- [x] User reports error when opening kiosk page at /kiosk/main-dojo
+- [x] Error: "Cannot read properties of undefined (reading 'idleTimeout')"
+- [x] Error occurs in Kiosk component at line 23 (useEffect)
+- [x] tRPC validation error: "Invalid input: expected object, received undefined"
+
+### Root Cause Found
+- [x] Missing `z` import in kioskRouter.ts - schema validation was failing
+- [x] getKioskRuntime procedure not validating settings before returning
+- [x] Settings could be undefined, causing idleTimeout access to fail
+- [x] JSX syntax error in Kiosk.tsx (line 201) - className on wrong line
+
+### Fixes Applied
+- [x] Added `import { z } from "zod"` to kioskRouter.ts
+- [x] Updated getKioskRuntime to validate settings with kioskSettingsSchema.parse()
+- [x] Ensured defaults are used if validation fails
+- [x] Fixed JSX formatting in Kiosk.tsx component
+- [x] Tested kiosk page - loads successfully without errors
+- [x] Save checkpoint (version: 63e94433)
 
 ## 🐛 BUG: TypeError When Updating Kiosk Theme Settings
 
@@ -395,7 +416,7 @@ Update hero banner to match exact mockup design:
 - [x] Error occurs when updating theme in Kiosk Settings page
 
 ### Root Cause
-- [x] Backend was parsing JSON settings without schema validation
+- [...[content truncated]g JSON settings without schema validation
 - [x] If stored JSON was missing nested properties, parsed object would be incomplete
 - [x] Frontend tried to access undefined properties causing TypeError
 
