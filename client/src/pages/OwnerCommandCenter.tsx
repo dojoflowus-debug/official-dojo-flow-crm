@@ -130,9 +130,9 @@ export function OwnerCommandCenter() {
               <h2 className="text-lg font-semibold mb-4">Enrollment Funnel</h2>
               <div className="space-y-4">
                 <FunnelStage label="Leads" value={stats?.total_leads || 0} percentage={100} />
-                <FunnelStage label="Trials Scheduled" value={0} percentage={0} notAvailable={true} />
+                <FunnelStage label="Trials Scheduled" value={stats?.trials_scheduled || 0} percentage={stats?.total_leads ? Math.round((stats.trials_scheduled / stats.total_leads) * 100) : 0} />
                 <FunnelStage label="Trials Attended" value={0} percentage={0} notAvailable={true} />
-                <FunnelStage label="Enrolled" value={0} percentage={0} notAvailable={true} />
+                <FunnelStage label="Enrolled" value={stats?.new_enrollments || 0} percentage={stats?.total_leads ? Math.round((stats.new_enrollments / stats.total_leads) * 100) : 0} />
               </div>
               <div className="mt-6 pt-4 border-t">
                 <Button variant="outline" className="w-full" asChild>
@@ -150,11 +150,26 @@ export function OwnerCommandCenter() {
                 Alerts & Signals
               </h2>
               <div className="space-y-3">
-                <AlertItem
-                  severity="info"
-                  title="No active alerts"
-                  description="All systems operating normally"
-                />
+                {stats?.alerts && stats.alerts.length > 0 ? (
+                  stats.alerts.map((alert: any) => (
+                    <a
+                      key={alert.id}
+                      href={alert.link}
+                      className="block p-3 rounded-lg hover:opacity-80 transition border"
+                    >
+                      <div className={`font-semibold text-sm ${alert.severity === 'critical' ? 'text-red-500' : 'text-amber-500'}`}>
+                        {alert.title}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">{alert.description}</div>
+                    </a>
+                  ))
+                ) : (
+                  <AlertItem
+                    severity="info"
+                    title="All Clear"
+                    description="No critical alerts"
+                  />
+                )}
               </div>
             </Card>
           </div>

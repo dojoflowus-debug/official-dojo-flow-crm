@@ -216,6 +216,8 @@ export async function deleteStaffPin(id: number) {
  */
 
 // Get dashboard statistics
+import { getDashboardAlerts } from "./alertsHelper";
+
 export async function getDashboardStats(organizationId?: number | null) {
   const db = await getDb();
   if (!db) return null;
@@ -289,6 +291,9 @@ export async function getDashboardStats(organizationId?: number | null) {
     )
   );
   
+  // Get alerts
+  const alerts = await getDashboardAlerts(organizationId);
+  
   return {
     total_students: totalStudents[0]?.count || 0,
     active_students: activeStudentsResult[0]?.count || 0,
@@ -298,6 +303,7 @@ export async function getDashboardStats(organizationId?: number | null) {
     new_enrollments: newEnrollmentsResult[0]?.count || 0,
     monthly_revenue: 12500, // TODO: Calculate from billing data
     total_leads: totalLeads[0]?.count || 0,
+    alerts: alerts,
     todays_classes: todaysClasses.map(c => ({
       name: c.name,
       time: c.time,
