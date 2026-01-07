@@ -1,77 +1,107 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from './_core/trpc';
-import { getDb } from './db';
-import { dojoSettings } from '../drizzle/schema';
 import { storagePut } from './storage';
-import { eq } from 'drizzle-orm';
+import { getKioskSettingsByLocationSlug, updateKioskBackgroundImage, resetKioskBackground, updateKioskBackgroundEffects, updateLocationKioskTheme, getKioskSettingsByLocationId } from './db';
 
 export const kioskSettingsRouter = router({
-  // Update kiosk settings (business name and logo)
-  update: protectedProcedure
-    .input(
-      z.object({
-        businessName: z.string().min(1, 'Business name is required'),
-        logoSquare: z.string().url('Logo must be a valid URL').optional(),
-      })
-    )
-    .mutation(async ({ input }) => {
+  getSettings: protectedProcedure
+    .input(z.object({ locationSlug: z.string() }))
+    .query(async ({ input }) => {
       try {
-        // Update dojo_settings table
-        const db = await getDb();
-        if (!db) {
-          throw new Error('Database connection not available');
-        }
-        
-        await db
-          .update(dojoSettings)
-          .set({
-            businessName: input.businessName,
-            logoSquare: input.logoSquare || null,
-          })
-          .execute();
-
-        return {
-          success: true,
-          message: 'Kiosk settings updated successfully',
-        };
+        const settings = await getKioskSettingsByLocationSlug(input.locationSlug);
+        return { success: true, settings };
       } catch (error) {
-        console.error('[Kiosk Settings] Update error:', error);
-        throw new Error('Failed to update kiosk settings');
+        console.error('[Kiosk Settings] Get error:', error);
+        throw new Error('Failed to get kiosk settings');
       }
     }),
 
-  // Upload logo to S3
-  uploadLogo: protectedProcedure
-    .input(
-      z.object({
-        fileName: z.string(),
-        fileData: z.string(), // base64 encoded
-        mimeType: z.string(),
-      })
-    )
+  uploadBackgroundImage: protectedProcedure
+    .input(z.object({
+      locationId: z.number().min(1),
+      fileName: z.string(),
+      fileData: z.string(),
+      mimeType: z.string(),
+      blur: z.number().min(0).max(24).optional().default(0),
+      dim: z.number().min(0).max(70).optional().default(0),
+    }))
     .mutation(async ({ input }) => {
       try {
-        // Extract base64 data (remove data:image/...;base64, prefix)
         const base64Data = input.fileData.split(',')[1] || input.fileData;
         const buffer = Buffer.from(base64Data, 'base64');
+        const fileSizeMB = buffer.length / (1024 * 1024);
+        
+        if (fileSizeMB > 8) throw new Error('File size must be less than 8MB');
+        const validMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validMimeTypes.includes(input.mimeType)) throw new Error('Invalid file type');
 
-        // Generate unique filename
         const timestamp = Date.now();
         const randomSuffix = Math.random().toString(36).substring(7);
-        const extension = input.fileName.split('.').pop() || 'png';
-        const fileKey = `kiosk-logos/logo-${timestamp}-${randomSuffix}.${extension}`;
+        const extension = input.fileName.split('.').pop() || 'jpg';
+        const fileKey = `kiosk-backgrounds/bg-${input.locationId}-${timestamp}-${randomSuffix}.${extension}`;
 
-        // Upload to S3
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        const success = await updateKioskBackgroundImage(input.locationId, url, input.blur, input.dim);
 
-        return {
-          success: true,
-          url,
-          fileKey,
-        };
+        if (!success) throw new Error('Failed to save background settings');
+        return { success: true, url, fileKey };
       } catch (error) {
-        console.error('[Kiosk Settings] Upload error:', error);
-        throw new Error('Failed to upload logo');
+        console.error('[Kiosk Settings] Background upload error:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to upload background image');
+      }
+    }),
+
+  updateBackgroundEffects: protectedProcedure
+    .input(z.object({
+      locationId: z.number().min(1),
+      blur: z.number().min(0).max(24),
+      dim: z.number().min(0).max(70),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const success = await updateKioskBackgroundEffects(input.locationId, input.blur, input.dim);
+        if (!success) throw new Error('Failed to update background effects');
+        const settings = await getKioskSettingsByLocationId(input.locationId);
+        return { success: true, settings };
+      } catch (error) {
+        console.error('[Kiosk Settings] Update effects error:', error);
+        throw new Error('Failed to update background effects');
+      }
+    }),
+
+  resetBackground: protectedProcedure
+    .input(z.object({
+      locationId: z.number().min(1),
+      presetKey: z.string().optional().default('dojo-warm-lights'),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const success = await resetKioskBackground(input.locationId, input.presetKey);
+        if (!success) throw new Error('Failed to reset background');
+        const settings = await getKioskSettingsByLocationId(input.locationId);
+        return { success: true, settings };
+      } catch (error) {
+        console.error('[Kiosk Settings] Reset background error:', error);
+        throw new Error('Failed to reset background');
+      }
+    }),
+
+  updateTheme: protectedProcedure
+    .input(z.object({
+      locationId: z.number().min(1),
+      mode: z.enum(['dark', 'light']),
+      primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i),
+      accentColor: z.string().regex(/^#[0-9A-F]{6}$/i),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const success = await updateLocationKioskTheme(input.locationId, input.mode, input.primaryColor, input.accentColor);
+        if (!success) throw new Error('Failed to update theme');
+        const settings = await getKioskSettingsByLocationId(input.locationId);
+        return { success: true, settings };
+      } catch (error) {
+        console.error('[Kiosk Settings] Update theme error:', error);
+        throw new Error('Failed to update theme');
       }
     }),
 });

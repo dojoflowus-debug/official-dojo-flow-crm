@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
 import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, staffPins, InsertStaffPin, studentMessages, studentMessageAttachments, InsertStudentMessage, students } from "../drizzle/schema";
+import { InsertUser, users, staffPins, InsertStaffPin, studentMessages, studentMessageAttachments, InsertStudentMessage, students, KioskSettings, getDefaultKioskSettings } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import * as schema from "../drizzle/schema";
 
@@ -1876,6 +1876,147 @@ export async function deleteKioskSchedule(scheduleId: number) {
     return true;
   } catch (error) {
     console.error("Error deleting kiosk schedule:", error);
+    return false;
+  }
+}
+
+
+/**
+ * Kiosk Settings Helpers
+ */
+export async function getKioskSettingsByLocationSlug(kioskSlug: string): Promise<KioskSettings> {
+  const db = await getDb();
+  if (!db) return getDefaultKioskSettings();
+  try {
+    const result = await db.select().from(schema.locations).where(eq(schema.locations.kioskSlug, kioskSlug)).limit(1);
+    if (result.length === 0) return getDefaultKioskSettings();
+    const location = result[0];
+    if (!location.kioskSettings) return getDefaultKioskSettings();
+    try {
+      const settings = typeof location.kioskSettings === 'string' ? JSON.parse(location.kioskSettings) : location.kioskSettings;
+      return { ...getDefaultKioskSettings(), ...settings };
+    } catch {
+      return getDefaultKioskSettings();
+    }
+  } catch (error) {
+    console.error("[Database] Failed to get kiosk settings:", error);
+    return getDefaultKioskSettings();
+  }
+}
+
+export async function getKioskSettingsByLocationId(locationId: number): Promise<KioskSettings> {
+  const db = await getDb();
+  if (!db) return getDefaultKioskSettings();
+  try {
+    const result = await db.select().from(schema.locations).where(eq(schema.locations.id, locationId)).limit(1);
+    if (result.length === 0) return getDefaultKioskSettings();
+    const location = result[0];
+    if (!location.kioskSettings) return getDefaultKioskSettings();
+    try {
+      const settings = typeof location.kioskSettings === 'string' ? JSON.parse(location.kioskSettings) : location.kioskSettings;
+      return { ...getDefaultKioskSettings(), ...settings };
+    } catch {
+      return getDefaultKioskSettings();
+    }
+  } catch (error) {
+    console.error("[Database] Failed to get kiosk settings:", error);
+    return getDefaultKioskSettings();
+  }
+}
+
+export async function updateKioskSettings(locationId: number, settings: Partial<KioskSettings>): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const mergedSettings: KioskSettings = {
+      ...currentSettings,
+      theme: settings.theme ? { ...currentSettings.theme, ...settings.theme } : currentSettings.theme,
+      background: settings.background ? { ...currentSettings.background, ...settings.background } : currentSettings.background,
+    };
+    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(mergedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update kiosk settings:", error);
+    return false;
+  }
+}
+
+export async function updateKioskBackgroundImage(locationId: number, imageUrl: string, blur: number = 0, dim: number = 0): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const updatedSettings: KioskSettings = {
+      ...currentSettings,
+      background: {
+        ...currentSettings.background,
+        type: 'image',
+        imageUrl,
+        presetKey: null,
+        blur: Math.min(Math.max(blur, 0), 24),
+        dim: Math.min(Math.max(dim, 0), 70),
+      }
+    };
+    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update background image:", error);
+    return false;
+  }
+}
+
+export async function resetKioskBackground(locationId: number, presetKey: string = 'dojo-warm-lights'): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const updatedSettings: KioskSettings = {
+      ...currentSettings,
+      background: { type: 'preset', presetKey, blur: 0, dim: 0, vignette: false }
+    };
+    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to reset background:", error);
+    return false;
+  }
+}
+
+export async function updateKioskBackgroundEffects(locationId: number, blur: number, dim: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const updatedSettings: KioskSettings = {
+      ...currentSettings,
+      background: {
+        ...currentSettings.background,
+        blur: Math.min(Math.max(blur, 0), 24),
+        dim: Math.min(Math.max(dim, 0), 70),
+      }
+    };
+    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update background effects:", error);
+    return false;
+  }
+}
+
+export async function updateLocationKioskTheme(locationId: number, mode: string, primaryColor: string, accentColor: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    const currentSettings = await getKioskSettingsByLocationId(locationId);
+    const updatedSettings: KioskSettings = {
+      ...currentSettings,
+      theme: { mode, primaryColor, accentColor }
+    };
+    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to update theme:", error);
     return false;
   }
 }

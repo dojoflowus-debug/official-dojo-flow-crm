@@ -351,6 +351,13 @@
       "when": 1767731801417,
       "tag": "0049_minor_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "5",
+      "when": 1767746386387,
+      "tag": "0050_lonely_grandmaster",
+      "breakpoints": true
     }
   ]
 }

@@ -34,7 +34,8 @@ import { platformAdminAuthRouter } from "./platformAdminAuth";
 import { masterDashboardRouter } from "./masterDashboardRouter";
 import { ownerProfileRouter } from "./ownerProfileRouter";
 import { kaiCommandRouter } from "./kaiCommandRouter";
-import { kioskDesignerRouter } from "./kioskDesignerRouter";
+import { kioskDesignerRouter } from './kioskDesignerRouter';
+import { kioskSettingsRouter } from './kioskSettingsRouter';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -368,6 +369,7 @@ export const appRouter = router({
   system: systemRouter,
   kaiCommand: kaiCommandRouter,
   kioskDesigner: kioskDesignerRouter,
+  kioskSettings: kioskSettingsRouter,
   
   // Platform Admin CRM (internal only)
   platform: platformRouter,

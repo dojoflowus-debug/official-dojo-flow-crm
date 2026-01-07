@@ -1,6 +1,16 @@
 import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, timestamp, varchar, datetime, json, tinyint } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
+export interface KioskSettings {
+  theme?: { mode?: string; primaryColor?: string; accentColor?: string };
+  background?: { type?: string; imageUrl?: string; presetKey?: string | null; blur?: number; dim?: number; vignette?: boolean };
+}
+
+export const getDefaultKioskSettings = (): KioskSettings => ({
+  theme: { mode: 'dark', primaryColor: '#2563EB', accentColor: '#EF4444' },
+  background: { type: 'preset', presetKey: 'dojo-warm-lights', blur: 0, dim: 0, vignette: false },
+})
+
 export const accountFlags = mysqlTable("account_flags", {
 	id: int().autoincrement().notNull(),
 	organizationId: int().notNull(),
@@ -663,7 +673,7 @@ export const locations = mysqlTable("locations", {
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 	kioskEnabled: int().default(0).notNull(),
 	kioskSlug: varchar({ length: 255 }),
-	kioskSettings: text(),
+	kioskSettings: json().$type<KioskSettings>().default(JSON.stringify(getDefaultKioskSettings())),
 	organizationId: int(),
 },
 (table) => [
