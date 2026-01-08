@@ -118,17 +118,13 @@ export default function StudentLogin() {
     return () => clearInterval(interval);
   }, []);
 
-  // tRPC queries for student lookup and dashboard data
-  const findStudentQuery = trpc.studentPortal.getByEmail.useQuery(
-    { email },
-    { enabled: false }
-  );
-  
+  // tRPC mutations and queries
+  const loginMutation = trpc.studentPortal.login.useMutation();
   const resetPasswordMutation = trpc.studentPortal.requestPasswordReset.useMutation();
 
   /**
    * RETURNING STUDENT LOGIN
-   * 1. Authenticate user by email
+   * 1. Authenticate user with email and password
    * 2. Load full student context: belt rank, program, progress, active classes
    * 3. Store session with all metadata
    * 4. Route to appropriate dashboard
@@ -142,19 +138,27 @@ export default function StudentLogin() {
       return;
     }
 
+    if (!password.trim()) {
+      setError("Please enter your password");
+      return;
+    }
+
     setIsLoggingIn(true);
 
     try {
-      // Step 1: Find student by email
-      const result = await findStudentQuery.refetch();
+      // Step 1: Authenticate with email and password
+      const result = await loginMutation.mutateAsync({
+        email,
+        password,
+      });
       
-      if (!result.data?.student) {
+      if (!result.success || !result.student) {
         setIsLoggingIn(false);
-        setError("No student found with this email. Please contact the front desk.");
+        setError(result.error || "Login failed. Please check your credentials.");
         return;
       }
       
-      const student = result.data.student;
+      const student = result.student;
       
       // Step 2: Build complete session with student context
       const studentSession: StudentSession = {
@@ -167,6 +171,14 @@ export default function StudentLogin() {
         program: student.program || undefined,
         beltRank: student.beltRank || 'White',
         status: student.status || 'active',
+        currentBelt: result.beltProgress?.currentBelt || 'White',
+        nextBelt: result.beltProgress?.nextBelt || 'Yellow',
+        progressPercent: result.beltProgress?.progressPercent || 0,
+        qualifiedClasses: result.beltProgress?.qualifiedClasses || 0,
+        classesRequired: result.beltProgress?.classesRequired || 20,
+        qualifiedAttendance: result.beltProgress?.qualifiedAttendance || 0,
+        attendanceRequired: result.beltProgress?.attendanceRequired || 80,
+        isEligible: (result.beltProgress?.isEligible || 0) === 1,
         isKioskMode,
         loginTimestamp: Date.now(),
       };
@@ -329,10 +341,10 @@ export default function StudentLogin() {
               {/* Enter the Dojo Button */}
               <Button
                 type="submit"
-                disabled={isLoggingIn || findStudentQuery.isFetching}
+                disabled={isLoggingIn || loginMutation.isPending}
                 className="w-full h-14 text-base font-semibold bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all border border-slate-700/50"
               >
-                {(isLoggingIn || findStudentQuery.isFetching) ? (
+                {(isLoggingIn || loginMutation.isPending) ? (
                   <>
                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                     Signing in...

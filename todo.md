@@ -195,3 +195,7 @@
   - Removed duplicate `classes` router definition at line 823 (simple version)
   - Kept the comprehensive `classes` router at line 4253 with all functionality
   - This was causing requests to fall through to Vite catch-all middleware and return HTML instead of JSON
+
+## Testing & Demo Data
+
+- [x] Add fake student with photo for testing purposes
