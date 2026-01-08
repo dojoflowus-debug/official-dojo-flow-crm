@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
 
@@ -84,6 +85,7 @@ const STATUS_COLORS: Record<string, string> = {
 type ViewMode = 'list' | 'map' | 'segments' | 'analytics';
 
 export default function StudentsDashboard() {
+  const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -91,6 +93,17 @@ export default function StudentsDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam === 'needs-attention') {
+      setStatusFilter('At Risk');
+    } else if (filterParam === 'needs-followup') {
+      setStatusFilter('On Hold');
+    } else if (filterParam === 'overdue') {
+      setStatusFilter('Inactive');
+    }
+  }, [searchParams]);
 
   // Fetch students with filters
   const { data: studentsData, isLoading: isLoadingStudents } = trpc.students.getListWithFilters.useQuery({

@@ -2027,7 +2027,11 @@ export const appRouter = router({
         thisMonth.setDate(1);
         const cancellationResult = await db.select({ count: count().as('count') })
           .from(studentCancellationRequests)
-          .where(gte(studentCancellationRequests.requestDate, thisMonth.toISOString()));
+          .innerJoin(students, eq(studentCancellationRequests.studentId, students.id))
+          .where(and(
+            eq(students.organizationId, orgId),
+            gte(studentCancellationRequests.requestDate, thisMonth.toISOString())
+          ));
         
         // Get delinquent tuition count
         const delinquentResult = await db.select({ count: count().as('count') })
