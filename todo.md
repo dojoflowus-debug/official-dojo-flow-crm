@@ -199,3 +199,9 @@
 ## Testing & Demo Data
 
 - [x] Add fake student with photo for testing purposes
+
+- [x] Fixed database query error on /students?filter=needs-attention page
+  - Removed query for non-existent `student_cancellation_requests` table
+  - Removed query for non-existent `student_tuition` table
+  - Fixed `getAnalytics` TRPC procedure to only query existing tables
+  - Page now loads successfully with KPI metrics displaying correctly

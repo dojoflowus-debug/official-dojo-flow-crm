@@ -1931,8 +1931,8 @@ export const appRouter = router({
     getAnalytics: protectedProcedure
       .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
-        const { students, studentAttendance, classEnrollments, studentCancellationRequests, studentTuition } = await import("../drizzle/schema");
-        const { eq, and, sql, gte, lte, count, desc } = await import("drizzle-orm");
+        const { students } = await import("../drizzle/schema");
+        const { eq, and, count } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
@@ -1987,32 +1987,12 @@ export const appRouter = router({
             eq(students.status, 'On Hold')
           ));
         
-        // Get cancellation requests this month
-        const thisMonth = new Date();
-        thisMonth.setDate(1);
-        const cancellationResult = await db.select({ count: count().as('count') })
-          .from(studentCancellationRequests)
-          .innerJoin(students, eq(studentCancellationRequests.studentId, students.id))
-          .where(and(
-            eq(students.organizationId, orgId),
-            gte(studentCancellationRequests.requestDate, thisMonth.toISOString())
-          ));
-        
-        // Get delinquent tuition count
-        const delinquentResult = await db.select({ count: count().as('count') })
-          .from(studentTuition)
-          .where(and(
-            eq(studentTuition.status, 'overdue')
-          ));
-        
         return {
           total: totalResult[0]?.count || 0,
           active: activeResult[0]?.count || 0,
           atRisk: atRiskResult[0]?.count || 0,
           inactive: inactiveResult[0]?.count || 0,
           pending: pendingResult[0]?.count || 0,
-          cancellations: cancellationResult[0]?.count || 0,
-          delinquent: delinquentResult[0]?.count || 0,
           statusBreakdown: statusCounts,
         };
       }),
