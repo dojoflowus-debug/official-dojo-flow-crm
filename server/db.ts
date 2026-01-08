@@ -2181,6 +2181,21 @@ export async function updateLocationBackground(
 }
 
 /**
+ * Map preset keys to actual image URLs
+ */
+function resolvePresetUrl(presetKey: string | null | undefined): string | undefined {
+  if (!presetKey) return undefined;
+  
+  const presets: Record<string, string> = {
+    'dojo-warm-lights': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80',
+    'clean-modern-gym': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80',
+    'kids-class-bright': 'https://images.unsplash.com/photo-1517836357463-d25ddfcbf042?w=1920&q=80',
+  };
+  
+  return presets[presetKey] || presets['dojo-warm-lights'];
+}
+
+/**
  * Get location background with fallback logic
  * Returns: location background → org default → global default
  */
@@ -2208,22 +2223,32 @@ export async function getLocationBackgroundWithFallback(
     
     if (location.length > 0 && location[0].kioskSettings) {
       try {
-        const settings = typeof location[0].kioskSettings === 'string' 
-          ? JSON.parse(location[0].kioskSettings) 
-          : location[0].kioskSettings;
+        // Drizzle ORM returns json() fields as objects, not strings
+        let settings = location[0].kioskSettings;
+        if (typeof settings === 'string') {
+          settings = JSON.parse(settings);
+        }
+        // Handle case where settings might be a stringified JSON (double-encoded)
+        if (typeof settings === 'string') {
+          settings = JSON.parse(settings);
+        }
         
         console.log('[DEBUG] getLocationBackgroundWithFallback - Parsed settings keys:', Object.keys(settings));
         console.log('[DEBUG] getLocationBackgroundWithFallback - Full background object:', JSON.stringify(settings.background));
         
-        // Priority: custom imageUrl first, then presetKey, then default
+        // Priority: custom imageUrl first, then presetKey (resolved to URL), then default
         if (settings.background?.imageUrl) {
           console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING custom imageUrl:', settings.background.imageUrl);
           console.log('[DEBUG] getLocationBackgroundWithFallback - Full background:', JSON.stringify(settings.background));
           return settings.background;
         }
         if (settings.background?.presetKey) {
-          console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING presetKey:', settings.background.presetKey);
-          return settings.background;
+          const resolvedUrl = resolvePresetUrl(settings.background.presetKey);
+          console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING presetKey:', settings.background.presetKey, 'resolved to:', resolvedUrl);
+          return {
+            ...settings.background,
+            imageUrl: resolvedUrl,
+          };
         }
         
         console.log('[DEBUG] getLocationBackgroundWithFallback - No imageUrl or presetKey found, falling back');

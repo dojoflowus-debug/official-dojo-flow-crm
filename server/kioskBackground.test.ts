@@ -99,9 +99,38 @@ describe('Kiosk Background Upload and Retrieval Flow', () => {
     const background = await getLocationBackgroundWithFallback(testLocationId);
     console.log('Background after reset:', JSON.stringify(background, null, 2));
     
-    // Should now use presetKey
+    // Should now have presetKey and resolved imageUrl
     expect(background.presetKey).toBe('dojo-warm-lights');
-    expect(background.imageUrl).toBeUndefined();
+    expect(background.imageUrl).toBeDefined();
+    expect(background.imageUrl).toContain('unsplash.com');
+  });
+
+  it('should resolve preset keys to actual image URLs', async () => {
+    const { resetKioskBackground, getLocationBackgroundWithFallback } = await import('./db');
+    
+    // Test dojo-warm-lights preset
+    await resetKioskBackground(testLocationId, 'dojo-warm-lights');
+    let background = await getLocationBackgroundWithFallback(testLocationId);
+    console.log('Resolved dojo-warm-lights:', background.imageUrl);
+    expect(background.imageUrl).toBeDefined();
+    expect(background.imageUrl).toContain('unsplash.com');
+    expect(background.presetKey).toBe('dojo-warm-lights');
+    
+    // Test clean-modern-gym preset
+    await resetKioskBackground(testLocationId, 'clean-modern-gym');
+    background = await getLocationBackgroundWithFallback(testLocationId);
+    console.log('Resolved clean-modern-gym:', background.imageUrl);
+    expect(background.imageUrl).toBeDefined();
+    expect(background.imageUrl).toContain('unsplash.com');
+    expect(background.presetKey).toBe('clean-modern-gym');
+    
+    // Test kids-class-bright preset
+    await resetKioskBackground(testLocationId, 'kids-class-bright');
+    background = await getLocationBackgroundWithFallback(testLocationId);
+    console.log('Resolved kids-class-bright:', background.imageUrl);
+    expect(background.imageUrl).toBeDefined();
+    expect(background.imageUrl).toContain('unsplash.com');
+    expect(background.presetKey).toBe('kids-class-bright');
   });
 
   it('should handle blur and dim updates correctly', async () => {

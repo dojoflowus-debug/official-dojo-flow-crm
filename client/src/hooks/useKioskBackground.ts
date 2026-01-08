@@ -34,10 +34,10 @@ export function useKioskBackground(locationId: number) {
     });
     
     if (fetchedBackground) {
-      // Ensure we always have a valid background with fallback URL
+      // Backend now resolves presetKey to imageUrl, so just use imageUrl directly
       const validatedBackground: KioskBackground = {
         ...fetchedBackground,
-        imageUrl: fetchedBackground.imageUrl || fetchedBackground.presetKey || DEFAULT_BACKGROUND_URL,
+        imageUrl: fetchedBackground.imageUrl || DEFAULT_BACKGROUND_URL,
       };
       console.log('[DEBUG] useKioskBackground - Setting validated background', { validatedBackground });
       setBackground(validatedBackground);
@@ -90,7 +90,7 @@ export function useKioskBackground(locationId: number) {
   const applyBackground = (element: HTMLElement | null) => {
     if (!element || !background) return;
 
-    const imageUrl = background.imageUrl || background.presetKey;
+    const imageUrl = background.imageUrl;
     if (!imageUrl) return;
 
     // Set background image
@@ -100,12 +100,11 @@ export function useKioskBackground(locationId: number) {
     element.style.backgroundAttachment = "fixed";
 
     // Apply blur effect
-    if (background.blur && background.blur > 0) {
+    if (background?.blur && background.blur > 0) {
       element.style.filter = `blur(${background.blur}px)`;
     }
 
-    // Apply dim overlay
-    if (background.dim && background.dim > 0) {
+    if (background?.dim && background.dim > 0) {
       const opacity = 1 - background.dim / 100;
       element.style.opacity = `${opacity}`;
     }
@@ -117,7 +116,7 @@ export function useKioskBackground(locationId: number) {
   const applyBackgroundWithOverlay = (element: HTMLElement | null) => {
     if (!element || !background) return;
 
-    const imageUrl = background.imageUrl || background.presetKey;
+    const imageUrl = background.imageUrl;
     if (!imageUrl) return;
 
     // Create or update background overlay
@@ -141,12 +140,11 @@ export function useKioskBackground(locationId: number) {
     overlay.style.backgroundAttachment = "fixed";
 
     // Apply blur effect
-    if (background.blur && background.blur > 0) {
+    if (background?.blur && background.blur > 0) {
       overlay.style.filter = `blur(${background.blur}px)`;
     }
 
-    // Apply dim overlay
-    if (background.dim && background.dim > 0) {
+    if (background?.dim && background.dim > 0) {
       const dimColor = `rgba(0, 0, 0, ${background.dim / 100})`;
       overlay.style.backgroundColor = dimColor;
     }
@@ -156,7 +154,7 @@ export function useKioskBackground(locationId: number) {
    * Get CSS styles for background
    */
   const getBackgroundStyles = (): React.CSSProperties => {
-    const imageUrl = background?.imageUrl || background?.presetKey;
+    const imageUrl = background?.imageUrl;
     if (!imageUrl) return {};
 
     const styles: React.CSSProperties = {

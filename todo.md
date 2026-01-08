@@ -387,12 +387,25 @@ Update hero banner to match exact mockup design:
 - [x] Verify icon path is correct
 - [x] Fix icon display - icon is showing on dev server
 - [x] Test on live site - needs checkpoint and publish
+## 🎨 Kiosk Preset Persistence Fix (2026-01-07) - COMPLETED
+
+### Issue
+Preset selection in Settings preview works, but live kiosk page /kiosk/main-dojo doesn't reflect saved preset.
+
+### Fix Tasks
+- [x] Verify DB persistence: Preset selection saved to locations.kioskSettings with presetKey
+- [x] Add preset resolution: Backend resolves presetKey to actual image URL
+- [x] Fix frontend hook: useKioskBackground properly handles resolved imageUrl
+- [x] Fix JSON parsing: Handle both string and object types from Drizzle ORM
+- [x] Query caching: Already implemented in KioskBackgroundSettings
+- [x] Test end-to-end: Select preset → Save → Refresh kiosk → Verify display
+
 ## 🐛 BUG: Leads Page tRPC Errors (2026-01-07)
 
 ### Issue
 - [ ] Error 1: "Invalid input: expected object, received undefined" on /leads?filter=needs-followup
 - [ ] Error 2: "Failed query: select ... from lead_sources" - table schema mismatch
-- [ ] leadSources table has different schema than expected by router
+- [ ] leadSources table has d...[content truncated]xpected by router
 
 ### Root Cause
 - leadSources table schema in 0012_lumpy_swordsman.sql has columns: sourceKey, icon, enabled, displayOrder
