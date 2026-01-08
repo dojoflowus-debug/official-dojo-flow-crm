@@ -2190,6 +2190,7 @@ function resolvePresetUrl(presetKey: string | null | undefined): string | undefi
     'dojo-warm-lights': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80',
     'clean-modern-gym': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80',
     'kids-class-bright': 'https://images.unsplash.com/photo-1517836357463-d25ddfcbf042?w=1920&q=80',
+    'debug-neon': 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=80', // Bright neon-like image for testing
   };
   
   return presets[presetKey] || presets['dojo-warm-lights'];
@@ -2238,13 +2239,13 @@ export async function getLocationBackgroundWithFallback(
         
         // Priority: custom imageUrl first, then presetKey (resolved to URL), then default
         if (settings.background?.imageUrl) {
-          console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING custom imageUrl:', settings.background.imageUrl);
-          console.log('[DEBUG] getLocationBackgroundWithFallback - Full background:', JSON.stringify(settings.background));
+          console.log('[TRUTH_TRACE] getLocationBackgroundWithFallback - RETURNING custom imageUrl:', settings.background.imageUrl);
+          console.log('[TRUTH_TRACE] getLocationBackgroundWithFallback - Full background:', JSON.stringify(settings.background));
           return settings.background;
         }
         if (settings.background?.presetKey) {
           const resolvedUrl = resolvePresetUrl(settings.background.presetKey);
-          console.log('[DEBUG] getLocationBackgroundWithFallback - RETURNING presetKey:', settings.background.presetKey, 'resolved to:', resolvedUrl);
+          console.log('[TRUTH_TRACE] getLocationBackgroundWithFallback - RETURNING presetKey:', settings.background.presetKey, 'resolved to:', resolvedUrl);
           return {
             ...settings.background,
             imageUrl: resolvedUrl,

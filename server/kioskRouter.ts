@@ -124,6 +124,8 @@ export const kioskRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      console.log('[TRUTH_TRACE] updateKioskSettings SAVE INPUT:', JSON.stringify(input, null, 2));
+      
       if (!ctx.db) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -166,23 +168,29 @@ export const kioskRouter = router({
       }
 
       // Update location
+      const settingsJson = JSON.stringify(input.settings);
+      console.log('[TRUTH_TRACE] updateKioskSettings - About to save to DB:', { locationId: input.locationId, kioskEnabled: input.kioskEnabled, settingsJson: settingsJson });
+      
       await ctx.db
         .update(locations)
         .set({
           kioskEnabled: input.kioskEnabled ? 1 : 0,
           kioskSlug: slug,
-          kioskSettings: JSON.stringify(input.settings),
+          kioskSettings: settingsJson,
           updatedAt: new Date(),
         })
         .where(eq(locations.id, input.locationId));
 
-      return {
+      const result = {
         success: true,
         kioskSlug: slug,
         kioskUrl: slug
           ? `${process.env.VITE_APP_URL || ""}/kiosk/${slug}`
           : null,
       };
+      
+      console.log('[TRUTH_TRACE] updateKioskSettings SAVE RESULT:', JSON.stringify(result));
+      return result;
     }),
 
   /**
@@ -286,7 +294,9 @@ export const kioskRouter = router({
    * Get public preset backgrounds from /client/public folder
    * Returns curated list of images suitable for kiosk backgrounds
    */
-  getPublicPresetBackgrounds: publicProcedure.query(async ({ ctx }) => {
+  getPublicPresetBackgrounds: publicProcedure
+    .input(z.void())
+    .query(async ({ ctx }) => {
     // Curated list of preset backgrounds from public folder
     const presets = [
       // Training & Martial Arts
@@ -425,7 +435,9 @@ export const kioskRouter = router({
     .input(z.object({ locationId: z.number() }))
     .query(async ({ ctx, input }) => {
       const { getLocationBackgroundWithFallback } = await import("./db");
+      console.log('[TRUTH_TRACE] getLocationBackground query - locationId:', input.locationId);
       const background = await getLocationBackgroundWithFallback(input.locationId);
+      console.log('[TRUTH_TRACE] getLocationBackground query - RETURNING background:', JSON.stringify(background));
       return background;
     }),
 

@@ -15,6 +15,12 @@ export default function Kiosk() {
     { slug: locationSlug || '' },
     { enabled: !!locationSlug }
   );
+  
+  useEffect(() => {
+    if (kioskConfig) {
+      console.log('[TRUTH_TRACE] Kiosk component - kioskConfig received:', JSON.stringify(kioskConfig, null, 2));
+    }
+  }, [kioskConfig]);
 
   // Fade in animation on mount
   useEffect(() => {

@@ -48,7 +48,8 @@ export default function KioskSettings() {
 
   // Update kiosk settings mutation
   const updateSettings = trpc.kiosk.updateKioskSettings.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('[TRUTH_TRACE] SAVE RESULT from server:', JSON.stringify(result, null, 2));
       toast.success("Settings saved", {
         description: "Kiosk settings have been updated successfully.",
       });
@@ -137,7 +138,7 @@ export default function KioskSettings() {
   const handleSave = () => {
     if (!selectedLocationId) return;
 
-    updateSettings.mutate({
+    const input = {
       locationId: selectedLocationId,
       kioskEnabled,
       settings: {
@@ -159,7 +160,10 @@ export default function KioskSettings() {
           facialRecognition,
         },
       },
-    });
+    };
+    
+    console.log('[TRUTH_TRACE] SAVE INPUT from client:', JSON.stringify(input, null, 2));
+    updateSettings.mutate(input);
   };
 
   const handleBackgroundImageUpload = async (file: File) => {

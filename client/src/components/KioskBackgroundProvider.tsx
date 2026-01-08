@@ -27,6 +27,10 @@ export function KioskBackgroundProvider({
   const bgImageRef = useRef<HTMLDivElement>(null);
   const bgDimRef = useRef<HTMLDivElement>(null);
   const { background, imageLoaded, imageError } = useKioskBackground(locationId);
+  
+  useEffect(() => {
+    console.log('[TRUTH_TRACE] KioskBackgroundProvider - background received:', JSON.stringify(background));
+  }, [background]);
 
   // Set up background image layer
   useEffect(() => {

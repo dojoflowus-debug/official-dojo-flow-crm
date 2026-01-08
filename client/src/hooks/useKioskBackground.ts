@@ -24,7 +24,7 @@ export function useKioskBackground(locationId: number) {
 
   // Fetch location background
   const { data: fetchedBackground, isLoading: isFetching } =
-    trpc.kiosk.getLocationBackground.useQuery({ locationId });
+    trpc.kiosk.getLocationBackground.useQuery({ locationId }, { staleTime: 0, refetchOnMount: 'always' });
 
   useEffect(() => {
     console.log('[DEBUG] useKioskBackground - fetchedBackground changed', { 

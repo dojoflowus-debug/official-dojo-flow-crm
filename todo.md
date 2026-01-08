@@ -6081,3 +6081,27 @@ The Delete All Messages feature allows users to clear all messages from a conver
 - [x] Add preset selection that saves presetKey and applies immediately
 - [x] Test kiosk settings page end-to-end
 - [ ] Save checkpoint with kiosk fixes
+
+
+## 🐛 BUG FIX: Kiosk Settings Page tRPC Validation Error (2026-01-08)
+
+### Issue
+- [x] Page: /settings/kiosk
+- [x] Error: "Invalid input: expected object, received undefined"
+- [x] Affected feature: Browse Presets button
+
+### Root Cause
+- [x] The `getPublicPresetBackgrounds` procedure was defined without explicit input validation
+- [x] Client was calling with `undefined`, but server expected an object
+- [x] tRPC validation failed because no input schema was defined
+
+### Fix Applied
+- [x] Added `.input(z.void())` to `getPublicPresetBackgrounds` procedure in kioskRouter.ts
+- [x] This explicitly tells tRPC the procedure accepts no input (void)
+- [x] Prevents validation error when client calls with `undefined`
+
+### Verification
+- [x] Tested Browse Presets button - works without errors
+- [x] Preset gallery displays all background images correctly
+- [x] No console errors
+- [x] Save checkpoint (version: TBD)
