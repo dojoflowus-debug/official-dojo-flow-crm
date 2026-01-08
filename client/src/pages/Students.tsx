@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
+import BottomNavLayout from '@/components/BottomNavLayout';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,9 @@ import {
   X,
   TrendingUp,
   TrendingDown,
+  AlertTriangle,
+  CreditCard,
+  Calendar,
 } from 'lucide-react';
 
 interface Student {
@@ -67,6 +71,7 @@ interface KPIMetric {
   value: number;
   icon: React.ReactNode;
   color: string;
+  trend?: number;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -79,7 +84,14 @@ const STATUS_COLORS: Record<string, string> = {
 
 type ViewMode = 'list' | 'map' | 'segments' | 'analytics';
 
-export default function StudentsDashboard() {
+// Reason badges for "needs-attention" filter
+const AT_RISK_REASONS = [
+  { icon: <TrendingDown className="w-3 h-3" />, label: 'Attendance Drop', color: 'bg-red-500/20 text-red-700' },
+  { icon: <CreditCard className="w-3 h-3" />, label: 'Overdue Payment', color: 'bg-orange-500/20 text-orange-700' },
+  { icon: <AlertTriangle className="w-3 h-3" />, label: 'Cancellation Pending', color: 'bg-yellow-500/20 text-yellow-700' },
+];
+
+function StudentsDashboard() {
   const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,10 +151,10 @@ export default function StudentsDashboard() {
       color: 'text-red-600 dark:text-red-400',
     },
     {
-      label: 'Inactive',
-      value: analyticsData?.inactive || 0,
-      icon: <Clock className="w-5 h-5" />,
-      color: 'text-gray-600 dark:text-gray-400',
+      label: 'Retention Rate',
+      value: analyticsData?.total ? Math.round((analyticsData.active / analyticsData.total) * 100) : 0,
+      icon: <TrendingUp className="w-5 h-5" />,
+      color: 'text-purple-600 dark:text-purple-400',
     },
   ], [analyticsData]);
 
@@ -160,29 +172,30 @@ export default function StudentsDashboard() {
     setTimeout(() => setSelectedStudent(null), 300);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Apple-style Hero Header */}
-      <div className="sticky top-0 z-40 bg-background/50 backdrop-blur-xl border-b border-white/5">
+  const pageContent = (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header Section */}
+      <div className="sticky top-0 z-30 bg-background/50 backdrop-blur-xl border-b border-white/5">
         <div className="container mx-auto px-4 py-6">
           <div className="space-y-4">
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">Students</h1>
-              <p className="text-muted-foreground mt-2">Manage your dojo's student roster and track progress</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">Students</h1>
+              <p className="text-sm text-muted-foreground mt-1">Manage your dojo's student roster and track progress</p>
             </div>
-            {/* Command Center - Core Signals */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+            {/* KPI Metrics Strip - Horizontal */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {kpiMetrics.map((metric, idx) => (
                 <div
                   key={idx}
-                  className="bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group"
+                  className="bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-lg p-3 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-2 font-medium">{metric.label}</p>
-                      <p className="text-3xl font-bold text-foreground group-hover:text-white transition-colors">{metric.value}</p>
+                      <p className="text-xs text-muted-foreground mb-1 font-medium">{metric.label}</p>
+                      <p className="text-2xl font-bold text-foreground group-hover:text-white transition-colors">{metric.value}{metric.label === 'Retention Rate' ? '%' : ''}</p>
                     </div>
-                    <div className={cn('p-2.5 rounded-lg transition-all duration-300', metric.color)}>
+                    <div className={cn('p-2 rounded-lg transition-all duration-300', metric.color)}>
                       {metric.icon}
                     </div>
                   </div>
@@ -195,7 +208,7 @@ export default function StudentsDashboard() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-          {/* View Tabs */}
+        {/* View Mode Switcher & Add Button */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-full">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
             <TabsList className="bg-white/[0.03] border border-white/10 backdrop-blur-sm">
@@ -217,7 +230,7 @@ export default function StudentsDashboard() {
               </TabsTrigger>
             </TabsList>
 
-            <Button className="gap-2 w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="gap-2 w-full md:w-auto bg-red-600 hover:bg-red-700 text-white">
               <UserPlus className="w-4 h-4" />
               Add Student
             </Button>
@@ -226,8 +239,7 @@ export default function StudentsDashboard() {
           {/* List View */}
           <TabsContent value="list" className="space-y-4">
             {/* Search and Filters */}
-            {/* Floating Search & Filter Bar */}
-            <div className="flex flex-col gap-3 md:flex-row md:items-center bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-lg p-4 hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <Input
@@ -263,7 +275,7 @@ export default function StudentsDashboard() {
               </Button>
             </div>
 
-            {/* Students Card Grid - Premium Roster */}
+            {/* Students Table/Cards */}
             {isLoadingStudents ? (
               <div className="flex items-center justify-center h-64">
                 <p className="text-muted-foreground">Loading students...</p>
@@ -275,39 +287,121 @@ export default function StudentsDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
+                {/* Table Header */}
+                <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 py-3 bg-white/[0.02] border border-white/5 rounded-lg text-xs font-semibold text-muted-foreground">
+                  <div className="col-span-3">Student</div>
+                  <div className="col-span-2">Status</div>
+                  <div className="col-span-2">Attendance</div>
+                  <div className="col-span-2">Last Attended</div>
+                  <div className="col-span-1">Tuition</div>
+                  <div className="col-span-2">Actions</div>
+                </div>
+
+                {/* Table Rows */}
                 {students.map((student) => (
-                  <StudentCard
+                  <div
                     key={student.id}
-                    id={student.id}
-                    firstName={student.firstName}
-                    lastName={student.lastName}
-                    email={student.email}
-                    phone={student.phone}
-                    beltRank={student.beltRank || 'White Belt'}
-                    status={student.status as 'Active' | 'Inactive' | 'On Hold'}
-                    program={student.program}
-                    photoUrl={student.photoUrl}
-                    lastCheckIn={student.createdAt ? `Joined ${new Date(student.createdAt).toLocaleDateString()}` : undefined}
-                    attendanceStreak={0}
-                    progressToNextBelt={Math.floor(Math.random() * 100)}
-                    indicators={{
-                      atRisk: student.status === 'At Risk',
-                    }}
-                    onCall={() => console.log('Call', student.id)}
-                    onText={() => console.log('Text', student.id)}
-                    onEmail={() => console.log('Email', student.id)}
-                    onNotes={() => console.log('Notes', student.id)}
-                    onAssignProgram={() => console.log('Assign Program', student.id)}
-                    onPromoteBelt={() => console.log('Promote Belt', student.id)}
-                    onProfileClick={() => handleSelectStudent(student)}
-                  />
+                    className="hidden md:grid md:grid-cols-12 gap-4 px-4 py-4 bg-white/[0.03] border border-white/10 rounded-lg hover:bg-white/[0.06] hover:border-white/20 transition-all duration-200 items-center group cursor-pointer"
+                    onClick={() => handleSelectStudent(student)}
+                  >
+                    {/* Student Name & Avatar */}
+                    <div className="col-span-3 flex items-center gap-3">
+                      <Avatar className="w-10 h-10 ring-2 ring-white/10">
+                        <AvatarImage src={student.photoUrl} />
+                        <AvatarFallback>{`${student.firstName?.charAt(0) || ''}${student.lastName?.charAt(0) || ''}`}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">{student.firstName} {student.lastName}</p>
+                        <p className="text-xs text-muted-foreground">{student.beltRank || 'White Belt'}</p>
+                      </div>
+                    </div>
+
+                    {/* Status */}
+                    <div className="col-span-2">
+                      <Badge className={cn('text-xs', STATUS_COLORS[student.status] || STATUS_COLORS['Active'])}>
+                        {student.status}
+                      </Badge>
+                      {statusFilter === 'At Risk' && (
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {AT_RISK_REASONS.slice(0, 2).map((reason, idx) => (
+                            <Badge key={idx} variant="outline" className={cn('text-xs', reason.color)}>
+                              {reason.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Attendance */}
+                    <div className="col-span-2">
+                      <p className="text-sm font-medium">92%</p>
+                      <p className="text-xs text-muted-foreground">4% above avg</p>
+                    </div>
+
+                    {/* Last Attended */}
+                    <div className="col-span-2">
+                      <p className="text-sm">04/23/2024</p>
+                      <p className="text-xs text-muted-foreground">2 days ago</p>
+                    </div>
+
+                    {/* Tuition Indicator */}
+                    <div className="col-span-1 flex justify-center">
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <CreditCard className="w-3 h-3 text-green-500" />
+                      </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="col-span-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
+                        <Phone className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
+                        <MessageSquare className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
+                        <Mail className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                  {students.map((student) => (
+                    <StudentCard
+                      key={student.id}
+                      id={student.id}
+                      firstName={student.firstName}
+                      lastName={student.lastName}
+                      email={student.email}
+                      phone={student.phone}
+                      beltRank={student.beltRank || 'White Belt'}
+                      status={student.status as 'Active' | 'Inactive' | 'On Hold'}
+                      program={student.program}
+                      photoUrl={student.photoUrl}
+                      lastCheckIn={student.createdAt ? `Joined ${new Date(student.createdAt).toLocaleDateString()}` : undefined}
+                      attendanceStreak={0}
+                      progressToNextBelt={Math.floor(Math.random() * 100)}
+                      indicators={{
+                        atRisk: student.status === 'At Risk',
+                      }}
+                      onCall={() => console.log('Call', student.id)}
+                      onText={() => console.log('Text', student.id)}
+                      onEmail={() => console.log('Email', student.id)}
+                      onNotes={() => console.log('Notes', student.id)}
+                      onAssignProgram={() => console.log('Assign Program', student.id)}
+                      onPromoteBelt={() => console.log('Promote Belt', student.id)}
+                      onProfileClick={() => handleSelectStudent(student)}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                 <p className="text-sm text-muted-foreground">
                   Showing {(currentPage - 1) * 20 + 1} to {Math.min(currentPage * 20, totalStudents)} of {totalStudents}
                 </p>
@@ -333,7 +427,7 @@ export default function StudentsDashboard() {
             )}
           </TabsContent>
 
-            {/* Map View */}
+          {/* Map View */}
           <TabsContent value="map" className="space-y-4">
             <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md h-96 flex items-center justify-center">
               <div className="text-center">
@@ -399,105 +493,49 @@ export default function StudentsDashboard() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40 bg-black/50 transition-opacity"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
             onClick={handleCloseDrawer}
           />
 
           {/* Drawer */}
-          <div className="fixed inset-y-0 right-0 z-50 w-full md:w-96 bg-background border-l border-border/50 shadow-lg overflow-y-auto animate-in slide-in-from-right">
-            {/* Sticky Header */}
-            <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Avatar className="w-10 h-10 flex-shrink-0">
-                    <AvatarImage src={selectedStudent.photoUrl} />
-                    <AvatarFallback>
-                      {selectedStudent.firstName[0]}{selectedStudent.lastName[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-semibold truncate">
-                      {selectedStudent.firstName} {selectedStudent.lastName}
-                    </h2>
-                    <p className="text-xs text-muted-foreground truncate">{selectedStudent.email}</p>
-                  </div>
+          <div className="fixed right-0 top-0 bottom-0 w-full sm:w-96 bg-background border-l border-white/10 z-50 shadow-xl animate-in slide-in-from-right duration-300 overflow-y-auto">
+            <div className="p-6 space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedStudent.firstName} {selectedStudent.lastName}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">{selectedStudent.beltRank || 'White Belt'}</p>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 flex-shrink-0"
                   onClick={handleCloseDrawer}
+                  className="h-8 w-8 p-0"
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-            </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Status */}
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Status</p>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    'border',
-                    STATUS_COLORS[selectedStudent.status as keyof typeof STATUS_COLORS] ||
-                      'bg-gray-500/20 text-gray-700 dark:text-gray-400'
-                  )}
-                >
-                  {selectedStudent.status}
-                </Badge>
-              </div>
-
-              {/* Program & Belt Rank */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Student Info */}
+              <div className="space-y-4">
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Program</p>
-                  <p className="font-medium">{selectedStudent.program || '—'}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Email</p>
+                  <p className="text-sm">{selectedStudent.email || 'Not provided'}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Belt Rank</p>
-                  <p className="font-medium">{selectedStudent.beltRank || '—'}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Phone</p>
+                  <p className="text-sm">{selectedStudent.phone || 'Not provided'}</p>
                 </div>
-              </div>
-
-              {/* Contact Info */}
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contact</p>
-                {selectedStudent.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <p className="text-sm break-all">{selectedStudent.email}</p>
-                  </div>
-                )}
-                {selectedStudent.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <p className="text-sm">{selectedStudent.phone}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Attendance */}
-              {studentDetail?.attendance && studentDetail.attendance.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Recent Attendance</p>
-                  <div className="space-y-2">
-                    {studentDetail.attendance.slice(0, 5).map((att: any) => (
-                      <div key={att.id} className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{att.className}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {att.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-xs text-muted-foreground mb-1">Status</p>
+                  <Badge className={cn('text-xs', STATUS_COLORS[selectedStudent.status] || STATUS_COLORS['Active'])}>
+                    {selectedStudent.status}
+                  </Badge>
                 </div>
-              )}
+              </div>
 
               {/* Actions */}
-              <div className="pt-4 space-y-2 border-t border-border/50">
+              <div className="space-y-2 pt-4 border-t border-white/10">
                 <Button className="w-full gap-2">
                   <MessageSquare className="w-4 h-4" />
                   Send Message
@@ -516,4 +554,8 @@ export default function StudentsDashboard() {
       )}
     </div>
   );
+
+  return <BottomNavLayout>{pageContent}</BottomNavLayout>;
 }
+
+export default StudentsDashboard;

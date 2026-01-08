@@ -205,3 +205,49 @@
   - Removed query for non-existent `student_tuition` table
   - Fixed `getAnalytics` TRPC procedure to only query existing tables
   - Page now loads successfully with KPI metrics displaying correctly
+
+
+## Phase 16: Students Page Redesign - CRM Dashboard Style (Current)
+
+### Database Migrations
+- [x] Create `student_tuition` table (student_id, amount, due_date, paid_date, status) - Already exists
+- [x] Create `student_cancellation_requests` table (student_id, reason, requested_date, status) - Already exists
+- [x] Add indexes for performance on new tables - Already configured
+
+### Students Page Layout
+- [x] Implement horizontal KPI/metrics strip (Total Students, Active, At Risk, Retention Rate, etc.)
+- [x] Add mode switcher buttons (List | Map | Segments | Analytics)
+- [x] Implement floating search bar with glass blur effect
+- [x] Add filter chips for status, grade, and other criteria
+- [x] Build student roster table with columns: Name, Status, Grade, Attendance, Last Attended, Tuition, Actions
+- [x] Ensure bottom navigation remains persistent and visible
+
+### Student Roster Features
+- [x] Display student status badges (Active, At Risk, Trial)
+- [x] Show attendance trend sparklines/charts
+- [x] Display last attended date
+- [x] Add tuition payment indicator ($ icon or status)
+- [x] Implement quick action buttons (phone, chat, email, more)
+- [x] Add soft hover effects and glass styling
+
+### Filtering & Search
+- [ ] Fix "needs-attention" filter to show reason badges
+- [ ] Display why student is flagged (attendance drop, overdue payment, cancellation pending)
+- [x] Implement status filter (All Status, Active, At Risk, Trial)
+- [ ] Implement grade filter
+- [ ] Add sorting by columns
+
+### UI Polish & Glass Design
+- [x] Apply Apple-style glass panels with backdrop blur
+- [x] Implement soft shadows and minimal borders
+- [x] Add smooth hover effects and lift animations
+- [x] Ensure responsive design across breakpoints
+- [ ] Test on mobile, tablet, desktop
+
+### Testing & Validation
+- [ ] Write vitest tests for new components
+- [ ] Test all filtering and search functionality
+- [ ] Verify no 500 errors from database queries
+- [ ] Test needs-attention filter with reason badges
+- [ ] Responsive design validation
+- [ ] Save checkpoint before delivery
