@@ -14,6 +14,7 @@ interface StudentCardProps {
   membershipStatus?: string
   lastCheckIn?: string
   attendanceStreak?: number
+  progressToNextBelt?: number
   indicators?: {
     atRisk?: boolean
     birthday?: boolean
@@ -60,6 +61,7 @@ export default function StudentCard({
   membershipStatus,
   lastCheckIn,
   attendanceStreak = 0,
+  progressToNextBelt = 0,
   indicators = {},
   onCall,
   onText,
@@ -81,12 +83,12 @@ export default function StudentCard({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-800/30 p-4 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-1"
+      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-5 transition-all duration-300 hover:border-white/20 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:bg-white/[0.06]"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
       {/* Background glow on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/3 group-hover:to-purple-500/3 transition-all duration-300" />
 
       {/* Content wrapper */}
       <div className="relative z-10 flex items-center gap-4">
@@ -124,7 +126,7 @@ export default function StudentCard({
             </div>
 
             {/* Last check-in and attendance */}
-            <div className="flex items-center gap-3 text-xs text-slate-400">
+            <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
               {lastCheckIn && (
                 <span>{lastCheckIn}</span>
               )}
@@ -135,6 +137,22 @@ export default function StudentCard({
                 </span>
               )}
             </div>
+
+            {/* Progress to next belt */}
+            {progressToNextBelt > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Progress</span>
+                  <span className="font-medium text-slate-300">{progressToNextBelt}% to next rank</span>
+                </div>
+                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                    style={{ width: `${progressToNextBelt}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -173,13 +191,13 @@ export default function StudentCard({
         </div>
 
         {/* Right Section: Quick Actions */}
-        <div className={`flex items-center gap-1 flex-shrink-0 transition-all duration-200 ${showActions ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`}>
+        <div className={`flex items-center gap-1.5 flex-shrink-0 transition-all duration-200 ${showActions ? 'opacity-100' : 'opacity-50 group-hover:opacity-100'}`}>
           {/* Quick action buttons - visible on hover */}
-          <div className={`flex items-center gap-1 overflow-hidden transition-all duration-300 ${showActions ? 'max-w-xs' : 'max-w-0'}`}>
+          <div className={`flex items-center gap-1.5 overflow-hidden transition-all duration-300 ${showActions ? 'max-w-xs' : 'max-w-0'}`}>
             {onCall && (
               <button
                 onClick={() => onCall(id)}
-                className="p-2 rounded-lg hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition-colors"
+                className="p-2 rounded-lg hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition-all duration-200"
                 title="Call"
               >
                 <Phone className="w-4 h-4" />
@@ -188,7 +206,7 @@ export default function StudentCard({
             {onText && (
               <button
                 onClick={() => onText(id)}
-                className="p-2 rounded-lg hover:bg-green-500/20 text-slate-400 hover:text-green-400 transition-colors"
+                className="p-2 rounded-lg hover:bg-green-500/20 text-slate-400 hover:text-green-400 transition-all duration-200"
                 title="Text"
               >
                 <MessageSquare className="w-4 h-4" />
@@ -197,7 +215,7 @@ export default function StudentCard({
             {onEmail && (
               <button
                 onClick={() => onEmail(id)}
-                className="p-2 rounded-lg hover:bg-purple-500/20 text-slate-400 hover:text-purple-400 transition-colors"
+                className="p-2 rounded-lg hover:bg-purple-500/20 text-slate-400 hover:text-purple-400 transition-all duration-200"
                 title="Email"
               >
                 <Mail className="w-4 h-4" />
@@ -206,7 +224,7 @@ export default function StudentCard({
             {onNotes && (
               <button
                 onClick={() => onNotes(id)}
-                className="p-2 rounded-lg hover:bg-yellow-500/20 text-slate-400 hover:text-yellow-400 transition-colors"
+                className="p-2 rounded-lg hover:bg-yellow-500/20 text-slate-400 hover:text-yellow-400 transition-all duration-200"
                 title="Notes"
               >
                 <FileText className="w-4 h-4" />
@@ -218,21 +236,21 @@ export default function StudentCard({
           <div className="relative">
             <button
               onClick={() => setShowActions(!showActions)}
-              className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-slate-200 transition-all duration-200"
               title="More actions"
             >
               <MoreVertical className="w-4 h-4" />
             </button>
 
             {showActions && (
-              <div className="absolute right-0 mt-1 w-48 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
                 {onAssignProgram && (
                   <button
                     onClick={() => {
                       onAssignProgram(id)
                       setShowActions(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-blue-500/20 hover:text-blue-300 transition-colors flex items-center gap-2"
+                    className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-blue-500/20 hover:text-blue-300 transition-all duration-150 flex items-center gap-2"
                   >
                     <Award className="w-4 h-4" />
                     Assign Program
@@ -244,7 +262,7 @@ export default function StudentCard({
                       onPromoteBelt(id)
                       setShowActions(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 transition-colors flex items-center gap-2"
+                    className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-150 flex items-center gap-2"
                   >
                     <Zap className="w-4 h-4" />
                     Promote Belt
@@ -256,7 +274,7 @@ export default function StudentCard({
                       onProfileClick(id)
                       setShowActions(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center gap-2 border-t border-white/10"
+                    className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-150 flex items-center gap-2 border-t border-white/10"
                   >
                     <ChevronRight className="w-4 h-4" />
                     View Profile
@@ -270,7 +288,7 @@ export default function StudentCard({
           {onProfileClick && (
             <button
               onClick={() => onProfileClick(id)}
-              className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-slate-200 transition-all duration-200"
               title="View profile"
             >
               <ChevronRight className="w-4 h-4" />

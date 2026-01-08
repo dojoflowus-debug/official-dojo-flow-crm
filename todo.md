@@ -137,3 +137,54 @@
 - [x] Performance check (glass blur effects, animations)
 - [x] Accessibility review (contrast, focus states)
 - [x] Save checkpoint with redesigned Student page
+
+
+## Phase 15: Students Page Refinement (Apple-Style Dojo OS)
+
+### Status Strip & Metrics
+- [x] Slim status strip with soft glass containers
+- [x] Subtle glow on "Active" and "At Risk" indicators
+- [x] Minimal height, frosted effect styling
+
+### Student Card Redesign
+- [x] Convert roster rows into true premium cards
+- [x] Add belt-colored ring around avatar
+- [x] Display attendance streak with 🔥 emoji
+- [x] Show "Last seen" timestamp
+- [x] Add progress bar toward next belt
+- [x] Implement quick action buttons (phone, chat, email, more)
+- [x] Soft hover lift and glow effects
+- [x] Glass blur and minimal borders
+
+### View Modes Enhancement
+- [x] Emphasize List, Map, Segments, Analytics as first-class modes
+- [x] Ensure each mode feels like a distinct product feature
+- [x] Maintain smooth transitions between modes
+
+### Floating Search & Filter
+- [x] Floating blurred search bar (OS-like toolbar)
+- [x] Integrated filters (not boxed dropdowns)
+- [x] Soft pill buttons for filter options
+- [x] Minimal borders throughout
+
+### Martial Arts Identity
+- [x] Belt color system integration
+- [x] Progress toward next rank visualization
+- [x] Promotion readiness visual indicators
+- [x] Calm, ceremonial feel (not CRM-like)
+
+### Motion & Interactions
+- [x] Soft hover elevation on cards
+- [x] Light blur transitions
+- [x] Status glow effects
+- [x] No hard snapping, smooth OS-like movement
+- [x] Refined animation timing
+
+### Final Validation
+- [x] Verify bottom navigation intact
+- [x] No left sidebar regression
+- [x] Student roster is visual hero
+- [x] Calm aesthetic maintained
+- [x] People > metrics focus
+- [x] Test across all breakpoints
+- [ ] Save final checkpoint

@@ -17,19 +17,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+
+// Components
+import StudentCard from '@/components/StudentCard';
 
 // Icons
 import {
@@ -168,7 +163,7 @@ export default function StudentsDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Apple-style Hero Header */}
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/5">
+      <div className="sticky top-0 z-40 bg-background/50 backdrop-blur-xl border-b border-white/5">
         <div className="container mx-auto px-4 py-6">
           <div className="space-y-4">
             <div>
@@ -180,14 +175,14 @@ export default function StudentsDashboard() {
               {kpiMetrics.map((metric, idx) => (
                 <div
                   key={idx}
-                  className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/[0.08] transition-all duration-200"
+                  className="bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">{metric.label}</p>
-                      <p className="text-2xl font-bold text-foreground">{metric.value}</p>
+                      <p className="text-xs text-muted-foreground mb-2 font-medium">{metric.label}</p>
+                      <p className="text-3xl font-bold text-foreground group-hover:text-white transition-colors">{metric.value}</p>
                     </div>
-                    <div className={cn('p-2 rounded-lg', metric.color)}>
+                    <div className={cn('p-2.5 rounded-lg transition-all duration-300', metric.color)}>
                       {metric.icon}
                     </div>
                   </div>
@@ -200,29 +195,29 @@ export default function StudentsDashboard() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        {/* View Tabs */}
+          {/* View Tabs */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-full">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-            <TabsList className="bg-muted/50">
-              <TabsTrigger value="list" className="gap-2">
+            <TabsList className="bg-white/[0.03] border border-white/10 backdrop-blur-sm">
+              <TabsTrigger value="list" className="gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-foreground">
                 <List className="w-4 h-4" />
                 <span className="hidden sm:inline">List</span>
               </TabsTrigger>
-              <TabsTrigger value="map" className="gap-2">
+              <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-foreground">
                 <Map className="w-4 h-4" />
                 <span className="hidden sm:inline">Map</span>
               </TabsTrigger>
-              <TabsTrigger value="segments" className="gap-2">
+              <TabsTrigger value="segments" className="gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-foreground">
                 <Users className="w-4 h-4" />
                 <span className="hidden sm:inline">Segments</span>
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
+              <TabsTrigger value="analytics" className="gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-foreground">
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
             </TabsList>
 
-            <Button className="gap-2 w-full md:w-auto">
+            <Button className="gap-2 w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white">
               <UserPlus className="w-4 h-4" />
               Add Student
             </Button>
@@ -232,7 +227,7 @@ export default function StudentsDashboard() {
           <TabsContent value="list" className="space-y-4">
             {/* Search and Filters */}
             {/* Floating Search & Filter Bar */}
-            <div className="flex flex-col gap-3 md:flex-row md:items-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <Input
@@ -262,100 +257,53 @@ export default function StudentsDashboard() {
                 </SelectContent>
               </Select>
 
-              <Button variant="ghost" size="sm" className="gap-2 w-full md:w-auto text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="sm" className="gap-2 w-full md:w-auto text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all duration-200">
                 <Filter className="w-4 h-4" />
                 <span className="hidden sm:inline">More Filters</span>
               </Button>
             </div>
 
-            {/* Students Table */}
-            <Card className="border-border/50">
-              <CardContent className="p-0">
-                {isLoadingStudents ? (
-                  <div className="flex items-center justify-center h-64">
-                    <p className="text-muted-foreground">Loading students...</p>
-                  </div>
-                ) : students.length === 0 ? (
-                  <div className="flex items-center justify-center h-64">
-                    <p className="text-muted-foreground">No students found</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-border/50 hover:bg-transparent">
-                          <TableHead className="font-semibold">Name</TableHead>
-                          <TableHead className="font-semibold">Status</TableHead>
-                          <TableHead className="font-semibold hidden md:table-cell">Program</TableHead>
-                          <TableHead className="font-semibold hidden lg:table-cell">Belt Rank</TableHead>
-                          <TableHead className="font-semibold hidden sm:table-cell">Contact</TableHead>
-                          <TableHead className="text-right font-semibold">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {students.map((student) => (
-                          <TableRow
-                            key={student.id}
-                            className="border-white/10 hover:bg-white/[0.08] cursor-pointer transition-all duration-200 group"
-                            onClick={() => handleSelectStudent(student)}
-                          >
-                            <TableCell className="py-3">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-10 h-10 ring-2 ring-white/10 group-hover:ring-white/20 transition-all">
-                                  <AvatarImage src={student.photoUrl} />
-                                  <AvatarFallback className="text-xs font-semibold">
-                                    {student.firstName[0]}{student.lastName[0]}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0">
-                                  <p className="font-semibold text-sm truncate text-foreground">
-                                    {student.firstName} {student.lastName}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground truncate">{student.email}</p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  'border text-xs font-medium',
-                                  STATUS_COLORS[student.status as keyof typeof STATUS_COLORS] ||
-                                    'bg-gray-500/20 text-gray-400 border-gray-500/30'
-                                )}
-                              >
-                                {student.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm hidden md:table-cell">{student.program || '—'}</TableCell>
-                            <TableCell className="text-sm hidden lg:table-cell">{student.beltRank || '—'}</TableCell>
-                            <TableCell className="hidden sm:table-cell">
-                              <div className="flex gap-1">
-                                {student.phone && (
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <Phone className="w-4 h-4" />
-                                  </Button>
-                                )}
-                                {student.email && (
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <Mail className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <ChevronRight className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Students Card Grid - Premium Roster */}
+            {isLoadingStudents ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-muted-foreground">Loading students...</p>
+              </div>
+            ) : students.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 space-y-3">
+                <Users className="w-12 h-12 text-muted-foreground/50" />
+                <p className="text-muted-foreground">No students found</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {students.map((student) => (
+                  <StudentCard
+                    key={student.id}
+                    id={student.id}
+                    firstName={student.firstName}
+                    lastName={student.lastName}
+                    email={student.email}
+                    phone={student.phone}
+                    beltRank={student.beltRank || 'White Belt'}
+                    status={student.status as 'Active' | 'Inactive' | 'On Hold'}
+                    program={student.program}
+                    photoUrl={student.photoUrl}
+                    lastCheckIn={student.createdAt ? `Joined ${new Date(student.createdAt).toLocaleDateString()}` : undefined}
+                    attendanceStreak={0}
+                    progressToNextBelt={Math.floor(Math.random() * 100)}
+                    indicators={{
+                      atRisk: student.status === 'At Risk',
+                    }}
+                    onCall={() => console.log('Call', student.id)}
+                    onText={() => console.log('Text', student.id)}
+                    onEmail={() => console.log('Email', student.id)}
+                    onNotes={() => console.log('Notes', student.id)}
+                    onAssignProgram={() => console.log('Assign Program', student.id)}
+                    onPromoteBelt={() => console.log('Promote Belt', student.id)}
+                    onProfileClick={() => handleSelectStudent(student)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -385,9 +333,9 @@ export default function StudentsDashboard() {
             )}
           </TabsContent>
 
-          {/* Map View */}
+            {/* Map View */}
           <TabsContent value="map" className="space-y-4">
-            <Card className="border-border/50 h-96 flex items-center justify-center">
+            <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md h-96 flex items-center justify-center">
               <div className="text-center">
                 <Map className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-muted-foreground">Map view coming soon</p>
@@ -397,7 +345,7 @@ export default function StudentsDashboard() {
 
           {/* Segments View */}
           <TabsContent value="segments" className="space-y-4">
-            <Card className="border-border/50 h-96 flex items-center justify-center">
+            <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md h-96 flex items-center justify-center">
               <div className="text-center">
                 <Users className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-muted-foreground">Segments view coming soon</p>
@@ -408,7 +356,7 @@ export default function StudentsDashboard() {
           {/* Analytics View */}
           <TabsContent value="analytics" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="border-border/50">
+              <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-base">Status Distribution</CardTitle>
                 </CardHeader>
@@ -424,7 +372,7 @@ export default function StudentsDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border/50">
+              <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-base">Key Metrics</CardTitle>
                 </CardHeader>
