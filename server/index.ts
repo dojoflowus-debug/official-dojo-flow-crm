@@ -6,6 +6,9 @@ import session from "express-session";
 import passport from "./auth/passport";
 import socialAuthRouter from "./auth/socialAuthRouter";
 import uploadRouter from "./uploadRouter.js";
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { appRouter } from "./routers";
+import { createContext } from "./_core/context";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +44,15 @@ async function startServer() {
   
   // Mount upload routes
   app.use("/api", uploadRouter);
+
+  // Mount TRPC routes
+  app.use(
+    "/api/trpc",
+    createExpressMiddleware({
+      router: appRouter,
+      createContext,
+    })
+  );
 
   // Serve static files from dist/public in production
   const staticPath =
