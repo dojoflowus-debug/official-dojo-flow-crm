@@ -74,7 +74,9 @@ export default function StudentCard({
   const statusColors = STATUS_COLORS[status]
 
   const getInitials = () => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+    const first = firstName?.charAt(0) || ''
+    const last = lastName?.charAt(0) || ''
+    return `${first}${last}`.toUpperCase() || '?'
   }
 
   return (
