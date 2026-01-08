@@ -187,4 +187,11 @@
 - [x] Calm aesthetic maintained
 - [x] People > metrics focus
 - [x] Test across all breakpoints
-- [ ] Save final checkpoint
+- [x] Save final checkpoint
+
+## Bug Fixes
+
+- [x] Fixed duplicate `classes` router causing TRPC JSON parsing error on /owner page
+  - Removed duplicate `classes` router definition at line 823 (simple version)
+  - Kept the comprehensive `classes` router at line 4253 with all functionality
+  - This was causing requests to fall through to Vite catch-all middleware and return HTML instead of JSON

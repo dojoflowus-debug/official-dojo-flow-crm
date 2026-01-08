@@ -819,41 +819,6 @@ export const appRouter = router({
       }),
   }),
 
-  // Classes router for class-related operations
-  classes: router({
-    // Get students enrolled in a specific class
-    getEnrolledStudents: publicProcedure
-      .input(z.object({
-        classId: z.number(),
-      }))
-      .query(async ({ input }) => {
-        const { getDb } = await import("./db");
-        const { classEnrollments, students } = await import("../drizzle/schema");
-        const { eq, and } = await import("drizzle-orm");
-        
-        const db = await getDb();
-        if (!db) return [];
-        
-        const enrollments = await db.select({
-          studentId: classEnrollments.studentId,
-          student: students
-        })
-          .from(classEnrollments)
-          .leftJoin(students, eq(classEnrollments.studentId, students.id))
-          .where(and(
-            eq(classEnrollments.classId, input.classId),
-            eq(classEnrollments.status, 'active')
-          ));
-        
-        return enrollments.map(e => ({
-          id: e.student?.id,
-          firstName: e.student?.firstName,
-          lastName: e.student?.lastName,
-          program: e.student?.program,
-          photoUrl: e.student?.photoUrl
-        })).filter(s => s.id);
-      }),
-  }),
 
   // Messaging router for @mentions and directed messages
   messaging: router({
