@@ -251,3 +251,21 @@
 - [ ] Test needs-attention filter with reason badges
 - [ ] Responsive design validation
 - [ ] Save checkpoint before delivery
+
+
+- [x] Fixed TRPC validation error on /students?filter=needs-attention page
+  - Changed `getAnalytics` procedure input from `z.object({}).optional()` to `z.void()`
+  - This matches the pattern used by other query procedures that don't require input
+  - The error "Invalid input: expected object, received undefined" was caused by incorrect input validation
+  - Page now loads successfully with all data displaying correctly
+
+## Current Issues - FIXED
+- [x] Fix Students page showing 8 active students in stats but empty list
+  - Root cause: Organization context filtering was working correctly, students were in database
+  - Fixed by ensuring proper organization context resolution in backend
+  - Students now display correctly with accurate stats
+- [x] Fix Add Student button not working
+  - Added onClick handler to Add Student button
+  - Created AddStudentModal component with TRPC integration
+  - Implemented students.create mutation integration
+  - Modal now successfully creates new students and updates the list

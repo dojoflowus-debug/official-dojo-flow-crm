@@ -26,6 +26,7 @@ import {
 
 // Components
 import StudentCard from '@/components/StudentCard';
+import { AddStudentModal } from '@/components/AddStudentModalContent';
 
 // Icons
 import {
@@ -100,6 +101,7 @@ function StudentsDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
 
   useEffect(() => {
     const filterParam = searchParams.get('filter');
@@ -113,7 +115,7 @@ function StudentsDashboard() {
   }, [searchParams]);
 
   // Fetch students with filters
-  const { data: studentsData, isLoading: isLoadingStudents } = trpc.students.getListWithFilters.useQuery({
+  const { data: studentsData, isLoading: isLoadingStudents, error: studentsError } = trpc.students.getListWithFilters.useQuery({
     page: currentPage,
     limit: 20,
     search: searchQuery || undefined,
@@ -122,7 +124,12 @@ function StudentsDashboard() {
   });
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: isLoadingAnalytics } = trpc.students.getAnalytics.useQuery();
+  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery();
+  
+  useEffect(() => {
+    if (studentsError) console.error('Students error:', studentsError);
+    if (analyticsError) console.error('Analytics error:', analyticsError);
+  }, [studentsError, analyticsError]);
 
   // Fetch student detail when selected
   const { data: studentDetail } = trpc.students.getDetail.useQuery(
@@ -230,7 +237,10 @@ function StudentsDashboard() {
               </TabsTrigger>
             </TabsList>
 
-            <Button className="gap-2 w-full md:w-auto bg-red-600 hover:bg-red-700 text-white">
+            <Button 
+              className="gap-2 w-full md:w-auto bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => setShowAddStudentModal(true)}
+            >
               <UserPlus className="w-4 h-4" />
               Add Student
             </Button>
@@ -489,6 +499,16 @@ function StudentsDashboard() {
       </div>
 
       {/* Student Detail Drawer */}
+      {/* Add Student Modal */}
+      <AddStudentModal 
+        isOpen={showAddStudentModal}
+        onClose={() => setShowAddStudentModal(false)}
+        onSuccess={() => {
+          // Refetch students list after creating new student
+          window.location.reload();
+        }}
+      />
+
       {showDrawer && selectedStudent && (
         <>
           {/* Backdrop */}

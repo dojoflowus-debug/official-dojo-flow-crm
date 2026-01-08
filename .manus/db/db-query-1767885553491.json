@@ -1,0 +1,35 @@
+{
+  "query": "SELECT organizationId, COUNT(*) as count, GROUP_CONCAT(DISTINCT status) as statuses FROM students GROUP BY organizationId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT organizationId, COUNT(*) as count, GROUP_CONCAT(DISTINCT status) as statuses FROM students GROUP BY organizationId;",
+  "rows": [
+    {
+      "organizationId": "180001",
+      "count": "29",
+      "statuses": "Active,On Hold,Inactive"
+    },
+    {
+      "organizationId": "NULL",
+      "count": "144",
+      "statuses": "Active,Inactive"
+    },
+    {
+      "organizationId": "120001",
+      "count": "8",
+      "statuses": "Active"
+    },
+    {
+      "organizationId": "330001",
+      "count": "1",
+      "statuses": "Active"
+    },
+    {
+      "organizationId": "1",
+      "count": "1",
+      "statuses": "Active"
+    }
+  ],
+  "messages": [],
+  "stdout": "organizationId\tcount\tstatuses\n180001\t29\tActive,On Hold,Inactive\nNULL\t144\tActive,Inactive\n120001\t8\tActive\n330001\t1\tActive\n1\t1\tActive\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

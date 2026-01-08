@@ -1929,6 +1929,7 @@ export const appRouter = router({
     
     // Get student analytics and KPI metrics
     getAnalytics: protectedProcedure
+      .input(z.void())
       .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
@@ -1938,7 +1939,20 @@ export const appRouter = router({
         if (!db) throw new Error('Database not available');
         
         const orgId = ctx.currentOrganizationId;
-        if (!orgId) return null;
+        console.log('[Analytics] Query with orgId:', orgId);
+        
+        // If no orgId, return empty analytics
+        if (!orgId) {
+          console.log('[Analytics] No orgId, returning empty analytics');
+          return {
+            total: 0,
+            active: 0,
+            atRisk: 0,
+            inactive: 0,
+            pending: 0,
+            statusBreakdown: [],
+          };
+        }
         
         // Get student counts by status
         const statusCounts = await db.select({
