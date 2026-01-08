@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
-import SimpleLayout from '../components/SimpleLayout'
+import BottomNavLayout from '../components/BottomNavLayout'
 import PlasmaKai from '../components/PlasmaKai'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -426,7 +426,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
   }
 
   return (
-    <SimpleLayout>
+    <BottomNavLayout>
       <div className={`flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden ${isDarkMode ? 'bg-[#0F1115]' : ''}`}>
         {/* Main Kai Interface - Center */}
         <div className="flex-1 flex flex-col min-h-0">
@@ -706,7 +706,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }) {
           </Card>
         </div>
       </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   )
 }
 

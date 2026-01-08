@@ -10,7 +10,6 @@ import { conversationsRouter } from "./conversationsRouter";
 import { authRouter } from "./authRouter";
 import { smsReminderRouter } from "./smsReminderRouter";
 import { kioskDirectRouter } from "./kioskDirectRouter";
-import { kioskSettingsRouter } from "./kioskSettingsRouter";
 import { kioskRouter } from "./kioskRouter";
 import { membershipPlansRouter } from "./membershipPlansRouter";
 import { classEntitlementsRouter } from "./classEntitlementsRouter";
@@ -475,7 +474,6 @@ export const appRouter = router({
   }),
   setupWizard: setupWizardRouter,
   kioskDirect: kioskDirectRouter,
-  kioskSettings: kioskSettingsRouter,
   kiosk: kioskRouter,
   billing: billingRouter,
   membershipPlans: membershipPlansRouter,
@@ -1021,7 +1019,7 @@ export const appRouter = router({
         if (!db) throw new Error('Database not available');
         
         await db.update(staffMessages)
-          .set({ isRead: 1, readAt: new Date() })
+          .set({ isRead: 1, readAt: new Date().toISOString() })
           .where(eq(staffMessages.id, input.messageId));
         
         return { success: true };

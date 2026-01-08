@@ -1,5 +1,5 @@
 import React from 'react'
-import SimpleLayout from '../components/SimpleLayout'
+import BottomNavLayout from '../components/BottomNavLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +15,7 @@ export default function Attendance({ onLogout, theme, toggleTheme }) {
   ]
 
   return (
-    <SimpleLayout>
+    <BottomNavLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex items-center justify-between">
           <div>
@@ -129,7 +129,7 @@ export default function Attendance({ onLogout, theme, toggleTheme }) {
           </CardContent>
         </Card>
       </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   )
 }
 

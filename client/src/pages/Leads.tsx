@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import ManagementLayout from '@/components/ManagementLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
 import HeroPipelineStrip from '@/components/HeroPipelineStrip';
@@ -199,7 +199,7 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
   }
 
   return (
-    <ManagementLayout title="Leads">
+    <BottomNavLayout>
       <div className={`min-h-screen transition-all duration-[180ms] ease-out ${isDarkMode ? 'bg-[#0A0A0A]' : 'bg-[#F6F7F9]'}`}>
         {/* Breadcrumb Navigation */}
         <div className={`border-b px-6 py-2 ${isDarkMode ? 'bg-[#111111]/80 backdrop-blur-sm border-white/10' : 'bg-white/80 backdrop-blur-sm border-slate-200/50'}`}>
@@ -530,6 +530,6 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
           </div>
         )}
       </div>
-    </ManagementLayout>
+    </BottomNavLayout>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import ManagementLayout from '@/components/ManagementLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -1152,7 +1152,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   // ClassForm now defined outside component
 
   return (
-    <ManagementLayout title="Classes">
+    <BottomNavLayout>
       {/* Breadcrumb Navigation */}
       <div className={`backdrop-blur-sm border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-background/80 border-border/40'}`}>
         <Breadcrumb
@@ -1849,7 +1849,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
           </DialogContent>
         </Dialog>
       </div>
-    </ManagementLayout>
+    </BottomNavLayout>
   );
 }
 

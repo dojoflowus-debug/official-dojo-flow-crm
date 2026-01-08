@@ -1,8 +1,8 @@
-import SimpleLayout from '@/components/SimpleLayout'
+import BottomNavLayout from '../components/BottomNavLayout'
 
 export default function ThemesTest() {
   return (
-    <SimpleLayout>
+    <BottomNavLayout>
       <div className="p-8">
         <h1 className="text-3xl font-bold text-foreground">Themes Test Page</h1>
         <p className="mt-4 text-muted-foreground">
@@ -12,6 +12,6 @@ export default function ThemesTest() {
           <p>This is a minimal test page with no complex components.</p>
         </div>
       </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   )
 }

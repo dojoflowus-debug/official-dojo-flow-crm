@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-import SimpleLayout from "@/components/SimpleLayout";
+import BottomNavLayout from '../components/BottomNavLayout'
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,7 +93,7 @@ export default function MerchandiseFulfillment() {
   };
 
   return (
-    <SimpleLayout>
+    <BottomNavLayout>
       <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -266,6 +266,6 @@ export default function MerchandiseFulfillment() {
         </DialogContent>
       </Dialog>
     </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   );
 }

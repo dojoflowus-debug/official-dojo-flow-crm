@@ -10,7 +10,7 @@ import { Package, Plus, User, Users, Edit, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BulkAssignDialog from "@/components/BulkAssignDialog";
 import { ReorderSuggestions } from "@/components/ReorderSuggestions";
-import SimpleLayout from "@/components/SimpleLayout";
+import BottomNavLayout from '../components/BottomNavLayout'
 import { toast } from "sonner";
 import {
   Select,
@@ -190,7 +190,7 @@ export default function MerchandiseManagement() {
   };
 
   return (
-    <SimpleLayout>
+    <BottomNavLayout>
       <div className="container mx-auto py-8 space-y-6">
         {/* Reorder Suggestions Section */}
         <ReorderSuggestions />
@@ -586,6 +586,6 @@ export default function MerchandiseManagement() {
         }}
         />
       </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   );
 }

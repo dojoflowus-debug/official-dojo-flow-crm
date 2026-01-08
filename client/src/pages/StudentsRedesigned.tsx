@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import SimpleLayout from '../components/SimpleLayout'
+import BottomNavLayout from '../components/BottomNavLayout'
 import StudentCommandBar from '../components/StudentCommandBar'
 import StudentCard from '../components/StudentCard'
 import StudentFilters from '../components/StudentFilters'
@@ -236,7 +236,7 @@ export default function StudentsRedesigned({ onLogout, theme, toggleTheme }) {
   const filtered = filteredStudents()
 
   return (
-    <SimpleLayout onLogout={onLogout} theme={theme} toggleTheme={toggleTheme}>
+    <BottomNavLayout>
       <div className="space-y-6">
         {/* Header with Add Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -365,6 +365,6 @@ export default function StudentsRedesigned({ onLogout, theme, toggleTheme }) {
           onStudentCreated={handleStudentCreated}
         />
       </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   )
 }

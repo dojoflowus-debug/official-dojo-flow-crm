@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Play, Pause, Users, CheckCircle2, Settings, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AutomationTemplateLibrary from "@/components/AutomationTemplateLibrary";
-import SimpleLayout from "@/components/SimpleLayout";
+import BottomNavLayout from '../components/BottomNavLayout'
 
 export default function Automation() {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function Automation() {
   };
 
   return (
-    <SimpleLayout>
+    <BottomNavLayout>
       <div className="min-h-screen bg-black text-white p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -236,6 +236,6 @@ export default function Automation() {
         />
         </div>
       </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   );
 }

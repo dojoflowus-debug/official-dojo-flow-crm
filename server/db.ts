@@ -69,11 +69,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     }
 
     if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
+      values.lastSignedIn = new Date().toISOString();
     }
 
     if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
+      updateSet.lastSignedIn = new Date().toISOString();
     }
 
     await db.insert(users).values(values).onDuplicateKeyUpdate({
@@ -136,7 +136,7 @@ export async function updateStaffPinLastUsed(id: number) {
   }
 
   await db.update(staffPins)
-    .set({ lastUsed: new Date() })
+    .set({  lastUsed: new Date().toISOString()  })
     .where(eq(staffPins.id, id));
 }
 
@@ -630,13 +630,13 @@ export async function updateBeltProgressAfterCheckIn(studentId: number) {
   
   // Update belt progress
   await db.update(beltProgress)
-    .set({
+    .set({ 
       qualifiedClasses,
       progressPercent,
       qualifiedAttendance,
       isEligible: isEligible ? 1 : 0,
-      updatedAt: new Date()
-    })
+      updatedAt: new Date().toISOString()
+     })
     .where(eq(beltProgress.studentId, studentId));
 }
 
@@ -721,7 +721,7 @@ export async function verifyStudentLogin(email: string, password: string) {
   
   // Update last login
   await db.update(studentAccounts)
-    .set({ lastLoginAt: new Date() })
+    .set({  lastLoginAt: new Date().toISOString()  })
     .where(eq(studentAccounts.id, account.id));
   
   return {
@@ -949,10 +949,10 @@ export async function registerForBeltTest(studentId: number, testId: number) {
   
   // Update test registration count
   await db.update(beltTests)
-    .set({ 
+    .set({  
       currentRegistrations: eligibility.test!.currentRegistrations + 1,
-      updatedAt: new Date()
-    })
+      updatedAt: new Date().toISOString()
+     })
     .where(eq(beltTests.id, testId));
   
   return { 
@@ -985,20 +985,20 @@ export async function cancelBeltTestRegistration(studentId: number, testId: numb
   
   // Update registration status
   await db.update(beltTestRegistrations)
-    .set({ 
+    .set({  
       status: 'cancelled',
-      updatedAt: new Date()
-    })
+      updatedAt: new Date().toISOString()
+     })
     .where(eq(beltTestRegistrations.id, regResult[0].id));
   
   // Get test to update count
   const testResult = await db.select().from(beltTests).where(eq(beltTests.id, testId)).limit(1);
   if (testResult.length > 0) {
     await db.update(beltTests)
-      .set({ 
+      .set({  
         currentRegistrations: Math.max(0, testResult[0].currentRegistrations - 1),
-        updatedAt: new Date()
-      })
+        updatedAt: new Date().toISOString()
+       })
       .where(eq(beltTests.id, testId));
   }
   
@@ -1208,10 +1208,10 @@ export async function markMessageAsRead(messageId: number, studentId: number) {
   try {
     await db
       .update(studentMessages)
-      .set({ 
+      .set({  
         isRead: 1,
-        readAt: new Date()
-      })
+        readAt: new Date().toISOString()
+       })
       .where(and(
         eq(studentMessages.id, messageId),
         eq(studentMessages.studentId, studentId)
@@ -1441,7 +1441,7 @@ export async function resetStudentPassword(token: string, newPassword: string): 
     if (existingPassword) {
       // Update existing password
       await db.update(studentPasswords)
-        .set({ passwordHash, lastChangedAt: new Date() })
+        .set({  passwordHash, lastChangedAt: new Date().toISOString()  })
         .where(eq(studentPasswords.studentId, validation.studentId));
     } else {
       // Create new password record
@@ -1453,7 +1453,7 @@ export async function resetStudentPassword(token: string, newPassword: string): 
     
     // Mark token as used
     await db.update(studentPasswordResetTokens)
-      .set({ used: 1, usedAt: new Date() })
+      .set({  used: 1, usedAt: new Date().toISOString()  })
       .where(eq(studentPasswordResetTokens.token, token));
     
     return { success: true };
@@ -1553,12 +1553,12 @@ export async function updateKioskDeviceStatus(deviceId: number, status: string, 
   
   try {
     await db.update(schema.kioskDevices)
-      .set({ 
+      .set({  
         status: status as any,
         onlineStatus,
         lastSyncAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      })
+       })
       .where(eq(schema.kioskDevices.id, deviceId));
     
     return true;
@@ -1640,7 +1640,7 @@ export async function updateKioskTheme(themeId: number, data: Partial<schema.Ins
   
   try {
     await db.update(schema.kioskThemes)
-      .set({ ...data, updatedAt: new Date().toISOString() })
+      .set({  ...data, updatedAt: new Date().toISOString()  })
       .where(eq(schema.kioskThemes.id, themeId));
     
     return true;
@@ -1688,7 +1688,7 @@ export async function setActiveKioskTheme(organizationId: number, themeId: numbe
     
     // Activate the selected theme
     await db.update(schema.kioskThemes)
-      .set({ isActive: 1, updatedAt: new Date().toISOString() })
+      .set({  isActive: 1, updatedAt: new Date().toISOString()  })
       .where(eq(schema.kioskThemes.id, themeId));
     
     return true;
@@ -1718,7 +1718,7 @@ export async function upsertKioskThemeAsset(data: schema.InsertKioskThemeAsset) 
     if (existing) {
       // Update existing asset
       await db.update(schema.kioskThemeAssets)
-        .set({ ...data, updatedAt: new Date().toISOString() })
+        .set({  ...data, updatedAt: new Date().toISOString()  })
         .where(eq(schema.kioskThemeAssets.id, existing.id));
       
       return existing.id;
@@ -1852,7 +1852,7 @@ export async function updateKioskSchedule(scheduleId: number, data: Partial<sche
   
   try {
     await db.update(schema.kioskSchedules)
-      .set({ ...data, updatedAt: new Date().toISOString() })
+      .set({  ...data, updatedAt: new Date().toISOString()  })
       .where(eq(schema.kioskSchedules.id, scheduleId));
     
     return true;
@@ -1935,7 +1935,7 @@ export async function updateKioskSettings(locationId: number, settings: Partial<
       background: settings.background ? { ...currentSettings.background, ...settings.background } : currentSettings.background,
       appearance: settings.appearance ? { ...currentSettings.appearance, ...settings.appearance } : currentSettings.appearance,
     };
-    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(mergedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    await db.update(schema.locations).set({  kioskSettings: JSON.stringify(mergedSettings), updatedAt: new Date().toISOString()  }).where(eq(schema.locations.id, locationId));
     return true;
   } catch (error) {
     console.error("[Database] Failed to update kiosk settings:", error);
@@ -2035,7 +2035,7 @@ export async function resetKioskBackground(locationId: number, presetKey: string
         vignette: false,
       },
     };
-    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    await db.update(schema.locations).set({  kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString()  }).where(eq(schema.locations.id, locationId));
     return true;
   } catch (error) {
     console.error("[Database] Failed to reset background:", error);
@@ -2070,7 +2070,7 @@ export async function updateKioskBackgroundEffects(locationId: number, blur: num
         dim: Math.min(Math.max(dim, 0), 70),
       }
     };
-    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    await db.update(schema.locations).set({  kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString()  }).where(eq(schema.locations.id, locationId));
     return true;
   } catch (error) {
     console.error("[Database] Failed to update background effects:", error);
@@ -2087,7 +2087,7 @@ export async function updateLocationKioskTheme(locationId: number, mode: string,
       ...currentSettings,
       theme: { mode, primaryColor, accentColor }
     };
-    await db.update(schema.locations).set({ kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString() }).where(eq(schema.locations.id, locationId));
+    await db.update(schema.locations).set({  kioskSettings: JSON.stringify(updatedSettings), updatedAt: new Date().toISOString()  }).where(eq(schema.locations.id, locationId));
     return true;
   } catch (error) {
     console.error("[Database] Failed to update theme:", error);
@@ -2168,10 +2168,10 @@ export async function updateLocationBackground(
     };
     await db
       .update(schema.locations)
-      .set({
+      .set({ 
         kioskSettings: JSON.stringify(updatedSettings),
         updatedAt: new Date().toISOString(),
-      })
+       })
       .where(eq(schema.locations.id, locationId));
     return true;
   } catch (error) {
@@ -2306,10 +2306,10 @@ export async function removeCustomBackground(locationId: number): Promise<boolea
     };
     await db
       .update(schema.locations)
-      .set({
+      .set({ 
         kioskSettings: JSON.stringify(updatedSettings),
         updatedAt: new Date().toISOString(),
-      })
+       })
       .where(eq(schema.locations.id, locationId));
     return true;
   } catch (error) {

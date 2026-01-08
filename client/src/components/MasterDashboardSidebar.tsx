@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "react-router-dom";
@@ -14,7 +15,6 @@ import {
   ChevronDown,
   Bell,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import ManagementLayout from '@/components/ManagementLayout';
+import BottomNavLayout from '@/components/BottomNavLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -381,7 +381,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   )
 
   return (
-    <ManagementLayout title="Staff">
+    <BottomNavLayout>
       <div className="p-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -931,7 +931,7 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
           </DialogContent>
         </Dialog>
       </div>
-    </ManagementLayout>
+    </BottomNavLayout>
   )
 }
 

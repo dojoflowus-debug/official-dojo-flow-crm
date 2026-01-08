@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import SimpleLayout from '../components/SimpleLayout'
+import BottomNavLayout from '../components/BottomNavLayout'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import PhoneInput from '../components/PhoneInput'
 import AddStudentWizard from '../components/AddStudentWizard'
@@ -527,16 +527,16 @@ export default function Students({ onLogout, theme, toggleTheme }) {
 
   if (loading) {
     return (
-      <SimpleLayout>
+      <BottomNavLayout>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </SimpleLayout>
+      </BottomNavLayout>
     )
   }
 
   return (
-    <SimpleLayout>
+    <BottomNavLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1712,7 +1712,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
           onStudentCreated={handleStudentCreated}
         />
       </div>
-    </SimpleLayout>
+    </BottomNavLayout>
   )
 }
 
