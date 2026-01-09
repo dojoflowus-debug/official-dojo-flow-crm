@@ -74,6 +74,7 @@ export default function StudentCardElevated({
 }: StudentCardElevatedProps) {
   const [showActions, setShowActions] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [isHoveredChevron, setIsHoveredChevron] = useState(false)
   const beltColors = BELT_COLORS[beltRank] || BELT_COLORS['White Belt']
   const statusColors = STATUS_COLORS[status]
 
@@ -128,18 +129,25 @@ export default function StudentCardElevated({
 
           {/* Student Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <h3 className="text-lg font-bold text-white truncate">{firstName} {lastName}</h3>
-                <p className="text-sm text-slate-400 font-medium">{beltRank}</p>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <h3 className="text-lg font-bold text-white truncate">{firstName} {lastName}</h3>
+                  <p className="text-sm text-slate-400 font-medium">{beltRank}</p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {/* Status badge with glow */}
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusColors.bg} ${statusColors.text} whitespace-nowrap shadow-lg ${statusColors.glow}`}>
+                    <div className={`w-2 h-2 rounded-full ${statusColors.dot} animate-pulse`} />
+                    {status}
+                  </div>
+                  
+                  {/* Open Profile Chevron */}
+                  <div className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-white transition-all duration-200">
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
-              
-              {/* Status badge with glow */}
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${statusColors.bg} ${statusColors.text} whitespace-nowrap shadow-lg ${statusColors.glow}`}>
-                <div className={`w-2 h-2 rounded-full ${statusColors.dot} animate-pulse`} />
-                {status}
-              </div>
-            </div>
 
             {/* Program badge */}
             {program && (

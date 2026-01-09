@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
 import BottomNavLayout from '@/components/BottomNavLayout'
@@ -73,14 +73,13 @@ interface KPIMetric {
 type ViewMode = 'list' | 'map' | 'segments' | 'analytics'
 
 function StudentsElevatedContent() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [programFilter, setProgramFilter] = useState<string>('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
-  const [showDrawer, setShowDrawer] = useState(false)
   const [showAddStudentModal, setShowAddStudentModal] = useState(false)
 
   useEffect(() => {
@@ -113,25 +112,17 @@ function StudentsElevatedContent() {
     if (analyticsError) console.error('Analytics error:', analyticsError)
   }, [studentsError, analyticsError])
 
-  // Fetch student detail when selected
-  const { data: studentDetail } = trpc.students.getDetail.useQuery(
-    { id: selectedStudent?.id || 0 },
-    { enabled: !!selectedStudent }
-  )
+
 
   const students = studentsData?.students || []
   const totalStudents = (studentsData?.total || 0) as number
   const totalPages = Math.ceil((totalStudents as number) / 20)
 
   const handleSelectStudent = (student: Student) => {
-    setSelectedStudent(student)
-    setShowDrawer(true)
+    navigate(`/students/${student.id}`)
   }
 
-  const handleCloseDrawer = () => {
-    setShowDrawer(false)
-    setTimeout(() => setSelectedStudent(null), 300)
-  }
+
 
   const pageContent = (
     <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
@@ -295,7 +286,7 @@ function StudentsElevatedContent() {
                     onNotes={() => console.log('Notes', student.id)}
                     onAssignProgram={() => console.log('Assign Program', student.id)}
                     onPromoteBelt={() => console.log('Promote Belt', student.id)}
-                    onProfileClick={() => handleSelectStudent(student)}
+                    onProfileClick={() => navigate(`/students/${student.id}`)}
                   />
                 ))}
               </div>
