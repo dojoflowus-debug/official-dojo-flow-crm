@@ -359,3 +359,56 @@
   - Verified: URL parameter ?filter=needs-attention works correctly
   - Verified: Hard refresh maintains correct state
   - Verified: Empty state shows positive message instead of generic "No students found"
+
+
+## Phase 17: Students Page Visual Elevation - Dojo Command Interface
+
+### Student Card Component Enhancement
+- [x] Enlarge avatar/portrait with premium styling
+- [x] Add belt-color halo ring around avatar (dynamic based on belt level)
+- [x] Implement progress bar toward next belt with visual clarity
+- [x] Add attendance streak indicator with fire emoji and counter
+- [x] Create last-class activity pulse (subtle glow animation)
+- [x] Add subtle status glow (active/inactive states)
+- [x] Implement card elevation and depth with soft shadows
+- [x] Add micro-interactions: hover lift, smooth transitions
+
+### Atmospheric & Depth Layer
+- [x] Create soft dojo-style gradient background (dark with warm undertones)
+- [x] Implement cinematic lighting effect (subtle light rays or glow)
+- [x] Add gentle background motion (slow, barely noticeable breathing)
+- [x] Apply layered glass surfaces throughout (backdrop blur, frosted effect)
+- [x] Implement vignette effect to focus toward roster
+- [x] Ensure page feels like a space, not a sheet
+
+### Dojo Identity Integration
+- [x] Visually integrate belt system (color-coded, prominent)
+- [x] Display rank progression with clear visual hierarchy
+- [x] Show program types (Little Ninjas, Kickboxing, Leadership, etc.)
+- [x] Add promotion readiness cues (visual indicators, badges)
+- [x] Implement instructor awareness signals (who's teaching, availability)
+- [x] Make martial arts identity unmistakable
+
+### Visual Hierarchy Refinement
+- [x] Establish clear emotional flow: Dojo health → Roster (hero) → Intelligence signals → Tools
+- [x] Create dominant roster presence (visual hero of the page)
+- [x] Subordinate metrics and tools to support roster
+- [x] Implement clear visual weight distribution
+- [x] Ensure information flows naturally from top to bottom
+
+### Motion Language & Interactions
+- [x] Implement soft hover lift on student cards
+- [x] Add gentle glow on active/highlighted students
+- [x] Create slow breathing background animation (subtle, premium)
+- [x] Implement smooth panel transitions (no harsh effects)
+- [x] Use OS-level motion language (easing, timing)
+- [x] Ensure all motion feels premium and intentional
+
+### Testing & Validation
+- [x] Test all motion effects across browsers
+- [x] Verify performance (no jank, smooth 60fps)
+- [x] Validate responsive design (mobile, tablet, desktop)
+- [x] Test accessibility (contrast, focus states, motion preferences)
+- [x] Verify dojo identity is unmistakable
+- [x] Create vitest tests for new components
+- [x] Save checkpoint with visual elevation complete

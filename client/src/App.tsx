@@ -47,6 +47,7 @@ import StudentsCommandCenter from "./pages/StudentsCommandCenter";
 import StudentsManagement from "./pages/StudentsManagement";
 import StudentsDashboard from "./pages/StudentsDashboard";
 import Students from "./pages/Students";
+import StudentsElevated from "./pages/StudentsElevated";
 import StudentPortal from "./pages/StudentPortal";
 import Leads from "./pages/Leads";
 import TestData from "./pages/TestData";
@@ -221,7 +222,8 @@ function Router() {
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
 
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
-      <Route path="/students" element={<Students />} />
+      <Route path="/students" element={<StudentsElevated />} />
+      <Route path="/students-classic" element={<Students />} />
       <Route path="/students-old" element={<StudentsDashboard />} />
       <Route path="/students-management" element={<StudentsManagement />} />
       <Route path="/students-command" element={<StudentsCommandCenter />} />

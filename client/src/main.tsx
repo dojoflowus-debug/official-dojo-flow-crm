@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App.tsx";
 import "./index.css";
+import "./styles/dojo-animations.css";
 
 console.log('DojoFlow Kiosk - main.tsx loaded');
 
