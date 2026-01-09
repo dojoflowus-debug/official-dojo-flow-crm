@@ -200,6 +200,15 @@ function StudentsDashboard() {
                 <div
                   key={idx}
                   className="bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-lg p-3 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 group cursor-pointer"
+                  onClick={() => {
+                    if (metric.label === 'At Risk') {
+                      setStatusFilter('At Risk');
+                      setCurrentPage(1);
+                    } else if (metric.label === 'Active') {
+                      setStatusFilter('Active');
+                      setCurrentPage(1);
+                    }
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -296,8 +305,17 @@ function StudentsDashboard() {
               </div>
             ) : students.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 space-y-3">
-                <Users className="w-12 h-12 text-muted-foreground/50" />
-                <p className="text-muted-foreground">No students found</p>
+                {statusFilter === 'At Risk' ? (
+                  <>
+                    <CheckCircle2 className="w-12 h-12 text-green-500/50" />
+                    <p className="text-muted-foreground">No students currently need attention. Great job.</p>
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-12 h-12 text-muted-foreground/50" />
+                    <p className="text-muted-foreground">No students found</p>
+                  </>
+                )}
               </div>
             ) : (
               <div className="space-y-3">
