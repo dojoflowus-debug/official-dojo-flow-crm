@@ -289,3 +289,30 @@
 ## Current Work - Student Page Filter Default
 
 - [x] Change student page filter default from "at risk" to "All status"
+
+## Current Issues - In Progress
+
+- [x] Change default student status filter from "At Risk" to "All Status"
+  - Verified: Students page already defaults to "All Status" on initial load
+  - All 30 students are displayed by default when users first visit the page
+  - Filter state initialized to 'all' on line 99 of Students.tsx
+  - Users can now see complete roster of all students/members without changing filter
+
+## Bug Fix - TRPC getAnalytics Query Input Validation (Jan 9, 2026)
+
+- [x] Fixed TRPCClientError on /students?filter=needs-attention page
+  - Error: "Invalid input: expected object, received undefined"
+  - Root cause: `getAnalytics` TRPC query uses `z.void()` input validation but was called with `.useQuery(undefined)` instead of `.useQuery()`
+  - Fix: Updated Students.tsx line 129 to call `.useQuery()` without any argument
+  - Result: Page now loads successfully with KPI metrics displaying correctly (Total: 30, Active: 27, At Risk: 0, Retention: 90%)
+  - Note: When using `z.void()` in TRPC, the client must call the query with no arguments, not even `undefined`
+
+
+## Bug Fix - TRPC getConversations Input Validation (Jan 9, 2026)
+
+- [x] Fixed TRPCClientError on /kai page
+  - Error: "Invalid input: expected object, received undefined"
+  - Root cause: `getConversations` TRPC query uses `z.void()` input validation but was called with `.useQuery(undefined)` instead of `.useQuery(void 0)`
+  - Fix: Updated KaiCommand.tsx line 444 to call `.useQuery(void 0)` instead of `.useQuery(undefined)`
+  - Result: Page now loads successfully with conversations displaying correctly
+  - Note: When using `z.void()` in TRPC, the client must call the query with `void 0`, not `undefined`

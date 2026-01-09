@@ -441,7 +441,7 @@ export default function KaiCommand() {
   // tRPC queries and mutations for Kai
   const kaiChatMutation = trpc.kai.chat.useMutation();
 
-  const conversationsQuery = trpc.kai.getConversations.useQuery(undefined, {
+  const conversationsQuery = trpc.kai.getConversations.useQuery(void 0, {
     onSuccess: (data) => {
       console.log('[Convos] loading for user:', user?.id);
       console.log('[Convos] Total conversations returned:', data?.length);
