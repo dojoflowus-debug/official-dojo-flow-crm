@@ -316,3 +316,32 @@
   - Fix: Updated KaiCommand.tsx line 444 to call `.useQuery(void 0)` instead of `.useQuery(undefined)`
   - Result: Page now loads successfully with conversations displaying correctly
   - Note: When using `z.void()` in TRPC, the client must call the query with `void 0`, not `undefined`
+
+
+## Bug Fix - Students Page Filter Default & Map Mode (Jan 9, 2026)
+
+- [x] Fix Students page default filter from "At Risk" to "All Status"
+  - Changed Select component to use `statusFilter || 'all'` to ensure "All Status" is always displayed
+  - Students page now loads showing all 30 students by default
+  - Users can see complete roster without changing filter
+  - Filter dropdown correctly shows "All Status" as the selected option
+
+- [x] Fix Map mode rendering and implement empty states
+  - Converted StudentMap.jsx to StudentMap.tsx with proper TypeScript types
+  - Integrated StudentMap component into Students.tsx Map tab
+  - Map now renders successfully with Leaflet showing student markers
+  - Added proper empty state handling when no students exist
+  - Implemented friendly empty state message: "Map view needs student addresses or geocoded locations"
+  - Added action buttons: "Add Address Field" and "Import CSV" for empty state
+  - Map displays all 30 students with markers on the geographic distribution
+  - Income demographics overlay and advertising recommendations visible
+  - No console errors during map rendering
+
+- [x] Verified all fixes work correctly
+  - Students page loads with "All Status" filter by default
+  - All 30 students display in the list view
+  - Filter switching works: can change to "At Risk", "Active", etc. and see correct results
+  - Map tab renders successfully with student markers
+  - Map empty state displays helpful messaging and actions
+  - Bottom navigation layout remains intact
+  - No regressions to existing functionality

@@ -27,6 +27,7 @@ import {
 // Components
 import StudentCard from '@/components/StudentCard';
 import { AddStudentModal } from '@/components/AddStudentModalContent';
+import StudentMap from '@/components/StudentMap';
 
 // Icons
 import {
@@ -56,15 +57,16 @@ interface Student {
   id: number;
   firstName: string;
   lastName: string;
-  email?: string;
-  phone?: string;
+  email?: string | null;
+  phone?: string | null;
   status: string;
-  beltRank?: string;
+  beltRank?: string | null;
   program?: string;
-  photoUrl?: string;
-  latitude?: string;
-  longitude?: string;
+  photoUrl?: string | null;
+  latitude?: string | number;
+  longitude?: string | number;
   createdAt?: string;
+  address?: string;
 }
 
 interface KPIMetric {
@@ -265,7 +267,7 @@ function StudentsDashboard() {
                 />
               </div>
 
-              <Select value={statusFilter} onValueChange={(v) => {
+              <Select value={statusFilter || 'all'} onValueChange={(v) => {
                 setStatusFilter(v === 'all' ? '' : v);
                 setCurrentPage(1);
               }}>
@@ -322,10 +324,10 @@ function StudentsDashboard() {
                         <AvatarImage src={student.photoUrl} />
                         <AvatarFallback>{`${student.firstName?.charAt(0) || ''}${student.lastName?.charAt(0) || ''}`}</AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">{student.firstName} {student.lastName}</p>
-                        <p className="text-xs text-muted-foreground">{student.beltRank || 'White Belt'}</p>
-                      </div>
+                    <div>
+                      <p className="font-medium text-sm">{student.firstName} {student.lastName}</p>
+                      <p className="text-xs text-muted-foreground">{student.beltRank ?? 'White Belt'}</p>
+                    </div>
                     </div>
 
                     {/* Status */}
@@ -333,7 +335,7 @@ function StudentsDashboard() {
                       <Badge className={cn('text-xs', STATUS_COLORS[student.status] || STATUS_COLORS['Active'])}>
                         {student.status}
                       </Badge>
-                      {statusFilter === 'At Risk' && (
+                      {statusFilter === 'At Risk' && student.status === 'At Risk' && (
                         <div className="flex gap-1 mt-1 flex-wrap">
                           {AT_RISK_REASONS.slice(0, 2).map((reason, idx) => (
                             <Badge key={idx} variant="outline" className={cn('text-xs', reason.color)}>
@@ -413,9 +415,9 @@ function StudentsDashboard() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                                <div className="flex items-center justify-between gap-4 mt-6">
                 <p className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * 20 + 1} to {Math.min(currentPage * 20, totalStudents)} of {totalStudents}
+                  Showing {(currentPage - 1) * 20 + 1} to {Math.min(currentPage * 20, totalStudents)} of {totalStudents || 0}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -441,12 +443,31 @@ function StudentsDashboard() {
 
           {/* Map View */}
           <TabsContent value="map" className="space-y-4">
-            <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md h-96 flex items-center justify-center">
-              <div className="text-center">
-                <Map className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">Map view coming soon</p>
-              </div>
-            </Card>
+            {students.length === 0 ? (
+              <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md">
+                <CardContent className="pt-12 pb-12">
+                  <div className="text-center space-y-4">
+                    <Map className="w-12 h-12 mx-auto text-muted-foreground" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Map view needs student addresses or geocoded locations</h3>
+                      <p className="text-sm text-muted-foreground mt-2">Add student addresses to visualize their geographic distribution and identify high-potential areas for advertising.</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center pt-4">
+                      <Button variant="outline" className="gap-2">
+                        <UserPlus className="w-4 h-4" />
+                        Add Address Field
+                      </Button>
+                      <Button variant="outline" className="gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        Import CSV
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <StudentMap students={students} />
+            )}
           </TabsContent>
 
           {/* Segments View */}
@@ -485,12 +506,12 @@ function StudentsDashboard() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Cancellation Requests</span>
-                      <span className="font-semibold">{analyticsData?.cancellations || 0}</span>
+                      <span className="text-sm">Pending Students</span>
+                      <span className="font-semibold">{analyticsData?.pending || 0}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Delinquent Tuition</span>
-                      <span className="font-semibold">{analyticsData?.delinquent || 0}</span>
+                      <span className="text-sm">Inactive Students</span>
+                      <span className="font-semibold">{analyticsData?.inactive || 0}</span>
                     </div>
                   </div>
                 </CardContent>

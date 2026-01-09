@@ -2,21 +2,35 @@ import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Circle, LayerGroup, LayersControl } from 'react-leaflet'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { MapPin, DollarSign, Hash, Users } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
-// Fix for default marker icon
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-})
+interface Student {
+  id: number
+  firstName: string
+  lastName: string
+  email?: string | null
+  phone?: string | null
+  status: string
+  beltRank?: string | null
+  program?: string
+  photoUrl?: string | null
+  latitude?: string | number
+  longitude?: string | number
+  createdAt?: string
+  address?: string
+}
+
+interface ZipCodeStats {
+  [key: string]: {
+    count: number
+    students: Student[]
+  }
+}
 
 // Mock demographic data by zip code (Tomball/Spring/Cypress area)
-const demographicData = {
+const demographicData: Record<string, { income: number; population: number; color: string }> = {
   '77377': { income: 95000, population: 28000, color: '#8b5cf6' }, // Tomball
   '77429': { income: 88000, population: 35000, color: '#3b82f6' }, // Cypress
   '77373': { income: 82000, population: 42000, color: '#3b82f6' }, // Spring
@@ -26,13 +40,21 @@ const demographicData = {
   '77450': { income: 98000, population: 45000, color: '#8b5cf6' }, // Katy
 }
 
-export default function StudentMap({ students }) {
-  const [center, setCenter] = useState([30.0933, -95.4611]) // Tomball, TX default
-  const [zipCodeStats, setZipCodeStats] = useState({})
+// Fix for default marker icon
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
+
+export default function StudentMap({ students }: { students: Student[] }) {
+  const [center, setCenter] = useState<[number, number]>([30.0933, -95.4611]) // Tomball, TX default
+  const [zipCodeStats, setZipCodeStats] = useState<ZipCodeStats>({})
 
   useEffect(() => {
     // Calculate student distribution by zip code
-    const stats = {}
+    const stats: ZipCodeStats = {}
     students.forEach(student => {
       if (student.address) {
         // Extract zip code from address (simplified)
@@ -51,21 +73,25 @@ export default function StudentMap({ students }) {
 
     // Set center to first student location if available
     if (students.length > 0 && students[0].latitude && students[0].longitude) {
-      setCenter([students[0].latitude, students[0].longitude])
+      const lat = typeof students[0].latitude === 'string' ? parseFloat(students[0].latitude) : students[0].latitude
+      const lng = typeof students[0].longitude === 'string' ? parseFloat(students[0].longitude) : students[0].longitude
+      setCenter([lat, lng])
     }
   }, [students])
 
   // Mock geocoding - in production, use a geocoding API
-  const getStudentCoordinates = (student) => {
+  const getStudentCoordinates = (student: Student): [number, number] => {
     if (student.latitude && student.longitude) {
-      return [student.latitude, student.longitude]
+      const lat = typeof student.latitude === 'string' ? parseFloat(student.latitude) : student.latitude
+      const lng = typeof student.longitude === 'string' ? parseFloat(student.longitude) : student.longitude
+      return [lat, lng]
     }
     
     // Mock coordinates based on zip code (Tomball/Spring/Cypress area)
     const zipMatch = student.address?.match(/\b\d{5}\b/)
     if (zipMatch) {
       const zip = zipMatch[0]
-      const baseCoords = {
+      const baseCoords: Record<string, [number, number]> = {
         '77377': [30.0933, -95.4611], // Tomball
         '77429': [29.9688, -95.6972], // Cypress
         '77373': [30.0799, -95.4171], // Spring
@@ -79,12 +105,12 @@ export default function StudentMap({ students }) {
       return [
         base[0] + (Math.random() - 0.5) * 0.02,
         base[1] + (Math.random() - 0.5) * 0.02
-      ]
+      ] as [number, number]
     }
     return center
   }
 
-  const getIncomeColor = (income) => {
+  const getIncomeColor = (income: number): string => {
     if (income >= 80000) return '#8b5cf6' // Purple - High
     if (income >= 65000) return '#3b82f6' // Blue - Upper Middle
     if (income >= 50000) return '#22c55e' // Green - Middle
@@ -92,7 +118,7 @@ export default function StudentMap({ students }) {
     return '#f97316' // Orange - Low
   }
 
-  const getIncomeLabel = (income) => {
+  const getIncomeLabel = (income: number): string => {
     if (income >= 80000) return 'High Income'
     if (income >= 65000) return 'Upper Middle'
     if (income >= 50000) return 'Middle Income'
@@ -143,9 +169,9 @@ export default function StudentMap({ students }) {
                         <Marker key={index} position={coords}>
                           <Popup>
                             <div className="p-2">
-                              <p className="font-semibold">{student.name}</p>
-                              <p className="text-sm text-muted-foreground">{student.address}</p>
-                              <Badge className="mt-1">{student.belt_rank}</Badge>
+                              <p className="font-semibold">{student.firstName} {student.lastName}</p>
+                              <p className="text-sm text-muted-foreground">{student.address || 'No address'}</p>
+                              <Badge className="mt-1">{student.beltRank || 'White Belt'}</Badge>
                             </div>
                           </Popup>
                         </Marker>
@@ -158,7 +184,7 @@ export default function StudentMap({ students }) {
                 <LayersControl.Overlay name="Income Demographics">
                   <LayerGroup>
                     {Object.entries(demographicData).map(([zip, data]) => {
-                      const baseCoords = {
+                      const baseCoords: Record<string, [number, number]> = {
                         '77377': [30.0933, -95.4611], // Tomball
                         '77429': [29.9688, -95.6972], // Cypress
                         '77373': [30.0799, -95.4171], // Spring
