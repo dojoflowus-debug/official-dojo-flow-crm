@@ -127,9 +127,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
               // Compute target href with optional filter params
               const targetHref = (() => {
                 if (badgeCounts && badgeCounts[item.id]) {
-                  if (item.id === 'students') {
-                    return `${item.href}?filter=needs-attention`
-                  } else if (item.id === 'leads') {
+                  if (item.id === 'leads') {
                     return `${item.href}?filter=needs-followup`
                   } else if (item.id === 'billing') {
                     return `${item.href}?filter=overdue`
