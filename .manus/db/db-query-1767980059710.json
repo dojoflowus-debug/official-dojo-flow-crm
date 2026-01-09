@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `student_contacts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `studentId` int NOT NULL,\n  `contactDate` timestamp NOT NULL,\n  `contactType` enum('call', 'sms', 'email', 'in_person', 'message') NOT NULL,\n  `notes` text,\n  `contactedBy` varchar(255),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  KEY `idx_contact_student` (`studentId`),\n  KEY `idx_contact_date` (`contactDate`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS `student_contacts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `studentId` int NOT NULL,\n  `contactDate` timestamp NOT NULL,\n  `contactType` enum('call', 'sms', 'email', 'in_person', 'message') NOT NULL,\n  `notes` text,\n  `contactedBy` varchar(255),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  KEY `idx_contact_student` (`studentId`),\n  KEY `idx_contact_date` (`contactDate`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 181
+}

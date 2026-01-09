@@ -1059,7 +1059,7 @@ export const appRouter = router({
 
   leads: router({
     getByStatus: protectedProcedure
-      .input(z.object({}).optional())
+      .input(z.void())
       .query(async ({ ctx, input }) => {
       const { getDb } = await import("./db");
       const { leads } = await import("../drizzle/schema");

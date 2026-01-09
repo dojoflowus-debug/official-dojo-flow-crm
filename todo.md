@@ -412,3 +412,13 @@
 - [x] Verify dojo identity is unmistakable
 - [x] Create vitest tests for new components
 - [x] Save checkpoint with visual elevation complete
+
+
+## Errors Fixed (2026-01-09)
+- [x] BUG: Failed query on /students page - student_contacts table queries failing for multiple student IDs
+  - Error: "Failed query: select `id`, `studentId`, `contactDate`, `contactType`, `notes`, `contactedBy`, `createdAt` from `student_contacts`"
+  - Affects student IDs: 450001, 510005, 480001, 510003, 1350001, 480002, 1320001, 1350002
+  - Fixed: Created missing student_contacts table in database
+- [x] BUG: Invalid input validation error on /students page
+  - Error: "Invalid input: expected object, received undefined"
+  - Fixed: Changed leads.getByStatus input from z.object({}).optional() to z.void()
