@@ -1933,7 +1933,7 @@ export const appRouter = router({
       .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
-        const { eq, and, count } = await import("drizzle-orm");
+        const { eq, and, count, sql } = await import("drizzle-orm");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
@@ -1954,61 +1954,77 @@ export const appRouter = router({
           };
         }
         
-        // Get student counts by status
-        const statusCounts = await db.select({
-          status: students.status,
-          count: count().as('count')
-        })
-        .from(students)
-        .where(eq(students.organizationId, orgId))
-        .groupBy(students.status);
-        
-        // Get total students
-        const totalResult = await db.select({ count: count().as('count') })
+        try {
+          // Get student counts by status
+          const statusCounts = await db.select({
+            status: students.status,
+            count: count().as('count')
+          })
           .from(students)
-          .where(eq(students.organizationId, orgId));
-        
-        // Get active students (last 30 days)
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const activeResult = await db.select({ count: count().as('count') })
-          .from(students)
-          .where(and(
-            eq(students.organizationId, orgId),
-            eq(students.status, 'Active')
-          ));
-        
-        // Get at-risk students (delinquent tuition or high absences)
-        const atRiskResult = await db.select({ count: count().as('count') })
-          .from(students)
-          .where(and(
-            eq(students.organizationId, orgId),
-            eq(students.status, 'At Risk')
-          ));
-        
-        // Get inactive students
-        const inactiveResult = await db.select({ count: count().as('count') })
-          .from(students)
-          .where(and(
-            eq(students.organizationId, orgId),
-            eq(students.status, 'Inactive')
-          ));
-        
-        // Get pending/trial students
-        const pendingResult = await db.select({ count: count().as('count') })
-          .from(students)
-          .where(and(
-            eq(students.organizationId, orgId),
-            eq(students.status, 'On Hold')
-          ));
-        
-        return {
-          total: totalResult[0]?.count || 0,
-          active: activeResult[0]?.count || 0,
-          atRisk: atRiskResult[0]?.count || 0,
-          inactive: inactiveResult[0]?.count || 0,
-          pending: pendingResult[0]?.count || 0,
-          statusBreakdown: statusCounts,
-        };
+          .where(eq(students.organizationId, orgId))
+          .groupBy(students.status);
+          
+          // Get total students
+          const totalResult = await db.select({ count: count().as('count') })
+            .from(students)
+            .where(eq(students.organizationId, orgId));
+          
+          const total = Number(totalResult[0]?.count || 0);
+          
+          // Get active students
+          const activeResult = await db.select({ count: count().as('count') })
+            .from(students)
+            .where(and(
+              eq(students.organizationId, orgId),
+              eq(students.status, 'Active')
+            ));
+          
+          const active = Number(activeResult[0]?.count || 0);
+          
+          // Get at-risk students
+          const atRiskResult = await db.select({ count: count().as('count') })
+            .from(students)
+            .where(and(
+              eq(students.organizationId, orgId),
+              eq(students.status, 'At Risk')
+            ));
+          
+          const atRisk = Number(atRiskResult[0]?.count || 0);
+          
+          // Get inactive students
+          const inactiveResult = await db.select({ count: count().as('count') })
+            .from(students)
+            .where(and(
+              eq(students.organizationId, orgId),
+              eq(students.status, 'Inactive')
+            ));
+          
+          const inactive = Number(inactiveResult[0]?.count || 0);
+          
+          // Get pending/trial students
+          const pendingResult = await db.select({ count: count().as('count') })
+            .from(students)
+            .where(and(
+              eq(students.organizationId, orgId),
+              eq(students.status, 'On Hold')
+            ));
+          
+          const pending = Number(pendingResult[0]?.count || 0);
+          
+          console.log('[Analytics] Results:', { total, active, atRisk, inactive, pending, orgId });
+          
+          return {
+            total,
+            active,
+            atRisk,
+            inactive,
+            pending,
+            statusBreakdown: statusCounts,
+          };
+        } catch (error) {
+          console.error('[Analytics] Error querying analytics:', error);
+          throw error;
+        }
       }),
     
     // Get students by segment
