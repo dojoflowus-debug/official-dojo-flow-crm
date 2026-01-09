@@ -277,3 +277,15 @@
   - Improved: Type safety by converting count results to numbers
   - Verified: Stats now correctly show Total Students=30, Active=27, At Risk=0, Retention Rate=90%
   - Test: Created vitest tests to verify analytics query logic
+
+## Bug Fix - TRPC Input Validation Error
+
+- [x] Fixed TRPCClientError on /students?filter=needs-attention page
+  - Error: "Invalid input: expected object, received undefined"
+  - Root cause: `getAnalytics` TRPC query uses `z.void()` input validation but was called without passing `undefined`
+  - Fix: Updated both Students.tsx and StudentsDashboard.tsx to pass `undefined` explicitly to `useQuery(undefined)`
+  - This matches the expected input type for void-validated procedures
+
+## Current Work - Student Page Filter Default
+
+- [x] Change student page filter default from "at risk" to "All status"

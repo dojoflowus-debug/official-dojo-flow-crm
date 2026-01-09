@@ -96,7 +96,7 @@ function StudentsDashboard() {
   const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [programFilter, setProgramFilter] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -111,6 +111,8 @@ function StudentsDashboard() {
       setStatusFilter('On Hold');
     } else if (filterParam === 'overdue') {
       setStatusFilter('Inactive');
+    } else {
+      setStatusFilter('all');
     }
   }, [searchParams]);
 
@@ -119,12 +121,12 @@ function StudentsDashboard() {
     page: currentPage,
     limit: 20,
     search: searchQuery || undefined,
-    status: statusFilter || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter || undefined,
     program: programFilter || undefined,
   });
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery();
+  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(undefined);
   
   useEffect(() => {
     if (studentsError) console.error('Students error:', studentsError);
