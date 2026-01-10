@@ -620,3 +620,35 @@
     - Has error handling to return default empty stats on failure
   - Page now loads successfully without JSON parsing errors
 
+
+
+## Phase 17: Critical Fixes - Light Mode + Notes Drawer + Footer (P0)
+
+### A) Light/Dark Mode Toggle Fix
+- [x] Ensure theme toggle updates root HTML/body class
+- [x] Replace hard-coded dark colors in Students page (bg-black, text-white, bg-[#0b0b0b])
+- [x] Replace hard-coded dark colors in Notes drawer
+- [x] Update all components to use theme tokens (bg-background, text-foreground, border-border)
+- [x] Verify theme persists on page refresh
+- [x] Test Light mode: background light, cards light, text dark, drawer light
+- [x] Test Dark mode: all components remain dark
+
+### B) Notes Drawer Enhancement
+- [x] Replace plain textarea with Student Activity & Notes timeline
+- [x] Implement header context block (student name, avatar, program, belt, status)
+- [x] Display last attended + attendance %
+- [x] Build scrollable notes feed (newest first)
+- [x] Each note entry: type icon, content, author, timestamp
+- [x] Support note types: General, Behavior, Attendance, Promotion, Parent, Follow-up, System
+- [x] Implement add note composer with type selector (chips)
+- [x] Add optional "Follow up date" toggle
+- [x] Create empty state with quick buttons (Add behavior note, Add parent note, Add follow-up)
+
+### C) Sticky Footer Implementation
+- [x] Create sticky footer pinned to bottom of drawer
+- [x] Add padding and safe-area spacing
+- [x] Content scrolls behind footer; footer stays visible
+- [x] Place Save as primary, Cancel secondary, aligned right
+- [x] Verify buttons visible even when scrolling
+- [x] Verify buttons not below fold on large empty content
+- [x] Test premium OS sheet feel

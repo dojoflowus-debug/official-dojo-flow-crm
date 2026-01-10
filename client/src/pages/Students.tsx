@@ -28,6 +28,7 @@ import {
 import StudentCard from '@/components/StudentCard';
 import { AddStudentModal } from '@/components/AddStudentModalContent';
 import StudentMap from '@/components/StudentMap';
+import { StudentNotesDrawer } from '@/components/StudentNotesDrawer';
 
 // Icons
 import {
@@ -550,69 +551,22 @@ function StudentsDashboard() {
         }}
       />
 
-      {showDrawer && selectedStudent && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
-            onClick={handleCloseDrawer}
-          />
-
-          {/* Drawer */}
-          <div className="fixed right-0 top-0 bottom-0 w-full sm:w-96 bg-background border-l border-white/10 z-50 shadow-xl animate-in slide-in-from-right duration-300 overflow-y-auto">
-            <div className="p-6 space-y-6">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">{selectedStudent.firstName} {selectedStudent.lastName}</h2>
-                  <p className="text-sm text-muted-foreground mt-1">{selectedStudent.beltRank || 'White Belt'}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCloseDrawer}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Student Info */}
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Email</p>
-                  <p className="text-sm">{selectedStudent.email || 'Not provided'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Phone</p>
-                  <p className="text-sm">{selectedStudent.phone || 'Not provided'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Status</p>
-                  <Badge className={cn('text-xs', STATUS_COLORS[selectedStudent.status] || STATUS_COLORS['Active'])}>
-                    {selectedStudent.status}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="space-y-2 pt-4 border-t border-white/10">
-                <Button className="w-full gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Send Message
-                </Button>
-                <Button variant="outline" className="w-full gap-2">
-                  <Phone className="w-4 h-4" />
-                  Call
-                </Button>
-                <Button variant="outline" className="w-full">
-                  Edit Student
-                </Button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <StudentNotesDrawer
+        studentId={selectedStudent?.id || 0}
+        studentName={selectedStudent ? `${selectedStudent.firstName} ${selectedStudent.lastName}` : ''}
+        studentData={{
+          firstName: selectedStudent?.firstName,
+          lastName: selectedStudent?.lastName,
+          beltRank: selectedStudent?.beltRank || undefined,
+          program: selectedStudent?.program || undefined,
+          status: selectedStudent?.status || undefined,
+          photoUrl: selectedStudent?.photoUrl || undefined,
+          attendancePercentage: studentDetail?.attendancePercentage || 0,
+          lastAttended: studentDetail?.lastAttended || 'Never',
+        }}
+        isOpen={showDrawer && !!selectedStudent}
+        onClose={handleCloseDrawer}
+      />
     </div>
   );
 

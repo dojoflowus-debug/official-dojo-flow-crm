@@ -209,6 +209,42 @@
   --sidebar-ring: oklch(0.62 0.22 15);
 }
 
+.light {
+  /* DojoFlow Light Mode - Apple Notes Style */
+  --background: oklch(0.98 0.005 80); /* Soft white/gray */
+  --foreground: oklch(0.15 0 0); /* Dark text */
+  --card: oklch(1 0 0); /* Pure white cards */
+  --card-foreground: oklch(0.15 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.62 0.22 15); /* DojoFlow Red */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.50 0.08 70);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.92 0.01 0); /* Light gray */
+  --muted-foreground: oklch(0.50 0 0); /* Medium gray text */
+  --accent: oklch(0.62 0.22 15);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.62 0.22 15);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0 0 0 / 0.08); /* Subtle dark border */
+  --input: oklch(0.92 0.01 0); /* Light gray input */
+  --ring: oklch(0.62 0.22 15);
+  --chart-1: oklch(0.62 0.22 15);
+  --chart-2: oklch(0.50 0.08 70);
+  --chart-3: oklch(0.75 0.18 200);
+  --chart-4: oklch(0.65 0.18 280);
+  --chart-5: oklch(0.80 0.12 50);
+  --sidebar: oklch(0.98 0.005 80);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.62 0.22 15);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0 0 0 / 0.05);
+  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --sidebar-border: oklch(0 0 0 / 0.08);
+  --sidebar-ring: oklch(0.62 0.22 15);
+}
+
 /* Light mode global styles */
 .light-mode body,
 .light body,
@@ -216,6 +252,7 @@ html.light,
 html.light-mode {
   background: oklch(0.98 0.005 80);
   background-attachment: fixed;
+  color: oklch(0.15 0 0);
 }
 
 /* Dark mode global styles - Phenomenon Studio */
