@@ -133,20 +133,21 @@ export function StudentNotesDrawer({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - z-index: 40, pointer-events: auto */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300 light:bg-black/30"
+        className="fixed inset-0 z-40 bg-black/50 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300 light:bg-black/30 pointer-events-auto"
         onClick={onClose}
+        role="presentation"
       />
 
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      {/* Drawer - z-index: 50 (above backdrop), full height, flex column layout */}
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 pointer-events-auto">
         
-        {/* Header - Student Context Block */}
-        <div className="border-b border-border p-6 space-y-4 flex-shrink-0">
+        {/* Header - Student Context Block - Fixed, non-scrolling */}
+        <div className="flex-shrink-0 border-b border-border p-6 space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
-              <Avatar className="w-12 h-12 border-2 border-primary/30">
+              <Avatar className="w-12 h-12 border-2 border-primary/30 flex-shrink-0">
                 <AvatarImage src={studentData?.photoUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary font-bold">
                   {(studentData?.firstName?.[0] || 'S') + (studentData?.lastName?.[0] || '')}
@@ -167,6 +168,7 @@ export function StudentNotesDrawer({
             <button
               onClick={onClose}
               className="p-2 hover:bg-muted rounded-lg transition-colors duration-200 flex-shrink-0"
+              aria-label="Close drawer"
             >
               <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />
             </button>
@@ -185,8 +187,8 @@ export function StudentNotesDrawer({
           </div>
         </div>
 
-        {/* Notes Feed - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Notes Feed - Scrollable content area with min-h-0 for flex shrinking */}
+        <div className="flex-1 overflow-y-auto min-h-0 p-6 space-y-4">
           {hasNotes ? (
             <div className="space-y-3">
               {notes.map((note, idx) => {
@@ -220,7 +222,7 @@ export function StudentNotesDrawer({
                     setSelectedNoteType('Behavior')
                     setNewNoteContent('')
                   }}
-                  className="w-full text-xs px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                  className="w-full text-xs px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors pointer-events-auto"
                 >
                   Add behavior note
                 </button>
@@ -229,7 +231,7 @@ export function StudentNotesDrawer({
                     setSelectedNoteType('Parent')
                     setNewNoteContent('')
                   }}
-                  className="w-full text-xs px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                  className="w-full text-xs px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors pointer-events-auto"
                 >
                   Add parent note
                 </button>
@@ -238,7 +240,7 @@ export function StudentNotesDrawer({
                     setSelectedNoteType('Follow-up')
                     setNewNoteContent('')
                   }}
-                  className="w-full text-xs px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                  className="w-full text-xs px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors pointer-events-auto"
                 >
                   Add follow-up
                 </button>
@@ -248,7 +250,7 @@ export function StudentNotesDrawer({
         </div>
 
         {/* Note Composer - Sticky Footer */}
-        <div className="border-t border-border bg-background p-6 space-y-4 flex-shrink-0">
+        <div className="flex-shrink-0 border-t border-border bg-background p-6 space-y-4">
           {/* Note Type Selector */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground">Note Type</label>
@@ -258,7 +260,7 @@ export function StudentNotesDrawer({
                   key={type}
                   onClick={() => setSelectedNoteType(type)}
                   className={cn(
-                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
+                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 pointer-events-auto',
                     selectedNoteType === type
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -277,13 +279,13 @@ export function StudentNotesDrawer({
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
               placeholder="Write your note here..."
-              className="min-h-24 resize-none bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus:bg-muted/70 focus:border-border transition-colors duration-200"
+              className="min-h-24 resize-none bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus:bg-muted/70 focus:border-border transition-colors duration-200 pointer-events-auto"
             />
           </div>
 
           {/* Follow-up Date Toggle */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer pointer-events-auto">
               <input
                 type="checkbox"
                 checked={!!followUpDate}
@@ -296,7 +298,7 @@ export function StudentNotesDrawer({
                     setFollowUpDate('')
                   }
                 }}
-                className="w-4 h-4 rounded border-border"
+                className="w-4 h-4 rounded border-border pointer-events-auto"
               />
               <span className="text-xs font-medium text-muted-foreground">Set follow-up date</span>
             </label>
@@ -305,7 +307,7 @@ export function StudentNotesDrawer({
                 type="date"
                 value={followUpDate}
                 onChange={(e) => setFollowUpDate(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg bg-muted/50 border border-border text-foreground focus:bg-muted/70 focus:border-border transition-colors duration-200"
+                className="w-full px-3 py-2 text-sm rounded-lg bg-muted/50 border border-border text-foreground focus:bg-muted/70 focus:border-border transition-colors duration-200 pointer-events-auto"
               />
             )}
           </div>
@@ -315,14 +317,14 @@ export function StudentNotesDrawer({
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 pointer-events-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveNote}
               disabled={!newNoteContent.trim() || isSaving}
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground pointer-events-auto"
             >
               {isSaving ? (
                 <>

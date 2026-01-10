@@ -84,6 +84,21 @@ const MOCK_NOTES: Note[] = [
     instructor_name: 'Sensei David',
     created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
   },
+  // Add more mock notes for scrolling test
+  {
+    id: 5,
+    content: 'Great form during kata practice. Keep up the consistency.',
+    category: 'progress',
+    instructor_name: 'Sensei Mike',
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 6,
+    content: 'Perfect attendance this month. Showing strong commitment.',
+    category: 'attendance',
+    instructor_name: 'Sensei Sarah',
+    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+  },
 ]
 
 // Format relative time
@@ -165,25 +180,26 @@ export default function NotesDrawer({
 
   return (
     <>
-      {/* Backdrop - z-index higher than modal backdrop (9990) but lower than drawer */}
+      {/* Backdrop - z-index: 9998, pointer-events: auto to allow closing */}
       <div
-        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998] transition-opacity duration-300 pointer-events-auto ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
+        role="presentation"
       />
 
-      {/* Drawer - z-index highest (above modal at 9995) */}
+      {/* Drawer - z-index: 10000 (above backdrop), full height, flex column */}
       <div
-        className={`fixed top-0 right-0 h-full w-[420px] bg-white shadow-2xl z-[10000] flex flex-col transition-transform duration-300 ease-out ${
+        className={`fixed top-0 right-0 h-screen w-[420px] bg-white shadow-2xl z-[10000] flex flex-col transition-transform duration-300 ease-out pointer-events-auto ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         style={{
           boxShadow: '-10px 0 40px rgba(0, 0, 0, 0.15)',
         }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+        {/* Header - Fixed, non-scrolling */}
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <FileText className="h-5 w-5 text-primary" />
@@ -195,14 +211,15 @@ export default function NotesDrawer({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-200 transition-colors"
+            className="flex-shrink-0 p-2 rounded-full hover:bg-slate-200 transition-colors"
+            aria-label="Close drawer"
           >
             <X className="h-5 w-5 text-slate-500" />
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="p-4 border-b border-slate-100">
+        {/* Search Bar - Fixed below header */}
+        <div className="flex-shrink-0 p-4 border-b border-slate-100">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
@@ -214,76 +231,15 @@ export default function NotesDrawer({
           </div>
         </div>
 
-        {/* Add Note Section */}
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-          {!isAdding ? (
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-2 text-slate-600 border-dashed"
-              onClick={() => setIsAdding(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Add a new note
-            </Button>
-          ) : (
-            <div className="space-y-3">
-              <Textarea
-                placeholder="Write your note here..."
-                value={newNoteContent}
-                onChange={(e) => setNewNoteContent(e.target.value)}
-                className="min-h-[100px] resize-none bg-white"
-                autoFocus
-              />
-              <div className="flex items-center gap-2">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[160px] bg-white">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NOTE_CATEGORIES.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${category.color.split(' ')[0]}`} />
-                          {category.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex-1" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsAdding(false)
-                    setNewNoteContent('')
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleAddNote}
-                  disabled={!newNoteContent.trim()}
-                  className="gap-2"
-                >
-                  <Send className="h-4 w-4" />
-                  Save
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Notes List */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Notes List - Scrollable content area */}
+        <div className="flex-1 overflow-y-auto min-h-0">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8">
               <FileText className="h-12 w-12 mb-4 opacity-50" />
               <p className="text-center">
                 {searchQuery
                   ? 'No notes match your search'
-                  : 'No notes yet. Add your first note above.'}
+                  : 'No notes yet. Add your first note below.'}
               </p>
             </div>
           ) : (
@@ -330,8 +286,70 @@ export default function NotesDrawer({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-3 border-t border-slate-200 bg-slate-50">
+        {/* Sticky Footer - Add Note Section */}
+        <div className="flex-shrink-0 border-t border-slate-200 bg-slate-50 p-4 space-y-3">
+          {!isAdding ? (
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-2 text-slate-600 border-dashed pointer-events-auto"
+              onClick={() => setIsAdding(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add a new note
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Write your note here..."
+                value={newNoteContent}
+                onChange={(e) => setNewNoteContent(e.target.value)}
+                className="min-h-[100px] resize-none bg-white pointer-events-auto"
+                autoFocus
+              />
+              <div className="flex items-center gap-2">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[160px] bg-white pointer-events-auto">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {NOTE_CATEGORIES.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${category.color.split(' ')[0]}`} />
+                          {category.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsAdding(false)
+                    setNewNoteContent('')
+                  }}
+                  className="pointer-events-auto"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleAddNote}
+                  disabled={!newNoteContent.trim()}
+                  className="gap-2 pointer-events-auto"
+                >
+                  <Send className="h-4 w-4" />
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Info - Fixed at bottom */}
+        <div className="flex-shrink-0 p-3 border-t border-slate-200 bg-white">
           <p className="text-xs text-slate-400 text-center">
             {filteredNotes.length} note{filteredNotes.length !== 1 ? 's' : ''} for this student
           </p>

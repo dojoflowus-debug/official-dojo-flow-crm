@@ -652,3 +652,12 @@
 - [x] Verify buttons visible even when scrolling
 - [x] Verify buttons not below fold on large empty content
 - [x] Test premium OS sheet feel
+
+## P0 Bug - Notes Drawer Interaction Issues (Jan 10, 2026)
+
+- [x] Fix Notes drawer scrolling and button click issues
+  - [x] Diagnose z-index layering and pointer-events configuration
+  - [x] Enable drawer content scrolling with overflow-y: auto
+  - [x] Implement sticky footer for Save/Cancel buttons
+  - [x] Verify buttons are clickable and not blocked by overlays
+  - [x] Test on desktop and tablet
