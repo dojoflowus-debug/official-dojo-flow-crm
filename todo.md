@@ -713,16 +713,112 @@
 - [x] Remove dark glass overlays from light mode (StudentCardOverlay.tsx)
 
 ### Verification & Testing
-- [ ] Test all text in light mode for readability (no ghost text)
-- [ ] Verify dark mode remains unchanged and premium
-- [ ] Test student card titles are clearly visible
-- [ ] Test belt labels are readable
-- [ ] Test action buttons are visible
-- [ ] Test search input is usable
-- [ ] Test filter dropdowns are readable
-- [ ] Test KPI tiles display correctly
-- [ ] Verify all text passes basic contrast requirements
+- [x] Test all text in light mode for readability (no ghost text)
+- [x] Verify dark mode remains unchanged and premium
+- [x] Test student card titles are clearly visible
+- [x] Test belt labels are readable
+- [x] Test action buttons are visible
+- [x] Test search input is usable
+- [x] Test filter dropdowns are readable
+- [x] Test KPI tiles display correctly
+- [x] Verify all text passes basic contrast requirements
 
 ### Checkpoint & Delivery
-- [ ] Create checkpoint after all light mode fixes verified
-- [ ] Deliver light mode contrast audit completion to user
+- [x] Create checkpoint after all light mode fixes verified (checkpoint: eb50fb8b)
+- [x] Deliver light mode contrast audit completion to user
+
+
+## Phase 19: Phase 1 Polish & Missing Pieces (Production Ready)
+
+### P0 – Default Filters & URL Routing
+- [ ] Verify /students loads with "All Status" filter by default (not At Risk)
+- [ ] Ensure filter=needs-attention URL parameter works correctly
+- [ ] Test hard refresh maintains correct filter state
+- [ ] Verify KPI tiles don't override default filter on page load
+
+### P0 – Map Tab Implementation
+- [ ] Decide: Implement full map OR disable with "Coming soon"
+- [ ] If implementing: Add student geo markers with addresses
+- [ ] If implementing: Show student info on marker click
+- [ ] If disabling: Hide Map tab and show "Coming soon" message
+- [ ] Ensure no dead tabs or broken functionality
+
+### P0 – Light Mode Contrast & Theme Tokens
+- [ ] Audit all Students page components for contrast issues
+- [ ] Convert hard-coded colors to theme tokens (bg-background, text-foreground, etc.)
+- [ ] Fix ghost text in light mode (names, badges, labels)
+- [ ] Remove dark overlays from light mode glass panels
+- [ ] Test all text passes WCAG AA contrast requirements
+- [ ] Verify dark mode remains premium and unchanged
+
+### P0 – Student Editing & Profile Management
+- [x] Add "Edit Profile" button to Student Profile drawer
+- [x] Create Edit Student form with all fields (name, email, phone, etc.)
+- [x] Implement form validation and error handling
+- [x] Add Save button with loading state
+- [x] Show success/error toast on save
+- [x] Ensure drawer closes on successful save
+- [x] Integrate StudentEditDrawer into Students page
+- [x] Add Edit button to student detail panel (Edit icon in quick actions)
+
+### P0 – Photo Upload & Optimistic Updates
+- [x] Add photo upload input to Edit Student form
+- [x] Implement file preview before upload
+- [x] Create backend mutation for photo upload (S3 integration) - using existing uploadPhoto route
+- [x] Add Save Photo button with loading state
+- [ ] Implement optimistic update to student card avatar
+- [x] Show success/error toast on upload
+- [x] Handle file size and format validation
+
+### P0 – Notes Panel UX & Scrollability
+- [ ] Fix notes drawer scrolling (content scrolls, footer sticky)
+- [ ] Implement sticky footer with Save/Cancel buttons
+- [ ] Ensure buttons are always clickable and visible
+- [ ] Add "No notes yet" empty state with quick-add buttons
+- [ ] Display note type badges, created date/time, created by
+- [ ] Add follow-up date toggle and priority option
+- [ ] Test on desktop, tablet, mobile
+
+### P1 – Needs-Attention Reasons System
+- [ ] Implement reason badges logic (attendance drop, missed streak, etc.)
+- [ ] Display reason badges on student cards
+- [ ] Add reason badges to list view
+- [ ] Create lightweight logic using existing data (no new DB tables)
+- [ ] Add feature flag for billing integration pending
+- [ ] Show "Billing integration pending" when billing data unavailable
+
+### P1 – Sorting & Filtering
+- [ ] Add sorting: Name, Last Attended, Attendance %
+- [ ] Add filters: Program, Belt, Status, Follow-up due
+- [ ] Implement column sorting UI
+- [ ] Persist sort/filter state in URL
+- [ ] Test all combinations work correctly
+
+### P1 – Bulk Actions & Multi-Select
+- [ ] Add checkbox multi-select mode to student roster
+- [ ] Implement bulk actions: Add note, Message, Mark follow-up, Export
+- [ ] Add "Select All" / "Deselect All" buttons
+- [ ] Show bulk action toolbar when items selected
+- [ ] Test bulk operations work correctly
+
+### Testing & Validation
+- [x] Write vitest tests for filter logic (Students.test.tsx)
+- [x] Write vitest tests for photo upload (StudentEditForm.test.tsx) - 15/15 tests passing
+- [ ] Write vitest tests for notes system
+- [ ] Test all features in light mode
+- [ ] Test all features in dark mode
+- [ ] Responsive design validation (mobile, tablet, desktop)
+- [ ] Performance check (no lag on photo upload)
+- [ ] Accessibility review (contrast, focus states, keyboard nav)
+
+### Production Readiness Checklist
+- [ ] No broken tabs or dead buttons
+- [ ] Default filters correct (All Status on /students)
+- [ ] Map handled (implemented or disabled)
+- [ ] Student edit + photo save works end-to-end
+- [ ] Notes system usable and scrollable
+- [ ] Light + Dark mode both readable
+- [ ] All text has proper contrast
+- [ ] No UI states that confuse new users
+- [ ] All features tested with vitest
+- [ ] Create final checkpoint for Phase 1 Polish

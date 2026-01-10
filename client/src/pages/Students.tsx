@@ -29,6 +29,7 @@ import StudentCard from '@/components/StudentCard';
 import { AddStudentModal } from '@/components/AddStudentModalContent';
 import StudentMap from '@/components/StudentMap';
 import { StudentNotesDrawer } from '@/components/StudentNotesDrawer';
+import { StudentEditDrawer } from '@/components/StudentEditDrawer';
 
 // Icons
 import {
@@ -105,6 +106,7 @@ function StudentsDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
 
   useEffect(() => {
@@ -395,6 +397,18 @@ function StudentsDashboard() {
                       <Button size="sm" variant="ghost" className="w-8 h-8 p-0">
                         <Mail className="w-4 h-4" />
                       </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="w-8 h-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedStudent(student);
+                          setShowEditDrawer(true);
+                        }}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -566,6 +580,26 @@ function StudentsDashboard() {
         }}
         isOpen={showDrawer && !!selectedStudent}
         onClose={handleCloseDrawer}
+      />
+
+      <StudentEditDrawer
+        studentId={selectedStudent?.id || 0}
+        studentData={{
+          firstName: selectedStudent?.firstName,
+          lastName: selectedStudent?.lastName,
+          email: selectedStudent?.email || undefined,
+          phone: selectedStudent?.phone || undefined,
+          beltRank: selectedStudent?.beltRank || undefined,
+          program: selectedStudent?.program || undefined,
+          status: selectedStudent?.status || undefined,
+          photoUrl: selectedStudent?.photoUrl || undefined,
+        }}
+        isOpen={showEditDrawer && !!selectedStudent}
+        onClose={() => setShowEditDrawer(false)}
+        onSave={() => {
+          setShowEditDrawer(false);
+          window.location.reload();
+        }}
       />
     </div>
   );
