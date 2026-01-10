@@ -547,3 +547,38 @@
 - [ ] Test photo upload and persistence (manual testing)
 - [ ] Test photo appears across all surfaces (manual testing)
 - [ ] Verify touch-friendly UX on tablet/mobile (manual testing)
+
+
+## Phase 18: Save Photo Feature (P0 - COMPLETED)
+
+### UI Actions & State Management
+- [x] Add Save Photo button (primary, disabled until changes detected)
+- [x] Add Cancel button (secondary)
+- [x] Add Remove Photo button (only if student has existing photo)
+- [x] Implement change detection (new file or crop/zoom/position changed)
+
+### Image Generation & Upload
+- [x] Generate final cropped square image on client-side canvas
+- [x] Upload cropped image to S3 storage
+- [x] Handle upload errors gracefully
+
+### Database & Query Management
+- [x] Update student record with photoUrl
+- [x] Invalidate/refetch student query after save
+- [x] Ensure photo updates everywhere (grid + profile)
+
+### UX Feedback & Interactions
+- [x] Add "Saving…" loading state on Save button
+- [x] Add success toast: "Photo updated"
+- [x] Add error toast with details
+- [x] Prevent double-submit during save
+- [x] Implement keyboard support (Enter=Save, Esc=Cancel)
+
+### Testing & Verification
+- [x] Upload photo → adjust crop → click Save Photo → photo persists
+- [x] Cancel returns without changes
+- [x] Remove Photo resets to initials avatar and persists
+- [x] Hard refresh still shows saved photo
+- [x] Photo appears in Students page cards
+- [x] Photo appears in Student profile header
+- [x] No console errors, no broken state

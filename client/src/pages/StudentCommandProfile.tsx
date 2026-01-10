@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ChevronLeft, Phone, Mail, MessageSquare, Edit, Save, X, AlertCircle, CheckCircle2, Calendar, MapPin, Users, FileText, Camera } from 'lucide-react';
+import { ChevronLeft, Phone, Mail, MessageSquare, Edit, Save, X, AlertCircle, CheckCircle2, Calendar, MapPin, Users, FileText, Camera, Check, AlertTriangle } from 'lucide-react';
 import { PhotoUploadModal } from '@/components/PhotoUploadModal';
+import { useToast } from '@/hooks/use-toast';
 
 interface EditableField {
   field: string;
@@ -23,6 +24,7 @@ function StudentCommandProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const studentId = id ? parseInt(id) : 0;
+  const { toast } = useToast();
 
   const [editingFields, setEditingFields] = useState<Record<string, EditableField>>({});
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
@@ -32,7 +34,7 @@ function StudentCommandProfile() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
-  const { data: studentDetail, isLoading, error } = trpc.students.getDetail.useQuery(
+  const { data: studentDetail, isLoading, error, refetch: refetchStudent } = trpc.students.getDetail.useQuery(
     { id: studentId },
     { enabled: !!studentId }
   );
@@ -140,9 +142,21 @@ function StudentCommandProfile() {
         base64Data,
         mimeType,
       });
-      window.location.reload();
+      // Refetch student data to update photo everywhere
+      await refetchStudent();
+      toast({
+        title: 'Photo updated',
+        description: 'Student photo has been saved successfully',
+        variant: 'default',
+      });
     } catch (err) {
-      setPhotoError(err instanceof Error ? err.message : 'Failed to upload photo');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to upload photo';
+      setPhotoError(errorMsg);
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive',
+      });
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -154,9 +168,21 @@ function StudentCommandProfile() {
     setPhotoError(null);
     try {
       await removePhotoMutation.mutateAsync({ studentId: student.id });
-      window.location.reload();
+      // Refetch student data to update photo everywhere
+      await refetchStudent();
+      toast({
+        title: 'Photo removed',
+        description: 'Student photo has been removed successfully',
+        variant: 'default',
+      });
     } catch (err) {
-      setPhotoError(err instanceof Error ? err.message : 'Failed to remove photo');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to remove photo';
+      setPhotoError(errorMsg);
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive',
+      });
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -548,6 +574,12 @@ function StudentCommandProfile() {
           currentPhotoUrl={student?.photoUrl}
           onRemovePhoto={handleRemovePhoto}
           isRemovingPhoto={isUploadingPhoto}
+          onSuccess={() => {
+            setPhotoError(null);
+          }}
+          onError={(error) => {
+            setPhotoError(error);
+          }}
         />
       </div>
     </BottomNavLayout>

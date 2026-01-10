@@ -14,6 +14,8 @@ interface PhotoUploadModalProps {
   currentPhotoUrl?: string | null;
   onRemovePhoto?: () => Promise<void>;
   isRemovingPhoto?: boolean;
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
 }
 
 export function PhotoUploadModal({
@@ -25,12 +27,16 @@ export function PhotoUploadModal({
   currentPhotoUrl,
   onRemovePhoto,
   isRemovingPhoto = false,
+  onSuccess,
+  onError,
 }: PhotoUploadModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
   const [cropZoom, setCropZoom] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [initialCropState, setInitialCropState] = useState({ x: 0, y: 0, zoom: 1 });
+  const [hasChanges, setHasChanges] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cropContainerRef = useRef<HTMLDivElement>(null);
@@ -42,8 +48,41 @@ export function PhotoUploadModal({
       setPreview(null);
       setCropPosition({ x: 0, y: 0 });
       setCropZoom(1);
+      setInitialCropState({ x: 0, y: 0, zoom: 1 });
+      setHasChanges(false);
     }
   }, [isOpen]);
+
+  // Detect changes in crop parameters or new file
+  useEffect(() => {
+    if (!selectedFile) {
+      setHasChanges(false);
+      return;
+    }
+
+    const cropChanged = 
+      cropPosition.x !== initialCropState.x ||
+      cropPosition.y !== initialCropState.y ||
+      cropZoom !== initialCropState.zoom;
+
+    setHasChanges(true);
+  }, [selectedFile, cropPosition, cropZoom, initialCropState]);
+
+  // Handle keyboard events
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && hasChanges && !isSaving) {
+        handleSave();
+      } else if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, hasChanges, isSaving]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -117,20 +156,24 @@ export function PhotoUploadModal({
   };
 
   const handleSave = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !hasChanges) return;
 
     try {
       setIsSaving(true);
       const cropped = await cropAndCompress();
       if (!cropped) {
-        alert('Failed to process image');
+        const errorMsg = 'Failed to process image';
+        onError?.(errorMsg);
         return;
       }
 
       await onSave(cropped.base64, cropped.mimeType);
+      onSuccess?.();
       onClose();
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save photo';
       console.error('Error saving photo:', err);
+      onError?.(errorMsg);
     } finally {
       setIsSaving(false);
     }
@@ -252,19 +295,20 @@ export function PhotoUploadModal({
                   </div>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full gap-2"
-                  onClick={() => {
-                    setCropPosition({ x: 0, y: 0 });
-                    setCropZoom(1);
-                  }}
-                >
-                  <RotateCw className="w-4 h-4" />
-                  Reset
-                </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full gap-2"
+              onClick={() => {
+                setCropPosition({ x: 0, y: 0 });
+                setCropZoom(1);
+                setInitialCropState({ x: 0, y: 0, zoom: 1 });
+              }}
+            >
+              <RotateCw className="w-4 h-4" />
+              Reset
+            </Button>
               </div>
             </div>
           )}
@@ -299,7 +343,8 @@ export function PhotoUploadModal({
             <Button
               type="button"
               onClick={handleSave}
-              disabled={!selectedFile || isLoading || isSaving}
+              disabled={!hasChanges || isLoading || isSaving}
+              title={!hasChanges ? 'Make changes to enable save' : 'Save photo (Enter)'}
             >
               {isSaving ? 'Saving...' : 'Save Photo'}
             </Button>
