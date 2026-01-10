@@ -604,3 +604,19 @@
 - [x] Verify photo appears after hard refresh
 - [x] Implement Remove Photo functionality
 - [x] Add TRPC query invalidation on mutation success
+
+## Current Issues - FIXED (2026-01-10)
+
+- [x] Fix TRPC JSON parsing error on /owner page
+  - Error: "Unexpected token '<', "<!doctype "... is not valid JSON"
+  - Root cause: Missing `stats` procedure in the `system` TRPC router
+  - When TRPC tried to call `trpc.system.stats.useQuery({})`, the endpoint didn't exist
+  - Request fell through to Vite's catch-all middleware and returned HTML error page instead of JSON
+  - Solution: Added `stats` procedure to systemRouter that:
+    - Uses protectedProcedure to ensure user is authenticated
+    - Takes z.void() as input (no parameters required)
+    - Calls getDashboardStats with the current organization ID from context
+    - Returns dashboard statistics (total students, active students, attendance, leads, etc.)
+    - Has error handling to return default empty stats on failure
+  - Page now loads successfully without JSON parsing errors
+
