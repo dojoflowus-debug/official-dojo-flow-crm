@@ -28,6 +28,7 @@ import {
 import StudentCardElevated from '@/components/StudentCardElevated'
 import StudentMap from '@/components/StudentMap'
 import DojoStatusStrip from '@/components/DojoStatusStrip'
+import { StudentNotesDrawer } from '@/components/StudentNotesDrawer'
 
 // Icons
 import {
@@ -81,6 +82,8 @@ function StudentsElevatedContent() {
   const [programFilter, setProgramFilter] = useState<string>('')
   const [currentPage, setCurrentPage] = useState(1)
   const [showAddStudentModal, setShowAddStudentModal] = useState(false)
+  const [selectedStudentForNotes, setSelectedStudentForNotes] = useState<Student | null>(null)
+  const [showNotesDrawer, setShowNotesDrawer] = useState(false)
 
   useEffect(() => {
     const filterParam = searchParams.get('filter')
@@ -120,6 +123,14 @@ function StudentsElevatedContent() {
 
   const handleSelectStudent = (student: Student) => {
     navigate(`/students/${student.id}`)
+  }
+
+  const handleOpenNotes = (studentId: number) => {
+    const student = students.find(s => s.id === studentId)
+    if (student) {
+      setSelectedStudentForNotes(student)
+      setShowNotesDrawer(true)
+    }
   }
 
 
@@ -283,7 +294,7 @@ function StudentsElevatedContent() {
                     onCall={() => console.log('Call', student.id)}
                     onText={() => console.log('Text', student.id)}
                     onEmail={() => console.log('Email', student.id)}
-                    onNotes={() => console.log('Notes', student.id)}
+                    onNotes={() => handleOpenNotes(student.id)}
                     onAssignProgram={() => console.log('Assign Program', student.id)}
                     onPromoteBelt={() => console.log('Promote Belt', student.id)}
                     onProfileClick={() => navigate(`/students/${student.id}`)}
@@ -340,6 +351,19 @@ function StudentsElevatedContent() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Notes Drawer */}
+      {selectedStudentForNotes && (
+        <StudentNotesDrawer
+          studentId={selectedStudentForNotes.id}
+          studentName={`${selectedStudentForNotes.firstName} ${selectedStudentForNotes.lastName}`}
+          isOpen={showNotesDrawer}
+          onClose={() => {
+            setShowNotesDrawer(false)
+            setSelectedStudentForNotes(null)
+          }}
+        />
+      )}
     </div>
   )
 

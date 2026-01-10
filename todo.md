@@ -422,3 +422,10 @@
 - [x] BUG: Invalid input validation error on /students page
   - Error: "Invalid input: expected object, received undefined"
   - Fixed: Changed leads.getByStatus input from z.object({}).optional() to z.void()
+
+## Current Issues - FIXED
+- [x] Fix student slide-out card feature not working when selecting notes
+  - Created StudentNotesDrawer component with slide-out animation from the right
+  - Integrated with StudentsElevated page to open drawer when Notes button is clicked
+  - Drawer shows student name, textarea for notes, and Save/Cancel buttons
+  - Connected to backend getNotes and addNote TRPC procedures
