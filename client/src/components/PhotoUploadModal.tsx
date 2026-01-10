@@ -232,13 +232,13 @@ export function PhotoUploadModal({
 
           {/* Preview and Crop */}
           {preview && (
-            <div className="space-y-3">
+            <div className="space-y-3 mt-2">
               <div className="text-sm text-muted-foreground">Preview (square crop)</div>
 
               {/* Crop Container */}
               <div
                 ref={cropContainerRef}
-                className="relative w-full aspect-square bg-black/20 rounded-lg overflow-hidden border border-white/10"
+                className="relative w-64 h-64 mx-auto aspect-square bg-black/20 rounded-lg overflow-hidden border border-white/10"
               >
                 <img
                   src={preview}
