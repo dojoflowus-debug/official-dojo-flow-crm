@@ -54,8 +54,12 @@ function StudentCommandProfile() {
         state: { field: 'state', value: student.state || '', isEditing: false },
         zipCode: { field: 'zipCode', value: student.zipCode || '', isEditing: false },
         guardianName: { field: 'guardianName', value: student.guardianName || '', isEditing: false },
+        guardianRelationship: { field: 'guardianRelationship', value: student.guardianRelationship || '', isEditing: false },
         guardianPhone: { field: 'guardianPhone', value: student.guardianPhone || '', isEditing: false },
         guardianEmail: { field: 'guardianEmail', value: student.guardianEmail || '', isEditing: false },
+        emergencyContactName: { field: 'emergencyContactName', value: student.emergencyContactName || '', isEditing: false },
+        emergencyContactRelationship: { field: 'emergencyContactRelationship', value: student.emergencyContactRelationship || '', isEditing: false },
+        emergencyContactPhone: { field: 'emergencyContactPhone', value: student.emergencyContactPhone || '', isEditing: false },
       };
       setEditingFields(fields);
     }
@@ -332,9 +336,47 @@ function StudentCommandProfile() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {['guardianName', 'guardianPhone', 'guardianEmail'].map((fieldName) => (
+                {['guardianName', 'guardianRelationship', 'guardianPhone', 'guardianEmail'].map((fieldName) => (
                   <div key={fieldName} className={fieldName === 'guardianEmail' ? 'md:col-span-2' : ''}>
                     <label className="text-xs text-muted-foreground font-medium capitalize">{fieldName}</label>
+                    {editingFields[fieldName]?.isEditing ? (
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          value={editingFields[fieldName].value}
+                          onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                          className="bg-white/5 border-white/10"
+                        />
+                        <Button size="sm" variant="ghost" onClick={() => toggleFieldEdit(fieldName)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between mt-1 p-2 rounded bg-white/[0.02] border border-white/5">
+                        <p className="text-sm">{editingFields[fieldName]?.value || '—'}</p>
+                        <Button size="sm" variant="ghost" onClick={() => toggleFieldEdit(fieldName)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Emergency Contact Section */}
+          <Card className="bg-white/[0.03] border border-white/10 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Phone className="w-5 h-5" />
+                Emergency Contact
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['emergencyContactName', 'emergencyContactRelationship', 'emergencyContactPhone'].map((fieldName) => (
+                  <div key={fieldName} className={fieldName === 'emergencyContactPhone' ? 'md:col-span-2' : ''}>
+                    <label className="text-xs text-muted-foreground font-medium capitalize">{fieldName.replace('emergencyContact', '')}</label>
                     {editingFields[fieldName]?.isEditing ? (
                       <div className="flex gap-2 mt-1">
                         <Input

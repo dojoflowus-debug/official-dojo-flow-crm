@@ -1239,6 +1239,9 @@ export const students = mysqlTable("students", {
 	guardianRelationship: varchar({ length: 50 }),
 	guardianPhone: varchar({ length: 20 }),
 	guardianEmail: varchar({ length: 320 }),
+	emergencyContactName: varchar({ length: 255 }),
+	emergencyContactPhone: varchar({ length: 20 }),
+	emergencyContactRelationship: varchar({ length: 50 }),
 	organizationId: int(),
 });
 

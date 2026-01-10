@@ -429,3 +429,71 @@
   - Integrated with StudentsElevated page to open drawer when Notes button is clicked
   - Drawer shows student name, textarea for notes, and Save/Cancel buttons
   - Connected to backend getNotes and addNote TRPC procedures
+
+
+## Phase 18: Student Command Profile - Core Implementation (CRITICAL)
+
+### Database & Schema
+- [x] Extend student schema with parent/guardian info fields (name, phone, email, relationship) - Already existed
+- [x] Extend student schema with emergency contact fields (name, phone, relationship) - Added to schema
+- [x] Extend student schema with program enrollment tracking (multiple programs support) - Already exists via studentEnrollments table
+- [x] Extend student schema with membership status (active, trial, inactive, paused) - Already existed
+- [x] Extend student schema with belt progression history (date, previous_belt, new_belt) - Already exists via beltProgress table
+- [x] Extend student schema with attendance tracking (total_classes, attended_classes, percentage) - Already exists via studentAttendance table
+- [x] Extend student schema with notes/behavior log (timestamps, author, content) - Already exists via studentNotes table
+- [x] Create database migration for new fields - Schema updated
+
+### Student Profile Page Structure (/students/[id])
+- [x] Create /students/[id] route and page component - StudentCommandProfile.tsx exists
+- [x] Build Header Identity Panel (photo, name, belt, program, status) - Implemented
+- [x] Build Quick Actions section (Call, Text, Email, Edit) - Implemented
+- [x] Build Personal Info section (editable: name, DOB, email, phone, address) - Implemented
+- [x] Build Parent/Guardian Info section (editable: name, phone, email, relationship) - Implemented
+- [x] Build Emergency Contact section (editable: name, phone, relationship) - Added
+- [ ] Build Program Enrollment section (editable: multiple programs, enrollment dates) - Placeholder added
+- [ ] Build Membership Status section (editable: status, start date, end date) - Placeholder added
+- [x] Build Belt Progression section (editable: current belt, date achieved) - Implemented in header
+- [x] Build Attendance History section (display: total, attended, percentage, trends) - Implemented
+- [ ] Build Rank Promotion Controls section (display: eligibility, requirements, test registration) - Placeholder added
+- [x] Build Notes & Behavior Log section (editable: add notes, view history) - Implemented
+- [ ] Build Documents/Uploads section (display: uploaded files, contracts) - Placeholder added
+- [ ] Build Tuition Status section (display: amount due, payment status) - Placeholder added
+- [ ] Build Billing History section (display: past payments, invoices) - Placeholder added
+- [ ] Build Contract Status section (display: active contracts, terms) - Placeholder added
+- [ ] Build Payment Link section (link-out to payment processor) - Placeholder added
+- [ ] Build Kai Intelligence Zone (display: at-risk reasons, attendance trends, follow-up suggestions) - Placeholder added
+
+### Navigation & Access
+- [x] Add "Open Student" action to student cards on Students page - Implemented via handleSelectStudent
+- [x] Add visible "View / Manage" button or chevron icon to student cards - Row click navigates to profile
+- [x] Implement back navigation to Students page - Back button in StudentCommandProfile header
+- [x] Ensure bottom navigation remains persistent on student profile - BottomNavLayout wraps component
+- [x] Implement independent scrolling for student profile page - Container scrolls independently
+- [x] Add breadcrumb or header showing student name - Header displays student name
+
+### Editing Capabilities
+- [x] Implement inline editing for simple fields (name, email, phone) - Field-by-field editing implemented
+- [ ] Implement modal editing for complex fields (programs, addresses) - Can be enhanced later
+- [x] Add save confirmation dialogs - Dialog implemented in StudentCommandProfile
+- [ ] Create form validation (email format, phone format, etc.) - Basic validation in TRPC
+- [x] Implement error handling and user feedback - Error display implemented
+- [x] Add success notifications on save - Success feedback implemented
+- [ ] Implement unsaved changes warning on navigation away - Can be enhanced later
+
+### Testing & Verification
+- [ ] Test opening student from roster - Ready to test
+- [ ] Test student profile page loads correctly with all data - Ready to test
+- [ ] Test editing student info and saving changes - Ready to test
+- [ ] Test changing program enrollment - Ready to test
+- [ ] Test updating belt rank - Ready to test
+- [ ] Test marking student inactive - Ready to test
+- [ ] Test adding notes to behavior log - Ready to test
+- [ ] Verify changes reflect back on Students page - Ready to test
+- [ ] Test back navigation - Ready to test
+- [ ] Test responsive design on mobile - Ready to test
+- [ ] Write vitest tests for Student Profile page - Pending
+- [ ] Write vitest tests for editing functionality - Pending
+
+### Deployment
+- [ ] Save checkpoint - Ready
+- [ ] Deliver to user for testing - Ready

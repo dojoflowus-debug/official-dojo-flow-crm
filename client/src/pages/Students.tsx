@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
 import BottomNavLayout from '@/components/BottomNavLayout';
@@ -96,6 +96,7 @@ const AT_RISK_REASONS = [
 
 function StudentsDashboard() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -174,8 +175,7 @@ function StudentsDashboard() {
   const totalPages = Math.ceil(totalStudents / 20);
 
   const handleSelectStudent = (student: Student) => {
-    setSelectedStudent(student);
-    setShowDrawer(true);
+    navigate(`/students/${student.id}`);
   };
 
   const handleCloseDrawer = () => {

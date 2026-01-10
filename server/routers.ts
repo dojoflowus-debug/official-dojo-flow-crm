@@ -1682,6 +1682,10 @@ export const appRouter = router({
         guardianRelationship: z.string().optional().nullable(),
         guardianPhone: z.string().optional().nullable(),
         guardianEmail: z.string().email().optional().nullable(),
+        // Emergency Contact fields
+        emergencyContactName: z.string().optional().nullable(),
+        emergencyContactRelationship: z.string().optional().nullable(),
+        emergencyContactPhone: z.string().optional().nullable(),
         // Photo URL
         photoUrl: z.string().optional().nullable(),
       }))
