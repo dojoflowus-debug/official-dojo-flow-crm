@@ -160,7 +160,7 @@ function AttentionStudentRow({
         rounded-xl p-3 cursor-pointer transition-all duration-200
         hover:shadow-lg hover:-translate-y-0.5
         ${getSeverityStyles()}
-        ${isDarkMode ? 'border border-white/5' : 'border border-slate-100'}
+        ${isDarkMode ? 'border border-border' : 'border border-border'}
       `}
     >
       <div className="flex items-center gap-3">
@@ -170,13 +170,13 @@ function AttentionStudentRow({
             <img 
               src={student.photo_url} 
               alt={`${student.first_name} ${student.last_name}`}
-              className="w-10 h-10 rounded-full object-cover border border-white/20"
+              className="w-10 h-10 rounded-full object-cover border border-border"
             />
           ) : (
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              isDarkMode ? 'bg-white/10' : 'bg-slate-100'
+              isDarkMode ? 'bg-muted' : 'bg-muted'
             }`}>
-              <User className={`h-5 w-5 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
+              <User className={`h-5 w-5 ${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'}`} />
             </div>
           )}
         </div>
@@ -184,7 +184,7 @@ function AttentionStudentRow({
         {/* Name & Program */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className={`font-medium text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            <h4 className={`font-medium text-sm truncate ${isDarkMode ? 'text-foreground' : 'text-foreground'}`}>
               {student.first_name} {student.last_name}
             </h4>
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -192,7 +192,7 @@ function AttentionStudentRow({
               student.status?.toLowerCase() === 'on hold' ? 'bg-yellow-500' : 'bg-red-500'
             }`} />
           </div>
-          <p className={`text-xs truncate ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>
+          <p className={`text-xs truncate ${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             {student.program || 'youth program'}
           </p>
         </div>
@@ -217,7 +217,7 @@ function AttentionStudentRow({
           }`}>
             {urgency.text}
           </p>
-          <p className={`text-[10px] ${isDarkMode ? 'text-white/40' : 'text-slate-500'}`}>
+          <p className={`text-[10px] ${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             {urgency.action}
           </p>
         </div>

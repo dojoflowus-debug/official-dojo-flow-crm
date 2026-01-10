@@ -675,3 +675,54 @@
   - [x] Test on desktop and tablet screens
   - [x] Verify no pointer-events blocking on footer
   - [x] Confirm footer sits above bottom navigation bar
+
+
+## Phase 18: Light Mode Contrast Audit (P0) - In Progress
+
+### Audit & Analysis
+- [x] Audit codebase for hard-coded opacity values (text-white/xx, text-black/xx, opacity-xx, border-white/10)
+- [x] Identify all glass morphism layers using dark overlays in light mode
+- [x] Document all instances of low-contrast text in Students page
+
+### Theme Token Definition
+- [x] Define proper light mode foreground color (dark readable text)
+- [x] Define muted-foreground for secondary text (still readable, not whisper-gray)
+- [x] Define border color for light mode (not white/10)
+- [x] Define card background for light mode (sufficient contrast vs background)
+- [x] Define background color for light mode
+- [x] Define muted background for light mode
+- [x] Add light mode CSS utilities to override hard-coded opacity values
+
+### Students Page Component Fixes
+- [x] Fix student card titles and names (StudentCard.tsx)
+- [x] Fix belt and program labels (StudentCard.tsx)
+- [x] Fix "Progress to next rank" text (StudentCard.tsx, StudentCardElevated.tsx)
+- [x] Fix icons and action labels (StudentCard.tsx)
+- [x] Fix search input and placeholder text (CSS utilities)
+- [x] Fix dropdown labels (CSS utilities)
+- [x] Fix KPI tiles text in light mode (CSS utilities)
+- [x] Fix filter chips and buttons (CSS utilities)
+- [x] Fix NeedsAttentionSection component
+- [x] Fix CommandStudentCard component
+- [x] Fix AddStudentModalContent component
+
+### Glass Morphism & Overlays
+- [x] Fix glass layers that use dark overlays in light mode (index.css)
+- [x] Fix gradient masks that sit on top of text (StudentCardElevated.tsx)
+- [x] Ensure light mode glass uses brighter surfaces with darker text
+- [x] Remove dark glass overlays from light mode (StudentCardOverlay.tsx)
+
+### Verification & Testing
+- [ ] Test all text in light mode for readability (no ghost text)
+- [ ] Verify dark mode remains unchanged and premium
+- [ ] Test student card titles are clearly visible
+- [ ] Test belt labels are readable
+- [ ] Test action buttons are visible
+- [ ] Test search input is usable
+- [ ] Test filter dropdowns are readable
+- [ ] Test KPI tiles display correctly
+- [ ] Verify all text passes basic contrast requirements
+
+### Checkpoint & Delivery
+- [ ] Create checkpoint after all light mode fixes verified
+- [ ] Deliver light mode contrast audit completion to user

@@ -140,7 +140,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
       <div
         className={`
           rounded-t-[24px] md:rounded-[24px] shadow-2xl overflow-hidden
-          ${isDarkMode ? 'bg-[#1C1C1E]/95 backdrop-blur-xl' : 'bg-white/95 backdrop-blur-xl'}
+          ${isDarkMode ? 'bg-card/95 backdrop-blur-xl' : 'bg-card/95 backdrop-blur-xl'}
           animate-in slide-in-from-bottom-4 duration-300
         `}
         style={{
@@ -149,19 +149,19 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
       >
         {/* Drag Handle - Mobile only */}
         <div className="md:hidden flex justify-center pt-3 pb-1">
-          <div className={`w-10 h-1 rounded-full ${isDarkMode ? 'bg-white/20' : 'bg-gray-300'}`} />
+          <div className={`w-10 h-1 rounded-full ${isDarkMode ? 'bg-border' : 'bg-border'}`} />
         </div>
 
         {/* Header with Tabs */}
-        <div className={`flex items-center justify-between px-4 md:px-6 py-3 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
+        <div className={`flex items-center justify-between px-4 md:px-6 py-3 border-b ${isDarkMode ? 'border-border' : 'border-border'}`}>
           {/* Tab Toggle */}
-          <div className={`flex p-1 rounded-full ${isDarkMode ? 'bg-white/10' : 'bg-gray-100'}`}>
+          <div className={`flex p-1 rounded-full ${isDarkMode ? 'bg-muted' : 'bg-muted'}`}>
             <button
               onClick={(e) => { e.stopPropagation(); setActiveTab('profile'); }}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 activeTab === 'profile'
-                  ? isDarkMode ? 'bg-white/20 text-white' : 'bg-white text-gray-900 shadow-sm'
-                  : isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
+                  ? isDarkMode ? 'bg-muted text-foreground' : 'bg-muted text-foreground shadow-sm'
+                  : isDarkMode ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Profile
@@ -170,8 +170,8 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
               onClick={(e) => { e.stopPropagation(); setActiveTab('details'); }}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 activeTab === 'details'
-                  ? isDarkMode ? 'bg-white/20 text-white' : 'bg-white text-gray-900 shadow-sm'
-                  : isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
+                  ? isDarkMode ? 'bg-muted text-foreground' : 'bg-muted text-foreground shadow-sm'
+                  : isDarkMode ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Details
@@ -184,7 +184,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
               variant="outline"
               size="sm"
               onClick={(e) => handleButtonClick(e, onViewNotes)}
-              className={`h-8 px-3 rounded-full text-xs ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
+              className={`h-8 px-3 rounded-full text-xs ${isDarkMode ? 'border-border text-foreground hover:bg-muted' : 'border-border text-foreground hover:bg-muted'}`}
             >
               <FileText className="h-3.5 w-3.5 mr-1" />
               Notes
@@ -193,7 +193,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
               variant="outline"
               size="sm"
               onClick={(e) => handleButtonClick(e, onEditProfile)}
-              className={`h-8 px-3 rounded-full text-xs ${isDarkMode ? 'border-white/20 text-white hover:bg-white/10' : ''}`}
+              className={`h-8 px-3 rounded-full text-xs ${isDarkMode ? 'border-border text-foreground hover:bg-muted' : 'border-border text-foreground hover:bg-muted'}`}
             >
               <Edit className="h-3.5 w-3.5 mr-1" />
               Edit
@@ -202,8 +202,8 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
               onClick={(e) => handleButtonClick(e, onClose)}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                 isDarkMode 
-                  ? 'bg-white/10 hover:bg-white/20 text-white' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  ? 'bg-muted hover:bg-muted/80 text-foreground' 
+                  : 'bg-muted hover:bg-muted/80 text-foreground'
               }`}
             >
               <X className="h-4 w-4" />
@@ -217,7 +217,7 @@ export const StudentCardOverlay: React.FC<StudentCardOverlayProps> = ({
           {activeTab === 'profile' && (
             <div className="flex flex-col md:flex-row md:items-stretch animate-in fade-in duration-200">
               {/* Left Section - Avatar and Basic Info */}
-              <div className={`flex-shrink-0 p-4 md:p-6 flex items-center gap-4 md:border-r ${isDarkMode ? 'md:border-white/10' : 'md:border-gray-100'}`}>
+              <div className={`flex-shrink-0 p-4 md:p-6 flex items-center gap-4 md:border-r ${isDarkMode ? 'md:border-border' : 'md:border-border'}`}>
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   {student.photo_url ? (

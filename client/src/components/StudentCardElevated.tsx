@@ -86,7 +86,7 @@ export default function StudentCardElevated({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl p-6 transition-all duration-500 hover:border-white/30 hover:shadow-2xl hover:shadow-blue-500/15 hover:-translate-y-2 hover:bg-gradient-to-br hover:from-white/[0.12] hover:to-white/[0.05]"
+      className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card/[0.08] to-card/[0.02] backdrop-blur-xl p-6 transition-all duration-500 hover:border-border/60 hover:shadow-2xl hover:shadow-blue-500/15 hover:-translate-y-2 hover:bg-gradient-to-br hover:from-card/[0.12] hover:to-card/[0.05]"
       onMouseEnter={() => {
         setIsHovered(true)
         setShowActions(true)
@@ -101,7 +101,7 @@ export default function StudentCardElevated({
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-500" />
       
       {/* Subtle cinematic light rays */}
-      <div className="absolute -inset-32 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-3xl" />
+      <div className="absolute -inset-32 bg-gradient-to-r from-transparent via-foreground/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-3xl" />
 
       {/* Content wrapper */}
       <div className="relative z-10 space-y-4">
@@ -123,7 +123,7 @@ export default function StudentCardElevated({
 
             {/* Activity pulse indicator */}
             {status === 'Active' && (
-              <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-emerald-400 ring-2 ring-white/20 animate-pulse shadow-lg shadow-emerald-500/50" />
+              <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-emerald-400 ring-2 ring-border animate-pulse shadow-lg shadow-emerald-500/50" />
             )}
           </div>
 
@@ -131,8 +131,8 @@ export default function StudentCardElevated({
           <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
-                  <h3 className="text-lg font-bold text-white truncate">{firstName} {lastName}</h3>
-                  <p className="text-sm text-slate-400 font-medium">{beltRank}</p>
+                  <h3 className="text-lg font-bold text-foreground truncate">{firstName} {lastName}</h3>
+                  <p className="text-sm text-muted-foreground font-medium">{beltRank}</p>
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ export default function StudentCardElevated({
                   </div>
                   
                   {/* Open Profile Chevron */}
-                  <div className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-white transition-all duration-200">
+                  <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground transition-all duration-200">
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </div>
@@ -157,7 +157,7 @@ export default function StudentCardElevated({
             )}
 
             {/* Attendance and activity info */}
-            <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
               {attendanceStreak > 0 && (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/10">
                   <Flame className="w-3 h-3 text-orange-400" />
@@ -176,10 +176,10 @@ export default function StudentCardElevated({
             {progressToNextBelt > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-medium">Progress to Next Rank</span>
-                  <span className="font-bold text-slate-200">{progressToNextBelt}%</span>
+                  <span className="text-muted-foreground font-medium">Progress to Next Rank</span>
+                  <span className="font-bold text-foreground/80">{progressToNextBelt}%</span>
                 </div>
-                <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden shadow-inner">
+                <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden shadow-inner">
                   <div
                     className={`h-full bg-gradient-to-r ${beltColors.halo} transition-all duration-700 ease-out rounded-full shadow-lg`}
                     style={{ width: `${progressToNextBelt}%` }}
@@ -227,14 +227,14 @@ export default function StudentCardElevated({
         )}
 
         {/* Bottom Row: Quick Actions */}
-        <div className={`flex items-center gap-2 pt-2 border-t border-white/5 transition-all duration-300 ${isHovered ? 'opacity-100' : 'opacity-60'}`}>
+        <div className={`flex items-center gap-2 pt-2 border-t border-border transition-all duration-300 ${isHovered ? 'opacity-100' : 'opacity-60'}`}>
           {onCall && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 onCall(id)
               }}
-              className="flex-1 p-2 rounded-lg hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition-all duration-200 text-sm font-medium hover:shadow-lg hover:shadow-blue-500/20"
+              className="flex-1 p-2 rounded-lg hover:bg-blue-500/20 text-muted-foreground hover:text-blue-400 transition-all duration-200 text-sm font-medium hover:shadow-lg hover:shadow-blue-500/20"
               title="Call"
             >
               <Phone className="w-4 h-4 inline mr-1" />
@@ -247,7 +247,7 @@ export default function StudentCardElevated({
                 e.stopPropagation()
                 onText(id)
               }}
-              className="flex-1 p-2 rounded-lg hover:bg-green-500/20 text-slate-400 hover:text-green-400 transition-all duration-200 text-sm font-medium hover:shadow-lg hover:shadow-green-500/20"
+              className="flex-1 p-2 rounded-lg hover:bg-green-500/20 text-muted-foreground hover:text-green-400 transition-all duration-200 text-sm font-medium hover:shadow-lg hover:shadow-green-500/20"
               title="Text"
             >
               <MessageSquare className="w-4 h-4 inline mr-1" />

@@ -222,12 +222,12 @@
   --secondary: oklch(0.50 0.08 70);
   --secondary-foreground: oklch(1 0 0);
   --muted: oklch(0.92 0.01 0); /* Light gray */
-  --muted-foreground: oklch(0.50 0 0); /* Medium gray text */
+  --muted-foreground: oklch(0.45 0 0); /* Darker gray text for better readability */
   --accent: oklch(0.62 0.22 15);
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.62 0.22 15);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0 0 0 / 0.08); /* Subtle dark border */
+  --border: oklch(0 0 0 / 0.12); /* More visible dark border */
   --input: oklch(0.92 0.01 0); /* Light gray input */
   --ring: oklch(0.62 0.22 15);
   --chart-1: oklch(0.62 0.22 15);
@@ -241,7 +241,7 @@
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0 0 0 / 0.05);
   --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0 0 0 / 0.08);
+  --sidebar-border: oklch(0 0 0 / 0.12);
   --sidebar-ring: oklch(0.62 0.22 15);
 }
 
@@ -659,4 +659,157 @@ h3 {
     top: 0.5rem;
     margin-bottom: 1rem;
   }
+}
+
+
+/* ===== Light Mode Specific Utilities ===== */
+
+/* Light mode glass panels - brighter surfaces with dark text */
+.light .glass-panel {
+  background: oklch(0.98 0.005 80 / 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid oklch(0 0 0 / 0.1);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.08);
+}
+
+.light .glass-panel:hover {
+  background: oklch(0.98 0.005 80 / 0.85);
+  border-color: oklch(0 0 0 / 0.15);
+  box-shadow: 0 12px 48px oklch(0 0 0 / 0.12);
+}
+
+/* Light mode soft cards */
+.light .soft-card {
+  background: oklch(0.98 0.005 80 / 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0 0 0 / 0.08);
+}
+
+.light .soft-card::before {
+  background: linear-gradient(to right, oklch(0 0 0 / 0), oklch(0 0 0 / 0.04), oklch(0 0 0 / 0));
+}
+
+.light .soft-card:hover {
+  background: oklch(0.98 0.005 80 / 0.65);
+  border-color: oklch(0 0 0 / 0.12);
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.08);
+}
+
+/* Light mode floating search */
+.light .floating-search-input {
+  background: oklch(0.98 0.005 80 / 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid oklch(0 0 0 / 0.1);
+  color: oklch(0.15 0 0);
+}
+
+.light .floating-search-input::placeholder {
+  color: oklch(0.45 0 0);
+}
+
+.light .floating-search-input:focus {
+  background: oklch(0.98 0.005 80 / 0.85);
+  border-color: oklch(0 0 0 / 0.15);
+  box-shadow: 0 0 0 3px oklch(0.62 0.22 15 / 0.1);
+}
+
+/* Light mode filter bar */
+.light .blur-filter-bar {
+  background: oklch(0.98 0.005 80 / 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0 0 0 / 0.08);
+}
+
+/* Light mode text utilities - replacing hard-coded white opacity */
+.light .text-foreground {
+  color: oklch(0.15 0 0);
+}
+
+.light .text-muted-foreground {
+  color: oklch(0.45 0 0);
+}
+
+/* Light mode border utilities */
+.light .border-border {
+  border-color: oklch(0 0 0 / 0.12);
+}
+
+/* Light mode background utilities */
+.light .bg-card {
+  background-color: oklch(1 0 0);
+}
+
+.light .bg-muted {
+  background-color: oklch(0.92 0.01 0);
+}
+
+/* Light mode modal overlays */
+.light [class*="bg-black/"] {
+  background-color: oklch(0 0 0 / 0.15) !important;
+}
+
+/* Light mode: Replace text-white opacity values with readable dark text */
+.light .text-white\/10,
+.light .text-white\/20,
+.light .text-white\/30,
+.light .text-white\/40,
+.light .text-white\/50,
+.light .text-white\/60,
+.light .text-white\/70,
+.light .text-white\/80,
+.light .text-white\/90 {
+  color: oklch(0.15 0 0) !important;
+}
+
+/* Light mode: Replace bg-white opacity with light backgrounds */
+.light .bg-white\/5,
+.light .bg-white\/10,
+.light .bg-white\/20 {
+  background-color: oklch(0.92 0.01 0) !important;
+}
+
+/* Light mode: Replace border-white opacity with dark borders */
+.light .border-white\/5,
+.light .border-white\/10,
+.light .border-white\/20 {
+  border-color: oklch(0 0 0 / 0.12) !important;
+}
+
+/* Light mode: Replace opacity utilities on text containers */
+.light [class*="opacity-"] {
+  /* Preserve opacity for images and non-text elements */
+}
+
+/* Light mode: Ensure readability in all text elements */
+.light p,
+.light span,
+.light label,
+.light button,
+.light a {
+  color: inherit;
+}
+
+/* Light mode: Fix specific component backgrounds */
+.light .bg-slate-900,
+.light .bg-slate-800,
+.light .bg-slate-700 {
+  background-color: oklch(0.92 0.01 0) !important;
+}
+
+/* Light mode: Fix specific component text */
+.light .text-slate-900,
+.light .text-slate-800,
+.light .text-slate-700 {
+  color: oklch(0.15 0 0) !important;
+}
+
+.light .text-slate-600,
+.light .text-slate-500,
+.light .text-slate-400 {
+  color: oklch(0.45 0 0) !important;
+}
+
+/* Light mode: Modal and overlay backgrounds */
+.light .fixed.inset-0 {
+  background-color: oklch(0 0 0 / 0.15) !important;
 }

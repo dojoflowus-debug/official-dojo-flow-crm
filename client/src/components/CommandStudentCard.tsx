@@ -176,7 +176,7 @@ export default function CommandStudentCard({
           ? 'border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)] bg-gradient-to-r from-blue-950/20 to-transparent'
           : 'border-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.08)] bg-gradient-to-r from-blue-50 to-transparent'
       default:
-        return isDarkMode ? 'border-white/10' : 'border-slate-200'
+        return isDarkMode ? 'border-border' : 'border-border'
     }
   }
   
@@ -186,7 +186,7 @@ export default function CommandStudentCard({
       case 'critical': return isDarkMode ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-100 text-red-700 border-red-200'
       case 'warning': return isDarkMode ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 'bg-yellow-100 text-yellow-700 border-yellow-200'
       case 'info': return isDarkMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-blue-100 text-blue-700 border-blue-200'
-      default: return isDarkMode ? 'bg-white/10 text-white/60' : 'bg-slate-100 text-slate-600'
+      default: return isDarkMode ? 'bg-muted text-muted-foreground' : 'bg-muted text-muted-foreground'
     }
   }
 
@@ -215,7 +215,7 @@ export default function CommandStudentCard({
           className={`absolute top-3 right-3 p-1 rounded-full transition-all ${
             isFavorite 
               ? 'text-yellow-500' 
-              : isDarkMode ? 'text-white/20 hover:text-white/40' : 'text-slate-300 hover:text-slate-400'
+              : isDarkMode ? 'text-muted-foreground hover:text-muted-foreground/80' : 'text-muted-foreground hover:text-muted-foreground/80'
           }`}
         >
           <Star className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
@@ -234,7 +234,7 @@ export default function CommandStudentCard({
                 urgencyLevel === 'critical' ? 'border-red-500' :
                 urgencyLevel === 'warning' ? 'border-yellow-500' :
                 urgencyLevel === 'info' ? 'border-blue-500' :
-                isDarkMode ? 'border-white/20' : 'border-slate-200'
+                isDarkMode ? 'border-border' : 'border-border'
               }`}
             />
           ) : (
@@ -242,9 +242,9 @@ export default function CommandStudentCard({
               urgencyLevel === 'critical' ? 'border-red-500 bg-red-500/10' :
               urgencyLevel === 'warning' ? 'border-yellow-500 bg-yellow-500/10' :
               urgencyLevel === 'info' ? 'border-blue-500 bg-blue-500/10' :
-              isDarkMode ? 'border-white/20 bg-white/5' : 'border-slate-200 bg-slate-100'
+              isDarkMode ? 'border-border bg-muted' : 'border-border bg-muted'
             }`}>
-              <User className={`h-6 w-6 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} />
+              <User className={`h-6 w-6 ${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'}`} />
             </div>
           )}
           {/* Status dot */}

@@ -83,7 +83,7 @@ export default function StudentCard({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-5 transition-all duration-300 hover:border-white/20 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:bg-white/[0.06]"
+      className="group relative overflow-hidden rounded-xl border border-border bg-card/[0.03] backdrop-blur-md p-5 transition-all duration-300 hover:border-border/60 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 hover:bg-card/[0.06]"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -106,7 +106,7 @@ export default function StudentCard({
           {/* Student info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-base font-bold text-white truncate">{firstName} {lastName}</h3>
+              <h3 className="text-base font-bold text-foreground truncate">{firstName} {lastName}</h3>
               {program && (
                 <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 whitespace-nowrap">
                   {program}
@@ -126,7 +126,7 @@ export default function StudentCard({
             </div>
 
             {/* Last check-in and attendance */}
-            <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
               {lastCheckIn && (
                 <span>{lastCheckIn}</span>
               )}
@@ -142,10 +142,10 @@ export default function StudentCard({
             {progressToNextBelt > 0 && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Progress</span>
-                  <span className="font-medium text-slate-300">{progressToNextBelt}% to next rank</span>
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="font-medium text-foreground/80">{progressToNextBelt}% to next rank</span>
                 </div>
-                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
                     style={{ width: `${progressToNextBelt}%` }}
@@ -197,7 +197,7 @@ export default function StudentCard({
             {onCall && (
               <button
                 onClick={() => onCall(id)}
-                className="p-2 rounded-lg hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition-all duration-200"
+                className="p-2 rounded-lg hover:bg-blue-500/20 text-muted-foreground hover:text-blue-400 transition-all duration-200"
                 title="Call"
               >
                 <Phone className="w-4 h-4" />
@@ -206,7 +206,7 @@ export default function StudentCard({
             {onText && (
               <button
                 onClick={() => onText(id)}
-                className="p-2 rounded-lg hover:bg-green-500/20 text-slate-400 hover:text-green-400 transition-all duration-200"
+                className="p-2 rounded-lg hover:bg-green-500/20 text-muted-foreground hover:text-green-400 transition-all duration-200"
                 title="Text"
               >
                 <MessageSquare className="w-4 h-4" />
@@ -215,7 +215,7 @@ export default function StudentCard({
             {onEmail && (
               <button
                 onClick={() => onEmail(id)}
-                className="p-2 rounded-lg hover:bg-purple-500/20 text-slate-400 hover:text-purple-400 transition-all duration-200"
+                className="p-2 rounded-lg hover:bg-purple-500/20 text-muted-foreground hover:text-purple-400 transition-all duration-200"
                 title="Email"
               >
                 <Mail className="w-4 h-4" />
@@ -224,7 +224,7 @@ export default function StudentCard({
             {onNotes && (
               <button
                 onClick={() => onNotes(id)}
-                className="p-2 rounded-lg hover:bg-yellow-500/20 text-slate-400 hover:text-yellow-400 transition-all duration-200"
+                className="p-2 rounded-lg hover:bg-yellow-500/20 text-muted-foreground hover:text-yellow-400 transition-all duration-200"
                 title="Notes"
               >
                 <FileText className="w-4 h-4" />
@@ -236,21 +236,21 @@ export default function StudentCard({
           <div className="relative">
             <button
               onClick={() => setShowActions(!showActions)}
-              className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-slate-200 transition-all duration-200"
+              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200"
               title="More actions"
             >
               <MoreVertical className="w-4 h-4" />
             </button>
 
             {showActions && (
-              <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 mt-2 w-48 bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
                 {onAssignProgram && (
                   <button
                     onClick={() => {
                       onAssignProgram(id)
                       setShowActions(false)
                     }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-blue-500/20 hover:text-blue-300 transition-all duration-150 flex items-center gap-2"
+                    className="w-full px-4 py-2.5 text-left text-sm text-foreground/80 hover:bg-blue-500/20 hover:text-blue-400 transition-all duration-150 flex items-center gap-2"
                   >
                     <Award className="w-4 h-4" />
                     Assign Program
@@ -262,7 +262,7 @@ export default function StudentCard({
                       onPromoteBelt(id)
                       setShowActions(false)
                     }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 transition-all duration-150 flex items-center gap-2"
+                    className="w-full px-4 py-2.5 text-left text-sm text-foreground/80 hover:bg-purple-500/20 hover:text-purple-400 transition-all duration-150 flex items-center gap-2"
                   >
                     <Zap className="w-4 h-4" />
                     Promote Belt
@@ -274,7 +274,7 @@ export default function StudentCard({
                       onProfileClick(id)
                       setShowActions(false)
                     }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-150 flex items-center gap-2 border-t border-white/10"
+                    className="w-full px-4 py-2.5 text-left text-sm text-foreground/80 hover:bg-muted hover:text-foreground transition-all duration-150 flex items-center gap-2 border-t border-border"
                   >
                     <ChevronRight className="w-4 h-4" />
                     View Profile
@@ -288,7 +288,7 @@ export default function StudentCard({
           {onProfileClick && (
             <button
               onClick={() => onProfileClick(id)}
-              className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-slate-200 transition-all duration-200"
+              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200"
               title="View profile"
             >
               <ChevronRight className="w-4 h-4" />

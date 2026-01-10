@@ -63,12 +63,12 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-background border border-white/10 rounded-lg z-50 shadow-xl animate-in fade-in zoom-in-95 duration-300 overflow-y-auto max-h-[90vh]">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-background border border-border rounded-lg z-50 shadow-xl animate-in fade-in zoom-in-95 duration-300 overflow-y-auto max-h-[90vh]">
         <div className="p-6 space-y-6">
           {/* Header */}
           <div className="flex items-start justify-between">
