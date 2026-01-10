@@ -1933,7 +1933,7 @@ export const appRouter = router({
     
     // Get student analytics and KPI metrics
     getAnalytics: protectedProcedure
-      .input(z.void())
+      .input(z.object({}).optional())
       .query(async ({ ctx }) => {
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");

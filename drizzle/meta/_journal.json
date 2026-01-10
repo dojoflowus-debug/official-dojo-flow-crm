@@ -372,6 +372,13 @@
       "when": 1768045420755,
       "tag": "0052_bouncy_corsair",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "5",
+      "when": 1768046289362,
+      "tag": "0053_kind_pyro",
+      "breakpoints": true
     }
   ]
 }
