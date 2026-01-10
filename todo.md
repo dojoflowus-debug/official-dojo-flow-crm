@@ -589,3 +589,18 @@
   - This matches the pattern used by other query procedures that don't require input
   - The error was caused by incorrect input validation schema
   - Student profile page now loads successfully
+
+## Photo Save Feature (COMPLETED)
+- [x] Add Save/Cancel/Remove buttons to PhotoUploadModal UI
+- [x] Implement client-side image cropping and export to JPEG blob
+- [x] Create server TRPC mutation uploadPhotoToStudent for photo upload and storage
+- [x] Update database schema with photoUrl field on students table
+- [x] Implement query invalidation for student detail and list queries
+- [x] Add logging to PhotoUploadModal for debugging
+- [x] Add logging to StudentCommandProfile for mutation tracking
+- [x] Add logging to server mutation for upload tracking
+- [x] Wire PhotoUploadModal into StudentCommandProfile page
+- [x] Test photo persistence after database operations
+- [x] Verify photo appears after hard refresh
+- [x] Implement Remove Photo functionality
+- [x] Add TRPC query invalidation on mutation success
