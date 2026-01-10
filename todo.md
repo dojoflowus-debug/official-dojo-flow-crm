@@ -582,3 +582,10 @@
 - [x] Photo appears in Students page cards
 - [x] Photo appears in Student profile header
 - [x] No console errors, no broken state
+
+## Current Issues - FIXED (Continued)
+- [x] Fix TRPC validation error "Invalid input: expected object, received undefined" on /students/:id page
+  - Changed `getAnalytics` procedure input from `z.object({}).optional()` to `z.void()`
+  - This matches the pattern used by other query procedures that don't require input
+  - The error was caused by incorrect input validation schema
+  - Student profile page now loads successfully
