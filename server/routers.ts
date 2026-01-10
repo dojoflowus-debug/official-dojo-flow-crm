@@ -2056,6 +2056,90 @@ export const appRouter = router({
         return result.filter(s => studentIds.includes(s.id));
       }),
     
+    // Upload photo and save to student record
+    uploadPhotoToStudent: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+        base64Data: z.string(), // base64 encoded image data (without data:image prefix)
+        mimeType: z.string(), // e.g., 'image/jpeg', 'image/png', 'image/heic'
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { storagePut } = await import("./storage");
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) {
+          throw new Error('No organization context found');
+        }
+        
+        // Verify student exists and belongs to user's organization
+        const [student] = await db.select().from(students).where(
+          eq(students.id, input.studentId)
+        );
+        if (!student || student.organizationId !== orgId) {
+          throw new Error('Student not found or does not belong to your organization');
+        }
+        
+        // Validate MIME type
+        const validMimeTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
+        if (!validMimeTypes.includes(input.mimeType)) {
+          throw new Error('Invalid image format. Supported formats: JPG, PNG, HEIC');
+        }
+        
+        // Generate unique file key
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const extension = input.mimeType.split('/')[1] || 'jpg';
+        const fileName = `student-${input.studentId}-${timestamp}-${randomSuffix}.${extension}`;
+        const fileKey = `student-photos/${input.studentId}/${fileName}`;
+        
+        // Convert base64 to buffer
+        const buffer = Buffer.from(input.base64Data, 'base64');
+        
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        
+        // Update student record with photo URL
+        await db.update(students).set({ photoUrl: url }).where(eq(students.id, input.studentId));
+        
+        return { success: true, url, photoUrl: url };
+      }),
+    
+    // Remove photo from student (revert to initials)
+    removePhoto: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getDb } = await import("./db");
+        const { students } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) {
+          throw new Error('No organization context found');
+        }
+        
+        // Verify student exists and belongs to user's organization
+        const [student] = await db.select().from(students).where(eq(students.id, input.studentId));
+        if (!student || student.organizationId !== orgId) {
+          throw new Error('Student not found or does not belong to your organization');
+        }
+        
+        // Remove photo URL
+        await db.update(students).set({ photoUrl: null }).where(eq(students.id, input.studentId));
+        
+        return { success: true };
+      }),
+    
     // Get student detail with related data
     getDetail: protectedProcedure
       .input(z.object({ id: z.number() }))

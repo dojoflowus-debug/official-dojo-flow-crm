@@ -19,7 +19,7 @@ const studentCardPayload = z.object({
   lastName: z.string(),
   email: z.string().nullable(),
   phone: z.string().nullable(),
-  dateOfBirth: z.date().nullable(),
+  dateOfBirth: z.string().nullable(),
   age: z.number().nullable(),
   beltRank: z.string().nullable(),
   status: z.enum(["Active", "Inactive", "On Hold"]),
@@ -36,8 +36,8 @@ const studentCardPayload = z.object({
   guardianRelationship: z.string().nullable(),
   guardianPhone: z.string().nullable(),
   guardianEmail: z.string().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 /**

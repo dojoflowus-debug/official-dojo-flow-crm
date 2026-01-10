@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ChevronLeft, Phone, Mail, MessageSquare, Edit, Save, X, AlertCircle, CheckCircle2, Calendar, MapPin, Users, FileText } from 'lucide-react';
+import { ChevronLeft, Phone, Mail, MessageSquare, Edit, Save, X, AlertCircle, CheckCircle2, Calendar, MapPin, Users, FileText, Camera } from 'lucide-react';
+import { PhotoUploadModal } from '@/components/PhotoUploadModal';
 
 interface EditableField {
   field: string;
@@ -27,6 +28,9 @@ function StudentCommandProfile() {
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const { data: studentDetail, isLoading, error } = trpc.students.getDetail.useQuery(
     { id: studentId },
@@ -39,6 +43,8 @@ function StudentCommandProfile() {
   );
 
   const updateMutation = trpc.students.update.useMutation();
+  const uploadPhotoMutation = trpc.students.uploadPhotoToStudent.useMutation();
+  const removePhotoMutation = trpc.students.removePhoto.useMutation();
   const student = studentDetail?.student;
 
   useEffect(() => {
@@ -124,6 +130,38 @@ function StudentCommandProfile() {
     }
   };
 
+  const handlePhotoUpload = async (base64Data: string, mimeType: string) => {
+    if (!student) return;
+    setIsUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      await uploadPhotoMutation.mutateAsync({
+        studentId: student.id,
+        base64Data,
+        mimeType,
+      });
+      window.location.reload();
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Failed to upload photo');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!student) return;
+    setIsUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      await removePhotoMutation.mutateAsync({ studentId: student.id });
+      window.location.reload();
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Failed to remove photo');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <BottomNavLayout>
@@ -181,13 +219,22 @@ function StudentCommandProfile() {
           <Card className="bg-white/[0.03] border border-white/10 backdrop-blur-sm">
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div className="flex-shrink-0">
-                  <Avatar className="w-24 h-24 ring-4 ring-white/10">
-                    <AvatarImage src={student.photoUrl || undefined} />
-                    <AvatarFallback className="text-lg font-bold">
-                      {`${student.firstName?.charAt(0) || ''}${student.lastName?.charAt(0) || ''}`}
-                    </AvatarFallback>
-                  </Avatar>
+                <div className="flex-shrink-0 relative group">
+                  <button
+                    onClick={() => setShowPhotoUpload(true)}
+                    className="relative cursor-pointer transition-all hover:opacity-80"
+                  >
+                    <Avatar className="w-24 h-24 ring-4 ring-white/10">
+                      <AvatarImage src={student.photoUrl || undefined} />
+                      <AvatarFallback className="text-lg font-bold">
+                        {`${student.firstName?.charAt(0) || ''}${student.lastName?.charAt(0) || ''}`}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                  </button>
+                  <p className="text-xs text-muted-foreground text-center mt-2">Click to change</p>
                 </div>
 
                 <div className="flex-1 space-y-4">
@@ -490,6 +537,18 @@ function StudentCommandProfile() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Photo Upload Modal */}
+        <PhotoUploadModal
+          isOpen={showPhotoUpload}
+          onClose={() => setShowPhotoUpload(false)}
+          onSave={handlePhotoUpload}
+          isLoading={isUploadingPhoto}
+          error={photoError}
+          currentPhotoUrl={student?.photoUrl}
+          onRemovePhoto={handleRemovePhoto}
+          isRemovingPhoto={isUploadingPhoto}
+        />
       </div>
     </BottomNavLayout>
   );

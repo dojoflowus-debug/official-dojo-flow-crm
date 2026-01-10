@@ -1,0 +1,46 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'student_%' ORDER BY TABLE_NAME;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'student_%' ORDER BY TABLE_NAME;",
+  "rows": [
+    {
+      "TABLE_NAME": "student_accounts"
+    },
+    {
+      "TABLE_NAME": "student_attendance"
+    },
+    {
+      "TABLE_NAME": "student_contacts"
+    },
+    {
+      "TABLE_NAME": "student_documents"
+    },
+    {
+      "TABLE_NAME": "student_enrollments"
+    },
+    {
+      "TABLE_NAME": "student_merchandise"
+    },
+    {
+      "TABLE_NAME": "student_message_attachments"
+    },
+    {
+      "TABLE_NAME": "student_messages"
+    },
+    {
+      "TABLE_NAME": "student_notes"
+    },
+    {
+      "TABLE_NAME": "student_password_reset_tokens"
+    },
+    {
+      "TABLE_NAME": "student_passwords"
+    },
+    {
+      "TABLE_NAME": "students"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nstudent_accounts\nstudent_attendance\nstudent_contacts\nstudent_documents\nstudent_enrollments\nstudent_merchandise\nstudent_message_attachments\nstudent_messages\nstudent_notes\nstudent_password_reset_tokens\nstudent_passwords\nstudents\n",
+  "stderr": "",
+  "execution_time_ms": 401
+}

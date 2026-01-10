@@ -158,7 +158,8 @@ export default function KioskCheckIn() {
             name: checkInResult.student.name,
             belt: checkInResult.student.belt_rank || 'White Belt',
             streak: 5,
-            class: 'Your next scheduled class'
+            class: 'Your next scheduled class',
+            photoUrl: checkInResult.student.photoUrl
           });
           setCheckedIn(true);
           toast.success(`Welcome, ${checkInResult.student.name}!`);
@@ -191,7 +192,8 @@ export default function KioskCheckIn() {
             name: checkInResult.student.name,
             belt: checkInResult.student.belt_rank || 'White Belt',
             streak: 5,
-            class: 'Your next scheduled class'
+            class: 'Your next scheduled class',
+            photoUrl: checkInResult.student.photoUrl
           });
           setCheckedIn(true);
           toast.success(`Welcome, ${checkInResult.student.name}!`);
@@ -211,6 +213,17 @@ export default function KioskCheckIn() {
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-2xl w-full border-slate-800 bg-slate-900/50 backdrop-blur-sm p-12">
           <div className="text-center space-y-6">
+            {/* Student Photo */}
+            {studentData.photoUrl && (
+              <div className="flex justify-center">
+                <img
+                  src={studentData.photoUrl}
+                  alt={studentData.name}
+                  className="w-32 h-32 rounded-full object-cover border-4 border-green-500 shadow-lg"
+                />
+              </div>
+            )}
+            
             <div className="flex justify-center">
               <div className="p-6 rounded-full bg-gradient-to-br from-green-600 to-green-700 shadow-lg">
                 <CheckCircle2 className="h-20 w-20 text-white" />

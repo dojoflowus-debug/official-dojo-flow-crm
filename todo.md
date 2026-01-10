@@ -497,3 +497,53 @@
 ### Deployment
 - [ ] Save checkpoint - Ready
 - [ ] Deliver to user for testing - Ready
+
+## Current Issues - FIXED (Session 2)
+
+- [x] Fix database error: student_tuition table not created
+  - Created the `student_tuition` table in the database with proper schema
+  - Table includes: id, studentId, amount, dueDate, paidDate, status, paymentMethod, notes, createdAt, updatedAt
+  - Added indexes for performance: idx_tuition_student, idx_tuition_status, idx_tuition_due_date
+
+- [x] Fix TRPC validation error on student detail page
+  - Changed kaiDataRouter output schema to use string types for date fields instead of z.date()
+  - Database returns timestamps as strings, not Date objects
+  - Updated studentCardPayload schema: dateOfBirth, createdAt, updatedAt now use z.string() instead of z.date()
+  - This fixes the "Invalid input: expected object, received undefined" validation error
+
+- [x] Verify student detail page loads correctly
+  - Student profile page now loads without TRPC validation errors
+  - Student data displays properly with all fields
+
+
+## Phase 18: Student Photo Management System (P0 - CURRENT)
+
+### Architecture & Storage Setup
+- [x] Audit codebase and design photo system architecture
+- [x] Set up S3 storage integration for photo uploads (using existing storage solution)
+- [x] Implement photo upload API endpoint with validation (JPG, PNG, HEIC)
+- [x] Implement photo resize/compress and square crop logic
+- [x] Update student schema to store photo URL
+
+### Photo Upload UI Component
+- [x] Build photo upload UI component with preview
+- [x] Implement square crop interface
+- [x] Add photo removal (revert to initials) functionality
+- [x] Add "Change Photo" button and camera icon overlay to student profile
+- [x] Integrate upload flow into Student Command Profile page
+
+### System-Wide Propagation
+- [x] Propagate photos to Students page cards (already supported)
+- [x] Propagate photos to student profile header
+- [x] Propagate photos to kiosk check-in
+- [ ] Propagate photos to floor plans (future enhancement)
+- [ ] Propagate photos to Kai context panels (future enhancement)
+
+### Permissions, Error Handling & Testing
+- [x] Implement permission checks (staff/admin only)
+- [x] Add error handling and validation
+- [x] Write vitest tests for photo upload component
+- [x] Write backend tests for photo upload endpoints
+- [ ] Test photo upload and persistence (manual testing)
+- [ ] Test photo appears across all surfaces (manual testing)
+- [ ] Verify touch-friendly UX on tablet/mobile (manual testing)
