@@ -35,7 +35,7 @@ export function registerOAuthRoutes(app: Express) {
         name: userInfo.name || null,
         email: userInfo.email ?? null,
         loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-        lastSignedIn: new Date(),
+        lastSignedIn:new Date().toISOString().toISOString(),
       });
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {

@@ -195,7 +195,7 @@ export const kaiOnboardingRouter = router({
         currentStep: 5, // Completed
         isVerified: 1,
         isCompleted: 1,
-        completedAt: new Date(),
+        completedAt:new Date().toISOString(),
         accountData: JSON.stringify({
           name: input.ownerName,
           email: input.ownerEmail,

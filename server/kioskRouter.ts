@@ -177,7 +177,7 @@ export const kioskRouter = router({
           kioskEnabled: input.kioskEnabled ? 1 : 0,
           kioskSlug: slug,
           kioskSettings: settingsJson,
-          updatedAt: new Date(),
+          updatedAt:new Date().toISOString().toISOString(),
         })
         .where(eq(locations.id, input.locationId));
 

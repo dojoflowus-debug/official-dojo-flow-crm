@@ -82,7 +82,7 @@ export const webhookRouter = router({
           await db
             .update(webhookKeys)
             .set({
-              lastUsedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+              lastUsedAt: new Date().toISOString(),
               usageCount: keyRecord.usageCount + 1,
             })
             .where(eq(webhookKeys.id, keyRecord.id));
@@ -117,7 +117,7 @@ export const webhookRouter = router({
               utmCampaign: input.utm_campaign,
               utmContent: input.utm_content,
               utmTerm: input.utm_term,
-              updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+              updatedAt: new Date().toISOString(),
             })
             .where(eq(leads.id, existingLead.id));
           

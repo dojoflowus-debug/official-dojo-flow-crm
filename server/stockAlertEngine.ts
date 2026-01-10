@@ -116,7 +116,7 @@ export async function checkLowStockItems(): Promise<AlertCheckResult> {
           await db
             .update(stockAlerts)
             .set({
-              lastAlertSent: new Date(),
+              lastAlertSent:new Date().toISOString(),
               alertCount: existingAlert.alertCount + 1,
               quantityAtAlert: item.stockQuantity!,
             })
@@ -130,7 +130,7 @@ export async function checkLowStockItems(): Promise<AlertCheckResult> {
             alertType,
             quantityAtAlert: item.stockQuantity!,
             threshold: item.lowStockThreshold!,
-            lastAlertSent: new Date(),
+            lastAlertSent:new Date().toISOString(),
             alertCount: 1,
             isResolved: 0,
           });
@@ -303,7 +303,7 @@ export async function resolveAlert(alertId: number, resolvedBy?: number, notes?:
     .update(stockAlerts)
     .set({
       isResolved: 1,
-      resolvedAt: new Date().toISOString(),
+      resolvedAt:new Date().toISOString().toISOString(),
       resolvedBy,
       resolutionNotes: notes,
     })

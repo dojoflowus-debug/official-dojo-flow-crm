@@ -182,7 +182,7 @@ export const staffAuthRouter = router({
       // Update last used timestamp
       await db
         .update(staffPins)
-        .set({ lastUsed: new Date() })
+        .set({ lastUsed:new Date().toISOString() })
         .where(eq(staffPins.id, staffPin.id));
 
       // TODO: Link PIN to actual user account and get organizations

@@ -90,7 +90,7 @@ export const setupModeRouter = router({
       // Mark step as completed
       checklist[`step_${input.step}`] = {
         completed: true,
-        completedAt: new Date().toISOString(),
+        completedAt:new Date().toISOString().toISOString(),
         data: input.data,
       };
 
@@ -181,11 +181,11 @@ export const setupModeRouter = router({
         .set({
           onboardingStatus: "completed",
           onboardingStep: 8,
-          onboardingCompletedAt: new Date(),
+          onboardingCompletedAt:new Date().toISOString(),
         })
         .where(eq(organizations.id, input.organizationId));
 
-      return { status: "completed", completedAt: new Date() };
+      return { status: "completed", completedAt:new Date().toISOString() };
     }),
 
   /**

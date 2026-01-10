@@ -210,7 +210,7 @@ export const kaiCommandRouter = router({
           .update(kaiAlerts)
           .set({
             dismissed: 1,
-            dismissedAt: new Date().toISOString(),
+            dismissedAt:new Date().toISOString().toISOString(),
             dismissedBy: ctx.user.id,
           })
           .where(eq(kaiAlerts.id, input.alertId));

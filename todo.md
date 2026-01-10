@@ -822,3 +822,72 @@
 - [ ] No UI states that confuse new users
 - [ ] All features tested with vitest
 - [ ] Create final checkpoint for Phase 1 Polish
+
+
+## P0 — Platform Stability (Jan 10, 2026)
+
+### TypeScript & Schema Fixes
+- [x] Fix Date type assignment errors in database schema
+- [x] Resolve Drizzle schema validation issues (fixed .toISOString() calls)
+- [x] Ensure all migrations are properly typed
+- [x] Verify no red console errors on dev server
+- [x] Confirm all health checks pass
+
+## P1 — Leads Pipeline (Revenue Engine)
+
+### Drag & Drop Kanban Implementation
+- [x] Set up @dnd-kit library and dependencies
+- [x] Create Leads page with Kanban board layout
+- [x] Implement lead columns (New, Contacted, Intro Scheduled, Trial, Lost/Winback)
+- [x] Build drag-and-drop functionality for lead cards using @dnd-kit
+- [x] Add optimistic UI updates on drop
+- [x] Persist lead status changes to database via onStatusChange callback
+- [x] Update pipeline counts and dollar totals on status change
+- [x] Add visual polish (lift + shadow while dragging, column highlight on hover)
+- [x] Ensure mouse and touch support via PointerSensor
+- [ ] Write and run vitest tests for drag-and-drop functionality
+
+### Lead Card Actions
+- [ ] Create lead card component with action buttons
+- [ ] Implement Call action (phone integration)
+- [ ] Implement Text action (SMS integration)
+- [ ] Implement Email action (email integration)
+- [ ] Add lead detail slide-out drawer
+- [ ] Implement notes and follow-ups system
+- [ ] Add Kai quick actions (draft SMS, email templates, etc.)
+- [ ] Write vitest tests for lead card interactions
+
+## P2 — Students Page Finalization
+
+### Notes System UX
+- [ ] Implement timeline-style notes display
+- [ ] Add sticky footer for note input
+- [ ] Fix scroll behavior and spacing
+- [ ] Ensure notes persist to database
+- [ ] Write vitest tests for notes functionality
+
+### Light Mode Completion
+- [ ] Fix ghost text visibility in light mode
+- [ ] Implement true light palette colors
+- [ ] Test all components in light mode
+- [ ] Ensure contrast meets accessibility standards
+
+### Needs-Attention System
+- [ ] Display reason badges for at-risk students
+- [ ] Show attendance drop indicators
+- [ ] Show overdue payment indicators
+- [ ] Show cancellation pending indicators
+- [ ] Write vitest tests for needs-attention logic
+
+### Map Tab & Student Editing
+- [ ] Ensure Map tab is functional or disabled (no dead UI)
+- [ ] Verify student editing works correctly
+- [ ] Confirm photo uploads work
+- [ ] Test follow-ups system
+- [ ] Write vitest tests for student management
+
+### Final Validation
+- [ ] Responsive design across all breakpoints
+- [ ] No console errors or warnings
+- [ ] All data bindings correct
+- [ ] Save checkpoint before feature expansion

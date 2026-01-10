@@ -141,7 +141,7 @@ export const conversationsRouter = router({
       await db.update(messages)
         .set({
           status: "sent",
-          sentAt: new Date(),
+          sentAt:new Date().toISOString().toISOString(),
         })
         .where(eq(messages.id, message.insertId));
       
@@ -149,7 +149,7 @@ export const conversationsRouter = router({
       await db.update(conversations)
         .set({
           lastMessagePreview: input.content.substring(0, 100),
-          lastMessageAt: new Date(),
+          lastMessageAt:new Date().toISOString(),
         })
         .where(eq(conversations.id, input.conversationId));
       
@@ -185,14 +185,14 @@ export const conversationsRouter = router({
         senderType: "customer",
         status: "delivered",
         externalMessageId: input.externalMessageId,
-        deliveredAt: new Date(),
+        deliveredAt:new Date().toISOString(),
       });
       
       // Update conversation
       await db.update(conversations)
         .set({
           lastMessagePreview: input.content.substring(0, 100),
-          lastMessageAt: new Date(),
+          lastMessageAt:new Date().toISOString(),
           unreadCount: (conversation.unreadCount || 0) + 1,
         })
         .where(eq(conversations.id, conversation.id));

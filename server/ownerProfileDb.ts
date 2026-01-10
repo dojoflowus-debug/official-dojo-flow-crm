@@ -52,7 +52,7 @@ export async function updateOwnerProfile(
   
   await db
     .update(ownerProfiles)
-    .set({ ...data, updatedAt: new Date().toISOString() })
+    .set({ ...data, updatedAt:new Date().toISOString().toISOString().toISOString() })
     .where(eq(ownerProfiles.organizationId, organizationId));
   
   return getOwnerProfileByOrgId(organizationId);

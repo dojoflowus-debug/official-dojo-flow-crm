@@ -188,7 +188,7 @@ async function startServer() {
         await db
           .update(webhookKeys)
           .set({
-            lastUsedAt: new Date(),
+            lastUsedAt:new Date().toISOString().toISOString(),
             usageCount: keyRecord.usageCount + 1,
           })
           .where(eq(webhookKeys.id, keyRecord.id));
@@ -222,7 +222,7 @@ async function startServer() {
               utmCampaign: input.utm_campaign,
               utmContent: input.utm_content,
               utmTerm: input.utm_term,
-              updatedAt: new Date(),
+              updatedAt:new Date().toISOString().toISOString(),
             })
             .where(eq(leads.id, existingLead.id));
           
@@ -280,7 +280,7 @@ async function startServer() {
   app.get("/api/webhook/health", (req, res) => {
     res.json({
       status: "ok",
-      timestamp: new Date().toISOString(),
+      timestamp:new Date().toISOString().toISOString().toISOString(),
       service: "DojoFlow Webhook API",
     });
   });

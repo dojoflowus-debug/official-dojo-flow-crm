@@ -215,7 +215,7 @@ export const onboardingRouter = router({
         .update(onboardingProgress)
         .set({
           isCompleted: 1,
-          completedAt: new Date(),
+          completedAt:new Date().toISOString(),
         })
         .where(eq(onboardingProgress.userId, input.userId));
 

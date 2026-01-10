@@ -286,7 +286,7 @@ export const ownerAuthRouter = router({
       // Update last signed in
       await db
         .update(users)
-        .set({ lastSignedIn: new Date() })
+        .set({ lastSignedIn:new Date().toISOString().toISOString() })
         .where(eq(users.id, user.id));
 
       // Check if owner has an organization

@@ -61,7 +61,7 @@ async function processEnrollmentStep(enrollment: any) {
     await db.update(automationEnrollments)
       .set({
         status: "completed",
-        completedAt: new Date(),
+        completedAt:new Date().toISOString(),
       })
       .where(eq(automationEnrollments.id, enrollment.id));
     return;
@@ -99,7 +99,7 @@ async function processEnrollmentStep(enrollment: any) {
       await db.update(automationEnrollments)
         .set({
           status: "completed",
-          completedAt: new Date(),
+          completedAt:new Date().toISOString(),
         })
         .where(eq(automationEnrollments.id, enrollment.id));
 
@@ -145,7 +145,7 @@ async function moveToNextStep(enrollment: any, currentStep: any) {
     await db.update(automationEnrollments)
       .set({
         status: "completed",
-        completedAt: new Date(),
+        completedAt:new Date().toISOString(),
       })
       .where(eq(automationEnrollments.id, enrollment.id));
     return;

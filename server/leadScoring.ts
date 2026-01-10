@@ -176,7 +176,7 @@ export async function updateLeadScore(leadId: number): Promise<number> {
       .update(leads)
       .set({
         leadScore: score,
-        leadScoreUpdatedAt: new Date(),
+        leadScoreUpdatedAt:new Date().toISOString(),
       })
       .where(eq(leads.id, leadId));
   }

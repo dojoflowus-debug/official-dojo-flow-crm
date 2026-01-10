@@ -218,7 +218,7 @@ export const merchandiseRouter = router({
         .update(studentMerchandise)
         .set({
           fulfillmentStatus: "handed_out",
-          handedOutAt: new Date(),
+          handedOutAt:new Date().toISOString(),
           handedOutBy: input.handedOutBy,
           confirmationToken,
           confirmationTokenExpiry,
@@ -299,7 +299,7 @@ export const merchandiseRouter = router({
         .update(studentMerchandise)
         .set({
           fulfillmentStatus: "confirmed",
-          confirmedAt: new Date(),
+          confirmedAt:new Date().toISOString(),
           confirmationMethod: "email", // Could be detected from referrer
         })
         .where(eq(studentMerchandise.id, record.id));
@@ -342,7 +342,7 @@ export const merchandiseRouter = router({
         .set({
           fulfillmentStatus: "disputed",
           disputeReason: input.reason,
-          disputedAt: new Date(),
+          disputedAt:new Date().toISOString(),
         })
         .where(eq(studentMerchandise.id, record.merchandise.id));
 
@@ -455,7 +455,7 @@ export const merchandiseRouter = router({
         .update(merchandiseItems)
         .set({
           stockQuantity: input.newQuantity,
-          updatedAt: new Date(),
+          updatedAt:new Date().toISOString().toISOString(),
         })
         .where(eq(merchandiseItems.id, input.itemId));
 
@@ -622,8 +622,8 @@ export const merchandiseRouter = router({
         recipientEmails: null,
         recipientPhones: null,
         alertCooldownHours: 24,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt:new Date().toISOString().toISOString(),
+        updatedAt:new Date().toISOString().toISOString(),
       };
     }
 
@@ -655,7 +655,7 @@ export const merchandiseRouter = router({
         await db.update(alertSettings)
           .set({
             ...input,
-            updatedAt: new Date(),
+            updatedAt:new Date().toISOString().toISOString(),
           })
           .where(eq(alertSettings.id, existing.id));
       } else {

@@ -325,7 +325,7 @@ export const kioskDesignerRouter = router({
       setTimeout(async () => {
         await updateKioskSchedule((deployment as any).id, {
           deploymentStatus: 'deployed',
-          deployedAt: new Date().toISOString(),
+          deployedAt:new Date().toISOString().toISOString(),
         });
       }, 1000);
 

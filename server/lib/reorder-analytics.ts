@@ -197,7 +197,7 @@ export async function updateReorderAnalytics(itemId: number) {
       averageDailyUsage: velocity.toString(),
       reorderPoint,
       reorderQuantity,
-      lastCalculatedAt: new Date(),
+      lastCalculatedAt:new Date().toISOString(),
     })
     .where(eq(merchandiseItems.id, itemId));
 

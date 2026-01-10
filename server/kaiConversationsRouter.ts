@@ -32,9 +32,9 @@ export const kaiConversationsRouter = router({
         createdByUserId: ctx.user.id,
         title: input?.title || "New Conversation",
         summary: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastMessageAt: new Date(),
+        createdAt:new Date().toISOString().toISOString(),
+        updatedAt:new Date().toISOString().toISOString(),
+        lastMessageAt:new Date().toISOString(),
       });
 
       const conversationId = (result as any).insertId || result[0]?.id;
@@ -176,7 +176,7 @@ export const kaiConversationsRouter = router({
         role: input.role,
         content: input.content,
         metadata: input.metadata ? JSON.stringify(input.metadata) : null,
-        createdAt: new Date(),
+        createdAt:new Date().toISOString().toISOString(),
       });
 
       const messageId = (result as any).insertId || result[0]?.id;
@@ -185,8 +185,8 @@ export const kaiConversationsRouter = router({
       await db
         .update(conversations)
         .set({
-          lastMessageAt: new Date(),
-          updatedAt: new Date(),
+          lastMessageAt:new Date().toISOString(),
+          updatedAt:new Date().toISOString().toISOString(),
         })
         .where(eq(conversations.id, input.conversationId));
 
@@ -212,7 +212,7 @@ export const kaiConversationsRouter = router({
         .update(conversations)
         .set({
           title: input.title,
-          updatedAt: new Date(),
+          updatedAt:new Date().toISOString().toISOString(),
         })
         .where(
           and(
@@ -247,7 +247,7 @@ export const kaiConversationsRouter = router({
         .update(conversations)
         .set({
           summary: input.summary,
-          updatedAt: new Date(),
+          updatedAt:new Date().toISOString().toISOString(),
         })
         .where(
           and(
@@ -313,7 +313,7 @@ export const kaiConversationsRouter = router({
           .update(conversations)
           .set({
             summary: summary.substring(0, 1200),
-            updatedAt: new Date(),
+            updatedAt:new Date().toISOString().toISOString(),
           })
           .where(eq(conversations.id, input.conversationId));
 

@@ -400,6 +400,9 @@ export default function Leads({ onLogout, theme, toggleTheme }) {
                 setSelectedLead(lead)
                 setIsDrawerOpen(true)
               }}
+              onStatusChange={(leadId, newStatus) => {
+                updateStatus.mutate({ id: leadId, status: newStatus })
+              }}
             />
           )}
         </div>

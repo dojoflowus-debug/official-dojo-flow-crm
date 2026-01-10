@@ -317,7 +317,7 @@ export async function processClassReminders(): Promise<ReminderResult> {
             .set({
               status: 'sent',
               twilioMessageId: smsResult.messageId,
-              sentAt: new Date()
+              sentAt:new Date().toISOString().toISOString()
             })
             .where(eq(classReminders.id, Number(reminderId)));
           

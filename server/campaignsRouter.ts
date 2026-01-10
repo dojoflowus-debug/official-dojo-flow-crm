@@ -186,7 +186,7 @@ export const campaignsRouter = router({
       await db.update(campaigns)
         .set({
           status: "sending",
-          sentAt: new Date(),
+          sentAt:new Date().toISOString().toISOString(),
         })
         .where(eq(campaigns.id, input.id));
       
@@ -212,7 +212,7 @@ export const campaignsRouter = router({
           await db.update(campaignRecipients)
             .set({
               status: "sent",
-              sentAt: new Date(),
+              sentAt:new Date().toISOString().toISOString(),
             })
             .where(eq(campaignRecipients.id, recipient.id));
           
@@ -235,7 +235,7 @@ export const campaignsRouter = router({
           status: "sent",
           sentCount,
           failedCount,
-          completedAt: new Date(),
+          completedAt:new Date().toISOString(),
         })
         .where(eq(campaigns.id, input.id));
       

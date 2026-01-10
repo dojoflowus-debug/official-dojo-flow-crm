@@ -135,9 +135,9 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
         status: 'active',
         stripeSubscriptionId: subscriptionId,
         stripeCustomerId: customerId,
-        currentPeriodStart: new Date().toISOString(),
+        currentPeriodStart:new Date().toISOString(),
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        updatedAt: new Date().toISOString(),
+        updatedAt:new Date().toISOString(),
       })
       .where(eq(organizationSubscriptions.organizationId, orgId));
   } else {
@@ -148,10 +148,10 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       status: 'active',
       stripeSubscriptionId: subscriptionId,
       stripeCustomerId: customerId,
-      currentPeriodStart: new Date().toISOString(),
+      currentPeriodStart:new Date().toISOString(),
       currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
     });
   }
 
@@ -179,7 +179,7 @@ async function allocateMonthlyCredits(organizationId: number, credits: number) {
     await db.update(aiCreditBalance)
       .set({
         balance: existing.balance + credits,
-        updatedAt: new Date().toISOString(),
+        updatedAt:new Date().toISOString(),
       })
       .where(eq(aiCreditBalance.organizationId, organizationId));
   } else {
@@ -187,8 +187,8 @@ async function allocateMonthlyCredits(organizationId: number, credits: number) {
     await db.insert(aiCreditBalance).values({
       organizationId,
       balance: credits,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
     });
   }
 }
@@ -231,7 +231,7 @@ export async function handleSubscriptionRenewed(subscription: Stripe.Subscriptio
       .set({
         currentPeriodStart: new Date(subscriptionItem.current_period_start * 1000).toISOString(),
         currentPeriodEnd: new Date(subscriptionItem.current_period_end * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
+        updatedAt:new Date().toISOString(),
       })
       .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
   }
@@ -266,8 +266,8 @@ export async function handleSubscriptionCanceled(subscription: Stripe.Subscripti
   await db.update(organizationSubscriptions)
     .set({
       status: 'cancelled',
-      cancelledAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      cancelledAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
     })
     .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
 
@@ -298,7 +298,7 @@ export async function handlePaymentFailed(invoice: Stripe.Invoice) {
   await db.update(organizationSubscriptions)
     .set({
       status: 'past_due',
-      updatedAt: new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
     })
     .where(eq(organizationSubscriptions.organizationId, orgSub.organizationId));
 
@@ -383,7 +383,7 @@ export async function createCreditTopUpCheckout(params: {
   await db.update(creditTopUps)
     .set({
       stripePaymentIntentId: session.payment_intent as string || session.id,
-      updatedAt: new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
     })
     .where(eq(creditTopUps.id, topUpId));
 
@@ -434,7 +434,7 @@ export async function handleCreditTopUpComplete(session: Stripe.Checkout.Session
       .set({
         balance: existing.balance + creditAmount,
         totalPurchased: existing.totalPurchased + creditAmount,
-        updatedAt: new Date().toISOString(),
+        updatedAt:new Date().toISOString(),
       })
       .where(eq(aiCreditBalance.organizationId, parseInt(organizationId)));
   } else {

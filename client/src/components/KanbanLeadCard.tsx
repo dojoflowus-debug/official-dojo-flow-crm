@@ -23,6 +23,7 @@ interface KanbanLeadCardProps {
   onCall?: () => void;
   onText?: () => void;
   onSchedule?: () => void;
+  isDragging?: boolean;
 }
 
 export default function KanbanLeadCard({
@@ -32,7 +33,8 @@ export default function KanbanLeadCard({
   onClick,
   onCall,
   onText,
-  onSchedule
+  onSchedule,
+  isDragging = false
 }: KanbanLeadCardProps) {
   const fullName = `${lead.first_name} ${lead.last_name}`.trim();
   const score = lead.lead_score || Math.floor(Math.random() * 50) + 50;

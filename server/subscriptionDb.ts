@@ -71,7 +71,7 @@ export async function upsertOrganizationSubscription(data: InsertOrganizationSub
       trialEndsAt: data.trialEndsAt,
       stripeSubscriptionId: data.stripeSubscriptionId,
       stripeCustomerId: data.stripeCustomerId,
-      updatedAt: new Date().toISOString()
+      updatedAt:new Date().toISOString()
     }
   });
 }
@@ -85,9 +85,9 @@ export async function cancelOrganizationSubscription(organizationId: number, rea
   await db.update(organizationSubscriptions)
     .set({
       status: "cancelled",
-      cancelledAt: new Date().toISOString(),
+      cancelledAt:new Date().toISOString(),
       cancellationReason: reason,
-      updatedAt: new Date().toISOString()
+      updatedAt:new Date().toISOString()
     })
     .where(eq(organizationSubscriptions.organizationId, organizationId));
 }
@@ -157,7 +157,7 @@ export async function deductCredits(
       balance: newBalance,
       periodUsed: newPeriodUsed,
       totalUsed: newTotalUsed,
-      updatedAt: new Date().toISOString()
+      updatedAt:new Date().toISOString()
     })
     .where(eq(aiCreditBalance.organizationId, organizationId));
 
@@ -204,7 +204,7 @@ export async function addCredits(
     .set({
       balance: newBalance,
       totalPurchased: newTotalPurchased,
-      updatedAt: new Date().toISOString()
+      updatedAt:new Date().toISOString()
     })
     .where(eq(aiCreditBalance.organizationId, organizationId));
 
@@ -298,8 +298,8 @@ export async function completeCreditTopUp(topUpId: number): Promise<void> {
   await db.update(creditTopUps)
     .set({
       status: 'completed',
-      completedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      completedAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString()
     })
     .where(eq(creditTopUps.id, topUpId));
 
@@ -342,7 +342,7 @@ export async function resetMonthlyCredits(organizationId: number, newAllowance: 
       lastResetAt: now.toISOString(),
       nextResetAt: nextReset.toISOString(),
       lowCreditAlertSent: 0,
-      updatedAt: new Date().toISOString()
+      updatedAt:new Date().toISOString()
     })
     .where(eq(aiCreditBalance.organizationId, organizationId));
 

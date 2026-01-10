@@ -412,8 +412,8 @@ export const automationRouter = router({
             description: template.description,
             trigger: template.trigger,
             isActive: 0, // Start as inactive - user can activate when ready
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt:new Date().toISOString().toISOString(),
+            updatedAt:new Date().toISOString().toISOString(),
           })
           .returning();
         
@@ -429,8 +429,8 @@ export const automationRouter = router({
             waitUnit: step.waitUnit || null,
             messageContent: step.messageContent || null,
             emailSubject: step.emailSubject || null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt:new Date().toISOString().toISOString(),
+            updatedAt:new Date().toISOString().toISOString(),
           });
         }
         
