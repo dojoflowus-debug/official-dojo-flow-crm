@@ -661,3 +661,17 @@
   - [x] Implement sticky footer for Save/Cancel buttons
   - [x] Verify buttons are clickable and not blocked by overlays
   - [x] Test on desktop and tablet
+
+
+## P0 Fix - Notes Drawer Footer Layout (Jan 10, 2026)
+
+- [x] Fix Notes drawer footer blocking issue (footer under bottom nav)
+  - [x] Set drawer height to calc(100vh - 64px) to account for bottom nav
+  - [x] Implement sticky footer with proper z-index stacking
+  - [x] Add backdrop blur effect for premium UX polish
+  - [x] Apply safe-area-inset padding for mobile devices
+  - [x] Ensure scrollable content region with overflow-y-auto
+  - [x] Verify footer buttons (Save/Cancel) are always clickable
+  - [x] Test on desktop and tablet screens
+  - [x] Verify no pointer-events blocking on footer
+  - [x] Confirm footer sits above bottom navigation bar

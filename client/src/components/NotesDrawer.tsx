@@ -189,12 +189,13 @@ export default function NotesDrawer({
         role="presentation"
       />
 
-      {/* Drawer - z-index: 10000 (above backdrop), full height, flex column */}
+      {/* Drawer - z-index: 10000 (above backdrop), flex column, height accounts for bottom nav */}
       <div
-        className={`fixed top-0 right-0 h-screen w-[420px] bg-white shadow-2xl z-[10000] flex flex-col transition-transform duration-300 ease-out pointer-events-auto ${
+        className={`fixed top-0 right-0 w-[420px] bg-white shadow-2xl z-[10000] flex flex-col transition-transform duration-300 ease-out pointer-events-auto ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         style={{
+          height: 'calc(100vh - 64px)',
           boxShadow: '-10px 0 40px rgba(0, 0, 0, 0.15)',
         }}
       >
@@ -287,7 +288,7 @@ export default function NotesDrawer({
         </div>
 
         {/* Sticky Footer - Add Note Section */}
-        <div className="flex-shrink-0 border-t border-slate-200 bg-slate-50 p-4 space-y-3">
+        <div className="flex-shrink-0 border-t border-slate-200 bg-slate-50/80 backdrop-blur-sm p-4 space-y-3 sticky bottom-0 z-[1001]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           {!isAdding ? (
             <Button
               variant="outline"
@@ -348,8 +349,8 @@ export default function NotesDrawer({
           )}
         </div>
 
-        {/* Footer Info - Fixed at bottom */}
-        <div className="flex-shrink-0 p-3 border-t border-slate-200 bg-white">
+        {/* Footer Info - Sticky, positioned above footer */}
+        <div className="flex-shrink-0 p-3 border-t border-slate-200 bg-white sticky z-[1000]" style={{ bottom: 'calc(100% - 100vh + 64px + 100px)' }}>
           <p className="text-xs text-slate-400 text-center">
             {filteredNotes.length} note{filteredNotes.length !== 1 ? 's' : ''} for this student
           </p>

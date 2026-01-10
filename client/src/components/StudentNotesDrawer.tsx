@@ -140,8 +140,8 @@ export function StudentNotesDrawer({
         role="presentation"
       />
 
-      {/* Drawer - z-index: 50 (above backdrop), full height, flex column layout */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 pointer-events-auto">
+      {/* Drawer - z-index: 50 (above backdrop), flex column layout, height accounts for bottom nav */}
+      <div className="fixed right-0 top-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 pointer-events-auto" style={{ height: 'calc(100vh - 64px)' }}>
         
         {/* Header - Student Context Block - Fixed, non-scrolling */}
         <div className="flex-shrink-0 border-b border-border p-6 space-y-4">
@@ -313,7 +313,7 @@ export function StudentNotesDrawer({
           </div>
 
           {/* Action Buttons - Sticky Footer */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 sticky bottom-0 z-[51] bg-background border-t border-border p-4 -mx-6 -mb-6" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
             <Button
               variant="outline"
               onClick={onClose}
