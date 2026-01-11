@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 
-// Default background - used as ultimate fallback
-const DEFAULT_BACKGROUND_URL = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80';
+// No default background - white background is the system default
+// Only apply image if explicitly configured via customUrl or presetKey
 
 interface KioskBackground {
   type?: string;
@@ -34,10 +34,10 @@ export function useKioskBackground(locationId: number) {
     });
     
     if (fetchedBackground) {
-      // Backend now resolves presetKey to imageUrl, so just use imageUrl directly
+      // Use imageUrl only if it exists - no fallback to default image
       const validatedBackground: KioskBackground = {
         ...fetchedBackground,
-        imageUrl: fetchedBackground.imageUrl || DEFAULT_BACKGROUND_URL,
+        imageUrl: fetchedBackground.imageUrl || undefined,
       };
       console.log('[DEBUG] useKioskBackground - Setting validated background', { validatedBackground });
       setBackground(validatedBackground);

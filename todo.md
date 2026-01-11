@@ -1231,3 +1231,12 @@ All three errors have been fixed by adding proper error handling and graceful fa
   - Component correctly passes { locationSlug } to useQuery
   - Error was likely from browser cache or previous version
   - Page now loads without validation errors
+
+
+## Phase 17: Kiosk Background Behavior Fix (COMPLETED)
+
+- [x] Remove blurred kiosk UI default background
+- [x] Set white (#ffffff) as true system default
+- [x] Implement conditional image rendering (only with customUrl or presetKey)
+- [x] Remove dim overlay and blur when no image is set
+- [x] Test default white background appearance

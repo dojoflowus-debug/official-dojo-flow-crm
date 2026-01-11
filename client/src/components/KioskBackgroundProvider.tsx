@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { useKioskBackground } from "@/hooks/useKioskBackground";
 
-// Fallback background color to prevent black screen
-const FALLBACK_BG_COLOR = '#1a1a1a';
+// System default: clean white background
+const DEFAULT_BG_COLOR = '#ffffff';
 
 interface KioskBackgroundProviderProps {
   locationId: number;
@@ -14,9 +14,9 @@ interface KioskBackgroundProviderProps {
  * Wraps kiosk routes and applies background settings
  * 
  * Layer structure:
- * 1. Fallback background color (prevents black screen)
- * 2. Background image (fixed position)
- * 3. Dim overlay (rgba on top of image)
+ * 1. White default background (no image)
+ * 2. Background image (fixed position) - only when imageUrl exists
+ * 3. Dim overlay (rgba on top of image) - only when imageUrl exists
  * 4. Content (children with z-index >= 0)
  */
 export function KioskBackgroundProvider({
@@ -32,7 +32,7 @@ export function KioskBackgroundProvider({
     console.log('[TRUTH_TRACE] KioskBackgroundProvider - background received:', JSON.stringify(background));
   }, [background]);
 
-  // Set up background image layer
+  // Set up background image layer - only when image URL exists
   useEffect(() => {
     console.log('[DEBUG] KioskBackgroundProvider - useEffect triggered', { 
       hasContainer: !!containerRef.current, 
@@ -44,8 +44,19 @@ export function KioskBackgroundProvider({
       dim: background?.dim
     });
     
-    if (!containerRef.current || !background?.imageUrl) {
-      console.log('[DEBUG] KioskBackgroundProvider - Early return: no container or imageUrl');
+    // If no imageUrl, don't create background image layer - use white default
+    if (!background?.imageUrl) {
+      console.log('[DEBUG] KioskBackgroundProvider - No imageUrl, using white default background');
+      // Clean up background image div if it exists
+      if (bgImageRef.current && containerRef.current?.contains(bgImageRef.current)) {
+        containerRef.current.removeChild(bgImageRef.current);
+        bgImageRef.current = null;
+      }
+      return;
+    }
+
+    if (!containerRef.current) {
+      console.log('[DEBUG] KioskBackgroundProvider - Early return: no container');
       return;
     }
 
@@ -60,7 +71,7 @@ export function KioskBackgroundProvider({
       bgImageRef.current.style.right = "0";
       bgImageRef.current.style.bottom = "0";
       bgImageRef.current.style.zIndex = "-2";
-      bgImageRef.current.style.backgroundColor = FALLBACK_BG_COLOR;
+      bgImageRef.current.style.backgroundColor = DEFAULT_BG_COLOR;
       bgImageRef.current.style.backgroundSize = "cover";
       bgImageRef.current.style.backgroundPosition = "center";
       bgImageRef.current.style.backgroundAttachment = "fixed";
@@ -77,22 +88,22 @@ export function KioskBackgroundProvider({
       bgImageRef.current.style.backgroundImage = `url('${finalUrl}')`;
       bgImageRef.current.style.opacity = "1";
     } else if (imageError) {
-      // Image failed to load - keep fallback color visible
-      console.warn(`[KioskBackgroundProvider] Image failed to load, using fallback color:`, background.imageUrl);
+      // Image failed to load - keep white default visible
+      console.warn(`[KioskBackgroundProvider] Image failed to load, using white default:`, background.imageUrl);
       bgImageRef.current.style.backgroundImage = "none";
       bgImageRef.current.style.opacity = "1";
     } else {
-      // Still loading - show fallback
-      console.log('[DEBUG] KioskBackgroundProvider - Image still loading, showing fallback');
+      // Still loading - show white fallback
+      console.log('[DEBUG] KioskBackgroundProvider - Image still loading, showing white fallback');
       bgImageRef.current.style.backgroundImage = "none";
       bgImageRef.current.style.opacity = "1";
     }
   }, [background?.imageUrl, imageLoaded, imageError]);
 
-  // Set up blur effect on image layer
+  // Set up blur effect on image layer - only when image exists
   useEffect(() => {
-    console.log('[DEBUG] KioskBackgroundProvider - Blur effect update', { blur: background?.blur });
-    if (!bgImageRef.current) return;
+    console.log('[DEBUG] KioskBackgroundProvider - Blur effect update', { blur: background?.blur, hasImage: !!background?.imageUrl });
+    if (!bgImageRef.current || !background?.imageUrl) return;
 
     if (background?.blur && background.blur > 0) {
       console.log('[DEBUG] KioskBackgroundProvider - Applying blur:', background.blur);
@@ -100,12 +111,19 @@ export function KioskBackgroundProvider({
     } else {
       bgImageRef.current.style.filter = "none";
     }
-  }, [background?.blur]);
+  }, [background?.blur, background?.imageUrl]);
 
-  // Set up dim overlay layer
+  // Set up dim overlay layer - only when image exists
   useEffect(() => {
-    console.log('[DEBUG] KioskBackgroundProvider - Dim overlay update', { dim: background?.dim });
-    if (!containerRef.current) return;
+    console.log('[DEBUG] KioskBackgroundProvider - Dim overlay update', { dim: background?.dim, hasImage: !!background?.imageUrl });
+    if (!containerRef.current || !background?.imageUrl) {
+      // Clean up dim overlay if no image
+      if (bgDimRef.current && containerRef.current?.contains(bgDimRef.current)) {
+        containerRef.current.removeChild(bgDimRef.current);
+        bgDimRef.current = null;
+      }
+      return;
+    }
 
     // Ensure dim overlay div exists
     if (!bgDimRef.current) {
@@ -122,17 +140,25 @@ export function KioskBackgroundProvider({
       containerRef.current.appendChild(bgDimRef.current);
     }
 
-    // Apply dim overlay
+    // Apply dim overlay only when image exists
     if (background?.dim && background.dim > 0) {
       console.log('[DEBUG] KioskBackgroundProvider - Applying dim:', background.dim);
       bgDimRef.current.style.backgroundColor = `rgba(0, 0, 0, ${background.dim / 100})`;
     } else {
       bgDimRef.current.style.backgroundColor = "transparent";
     }
-  }, [background?.dim]);
+  }, [background?.dim, background?.imageUrl]);
 
   return (
-    <div ref={containerRef} className="relative min-h-screen">
+    <div 
+      ref={containerRef} 
+      className="relative min-h-screen kiosk-background-provider"
+      style={{
+        backgroundColor: DEFAULT_BG_COLOR,
+        backgroundImage: 'none',
+        backgroundAttachment: 'unset',
+      }}
+    >
       {children}
     </div>
   );

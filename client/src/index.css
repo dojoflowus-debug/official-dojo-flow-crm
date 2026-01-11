@@ -286,6 +286,13 @@ body {
   height: 100%;
 }
 
+/* Kiosk mode: white background when no image is configured */
+.kiosk-background-provider {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  background-attachment: unset !important;
+}
+
 /* Container utilities */
 .container {
   width: 100%;

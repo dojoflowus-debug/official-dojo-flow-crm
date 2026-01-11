@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import KioskScreensaver from './KioskScreensaver';
 
@@ -13,6 +13,7 @@ interface KioskLayoutProps {
  * 
  * Features:
  * - Kiosk-only background system (not shared with website)
+ * - Conditional background: white default, image only when configured
  * - Idle detection with screensaver mode
  * - Touch-first, full-screen experience
  * - No website styles or navigation leakage
@@ -72,21 +73,26 @@ export default function KioskLayout({
   // Get background image URL based on priority:
   // 1. Custom upload (backgroundImage)
   // 2. Preset (backgroundPreset)
-  // 3. System default
-  const getBackgroundUrl = (): string => {
+  // 3. No background (white default)
+  const getBackgroundUrl = (): string | null => {
     if (backgroundImage) {
       return backgroundImage;
     }
 
-    // Map preset keys to URLs
-    const presets: Record<string, string> = {
-      'dojo-warm-lights': '/kiosk-welcome-bg.jpg',
-      'dojo-dark': '/kiosk-dark-bg.jpg',
-      'dojo-minimal': '/kiosk-minimal-bg.jpg',
-      'default': '/kiosk-welcome-bg.jpg',
-    };
+    // Only use preset if it's not 'none' and not the default 'default'
+    if (backgroundPreset && backgroundPreset !== 'none' && backgroundPreset !== 'default') {
+      // Map preset keys to URLs
+      const presets: Record<string, string> = {
+        'dojo-warm-lights': '/kiosk-welcome-bg.jpg',
+        'dojo-dark': '/kiosk-dark-bg.jpg',
+        'dojo-minimal': '/kiosk-minimal-bg.jpg',
+      };
 
-    return presets[backgroundPreset] || presets['default'];
+      return presets[backgroundPreset] || null;
+    }
+
+    // No background configured - return null for white default
+    return null;
   };
 
   // If idle, show screensaver
@@ -94,22 +100,31 @@ export default function KioskLayout({
     return <KioskScreensaver onReturn={() => setIsIdle(false)} />;
   }
 
-  // Background image with blur and vignette
   const backgroundUrl = getBackgroundUrl();
-  const backgroundStyle = {
+  const hasBackground = !!backgroundUrl;
+
+  // Background style - only apply if image exists
+  const backgroundStyle = hasBackground ? {
     backgroundImage: `url(${backgroundUrl})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed',
+  } : {
+    backgroundColor: '#ffffff',
+    backgroundImage: 'none',
   };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden" style={backgroundStyle}>
-      {/* Blur overlay for background */}
-      <div className="absolute inset-0 backdrop-blur-sm bg-black/20" />
+      {/* Blur overlay for background - only when image exists */}
+      {hasBackground && (
+        <div className="absolute inset-0 backdrop-blur-sm bg-black/20" />
+      )}
 
-      {/* Vignette overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/30" />
+      {/* Vignette overlay - only when image exists */}
+      {hasBackground && (
+        <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/30" />
+      )}
 
       {/* Content */}
       <div className="relative z-10 w-full h-full">
