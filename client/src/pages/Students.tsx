@@ -135,7 +135,7 @@ function StudentsDashboard() {
   });
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(undefined);
+  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery();
   
   useEffect(() => {
     if (studentsError) console.error('Students error:', studentsError);
