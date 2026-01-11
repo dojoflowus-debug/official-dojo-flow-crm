@@ -2184,6 +2184,15 @@ export const appRouter = router({
     // Get student detail with related data
     getDetail: protectedProcedure
       .input(z.object({ id: z.number() }))
+      .output(z.union([
+        z.object({
+          student: z.any(),
+          attendance: z.array(z.any()),
+          lastContact: z.any().nullable(),
+          tuition: z.array(z.any()),
+        }),
+        z.null(),
+      ]))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { students, studentAttendance, studentContacts, studentTuition, studentMessages } = await import("../drizzle/schema");

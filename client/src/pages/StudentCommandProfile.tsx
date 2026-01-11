@@ -41,13 +41,13 @@ function StudentCommandProfile() {
 
   const { data: notes } = trpc.students.getNotes.useQuery(
     { studentId },
-    { enabled: !!studentId }
+    { enabled: !!studentId && !!studentDetail }
   );
 
   const updateMutation = trpc.students.update.useMutation();
   const uploadPhotoMutation = trpc.students.uploadPhotoToStudent.useMutation();
   const removePhotoMutation = trpc.students.removePhoto.useMutation();
-  const student = studentDetail?.student;
+  const student = studentDetail?.student || null;
 
   useEffect(() => {
     if (student) {
@@ -65,9 +65,6 @@ function StudentCommandProfile() {
         guardianRelationship: { field: 'guardianRelationship', value: student.guardianRelationship || '', isEditing: false },
         guardianPhone: { field: 'guardianPhone', value: student.guardianPhone || '', isEditing: false },
         guardianEmail: { field: 'guardianEmail', value: student.guardianEmail || '', isEditing: false },
-        emergencyContactName: { field: 'emergencyContactName', value: student.emergencyContactName || '', isEditing: false },
-        emergencyContactRelationship: { field: 'emergencyContactRelationship', value: student.emergencyContactRelationship || '', isEditing: false },
-        emergencyContactPhone: { field: 'emergencyContactPhone', value: student.emergencyContactPhone || '', isEditing: false },
       };
       setEditingFields(fields);
     }
@@ -207,9 +204,20 @@ function StudentCommandProfile() {
               <ChevronLeft className="w-4 h-4" />
               Back to Students
             </Button>
-            <div className="flex items-center justify-center h-64 space-y-3">
+            <div className="flex flex-col items-center justify-center h-64 space-y-4">
               <AlertCircle className="w-12 h-12 text-red-500/50" />
-              <p className="text-muted-foreground">Student not found</p>
+              <div className="text-center space-y-2">
+                <p className="text-lg font-semibold text-foreground">Student Not Found</p>
+                <p className="text-sm text-muted-foreground">This student record doesn't exist or may have been deleted.</p>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <Button variant="outline" onClick={() => navigate('/students')} className="gap-2">
+                  Back to Students
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/students')} className="gap-2">
+                  Search Students
+                </Button>
+              </div>
             </div>
           </div>
         </div>
