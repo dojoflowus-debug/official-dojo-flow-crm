@@ -114,6 +114,7 @@ function StudentsDashboard() {
 
   useEffect(() => {
     const filterParam = searchParams.get('filter');
+  
     if (filterParam === 'needs-attention') {
       setStatusFilter('At Risk');
     } else if (filterParam === 'needs-followup') {
@@ -126,13 +127,16 @@ function StudentsDashboard() {
   }, [searchParams]);
 
   // Fetch students with filters
-  const { data: studentsData, isLoading: isLoadingStudents, error: studentsError } = trpc.students.getListWithFilters.useQuery({
+  const queryParams = useMemo(() => ({
     page: currentPage,
     limit: 20,
     search: searchQuery || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter || undefined,
     program: programFilter || undefined,
-  });
+  }), [currentPage, searchQuery, statusFilter, programFilter]);
+  
+  console.log('[Students] Query params:', queryParams, 'statusFilter:', statusFilter);
+  const { data: studentsData, isLoading: isLoadingStudents, error: studentsError } = trpc.students.getListWithFilters.useQuery(queryParams);
 
   // Fetch analytics
   const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(undefined);
@@ -282,8 +286,9 @@ function StudentsDashboard() {
                 />
               </div>
 
-              <Select value={statusFilter || 'all'} onValueChange={(v) => {
-                setStatusFilter(v === 'all' ? '' : v);
+              <Select value={statusFilter} onValueChange={(v) => {
+                console.log('[Students] Status filter changed to:', v);
+                setStatusFilter(v);
                 setCurrentPage(1);
               }}>
                 <SelectTrigger className="w-full md:w-40 bg-transparent border-0 focus:ring-0">
@@ -308,6 +313,11 @@ function StudentsDashboard() {
             {isLoadingStudents ? (
               <div className="flex items-center justify-center h-64">
                 <p className="text-muted-foreground">Loading students...</p>
+              </div>
+            ) : studentsError ? (
+              <div className="flex flex-col items-center justify-center h-64 space-y-3">
+                <AlertCircle className="w-12 h-12 text-red-500/50" />
+                <p className="text-muted-foreground">Error loading students: {studentsError?.message || 'Unknown error'}</p>
               </div>
             ) : students.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 space-y-3">

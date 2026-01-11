@@ -1917,6 +1917,7 @@ export const appRouter = router({
         let countQuery = db.select({ count: sql`COUNT(*) as count` })
           .from(students);
         if (conditions.length > 0) {
+          // Always use and() to combine conditions, even if there's only one
           countQuery = countQuery.where(and(...conditions));
         }
         const countResult = await countQuery;
@@ -1931,9 +1932,36 @@ export const appRouter = router({
         
         // Get paginated results
         const offset = (input.page - 1) * input.limit;
-        let query = db.select()
+        let query = db.select({
+          id: students.id,
+          firstName: students.firstName,
+          lastName: students.lastName,
+          email: students.email,
+          phone: students.phone,
+          dateOfBirth: students.dateOfBirth,
+          age: students.age,
+          beltRank: students.beltRank,
+          status: students.status,
+          membershipStatus: students.membershipStatus,
+          createdAt: students.createdAt,
+          updatedAt: students.updatedAt,
+          photoUrl: students.photoUrl,
+          program: students.program,
+          streetAddress: students.streetAddress,
+          city: students.city,
+          state: students.state,
+          zipCode: students.zipCode,
+          latitude: students.latitude,
+          longitude: students.longitude,
+          guardianName: students.guardianName,
+          guardianRelationship: students.guardianRelationship,
+          guardianPhone: students.guardianPhone,
+          guardianEmail: students.guardianEmail,
+          organizationId: students.organizationId,
+        })
           .from(students);
         if (conditions.length > 0) {
+          // Always use and() to combine conditions, even if there's only one
           query = query.where(and(...conditions));
         }
         const result = await query

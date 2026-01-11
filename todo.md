@@ -261,6 +261,10 @@
 
 ## Current Issues - FIXED
 - [x] Fix Students page showing 8 active students in stats but empty list
+  - Root cause: Query was selecting non-existent `deletedAt` column which caused 500 error
+  - Solution: Modified getListWithFilters to explicitly select only existing columns instead of using select()
+  - This fixed the "Unknown column 'deletedat'" MySQL error
+  - Students now load correctly with all filtering working as expected
   - Root cause: Organization context filtering was working correctly, students were in database
   - Fixed by ensuring proper organization context resolution in backend
   - Students now display correctly with accurate stats
