@@ -1097,3 +1097,24 @@ All three errors have been fixed by adding proper error handling and graceful fa
 1. Lead sources queries now return empty arrays on error
 2. Student detail queries now handle missing or failing related table queries
 3. Each query has proper logging for debugging
+
+
+## P0 Bug Fix - Student Detail Page Infinite Loading (Current)
+
+- [x] Add instrumentation to Student Detail page component (route param, studentId, organizationId, query enabled state)
+- [x] Add instrumentation to TRPC procedure (input, ctx.session.organizationId, query lifecycle)
+- [x] Identify failure mode using DevTools Network and server logs
+- [x] Document confirmed failure mode in this file
+- [x] Fix server query scoping - explicitly select columns instead of using select() without arguments
+- [x] Implement proper UI state machine (loading, error, not found, success) - Already implemented in StudentCommandProfile.tsx
+- [x] Test with multiple students - Verified: Amanda Lee, Ava Martinez profiles load successfully
+- [x] Test with invalid ID (e.g., /students/999999999) - Verified: Shows "Student Not Found" error state
+- [x] Create checkpoint after fix verification
+
+### Confirmed Failure Mode
+**FIXED**: Database column selection error - The getDetail TRPC procedure was using `.select()` without specifying columns, which caused Drizzle ORM to try selecting all columns including `deletedAt`. MySQL couldn't find the column due to case sensitivity issues (looking for `deletedat` instead of `deletedAt`). Fixed by explicitly selecting only the columns we need.
+
+### Notes
+- Earlier error referenced student ID 480002 org 120001
+- Likely root cause: click handler pushing wrong identifier (e.g., student.studentId vs student.id)
+- Must ensure list and detail use same ID type (number vs string)

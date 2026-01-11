@@ -147,10 +147,25 @@ function StudentsDashboard() {
   }, [studentsError, analyticsError]);
 
   // Fetch student detail when selected
-  const { data: studentDetail } = trpc.students.getDetail.useQuery(
+  const { data: studentDetail, isLoading: isDetailLoading, isError: isDetailError, error: detailError } = trpc.students.getDetail.useQuery(
     { id: selectedStudent?.id || 0 },
     { enabled: !!selectedStudent }
   );
+  
+  // Instrumentation for debugging
+  useEffect(() => {
+    if (selectedStudent) {
+      console.log('[Students] Student selected:', {
+        studentId: selectedStudent.id,
+        studentName: `${selectedStudent.firstName} ${selectedStudent.lastName}`,
+        queryEnabled: !!selectedStudent,
+        isDetailLoading,
+        isDetailError,
+        detailErrorMessage: detailError?.message,
+        studentDetailLoaded: studentDetail ? 'yes' : 'no',
+      });
+    }
+  }, [selectedStudent, isDetailLoading, isDetailError, detailError, studentDetail]);
 
   // KPI Metrics
   const kpiMetrics: KPIMetric[] = useMemo(() => [

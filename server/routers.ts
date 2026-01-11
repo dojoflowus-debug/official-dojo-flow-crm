@@ -2210,16 +2210,49 @@ export const appRouter = router({
         const orgId = ctx.currentOrganizationId;
         if (!orgId) return null;
         
+        console.log('[getDetail] Query started - studentId:', input.id, 'orgId:', orgId);
+        
         try {
-          // Get student
-          const [student] = await db.select()
+          // Get student - explicitly select columns to avoid case sensitivity issues
+          console.log('[getDetail] Fetching student...');
+          const [student] = await db.select({
+            id: students.id,
+            firstName: students.firstName,
+            lastName: students.lastName,
+            email: students.email,
+            phone: students.phone,
+            dateOfBirth: students.dateOfBirth,
+            age: students.age,
+            beltRank: students.beltRank,
+            status: students.status,
+            membershipStatus: students.membershipStatus,
+            createdAt: students.createdAt,
+            updatedAt: students.updatedAt,
+            photoUrl: students.photoUrl,
+            program: students.program,
+            streetAddress: students.streetAddress,
+            city: students.city,
+            state: students.state,
+            zipCode: students.zipCode,
+            latitude: students.latitude,
+            longitude: students.longitude,
+            guardianName: students.guardianName,
+            guardianRelationship: students.guardianRelationship,
+            guardianPhone: students.guardianPhone,
+            guardianEmail: students.guardianEmail,
+            organizationId: students.organizationId,
+          })
             .from(students)
             .where(and(
               eq(students.id, input.id),
               eq(students.organizationId, orgId)
             ));
+          console.log('[getDetail] Student found:', !!student);
           
-          if (!student) return null;
+          if (!student) {
+            console.log('[getDetail] Student not found for id:', input.id);
+            return null;
+          }
           
           // Get attendance - with error handling
           let attendance = [];
@@ -2257,12 +2290,14 @@ export const appRouter = router({
             console.warn('[getDetail] Failed to fetch tuition:', err);
           }
           
-          return {
+          const result = {
             student,
             attendance: attendance || [],
             lastContact: lastContact || null,
             tuition: tuition || [],
           };
+          console.log('[getDetail] Procedure completed successfully');
+          return result;
         } catch (error) {
           console.error('[getDetail] Error fetching student detail:', error);
           throw error;
