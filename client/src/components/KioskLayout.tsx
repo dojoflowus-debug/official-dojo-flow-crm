@@ -115,7 +115,7 @@ export default function KioskLayout({
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden" style={backgroundStyle}>
+    <div className="kiosk-root relative min-h-screen w-full overflow-hidden" style={backgroundStyle}>
       {/* Blur overlay for background - only when image exists */}
       {hasBackground && (
         <div className="absolute inset-0 backdrop-blur-sm bg-black/20" />

@@ -96,13 +96,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug }: Kios
           </div>
         </div>
 
-        {/* Main Headline */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-3 tracking-tight">
-            Welcome to Training
-          </h1>
-          <div className="h-1 w-32 mx-auto bg-gradient-to-r from-red-500 via-red-400 to-transparent rounded-full" />
-        </div>
+
 
         {/* Info Bar */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">

@@ -164,3 +164,57 @@
   background: oklch(0.7 0 0 / 0.4);
 }
 
+
+/* Kiosk-specific styles - scoped to prevent leakage */
+.kiosk-root {
+  /* Ensure kiosk has its own stacking context */
+  position: relative;
+  z-index: 0;
+}
+
+/* Kiosk background image styling */
+.kiosk-bg-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* Kiosk background dim overlay */
+.kiosk-bg-dim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* Scope all kiosk child elements */
+.kiosk-root h1,
+.kiosk-root h2,
+.kiosk-root h3,
+.kiosk-root h4,
+.kiosk-root h5,
+.kiosk-root h6 {
+  /* Only apply kiosk-specific heading styles within kiosk-root */
+  margin: 0;
+}
+
+/* Prevent any hero or title styles from leaking into kiosk */
+.kiosk-root .hero,
+.kiosk-root .hero-title,
+.kiosk-root .title {
+  display: none !important;
+}
+
+/* Remove any pseudo-element underlines that might leak */
+.kiosk-root h1::after,
+.kiosk-root h2::after,
+.kiosk-root h3::after {
+  display: none !important;
+}
+

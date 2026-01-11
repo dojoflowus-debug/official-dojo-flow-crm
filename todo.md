@@ -1240,3 +1240,14 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Implement conditional image rendering (only with customUrl or presetKey)
 - [x] Remove dim overlay and blur when no image is set
 - [x] Test default white background appearance
+
+## Phase 17: Bug Fix - Ghost Text and Floating Underline on Kiosk Page
+
+- [x] Inspect DevTools to identify ghost elements (faint text and floating underline)
+- [x] Search codebase for remnants of old hero component in kiosk
+- [x] Remove ghost elements and refactor kiosk layout structure
+- [x] Implement scoped CSS with .kiosk-root wrapper to prevent style leakage
+- [x] Verify kiosk layout shows only intended UI (header, info cards, action tiles)
+- [x] Test on /kiosk/main-dojo to confirm no ghost text or stray underline
+- [x] Verify refresh does not reintroduce the ghost elements
+
