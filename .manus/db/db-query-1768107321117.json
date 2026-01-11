@@ -1,0 +1,19 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%lead%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%lead%';",
+  "rows": [
+    {
+      "TABLE_NAME": "leads"
+    },
+    {
+      "TABLE_NAME": "lead_activities"
+    },
+    {
+      "TABLE_NAME": "lead_scoring_rules"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nleads\nlead_activities\nlead_scoring_rules\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
