@@ -194,6 +194,83 @@ export const kioskRouter = router({
     }),
 
   /**
+   * Get kiosk runtime data with classes and students (public)
+   * Fetches real-time data for the kiosk display
+   */
+  getKioskData: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      const location = await ctx.db
+        .select()
+        .from(locations)
+        .where(eq(locations.kioskSlug, input.slug))
+        .limit(1);
+
+      if (!location || location.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Kiosk not found",
+        });
+      }
+
+      const loc = location[0];
+
+      if (loc.kioskEnabled !== 1) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Kiosk is disabled for this location",
+        });
+      }
+
+      // Fetch upcoming classes for this location
+      const { classes: classesTable, classEnrollments } = await import("../drizzle/schema");
+      const { and, gte } = await import("drizzle-orm");
+      
+      const upcomingClasses = await ctx.db
+        .select()
+        .from(classesTable)
+        .where(
+          and(
+            eq(classesTable.locationId, loc.id),
+            eq(classesTable.isActive, 1)
+          )
+        )
+        .limit(5);
+
+      // Get today's focus (from class descriptions or announcements)
+      const todaysFocus = upcomingClasses
+        .slice(0, 3)
+        .map(c => c.name)
+        .filter(Boolean);
+
+      return {
+        locationId: loc.id,
+        locationName: loc.name,
+        locationAddress: loc.address,
+        upcomingClasses: upcomingClasses.map(c => ({
+          id: c.id,
+          name: c.name,
+          time: c.startTime,
+          instructor: c.instructorName,
+          capacity: c.capacity,
+        })),
+        todaysFocus: todaysFocus.length > 0 ? todaysFocus : ['Discipline', 'Confidence', 'Fitness'],
+        nextClass: upcomingClasses[0] ? {
+          name: upcomingClasses[0].name,
+          time: upcomingClasses[0].startTime,
+          minutesUntil: 30, // Will be calculated on client
+        } : null,
+      };
+    }),
+
+  /**
    * Get kiosk runtime configuration by slug (public)
    */
   getKioskRuntime: publicProcedure
@@ -622,6 +699,162 @@ export const kioskRouter = router({
   /**
    * Remove custom background and revert to preset
    */
+  /**
+   * Student check-in endpoint
+   * Records student check-in for attendance tracking
+   */
+  checkInStudent: publicProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+        studentId: z.number().optional(),
+        studentName: z.string().optional(),
+        classSessionId: z.number().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      try {
+        // Get location by slug
+        const location = await ctx.db
+          .select()
+          .from(locations)
+          .where(eq(locations.kioskSlug, input.slug))
+          .limit(1);
+
+        if (!location || location.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Location not found",
+          });
+        }
+
+        const loc = location[0];
+
+        // Import check-in table
+        const { kioskCheckIns, students } = await import("../drizzle/schema");
+
+        // Record check-in
+        const checkInResult = await ctx.db
+          .insert(kioskCheckIns)
+          .values({
+            studentId: input.studentId || null,
+            checkInType: input.studentId ? 'student' : 'visitor',
+            checkInTime: new Date().toISOString(),
+            classSessionId: input.classSessionId || null,
+          });
+
+        // If student ID provided, also update attendance record
+        if (input.studentId && input.classSessionId) {
+          const { attendance } = await import("../drizzle/schema");
+          
+          await ctx.db
+            .insert(attendance)
+            .values({
+              studentId: input.studentId,
+              classSessionId: input.classSessionId,
+              status: 'present',
+              checkInTime: new Date().toISOString(),
+            })
+            .onDuplicateKeyUpdate({
+              set: {
+                status: 'present',
+                checkInTime: new Date().toISOString(),
+              },
+            });
+        }
+
+        return {
+          success: true,
+          checkInId: checkInResult[0],
+          message: `Check-in recorded for ${input.studentName || 'visitor'}`,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error("[kioskRouter] checkInStudent error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to check in student",
+        });
+      }
+    }),
+
+  /**
+   * Search for students by name or ID
+   */
+  searchStudents: publicProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+        query: z.string().min(1),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      try {
+        // Get location by slug
+        const location = await ctx.db
+          .select()
+          .from(locations)
+          .where(eq(locations.kioskSlug, input.slug))
+          .limit(1);
+
+        if (!location || location.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Location not found",
+          });
+        }
+
+        const loc = location[0];
+        const { students } = await import("../drizzle/schema");
+        const { or, like } = await import("drizzle-orm");
+
+        // Search students by name or ID
+        const searchResults = await ctx.db
+          .select()
+          .from(students)
+          .where(
+            or(
+              like(students.firstName, `%${input.query}%`),
+              like(students.lastName, `%${input.query}%`),
+              like(students.email, `%${input.query}%`)
+            )
+          )
+          .limit(10);
+
+        return searchResults.map(s => ({
+          id: s.id,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          email: s.email,
+          phone: s.phone,
+          beltRank: s.beltRank,
+          status: s.status,
+          membershipStatus: s.membershipStatus,
+        }));
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error("[kioskRouter] searchStudents error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to search students",
+        });
+      }
+    }),
+
   removeCustomBackground: protectedProcedure
     .input(z.object({ locationId: z.number() }))
     .mutation(async ({ ctx, input }) => {

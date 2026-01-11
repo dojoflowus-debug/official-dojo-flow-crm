@@ -1684,3 +1684,150 @@ All three errors have been fixed by adding proper error handling and graceful fa
   - All three errors resolved
   - Page displays "Main Dojo" location with check-in and start training options
   - No console errors
+
+
+## Phase 17: Kiosk Manager - Core Module Integration (CURRENT)
+
+### Database & Schema
+- [ ] Verify kiosk_locations table links to locations table properly
+- [ ] Ensure kioskDevices, kioskThemes, kioskThemeAssets tables are properly indexed
+- [ ] Add organization_id filtering to all kiosk queries for multi-tenant support
+- [ ] Create database migrations for any missing kiosk tables
+
+### Kiosk Manager Admin Interface
+- [ ] Build Kiosk Manager page (/owner/kiosk-manager)
+- [ ] List all kiosks per location with status indicators
+- [ ] Create new kiosk with location assignment
+- [ ] Edit kiosk name, location, and basic settings
+- [ ] Delete kiosk with confirmation
+- [ ] Toggle kiosk active/inactive status
+- [ ] View kiosk check-in history and analytics
+
+### Live Preview Builder
+- [ ] Create KioskBuilder component with split-view (editor + live preview)
+- [ ] Implement real-time preview updates as settings change
+- [ ] Build background customization panel (image upload, color, blur, dim)
+- [ ] Build typography customization (font family, sizes, colors)
+- [ ] Build layout customization (show/hide elements, positioning)
+- [ ] Build content customization (headlines, buttons, messages)
+- [ ] Build behavior settings (idle timeout, screensaver, messages)
+- [ ] Implement draft/publish workflow
+- [ ] Show version history and rollback capability
+
+### Kiosk Check-In Interface (/kiosk/:slug)
+- [ ] Create production kiosk route with slug-based access
+- [ ] Implement student check-in by name/ID search
+- [ ] Display upcoming classes for checked-in students
+- [ ] Implement visitor check-in form
+- [ ] Add waiver signature capture for new visitors
+- [ ] Display trial enrollment form
+- [ ] Integrate with real student database
+- [ ] Real-time attendance updates to class sessions
+
+### Kiosk Customization Engine
+- [ ] Background image upload to S3
+- [ ] Color theme customization (primary, accent, text colors)
+- [ ] Font family selection and sizing
+- [ ] Layout control (show/hide clock, info bar, footer)
+- [ ] Content text customization (headlines, button labels, messages)
+- [ ] Screensaver customization (idle message, logo display)
+- [ ] Behavior settings (idle timeout in seconds, auto-reset)
+
+### Real-Time Data Integration
+- [ ] Fetch upcoming classes for location
+- [ ] Display student roster with search
+- [ ] Show real-time attendance updates
+- [ ] Display membership status and trial status
+- [ ] Fetch today's focus/announcements
+- [ ] Live sync with class schedule changes
+- [ ] WebSocket integration for real-time updates (future)
+
+### Screensaver & Idle Management
+- [ ] Implement idle detection on kiosk
+- [ ] Auto-launch screensaver after configurable timeout
+- [ ] Display custom idle message
+- [ ] Show logo and branding on screensaver
+- [ ] Detect touch to wake from screensaver
+- [ ] Auto-reset to home screen after idle period
+
+### Kiosk Appearance Versioning
+- [ ] Track draft vs published appearance settings
+- [ ] Increment version on each publish
+- [ ] Allow rollback to previous versions
+- [ ] Show version history in admin interface
+- [ ] Display "Draft" label when changes not published
+
+### Integration with Existing DojoFlow Data
+- [ ] Link kiosk check-ins to student attendance records
+- [ ] Update class session attendance from kiosk check-ins
+- [ ] Sync membership status to kiosk display
+- [ ] Display trial enrollment data
+- [ ] Show staff login capability
+- [ ] Integrate with existing location data
+
+### Testing & Validation
+- [ ] Write vitest tests for kiosk manager TRPC endpoints
+- [ ] Test check-in flow with real student data
+- [ ] Test customization engine with live preview
+- [ ] Test draft/publish workflow
+- [ ] Test screensaver and idle detection
+- [ ] Responsive design validation (iPad, tablet, mobile)
+- [ ] Test multi-location kiosk management
+- [ ] Test organization isolation (multi-tenant)
+
+### Deployment & Documentation
+- [ ] Document kiosk setup process
+- [ ] Create admin guide for kiosk customization
+- [ ] Add kiosk routes to navigation
+- [ ] Save checkpoint with kiosk manager implementation
+
+
+## Phase 17: Kiosk Manager - Core Module Integration (IN PROGRESS)
+
+### Completed in This Phase
+- [x] Enhanced KioskHome component with real data integration
+- [x] Added idle detection and screensaver functionality
+- [x] Created getKioskData endpoint for real-time class and focus data
+- [x] Created checkInStudent endpoint for attendance tracking
+- [x] Created searchStudents endpoint for student lookup
+- [x] Integrated kiosk settings (content, layout, behavior) into KioskHome
+
+### Remaining Tasks
+
+#### Kiosk Check-In Interface
+- [ ] Build KioskCheckIn component with student search
+- [ ] Implement check-in confirmation screen
+- [ ] Add visitor check-in form
+- [ ] Implement waiver signature capture
+- [ ] Build trial enrollment flow
+
+#### Kiosk Customization Engine
+- [ ] Add font family selection to customization
+- [ ] Add version history and rollback UI
+- [ ] Build "Draft" indicator in admin interface
+
+#### Real-Time Data Integration
+- [ ] Display membership status on kiosk
+- [ ] Show trial enrollment status
+- [ ] Display student roster with search
+- [ ] Add real-time attendance updates
+
+#### Admin Features
+- [ ] Build kiosk check-in history view
+- [ ] Add analytics dashboard for kiosk usage
+- [ ] Implement kiosk device management
+- [ ] Add organization isolation for multi-tenant
+
+#### Testing & Validation
+- [ ] Write vitest tests for checkInStudent endpoint
+- [ ] Write vitest tests for searchStudents endpoint
+- [ ] Write vitest tests for getKioskData endpoint
+- [ ] Test check-in flow end-to-end
+- [ ] Test screensaver and idle detection
+- [ ] Test iPad responsiveness
+- [ ] Test multi-location kiosk management
+
+#### Documentation
+- [ ] Document kiosk setup and configuration
+- [ ] Create admin guide for customization
+- [ ] Add kiosk routes to main navigation

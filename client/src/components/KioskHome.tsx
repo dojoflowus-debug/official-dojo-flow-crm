@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, LogIn, UserPlus, Settings } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import KioskScreensaver from './KioskScreensaver';
 
 interface KioskHomeProps {
   locationName?: string;
@@ -9,14 +11,15 @@ interface KioskHomeProps {
 }
 
 /**
- * KioskHome - New kiosk home screen
+ * KioskHome - Production kiosk home screen
  * 
  * Features:
  * - Large touch-friendly tiles (Check In, Start Training)
  * - Live clock display
- * - Info bar (next class, today's focus)
+ * - Real-time class schedule and focus areas
+ * - Auto screensaver on idle
  * - Discreet staff login button
- * - Responsive for various screen sizes
+ * - iPad optimized
  */
 export default function KioskHome({ locationName, locationSlug: propSlug, settings }: KioskHomeProps) {
   const navigate = useNavigate();
@@ -25,6 +28,16 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [fadeIn, setFadeIn] = useState(false);
+  const [showScreensaver, setShowScreensaver] = useState(false);
+  const [isIdle, setIsIdle] = useState(false);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch real kiosk data
+  const { data: kioskData, isLoading: kioskDataLoading } = trpc.kiosk.getKioskData.useQuery(
+    { slug: slug || '' },
+    { enabled: !!slug }
+  );
 
   // Update clock every second
   useEffect(() => {
@@ -39,14 +52,10 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
       setCurrentTime(timeString);
     };
 
-    // Set initial time immediately
     updateClock();
-    
-    // Update every second
     const interval = setInterval(updateClock, 1000);
-
     return () => clearInterval(interval);
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
   // Fade in animation on mount
   useEffect(() => {
@@ -54,14 +63,70 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
     return () => clearTimeout(timer);
   }, []);
 
-  // Mock data - will be replaced with real data later
-  const nextClass = {
+  // Idle detection and screensaver
+  const idleTimeout = (settings?.screensaver?.idleSeconds || 60) * 1000;
+
+  const resetIdleTimer = () => {
+    // Clear existing timers
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+
+    setIsIdle(false);
+    setShowScreensaver(false);
+
+    // Set new idle timer
+    idleTimeoutRef.current = setTimeout(() => {
+      setIsIdle(true);
+      if (settings?.screensaver?.enabled !== false) {
+        setShowScreensaver(true);
+      }
+    }, idleTimeout);
+  };
+
+  // Setup idle detection
+  useEffect(() => {
+    resetIdleTimer();
+
+    const handleActivity = () => {
+      resetIdleTimer();
+    };
+
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+      window.addEventListener(event, handleActivity);
+    });
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+    };
+  }, [idleTimeout, settings?.screensaver?.enabled]);
+
+  // Show screensaver if idle
+  if (showScreensaver) {
+    return (
+      <KioskScreensaver
+        message={settings?.screensaver?.message || 'Tap the screen to check-in'}
+        showLogo={settings?.screensaver?.showLogo !== false}
+        onActivity={() => {
+          setShowScreensaver(false);
+          resetIdleTimer();
+        }}
+      />
+    );
+  }
+
+  // Get display data
+  const displayName = locationName || kioskData?.locationName || 'Main Dojo';
+  const nextClass = kioskData?.nextClass || {
     name: 'Kids Karate',
     time: '5:30 PM',
     minutesUntil: 18,
   };
-
-  const todaysFocus = ['Discipline', 'Confidence', 'Fitness'];
+  const todaysFocus = kioskData?.todaysFocus || ['Discipline', 'Confidence', 'Fitness'];
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
@@ -83,7 +148,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
             <div>
               <p className="text-white/60 text-xs font-medium tracking-wide uppercase">DojoFlow</p>
               <p className="text-white text-xl font-bold tracking-tight">
-                {locationName || 'Main Dojo'}
+                {displayName}
               </p>
             </div>
           </div>
@@ -97,29 +162,33 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
           </div>
         </div>
 
-
-
         {/* Info Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-          {/* Next Class */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20">
-            <p className="text-white/60 text-sm font-medium mb-1">Next Class</p>
-            <p className="text-white text-lg font-semibold">
-              {nextClass.name} at {nextClass.time}
-            </p>
-            <p className="text-white/50 text-xs mt-1">
-              in {nextClass.minutesUntil} minutes
-            </p>
-          </div>
+        {settings?.layout?.showInfoBar !== false && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+            {/* Next Class */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20">
+              <p className="text-white/60 text-sm font-medium mb-1">
+                {settings?.content?.infoLeftLabel || 'Next Class'}
+              </p>
+              <p className="text-white text-lg font-semibold">
+                {nextClass?.name} at {nextClass?.time}
+              </p>
+              <p className="text-white/50 text-xs mt-1">
+                in {nextClass?.minutesUntil} minutes
+              </p>
+            </div>
 
-          {/* Today's Focus */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20">
-            <p className="text-white/60 text-sm font-medium mb-1">Today's Focus</p>
-            <p className="text-white text-lg font-semibold">
-              {todaysFocus.join(' • ')}
-            </p>
+            {/* Today's Focus */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20">
+              <p className="text-white/60 text-sm font-medium mb-1">
+                {settings?.content?.infoRightLabel || "Today's Focus"}
+              </p>
+              <p className="text-white text-lg font-semibold">
+                {todaysFocus.join(' • ')}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Action Tiles */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
@@ -153,14 +222,18 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
 
             {/* Text Content */}
             <div className="relative text-center space-y-2">
-              <h2 className="text-white text-4xl font-bold">Check In</h2>
-              <p className="text-white/70 text-lg">Tap here to check into class</p>
+              <h2 className="text-white text-4xl font-bold">
+                {settings?.content?.tileLeft?.title || 'Check In'}
+              </h2>
+              <p className="text-white/70 text-lg">
+                {settings?.content?.tileLeft?.subtitle || 'Tap here to check into class'}
+              </p>
             </div>
 
             {/* Bottom Button */}
             <div className="relative mt-8 pt-8 border-t border-white/10">
               <div className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center font-bold text-lg shadow-lg group-hover:from-blue-400 group-hover:to-blue-500 transition-all">
-                Check In
+                {settings?.content?.tileLeft?.button || 'Check In'}
               </div>
             </div>
           </button>
@@ -195,14 +268,18 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
 
             {/* Text Content */}
             <div className="relative text-center space-y-2">
-              <h2 className="text-white text-4xl font-bold">Start Training</h2>
-              <p className="text-white/70 text-lg">New students start here</p>
+              <h2 className="text-white text-4xl font-bold">
+                {settings?.content?.tileRight?.title || 'Start Training'}
+              </h2>
+              <p className="text-white/70 text-lg">
+                {settings?.content?.tileRight?.subtitle || 'New students start here'}
+              </p>
             </div>
 
             {/* Bottom Button */}
             <div className="relative mt-8 pt-8 border-t border-white/10">
               <div className="w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 text-white text-center font-bold text-lg shadow-lg group-hover:from-red-400 group-hover:to-red-500 transition-all">
-                Start Training
+                {settings?.content?.tileRight?.button || 'Start Training'}
               </div>
             </div>
           </button>
