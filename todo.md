@@ -1307,3 +1307,110 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Create final checkpoint
 - [x] Verify all features working end-to-end
 - [x] Document any known limitations
+
+
+## Phase 17: Kiosk Studio Builder (Current)
+
+### Database Schema Updates
+- [x] Update kiosk_locations schema with draft/published appearance settings
+- [x] Add kioskAppearanceDraft, kioskAppearancePublished, kioskAppearanceVersion fields
+- [x] Create migration for schema changes
+- [x] Add default appearance values (white background, default typography)
+- [x] Create kioskStudioRouter with all backend procedures
+
+### Kiosk Studio UI - Two Column Layout
+- [x] Create /settings/kiosk/studio route and page component (KioskStudioBuilder.tsx)
+- [x] Build two-column layout (controls on left, live preview iframe on right)
+- [x] Implement tab system for controls (Appearance, Typography, Layout, Content, Behavior)
+- [x] Add Save Draft button
+- [x] Add Publish button
+- [x] Add Refresh Preview button
+- [x] Add Reset to Default button
+
+### Appearance Tab Controls
+- [x] Background color picker (solid hex, default white)
+- [x] Background image selector (preset or custom upload)
+- [x] Background effects controls (dim, blur, fit)
+- [x] Accent color picker
+- [x] Text color picker
+- [x] Ensure custom upload returns real URL
+
+### Typography Tab Controls
+- [x] Font family selector
+- [x] Title size slider
+- [x] Title weight selector
+- [x] Subtitle size slider
+- [x] Letter spacing slider
+- [x] Button font size slider
+
+### Layout Tab Controls
+- [x] Spacing presets (compact, comfortable, spacious)
+- [x] Alignment options (left, center, right)
+- [ ] Snap guides for alignment (premium)
+
+### Content Tab Controls
+- [x] Welcome message text input
+- [x] Subtitle text input
+- [x] Button text customization
+- [x] Logo upload
+
+### Behavior Tab Controls
+- [x] Idle seconds input (default 60)
+- [x] Screensaver enabled toggle
+- [x] Screensaver message input
+- [x] Screensaver logo upload
+
+### Live Preview System
+- [x] Create preview iframe at /kiosk/:locationSlug?studioPreview=1
+- [x] Implement postMessage communication between studio and preview
+- [x] Update preview instantly when controls change (draft state)
+- [x] Add version query parameter for cache busting
+- [x] Disable screensaver in preview mode
+- [ ] Add device frame preview (iPad portrait/landscape toggle) (premium)
+
+### Background Resolution System
+- [x] Create resolveKioskBackground() function
+- [x] Support color backgrounds (solid hex)
+- [x] Support image backgrounds (preset or custom upload)
+- [x] Implement background effects (dim, blur, fit)
+- [x] Map preset keys to /public/... assets
+- [x] Ensure default is solid white with no image
+- [x] Fix custom upload to return real URL and store under customUrl
+- [x] Ensure preset selection stores presetKey
+
+### Typography Application
+- [x] Add typography fields to appearance schema
+- [x] Implement CSS variable injection (.kiosk-root)
+- [x] Apply font family via CSS variable
+- [x] Apply title/subtitle sizing and weight
+- [x] Apply letter spacing and button font size
+
+### Screensaver Feature
+- [x] Add screensaver fields to appearance (enabled, idleSeconds, message, logoUrl)
+- [x] Implement idle detection in kiosk
+- [x] Create screensaver overlay component
+- [x] Add fade-in animation after idle period
+- [x] Implement tap-to-dismiss
+- [x] Disable in studio preview mode
+
+### Premium Features (Optional)
+- [x] Create theme presets (Minimal White, Dojo Warm, Night Mode, High Contrast)
+- [x] Add one-click "Reset to Default"
+- [ ] Implement "Save as Template" (apply to all locations)
+
+### Testing & Validation
+- [ ] Test draft/publish workflow
+- [ ] Verify background changes persist on refresh
+- [ ] Test live preview postMessage communication
+- [ ] Verify default white background displays correctly
+- [ ] Test version increment on publish
+- [ ] Test screensaver idle detection
+- [ ] Test typography CSS variables apply
+- [ ] Cross-browser testing
+- [ ] Responsive design validation
+
+### Acceptance Tests
+- [ ] Changing preset background and pressing Publish updates /kiosk/:locationSlug on refresh
+- [ ] In studio, changes update preview instantly via postMessage
+- [ ] Default kiosk background is plain white with NO ghost text
+- [ ] Publish increments version and preview reload uses latest version

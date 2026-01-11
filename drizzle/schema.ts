@@ -1621,6 +1621,10 @@ export const kiosk_locations = mysqlTable("kiosk_locations", {
 	locationId: int(),
 	isActive: int().default(1).notNull(),
 	settings: text(),
+	// Draft/Published Settings with versioning
+	kioskAppearanceDraft: text(), // JSON: { background, typography, layout, content, behavior }
+	kioskAppearancePublished: text(), // JSON: { background, typography, layout, content, behavior }
+	kioskAppearanceVersion: int().default(1).notNull(), // Incremented on publish
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 });

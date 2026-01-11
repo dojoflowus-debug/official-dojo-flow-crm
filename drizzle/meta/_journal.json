@@ -400,6 +400,13 @@
       "when": 1768155378527,
       "tag": "0056_fuzzy_war_machine",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "5",
+      "when": 1768156146848,
+      "tag": "0057_sturdy_nomad",
+      "breakpoints": true
     }
   ]
 }
