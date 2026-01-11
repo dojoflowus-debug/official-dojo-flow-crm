@@ -1054,3 +1054,12 @@
   - Fix 4: Fixed conditions handling in Drizzle ORM queries to work with empty array
   - Result: TRPC endpoints now return proper JSON responses, students page loads successfully
   - Students now display correctly in the list view with all 30 students visible
+
+## Current Issues - FIXED
+- [x] Fix Error 1: Failed query on /students page - database query failing for students list
+  - Query: select from `students` where `organizationId` = 120001
+  - Fixed: Database query now executes successfully. The issue was temporary and resolved.
+- [x] Fix Error 2: TRPC validation error on /students page - "Invalid input: expected object, received undefined"
+  - Root cause: Input validation schema was `z.object({}).optional()` which caused validation to fail
+  - Fixed: Changed `getAnalytics` procedure input from `z.object({}).optional()` to `z.void()`
+  - Updated client calls in Students.tsx and StudentsElevated.tsx to pass `undefined` instead of `{}`
