@@ -54,7 +54,7 @@ const oldStages = [
   { id: 'lost_winback', label: 'Lost / Winback' },
 ];
 
-export default function Leads({ onLogout, theme, toggleTheme }) {
+export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () => void; theme: string; toggleTheme: () => void }) {
   const [searchParams] = useSearchParams()
   const { theme: currentTheme } = useTheme()
   const isDarkMode = currentTheme === 'dark' || currentTheme === 'cinematic'

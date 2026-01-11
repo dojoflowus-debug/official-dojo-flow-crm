@@ -103,7 +103,7 @@ export async function checkLowStockItems(): Promise<AlertCheckResult> {
           // Check if we should send another notification (cooldown period)
           const lastAlertTime = typeof existingAlert.lastAlertSent === 'string' 
             ? new Date(existingAlert.lastAlertSent).getTime()
-            : existingAlert.lastAlertSent.getTime();
+            : (existingAlert.lastAlertSent as any).getTime?.() ?? 0;
           const hoursSinceLastAlert = 
             (Date.now() - lastAlertTime) / (1000 * 60 * 60);
           
@@ -303,7 +303,7 @@ export async function resolveAlert(alertId: number, resolvedBy?: number, notes?:
     .update(stockAlerts)
     .set({
       isResolved: 1,
-      resolvedAt:new Date().toISOString().toISOString(),
+      resolvedAt: new Date().toISOString(),
       resolvedBy,
       resolutionNotes: notes,
     })

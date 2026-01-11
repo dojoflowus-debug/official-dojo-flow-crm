@@ -891,3 +891,79 @@
 - [ ] No console errors or warnings
 - [ ] All data bindings correct
 - [ ] Save checkpoint before feature expansion
+
+
+## STABILITY PASS (Jan 10, 2026) - LIMITED SCOPE
+
+### TypeScript Cleanup (Students, Leads, Shared Layouts Only)
+- [x] Fix Students.tsx type errors (AuthUser vs User mismatch)
+- [x] Fix Leads.tsx type errors
+- [x] Fix BottomNavLayout.tsx type errors
+- [ ] Fix CommandHeader.tsx type errors
+- [ ] Fix DashboardLayout.tsx type errors
+- [ ] Fix TRPC endpoints used by Students page
+- [ ] Fix TRPC endpoints used by Leads page
+- [ ] Verify no console errors on Students page load
+- [ ] Verify no console errors on Leads page load
+- [ ] Verify no API call failures in critical flows
+
+## PRIORITY 2 — LEADS PIPELINE (REVENUE ENGINE)
+
+### Drag-and-Drop Kanban Implementation
+- [x] @dnd-kit library already installed and configured
+- [x] Leads page Kanban board layout implemented
+- [x] Lead columns implemented (New, Contacted, Intro Scheduled, Trial, Lost/Winback)
+- [x] Drag-and-drop functionality with @dnd-kit working
+- [x] Visual polish (lift + scale on drag) implemented
+- [x] Column glow on hover implemented
+- [x] Smooth snap animation implemented
+- [x] Optimistic UI updates on drop working
+- [x] Lead status changes persist to database
+- [x] Pipeline counts update on status change
+- [x] Dollar totals update on status change
+- [x] Mouse and touch interactions supported
+- [ ] Write vitest tests for drag-and-drop functionality
+- [ ] Test all lead status transitions work correctly
+
+## PRIORITY 3 — STUDENTS FINALIZATION
+
+### Light Mode Completion
+- [ ] Fix ghost text visibility in light mode
+- [ ] Implement true light palette colors
+- [ ] Test all components in light mode
+- [ ] Ensure contrast meets accessibility standards
+
+### Notes Panel UX
+- [ ] Implement internal scrolling for notes
+- [ ] Create sticky footer with Save/Cancel buttons
+- [ ] Implement timeline-style notes display
+- [ ] Add "No notes yet" empty state
+- [ ] Ensure buttons are always clickable and visible
+- [ ] Test on desktop, tablet, mobile
+
+### Needs-Attention Reasons System
+- [ ] Implement reason badges logic (attendance drop, missed classes, etc.)
+- [ ] Display reason badges on student cards
+- [ ] Show attendance drop indicators
+- [ ] Show overdue payment indicators (placeholder logic OK)
+- [ ] Show cancellation pending indicators
+- [ ] Add feature flag for billing integration pending
+
+### Map Tab & Student Editing
+- [ ] Ensure Map tab is functional or properly disabled
+- [ ] Verify student editing works correctly
+- [ ] Confirm photo uploads work end-to-end
+- [ ] Test follow-ups system
+- [ ] Lock all student edit flows (photo, notes, status, follow-ups)
+
+### Testing & Validation
+- [ ] Write vitest tests for notes system
+- [ ] Write vitest tests for needs-attention logic
+- [ ] Write vitest tests for student management
+- [ ] Test all features in light mode
+- [ ] Test all features in dark mode
+- [ ] Responsive design validation (mobile, tablet, desktop)
+- [ ] Performance check (no lag on photo upload)
+- [ ] Accessibility review (contrast, focus states, keyboard nav)
+- [ ] No console errors or warnings
+- [ ] All data bindings correct

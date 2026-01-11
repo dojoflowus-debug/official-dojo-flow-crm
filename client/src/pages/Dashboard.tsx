@@ -22,7 +22,7 @@ import {
   FileCheck
 } from 'lucide-react'
 
-export default function Dashboard({ onLogout, theme, toggleTheme }) {
+export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: () => void; theme: string; toggleTheme: () => void }) {
   const { theme: currentTheme } = useTheme()
   const isDarkMode = currentTheme === 'dark' || currentTheme === 'cinematic'
   const [isListening, setIsListening] = useState(false)

@@ -61,7 +61,7 @@ interface Student {
   lastName: string;
   email?: string | null;
   phone?: string | null;
-  status: string;
+  status: 'Active' | 'Inactive' | 'On Hold' | 'At Risk' | string;
   beltRank?: string | null;
   program?: string;
   photoUrl?: string | null;
@@ -69,6 +69,9 @@ interface Student {
   longitude?: string | number;
   createdAt?: string;
   address?: string;
+  dateOfBirth?: string | null;
+  age?: number | null;
+  organizationId?: number | null;
 }
 
 interface KPIMetric {
@@ -174,7 +177,7 @@ function StudentsDashboard() {
   ], [analyticsData]);
 
   const students = studentsData?.students || [];
-  const totalStudents = studentsData?.total || 0;
+  const totalStudents = Number(studentsData?.total || 0);
   const totalPages = Math.ceil(totalStudents / 20);
 
   const handleSelectStudent = (student: Student) => {
@@ -421,10 +424,10 @@ function StudentsDashboard() {
                       id={student.id}
                       firstName={student.firstName}
                       lastName={student.lastName}
-                      email={student.email}
-                      phone={student.phone}
+                      email={student.email || undefined}
+                      phone={student.phone || undefined}
                       beltRank={student.beltRank || 'White Belt'}
-                      status={student.status as 'Active' | 'Inactive' | 'On Hold'}
+                      status={(student.status as any) || 'Active' as 'Active' | 'Inactive' | 'On Hold'}
                       program={student.program}
                       photoUrl={student.photoUrl}
                       lastCheckIn={student.createdAt ? `Joined ${new Date(student.createdAt).toLocaleDateString()}` : undefined}
@@ -567,16 +570,16 @@ function StudentsDashboard() {
 
       <StudentNotesDrawer
         studentId={selectedStudent?.id || 0}
-        studentName={selectedStudent ? `${selectedStudent.firstName} ${selectedStudent.lastName}` : ''}
+        studentName={`${selectedStudent?.firstName} ${selectedStudent?.lastName}`}
         studentData={{
-          firstName: selectedStudent?.firstName,
-          lastName: selectedStudent?.lastName,
+          firstName: selectedStudent?.firstName || undefined,
+          lastName: selectedStudent?.lastName || undefined,
           beltRank: selectedStudent?.beltRank || undefined,
           program: selectedStudent?.program || undefined,
           status: selectedStudent?.status || undefined,
           photoUrl: selectedStudent?.photoUrl || undefined,
-          attendancePercentage: studentDetail?.attendancePercentage || 0,
-          lastAttended: studentDetail?.lastAttended || 'Never',
+          attendancePercentage: 0,
+          lastAttended: 'Never',
         }}
         isOpen={showDrawer && !!selectedStudent}
         onClose={handleCloseDrawer}

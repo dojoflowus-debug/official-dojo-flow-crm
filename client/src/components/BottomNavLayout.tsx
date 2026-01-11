@@ -151,7 +151,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    return getInitials(user)
+    return getInitials(user as any)
   }
 
   // Get display name with fallback
@@ -333,7 +333,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                   {isLoadingCredits ? (
                     'Credits: ...'
                   ) : (
-                    `Credits: ${creditBalance?.balance?.toLocaleString() ?? 0}`
+                    `Credits: ${(creditBalance as any)?.balance?.toLocaleString?.() ?? (creditBalance as any)?.creditsRemaining?.toLocaleString?.() ?? 0}`
                   )}
                 </span>
               </Button>
@@ -394,7 +394,7 @@ export default function BottomNavLayout({ children, hideHeader = false, hiddenIn
                     />
                   )}
                   <AvatarFallback className="text-white text-sm font-medium">
-                    {getInitials(user)}
+                    {getInitials(user as any)}
                   </AvatarFallback>
                 </Avatar>
                 <ChevronDown className={`h-4 w-4 hidden sm:block transition-transform duration-200 ${isAccountPanelOpen ? 'rotate-180' : ''} ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />

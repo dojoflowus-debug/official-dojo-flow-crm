@@ -194,7 +194,7 @@ export const staffAuthRouter = router({
         locationSlug: input.locationSlug,
       };
 
-      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions());
+      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions(ctx.req));
 
       return {
         success: true,
@@ -300,7 +300,7 @@ export const staffAuthRouter = router({
         currentOrganizationId: orgMemberships.length === 1 ? orgMemberships[0].organizationId : null,
       };
 
-      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions());
+      ctx.res.cookie("session", JSON.stringify(sessionData), getSessionCookieOptions(ctx.req));
 
       return {
         success: true,
