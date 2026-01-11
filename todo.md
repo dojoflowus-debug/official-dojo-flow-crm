@@ -974,3 +974,61 @@
   - Locations: db.ts, _core/index.ts, authRouter.ts, automationRouter.ts, billingRouter.ts, campaignsRouter.ts, classReminderService.ts, conversationsRouter.ts, creditConsumption.ts, kaiCommandRouter.ts, kaiConversationsRouter.ts, kioskDesignerRouter.ts, oauth.ts, voiceTranscription.ts
   - Solution: Replace all `new Date().toISOString().toISOString()` with `new Date().toISOString()`
   - Fixed using sed command to replace all instances across all server TypeScript files
+
+
+## Phase 18: Student Deletion System (Secure Multi-Step Approval)
+
+### Database & Migrations
+- [x] Create student_deletion_requests table migration
+- [x] Add deletedAt, deletedByUserId, deletionRequestId fields to students table
+- [x] Add permissions to staff_roles table for deletion workflow
+
+### Permissions & Authorization
+- [ ] Define permission constants: students.delete.request, students.delete.approve, students.delete.execute, students.delete.viewRequests
+- [ ] Implement permission checking in auth middleware
+- [ ] Set default permissions: Instructor (none), Manager (request+view), Owner (all)
+
+### TRPC Endpoints
+- [x] students.requestDeletion - Create deletion request with password verification
+- [x] students.listDeletionRequests - List pending requests (owner only)
+- [x] students.approveDeletion - Approve deletion with billing decision
+- [x] students.denyDeletion - Deny deletion request
+- [x] students.getDeletionRequestDetails - Get single request details
+
+### UI Components - Student Profile
+- [x] Create DeletionConfirmationModal component
+- [x] Create PaymentWarningModal component
+- [x] Create PasswordReAuthModal component
+- [x] Add "Request Deletion" button to Student Profile Danger Zone
+- [x] Implement modal flow: confirmation → payment warning → password reauth
+
+### UI Components - Owner Settings
+- [x] Create DeletionRequestsScreen component
+- [x] Create DeletionRequestCard component
+- [x] Create BillingDecisionModal component
+- [x] Implement list view with pending requests
+- [x] Add approve/deny functionality with password reauth
+
+### Security & Audit
+- [x] Implement password re-authentication endpoint
+- [x] Add audit logging for deletion events
+- [x] Implement rate limiting for password attempts
+- [x] Create audit log entries: DELETE_REQUESTED, DELETE_APPROVED, DELETE_DENIED, DELETE_EXECUTED
+
+### Soft Delete & Cleanup
+- [x] Implement soft delete logic (set deletedAt, deletedByUserId)
+- [x] Create scheduled job for anonymization after 24h
+- [x] Update student list queries to exclude soft-deleted students
+
+### Testing
+- [x] Unit tests for permission checks
+- [x] Integration tests for deletion request workflow
+- [x] Tests for password re-authentication
+- [x] Tests for billing decision logic
+- [x] Tests for audit logging
+
+### Integration & Delivery
+- [x] End-to-end testing of complete workflow
+- [x] Verify security measures
+- [x] Create checkpoint
+- [x] Deliver to user

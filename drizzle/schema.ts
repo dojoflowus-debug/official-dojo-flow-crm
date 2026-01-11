@@ -1240,7 +1240,48 @@ export const students = mysqlTable("students", {
 	guardianPhone: varchar({ length: 20 }),
 	guardianEmail: varchar({ length: 320 }),
 	organizationId: int(),
+	deletedAt: timestamp({ mode: 'string' }),
+	deletedByUserId: int(),
+	deletionRequestId: int(),
 });
+
+export const studentDeletionRequests = mysqlTable("student_deletion_requests", {
+	id: int().autoincrement().notNull(),
+	orgId: int().notNull(),
+	studentId: int().notNull(),
+	requestedByUserId: int().notNull(),
+	approvedByUserId: int(),
+	status: mysqlEnum(['pending','approved','denied','executed','expired']).default('pending').notNull(),
+	reason: text().notNull(),
+	isPayingMemberAtRequestTime: int().default(0).notNull(),
+	billingDecision: mysqlEnum(['cancel_subscription','keep_active','abort']),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_org_student").on(table.orgId, table.studentId),
+	index("idx_status").on(table.status),
+	index("idx_created").on(table.createdAt),
+]);
+
+export const auditLogs = mysqlTable("audit_logs", {
+	id: int().autoincrement().notNull(),
+	orgId: int().notNull(),
+	actorUserId: int().notNull(),
+	actorName: varchar({ length: 255 }),
+	eventType: mysqlEnum(['DELETE_REQUESTED','DELETE_APPROVED','DELETE_DENIED','DELETE_EXECUTED','DELETE_ANONYMIZED']).notNull(),
+	studentId: int(),
+	studentName: varchar({ length: 255 }),
+	deletionRequestId: int(),
+	description: text(),
+	metadata: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_org_event").on(table.orgId, table.eventType),
+	index("idx_student").on(table.studentId),
+	index("idx_created").on(table.createdAt),
+]);
 
 export const subscriptionPlans = mysqlTable("subscription_plans", {
 	id: int().autoincrement().notNull(),

@@ -379,6 +379,13 @@
       "when": 1768046289362,
       "tag": "0053_kind_pyro",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "5",
+      "when": 1768100939736,
+      "tag": "0054_tearful_maverick",
+      "breakpoints": true
     }
   ]
 }
