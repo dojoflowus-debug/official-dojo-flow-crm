@@ -1593,3 +1593,11 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Add theme versioning and rollback
 - [ ] Add multi-location bulk operations
 - [ ] Add kiosk deployment status tracking
+
+
+## Bug Fix - TRPC Error on /kiosk page
+- [x] Fixed TRPCClientError on /kiosk page - "Invalid input: expected object, received undefined"
+  - Issue: Kiosk component was passing empty string `''` as slug when locationSlug was undefined
+  - Solution: Changed `{ slug: locationSlug || '' }` to `{ slug: locationSlug! }` with `enabled: !!locationSlug` flag
+  - Result: Query is now only executed when locationSlug is defined, preventing validation errors
+  - Verified: /kiosk/main-dojo page now loads successfully without errors

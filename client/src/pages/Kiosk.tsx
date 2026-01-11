@@ -33,7 +33,7 @@ export default function Kiosk() {
 
   // Fetch kiosk runtime configuration
   const { data: kioskConfig, isLoading, error } = trpc.kiosk.getKioskRuntime.useQuery(
-    { slug: locationSlug || '' },
+    { slug: locationSlug! },
     { enabled: !!locationSlug }
   );
 
