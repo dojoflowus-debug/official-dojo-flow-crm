@@ -1251,3 +1251,59 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Test on /kiosk/main-dojo to confirm no ghost text or stray underline
 - [x] Verify refresh does not reintroduce the ghost elements
 
+
+
+## Phase 17: Kiosk Studio & Ghost Text Fix (Current)
+
+### Phase 1: Ghost Text & Background Reliability
+- [x] Remove DEFAULT_BACKGROUND_URL or set to empty string
+- [x] Update kiosk background logic: default to solid white (#ffffff)
+- [x] Set backgroundImage: none when no customUrl and no valid presetKey
+- [x] Remove legacy hero/marketing components from kiosk routes
+- [x] Verify kiosk page does not import any legacy components
+
+### Phase 2: Kiosk Studio Page Layout
+- [x] Create /settings/kiosk/studio route
+- [x] Build split-view layout (left: controls, right: iframe preview)
+- [x] Add location selector dropdown
+- [x] Create tab navigation (Appearance, Behavior, Preview)
+- [x] Implement "Save Draft" and "Publish" buttons
+
+### Phase 3: Live Preview with PostMessage
+- [x] Add studioPreview query param to kiosk page
+- [x] Implement postMessage listener in kiosk page
+- [x] Add postMessage sender in studio controls
+- [x] Enable instant visual feedback without DB roundtrips
+- [x] Add cache-busting timestamp (ts=...) to preview URL
+
+### Phase 4: Typography & Background Controls
+- [x] Add fontFamily, titleSize, titleWeight, subtitleSize, letterSpacing, buttonFontSize controls
+- [x] Implement CSS variables on .kiosk-root for typography
+- [x] Create preset gallery selector for background images
+- [x] Add custom background image upload
+- [x] Add solid background color picker
+- [x] Implement dim slider (0-100%)
+- [x] Implement blur slider (0-20px)
+- [x] Add background fit mode selector (cover, contain, etc.)
+
+### Phase 5: Screensaver Behavior
+- [x] Add idleSeconds setting (default 60)
+- [x] Create KioskScreensaver overlay component
+- [x] Display logo + "Tap to begin" message
+- [x] Implement fade-in on idle
+- [x] Implement exit on tap/mouse
+- [x] Disable screensaver in preview mode
+
+### Phase 6: Acceptance Tests
+- [x] Test default kiosk has pure white background
+- [x] Test no ghost text appears on default kiosk
+- [x] Test preset background change reflects instantly
+- [x] Test custom background upload reflects instantly
+- [x] Test studio preview updates live without refresh
+- [x] Test published settings match kiosk display
+- [x] Test screensaver appears and exits correctly
+
+### Phase 7: Delivery
+- [x] Create final checkpoint
+- [x] Verify all features working end-to-end
+- [x] Document any known limitations

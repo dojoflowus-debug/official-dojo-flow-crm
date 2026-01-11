@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -16,6 +16,20 @@ import { trpc } from '@/lib/trpc';
  */
 export default function Kiosk() {
   const { locationSlug } = useParams<{ locationSlug: string }>();
+  const [draftSettings, setDraftSettings] = useState<any>(null);
+  const isStudioPreview = new URLSearchParams(window.location.search).get('studioPreview') === '1';
+
+  // Listen for PostMessage from studio preview
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'KIOSK_SETTINGS_UPDATE') {
+        setDraftSettings(event.data.settings);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   // Fetch kiosk runtime configuration
   const { data: kioskConfig, isLoading, error } = trpc.kiosk.getKioskRuntime.useQuery(
@@ -69,11 +83,21 @@ export default function Kiosk() {
   }
 
   const { locationName, settings } = kioskConfig;
-  const backgroundImage = settings?.background?.imageUrl;
-  const backgroundPreset = settings?.background?.presetKey || 'default';
+  
+  // Use draft settings from studio preview if available, otherwise use published settings
+  const effectiveSettings = draftSettings || settings;
+  const backgroundImage = effectiveSettings?.appearance?.backgroundImageUrl || effectiveSettings?.background?.imageUrl;
+  const backgroundPreset = effectiveSettings?.appearance?.presetKey || effectiveSettings?.background?.presetKey || 'default';
+
+  const idleSeconds = effectiveSettings?.behavior?.idleSeconds || effectiveSettings?.behavior?.idleTimeout || 60;
 
   return (
-    <KioskLayout backgroundImage={backgroundImage} backgroundPreset={backgroundPreset}>
+    <KioskLayout 
+      backgroundImage={backgroundImage} 
+      backgroundPreset={backgroundPreset} 
+      isStudioPreview={isStudioPreview}
+      idleSeconds={idleSeconds}
+    >
       <KioskHome locationName={locationName} locationSlug={locationSlug} />
     </KioskLayout>
   );

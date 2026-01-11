@@ -6,6 +6,8 @@ interface KioskLayoutProps {
   children: ReactNode;
   backgroundImage?: string;
   backgroundPreset?: string;
+  isStudioPreview?: boolean;
+  idleSeconds?: number;
 }
 
 /**
@@ -22,12 +24,14 @@ export default function KioskLayout({
   children,
   backgroundImage,
   backgroundPreset = 'default',
+  isStudioPreview = false,
+  idleSeconds = 60,
 }: KioskLayoutProps) {
   const { locationSlug } = useParams<{ locationSlug: string }>();
   const [isIdle, setIsIdle] = useState(false);
 
-  // Idle detection - 60 seconds
-  const IDLE_TIMEOUT = 60000; // 60 seconds
+  // Idle detection - configurable timeout
+  const IDLE_TIMEOUT = (idleSeconds || 60) * 1000; // Convert to milliseconds
 
   useEffect(() => {
     let currentTimer: NodeJS.Timeout | null = null;
@@ -71,16 +75,17 @@ export default function KioskLayout({
   }, []);
 
   // Get background image URL based on priority:
-  // 1. Custom upload (backgroundImage)
-  // 2. Preset (backgroundPreset)
-  // 3. No background (white default)
+  // 1. Custom upload (backgroundImage) - only if not empty
+  // 2. Preset (backgroundPreset) - only if valid and not none/default
+  // 3. No background (white default) - pure white, no ghost text
   const getBackgroundUrl = (): string | null => {
-    if (backgroundImage) {
+    // Only use custom image if it's a non-empty string
+    if (backgroundImage && typeof backgroundImage === 'string' && backgroundImage.trim()) {
       return backgroundImage;
     }
 
-    // Only use preset if it's not 'none' and not the default 'default'
-    if (backgroundPreset && backgroundPreset !== 'none' && backgroundPreset !== 'default') {
+    // Only use preset if it's not none, not default, and is a valid preset key
+    if (backgroundPreset && backgroundPreset !== 'none' && backgroundPreset !== 'default' && backgroundPreset.trim()) {
       // Map preset keys to URLs
       const presets: Record<string, string> = {
         'dojo-warm-lights': '/kiosk-welcome-bg.jpg',
@@ -91,12 +96,12 @@ export default function KioskLayout({
       return presets[backgroundPreset] || null;
     }
 
-    // No background configured - return null for white default
+    // No background configured - return null for pure white default
     return null;
   };
 
-  // If idle, show screensaver
-  if (isIdle) {
+  // If idle, show screensaver (disabled in studio preview mode)
+  if (isIdle && !isStudioPreview) {
     return <KioskScreensaver onReturn={() => setIsIdle(false)} />;
   }
 

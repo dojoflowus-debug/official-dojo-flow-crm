@@ -8,7 +8,7 @@ export interface KioskSettings {
 
 export const getDefaultKioskSettings = (): KioskSettings => ({
   theme: { mode: 'dark', primaryColor: '#2563EB', accentColor: '#EF4444' },
-  background: { type: 'none', presetKey: null, imageUrl: undefined, blur: 0, dim: 0, vignette: false },
+  background: { type: 'solid', presetKey: null, imageUrl: '', blur: 0, dim: 0, vignette: false },
 })
 
 export const accountFlags = mysqlTable("account_flags", {

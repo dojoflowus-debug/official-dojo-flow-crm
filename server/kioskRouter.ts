@@ -36,14 +36,14 @@ export const defaultKioskSettings: KioskSettings = {
     accentColor: "#ef4444",
     headline: "Welcome to Training",
     subtext: "Sign in or get started below",
-    backgroundImageUrl: undefined, // Will use default if not set
-    backgroundIntensity: 70,
-    backgroundBlur: 3,
+    backgroundImageUrl: undefined, // Will use default white background if not set
+    backgroundIntensity: 0, // No overlay by default
+    backgroundBlur: 0, // No blur by default
   },
   behavior: {
     showMemberLogin: true,
     showNewStudent: true,
-    idleTimeout: 30,
+    idleTimeout: 60, // 60 seconds default
     autoReturn: true,
     kaiEnrollment: false,
     facialRecognition: false,
