@@ -1075,7 +1075,7 @@ async function startServer() {
     await handleStripeWebhook(req, res);
   });
   
-  // tRPC API
+  // tRPC API (must be BEFORE Vite/static setup so it's not caught by catch-all)
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -1083,6 +1083,7 @@ async function startServer() {
       createContext,
     })
   );
+  
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

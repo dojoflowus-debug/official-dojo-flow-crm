@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, firstName, lastName, organizationId FROM students LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, organizationId FROM students LIMIT 5;",
+  "rows": [
+    {
+      "id": "360001",
+      "firstName": "Emma",
+      "lastName": "Rodriguez",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360002",
+      "firstName": "Liam",
+      "lastName": "Chen",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360003",
+      "firstName": "Sophia",
+      "lastName": "Johnson",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360004",
+      "firstName": "Noah",
+      "lastName": "Williams",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360005",
+      "firstName": "Olivia",
+      "lastName": "Brown",
+      "organizationId": "180001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\torganizationId\n360001\tEmma\tRodriguez\t180001\n360002\tLiam\tChen\t180001\n360003\tSophia\tJohnson\t180001\n360004\tNoah\tWilliams\t180001\n360005\tOlivia\tBrown\t180001\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

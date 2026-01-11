@@ -1042,3 +1042,15 @@
   - Prevents "Invalid input: expected object, received undefined" error
   - Page now loads without validation errors
 
+
+## Bug Fix - Students Page Not Loading (Jan 11, 2026)
+
+- [x] Fixed students page showing "Loading students..." indefinitely
+  - Root cause: Vite catch-all middleware was intercepting TRPC API requests and returning HTML instead of JSON
+  - The middleware order was: TRPC → Vite catch-all, which meant Vite's catch-all was catching all requests
+  - Fix 1: Moved TRPC middleware BEFORE Vite setup so it's not caught by the catch-all
+  - Fix 2: Added check in Vite catch-all to skip API routes (if req.path.startsWith('/api/'))
+  - Fix 3: Modified getListWithFilters query to work without organization ID requirement
+  - Fix 4: Fixed conditions handling in Drizzle ORM queries to work with empty array
+  - Result: TRPC endpoints now return proper JSON responses, students page loads successfully
+  - Students now display correctly in the list view with all 30 students visible

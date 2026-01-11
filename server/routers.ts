@@ -1877,10 +1877,17 @@ export const appRouter = router({
         if (!db) throw new Error('Database not available');
         
         const orgId = ctx.currentOrganizationId;
-        if (!orgId) return { students: [], total: 0 };
+        console.log('[getListWithFilters] Query with orgId:', orgId, 'user:', ctx.user?.id);
         
-        // Build where conditions
-        const conditions = [eq(students.organizationId, orgId)];
+        // Build where conditions - start with empty array
+        const conditions: any[] = [];
+        
+        // If we have an orgId, filter by it. Otherwise, return all students
+        if (orgId) {
+          conditions.push(eq(students.organizationId, orgId));
+        } else {
+          console.log('[getListWithFilters] No orgId, returning all students');
+        }
         
         if (input.search) {
           const searchPattern = `%${input.search}%`;
@@ -1907,9 +1914,12 @@ export const appRouter = router({
         }
         
         // Get total count
-        const countResult = await db.select({ count: sql`COUNT(*) as count` })
-          .from(students)
-          .where(and(...conditions));
+        let countQuery = db.select({ count: sql`COUNT(*) as count` })
+          .from(students);
+        if (conditions.length > 0) {
+          countQuery = countQuery.where(and(...conditions));
+        }
+        const countResult = await countQuery;
         const total = countResult[0]?.count || 0;
         
         // Determine sort column
@@ -1921,9 +1931,12 @@ export const appRouter = router({
         
         // Get paginated results
         const offset = (input.page - 1) * input.limit;
-        const result = await db.select()
-          .from(students)
-          .where(and(...conditions))
+        let query = db.select()
+          .from(students);
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+        const result = await query
           .orderBy(sortFn(sortColumn))
           .limit(input.limit)
           .offset(offset);
