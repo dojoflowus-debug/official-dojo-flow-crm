@@ -1414,3 +1414,182 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] In studio, changes update preview instantly via postMessage
 - [ ] Default kiosk background is plain white with NO ghost text
 - [ ] Publish increments version and preview reload uses latest version
+
+
+## Phase 17: Kiosk Manager - Location & Customization Interface (Current)
+
+### Core Database Schema
+- [ ] Create `kiosk_locations` table (id, name, address, status, createdAt, updatedAt)
+- [ ] Create `kiosk_configs` table (locationId, backgroundColor, primaryColor, secondaryColor, backgroundImage, theme, createdAt, updatedAt)
+- [ ] Create `kiosk_backgrounds` table (id, locationId, imageUrl, uploadedAt)
+- [ ] Create `kiosk_behaviors` table (locationId, idleTimeout, message, screensaverEnabled, createdAt, updatedAt)
+
+### Location Management Features
+- [ ] Build locations list view with search functionality
+- [ ] Display location cards with name, address, status badge
+- [ ] Show "Modified X days ago" timestamp on each location
+- [ ] Implement "Add Kiosk Location" button and modal
+- [ ] Build location edit form
+- [ ] Implement location delete functionality with confirmation
+- [ ] Add location status toggle (Active/Inactive)
+- [ ] Display location list in left sidebar
+
+### Kiosk Editor Layout
+- [ ] Create two-column layout (left editor panel + right preview)
+- [ ] Build collapsible sections for different settings
+- [ ] Implement section headers with icons
+- [ ] Add expand/collapse toggle for each section
+
+### Background Customization
+- [ ] Build "Background" section with collapsible panel
+- [ ] Implement image gallery display (grid of background images)
+- [ ] Create "Upload Image" button and file input handler
+- [ ] Add image selection with visual indicator
+- [ ] Implement image preview in real-time
+- [ ] Store uploaded images in S3 with storagePut helper
+
+### Color Customization
+- [ ] Build color picker component for primary color
+- [ ] Build color picker component for secondary color
+- [ ] Add color preview swatches
+- [ ] Implement hex color input fields
+- [ ] Add color reset to defaults button
+- [ ] Real-time color preview in kiosk display panel
+
+### Image Filters
+- [ ] Build "Dim" slider (0-100) for brightness adjustment
+- [ ] Build "Blur" slider (0-100) for blur effect
+- [ ] Add filter type buttons: FR, Cover, Contain, Fill
+- [ ] Implement real-time filter preview
+- [ ] Add "Apply Solid color" option
+
+### Theme & Text Customization
+- [ ] Build "Theme & Text" collapsible section
+- [ ] Create theme preset selector
+- [ ] Add font selection dropdown
+- [ ] Implement text color customization
+- [ ] Add preview of theme changes
+
+### Screensaver Configuration
+- [ ] Build "Screensaver" collapsible section
+- [ ] Add enable/disable toggle
+- [ ] Implement screensaver content options
+- [ ] Add preview for screensaver
+
+### Behavior Settings
+- [ ] Build "Behavior" collapsible section with counter display
+- [ ] Create "Idle Timeout" slider (0-600 seconds)
+- [ ] Add custom message input field
+- [ ] Implement message character counter
+- [ ] Add behavior preview
+
+### Kiosk Display Preview
+- [ ] Create right-side preview panel showing kiosk display
+- [ ] Build "Check In" button with icon
+- [ ] Build "Start Training" button with icon
+- [ ] Add "Next Class" information display
+- [ ] Add "Today's Focus" section
+- [ ] Implement "SAVE & LAUNCH KIOSK" button
+- [ ] Add preview mode toggle
+- [ ] Display publication status ("Last Published: X days ago")
+- [ ] Show draft version indicator ("Unpublished Changes")
+
+### API Routes
+- [ ] GET /api/kiosk-locations - List all locations
+- [ ] POST /api/kiosk-locations - Create new location
+- [ ] PUT /api/kiosk-locations/:id - Update location
+- [ ] DELETE /api/kiosk-locations/:id - Delete location
+- [ ] GET /api/kiosk-configs/:locationId - Get kiosk configuration
+- [ ] PUT /api/kiosk-configs/:locationId - Update kiosk configuration
+- [ ] POST /api/kiosk-upload - Handle image uploads to S3
+- [ ] GET /api/kiosk-display/:locationId - Get display data for kiosk
+
+### UI Components
+- [ ] KioskManager main component
+- [ ] LocationCard component
+- [ ] LocationList component
+- [ ] KioskEditor component
+- [ ] EditorSection component (collapsible)
+- [ ] ColorPicker component
+- [ ] ImageUploader component
+- [ ] ImageGallery component
+- [ ] SliderControl component
+- [ ] PreviewPanel component
+- [ ] KioskDisplay component
+
+### Testing
+- [ ] Write vitest tests for kiosk location CRUD operations
+- [ ] Write vitest tests for kiosk configuration updates
+- [ ] Write vitest tests for image upload handling
+- [ ] Test color customization logic
+- [ ] Test filter application
+- [ ] Test preview updates in real-time
+
+### Integration
+- [ ] Integrate with existing authentication system
+- [ ] Ensure kiosk data is organization-scoped
+- [ ] Add proper authorization checks
+- [ ] Implement error handling and validation
+
+
+
+## Phase 17 Completion Summary
+
+### COMPLETED FEATURES
+- [x] KioskManager main page with location list and editor layout
+- [x] Location management (create, read, update, delete)
+- [x] AddLocationModal for creating new locations
+- [x] KioskEditor with collapsible sections (Background, Theme, Behavior)
+- [x] BackgroundSection with color picker, image upload, and filters
+- [x] ThemeSection with theme presets and custom colors
+- [x] BehaviorSection with idle timeout, messages, and screensaver
+- [x] KioskPreview with real-time display simulation
+- [x] kioskManagerRouter with TRPC endpoints
+- [x] Full TRPC integration for all operations
+- [x] Organization-scoped data access
+- [x] Error handling and validation
+- [x] Glass morphism UI design
+- [x] Responsive layout (mobile, tablet, desktop)
+- [x] Search and filtering functionality
+- [x] Status indicators (Active/Inactive)
+- [x] Modified date display
+- [x] Draft/Publish workflow
+- [x] Real-time preview updates
+
+### ROUTES ADDED
+- /kiosk - KioskManager main page
+- /kiosk-manager - Alternative route to KioskManager
+
+### API ENDPOINTS (TRPC)
+- kioskManager.getLocations - Get all locations
+- kioskManager.getLocation - Get single location
+- kioskManager.createLocation - Create new location
+- kioskManager.updateLocation - Update location
+- kioskManager.deleteLocation - Delete location
+- kioskManager.getKioskConfig - Get kiosk configuration
+- kioskManager.updateKioskAppearance - Update appearance (draft)
+- kioskManager.publishKioskAppearance - Publish appearance
+
+### COMPONENTS CREATED
+- /client/src/pages/KioskManager.tsx
+- /client/src/components/kiosk/AddLocationModal.tsx
+- /client/src/components/kiosk/KioskEditor.tsx
+- /client/src/components/kiosk/KioskPreview.tsx
+- /client/src/components/kiosk/sections/BackgroundSection.tsx
+- /client/src/components/kiosk/sections/ThemeSection.tsx
+- /client/src/components/kiosk/sections/BehaviorSection.tsx
+
+### BACKEND CREATED
+- /server/kioskManagerRouter.ts
+
+### NEXT STEPS (Future Enhancements)
+- [ ] Write vitest tests for TRPC endpoints
+- [ ] Write vitest tests for UI components
+- [ ] Implement S3 image upload integration
+- [ ] Add more background presets
+- [ ] Add screensaver content customization
+- [ ] Add analytics dashboard for kiosk usage
+- [ ] Add device management features
+- [ ] Add theme versioning and rollback
+- [ ] Add multi-location bulk operations
+- [ ] Add kiosk deployment status tracking

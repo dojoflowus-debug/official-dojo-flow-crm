@@ -140,6 +140,7 @@ import MasterSupport from "./pages/MasterSupport";
 import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
+import KioskManager from "./pages/KioskManager";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -174,7 +175,8 @@ function Router() {
       
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
       {/* Kiosk Manager Dashboard */}
-      <Route path="/kiosk" element={<KioskDashboard />} />
+      <Route path="/kiosk" element={<KioskManager />} />
+      <Route path="/kiosk-manager" element={<KioskManager />} />
       
       {/* Kiosk Runtime - Tablet Interface */}
       <Route path="/kiosk/:locationSlug" element={<Kiosk />} />

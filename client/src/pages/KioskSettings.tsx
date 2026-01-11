@@ -42,7 +42,7 @@ export default function KioskSettings() {
   );
 
   // Fetch preset backgrounds
-  const { data: presetBackgrounds } = trpc.kiosk.getPublicPresetBackgrounds.useQuery(void 0, {
+  const { data: presetBackgrounds } = trpc.kiosk.getPublicPresetBackgrounds.useQuery({}, {
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
   });
 
