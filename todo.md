@@ -1118,3 +1118,81 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - Earlier error referenced student ID 480002 org 120001
 - Likely root cause: click handler pushing wrong identifier (e.g., student.studentId vs student.id)
 - Must ensure list and detail use same ID type (number vs string)
+
+
+---
+
+## Phase 17: Dedicated In-Dojo Kiosk System (Current)
+
+### Kiosk Architecture & Setup
+- [x] Create KioskLayout component (isolated from website layouts)
+- [x] Create KioskHome component with new UI design
+- [x] Set up /kiosk/:locationSlug route structure
+- [x] Create kiosk-specific styling (no website styles leaking)
+
+### Kiosk Home Screen UI
+- [x] Design and build large touch-friendly tiles
+  - [x] Check In tile (for existing students)
+  - [x] Start Training tile (for new students/trials)
+- [x] Add dojo name display at top
+- [x] Add live clock display
+- [x] Add info bar (next class, today's focus)
+- [x] Add discreet Staff Login button
+- [x] Ensure responsive design for various screen sizes
+
+### Background System Redesign (Kiosk-Only)
+- [x] Create new KioskBackground system (kiosk-only, not website)
+- [x] Implement background priority order:
+  - [x] Location custom upload
+  - [x] Selected preset
+  - [x] System default
+- [x] Add image preloading to prevent black screens
+- [x] Create preset background gallery
+- [x] Add reliable custom image upload for locations
+- [x] Ensure no fallback to old dojo image unless explicitly selected
+- [x] Create kiosk-specific settings panel (not website settings)
+
+### Idle Detection & Screensaver Mode
+- [x] Implement idle detection (60 seconds)
+- [x] Create screensaver component with:
+  - [x] Full screen display
+  - [x] School logo centered
+  - [x] Subtle animated background (slow zoom, particles, light motion)
+  - [x] Large "Tap the screen to check in" text
+- [x] Wire touch/click events to return to kiosk home
+- [x] Make screensaver duration configurable
+
+### Check-In Flow (Placeholder)
+- [x] Create KioskCheckIn component with:
+  - [x] Phone number input mode
+  - [x] Name search mode
+  - [x] QR code scan ready (placeholder)
+  - [x] Large touch-friendly interface
+  - [x] Back button to home
+
+### New Student Flow (Placeholder)
+- [x] Create KioskNewStudent component with:
+  - [x] Multi-step form (info -> program -> confirm)
+  - [x] Name and phone input
+  - [x] Program interest selector
+  - [x] Confirmation screen
+  - [x] Back button to home
+
+### Testing & Isolation
+- [ ] Test kiosk routes don't leak website styles
+- [ ] Verify background system works reliably
+- [ ] Test idle detection and screensaver transition
+- [ ] Test touch interactions on various devices
+- [ ] Verify no marketing components appear in kiosk
+- [ ] Write vitest tests for KioskLayout
+- [ ] Write vitest tests for KioskHome
+- [ ] Write vitest tests for KioskScreensaver
+
+### Future Features (Backlog)
+- [ ] Rotation slides for announcements/promos/events
+- [ ] Dojo branding per location customization
+- [ ] Real check-in flow integration with database
+- [ ] Real new student enrollment flow with database
+- [ ] Class information display
+- [ ] RFID card scan support
+- [ ] Biometric authentication
