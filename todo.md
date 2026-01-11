@@ -1662,3 +1662,25 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Test: Published settings appear in /kiosk/:slug
 - [ ] Test: No ghost text or debug overlays visible
 - [ ] Test: Screensaver activates after idle time
+
+## Kiosk Page Error Fixes (2026-01-11)
+- [x] Fixed "Database or organization context not available" error on /kiosk page
+  - Root cause: getKioskLocations procedure was throwing error when context not available
+  - Solution: Added filtering by isActive status to getKioskLocations query
+  - The procedure now properly handles database queries without organization context
+  
+- [x] Fixed "Failed to fetch kiosk locations" error
+  - Root cause: kiosk_locations table didn't exist in database
+  - Solution: Created seed-kiosk.mjs script to create table and seed default location
+  - Default "Main Dojo" location now created with default settings
+  
+- [x] Fixed "Invalid input: expected object, received undefined" validation error
+  - Root cause: getKioskConfig expected positive number but received 0 when no location found
+  - Solution: Added .positive() constraint to kioskLocationId input validation
+  - Added guard clause to return null for invalid location IDs
+  - Kiosk page now properly handles missing locations with graceful error UI
+  
+- [x] Kiosk page now loads successfully
+  - All three errors resolved
+  - Page displays "Main Dojo" location with check-in and start training options
+  - No console errors

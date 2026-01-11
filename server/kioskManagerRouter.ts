@@ -91,7 +91,8 @@ export const kioskManagerRouter = router({
       try {
         const result = await ctx.db
           .select()
-          .from(kiosk_locations);
+          .from(kiosk_locations)
+          .where(eq(kiosk_locations.isActive, 1));
 
         return result.map(loc => ({
           id: loc.id,
@@ -386,13 +387,18 @@ export const kioskManagerRouter = router({
    * Get kiosk configuration by location ID
    */
   getKioskConfig: protectedProcedure
-    .input(z.object({ kioskLocationId: z.number() }))
+    .input(z.object({ kioskLocationId: z.number().positive() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.db) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Database not available',
         });
+      }
+
+      // Return null if invalid location ID
+      if (input.kioskLocationId <= 0) {
+        return null;
       }
 
       try {
