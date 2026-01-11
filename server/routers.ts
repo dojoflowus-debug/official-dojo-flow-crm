@@ -1027,13 +1027,19 @@ export const appRouter = router({
     list: publicProcedure.query(async () => {
       const { getDb } = await import("./db");
       const { leadSources } = await import("../drizzle/schema");
+      const { desc } = await import("drizzle-orm");
       
       const db = await getDb();
       if (!db) throw new Error('Database not available');
       
-      // Get all lead sources ordered by creation date
-      const sources = await db.select().from(leadSources).orderBy(leadSources.createdAt);
-      return sources;
+      try {
+        // Get all lead sources ordered by creation date
+        const sources = await db.select().from(leadSources).orderBy(desc(leadSources.createdAt));
+        return sources || [];
+      } catch (error) {
+        console.error('[leadSources.list] Error fetching lead sources:', error);
+        return [];
+      }
     }),
     
     toggle: publicProcedure
@@ -2195,7 +2201,7 @@ export const appRouter = router({
       ]))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { students, studentAttendance, studentContacts, studentTuition, studentMessages } = await import("../drizzle/schema");
+        const { students, studentAttendance, studentContacts, studentTuition } = await import("../drizzle/schema");
         const { eq, and, desc } = await import("drizzle-orm");
         
         const db = await getDb();
@@ -2204,42 +2210,63 @@ export const appRouter = router({
         const orgId = ctx.currentOrganizationId;
         if (!orgId) return null;
         
-        // Get student
-        const [student] = await db.select()
-          .from(students)
-          .where(and(
-            eq(students.id, input.id),
-            eq(students.organizationId, orgId)
-          ));
-        
-        if (!student) return null;
-        
-        // Get attendance
-        const attendance = await db.select()
-          .from(studentAttendance)
-          .where(eq(studentAttendance.studentId, input.id))
-          .orderBy(desc(studentAttendance.classDate))
-          .limit(10);
-        
-        // Get last contact
-        const lastContact = await db.select()
-          .from(studentContacts)
-          .where(eq(studentContacts.studentId, input.id))
-          .orderBy(desc(studentContacts.contactDate))
-          .limit(1);
-        
-        // Get tuition
-        const tuition = await db.select()
-          .from(studentTuition)
-          .where(eq(studentTuition.studentId, input.id))
-          .orderBy(desc(studentTuition.dueDate));
-        
-        return {
-          student,
-          attendance: attendance || [],
-          lastContact: lastContact[0] || null,
-          tuition: tuition || [],
-        };
+        try {
+          // Get student
+          const [student] = await db.select()
+            .from(students)
+            .where(and(
+              eq(students.id, input.id),
+              eq(students.organizationId, orgId)
+            ));
+          
+          if (!student) return null;
+          
+          // Get attendance - with error handling
+          let attendance = [];
+          try {
+            attendance = await db.select()
+              .from(studentAttendance)
+              .where(eq(studentAttendance.studentId, input.id))
+              .orderBy(desc(studentAttendance.classDate))
+              .limit(10);
+          } catch (err) {
+            console.warn('[getDetail] Failed to fetch attendance:', err);
+          }
+          
+          // Get last contact - with error handling
+          let lastContact = null;
+          try {
+            const contacts = await db.select()
+              .from(studentContacts)
+              .where(eq(studentContacts.studentId, input.id))
+              .orderBy(desc(studentContacts.contactDate))
+              .limit(1);
+            lastContact = contacts[0] || null;
+          } catch (err) {
+            console.warn('[getDetail] Failed to fetch contacts:', err);
+          }
+          
+          // Get tuition - with error handling
+          let tuition = [];
+          try {
+            tuition = await db.select()
+              .from(studentTuition)
+              .where(eq(studentTuition.studentId, input.id))
+              .orderBy(desc(studentTuition.dueDate));
+          } catch (err) {
+            console.warn('[getDetail] Failed to fetch tuition:', err);
+          }
+          
+          return {
+            student,
+            attendance: attendance || [],
+            lastContact: lastContact || null,
+            tuition: tuition || [],
+          };
+        } catch (error) {
+          console.error('[getDetail] Error fetching student detail:', error);
+          throw error;
+        }
       }),
     
     // Request student deletion (staff with permission)

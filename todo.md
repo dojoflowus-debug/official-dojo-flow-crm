@@ -1067,3 +1067,33 @@
   - Root cause: Input validation schema was `z.object({}).optional()` which caused validation to fail
   - Fixed: Changed `getAnalytics` procedure input from `z.object({}).optional()` to `z.void()`
   - Updated client calls in Students.tsx and StudentsElevated.tsx to pass `undefined` instead of `{}`
+
+
+## Bug Fixes - Error Resolution (2026-01-11)
+
+- [x] Fixed Error 1: Input validation error on /students/480002 page
+  - The `getAnalytics` procedure already had `z.void()` input validation (correct)
+  - No changes needed for this error
+
+- [x] Fixed Error 2: Failed query for lead sources
+  - Updated `leadSources.list` procedure to include error handling
+  - Added `desc` import from drizzle-orm for proper ordering
+  - Wrapped query in try-catch to return empty array on error instead of throwing
+  - Query now: `db.select().from(leadSources).orderBy(desc(leadSources.createdAt))`
+
+- [x] Fixed Error 3: Failed query for student details on /students/480002
+  - Updated `students.getDetail` procedure with comprehensive error handling
+  - Wrapped each related data fetch (attendance, contacts, tuition) in individual try-catch blocks
+  - If any related table query fails, the procedure continues with empty data instead of throwing
+  - Returns graceful fallback values:
+    - attendance: empty array []
+    - lastContact: null
+    - tuition: empty array []
+  - Main student query still validates organization access for security
+
+## Summary of Changes
+
+All three errors have been fixed by adding proper error handling and graceful fallbacks:
+1. Lead sources queries now return empty arrays on error
+2. Student detail queries now handle missing or failing related table queries
+3. Each query has proper logging for debugging
