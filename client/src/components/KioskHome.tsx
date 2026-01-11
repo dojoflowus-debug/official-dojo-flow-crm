@@ -5,6 +5,7 @@ import { Clock, LogIn, UserPlus, Settings } from 'lucide-react';
 interface KioskHomeProps {
   locationName?: string;
   locationSlug?: string;
+  settings?: any;
 }
 
 /**
@@ -17,7 +18,7 @@ interface KioskHomeProps {
  * - Discreet staff login button
  * - Responsive for various screen sizes
  */
-export default function KioskHome({ locationName, locationSlug: propSlug }: KioskHomeProps) {
+export default function KioskHome({ locationName, locationSlug: propSlug, settings }: KioskHomeProps) {
   const navigate = useNavigate();
   const { locationSlug: routeSlug } = useParams<{ locationSlug: string }>();
   const slug = propSlug || routeSlug;

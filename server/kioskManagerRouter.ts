@@ -5,12 +5,113 @@ import { z } from 'zod';
 import { locations, kiosk_locations } from '../drizzle/schema';
 import { getDb } from './db';
 
+// Default kiosk settings
+const DEFAULT_SETTINGS = {
+  theme: { accentColor: '#ef4444', fontFamily: 'Inter' },
+  content: {
+    headline: 'Welcome to Training',
+    subtext: 'Tap to begin',
+    tileLeft: { title: 'Check In', subtitle: 'Tap here to check into class', button: 'Check In' },
+    tileRight: { title: 'Start Training', subtitle: 'New students start here', button: 'Start Training' },
+    infoLeftLabel: 'Next Class',
+    infoRightLabel: 'Today\'s Focus'
+  },
+  layout: { showClock: true, showInfoBar: true },
+  background: { type: 'solid', color: '#ffffff', presetKey: null, customUrl: null, blur: 0, dim: 0, fit: 'cover' },
+  screensaver: { enabled: true, idleSeconds: 60, message: 'Tap the screen to check-in', showLogo: true }
+};
+
 /**
  * Kiosk Manager Router - Handles location and kiosk configuration management
  */
 export const kioskManagerRouter = router({
   /**
-   * Get all kiosk locations for the organization
+   * Seed default location if none exist
+   */
+  seedDefaultLocation: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      if (!ctx.db || !ctx.organizationId) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database or organization context not available',
+        });
+      }
+
+      try {
+        // Check if any kiosk locations exist
+        const existing = await ctx.db
+          .select()
+          .from(kiosk_locations)
+          .limit(1);
+
+        if (existing.length > 0) {
+          return { success: true, message: 'Locations already exist' };
+        }
+
+        // Create default location
+        const result = await ctx.db
+          .insert(kiosk_locations)
+          .values({
+            name: 'Main Dojo',
+            locationId: null,
+            isActive: 1,
+            kioskAppearanceDraft: JSON.stringify(DEFAULT_SETTINGS),
+            kioskAppearancePublished: JSON.stringify(DEFAULT_SETTINGS),
+            kioskAppearanceVersion: 1,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+
+        return {
+          success: true,
+          message: 'Default location created',
+          locationId: result[0],
+        };
+      } catch (error) {
+        console.error('Error seeding default location:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to seed default location',
+        });
+      }
+    }),
+
+  /**
+   * Get all kiosk locations
+   */
+  getKioskLocations: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        const result = await ctx.db
+          .select()
+          .from(kiosk_locations);
+
+        return result.map(loc => ({
+          id: loc.id,
+          name: loc.name,
+          slug: loc.name?.toLowerCase().replace(/\s+/g, '-'),
+          isEnabled: loc.isActive,
+          createdAt: loc.createdAt,
+          updatedAt: loc.updatedAt,
+        }));
+      } catch (error) {
+        console.error('Error fetching kiosk locations:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch kiosk locations',
+        });
+      }
+    }),
+
+  /**
+   * Get all locations for the organization (original method)
    */
   getLocations: protectedProcedure
     .query(async ({ ctx }) => {
@@ -93,6 +194,51 @@ export const kioskManagerRouter = router({
 
   /**
    * Create a new kiosk location
+   */
+  createKioskLocation: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, 'Location name is required'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        const result = await ctx.db
+          .insert(kiosk_locations)
+          .values({
+            name: input.name,
+            locationId: null,
+            isActive: 1,
+            kioskAppearanceDraft: JSON.stringify(DEFAULT_SETTINGS),
+            kioskAppearancePublished: JSON.stringify(DEFAULT_SETTINGS),
+            kioskAppearanceVersion: 1,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+
+        return {
+          success: true,
+          locationId: result[0],
+          message: 'Kiosk location created successfully',
+        };
+      } catch (error) {
+        console.error('Error creating kiosk location:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create kiosk location',
+        });
+      }
+    }),
+
+  /**
+   * Create a new location (original method)
    */
   createLocation: protectedProcedure
     .input(
@@ -237,15 +383,15 @@ export const kioskManagerRouter = router({
     }),
 
   /**
-   * Get kiosk configuration for a location
+   * Get kiosk configuration by location ID
    */
   getKioskConfig: protectedProcedure
-    .input(z.object({ locationId: z.number() }))
+    .input(z.object({ kioskLocationId: z.number() }))
     .query(async ({ ctx, input }) => {
-      if (!ctx.db || !ctx.organizationId) {
+      if (!ctx.db) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Database or organization context not available',
+          message: 'Database not available',
         });
       }
 
@@ -253,14 +399,25 @@ export const kioskManagerRouter = router({
         const config = await ctx.db
           .select()
           .from(kiosk_locations)
-          .where(eq(kiosk_locations.locationId, input.locationId))
+          .where(eq(kiosk_locations.id, input.kioskLocationId))
           .limit(1);
 
         if (!config || config.length === 0) {
           return null;
         }
 
-        return config[0];
+        const data = config[0];
+        return {
+          id: data.id,
+          name: data.name,
+          slug: data.name?.toLowerCase().replace(/\s+/g, '-'),
+          isEnabled: data.isActive,
+          draft: data.kioskAppearanceDraft ? JSON.parse(data.kioskAppearanceDraft) : DEFAULT_SETTINGS,
+          published: data.kioskAppearancePublished ? JSON.parse(data.kioskAppearancePublished) : DEFAULT_SETTINGS,
+          version: data.kioskAppearanceVersion,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+        };
       } catch (error) {
         console.error('Error fetching kiosk config:', error);
         throw new TRPCError({
@@ -276,51 +433,28 @@ export const kioskManagerRouter = router({
   updateKioskAppearance: protectedProcedure
     .input(
       z.object({
-        locationId: z.number(),
+        kioskLocationId: z.number(),
         appearance: z.record(z.any()),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.db || !ctx.organizationId) {
+      if (!ctx.db) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Database or organization context not available',
+          message: 'Database not available',
         });
       }
 
       try {
         const appearanceJson = JSON.stringify(input.appearance);
 
-        // Check if config exists
-        const existing = await ctx.db
-          .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.locationId, input.locationId))
-          .limit(1);
-
-        if (existing && existing.length > 0) {
-          // Update existing
-          await ctx.db
-            .update(kiosk_locations)
-            .set({
-              kioskAppearanceDraft: appearanceJson,
-              updatedAt: new Date().toISOString(),
-            })
-            .where(eq(kiosk_locations.locationId, input.locationId));
-        } else {
-          // Create new
-          await ctx.db
-            .insert(kiosk_locations)
-            .values({
-              locationId: input.locationId,
-              name: `Kiosk ${input.locationId}`,
-              kioskAppearanceDraft: appearanceJson,
-              kioskAppearanceVersion: 1,
-              isActive: 1,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            });
-        }
+        await ctx.db
+          .update(kiosk_locations)
+          .set({
+            kioskAppearanceDraft: appearanceJson,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(kiosk_locations.id, input.kioskLocationId));
 
         return {
           success: true,
@@ -339,12 +473,12 @@ export const kioskManagerRouter = router({
    * Publish kiosk appearance
    */
   publishKioskAppearance: protectedProcedure
-    .input(z.object({ locationId: z.number() }))
+    .input(z.object({ kioskLocationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.db || !ctx.organizationId) {
+      if (!ctx.db) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Database or organization context not available',
+          message: 'Database not available',
         });
       }
 
@@ -352,7 +486,7 @@ export const kioskManagerRouter = router({
         const config = await ctx.db
           .select()
           .from(kiosk_locations)
-          .where(eq(kiosk_locations.locationId, input.locationId))
+          .where(eq(kiosk_locations.id, input.kioskLocationId))
           .limit(1);
 
         if (!config || config.length === 0) {
@@ -372,7 +506,7 @@ export const kioskManagerRouter = router({
             kioskAppearanceVersion: newVersion,
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.locationId, input.locationId));
+          .where(eq(kiosk_locations.id, input.kioskLocationId));
 
         return {
           success: true,

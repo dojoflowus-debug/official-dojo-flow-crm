@@ -2,12 +2,31 @@ import { ReactNode, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import KioskScreensaver from './KioskScreensaver';
 
+interface BackgroundSettings {
+  type?: string;
+  color?: string;
+  customUrl?: string | null;
+  presetKey?: string | null;
+  blur?: number;
+  dim?: number;
+  fit?: string;
+}
+
+interface ScreensaverSettings {
+  enabled?: boolean;
+  idleSeconds?: number;
+  message?: string;
+  showLogo?: boolean;
+}
+
 interface KioskLayoutProps {
   children: ReactNode;
+  backgroundSettings?: BackgroundSettings;
   backgroundImage?: string;
   backgroundPreset?: string;
   isStudioPreview?: boolean;
   idleSeconds?: number;
+  screensaverSettings?: ScreensaverSettings;
 }
 
 /**
@@ -22,10 +41,12 @@ interface KioskLayoutProps {
  */
 export default function KioskLayout({
   children,
+  backgroundSettings,
   backgroundImage,
   backgroundPreset = 'default',
   isStudioPreview = false,
   idleSeconds = 60,
+  screensaverSettings,
 }: KioskLayoutProps) {
   const { locationSlug } = useParams<{ locationSlug: string }>();
   const [isIdle, setIsIdle] = useState(false);
@@ -72,62 +93,82 @@ export default function KioskLayout({
         clearTimeout(currentTimer);
       }
     };
-  }, []);
+  }, [IDLE_TIMEOUT]);
 
-  // Get background image URL based on priority:
-  // 1. Custom upload (backgroundImage) - only if not empty
-  // 2. Preset (backgroundPreset) - only if valid and not none/default
-  // 3. No background (white default) - pure white, no ghost text
-  const getBackgroundUrl = (): string | null => {
-    // Only use custom image if it's a non-empty string
-    if (backgroundImage && typeof backgroundImage === 'string' && backgroundImage.trim()) {
-      return backgroundImage;
+  // Get background configuration with priority:
+  // 1. Custom image (type=custom and customUrl)
+  // 2. Preset (type=preset and presetKey)
+  // 3. Solid color (type=solid and color)
+  // 4. Default white
+  const getBackgroundStyle = (): React.CSSProperties => {
+    const settings = backgroundSettings || {};
+    const type = settings.type || 'solid';
+    const blur = settings.blur || 0;
+    const dim = settings.dim || 0;
+    const fit = settings.fit || 'cover';
+
+    // Priority 1: Custom image
+    if (type === 'custom' && settings.customUrl && typeof settings.customUrl === 'string' && settings.customUrl.trim()) {
+      return {
+        backgroundImage: `url(${settings.customUrl})`,
+        backgroundSize: fit,
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        filter: `blur(${blur}px) brightness(${1 - dim / 100})`,
+      };
     }
 
-    // Only use preset if it's not none, not default, and is a valid preset key
-    if (backgroundPreset && backgroundPreset !== 'none' && backgroundPreset !== 'default' && backgroundPreset.trim()) {
-      // Map preset keys to URLs
+    // Priority 2: Preset
+    if (type === 'preset' && settings.presetKey) {
       const presets: Record<string, string> = {
         'dojo-warm-lights': '/kiosk-welcome-bg.jpg',
         'dojo-dark': '/kiosk-dark-bg.jpg',
         'dojo-minimal': '/kiosk-minimal-bg.jpg',
       };
-
-      return presets[backgroundPreset] || null;
+      const presetUrl = presets[settings.presetKey];
+      if (presetUrl) {
+        return {
+          backgroundImage: `url(${presetUrl})`,
+          backgroundSize: fit,
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          filter: `blur(${blur}px) brightness(${1 - dim / 100})`,
+        };
+      }
     }
 
-    // No background configured - return null for pure white default
-    return null;
+    // Priority 3: Solid color
+    if (type === 'solid') {
+      return {
+        backgroundColor: settings.color || '#ffffff',
+        backgroundImage: 'none',
+      };
+    }
+
+    // Fallback: white
+    return {
+      backgroundColor: '#ffffff',
+      backgroundImage: 'none',
+    };
   };
 
   // If idle, show screensaver (disabled in studio preview mode)
-  if (isIdle && !isStudioPreview) {
-    return <KioskScreensaver onReturn={() => setIsIdle(false)} />;
+  if (isIdle && !isStudioPreview && screensaverSettings?.enabled) {
+    return <KioskScreensaver onReturn={() => setIsIdle(false)} message={screensaverSettings?.message} showLogo={screensaverSettings?.showLogo} />;
   }
 
-  const backgroundUrl = getBackgroundUrl();
-  const hasBackground = !!backgroundUrl;
-
-  // Background style - only apply if image exists
-  const backgroundStyle = hasBackground ? {
-    backgroundImage: `url(${backgroundUrl})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundAttachment: 'fixed',
-  } : {
-    backgroundColor: '#ffffff',
-    backgroundImage: 'none',
-  };
+  const backgroundStyle = getBackgroundStyle();
+  const hasImage = backgroundStyle.backgroundImage && backgroundStyle.backgroundImage !== 'none';
 
   return (
     <div className="kiosk-root relative min-h-screen w-full overflow-hidden" style={backgroundStyle}>
       {/* Blur overlay for background - only when image exists */}
-      {hasBackground && (
+      {hasImage && (
         <div className="absolute inset-0 backdrop-blur-sm bg-black/20" />
       )}
 
       {/* Vignette overlay - only when image exists */}
-      {hasBackground && (
+      {hasImage && (
         <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/30" />
       )}
 

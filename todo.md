@@ -1601,3 +1601,64 @@ All three errors have been fixed by adding proper error handling and graceful fa
   - Solution: Changed `{ slug: locationSlug || '' }` to `{ slug: locationSlug! }` with `enabled: !!locationSlug` flag
   - Result: Query is now only executed when locationSlug is defined, preventing validation errors
   - Verified: /kiosk/main-dojo page now loads successfully without errors
+
+
+## Phase 17: Kiosk Manager Builder (In Progress)
+
+### Database & Seeding
+- [x] Add seed location logic to auto-create "Main Dojo" if table is empty
+- [x] Implement tRPC create location procedure
+- [x] Add location list query procedure
+- [x] Standardize settings JSON shape with DEFAULT_SETTINGS
+
+### Builder Layout (3-Column)
+- [x] Implement 3-column layout (Location List | Builder Controls | Live Preview)
+- [x] Build location list with search and cards (name, slug, enabled, actions)
+- [x] Create modal for adding new locations
+- [x] Add builder control tabs (Design / Content / Behavior / Screensaver)
+
+### Live Preview & Device Frame
+- [x] Create device frame component (iPad landscape, portrait, 1080p)
+- [x] Implement live preview rendering of kiosk home screen
+- [x] Add preview size toggles
+- [x] Wire builder state to preview updates instantly
+
+### Builder Controls
+- [x] Design tab: theme color picker, font family selector
+- [x] Content tab: headline, subtext, tile titles/subtitles/buttons, info labels
+- [x] Behavior tab: clock toggle, info bar toggle
+- [x] Background controls: solid color, preset gallery, upload, blur, dim, fit mode
+
+### Save & Publish Workflow
+- [x] Implement sticky bottom bar with Save Draft button
+- [x] Implement Publish/Launch button
+- [x] Add status display (Draft changes vs Published + timestamp)
+- [x] Wire Save Draft to write settings JSON to DB
+- [x] Wire Publish to set publishedAt/version and make kiosk route use published settings
+
+### Kiosk Route & Background Fix
+- [x] Update /kiosk/:slug route to use published settings
+- [x] Implement background.type logic (custom > preset > solid)
+- [x] Ensure background applies correctly to kiosk display
+- [x] Standardize settings JSON shape across builder and kiosk
+
+### Debug Cleanup
+- [ ] Remove debug/highlight overlays
+- [ ] Remove duplicate rendering paths
+- [ ] Remove ghost text and debug wrappers
+- [ ] Verify single header + info bar + tiles rendering
+
+### Screensaver Feature
+- [x] Implement idle detection (default 60 seconds)
+- [x] Create full-screen screensaver overlay
+- [x] Add logo + message display
+- [x] Implement fade-in animation
+- [x] Add tap-to-dismiss functionality
+
+### End-to-End Testing
+- [ ] Test: Default location appears on load
+- [ ] Test: Can add new location
+- [ ] Test: Background and typography changes update preview live
+- [ ] Test: Published settings appear in /kiosk/:slug
+- [ ] Test: No ghost text or debug overlays visible
+- [ ] Test: Screensaver activates after idle time

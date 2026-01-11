@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 interface KioskScreensaverProps {
   onReturn: () => void;
+  message?: string;
+  showLogo?: boolean;
 }
 
 /**
@@ -13,7 +15,7 @@ interface KioskScreensaverProps {
  * - Large "Tap to check in" text
  * - Any interaction returns to kiosk home
  */
-export default function KioskScreensaver({ onReturn }: KioskScreensaverProps) {
+export default function KioskScreensaver({ onReturn, message = 'Tap the screen to check in', showLogo = true }: KioskScreensaverProps) {
   const [scale, setScale] = useState(1);
   const [opacity, setOpacity] = useState(0.3);
 
@@ -84,19 +86,21 @@ export default function KioskScreensaver({ onReturn }: KioskScreensaverProps) {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-6">
         {/* Logo */}
-        <div
-          className="mb-12 transition-transform duration-100"
-          style={{
-            transform: `scale(${scale})`,
-            opacity,
-          }}
-        >
-          <img
-            src="/logo-icon.png"
-            alt="DojoFlow"
-            className="h-32 w-32 object-contain drop-shadow-2xl"
-          />
-        </div>
+        {showLogo && (
+          <div
+            className="mb-12 transition-transform duration-100"
+            style={{
+              transform: `scale(${scale})`,
+              opacity,
+            }}
+          >
+            <img
+              src="/logo-icon.png"
+              alt="DojoFlow"
+              className="h-32 w-32 object-contain drop-shadow-2xl"
+            />
+          </div>
+        )}
 
         {/* Main text */}
         <div className="space-y-6 max-w-2xl">
@@ -105,7 +109,7 @@ export default function KioskScreensaver({ onReturn }: KioskScreensaverProps) {
           </h1>
 
           <p className="text-3xl md:text-4xl text-white/80 font-light">
-            Tap the screen to check in
+            {message}
           </p>
 
           {/* Rotating slogans */}

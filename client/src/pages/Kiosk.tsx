@@ -10,7 +10,8 @@ import { trpc } from '@/lib/trpc';
  * Kiosk - Main kiosk page
  * 
  * This page:
- * - Fetches kiosk configuration for the location
+ * - Fetches kiosk location by slug
+ * - Fetches published kiosk configuration
  * - Wraps content in KioskLayout (handles background, idle detection, screensaver)
  * - Renders KioskHome (the main kiosk UI)
  */
@@ -31,10 +32,14 @@ export default function Kiosk() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Fetch kiosk runtime configuration
-  const { data: kioskConfig, isLoading, error } = trpc.kiosk.getKioskRuntime.useQuery(
-    { slug: locationSlug! },
-    { enabled: !!locationSlug }
+  // Fetch kiosk location by slug
+  const { data: kioskLocations } = trpc.kioskManager.getKioskLocations.useQuery();
+  const kioskLocation = kioskLocations?.find(loc => loc.slug === locationSlug);
+
+  // Fetch kiosk config with published settings
+  const { data: kioskConfig, isLoading, error } = trpc.kioskManager.getKioskConfig.useQuery(
+    kioskLocation ? { kioskLocationId: kioskLocation.id } : { kioskLocationId: 0 },
+    { enabled: !!kioskLocation }
   );
 
   // Loading state
@@ -82,23 +87,34 @@ export default function Kiosk() {
     );
   }
 
-  const { locationName, settings } = kioskConfig;
+  // Use published settings, fallback to draft if in preview mode
+  const effectiveSettings = draftSettings || kioskConfig?.published;
   
-  // Use draft settings from studio preview if available, otherwise use published settings
-  const effectiveSettings = draftSettings || settings;
-  const backgroundImage = effectiveSettings?.appearance?.backgroundImageUrl || effectiveSettings?.background?.imageUrl;
-  const backgroundPreset = effectiveSettings?.appearance?.presetKey || effectiveSettings?.background?.presetKey || 'default';
+  if (!effectiveSettings) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+        <Card className="max-w-md p-8 text-center space-y-4">
+          <AlertCircle className="h-16 w-16 mx-auto text-red-500" />
+          <h1 className="text-2xl font-bold">Kiosk Not Configured</h1>
+          <p className="text-muted-foreground">
+            This kiosk has not been published yet. Please configure it in the Kiosk Manager.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
-  const idleSeconds = effectiveSettings?.behavior?.idleSeconds || effectiveSettings?.behavior?.idleTimeout || 60;
+  const backgroundSettings = effectiveSettings.background || {};
+  const idleSeconds = effectiveSettings.screensaver?.idleSeconds || 60;
 
   return (
     <KioskLayout 
-      backgroundImage={backgroundImage} 
-      backgroundPreset={backgroundPreset} 
+      backgroundSettings={backgroundSettings}
       isStudioPreview={isStudioPreview}
       idleSeconds={idleSeconds}
+      screensaverSettings={effectiveSettings.screensaver}
     >
-      <KioskHome locationName={locationName} locationSlug={locationSlug} />
+      <KioskHome locationName={kioskLocation?.name || 'Dojo'} locationSlug={locationSlug} settings={effectiveSettings} />
     </KioskLayout>
   );
 }
