@@ -1,4 +1,4 @@
-import { router, protectedProcedure } from './_core/trpc';
+import { router, protectedProcedure, publicProcedure } from './_core/trpc';
 import { TRPCError } from '@trpc/server';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
@@ -77,9 +77,9 @@ export const kioskManagerRouter = router({
     }),
 
   /**
-   * Get all kiosk locations
+   * Get all kiosk locations (PUBLIC - for kiosk display)
    */
-  getKioskLocations: protectedProcedure
+  getKioskLocations: publicProcedure
     .query(async ({ ctx }) => {
       if (!ctx.db) {
         throw new TRPCError({
@@ -384,9 +384,9 @@ export const kioskManagerRouter = router({
     }),
 
   /**
-   * Get kiosk configuration by location ID
+   * Get kiosk configuration by location ID (PUBLIC - for kiosk display)
    */
-  getKioskConfig: protectedProcedure
+  getKioskConfig: publicProcedure
     .input(z.object({ kioskLocationId: z.number().positive() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.db) {

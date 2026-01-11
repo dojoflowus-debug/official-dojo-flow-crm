@@ -1831,3 +1831,11 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Document kiosk setup and configuration
 - [ ] Create admin guide for customization
 - [ ] Add kiosk routes to main navigation
+
+## Bug Fixes (Continued)
+
+- [x] Fixed TRPCClientError on /kiosk page (JSON parsing error)
+  - Changed `getKioskLocations` from `protectedProcedure` to `publicProcedure`
+  - Changed `getKioskConfig` from `protectedProcedure` to `publicProcedure`
+  - Kiosk display pages should be publicly accessible without authentication
+  - Page now loads successfully with proper kiosk UI display
