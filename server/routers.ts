@@ -1865,8 +1865,8 @@ export const appRouter = router({
         status: z.string().optional(),
         program: z.string().optional(),
         beltRank: z.string().optional(),
-        sortBy: z.enum(['name', 'enrollment', 'lastContact', 'status']).default('name'),
-        sortOrder: z.enum(['asc', 'desc']).default('asc'),
+        sortBy: z.enum(['name', 'enrollment', 'lastContact', 'status']).optional().default('name'),
+        sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
       }))
       .query(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
