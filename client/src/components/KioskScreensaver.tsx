@@ -20,25 +20,24 @@ export default function KioskScreensaver({ onReturn }: KioskScreensaverProps) {
   // Subtle animation loop - slow zoom and fade
   useEffect(() => {
     let animationFrame: number;
-    let direction = 1; // 1 for zoom in, -1 for zoom out
+    let direction = 1;
+    let currentScale = 1;
+    let currentOpacity = 0.3;
 
     const animate = () => {
-      setScale((prev) => {
-        let newScale = prev + direction * 0.0005;
-        if (newScale >= 1.1) {
-          direction = -1;
-          newScale = 1.1;
-        } else if (newScale <= 1) {
-          direction = 1;
-          newScale = 1;
-        }
-        return newScale;
-      });
+      currentScale += direction * 0.0005;
+      if (currentScale >= 1.1) {
+        direction = -1;
+        currentScale = 1.1;
+      } else if (currentScale <= 1) {
+        direction = 1;
+        currentScale = 1;
+      }
+      setScale(currentScale);
 
-      setOpacity((prev) => {
-        const target = direction === 1 ? 0.3 : 0.5;
-        return prev + (target - prev) * 0.01;
-      });
+      const target = direction === 1 ? 0.3 : 0.5;
+      currentOpacity = currentOpacity + (target - currentOpacity) * 0.01;
+      setOpacity(currentOpacity);
 
       animationFrame = requestAnimationFrame(animate);
     };
@@ -89,7 +88,7 @@ export default function KioskScreensaver({ onReturn }: KioskScreensaverProps) {
           className="mb-12 transition-transform duration-100"
           style={{
             transform: `scale(${scale})`,
-            opacity: 0.9,
+            opacity,
           }}
         >
           <img

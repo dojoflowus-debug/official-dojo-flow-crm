@@ -24,30 +24,27 @@ export default function KioskLayout({
 }: KioskLayoutProps) {
   const { locationSlug } = useParams<{ locationSlug: string }>();
   const [isIdle, setIsIdle] = useState(false);
-  const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Idle detection - 60 seconds
   const IDLE_TIMEOUT = 60000; // 60 seconds
 
   useEffect(() => {
+    let currentTimer: NodeJS.Timeout | null = null;
+
     const resetIdleTimer = () => {
       // Clear existing timer
-      if (idleTimer) {
-        clearTimeout(idleTimer);
+      if (currentTimer) {
+        clearTimeout(currentTimer);
       }
 
       // Set new timer
-      const newTimer = setTimeout(() => {
+      currentTimer = setTimeout(() => {
         setIsIdle(true);
       }, IDLE_TIMEOUT);
-
-      setIdleTimer(newTimer);
     };
 
     const handleUserInteraction = () => {
-      if (isIdle) {
-        setIsIdle(false);
-      }
+      setIsIdle(false);
       resetIdleTimer();
     };
 
@@ -66,11 +63,11 @@ export default function KioskLayout({
       window.removeEventListener('keypress', handleUserInteraction);
       window.removeEventListener('mousemove', handleUserInteraction);
 
-      if (idleTimer) {
-        clearTimeout(idleTimer);
+      if (currentTimer) {
+        clearTimeout(currentTimer);
       }
     };
-  }, [isIdle, idleTimer]);
+  }, []);
 
   // Get background image URL based on priority:
   // 1. Custom upload (backgroundImage)
@@ -121,7 +118,7 @@ export default function KioskLayout({
 
       {/* Kiosk mode indicator (bottom right, subtle) */}
       <div className="absolute bottom-4 right-4 z-20 text-white/30 text-xs font-medium tracking-wide">
-        Kiosk Mode • {locationSlug}
+        Kiosk Mode • {locationSlug || 'main'}
       </div>
     </div>
   );

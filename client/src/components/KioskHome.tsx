@@ -38,11 +38,14 @@ export default function KioskHome({ locationName, locationSlug: propSlug }: Kios
       setCurrentTime(timeString);
     };
 
+    // Set initial time immediately
     updateClock();
+    
+    // Update every second
     const interval = setInterval(updateClock, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Empty dependency array - only run once on mount
 
   // Fade in animation on mount
   useEffect(() => {
