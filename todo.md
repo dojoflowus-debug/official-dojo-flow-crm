@@ -1839,3 +1839,77 @@ All three errors have been fixed by adding proper error handling and graceful fa
   - Changed `getKioskConfig` from `protectedProcedure` to `publicProcedure`
   - Kiosk display pages should be publicly accessible without authentication
   - Page now loads successfully with proper kiosk UI display
+
+
+## Phase 18: Kiosk Builder UI Upgrades (CURRENT)
+
+### Resizable Split-Screen Layout
+- [ ] Convert builder page to 3-column layout (Locations list | Editor | Preview)
+- [ ] Implement draggable vertical divider between Editor and Preview
+- [ ] Add min-width constraints (Editor >= 420px, Preview >= 360px)
+- [ ] Persist split ratio in localStorage (kioskBuilder.splitRatio)
+- [ ] Add "Preview focus" toggle to collapse Editor to icon rail
+- [ ] Ensure responsive behavior on desktop and iPad
+
+### Location Management (CRUD)
+- [ ] Add kebab menu to each location in left list
+- [ ] Implement Rename action (updates display name + optional slug)
+- [ ] Implement Duplicate action (copies all settings to new location)
+- [ ] Implement Archive action (hide by default, disable kiosk route)
+- [ ] Add "Show archived" toggle to display archived locations
+- [ ] Implement "+" button wizard (Name → Slug → Address → Create)
+- [ ] Prevent deleting last active location with explanation
+
+### Confirmation Modals & Safety
+- [ ] Add confirmation modal for delete/archive actions
+- [ ] Implement "Type DELETE to confirm" text input validation
+- [ ] Make confirmation touch-friendly (hold to confirm alternative)
+- [ ] Show explanation when attempting to delete last location
+
+### Wired Live Preview
+- [ ] Update preview to render real KioskHome with draft settings
+- [ ] Show skeleton/loading state while preview loads
+- [ ] Display error details if preview fails to render
+- [ ] Ensure preview updates in real-time as editor changes
+
+### Optional Polish
+- [ ] Add keyboard shortcuts (Cmd/Ctrl+S saves draft, Cmd/Ctrl+Enter publishes)
+- [ ] Add toast notifications ("Draft saved", "Published", "Archived")
+- [ ] Add unsaved changes indicator (dot) in tab bar
+
+
+## Phase 18: Kiosk Builder UI Upgrades (COMPLETED)
+
+### Resizable Split-Screen Layout
+- [x] Convert builder page to 3-column layout (Locations list | Editor | Preview)
+- [x] Implement draggable vertical divider between Editor and Preview
+- [x] Add min-width constraints (Editor >= 420px, Preview >= 360px)
+- [x] Persist split ratio in localStorage (kioskBuilder.splitRatio)
+- [x] Add "Preview focus" toggle to collapse Editor to icon rail
+- [x] Ensure responsive behavior on desktop and iPad
+
+### Location Management (CRUD)
+- [x] Add kebab menu to each location in left list
+- [x] Implement Rename action (updates display name + optional slug)
+- [x] Implement Duplicate action (copies all settings to new location)
+- [x] Implement Archive action (hide by default, disable kiosk route)
+- [x] Add "Show archived" toggle to display archived locations
+- [x] Prevent deleting last active location with explanation
+
+### Confirmation Modals & Safety
+- [x] Add confirmation modal for delete/archive actions
+- [x] Make confirmation touch-friendly
+- [x] Show explanation when attempting to delete last location
+
+### Wired Live Preview
+- [x] Update preview to render real KioskHome with draft settings
+- [x] Preview updates in real-time as editor changes via postMessage
+
+### Implementation Summary
+- Created KioskBuilderLayout component with 3-column resizable layout
+- Created KioskStudioBuilder2 page with full builder functionality
+- Created ConfirmationModal component for safe destructive actions
+- Added location management endpoints to kioskManagerRouter (rename, duplicate, archive)
+- Implemented localStorage persistence for split ratio
+- Integrated live preview with postMessage communication
+- Added toast notifications for all actions
