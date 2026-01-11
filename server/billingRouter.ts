@@ -853,7 +853,7 @@ export const billingRouter = router({
       await db.update(billingApplications)
         .set({
           status: "submitted",
-          submittedAt:new Date().toISOString().toISOString(),
+          submittedAt:new Date().toISOString(),
         })
         .where(eq(billingApplications.id, input.applicationId));
 

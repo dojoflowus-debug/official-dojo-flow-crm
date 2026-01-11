@@ -177,7 +177,7 @@ export async function deductCredits(params: {
         description,
         metadata: metadata ? JSON.stringify(metadata) : null,
         balanceAfter: newBalance,
-        createdAt:new Date().toISOString().toISOString(),
+        createdAt:new Date().toISOString(),
       });
 
     return {
@@ -242,7 +242,7 @@ export async function addCredits(params: {
       .set({
         balance: newBalance,
         totalPurchased: source === 'top_up' ? currentTotalPurchased + amount : currentTotalPurchased,
-        updatedAt:new Date().toISOString().toISOString(),
+        updatedAt:new Date().toISOString(),
       })
       .where(eq(aiCreditBalance.organizationId, organizationId));
 
@@ -269,7 +269,7 @@ export async function addCredits(params: {
         description,
         metadata: metadata ? JSON.stringify(metadata) : null,
         balanceAfter: newBalance,
-        createdAt:new Date().toISOString().toISOString(),
+        createdAt:new Date().toISOString(),
       });
 
     return {

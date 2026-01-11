@@ -90,7 +90,7 @@ export const setupModeRouter = router({
       // Mark step as completed
       checklist[`step_${input.step}`] = {
         completed: true,
-        completedAt:new Date().toISOString().toISOString(),
+        completedAt:new Date().toISOString(),
         data: input.data,
       };
 

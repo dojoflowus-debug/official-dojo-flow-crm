@@ -141,7 +141,7 @@ export const conversationsRouter = router({
       await db.update(messages)
         .set({
           status: "sent",
-          sentAt:new Date().toISOString().toISOString(),
+          sentAt:new Date().toISOString(),
         })
         .where(eq(messages.id, message.insertId));
       

@@ -59,7 +59,7 @@ export const setupWizardRouter = router({
           industry: input.industry,
           businessModel: input.businessModel,
           usePreset: input.usePreset,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         });
       }
       
@@ -135,7 +135,7 @@ export const setupWizardRouter = router({
       } else {
         await db.update(dojoSettings).set({
           ...input,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         });
       }
       
@@ -201,7 +201,7 @@ export const setupWizardRouter = router({
       await db.update(locations)
         .set({
           ...updates,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         })
         .where(eq(locations.id, id));
       
@@ -294,7 +294,7 @@ export const setupWizardRouter = router({
       await db.update(programs)
         .set({
           ...updates,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         })
         .where(eq(programs.id, id));
       
@@ -619,7 +619,7 @@ export const setupWizardRouter = router({
       } else {
         await db.update(dojoSettings).set({
           ...input,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         });
       }
       
@@ -695,7 +695,7 @@ export const setupWizardRouter = router({
       await db.update(teamMembers)
         .set({
           ...updates,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         })
         .where(eq(teamMembers.id, id));
       
@@ -780,7 +780,7 @@ export const setupWizardRouter = router({
       } else {
         await db.update(memberJourneyConfig).set({
           ...input,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         });
       }
       
@@ -804,7 +804,7 @@ export const setupWizardRouter = router({
       // Mark setup as completed
       await db.update(dojoSettings).set({
         setupCompleted: 1,
-        updatedAt:new Date().toISOString().toISOString(),
+        updatedAt:new Date().toISOString(),
       });
       
       // Auto-install industry-specific automation templates
@@ -825,8 +825,8 @@ export const setupWizardRouter = router({
               description: template.description,
               trigger: template.trigger,
               isActive: 0, // Start as inactive - user can activate when ready
-              createdAt:new Date().toISOString().toISOString(),
-              updatedAt:new Date().toISOString().toISOString(),
+              createdAt:new Date().toISOString(),
+              updatedAt:new Date().toISOString(),
             })
             .returning();
           
@@ -842,8 +842,8 @@ export const setupWizardRouter = router({
               waitUnit: step.waitUnit || null,
               messageContent: step.messageContent || null,
               emailSubject: step.emailSubject || null,
-              createdAt:new Date().toISOString().toISOString(),
-              updatedAt:new Date().toISOString().toISOString(),
+              createdAt:new Date().toISOString(),
+              updatedAt:new Date().toISOString(),
             });
           }
           
@@ -907,7 +907,7 @@ export const setupWizardRouter = router({
       } else {
         await db.update(dojoSettings).set({
           ...updateData,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         });
       }
       
@@ -972,7 +972,7 @@ export const setupWizardRouter = router({
       } else {
         await db.update(dojoSettings).set({
           ...updateData,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         });
       }
       
@@ -1075,7 +1075,7 @@ export const setupWizardRouter = router({
     } else {
       await db.update(setupProgress).set({
         snoozeUntil,
-        updatedAt:new Date().toISOString().toISOString(),
+        updatedAt:new Date().toISOString(),
       }).where(eq(setupProgress.organizationId, ctx.user.organizationId));
     }
     
@@ -1103,7 +1103,7 @@ export const setupWizardRouter = router({
     const updateData = {
       currentStep: input.currentStep,
       stepsCompleted: input.stepsCompleted ? JSON.stringify(input.stepsCompleted) : undefined,
-      updatedAt:new Date().toISOString().toISOString(),
+      updatedAt:new Date().toISOString(),
     };
     
     if (existing.length === 0) {
@@ -1157,7 +1157,7 @@ export const setupWizardRouter = router({
     if (settings.length > 0) {
       await db.update(dojoSettings).set({
         setupCompleted: 1,
-        updatedAt:new Date().toISOString().toISOString(),
+        updatedAt:new Date().toISOString(),
       });
     }
     
@@ -1249,7 +1249,7 @@ export const setupWizardRouter = router({
     // Mark as cancelled
     await db.update(setupImports).set({
       status: 'cancelled',
-      updatedAt:new Date().toISOString().toISOString(),
+      updatedAt:new Date().toISOString(),
     }).where(eq(setupImports.id, input.importId));
     
     // Mark rows as skipped

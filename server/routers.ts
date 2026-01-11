@@ -984,7 +984,7 @@ export const appRouter = router({
         if (!db) throw new Error('Database not available');
         
         await db.update(staffMessages)
-          .set({ isRead: 1, readAt:new Date().toISOString().toISOString() })
+          .set({ isRead: 1, readAt:new Date().toISOString() })
           .where(eq(staffMessages.id, input.messageId));
         
         return { success: true };
@@ -2301,7 +2301,7 @@ export const appRouter = router({
             status: "active",
             category: "kai",
             priority: "neutral",
-            lastMessageAt:new Date().toISOString().toISOString(),
+            lastMessageAt:new Date().toISOString(),
             participantIds: JSON.stringify([ctx.user.id]),
           };
           
@@ -2391,7 +2391,7 @@ export const appRouter = router({
           const preview = input.content.substring(0, 200);
           const updateData: any = {
             preview,
-            lastMessageAt:new Date().toISOString().toISOString(),
+            lastMessageAt:new Date().toISOString(),
           };
           
           // Auto-update title from first user message if still "New Conversation"
@@ -2654,7 +2654,7 @@ Format the summary with clear sections and bullet points where appropriate. Keep
           conversationId: input.conversationId,
           role: 'assistant',
           content: `## 📋 Conversation Summary\n\n${summary}`,
-          metadata: JSON.stringify({ type: 'summary', generatedAt:new Date().toISOString().toISOString() })
+          metadata: JSON.stringify({ type: 'summary', generatedAt:new Date().toISOString() })
         });
         
         // Update conversation last message
@@ -2943,7 +2943,7 @@ Return the data as a structured JSON object.`
           metadata: JSON.stringify({ 
             type: 'extraction', 
             extractedData,
-            generatedAt:new Date().toISOString().toISOString() 
+            generatedAt:new Date().toISOString() 
           })
         });
         
@@ -3473,7 +3473,7 @@ Return the data as a structured JSON object.`
         await db.update(kaiConversations)
           .set({
             summary: input.summary,
-            updatedAt:new Date().toISOString().toISOString(),
+            updatedAt:new Date().toISOString(),
           })
           .where(and(
             eq(kaiConversations.id, input.conversationId),
@@ -3539,7 +3539,7 @@ Return the data as a structured JSON object.`
             .update(kaiConversations)
             .set({
               summary: truncatedSummary,
-              updatedAt:new Date().toISOString().toISOString(),
+              updatedAt:new Date().toISOString(),
             })
             .where(eq(kaiConversations.id, input.conversationId));
           
@@ -3681,7 +3681,7 @@ Return the data as a structured JSON object.`
           await db.update(dojoSettings)
             .set({
               ...input,
-              updatedAt:new Date().toISOString().toISOString(),
+              updatedAt:new Date().toISOString(),
             });
         }
         
@@ -3703,7 +3703,7 @@ Return the data as a structured JSON object.`
         await db.update(dojoSettings)
           .set({
             setupCompleted: 1,
-            updatedAt:new Date().toISOString().toISOString(),
+            updatedAt:new Date().toISOString(),
           });
         
         return {
@@ -4018,7 +4018,7 @@ Return the data as a structured JSON object.`
         await db.insert(kioskCheckIns).values({
           studentId: input.studentId,
           studentName: fullName,
-          timestamp:new Date().toISOString().toISOString(),
+          timestamp:new Date().toISOString(),
         });
         
         // Update belt progress
@@ -4178,7 +4178,7 @@ Return the data as a structured JSON object.`
           await db.update(beltTests)
             .set({ 
               currentRegistrations: test.currentRegistrations + 1,
-              updatedAt:new Date().toISOString().toISOString()
+              updatedAt:new Date().toISOString()
             })
             .where(eq(beltTests.id, input.testId));
           
@@ -4216,7 +4216,7 @@ Return the data as a structured JSON object.`
           await db.update(beltTests)
             .set({ 
               currentRegistrations: test.currentRegistrations + 1,
-              updatedAt:new Date().toISOString().toISOString()
+              updatedAt:new Date().toISOString()
             })
             .where(eq(beltTests.id, input.testId));
           
@@ -4253,7 +4253,7 @@ Return the data as a structured JSON object.`
                 .set({ 
                   paymentStatus: 'paid',
                   stripePaymentIntentId: session.payment_intent as string,
-                  updatedAt:new Date().toISOString().toISOString()
+                  updatedAt:new Date().toISOString()
                 })
                 .where(eq(beltTestRegistrations.stripeSessionId, input.sessionId));
             }
@@ -5090,14 +5090,14 @@ Return the data as a structured JSON object.`
           status: 'New Lead',
           source: enroll.source === 'kai' ? 'Kai Enrollment' : 'Kiosk Enrollment',
           notes: `Program Interest: ${enroll.programInterest || 'Not specified'}\nExperience: ${enroll.experienceLevel || 'Not specified'}\nGoals: ${enroll.goals || 'Not specified'}`,
-          createdAt:new Date().toISOString().toISOString(),
+          createdAt:new Date().toISOString(),
         }).returning();
         
         // Update enrollment status
         await db.update(enrollments)
           .set({ 
             status: 'submitted',
-            submittedAt:new Date().toISOString().toISOString(),
+            submittedAt:new Date().toISOString(),
           })
           .where(eq(enrollments.id, input.enrollmentId));
         
@@ -5331,14 +5331,14 @@ Membership plans available:
               status: 'New Lead',
               source: 'Kai Enrollment',
               notes: `Program Interest: ${enroll.programInterest || 'Not specified'}\nExperience: ${enroll.experienceLevel || 'Not specified'}\nGoals: ${enroll.goals || 'Not specified'}`,
-              createdAt:new Date().toISOString().toISOString(),
+              createdAt:new Date().toISOString(),
             });
             
             // Update enrollment status
             await db.update(enrollments)
               .set({ 
                 status: 'submitted',
-                submittedAt:new Date().toISOString().toISOString(),
+                submittedAt:new Date().toISOString(),
               })
               .where(eq(enrollments.id, input.enrollmentId));
           }

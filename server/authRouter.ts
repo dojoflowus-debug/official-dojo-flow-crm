@@ -144,7 +144,7 @@ export const authRouter = router({
           ...(input.email !== undefined && { email: input.email }),
           ...(input.phone !== undefined && { phone: input.phone }),
           ...(input.bio !== undefined && { bio: input.bio }),
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         })
         .where(eq(users.id, ctx.user.id));
 
@@ -212,7 +212,7 @@ export const authRouter = router({
           .set({
             photoUrl: url,
             photoUrlSmall: url, // For now, use same URL for both
-            updatedAt:new Date().toISOString().toISOString(),
+            updatedAt:new Date().toISOString(),
           })
           .where(eq(users.id, ctx.user.id));
 
@@ -248,7 +248,7 @@ export const authRouter = router({
       .set({
         photoUrl: null,
         photoUrlSmall: null,
-        updatedAt:new Date().toISOString().toISOString(),
+        updatedAt:new Date().toISOString(),
       })
       .where(eq(users.id, ctx.user.id));
 

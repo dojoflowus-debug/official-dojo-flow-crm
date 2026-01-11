@@ -967,3 +967,10 @@
 - [ ] Accessibility review (contrast, focus states, keyboard nav)
 - [ ] No console errors or warnings
 - [ ] All data bindings correct
+
+## Bug Fix: Double toISOString() Error on /owner Page
+- [x] Fix double toISOString() calls in server code (50+ instances)
+  - Error: "(intermediate value).toISOString(...).toISOString is not a function"
+  - Locations: db.ts, _core/index.ts, authRouter.ts, automationRouter.ts, billingRouter.ts, campaignsRouter.ts, classReminderService.ts, conversationsRouter.ts, creditConsumption.ts, kaiCommandRouter.ts, kaiConversationsRouter.ts, kioskDesignerRouter.ts, oauth.ts, voiceTranscription.ts
+  - Solution: Replace all `new Date().toISOString().toISOString()` with `new Date().toISOString()`
+  - Fixed using sed command to replace all instances across all server TypeScript files

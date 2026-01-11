@@ -455,7 +455,7 @@ export const merchandiseRouter = router({
         .update(merchandiseItems)
         .set({
           stockQuantity: input.newQuantity,
-          updatedAt:new Date().toISOString().toISOString(),
+          updatedAt:new Date().toISOString(),
         })
         .where(eq(merchandiseItems.id, input.itemId));
 
@@ -622,8 +622,8 @@ export const merchandiseRouter = router({
         recipientEmails: null,
         recipientPhones: null,
         alertCooldownHours: 24,
-        createdAt:new Date().toISOString().toISOString(),
-        updatedAt:new Date().toISOString().toISOString(),
+        createdAt:new Date().toISOString(),
+        updatedAt:new Date().toISOString(),
       };
     }
 
@@ -655,7 +655,7 @@ export const merchandiseRouter = router({
         await db.update(alertSettings)
           .set({
             ...input,
-            updatedAt:new Date().toISOString().toISOString(),
+            updatedAt:new Date().toISOString(),
           })
           .where(eq(alertSettings.id, existing.id));
       } else {
