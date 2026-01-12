@@ -5,6 +5,7 @@ import { trpc } from '@/lib/trpc';
 import { KioskTypographyControls } from '@/components/KioskTypographyControls';
 import { KioskBackgroundControls } from '@/components/KioskBackgroundControls';
 import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
+import { KioskConfigSchema } from '../../../shared/kioskConfigSchema';
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
@@ -186,15 +187,27 @@ export default function KioskStudio() {
     try {
       // Ensure we have a valid config
       const safeConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
-      console.log('[KioskStudio] Saving draft with config:', safeConfig);
+      
+      // Validate the config before saving
+      const validationResult = KioskConfigSchema.safeParse(safeConfig);
+      if (!validationResult.success) {
+        console.error('[KioskStudio] Config validation failed:', validationResult.error);
+        setSaveMessage({ type: 'error', text: '✗ Invalid configuration' });
+        setTimeout(() => setSaveMessage(null), 3000);
+        setIsSaving(false);
+        return;
+      }
+      
+      console.log('[KioskStudio] Saving draft with config:', validationResult.data);
       await saveDraftMutation.mutateAsync({
         kioskId: selectedKiosk,
-        config: safeConfig,
+        config: validationResult.data,
       });
       setLastSavedConfig(draftConfig);
       setSaveMessage({ type: 'success', text: '✓ Draft saved' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
+      console.error('[KioskStudio] Save error:', error);
       setSaveMessage({ type: 'error', text: '✗ Failed to save draft' });
       setTimeout(() => setSaveMessage(null), 3000);
     } finally {

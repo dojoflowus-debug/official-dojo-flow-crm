@@ -1,8 +1,12 @@
 import { z } from 'zod';
+import { DEFAULT_KIOSK_CONFIG } from './kioskConfig';
 
 /**
  * Zod schema for KioskConfig - shared between client and server
  * Used for TRPC validation
+ * 
+ * IMPORTANT: This schema must match the DEFAULT_KIOSK_CONFIG structure
+ * to ensure validation always succeeds with default values.
  */
 export const KioskConfigSchema = z.object({
   theme: z.object({
@@ -56,6 +60,19 @@ export const KioskConfigSchema = z.object({
     message: z.string(),
     showLogo: z.boolean(),
   }),
-})
+});
 
 export type KioskConfigType = z.infer<typeof KioskConfigSchema>;
+
+/**
+ * Validate a config object against the schema
+ * Returns the validated config or DEFAULT_KIOSK_CONFIG if validation fails
+ */
+export function validateKioskConfig(config: unknown): KioskConfigType {
+  const result = KioskConfigSchema.safeParse(config);
+  if (!result.success) {
+    console.warn('[KioskConfigSchema] Validation failed, using defaults:', result.error);
+    return DEFAULT_KIOSK_CONFIG as KioskConfigType;
+  }
+  return result.data;
+}
