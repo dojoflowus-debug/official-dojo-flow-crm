@@ -85,6 +85,7 @@ import { OwnerCommandCenter } from "./pages/OwnerCommandCenter";
 import WebhookSettings from "./pages/WebhookSettings";
 import KioskSettings from "./pages/KioskSettings";
 import KioskStudio from "./pages/KioskStudio";
+import KioskStudioBuilder2 from "./pages/KioskStudioBuilder2";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -272,7 +273,8 @@ function Router() {
       <Route path="/settings/communication" element={<CommunicationSettings />} />
       <Route path="/settings/webhooks" element={<WebhookSettings />} />
       <Route path="/settings/kiosk" element={<KioskSettings />} />
-      <Route path="/settings/kiosk/studio" element={<ProtectedRoute><KioskStudio /></ProtectedRoute>} />
+      <Route path="/settings/kiosk/studio" element={<ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>} />
+      <Route path="/kiosk-studio-builder/:locationId" element={<ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>} />
       <Route path="/settings/floor-plans" element={<FloorPlanBuilder />} />
       <Route path="/settings/profile" element={<ProfileSettings />} />
       <Route path="/settings/owner-profile" element={<OwnerProfile />} />

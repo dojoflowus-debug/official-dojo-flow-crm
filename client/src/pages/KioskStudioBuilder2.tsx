@@ -77,9 +77,10 @@ export default function KioskStudioBuilder2() {
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const MIN_EDITOR_WIDTH = 420;
+  const MIN_EDITOR_WIDTH = 520;
   const MIN_PREVIEW_WIDTH = 360;
   const LOCATIONS_WIDTH = 280;
+  const ICON_RAIL_WIDTH = 60;
   const locId = locationId ? parseInt(locationId) : 0;
 
   const { data: fetchedLocations, refetch: refetchLocations } = trpc.kioskManager.getKioskLocations.useQuery();
@@ -111,20 +112,24 @@ export default function KioskStudioBuilder2() {
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!containerRef.current) return;
     setIsResizing(true);
+    document.body.style.userSelect = 'none';
     const startX = e.clientX;
     const startWidth = editorWidth;
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
       const deltaX = moveEvent.clientX - startX;
+      const containerWidth = containerRef.current!.clientWidth;
+      const maxEditorWidth = containerWidth - LOCATIONS_WIDTH - MIN_PREVIEW_WIDTH;
       const newWidth = Math.max(
         MIN_EDITOR_WIDTH,
-        Math.min(startWidth + deltaX, containerRef.current!.clientWidth - LOCATIONS_WIDTH - MIN_PREVIEW_WIDTH)
+        Math.min(startWidth + deltaX, maxEditorWidth)
       );
       setEditorWidth(newWidth);
     };
 
     const handlePointerUp = () => {
       setIsResizing(false);
+      document.body.style.userSelect = 'auto';
       localStorage.setItem('kioskBuilder.splitRatio', editorWidth.toString());
       document.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('pointerup', handlePointerUp);
@@ -359,7 +364,17 @@ export default function KioskStudioBuilder2() {
       </div>
 
       {/* Middle: Editor */}
-      {!isPreviewFocus && (
+      {isPreviewFocus ? (
+        <div className="w-[60px] border-r border-border bg-card flex flex-col items-center justify-center overflow-hidden">
+          <button
+            onClick={() => setIsPreviewFocus(false)}
+            className="p-2 hover:bg-accent rounded-md transition-colors mb-4"
+            title="Expand Editor"
+          >
+            <Layout className="w-5 h-5" />
+          </button>
+        </div>
+      ) : (
         <div style={{ width: `${editorWidth}px` }} className="border-r border-border bg-card flex flex-col overflow-hidden">
           {selectedLocation ? (
             <>
@@ -425,14 +440,26 @@ export default function KioskStudioBuilder2() {
 
       {/* Divider */}
       {!isPreviewFocus && (
-        <div onPointerDown={handlePointerDown} className="w-1 bg-border hover:bg-primary/50 cursor-col-resize transition-colors active:bg-primary" style={{ userSelect: 'none' }} />
+        <div
+          onPointerDown={handlePointerDown}
+          className="w-1 bg-border hover:bg-primary/50 cursor-col-resize transition-colors active:bg-primary flex-shrink-0"
+          style={{ userSelect: 'none' }}
+          role="separator"
+          aria-label="Resize editor and preview"
+        />
       )}
 
       {/* Right: Preview */}
       <div className="flex-1 bg-gray-100 flex flex-col overflow-hidden">
         <div className="p-4 border-b border-border bg-card flex items-center justify-between">
           <h3 className="font-semibold">Live Preview</h3>
-          <button onClick={() => setIsPreviewFocus(!isPreviewFocus)} className="px-3 py-1.5 text-sm bg-muted text-muted-foreground rounded-md hover:bg-muted/80 transition-colors">{isPreviewFocus ? 'Show Editor' : 'Focus'}</button>
+          <button
+            onClick={() => setIsPreviewFocus(!isPreviewFocus)}
+            className="px-3 py-1.5 text-sm bg-muted text-muted-foreground rounded-md hover:bg-muted/80 transition-colors"
+            title={isPreviewFocus ? 'Show Editor' : 'Collapse Editor'}
+          >
+            {isPreviewFocus ? 'Show Editor' : 'Focus Preview'}
+          </button>
         </div>
         <div className="flex-1 overflow-hidden flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
           {selectedLocation ? (
