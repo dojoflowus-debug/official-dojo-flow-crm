@@ -175,8 +175,11 @@ function Router() {
       <Route path="/test-brand" element={<TestBrand />} />
       
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
-      {/* Kiosk Studio Builder - New Location/Kiosk Management */}
-      <Route path="/kiosk" element={<ProtectedRoute requireSetup={false}><KioskStudioBuilder2 /></ProtectedRoute>} />
+      {/* Kiosk Studio Builder - New Location/Kiosk Management - CANONICAL ENTRY POINT */}
+      <Route path="/kiosk-studio" element={<ProtectedRoute requireSetup={false}><KioskStudioBuilder2 /></ProtectedRoute>} />
+      <Route path="/kiosk-studio/:locationId" element={<ProtectedRoute requireSetup={false}><KioskStudioBuilder2 /></ProtectedRoute>} />
+      {/* Redirect old /kiosk to /kiosk-studio */}
+      <Route path="/kiosk" element={<Navigate to="/kiosk-studio" replace />} />
       <Route path="/kiosk-manager" element={<KioskManager />} />
       
       {/* Kiosk Runtime - Tablet Interface */}

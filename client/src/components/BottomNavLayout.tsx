@@ -43,7 +43,7 @@ const NAVIGATION = [
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
   { id: 'kai-command', name: 'Kai', href: '/kai', icon: Sparkles, isCenter: true },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
-  { id: 'kiosk', name: 'Kiosk', href: '/kiosk-studio/1', icon: Monitor },
+  { id: 'kiosk', name: 'Kiosk', href: '/kiosk-studio', icon: Monitor },
   { id: 'floor-plans', name: 'Floor Plans', href: '/floor-plans', icon: Grid3x3 },
   { id: 'operations', name: 'Operations', href: '/operations/merchandise', icon: Package },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },

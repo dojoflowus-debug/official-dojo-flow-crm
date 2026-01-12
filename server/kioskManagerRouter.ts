@@ -759,7 +759,7 @@ export const kioskManagerRouter = router({
         const result = await ctx.db
           .insert(kiosks)
           .values({
-            organizationId: ctx.organizationId,
+            organizationId: ctx.currentOrganizationId,
             locationId: input.locationId,
             name: input.name,
             slug: slug,

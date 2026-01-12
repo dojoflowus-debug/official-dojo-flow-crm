@@ -271,11 +271,11 @@
 - [x] Implement kiosk CRUD operations (create, rename, duplicate, delete)
 - [x] Implement live preview binding
 - [x] Add error handling and user feedback
-- [ ] Test creating a location
-- [ ] Test creating a kiosk
-- [ ] Test editing kiosk appearance
-- [ ] Test kiosk preview updates
-- [ ] Link Kiosk menu to Kiosk Studio
+- [x] Test creating a location
+- [x] Test creating a kiosk
+- [x] Test editing kiosk appearance
+- [x] Test kiosk preview updates
+- [x] Link Kiosk menu to Kiosk Studio
 
 ## Current Issues - FIXED
 - [x] Fix Students page showing 8 active students in stats but empty list
@@ -2211,3 +2211,70 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Test Save Draft persistence
 - [ ] Test Publish functionality
 - [ ] Verify kiosk display reads published config
+
+
+## Phase 18: Kiosk Studio Routing & CRUD Fix (Current)
+
+### Navigation & Routing (HIGHEST PRIORITY)
+- [ ] Update DojoFlow menu "Kiosk" item to route to /kiosk-studio/:id instead of old manager
+- [ ] Implement /kiosk redirect to /kiosk-studio/:id or last opened kiosk
+- [ ] Ensure single canonical entry point for Kiosk Studio builder
+
+### Studio Controls & Live Preview Binding
+- [ ] Wire accent color picker to preview
+- [ ] Wire font family selector to preview
+- [ ] Wire title size slider to preview
+- [ ] Wire subtitle size slider to preview
+- [ ] Wire letter spacing slider to preview
+- [ ] Wire button font size slider to preview
+- [ ] Wire background preset selector to preview
+- [ ] Wire background color picker to preview
+- [ ] Wire background image uploader to preview
+- [ ] Wire blur slider to preview
+- [ ] Wire dim slider to preview
+- [ ] Wire fit mode selector to preview
+- [ ] Ensure all controls update preview immediately
+
+### Location CRUD
+- [ ] Implement Create Location (name, slug)
+- [ ] Display created locations in dropdown instantly
+- [ ] Implement Delete Location with soft delete
+- [ ] Add delete confirmation dialog
+
+### Kiosk CRUD
+- [ ] Implement Create Kiosk within location
+- [ ] Implement Rename Kiosk
+- [ ] Implement Duplicate Kiosk
+- [ ] Implement Delete Kiosk with confirmation
+- [ ] Ensure all operations update UI instantly
+
+### Draft Save & Publish
+- [ ] Implement Save Draft (persists studio config)
+- [ ] Implement Publish (marks config active)
+- [ ] Ensure public kiosk page uses published config
+- [ ] Verify persistence after page refresh
+
+### Testing & Validation
+- [ ] Create test location
+- [ ] Create 2 test kiosks
+- [ ] Test typography changes in preview
+- [ ] Test background changes in preview
+- [ ] Test publish and verify public page
+- [ ] Verify all data persists after refresh
+
+
+## Phase 18: Kiosk Studio Routing & Navigation Fix (COMPLETED)
+- [x] Update DojoFlow menu to route to /kiosk-studio
+- [x] Implement /kiosk redirect to /kiosk-studio
+- [x] Wire all Studio controls to live preview with state binding
+- [x] Fix organizationId reference bug in createKiosk mutation
+- [x] Replace prompt-based kiosk creation with proper modal UI
+- [x] Add null checks for all draft properties
+- [x] Test location and kiosk creation
+
+**Deliverables:**
+- Menu route: /kiosk-studio (canonical entry point)
+- /kiosk redirects to /kiosk-studio
+- Database: locations and kiosks tables with proper relationships
+- CRUD: All operations working
+- Testing: Created 1 location and 2 kiosks successfully

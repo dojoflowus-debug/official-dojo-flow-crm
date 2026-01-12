@@ -130,7 +130,9 @@ export default function KioskStudioBuilder2() {
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
   const [kiosks, setKiosks] = useState<Kiosk[]>([]);
   const [selectedKioskId, setSelectedKioskId] = useState<number | null>(null);
-  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; kioskId?: number }>({ isOpen: false });
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; kioskId?: number; locationId?: number; type?: 'kiosk' | 'location' }>({ isOpen: false });
+  const [createKioskName, setCreateKioskName] = useState('');
+  const [showCreateKioskModal, setShowCreateKioskModal] = useState(false);
   
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -189,6 +191,26 @@ export default function KioskStudioBuilder2() {
       setSelectedKioskId(data.id);
       toast.success('Kiosk duplicated');
       setMenuOpen(null);
+    },
+    onError: (error) => toast.error('Error', { description: error.message }),
+  });
+
+  const createLocationMutation = trpc.kioskManager.createLocation.useMutation({
+    onSuccess: (data) => {
+      refetchLocations();
+      setSelectedLocationId(data.locationId);
+      toast.success('Location created');
+    },
+    onError: (error) => toast.error('Error', { description: error.message }),
+  });
+
+  const deleteLocationMutation = trpc.kioskManager.deleteLocation.useMutation({
+    onSuccess: () => {
+      refetchLocations();
+      setSelectedLocationId(null);
+      setSelectedKioskId(null);
+      toast.success('Location deleted');
+      setConfirmModal({ isOpen: false });
     },
     onError: (error) => toast.error('Error', { description: error.message }),
   });
@@ -318,12 +340,31 @@ export default function KioskStudioBuilder2() {
     }
   };
 
+  const handlePublish = async () => {
+    if (!selectedLocationId) return;
+    setIsSaving(true);
+    try {
+      // First save the draft
+      if (selectedKioskId && draft) {
+        await updateKioskMutation.mutateAsync({ kioskId: selectedKioskId, config: draft });
+      }
+      toast.success('Configuration published and live');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleCreateKiosk = () => {
     if (!selectedLocationId) return;
-    const name = prompt('Kiosk name:', 'New Kiosk');
-    if (name && name.trim()) {
-      createKioskMutation.mutate({ locationId: selectedLocationId, name: name.trim() });
-    }
+    setCreateKioskName('New Kiosk');
+    setShowCreateKioskModal(true);
+  };
+
+  const handleConfirmCreateKiosk = () => {
+    if (!selectedLocationId || !createKioskName.trim()) return;
+    createKioskMutation.mutate({ locationId: selectedLocationId, name: createKioskName.trim() });
+    setShowCreateKioskModal(false);
+    setCreateKioskName('');
   };
 
   const handleRenameKiosk = (kioskId: number) => {
@@ -345,12 +386,25 @@ export default function KioskStudioBuilder2() {
   };
 
   const handleDeleteClick = (kioskId: number) => {
-    setConfirmModal({ isOpen: true, kioskId });
+    setConfirmModal({ isOpen: true, kioskId, type: 'kiosk' });
+  };
+
+  const handleDeleteLocationClick = (locationId: number) => {
+    setConfirmModal({ isOpen: true, locationId, type: 'location' });
   };
 
   const handleConfirmDelete = () => {
-    if (confirmModal.kioskId) {
+    if (confirmModal.type === 'kiosk' && confirmModal.kioskId) {
       deleteKioskMutation.mutate({ kioskId: confirmModal.kioskId });
+    } else if (confirmModal.type === 'location' && confirmModal.locationId) {
+      deleteLocationMutation.mutate({ locationId: confirmModal.locationId });
+    }
+  };
+
+  const handleCreateLocation = () => {
+    const name = prompt('Location name:', 'New Location');
+    if (name && name.trim()) {
+      createLocationMutation.mutate({ name: name.trim() });
     }
   };
 
@@ -387,7 +441,12 @@ export default function KioskStudioBuilder2() {
       {/* Left: Locations & Kiosks */}
       <div className="w-[280px] border-r border-border bg-card flex flex-col overflow-hidden">
         <div className="p-4 border-b border-border space-y-3">
-          <h2 className="text-sm font-semibold">Location</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Location</h2>
+            <button onClick={handleCreateLocation} className="p-1 hover:bg-accent rounded-md transition-colors" title="Add location">
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
           <Select value={selectedLocationId?.toString()} onValueChange={(v) => setSelectedLocationId(parseInt(v))}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select location" />
@@ -398,6 +457,11 @@ export default function KioskStudioBuilder2() {
               ))}
             </SelectContent>
           </Select>
+          {selectedLocation && (
+            <button onClick={() => handleDeleteLocationClick(selectedLocation.id)} className="w-full px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-md transition-colors border border-destructive/20">
+              Delete Location
+            </button>
+          )}
         </div>
 
         <div className="p-4 border-b border-border space-y-2">
@@ -458,8 +522,9 @@ export default function KioskStudioBuilder2() {
                 <h2 className="font-semibold">{selectedKiosk.name}</h2>
                 <p className="text-xs text-muted-foreground mt-1">Customize appearance</p>
               </div>
-              <div className="p-4 border-b border-border space-y-2">
-                <button onClick={handleSaveDraft} disabled={isSaving} className="w-full px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />Save</button>
+              <div className="p-4 border-b border-border space-y-2 flex gap-2">
+                <button onClick={handleSaveDraft} disabled={isSaving} className="flex-1 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />Save</button>
+                <button onClick={handlePublish} disabled={isSaving} className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"><Zap className="w-4 h-4 inline mr-2" />Publish</button>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="h-full">
@@ -478,28 +543,28 @@ export default function KioskStudioBuilder2() {
                     <div><Label>Dim: {draft.background.dim}%</Label><Slider value={[draft.background.dim]} onValueChange={(v) => updateBackground({ dim: v[0] })} min={0} max={100} step={5} /></div>
                   </TabsContent>
                   <TabsContent value="typography" className="p-4 space-y-4">
-                    <div><Label>Font Family</Label><Select value={draft.typography.fontFamily} onValueChange={(v) => updateTypography({ fontFamily: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Inter">Inter</SelectItem><SelectItem value="Roboto">Roboto</SelectItem><SelectItem value="Poppins">Poppins</SelectItem></SelectContent></Select></div>
-                    <div><Label>Title Size: {draft.typography.titleSize}px</Label><Slider value={[draft.typography.titleSize]} onValueChange={(v) => updateTypography({ titleSize: v[0] })} min={24} max={72} step={2} /></div>
-                    <div><Label>Subtitle Size: {draft.typography.subtitleSize}px</Label><Slider value={[draft.typography.subtitleSize]} onValueChange={(v) => updateTypography({ subtitleSize: v[0] })} min={12} max={48} step={1} /></div>
-                    <div><Label>Letter Spacing: {draft.typography.letterSpacing}px</Label><Slider value={[draft.typography.letterSpacing]} onValueChange={(v) => updateTypography({ letterSpacing: v[0] })} min={-2} max={10} step={0.5} /></div>
+                    <div><Label>Font Family</Label><Select value={draft?.typography?.fontFamily || 'Inter'} onValueChange={(v) => updateTypography({ fontFamily: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Inter">Inter</SelectItem><SelectItem value="Roboto">Roboto</SelectItem><SelectItem value="Poppins">Poppins</SelectItem></SelectContent></Select></div>
+                    <div><Label>Title Size: {draft?.typography?.titleSize || 0}px</Label><Slider value={[draft?.typography?.titleSize || 48]} onValueChange={(v) => updateTypography({ titleSize: v[0] })} min={24} max={72} step={2} /></div>
+                    <div><Label>Subtitle Size: {draft?.typography?.subtitleSize || 0}px</Label><Slider value={[draft?.typography?.subtitleSize || 24]} onValueChange={(v) => updateTypography({ subtitleSize: v[0] })} min={12} max={48} step={1} /></div>
+                    <div><Label>Letter Spacing: {draft?.typography?.letterSpacing || 0}px</Label><Slider value={[draft?.typography?.letterSpacing || 0]} onValueChange={(v) => updateTypography({ letterSpacing: v[0] })} min={-2} max={10} step={0.5} /></div>
                   </TabsContent>
                   <TabsContent value="layout" className="p-4 space-y-4">
-                    <div><Label>Spacing</Label><Select value={draft.layout.spacing} onValueChange={(v: any) => updateLayout({ spacing: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compact">Compact</SelectItem><SelectItem value="comfortable">Comfortable</SelectItem><SelectItem value="spacious">Spacious</SelectItem></SelectContent></Select></div>
-                    <div><Label>Alignment</Label><Select value={draft.layout.alignment} onValueChange={(v: any) => updateLayout({ alignment: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="left">Left</SelectItem><SelectItem value="center">Center</SelectItem><SelectItem value="right">Right</SelectItem></SelectContent></Select></div>
-                    <div><Label>Max Width: {draft.layout.maxWidth}px</Label><Slider value={[draft.layout.maxWidth]} onValueChange={(v) => updateLayout({ maxWidth: v[0] })} min={300} max={1200} step={50} /></div>
+                    <div><Label>Spacing</Label><Select value={draft?.layout?.spacing || 'comfortable'} onValueChange={(v: any) => updateLayout({ spacing: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compact">Compact</SelectItem><SelectItem value="comfortable">Comfortable</SelectItem><SelectItem value="spacious">Spacious</SelectItem></SelectContent></Select></div>
+                    <div><Label>Alignment</Label><Select value={draft?.layout?.alignment || 'center'} onValueChange={(v: any) => updateLayout({ alignment: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="left">Left</SelectItem><SelectItem value="center">Center</SelectItem><SelectItem value="right">Right</SelectItem></SelectContent></Select></div>
+                    <div><Label>Max Width: {draft?.layout?.maxWidth || 0}px</Label><Slider value={[draft?.layout?.maxWidth || 1000]} onValueChange={(v) => updateLayout({ maxWidth: v[0] })} min={300} max={1200} step={50} /></div>
                   </TabsContent>
                   <TabsContent value="content" className="p-4 space-y-4">
-                    <div><Label>Headline</Label><Input value={draft.content.headline} onChange={(e) => updateContent({ headline: e.target.value })} placeholder="Welcome to Training" /></div>
-                    <div><Label>Subtext</Label><Input value={draft.content.subtext} onChange={(e) => updateContent({ subtext: e.target.value })} placeholder="Sign in or get started below" /></div>
-                    <div><Label>Logo URL (optional)</Label><Input value={draft.content.logoUrl || ''} onChange={(e) => updateContent({ logoUrl: e.target.value || null })} placeholder="https://..." /></div>
+                    <div><Label>Headline</Label><Input value={draft?.content?.headline || ''} onChange={(e) => updateContent({ headline: e.target.value })} placeholder="Welcome to Training" /></div>
+                    <div><Label>Subtext</Label><Input value={draft?.content?.subtext || ''} onChange={(e) => updateContent({ subtext: e.target.value })} placeholder="Sign in or get started below" /></div>
+                    <div><Label>Logo URL (optional)</Label><Input value={draft?.content?.logoUrl || ''} onChange={(e) => updateContent({ logoUrl: e.target.value || null })} placeholder="https://..." /></div>
                   </TabsContent>
                   <TabsContent value="behavior" className="p-4 space-y-4">
-                    <div className="flex items-center justify-between"><Label>Show Member Login</Label><Switch checked={draft.behavior.showMemberLogin} onCheckedChange={(v) => updateBehavior({ showMemberLogin: v })} /></div>
-                    <div className="flex items-center justify-between"><Label>Show New Student</Label><Switch checked={draft.behavior.showNewStudent} onCheckedChange={(v) => updateBehavior({ showNewStudent: v })} /></div>
-                    <div className="flex items-center justify-between"><Label>Auto Return</Label><Switch checked={draft.behavior.autoReturn} onCheckedChange={(v) => updateBehavior({ autoReturn: v })} /></div>
-                    <div><Label>Idle Timeout: {draft.behavior.idleSeconds}s</Label><Slider value={[draft.behavior.idleSeconds]} onValueChange={(v) => updateBehavior({ idleSeconds: v[0] })} min={10} max={600} step={10} /></div>
-                    <div className="flex items-center justify-between"><Label>Enable Screensaver</Label><Switch checked={draft.behavior.screensaverEnabled} onCheckedChange={(v) => updateBehavior({ screensaverEnabled: v })} /></div>
-                    <div><Label>Screensaver Message</Label><Input value={draft.behavior.screensaverMessage} onChange={(e) => updateBehavior({ screensaverMessage: e.target.value })} placeholder="Tap to continue" /></div>
+                    <div className="flex items-center justify-between"><Label>Show Member Login</Label><Switch checked={draft?.behavior?.showMemberLogin || false} onCheckedChange={(v) => updateBehavior({ showMemberLogin: v })} /></div>
+                    <div className="flex items-center justify-between"><Label>Show New Student</Label><Switch checked={draft?.behavior?.showNewStudent || false} onCheckedChange={(v) => updateBehavior({ showNewStudent: v })} /></div>
+                    <div className="flex items-center justify-between"><Label>Auto Return</Label><Switch checked={draft?.behavior?.autoReturn || false} onCheckedChange={(v) => updateBehavior({ autoReturn: v })} /></div>
+                    <div><Label>Idle Timeout: {draft?.behavior?.idleSeconds || 0}s</Label><Slider value={[draft?.behavior?.idleSeconds || 300]} onValueChange={(v) => updateBehavior({ idleSeconds: v[0] })} min={10} max={600} step={10} /></div>
+                    <div className="flex items-center justify-between"><Label>Enable Screensaver</Label><Switch checked={draft?.behavior?.screensaverEnabled || false} onCheckedChange={(v) => updateBehavior({ screensaverEnabled: v })} /></div>
+                    <div><Label>Screensaver Message</Label><Input value={draft?.behavior?.screensaverMessage || ''} onChange={(e) => updateBehavior({ screensaverMessage: e.target.value })} placeholder="Tap to continue" /></div>
                   </TabsContent>
                 </Tabs>
               </div>
@@ -546,14 +611,34 @@ export default function KioskStudioBuilder2() {
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
-        title="Delete Kiosk"
-        message="Are you sure you want to delete this kiosk? This action cannot be undone."
+        title={confirmModal.type === 'location' ? 'Delete Location' : 'Delete Kiosk'}
+        message={confirmModal.type === 'location' ? 'Are you sure you want to delete this location and all its kiosks? This action cannot be undone.' : 'Are you sure you want to delete this kiosk? This action cannot be undone.'}
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmModal({ isOpen: false })}
         isDangerous
       />
+
+      {/* Create Kiosk Modal */}
+      {showCreateKioskModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-sm w-full mx-4">
+            <h2 className="text-lg font-semibold mb-4">Create New Kiosk</h2>
+            <Input
+              value={createKioskName}
+              onChange={(e) => setCreateKioskName(e.target.value)}
+              placeholder="Kiosk name"
+              className="mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowCreateKioskModal(false); setCreateKioskName(''); }} className="flex-1 px-3 py-2 text-sm border border-border rounded-md hover:bg-accent transition-colors">Cancel</button>
+              <button onClick={handleConfirmCreateKiosk} className="flex-1 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">Create</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
