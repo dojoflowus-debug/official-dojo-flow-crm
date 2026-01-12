@@ -3,7 +3,7 @@ import { Upload, X } from 'lucide-react';
 import { KioskConfig } from '../../../shared/kioskConfig';
 
 interface KioskBackgroundControlsProps {
-  settings: KioskConfig['background'];
+  background: KioskConfig['background'];
   onChange: (key: string, value: any) => void;
 }
 
@@ -15,10 +15,10 @@ const PRESET_BACKGROUNDS = [
 ];
 
 export function KioskBackgroundControls({
-  settings,
+  background,
   onChange,
 }: KioskBackgroundControlsProps) {
-  const safeSettings = settings || {
+  const safeSettings = background || {
     type: 'solid',
     color: '#ffffff',
     presetKey: null,
@@ -155,7 +155,6 @@ export function KioskBackgroundControls({
             type="color"
             value={safeSettings.color || '#ffffff'}
             onChange={(e) => {
-              onChange('type', 'solid');
               onChange('color', e.target.value);
             }}
             className="w-12 h-10 rounded cursor-pointer"
@@ -164,7 +163,6 @@ export function KioskBackgroundControls({
             type="text"
             value={safeSettings.color || '#ffffff'}
             onChange={(e) => {
-              onChange('type', 'solid');
               onChange('color', e.target.value);
             }}
             className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm font-mono"

@@ -42,6 +42,9 @@ export default function KioskStudio() {
   const [isCreating, setIsCreating] = useState(false);
   const [previewMode, setPreviewMode] = useState<'draft' | 'published'>('draft');
 
+  // Calculate dirty state
+  const isDirty = JSON.stringify(draftConfig) !== JSON.stringify(lastSavedConfig);
+
   // Fetch locations
   const { data: locationsData } = trpc.kiosk.listLocations.useQuery(undefined, { enabled: true })
 
@@ -76,6 +79,10 @@ export default function KioskStudio() {
       if (kiosk.draftConfig) {
         setDraftConfig(kiosk.draftConfig);
         setLastSavedConfig(kiosk.draftConfig);
+      } else {
+        // Initialize with default if no draft exists
+        setDraftConfig(DEFAULT_KIOSK_CONFIG);
+        setLastSavedConfig(DEFAULT_KIOSK_CONFIG);
       }
       if (kiosk.publishedConfig) {
         setPublishedConfig(kiosk.publishedConfig);
@@ -107,34 +114,12 @@ export default function KioskStudio() {
     }
   }, [locationId, locationsData]);
 
-  // Auto-select first kiosk when kiosks list loads
-  useEffect(() => {
-    if (kiosksData && kiosksData.length > 0 && !selectedKiosk) {
-      setSelectedKiosk(kiosksData[0].id);
-    }
-  }, [kiosksData, selectedKiosk]);
-
-
   // Preview config selection
   const getPreviewConfig = (): KioskConfig => {
     if (previewMode === 'published' && publishedConfig) {
       return publishedConfig;
     }
     return draftConfig;
-  };
-  // Send draft to iframe preview
-  const sendPreviewUpdate = (config: KioskConfig) => {
-    const previewFrame = document.getElementById('kiosk-preview') as HTMLIFrameElement;
-    if (previewFrame?.contentWindow) {
-      previewFrame.contentWindow.postMessage(
-        {
-          type: 'KIOSK_SETTINGS_UPDATE',
-          settings: config,
-          timestamp: Date.now(),
-        },
-        '*'
-      );
-    }
   };
 
   // Generic handler for nested config updates
@@ -147,7 +132,6 @@ export default function KioskStudio() {
       },
     };
     setDraftConfig(updated);
-    sendPreviewUpdate(updated);
   };
 
   // Theme updates
@@ -169,7 +153,6 @@ export default function KioskStudio() {
         },
       };
       setDraftConfig(updated);
-      sendPreviewUpdate(updated);
     } else {
       updateConfig('content', key, value);
     }
@@ -185,7 +168,6 @@ export default function KioskStudio() {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
-      // Ensure we have a valid config - use DEFAULT as fallback
       const payloadConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
       
       // Validate the config BEFORE sending to server
@@ -198,7 +180,6 @@ export default function KioskStudio() {
         return;
       }
       
-      // Use validated data only
       const validatedConfig = validationResult.data;
       console.log('[KioskStudio] Saving draft with validated config:', validatedConfig);
       
@@ -224,7 +205,6 @@ export default function KioskStudio() {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
-      // Ensure we have a valid config - use DEFAULT as fallback
       const payloadConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
       
       // Validate the config BEFORE sending to server
@@ -237,7 +217,6 @@ export default function KioskStudio() {
         return;
       }
       
-      // Use validated data only
       const validatedConfig = validationResult.data;
       console.log('[KioskStudio] Publishing with validated config:', validatedConfig);
       
@@ -247,6 +226,7 @@ export default function KioskStudio() {
       });
       
       setPublishedConfig(validatedConfig);
+      setLastSavedConfig(validatedConfig);
       setSaveMessage({ type: 'success', text: '✓ Published successfully' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
@@ -272,7 +252,6 @@ export default function KioskStudio() {
       return;
     }
 
-    // If not using default name and we have existing kiosks, auto-increment the name
     if (!useDefaultName && kiosksForLocation && kiosksForLocation.length > 0) {
       const count = kiosksForLocation.length + 1;
       kioskName = `Kiosk ${count}`;
@@ -291,19 +270,17 @@ export default function KioskStudio() {
       setNewKioskNameInput('');
       setShowAddKiosk(false);
       
-      // Invalidate and refetch kiosks query
       await queryClient.invalidateQueries({
         queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
       });
       await refetchKiosks();
       setSelectedKiosk(newKiosk.id);
       
-      // Show success toast
       setSaveMessage({ type: 'success', text: `✓ Kiosk "${kioskName}" created` });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to create kiosk';
-      console.error('[KioskStudio] Create error:', { locationId: selectedLocation, orgId: 'ctx.organizationId', error });
+      console.error('[KioskStudio] Create error:', { locationId: selectedLocation, error });
       setCreateError(errorMsg);
       setSaveMessage({ type: 'error', text: `✗ ${errorMsg}` });
       setTimeout(() => setSaveMessage(null), 3000);
@@ -319,7 +296,6 @@ export default function KioskStudio() {
       if (selectedKiosk === kioskId) {
         setSelectedKiosk(null);
       }
-      // Invalidate and refetch kiosks query
       await queryClient.invalidateQueries({
         queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
       });
@@ -332,7 +308,6 @@ export default function KioskStudio() {
   const handleDuplicateKiosk = async (kioskId: number) => {
     try {
       await duplicateKioskMutation.mutateAsync({ kioskId });
-      // Invalidate and refetch kiosks query
       await queryClient.invalidateQueries({
         queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
       });
@@ -351,7 +326,6 @@ export default function KioskStudio() {
       });
       setRenameKioskId(null);
       setNewKioskName('');
-      // Invalidate and refetch kiosks query
       await queryClient.invalidateQueries({
         queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
       });
@@ -386,7 +360,7 @@ export default function KioskStudio() {
           </button>
           <button
             onClick={handleSaveDraft}
-            disabled={isSaving || hasNoKiosks}
+            disabled={isSaving || hasNoKiosks || !isDirty}
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             <Save className="w-4 h-4 inline mr-2" />
@@ -394,7 +368,7 @@ export default function KioskStudio() {
           </button>
           <button
             onClick={handlePublish}
-            disabled={isSaving || hasNoKiosks}
+            disabled={isSaving || hasNoKiosks || !isDirty}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             <Zap className="w-4 h-4 inline mr-2" />
@@ -692,7 +666,6 @@ export default function KioskStudio() {
                           },
                         };
                         setDraftConfig(updated);
-                        sendPreviewUpdate(updated);
                       }}
                     />
 
@@ -708,7 +681,6 @@ export default function KioskStudio() {
                           },
                         };
                         setDraftConfig(updated);
-                        sendPreviewUpdate(updated);
                       }}
                     />
                   </div>
@@ -734,6 +706,60 @@ export default function KioskStudio() {
                         rows={3}
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Check In - Title</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileLeft.title}
+                        onChange={(e) => handleContentChange('tileLeft.title', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Check In - Subtitle</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileLeft.subtitle}
+                        onChange={(e) => handleContentChange('tileLeft.subtitle', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Check In - Button</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileLeft.button}
+                        onChange={(e) => handleContentChange('tileLeft.button', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Start Training - Title</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileRight.title}
+                        onChange={(e) => handleContentChange('tileRight.title', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Start Training - Subtitle</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileRight.subtitle}
+                        onChange={(e) => handleContentChange('tileRight.subtitle', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Start Training - Button</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileRight.button}
+                        onChange={(e) => handleContentChange('tileRight.button', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -743,7 +769,7 @@ export default function KioskStudio() {
                       <label className="text-sm font-medium">Show Member Login</label>
                       <input
                         type="checkbox"
-                        checked={draftConfig.behavior.showMemberLogin}
+                        checked={draftConfig.behavior.showMemberLogin ?? true}
                         onChange={(e) => handleBehaviorChange('showMemberLogin', e.target.checked)}
                         className="w-4 h-4 rounded"
                       />
@@ -752,7 +778,7 @@ export default function KioskStudio() {
                       <label className="text-sm font-medium">Show New Student</label>
                       <input
                         type="checkbox"
-                        checked={draftConfig.behavior.showNewStudent}
+                        checked={draftConfig.behavior.showNewStudent ?? true}
                         onChange={(e) => handleBehaviorChange('showNewStudent', e.target.checked)}
                         className="w-4 h-4 rounded"
                       />
@@ -763,7 +789,7 @@ export default function KioskStudio() {
                         type="number"
                         min="10"
                         max="600"
-                        value={draftConfig.behavior.idleSeconds}
+                        value={draftConfig.behavior.idleSeconds ?? 60}
                         onChange={(e) => handleBehaviorChange('idleSeconds', parseInt(e.target.value))}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
                       />
@@ -815,6 +841,19 @@ export default function KioskStudio() {
                 )}
               </div>
             </>
+          )}
+
+          {/* Debug Panel */}
+          {showDebugPanel && !hasNoKiosks && (
+            <div className="p-6 border-t border-slate-800 bg-slate-950/50">
+              <h3 className="text-sm font-bold mb-3 text-yellow-400">Debug: Current Config</h3>
+              <pre className="text-xs bg-slate-950 p-3 rounded border border-slate-700 overflow-auto max-h-64 text-slate-300">
+                {JSON.stringify(draftConfig, null, 2)}
+              </pre>
+              <div className="mt-3 text-xs text-slate-400">
+                <p>Dirty: {isDirty ? '✓ Yes' : '✗ No'}</p>
+              </div>
+            </div>
           )}
         </div>
 

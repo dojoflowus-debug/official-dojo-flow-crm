@@ -45,7 +45,7 @@ export interface KioskConfig {
 
   // Background - Image, color, effects
   background: {
-    type: 'color' | 'image' | 'preset'; // Background type
+    type: 'color' | 'image' | 'preset' | 'custom'; // Background type
     color: string; // Hex color for solid backgrounds
     presetKey: string | null; // Preset identifier (e.g., 'dojo-warm-lights')
     customUrl: string | null; // Custom image URL
@@ -59,6 +59,9 @@ export interface KioskConfig {
     autoAdvanceSeconds?: number; // Auto-advance to next screen
     enableSound?: boolean; // Enable audio feedback
     enableHaptics?: boolean; // Enable haptic feedback
+    showMemberLogin?: boolean; // Show member login button
+    showNewStudent?: boolean; // Show new student button
+    idleSeconds?: number; // Idle timeout before screensaver (in seconds)
   };
 
   // Screensaver - Idle behavior
@@ -118,6 +121,9 @@ export const DEFAULT_KIOSK_CONFIG: KioskConfig = {
     autoAdvanceSeconds: undefined,
     enableSound: false,
     enableHaptics: false,
+    showMemberLogin: true,
+    showNewStudent: true,
+    idleSeconds: 60,
   },
   screensaver: {
     enabled: true,

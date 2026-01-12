@@ -3,12 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, LogIn, UserPlus, Settings } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import KioskScreensaver from './KioskScreensaver';
-import { DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
+import { DEFAULT_KIOSK_CONFIG, KioskConfig } from '../../../shared/kioskConfig';
 
 interface KioskHomeProps {
   locationName?: string;
   locationSlug?: string;
-  settings?: any;
+  config?: KioskConfig;
 }
 
 /**
@@ -22,13 +22,13 @@ interface KioskHomeProps {
  * - Discreet staff login button
  * - iPad optimized
  */
-export default function KioskHome({ locationName, locationSlug: propSlug, settings: propSettings }: KioskHomeProps) {
+export default function KioskHome({ locationName, locationSlug: propSlug, config: propConfig }: KioskHomeProps) {
   const navigate = useNavigate();
   const { locationSlug: routeSlug } = useParams<{ locationSlug: string }>();
   const slug = propSlug || routeSlug;
   
-  // Ensure settings always has a safe default
-  const settings = propSettings || DEFAULT_KIOSK_CONFIG;
+  // Use provided config or fallback to default
+  const config = propConfig || DEFAULT_KIOSK_CONFIG;
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [fadeIn, setFadeIn] = useState(false);
@@ -68,7 +68,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
   }, []);
 
   // Idle detection and screensaver
-  const idleTimeout = (settings?.screensaver?.idleSeconds || 60) * 1000;
+  const idleTimeout = (config?.screensaver?.idleSeconds || 60) * 1000;
 
   const resetIdleTimer = () => {
     // Clear existing timers
@@ -81,7 +81,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
     // Set new idle timer
     idleTimeoutRef.current = setTimeout(() => {
       setIsIdle(true);
-      if (settings?.screensaver?.enabled !== false) {
+      if (config?.screensaver?.enabled !== false) {
         setShowScreensaver(true);
       }
     }, idleTimeout);
@@ -107,14 +107,14 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
       if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
     };
-  }, [idleTimeout, settings?.screensaver?.enabled]);
+  }, [idleTimeout, config?.screensaver?.enabled]);
 
   // Show screensaver if idle
   if (showScreensaver) {
     return (
       <KioskScreensaver
-        message={settings?.screensaver?.message || 'Tap the screen to check-in'}
-        showLogo={settings?.screensaver?.showLogo !== false}
+        message={config?.screensaver?.message || 'Tap the screen to check-in'}
+        showLogo={config?.screensaver?.showLogo !== false}
         onActivity={() => {
           setShowScreensaver(false);
           resetIdleTimer();
@@ -167,12 +167,12 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
         </div>
 
         {/* Info Bar */}
-        {settings?.layout?.showInfoBar !== false && (
+        {config?.layout?.showInfoBar !== false && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
             {/* Next Class */}
             <div className="bg-gray-100 rounded-2xl px-6 py-4 border border-gray-300">
               <p className="text-gray-600 text-sm font-medium mb-1">
-                {settings?.content?.infoLeftLabel || 'Next Class'}
+                {config?.content?.infoLeftLabel || 'Next Class'}
               </p>
               <p className="text-black text-lg font-semibold">
                 {nextClass?.name} at {nextClass?.time}
@@ -185,7 +185,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
             {/* Today's Focus */}
             <div className="bg-gray-100 rounded-2xl px-6 py-4 border border-gray-300">
               <p className="text-gray-600 text-sm font-medium mb-1">
-                {settings?.content?.infoRightLabel || "Today's Focus"}
+                {config?.content?.infoRightLabel || "Today's Focus"}
               </p>
               <p className="text-black text-lg font-semibold">
                 {todaysFocus.join(' • ')}
@@ -223,17 +223,17 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
             {/* Text Content */}
             <div className="relative text-center space-y-2">
               <h2 className="text-black text-4xl font-bold">
-                {settings?.content?.tileLeft?.title || 'Check In'}
+                {config?.content?.tileLeft?.title || 'Check In'}
               </h2>
               <p className="text-gray-600 text-lg">
-                {settings?.content?.tileLeft?.subtitle || 'Tap here to check into class'}
+                {config?.content?.tileLeft?.subtitle || 'Tap here to check into class'}
               </p>
             </div>
 
             {/* Bottom Button */}
             <div className="relative mt-8 pt-8 border-t border-gray-300">
               <div className="w-full py-4 rounded-2xl bg-blue-500 text-white text-center font-bold text-lg shadow-lg hover:bg-blue-600 transition-all">
-                {settings?.content?.tileLeft?.button || 'Check In'}
+                {config?.content?.tileLeft?.button || 'Check In'}
               </div>
             </div>
           </button>
@@ -265,17 +265,17 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
             {/* Text Content */}
             <div className="relative text-center space-y-2">
               <h2 className="text-black text-4xl font-bold">
-                {settings?.content?.tileRight?.title || 'Start Training'}
+                {config?.content?.tileRight?.title || 'Start Training'}
               </h2>
               <p className="text-gray-600 text-lg">
-                {settings?.content?.tileRight?.subtitle || 'New students start here'}
+                {config?.content?.tileRight?.subtitle || 'New students start here'}
               </p>
             </div>
 
             {/* Bottom Button */}
             <div className="relative mt-8 pt-8 border-t border-gray-300">
               <div className="w-full py-4 rounded-2xl bg-red-500 text-white text-center font-bold text-lg shadow-lg hover:bg-red-600 transition-all">
-                {settings?.content?.tileRight?.button || 'Start Training'}
+                {config?.content?.tileRight?.button || 'Start Training'}
               </div>
             </div>
           </button>

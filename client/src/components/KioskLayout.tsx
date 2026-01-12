@@ -1,32 +1,12 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import KioskScreensaver from './KioskScreensaver';
-
-interface BackgroundSettings {
-  type?: string;
-  color?: string;
-  customUrl?: string | null;
-  presetKey?: string | null;
-  blur?: number;
-  dim?: number;
-  fit?: string;
-}
-
-interface ScreensaverSettings {
-  enabled?: boolean;
-  idleSeconds?: number;
-  message?: string;
-  showLogo?: boolean;
-}
+import { KioskConfig } from '../../../shared/kioskConfig';
 
 interface KioskLayoutProps {
   children: ReactNode;
-  backgroundSettings?: BackgroundSettings;
-  backgroundImage?: string;
-  backgroundPreset?: string;
+  config?: KioskConfig;
   isStudioPreview?: boolean;
-  idleSeconds?: number;
-  screensaverSettings?: ScreensaverSettings;
 }
 
 /**
@@ -41,18 +21,14 @@ interface KioskLayoutProps {
  */
 export default function KioskLayout({
   children,
-  backgroundSettings,
-  backgroundImage,
-  backgroundPreset = 'default',
+  config,
   isStudioPreview = false,
-  idleSeconds = 60,
-  screensaverSettings,
 }: KioskLayoutProps) {
   const { locationSlug } = useParams<{ locationSlug: string }>();
   const [isIdle, setIsIdle] = useState(false);
 
   // Idle detection - configurable timeout
-  const IDLE_TIMEOUT = (idleSeconds || 60) * 1000; // Convert to milliseconds
+  const IDLE_TIMEOUT = (config?.screensaver?.idleSeconds || 60) * 1000; // Convert to milliseconds
 
   useEffect(() => {
     let currentTimer: NodeJS.Timeout | null = null;
@@ -101,7 +77,7 @@ export default function KioskLayout({
   // 3. Solid color (type=solid and color)
   // 4. Default white
   const getBackgroundStyle = (): React.CSSProperties => {
-    const settings = backgroundSettings || {};
+    const settings = config?.background || {};
     const type = settings.type || 'solid';
     const blur = settings.blur || 0;
     const dim = settings.dim || 0;
@@ -153,8 +129,8 @@ export default function KioskLayout({
   };
 
   // If idle, show screensaver (disabled in studio preview mode)
-  if (isIdle && !isStudioPreview && screensaverSettings?.enabled) {
-    return <KioskScreensaver onReturn={() => setIsIdle(false)} message={screensaverSettings?.message} showLogo={screensaverSettings?.showLogo} />;
+  if (isIdle && !isStudioPreview && config?.screensaver?.enabled) {
+    return <KioskScreensaver onReturn={() => setIsIdle(false)} message={config?.screensaver?.message} showLogo={config?.screensaver?.showLogo} />;
   }
 
   const backgroundStyle = getBackgroundStyle();

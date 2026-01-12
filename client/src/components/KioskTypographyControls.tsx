@@ -1,15 +1,15 @@
 import { KioskConfig } from '../../../shared/kioskConfig';
 
 interface KioskTypographyControlsProps {
-  settings: KioskConfig['typography'];
+  typography: KioskConfig['typography'];
   onChange: (key: string, value: any) => void;
 }
 
 export function KioskTypographyControls({
-  settings,
+  typography,
   onChange,
 }: KioskTypographyControlsProps) {
-  const safeSettings = settings || {
+  const safeSettings = typography || {
     titleSize: 48,
     titleWeight: 700,
     subtitleSize: 24,
