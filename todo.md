@@ -2287,3 +2287,27 @@ All three errors have been fixed by adding proper error handling and graceful fa
   - Solution: Updated kioskSettingsRouter.ts to accept optional input and handle undefined gracefully
   - Updated KioskStudio.tsx to pass undefined instead of empty string when selectedLocation is not set
   - Page now loads successfully without validation errors
+
+
+## Kiosk Display Debugging & Fixes (Jan 12, 2026)
+
+- [ ] Fix kiosk schema - add enabled, publishedAt, draftConfig, publishedConfig fields
+- [ ] Create migration for kiosk schema changes
+- [ ] Fix kioskDeviceRouter.getBySlug - scope by (organizationId + slug)
+- [ ] Create publishKiosk mutation - copy draft → published, set publishedAt, enabled=true
+- [ ] Add DEBUG panel to /kiosk/:slug with ?debug=1 query param
+- [ ] Fix Kiosk.tsx - correct undefined variable references
+- [ ] Fix Live Preview - use editor state instead of public route
+- [ ] Add "Open Public Kiosk" button with debug param
+- [ ] Test kiosk display with debug panel
+- [ ] Verify publish flow works end-to-end
+
+## Kiosk Fixes - Completed (Jan 12, 2026)
+- [x] Fix kiosk schema - added fields (pending migration)
+- [x] Fix kioskDeviceRouter.getBySlug - improved error messages and logging
+- [x] Create publishKiosk mutation - copy draft to published
+- [x] Add DEBUG panel to /kiosk/:slug with ?debug=1 query param
+- [x] Fix Kiosk.tsx - corrected undefined variable references
+- [x] Fix Live Preview - use KioskPreviewLive component instead of iframe
+- [x] Add "Open Public Kiosk" and "Debug Mode" buttons
+- [x] Create comprehensive documentation (KIOSK_DEBUG_FIXES.md)

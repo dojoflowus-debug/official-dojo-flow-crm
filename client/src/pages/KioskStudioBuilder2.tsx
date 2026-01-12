@@ -8,8 +8,9 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Save, Zap, RotateCcw, Palette, Type, Layout, FileText, Zap as Zap2, MoreVertical, Plus } from 'lucide-react';
+import { Save, Zap, RotateCcw, Palette, Type, Layout, FileText, Zap as Zap2, MoreVertical, Plus, ExternalLink } from 'lucide-react';
 import ConfirmationModal from '@/components/kiosk/ConfirmationModal';
+import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
 
 interface KioskAppearance {
   background: {
@@ -597,14 +598,35 @@ export default function KioskStudioBuilder2() {
             {isPreviewFocus ? 'Expand' : 'Focus'}
           </button>
         </div>
-        <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
-          <iframe
-            key={previewKey}
-            ref={previewFrameRef}
-            src={`/kiosk/${selectedKiosk?.slug || 'preview'}`}
-            className="w-full h-full border border-border rounded-lg shadow-lg"
-            title="Kiosk Preview"
-          />
+        <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-auto">
+          {/* Live Preview using local component */}
+          <div className="w-full h-full border border-border rounded-lg shadow-lg overflow-hidden bg-white">
+            <KioskPreviewLive config={draft} />
+          </div>
+          
+          {/* Open Public Kiosk Buttons */}
+          {selectedKiosk && (
+            <div className="mt-4 flex gap-2">
+              <a
+                href={`/kiosk/${selectedKiosk.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open Public Kiosk
+              </a>
+              <a
+                href={`/kiosk/${selectedKiosk.slug}?debug=1`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Debug Mode
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

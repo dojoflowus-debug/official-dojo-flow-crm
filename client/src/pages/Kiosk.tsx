@@ -1,24 +1,83 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { AlertCircle, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import KioskLayout from '@/components/KioskLayout';
 import KioskHome from '@/components/KioskHome';
 import { trpc } from '@/lib/trpc';
 
 /**
+ * DEBUG PANEL - Shows diagnostic information when ?debug=1 is in URL
+ */
+function DebugPanel({ kiosk, error, locationSlug }: any) {
+  const [isOpen, setIsOpen] = useState(true);
+  
+  if (!isOpen) return null;
+
+  let reason = 'UNKNOWN';
+  if (error) {
+    const msg = error.message || '';
+    if (msg.includes('NO_KIOSK_FOUND')) reason = 'NO_KIOSK_FOUND';
+    else if (msg.includes('DISABLED')) reason = 'DISABLED';
+    else if (msg.includes('NO_PUBLISHED_CONFIG')) reason = 'NO_PUBLISHED_CONFIG';
+    else if (msg.includes('ORG_CONTEXT_MISSING')) reason = 'ORG_CONTEXT_MISSING';
+    else if (msg.includes('QUERY_ERROR')) reason = 'QUERY_ERROR';
+  } else if (!kiosk) {
+    reason = 'NO_KIOSK_DATA';
+  } else if (!kiosk.publishedConfig) {
+    reason = 'NO_PUBLISHED_CONFIG';
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 max-w-sm">
+      <div className="bg-slate-900 border border-red-500 rounded-lg p-4 text-xs font-mono text-red-100 space-y-2">
+        <div className="flex justify-between items-center mb-2">
+          <span className="font-bold text-red-400">DEBUG PANEL</span>
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="text-red-400 hover:text-red-300"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="space-y-1 border-t border-red-500/30 pt-2">
+          <div><span className="text-red-400">slug:</span> {locationSlug}</div>
+          <div><span className="text-red-400">kioskId:</span> {kiosk?.id || 'null'}</div>
+          <div><span className="text-red-400">orgId:</span> {kiosk?.organizationId || 'null'}</div>
+          <div><span className="text-red-400">isActive:</span> {kiosk?.isActive ? 'true' : 'false'}</div>
+          <div><span className="text-red-400">hasPublishedConfig:</span> {kiosk?.publishedConfig ? 'true' : 'false'}</div>
+          <div className="border-t border-red-500/30 pt-1 mt-1">
+            <div><span className="text-red-400">reason:</span> <span className="text-yellow-300">{reason}</span></div>
+          </div>
+          {error && (
+            <div className="border-t border-red-500/30 pt-1 mt-1">
+              <div><span className="text-red-400">error:</span></div>
+              <div className="text-red-300 break-words">{error.message}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Kiosk - Main kiosk page
  * 
  * This page:
- * - Fetches kiosk location by slug
- * - Fetches published kiosk configuration
+ * - Fetches kiosk by slug (public endpoint)
+ * - Renders published kiosk configuration
  * - Wraps content in KioskLayout (handles background, idle detection, screensaver)
  * - Renders KioskHome (the main kiosk UI)
+ * - Shows DEBUG panel if ?debug=1 is in URL
  */
 export default function Kiosk() {
   const { locationSlug } = useParams<{ locationSlug: string }>();
+  const [searchParams] = useSearchParams();
   const [draftSettings, setDraftSettings] = useState<any>(null);
-  const isStudioPreview = new URLSearchParams(window.location.search).get('studioPreview') === '1';
+  const isStudioPreview = searchParams.get('studioPreview') === '1';
+  const isDebugMode = searchParams.get('debug') === '1';
 
   // Listen for PostMessage from studio preview
   useEffect(() => {
@@ -43,6 +102,7 @@ export default function Kiosk() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-white text-xl">Loading kiosk...</div>
+        {isDebugMode && <DebugPanel kiosk={null} error={null} locationSlug={locationSlug} />}
       </div>
     );
   }
@@ -61,12 +121,13 @@ export default function Kiosk() {
             Please contact your administrator for assistance.
           </p>
         </Card>
+        {isDebugMode && <DebugPanel kiosk={null} error={null} locationSlug={locationSlug} />}
       </div>
     );
   }
 
   // Error state - kiosk not found or disabled
-  if (error || !kioskConfig) {
+  if (error || !kiosk) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-md p-8 text-center space-y-4">
@@ -78,7 +139,13 @@ export default function Kiosk() {
           <p className="text-sm text-muted-foreground">
             Please contact your administrator for assistance.
           </p>
+          {isDebugMode && (
+            <p className="text-xs text-blue-400 mt-4">
+              <a href={`${window.location.pathname}?debug=1`} className="underline">View Debug Info</a>
+            </p>
+          )}
         </Card>
+        {isDebugMode && <DebugPanel kiosk={kiosk} error={error} locationSlug={locationSlug} />}
       </div>
     );
   }
@@ -96,6 +163,7 @@ export default function Kiosk() {
             This kiosk has not been published yet. Please configure it in the Kiosk Manager.
           </p>
         </Card>
+        {isDebugMode && <DebugPanel kiosk={kiosk} error={error} locationSlug={locationSlug} />}
       </div>
     );
   }
@@ -104,13 +172,16 @@ export default function Kiosk() {
   const idleSeconds = effectiveSettings.screensaver?.idleSeconds || 60;
 
   return (
-    <KioskLayout 
-      backgroundSettings={backgroundSettings}
-      isStudioPreview={isStudioPreview}
-      idleSeconds={idleSeconds}
-      screensaverSettings={effectiveSettings.screensaver}
-    >
-      <KioskHome locationName={kioskLocation?.name || 'Dojo'} locationSlug={locationSlug} settings={effectiveSettings} />
-    </KioskLayout>
+    <>
+      <KioskLayout 
+        backgroundSettings={backgroundSettings}
+        isStudioPreview={isStudioPreview}
+        idleSeconds={idleSeconds}
+        screensaverSettings={effectiveSettings.screensaver}
+      >
+        <KioskHome locationName={kiosk?.name || 'Dojo'} locationSlug={locationSlug} settings={effectiveSettings} />
+      </KioskLayout>
+      {isDebugMode && <DebugPanel kiosk={kiosk} error={error} locationSlug={locationSlug} />}
+    </>
   );
 }

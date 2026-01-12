@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server';
-import { eq, and } from 'drizzle-orm';
+import { organizations } from '../drizzle/schema';
+import { eq, and, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { kiosks } from '../drizzle/schema';
 import { getDb } from './db';
@@ -212,6 +213,8 @@ export const kioskDeviceRouter = router({
 
   /**
    * Get kiosk by slug (public, returns published config only)
+   * NOTE: This is a PUBLIC procedure - kiosk displays call this without authentication
+   * The slug must be globally unique OR we need to accept orgPublicId as well
    */
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
@@ -224,6 +227,8 @@ export const kioskDeviceRouter = router({
       }
 
       try {
+        // Query by slug only - assumes slug is globally unique per organization
+        // If you need org scoping, pass orgPublicId in the URL
         const result = await ctx.db
           .select()
           .from(kiosks)
@@ -231,37 +236,50 @@ export const kioskDeviceRouter = router({
           .limit(1);
 
         if (!result || result.length === 0) {
+          console.log('[Kiosk Device] Kiosk not found for slug:', input.slug);
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: 'Kiosk not found',
+            message: 'NO_KIOSK_FOUND',
           });
         }
 
         const kiosk = result[0];
-        const configData = parseKioskConfig(kiosk.config);
+        
+        // Check if isActive (using existing schema field)
+        if (kiosk.isActive !== 1) {
+          console.log('[Kiosk Device] Kiosk is disabled:', kiosk.id);
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'DISABLED',
+          });
+        }
 
-        // Only return published config, check if enabled
-        if (!configData.enabled || !configData.published) {
+        // Parse config from legacy field
+        const configData = parseKioskConfig(kiosk.config);
+        const publishedConfig = configData.published;
+
+        if (!publishedConfig) {
+          console.log('[Kiosk Device] No published config for kiosk:', kiosk.id);
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: 'Kiosk not published or disabled',
+            message: 'NO_PUBLISHED_CONFIG',
           });
         }
 
         return {
           id: kiosk.id,
+          organizationId: kiosk.organizationId,
           name: kiosk.name,
           slug: kiosk.slug,
           isActive: kiosk.isActive,
-          publishedConfig: configData.published,
-          enabled: configData.enabled,
+          publishedConfig,
         };
       } catch (e) {
         if (e instanceof TRPCError) throw e;
         console.error('[Kiosk Device] Get by slug error:', e);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to get kiosk',
+          message: 'QUERY_ERROR',
         });
       }
     }),
@@ -285,7 +303,7 @@ export const kioskDeviceRouter = router({
       }
 
       try {
-        // Get current config
+        // Get current kiosk
         const current = await ctx.db
           .select()
           .from(kiosks)
@@ -304,9 +322,8 @@ export const kioskDeviceRouter = router({
           });
         }
 
+        // Update draft in config field
         const currentConfig = parseKioskConfig(current[0].config);
-        
-        // Update draft, keep published
         const newConfig = {
           draft: input.config,
           published: currentConfig.published,
@@ -329,6 +346,7 @@ export const kioskDeviceRouter = router({
         return {
           success: true,
           message: 'Draft saved',
+          draftConfig: input.config,
         };
       } catch (e) {
         console.error('[Kiosk Device] Save draft error:', e);
@@ -341,12 +359,13 @@ export const kioskDeviceRouter = router({
 
   /**
    * Publish kiosk configuration
+   * Copies draft config to published config and sets publishedAt timestamp
    */
   publish: protectedProcedure
     .input(
       z.object({
         kioskId: z.number(),
-        config: KioskConfigSchema,
+        config: KioskConfigSchema.optional(), // If not provided, publish current draft
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -358,10 +377,56 @@ export const kioskDeviceRouter = router({
       }
 
       try {
+        // Get current kiosk to read draft
+        const current = await ctx.db
+          .select()
+          .from(kiosks)
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          )
+          .limit(1);
+
+        if (!current || current.length === 0) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not found',
+          });
+        }
+
+        // Use provided config or current draft
+        let configToPublish = input.config;
+        if (!configToPublish) {
+          // Try to get from draftConfig field
+          if (current[0].draftConfig) {
+            try {
+              configToPublish = JSON.parse(current[0].draftConfig);
+            } catch (e) {
+              console.error('[Kiosk Device] Failed to parse draftConfig:', e);
+            }
+          }
+          // Fall back to legacy config field
+          if (!configToPublish) {
+            const configData = parseKioskConfig(current[0].config);
+            configToPublish = configData.draft || configData.published;
+          }
+        }
+
+        if (!configToPublish) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'No configuration to publish',
+          });
+        }
+
+        const now = new Date().toISOString();
+        
         // Store both draft and published config
         const newConfig = {
-          draft: input.config,
-          published: input.config,
+          draft: configToPublish,
+          published: configToPublish,
           enabled: true,
         };
 
@@ -370,7 +435,7 @@ export const kioskDeviceRouter = router({
           .set({
             config: JSON.stringify(newConfig),
             isActive: 1,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           })
           .where(
             and(
@@ -382,7 +447,8 @@ export const kioskDeviceRouter = router({
         return {
           success: true,
           message: 'Published successfully',
-          publishedAt: new Date().toISOString(),
+          publishedAt: now,
+          publishedConfig: configToPublish,
         };
       } catch (e) {
         console.error('[Kiosk Device] Publish error:', e);

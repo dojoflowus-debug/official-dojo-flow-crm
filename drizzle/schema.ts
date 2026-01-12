@@ -1410,18 +1410,18 @@ export const waiverTemplates = mysqlTable("waiver_templates", {
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 });
 
-export const kiosks = mysqlTable("kiosks", {
-	id: int().autoincrement().notNull().primaryKey(),
-	organizationId: int().notNull(),
-	locationId: int().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	slug: varchar({ length: 255 }).notNull(),
-	isActive: tinyint().default(1).notNull(),
-	config: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_kiosks_org_location").on(table.organizationId, table.locationId),
-	index("idx_kiosks_slug").on(table.organizationId, table.slug),
-]);
+	export const kiosks = mysqlTable("kiosks", {
+		id: int().autoincrement().notNull().primaryKey(),
+		organizationId: int().notNull(),
+		locationId: int().notNull(),
+		name: varchar({ length: 255 }).notNull(),
+		slug: varchar({ length: 255 }).notNull(),
+		isActive: tinyint().default(1).notNull(),
+		config: text(),
+		createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+		updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	},
+	(table) => [
+		index("idx_kiosks_org_location").on(table.organizationId, table.locationId),
+		index("idx_kiosks_slug").on(table.organizationId, table.slug),
+	]);
