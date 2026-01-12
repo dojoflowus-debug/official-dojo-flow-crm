@@ -2,7 +2,7 @@ import { router, protectedProcedure, publicProcedure } from './_core/trpc';
 import { TRPCError } from '@trpc/server';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
-import { locations, kiosk_locations } from '../drizzle/schema';
+import { locations, kioskLocations } from '../drizzle/schema';
 import { getDb } from './db';
 
 // Default kiosk settings
@@ -41,7 +41,7 @@ export const kioskManagerRouter = router({
         // Check if any kiosk locations exist
         const existing = await ctx.db
           .select()
-          .from(kiosk_locations)
+          .from(kioskLocations)
           .limit(1);
 
         if (existing.length > 0) {
@@ -50,7 +50,7 @@ export const kioskManagerRouter = router({
 
         // Create default location
         const result = await ctx.db
-          .insert(kiosk_locations)
+          .insert(kioskLocations)
           .values({
             name: 'Main Dojo',
             locationId: null,
@@ -91,8 +91,8 @@ export const kioskManagerRouter = router({
       try {
         const result = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.isActive, 1));
+          .from(kioskLocations)
+          .where(eq(kioskLocations.isActive, 1));
 
         return result.map(loc => ({
           id: loc.id,
@@ -212,7 +212,7 @@ export const kioskManagerRouter = router({
 
       try {
         const result = await ctx.db
-          .insert(kiosk_locations)
+          .insert(kioskLocations)
           .values({
             name: input.name,
             locationId: null,
@@ -404,8 +404,8 @@ export const kioskManagerRouter = router({
       try {
         const config = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.kioskLocationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.kioskLocationId))
           .limit(1);
 
         if (!config || config.length === 0) {
@@ -455,12 +455,12 @@ export const kioskManagerRouter = router({
         const appearanceJson = JSON.stringify(input.appearance);
 
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearanceDraft: appearanceJson,
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.kioskLocationId));
+          .where(eq(kioskLocations.id, input.kioskLocationId));
 
         return {
           success: true,
@@ -491,8 +491,8 @@ export const kioskManagerRouter = router({
       try {
         const config = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.kioskLocationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.kioskLocationId))
           .limit(1);
 
         if (!config || config.length === 0) {
@@ -506,13 +506,13 @@ export const kioskManagerRouter = router({
         const newVersion = (currentConfig.kioskAppearanceVersion || 1) + 1;
 
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearancePublished: currentConfig.kioskAppearanceDraft,
             kioskAppearanceVersion: newVersion,
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.kioskLocationId));
+          .where(eq(kioskLocations.id, input.kioskLocationId));
 
         return {
           success: true,
@@ -547,12 +547,12 @@ export const kioskManagerRouter = router({
 
       try {
         const result = await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             name: input.name,
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.locationId));
+          .where(eq(kioskLocations.id, input.locationId));
 
         if (result.rowsAffected === 0) {
           throw new TRPCError({
@@ -592,8 +592,8 @@ export const kioskManagerRouter = router({
         // Fetch the source location
         const sourceLocation = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.locationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.locationId))
           .limit(1);
 
         if (sourceLocation.length === 0) {
@@ -607,7 +607,7 @@ export const kioskManagerRouter = router({
 
         // Create a new location with copied settings
         const result = await ctx.db
-          .insert(kiosk_locations)
+          .insert(kioskLocations)
           .values({
             name: input.name,
             locationId: source.locationId,
@@ -655,8 +655,8 @@ export const kioskManagerRouter = router({
         // Check if this is the last active location
         const activeLocations = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.isActive, 1));
+          .from(kioskLocations)
+          .where(eq(kioskLocations.isActive, 1));
 
         if (activeLocations.length === 1 && activeLocations[0].id === input.locationId) {
           throw new TRPCError({
@@ -666,12 +666,12 @@ export const kioskManagerRouter = router({
         }
 
         const result = await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             isActive: 0,
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.locationId));
+          .where(eq(kioskLocations.id, input.locationId));
 
         if (result.rowsAffected === 0) {
           throw new TRPCError({

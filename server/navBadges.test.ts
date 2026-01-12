@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getDb } from './db';
-import { students, leads, billingTransactions, studentMerchandise, merchandiseItems } from '../drizzle/schema';
+import { students, leads, studentMerchandise, merchandiseItems } from '../drizzle/schema';
 import { eq, and, or, sql } from 'drizzle-orm';
 
 /**

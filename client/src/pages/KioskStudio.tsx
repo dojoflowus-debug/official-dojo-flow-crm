@@ -1,11 +1,21 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, Save, Zap, Code } from 'lucide-react';
+import { AlertCircle, Save, Zap, Code, Plus, MoreVertical, Trash2, Copy, Edit2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { KioskTypographyControls } from '@/components/KioskTypographyControls';
 import { KioskBackgroundControls } from '@/components/KioskBackgroundControls';
 import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
+import { useState, useEffect } from 'react';
+
+interface Kiosk {
+  id: number;
+  name: string;
+  slug: string;
+  isActive: number;
+  config: KioskConfig | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function KioskStudio() {
   const { locationId } = useParams<{ locationId: string }>();
@@ -15,22 +25,38 @@ export default function KioskStudio() {
   const [lastSavedConfig, setLastSavedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [publishedConfig, setPublishedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+  const [selectedKiosk, setSelectedKiosk] = useState<number | null>(null);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [renameKioskId, setRenameKioskId] = useState<number | null>(null);
+  const [newKioskName, setNewKioskName] = useState('');
+  const [showAddKiosk, setShowAddKiosk] = useState(false);
+  const [newKioskNameInput, setNewKioskNameInput] = useState('');
 
   // Fetch locations
   const { data: locationsData } = trpc.kiosk.listLocations.useQuery();
 
+  // Fetch kiosks for selected location
+  const { data: kiosksData, refetch: refetchKiosks } = trpc.kioskDevice.listByLocation.useQuery(
+    { locationId: selectedLocation! },
+    { enabled: !!selectedLocation }
+  );
+
   // Fetch current kiosk settings
   const { data: settingsData, isLoading: settingsLoading } = trpc.kioskSettings.getSettings.useQuery(
-    { locationSlug: selectedLocation },
+    { locationSlug: selectedLocation?.toString() || '' },
     { enabled: !!selectedLocation }
   );
 
   // Initialize mutations
   const saveDraftMutation = trpc.kioskSettings.saveDraft.useMutation();
   const publishMutation = trpc.kioskSettings.publish.useMutation();
+  const createKioskMutation = trpc.kioskDevice.create.useMutation();
+  const updateKioskMutation = trpc.kioskDevice.update.useMutation();
+  const deleteKioskMutation = trpc.kioskDevice.delete.useMutation();
+  const duplicateKioskMutation = trpc.kioskDevice.duplicate.useMutation();
 
   // Initialize draft settings from fetched data
   useEffect(() => {
@@ -48,16 +74,23 @@ export default function KioskStudio() {
     
     if (locationId) {
       const loc = locationsData.find(l => l.id === parseInt(locationId));
-      if (loc?.kioskSlug) {
-        setSelectedLocation(loc.kioskSlug);
+      if (loc) {
+        setSelectedLocation(loc.id);
       }
     } else if (locationsData.length > 0) {
       const firstWithKiosk = locationsData.find(l => l.kioskEnabled === 1);
-      if (firstWithKiosk?.kioskSlug) {
-        setSelectedLocation(firstWithKiosk.kioskSlug);
+      if (firstWithKiosk) {
+        setSelectedLocation(firstWithKiosk.id);
       }
     }
   }, [locationId, locationsData]);
+
+  // Auto-select first kiosk when kiosks list loads
+  useEffect(() => {
+    if (kiosksData && kiosksData.length > 0 && !selectedKiosk) {
+      setSelectedKiosk(kiosksData[0].id);
+    }
+  }, [kiosksData, selectedKiosk]);
 
   // Send draft to iframe preview
   const sendPreviewUpdate = (config: KioskConfig) => {
@@ -100,7 +133,7 @@ export default function KioskStudio() {
         content: {
           ...draftConfig.content,
           [section]: {
-            ...(draftConfig.content[section as keyof typeof draftConfig.content] as any),
+            ...(draftConfig.content[section as any] as any),
             [field]: value,
           },
         },
@@ -112,518 +145,544 @@ export default function KioskStudio() {
     }
   };
 
-  // Typography updates
-  const handleTypographyChange = (key: string, value: any) => updateConfig('typography', key, value);
+  // Behavior updates
+  const handleBehaviorChange = (key: string, value: any) => updateConfig('behavior', key, value);
 
-  // Layout updates
-  const handleLayoutChange = (key: string, value: any) => updateConfig('layout', key, value);
-
-  // Background updates
-  const handleBackgroundChange = (key: string, value: any) => updateConfig('background', key, value);
-
-  // Behavior/Screensaver updates
+  // Screensaver updates
   const handleScreensaverChange = (key: string, value: any) => updateConfig('screensaver', key, value);
 
   const handleSaveDraft = async () => {
-    if (!draftConfig || !selectedLocation) return;
+    if (!selectedLocation) return;
     setIsSaving(true);
     try {
       await saveDraftMutation.mutateAsync({
-        locationSlug: selectedLocation,
-        config: draftConfig,
+        locationSlug: selectedLocation.toString(),
+        settings: draftConfig,
       });
       setLastSavedConfig(draftConfig);
-      setSaveMessage({ type: 'success', text: 'Draft saved successfully!' });
+      setSaveMessage({ type: 'success', text: '✓ Draft saved' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
-      console.error('Save draft error:', error);
-      setSaveMessage({ type: 'error', text: 'Failed to save draft' });
+      setSaveMessage({ type: 'error', text: '✗ Failed to save draft' });
+      setTimeout(() => setSaveMessage(null), 3000);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!draftConfig || !selectedLocation) return;
+    if (!selectedLocation) return;
     setIsSaving(true);
     try {
       await publishMutation.mutateAsync({
-        locationSlug: selectedLocation,
-        config: draftConfig,
+        locationSlug: selectedLocation.toString(),
+        settings: draftConfig,
       });
       setPublishedConfig(draftConfig);
-      setLastSavedConfig(draftConfig);
-      setSaveMessage({ type: 'success', text: 'Published successfully!' });
+      setSaveMessage({ type: 'success', text: '✓ Published successfully' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
-      console.error('Publish error:', error);
-      setSaveMessage({ type: 'error', text: 'Failed to publish' });
+      setSaveMessage({ type: 'error', text: '✗ Failed to publish' });
+      setTimeout(() => setSaveMessage(null), 3000);
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (!selectedLocation && !settingsLoading && locationsData && locationsData.length === 0) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-        <Card className="max-w-md p-8 text-center space-y-4">
-          <AlertCircle className="h-16 w-16 mx-auto text-red-500" />
-          <h1 className="text-2xl font-bold">No Kiosk Found</h1>
-          <p className="text-muted-foreground">
-            Please enable a kiosk for a location first.
-          </p>
-        </Card>
-      </div>
-    );
-  }
+  const handleCreateKiosk = async () => {
+    if (!selectedLocation || !newKioskNameInput.trim()) return;
+    try {
+      await createKioskMutation.mutateAsync({
+        locationId: selectedLocation,
+        name: newKioskNameInput,
+        config: DEFAULT_KIOSK_CONFIG,
+      });
+      setNewKioskNameInput('');
+      setShowAddKiosk(false);
+      refetchKiosks();
+    } catch (error) {
+      console.error('Failed to create kiosk:', error);
+    }
+  };
 
-  const previewUrl = selectedLocation
-    ? `/kiosk/${selectedLocation}?studioPreview=1&ts=${Date.now()}`
-    : '';
+  const handleDeleteKiosk = async (kioskId: number) => {
+    try {
+      await deleteKioskMutation.mutateAsync({ kioskId });
+      setShowDeleteConfirm(null);
+      if (selectedKiosk === kioskId) {
+        setSelectedKiosk(null);
+      }
+      refetchKiosks();
+    } catch (error) {
+      console.error('Failed to delete kiosk:', error);
+    }
+  };
 
-  const hasUnsavedChanges = JSON.stringify(draftConfig) !== JSON.stringify(lastSavedConfig);
+  const handleDuplicateKiosk = async (kioskId: number) => {
+    try {
+      await duplicateKioskMutation.mutateAsync({ kioskId });
+      refetchKiosks();
+    } catch (error) {
+      console.error('Failed to duplicate kiosk:', error);
+    }
+  };
+
+  const handleRenameKiosk = async (kioskId: number) => {
+    if (!newKioskName.trim()) return;
+    try {
+      await updateKioskMutation.mutateAsync({
+        kioskId,
+        patch: { name: newKioskName },
+      });
+      setRenameKioskId(null);
+      setNewKioskName('');
+      refetchKiosks();
+    } catch (error) {
+      console.error('Failed to rename kiosk:', error);
+    }
+  };
+
+  const selectedLocationData = locationsData?.find(l => l.id === selectedLocation);
+  const kiosksForLocation = kiosksData || [];
+  const hasNoKiosks = kiosksForLocation.length === 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-full px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Kiosk Studio</h1>
-              <p className="text-sm text-slate-400">Configure kiosk appearance and behavior</p>
-              {hasUnsavedChanges && <p className="text-xs text-yellow-400 mt-1">● Unsaved changes</p>}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800">
+        <h1 className="text-2xl font-bold">Kiosk Studio</h1>
+        <div className="flex gap-2">
+          {saveMessage && (
+            <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              saveMessage.type === 'success' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
+            }`}>
+              {saveMessage.text}
             </div>
-            <div className="flex gap-3">
-              {saveMessage && (
-                <div className={`px-3 py-2 rounded-lg text-sm ${
-                  saveMessage.type === 'success' ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300'
-                }`}>
-                  {saveMessage.text}
-                </div>
-              )}
-              <button
-                onClick={() => setShowDebugPanel(!showDebugPanel)}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
-                title="Toggle debug panel"
-              >
-                <Code className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleSaveDraft}
-                disabled={isSaving}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4 inline mr-2" />
-                Save Draft
-              </button>
-              <button
-                onClick={handlePublish}
-                disabled={isSaving}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                <Zap className="w-4 h-4 inline mr-2" />
-                Publish
-              </button>
-            </div>
-          </div>
+          )}
+          <button
+            onClick={() => setShowDebugPanel(!showDebugPanel)}
+            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
+            title="Toggle debug panel"
+          >
+            <Code className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleSaveDraft}
+            disabled={isSaving || hasNoKiosks}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            <Save className="w-4 h-4 inline mr-2" />
+            Save Draft
+          </button>
+          <button
+            onClick={handlePublish}
+            disabled={isSaving || hasNoKiosks}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            <Zap className="w-4 h-4 inline mr-2" />
+            Publish
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex h-[calc(100vh-80px)]">
         {/* Left Panel - Controls */}
-        <div className="w-96 border-r border-slate-800 overflow-y-auto bg-slate-900/30">
+        <div className="w-96 border-r border-slate-800 overflow-y-auto bg-slate-900/30 border-4 border-red-500 relative z-50 pointer-events-auto">
           {/* Location Selector */}
           <div className="p-6 border-b border-slate-800">
             <label className="block text-sm font-medium mb-2">Location</label>
             <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
+              value={selectedLocation || ''}
+              onChange={(e) => {
+                setSelectedLocation(parseInt(e.target.value));
+                setSelectedKiosk(null);
+              }}
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm"
             >
               <option value="">Select a location...</option>
               {locationsData?.filter(l => l.kioskEnabled === 1).map((loc) => (
-                <option key={loc.id} value={loc.kioskSlug || ''}>
+                <option key={loc.id} value={loc.id}>
                   {loc.name}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex border-b border-slate-800 px-6">
-            {(['design', 'content', 'behavior', 'screensaver'] as const).map((tab) => {
-              const tabLabels: Record<string, string> = {
-                design: 'Design',
-                content: 'Content',
-                behavior: 'Behavior',
-                screensaver: 'Screensaver',
-              };
-              return (
+          {/* Kiosk List */}
+          {selectedLocation && (
+            <div className="p-6 border-b border-slate-800">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium">Kiosks</label>
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab
-                      ? 'border-red-500 text-red-400'
-                      : 'border-transparent text-slate-400 hover:text-white'
-                  }`}
+                  onClick={() => setShowAddKiosk(true)}
+                  className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs font-medium transition-colors flex items-center gap-1"
                 >
-                  {tabLabels[tab]}
+                  <Plus className="w-3 h-3" />
+                  Add
                 </button>
-              );
-            })}
-          </div>
+              </div>
 
-          {/* Tab Content */}
-          <div className="p-6 space-y-6">
-            {activeTab === 'design' && (
-              <div className="space-y-6">
-                {/* Accent Color */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Accent Color</label>
+              {hasNoKiosks ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-slate-400 mb-4">No kiosks yet. Create one to get started.</p>
+                  <button
+                    onClick={() => setShowAddKiosk(true)}
+                    className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Create First Kiosk
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {kiosksForLocation.map((kiosk) => (
+                    <div
+                      key={kiosk.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedKiosk === kiosk.id
+                          ? 'bg-red-600/20 border-red-500'
+                          : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                      }`}
+                      onClick={() => setSelectedKiosk(kiosk.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          {renameKioskId === kiosk.id ? (
+                            <input
+                              type="text"
+                              value={newKioskName}
+                              onChange={(e) => setNewKioskName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleRenameKiosk(kiosk.id);
+                                if (e.key === 'Escape') setRenameKioskId(null);
+                              }}
+                              onBlur={() => setRenameKioskId(null)}
+                              className="w-full px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm"
+                              autoFocus
+                            />
+                          ) : (
+                            <p className="text-sm font-medium">{kiosk.name}</p>
+                          )}
+                          <p className="text-xs text-slate-400 mt-1">{kiosk.slug}</p>
+                        </div>
+                        <div className="relative group">
+                          <button className="p-1 hover:bg-slate-700 rounded">
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                          <div className="absolute right-0 mt-1 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                            <button
+                              onClick={() => {
+                                setRenameKioskId(kiosk.id);
+                                setNewKioskName(kiosk.name);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-slate-700 flex items-center gap-2"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                              Rename
+                            </button>
+                            <button
+                              onClick={() => handleDuplicateKiosk(kiosk.id)}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-slate-700 flex items-center gap-2"
+                            >
+                              <Copy className="w-3 h-3" />
+                              Duplicate
+                            </button>
+                            <button
+                              onClick={() => setShowDeleteConfirm(kiosk.id)}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-slate-700 text-red-400 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add Kiosk Form */}
+              {showAddKiosk && (
+                <div className="mt-4 p-3 bg-slate-800 border border-slate-700 rounded-lg">
+                  <input
+                    type="text"
+                    placeholder="Kiosk name (e.g., Front Desk iPad)"
+                    value={newKioskNameInput}
+                    onChange={(e) => setNewKioskNameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreateKiosk();
+                      if (e.key === 'Escape') setShowAddKiosk(false);
+                    }}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm mb-2"
+                    autoFocus
+                  />
                   <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={draftConfig.theme.accentColor}
-                      onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                      className="w-12 h-10 rounded cursor-pointer"
-                    />
+                    <button
+                      onClick={handleCreateKiosk}
+                      className="flex-1 px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setShowAddKiosk(false)}
+                      className="flex-1 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Confirmation Modal */}
+              {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-sm">
+                    <h3 className="text-lg font-bold mb-4">Delete Kiosk?</h3>
+                    <p className="text-sm text-slate-400 mb-6">
+                      Type <strong>DELETE</strong> to confirm deletion of this kiosk.
+                    </p>
                     <input
                       type="text"
-                      value={draftConfig.theme.accentColor}
-                      onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                      className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm font-mono"
+                      placeholder="Type DELETE to confirm"
+                      id="delete-confirm-input"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm mb-4"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const input = document.getElementById('delete-confirm-input') as HTMLInputElement;
+                          if (input.value === 'DELETE') {
+                            handleDeleteKiosk(showDeleteConfirm);
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(null)}
+                        className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab Navigation */}
+          {!hasNoKiosks && (
+            <>
+              <div className="flex border-b border-slate-800 px-6">
+                {(['design', 'content', 'behavior', 'screensaver'] as const).map((tab) => {
+                  const tabLabels: Record<string, string> = {
+                    design: 'Design',
+                    content: 'Content',
+                    behavior: 'Behavior',
+                    screensaver: 'Screensaver',
+                  };
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === tab
+                          ? 'border-red-500 text-red-400'
+                          : 'border-transparent text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {tabLabels[tab]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-6 space-y-6">
+                {activeTab === 'design' && (
+                  <div className="space-y-6">
+                    {/* Accent Color */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Accent Color</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={draftConfig.theme.accentColor}
+                          onChange={(e) => handleThemeChange('accentColor', e.target.value)}
+                          className="w-12 h-10 rounded cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={draftConfig.theme.accentColor}
+                          onChange={(e) => handleThemeChange('accentColor', e.target.value)}
+                          className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Background */}
+                    <KioskBackgroundControls
+                      background={draftConfig.theme.background}
+                      onChange={(key, value) => {
+                        const updated = {
+                          ...draftConfig,
+                          theme: {
+                            ...draftConfig.theme,
+                            background: {
+                              ...draftConfig.theme.background,
+                              [key]: value,
+                            },
+                          },
+                        };
+                        setDraftConfig(updated);
+                        sendPreviewUpdate(updated);
+                      }}
+                    />
+
+                    {/* Typography */}
+                    <KioskTypographyControls
+                      typography={draftConfig.theme.typography}
+                      onChange={(key, value) => {
+                        const updated = {
+                          ...draftConfig,
+                          theme: {
+                            ...draftConfig.theme,
+                            typography: {
+                              ...draftConfig.theme.typography,
+                              [key]: value,
+                            },
+                          },
+                        };
+                        setDraftConfig(updated);
+                        sendPreviewUpdate(updated);
+                      }}
                     />
                   </div>
-                </div>
+                )}
 
-                {/* Typography Section */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Typography</h3>
-                  <KioskTypographyControls
-                    settings={draftConfig.typography}
-                    onChange={handleTypographyChange}
-                  />
-                </div>
+                {activeTab === 'content' && (
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Headline</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.headline}
+                        onChange={(e) => handleContentChange('headline', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Subtext</label>
+                      <textarea
+                        value={draftConfig.content.subtext}
+                        onChange={(e) => handleContentChange('subtext', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                )}
 
-                {/* Background Section */}
-                <div className="border-t border-slate-700 pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Background</h3>
-                  <KioskBackgroundControls
-                    settings={draftConfig.background}
-                    onChange={handleBackgroundChange}
-                  />
-                </div>
+                {activeTab === 'behavior' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Show Member Login</label>
+                      <input
+                        type="checkbox"
+                        checked={draftConfig.behavior.showMemberLogin}
+                        onChange={(e) => handleBehaviorChange('showMemberLogin', e.target.checked)}
+                        className="w-4 h-4 rounded"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Show New Student</label>
+                      <input
+                        type="checkbox"
+                        checked={draftConfig.behavior.showNewStudent}
+                        onChange={(e) => handleBehaviorChange('showNewStudent', e.target.checked)}
+                        className="w-4 h-4 rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Idle Timeout (seconds)</label>
+                      <input
+                        type="number"
+                        min="10"
+                        max="600"
+                        value={draftConfig.behavior.idleSeconds}
+                        onChange={(e) => handleBehaviorChange('idleSeconds', parseInt(e.target.value))}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'screensaver' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Enable Screensaver</label>
+                      <input
+                        type="checkbox"
+                        checked={draftConfig.screensaver.enabled}
+                        onChange={(e) => handleScreensaverChange('enabled', e.target.checked)}
+                        className="w-4 h-4 rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Idle Timeout (seconds)</label>
+                      <input
+                        type="number"
+                        min="10"
+                        max="300"
+                        value={draftConfig.screensaver.idleSeconds}
+                        onChange={(e) => handleScreensaverChange('idleSeconds', parseInt(e.target.value))}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Show Logo</label>
+                      <input
+                        type="checkbox"
+                        checked={draftConfig.screensaver.showLogo}
+                        onChange={(e) => handleScreensaverChange('showLogo', e.target.checked)}
+                        className="w-4 h-4 rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Message</label>
+                      <input
+                        type="text"
+                        value={draftConfig.screensaver.message}
+                        onChange={(e) => handleScreensaverChange('message', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-
-            {activeTab === 'content' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Headline</label>
-                  <input
-                    type="text"
-                    value={draftConfig.content.headline}
-                    onChange={(e) => handleContentChange('headline', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Subtext</label>
-                  <input
-                    type="text"
-                    value={draftConfig.content.subtext}
-                    onChange={(e) => handleContentChange('subtext', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                  />
-                </div>
-
-                {/* Left Tile */}
-                <div className="border-t border-slate-700 pt-4 mt-4">
-                  <h4 className="font-medium mb-3">Left Tile (Check In)</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Title</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.tileLeft.title}
-                        onChange={(e) => handleContentChange('tileLeft.title', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Subtitle</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.tileLeft.subtitle}
-                        onChange={(e) => handleContentChange('tileLeft.subtitle', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Button Label</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.tileLeft.button}
-                        onChange={(e) => handleContentChange('tileLeft.button', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Tile */}
-                <div className="border-t border-slate-700 pt-4 mt-4">
-                  <h4 className="font-medium mb-3">Right Tile (Start Training)</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Title</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.tileRight.title}
-                        onChange={(e) => handleContentChange('tileRight.title', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Subtitle</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.tileRight.subtitle}
-                        onChange={(e) => handleContentChange('tileRight.subtitle', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Button Label</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.tileRight.button}
-                        onChange={(e) => handleContentChange('tileRight.button', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Info Labels */}
-                <div className="border-t border-slate-700 pt-4 mt-4">
-                  <h4 className="font-medium mb-3">Info Bar Labels</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Left Label</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.infoLeftLabel}
-                        onChange={(e) => handleContentChange('infoLeftLabel', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Right Label</label>
-                      <input
-                        type="text"
-                        value={draftConfig.content.infoRightLabel}
-                        onChange={(e) => handleContentChange('infoRightLabel', e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'behavior' && (
-              <BehaviorControls
-                layout={draftConfig.layout}
-                screensaver={draftConfig.screensaver}
-                onLayoutChange={handleLayoutChange}
-                onScreensaverChange={handleScreensaverChange}
-              />
-            )}
-
-            {activeTab === 'screensaver' && (
-              <ScreensaverControls
-                screensaver={draftConfig.screensaver}
-                onChange={handleScreensaverChange}
-              />
-            )}
-          </div>
+            </>
+          )}
         </div>
 
         {/* Right Panel - Preview */}
-        <div className="flex-1 bg-slate-950 flex flex-col relative">
-          <div className="flex-1 border border-slate-800 m-6 rounded-lg overflow-hidden bg-white">
-            {previewUrl && (
-              <iframe
-                id="kiosk-preview"
-                src={previewUrl}
-                className="w-full h-full border-0"
-                title="Kiosk Preview"
-              />
-            )}
-          </div>
-
-          {/* Debug Panel */}
-          {showDebugPanel && (
-            <div className="absolute bottom-0 right-0 w-96 max-h-96 bg-slate-900 border-l border-t border-slate-700 rounded-tl-lg p-4 overflow-y-auto text-xs font-mono">
-              <div className="space-y-2">
-                <div className="text-slate-400">
-                  <div className="font-bold text-slate-300 mb-2">Current Config:</div>
-                  <pre className="bg-slate-950 p-2 rounded overflow-x-auto text-xs">
-                    {JSON.stringify(draftConfig, null, 2)}
-                  </pre>
-                </div>
-                <div className="text-slate-400 border-t border-slate-700 pt-2">
-                  <div className="font-bold text-slate-300 mb-2">State:</div>
-                  <div>Location: {selectedLocation || 'none'}</div>
-                  <div>Has Unsaved: {hasUnsavedChanges ? 'yes' : 'no'}</div>
-                  <div>Last Saved: {lastSavedConfig ? 'loaded' : 'none'}</div>
-                  <div>Published: {publishedConfig ? 'loaded' : 'none'}</div>
-                </div>
-              </div>
+        <div className="flex-1 bg-slate-950 flex items-center justify-center p-8">
+          {hasNoKiosks ? (
+            <div className="text-center">
+              <AlertCircle className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <h2 className="text-xl font-bold mb-2">No Kiosks Yet</h2>
+              <p className="text-slate-400 mb-6">Create your first kiosk to start designing</p>
             </div>
+          ) : (
+            <iframe
+              id="kiosk-preview"
+              src="/kiosk-preview"
+              className="w-full h-full border-0 rounded-lg"
+              title="Kiosk Preview"
+            />
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-// Behavior Controls Component
-function BehaviorControls({
-  layout,
-  screensaver,
-  onLayoutChange,
-  onScreensaverChange,
-}: {
-  layout: KioskConfig['layout'];
-  screensaver: KioskConfig['screensaver'];
-  onLayoutChange: (key: string, value: any) => void;
-  onScreensaverChange: (key: string, value: any) => void;
-}) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Display Options</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Show Clock</label>
-            <input
-              type="checkbox"
-              checked={layout.showClock}
-              onChange={(e) => onLayoutChange('showClock', e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Show Info Bar</label>
-            <input
-              type="checkbox"
-              checked={layout.showInfoBar}
-              onChange={(e) => onLayoutChange('showInfoBar', e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-700 pt-6">
-        <h3 className="text-lg font-semibold mb-4">Screensaver</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Enable Screensaver</label>
-            <input
-              type="checkbox"
-              checked={screensaver.enabled}
-              onChange={(e) => onScreensaverChange('enabled', e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Idle Timeout (seconds)</label>
-            <input
-              type="number"
-              min="10"
-              max="300"
-              value={screensaver.idleSeconds}
-              onChange={(e) => onScreensaverChange('idleSeconds', parseInt(e.target.value))}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Show Logo</label>
-            <input
-              type="checkbox"
-              checked={screensaver.showLogo}
-              onChange={(e) => onScreensaverChange('showLogo', e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Message</label>
-            <input
-              type="text"
-              value={screensaver.message}
-              onChange={(e) => onScreensaverChange('message', e.target.value)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Screensaver Controls Component
-function ScreensaverControls({
-  screensaver,
-  onChange,
-}: {
-  screensaver: KioskConfig['screensaver'];
-  onChange: (key: string, value: any) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Enable Screensaver</label>
-        <input
-          type="checkbox"
-          checked={screensaver.enabled}
-          onChange={(e) => onChange('enabled', e.target.checked)}
-          className="w-4 h-4 rounded"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-2">Idle Timeout (seconds)</label>
-        <input
-          type="number"
-          min="10"
-          max="300"
-          value={screensaver.idleSeconds}
-          onChange={(e) => onChange('idleSeconds', parseInt(e.target.value))}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-        />
-      </div>
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Show Logo</label>
-        <input
-          type="checkbox"
-          checked={screensaver.showLogo}
-          onChange={(e) => onChange('showLogo', e.target.checked)}
-          className="w-4 h-4 rounded"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-2">Message</label>
-        <input
-          type="text"
-          value={screensaver.message}
-          onChange={(e) => onChange('message', e.target.value)}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-        />
       </div>
     </div>
   );

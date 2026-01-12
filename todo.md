@@ -2089,3 +2089,52 @@ All three errors have been fixed by adding proper error handling and graceful fa
   - Added saveDraftMutation and publishMutation hooks at component level
   - Changed mutation calls from `trpc.kioskSettings.saveDraft.mutate()` to `saveDraftMutation.mutateAsync()`
   - Changed mutation calls from `trpc.kioskSettings.publish.mutate()` to `publishMutation.mutateAsync()`
+
+
+## Bug Fixes - Kiosk Studio
+
+- [x] Fixed "Location not found" error on /kiosk-studio page
+  - Root cause: kioskSettingsRouter was searching for locations by `name` field instead of `kioskSlug`
+  - Solution: Updated schema to add `kioskSlug` column to `kiosk_locations` table
+  - Updated `saveDraft` and `publish` procedures to search by `kioskSlug` instead of `name`
+  - Populated existing locations with kioskSlug values based on their ID (location-{id})
+
+
+## Phase 17: Kiosk Devices System Implementation (Current)
+
+### Database Schema
+- [x] Add kiosks table to database schema (id, organizationId, locationId, name, slug, isActive, config, createdAt, updatedAt)
+- [x] Run database migration for kiosks table
+- [x] Verify foreign key relationships to locations and organizations
+
+### API Routes (tRPC)
+- [x] Implement tRPC router: kiosk.listByLocation
+- [x] Implement tRPC router: kiosk.create
+- [x] Implement tRPC router: kiosk.update
+- [x] Implement tRPC router: kiosk.delete
+- [x] Implement tRPC router: kiosk.duplicate
+
+### UI - Sidebar & Navigation
+- [x] Update sidebar: location selector with kiosk list below
+- [x] Add [+ Add Kiosk] button in sidebar
+- [x] Add [⋯] menu per kiosk with Rename, Duplicate, Delete options
+- [x] Implement kiosk selection logic (store selected kiosk in state)
+
+### UI - Editor & Preview
+- [x] Update editor to load/save selected kiosk's config
+- [x] Update preview to reflect selected kiosk
+- [x] Add empty state when no kiosks exist for location
+- [x] Disable Publish button when no kiosk selected
+
+### Kiosk Operations
+- [x] Implement delete kiosk modal with confirmation
+- [x] Implement duplicate kiosk functionality
+- [x] Implement rename kiosk functionality
+
+### Testing & Validation
+- [x] Test: Select location and create 3 kiosks
+- [x] Test: Switch between kiosks and verify preview changes
+- [x] Test: Delete kiosk and verify it disappears
+- [x] Test: Duplicate kiosk and verify copy has same config
+- [x] Test: Verify Publish button disabled when no kiosk exists
+- [x] Write comprehensive vitest tests for kiosk device system (16 tests passing)

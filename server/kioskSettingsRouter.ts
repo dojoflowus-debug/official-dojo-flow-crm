@@ -3,7 +3,7 @@ import { router, protectedProcedure } from './_core/trpc';
 import { storagePut } from './storage';
 import { getKioskSettingsByLocationSlug, updateKioskBackgroundImage, resetKioskBackground, updateKioskBackgroundEffects, updateLocationKioskTheme, getKioskSettingsByLocationId } from './db';
 import { eq } from 'drizzle-orm';
-import { kiosk_locations } from '../drizzle/schema';
+import { kioskLocations } from '../drizzle/schema';
 
 export const kioskSettingsRouter = router({
   getSettings: protectedProcedure
@@ -121,8 +121,8 @@ export const kioskSettingsRouter = router({
         
         const locations = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.name, input.locationSlug))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.kioskSlug, input.locationSlug))
           .limit(1);
         
         if (!locations || locations.length === 0) {
@@ -132,12 +132,12 @@ export const kioskSettingsRouter = router({
         const location = locations[0];
         
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearanceDraft: JSON.stringify(input.config),
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, location.id));
+          .where(eq(kioskLocations.id, location.id));
         
         return {
           success: true,
@@ -164,8 +164,8 @@ export const kioskSettingsRouter = router({
         
         const locations = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.name, input.locationSlug))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.kioskSlug, input.locationSlug))
           .limit(1);
         
         if (!locations || locations.length === 0) {
@@ -175,13 +175,13 @@ export const kioskSettingsRouter = router({
         const location = locations[0];
         
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearancePublished: JSON.stringify(input.config),
             kioskAppearanceVersion: (location.kioskAppearanceVersion || 0) + 1,
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, location.id));
+          .where(eq(kioskLocations.id, location.id));
         
         return {
           success: true,

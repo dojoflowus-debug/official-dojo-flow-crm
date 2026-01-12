@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
-import { students, leads, billingTransactions, kaiConversations, kaiMessages, merchandiseItems, studentMerchandise, kiosk_locations } from "../drizzle/schema";
+import { students, leads, kaiConversations, kaiMessages, merchandiseItems, studentMerchandise } from "../drizzle/schema";
 import { eq, and, or, lt, gt, isNull, sql, count } from "drizzle-orm";
 
 /**

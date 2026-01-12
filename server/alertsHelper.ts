@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { leads, attendance, students } from "../drizzle/schema";
+import { leads, studentAttendance, students } from "../drizzle/schema";
 import { eq, and, lt, gte, lte, count } from "drizzle-orm";
 
 export interface Alert {

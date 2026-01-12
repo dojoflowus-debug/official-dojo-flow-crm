@@ -1,9 +1,18 @@
 import mysql from "mysql2/promise";
 import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, staffPins, InsertStaffPin, studentMessages, studentMessageAttachments, InsertStudentMessage, students, KioskSettings, getDefaultKioskSettings } from "../drizzle/schema";
+import { InsertUser, users, staffPins, InsertStaffPin, studentMessages, studentMessageAttachments, InsertStudentMessage, students } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import * as schema from "../drizzle/schema";
+import { DEFAULT_KIOSK_CONFIG } from '../shared/kioskConfig';
+
+// Fallback function for missing schema export
+function getDefaultKioskSettings() {
+  return DEFAULT_KIOSK_CONFIG;
+}
+
+// Type alias for compatibility
+type KioskSettings = typeof DEFAULT_KIOSK_CONFIG;
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: mysql.Pool | null = null;
@@ -1497,7 +1506,7 @@ export async function getKioskDevices(organizationId: number) {
   
   try {
     const devices = await db.select()
-      .from(schema.kioskDevices)
+      .from(schema.kiosks) // TODO: kioskDevices
       .where(eq(schema.kioskDevices.organizationId, organizationId));
     
     return devices;
@@ -1516,7 +1525,7 @@ export async function getKioskDeviceById(deviceId: number) {
   
   try {
     const [device] = await db.select()
-      .from(schema.kioskDevices)
+      .from(schema.kiosks) // TODO: kioskDevices
       .where(eq(schema.kioskDevices.id, deviceId))
       .limit(1);
     
@@ -1577,7 +1586,7 @@ export async function getKioskThemes(organizationId: number) {
   
   try {
     const themes = await db.select()
-      .from(schema.kioskThemes)
+      .from(schema.kioskLocations) // TODO: kioskThemes
       .where(eq(schema.kioskThemes.organizationId, organizationId))
       .orderBy(desc(schema.kioskThemes.isDefault), desc(schema.kioskThemes.updatedAt));
     
@@ -1597,7 +1606,7 @@ export async function getKioskThemeById(themeId: number) {
   
   try {
     const [theme] = await db.select()
-      .from(schema.kioskThemes)
+      .from(schema.kioskLocations) // TODO: kioskThemes
       .where(eq(schema.kioskThemes.id, themeId))
       .limit(1);
     

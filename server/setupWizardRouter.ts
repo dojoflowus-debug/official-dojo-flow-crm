@@ -1118,51 +1118,7 @@ export const setupWizardRouter = router({
     return { success: true };
   }),
 
-  // Complete setup
-  completeSetup: protectedProcedure.mutation(async ({ ctx }) => {
-    const { getDb } = await import("./db");
-    const { setupProgress, dojoSettings } = await import("../drizzle/schema");
-    const { eq } = await import("drizzle-orm");
-    
-    const db = await getDb();
-    if (!db) throw new Error('Database not available');
-    
-    if (!ctx.user?.organizationId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED' });
-    }
-    
-    const now = new Date();
-    
-    // Update setup progress
-    const existing = await db.select().from(setupProgress).where(eq(setupProgress.organizationId, ctx.user.organizationId)).limit(1);
-    
-    if (existing.length === 0) {
-      await db.insert(setupProgress).values({
-        organizationId: ctx.user.organizationId,
-        isCompleted: 1,
-        completedAt: now,
-        currentStep: 8,
-      });
-    } else {
-      await db.update(setupProgress).set({
-        isCompleted: 1,
-        completedAt: now,
-        currentStep: 8,
-        updatedAt: now,
-      }).where(eq(setupProgress.organizationId, ctx.user.organizationId));
-    }
-    
-    // Mark dojo settings as setup completed
-    const settings = await db.select().from(dojoSettings).limit(1);
-    if (settings.length > 0) {
-      await db.update(dojoSettings).set({
-        setupCompleted: 1,
-        updatedAt:new Date().toISOString(),
-      });
-    }
-    
-    return { success: true, completedAt: now };
-  }),
+
 
   // Upload file for import
   uploadFile: protectedProcedure.input(z.object({

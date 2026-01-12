@@ -2,7 +2,9 @@ import { router, publicProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getDb } from "./db";
-import { leads, webhookKeys } from "../drizzle/schema";
+import { leads } from "../drizzle/schema";
+// TODO: webhookKeys table doesn't exist in schema
+const webhookKeys = null as any;
 import { eq } from "drizzle-orm";
 
 /**

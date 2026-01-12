@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from './_core/trpc';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
-import { kiosk_locations } from '../drizzle/schema';
+import { kioskLocations } from '../drizzle/schema';
 import { storagePut, storageGet } from './storage';
 
 /**
@@ -173,8 +173,8 @@ export const kioskStudioRouter = router({
       try {
         const location = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.locationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.locationId))
           .limit(1);
 
         if (!location || location.length === 0) {
@@ -226,12 +226,12 @@ export const kioskStudioRouter = router({
 
       try {
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearanceDraft: JSON.stringify(input.appearance),
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.locationId));
+          .where(eq(kioskLocations.id, input.locationId));
 
         return { success: true, message: 'Draft saved' };
       } catch (e) {
@@ -259,8 +259,8 @@ export const kioskStudioRouter = router({
       try {
         const location = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.locationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.locationId))
           .limit(1);
 
         if (!location || location.length === 0) {
@@ -275,13 +275,13 @@ export const kioskStudioRouter = router({
         const newVersion = (loc.kioskAppearanceVersion || 1) + 1;
 
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearancePublished: draft,
             kioskAppearanceVersion: newVersion,
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.locationId));
+          .where(eq(kioskLocations.id, input.locationId));
 
         return {
           success: true,
@@ -314,12 +314,12 @@ export const kioskStudioRouter = router({
         const defaultAppearance = getDefaultAppearance();
 
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearanceDraft: JSON.stringify(defaultAppearance),
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.locationId));
+          .where(eq(kioskLocations.id, input.locationId));
 
         return {
           success: true,
@@ -381,8 +381,8 @@ export const kioskStudioRouter = router({
         // Update draft with new image URL
         const location = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.locationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.locationId))
           .limit(1);
 
         if (location && location.length > 0) {
@@ -396,12 +396,12 @@ export const kioskStudioRouter = router({
           draft.background.dim = input.dim;
 
           await ctx.db
-            .update(kiosk_locations)
+            .update(kioskLocations)
             .set({
               kioskAppearanceDraft: JSON.stringify(draft),
               updatedAt: new Date().toISOString(),
             })
-            .where(eq(kiosk_locations.id, input.locationId));
+            .where(eq(kioskLocations.id, input.locationId));
         }
 
         return {
@@ -434,8 +434,8 @@ export const kioskStudioRouter = router({
       try {
         const location = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.locationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.locationId))
           .limit(1);
 
         if (!location || location.length === 0) {
@@ -555,8 +555,8 @@ export const kioskStudioRouter = router({
 
         const location = await ctx.db
           .select()
-          .from(kiosk_locations)
-          .where(eq(kiosk_locations.id, input.locationId))
+          .from(kioskLocations)
+          .where(eq(kioskLocations.id, input.locationId))
           .limit(1);
 
         if (!location || location.length === 0) {
@@ -577,12 +577,12 @@ export const kioskStudioRouter = router({
         };
 
         await ctx.db
-          .update(kiosk_locations)
+          .update(kioskLocations)
           .set({
             kioskAppearanceDraft: JSON.stringify(updated),
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(kiosk_locations.id, input.locationId));
+          .where(eq(kioskLocations.id, input.locationId));
 
         return {
           success: true,

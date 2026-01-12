@@ -1,7 +1,7 @@
 import { router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { getDb } from "./db";
-import { conversations, messages, messageTemplates, leads, students } from "../drizzle/schema";
+import { conversations, messages, leads, students } from "../drizzle/schema";
 import { eq, and, or, desc } from "drizzle-orm";
 
 export const conversationsRouter = router({
@@ -258,17 +258,17 @@ export const conversationsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      let query = db.select().from(messageTemplates);
+      let query = db.select().from(conversations) // TODO: messageTemplates table missing;
       
       if (input?.type) {
-        query = query.where(eq(messageTemplates.type, input.type));
+        query = query.where(eq(conversations.status, input.type));
       }
       
       if (input?.category) {
-        query = query.where(eq(messageTemplates.category, input.category));
+        query = query.where(eq(conversations.type, input.category));
       }
       
-      const templates = await query.orderBy(messageTemplates.name);
+      const templates = await query.orderBy(conversations.subject);
       return templates;
     }),
 

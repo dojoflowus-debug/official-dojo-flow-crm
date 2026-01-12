@@ -1,16 +1,6 @@
 import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, timestamp, varchar, datetime, json, tinyint } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
-export interface KioskSettings {
-  theme?: { mode?: string; primaryColor?: string; accentColor?: string };
-  background?: { type?: string; imageUrl?: string; presetKey?: string | null; blur?: number; dim?: number; vignette?: boolean };
-}
-
-export const getDefaultKioskSettings = (): KioskSettings => ({
-  theme: { mode: 'dark', primaryColor: '#2563EB', accentColor: '#EF4444' },
-  background: { type: 'solid', presetKey: null, imageUrl: '', blur: 0, dim: 0, vignette: false },
-})
-
 export const accountFlags = mysqlTable("account_flags", {
 	id: int().autoincrement().notNull(),
 	organizationId: int().notNull(),
@@ -282,20 +272,14 @@ export const classes = mysqlTable("classes", {
 });
 
 export const conversations = mysqlTable("conversations", {
-	id: int().autoincrement().notNull().primaryKey(),
-	organizationId: int().notNull(),
-	createdByUserId: int().notNull(),
+	id: int().autoincrement().notNull(),
+	userId: int().notNull(),
 	title: varchar({ length: 255 }),
-	summary: text(),
+	collection: varchar({ length: 100 }),
+	isPinned: tinyint().default(0),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-	lastMessageAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_conversations_org").on(table.organizationId),
-	index("idx_conversations_user").on(table.createdByUserId),
-	index("idx_conversations_last_message").on(table.lastMessageAt),
-]);
+});
 
 export const creditTopUps = mysqlTable("credit_top_ups", {
 	id: int().autoincrement().notNull(),
@@ -465,6 +449,7 @@ export const dojoSettings = mysqlTable("dojo_settings", {
 	logoDarkUrl: varchar({ length: 500 }),
 	logoLightUrl: varchar({ length: 500 }),
 	organizationId: int(),
+	kioskTheme: varchar({ length: 50 }).default('default'),
 });
 
 export const enrollments = mysqlTable("enrollments", {
@@ -556,7 +541,7 @@ export const floorPlans = mysqlTable("floor_plans", {
 
 export const kaiConversations = mysqlTable("kai_conversations", {
 	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
+	organizationId: int().default(120001).notNull(),
 	userId: int().notNull(),
 	title: varchar({ length: 500 }).default('New Conversation').notNull(),
 	preview: text(),
@@ -570,29 +555,33 @@ export const kaiConversations = mysqlTable("kai_conversations", {
 	deletedAt: timestamp({ mode: 'string' }),
 	archivedAt: timestamp({ mode: 'string' }),
 	participantIds: text(),
-},
-(table) => [
-	index("idx_kai_conversations_org").on(table.organizationId),
-	index("idx_kai_conversations_user").on(table.userId),
-	index("idx_kai_conversations_last_message").on(table.lastMessageAt),
-]);
+});
 
 export const kaiMessages = mysqlTable("kai_messages", {
 	id: int().autoincrement().notNull(),
 	conversationId: int().notNull(),
-	organizationId: int().notNull(),
+	organizationId: int().default(180001).notNull(),
 	role: mysqlEnum(['user','assistant','system']).notNull(),
 	content: text().notNull(),
 	metadata: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	attachments: text(),
 	deletedAt: timestamp({ mode: 'string' }),
-},
-(table) => [
-	index("idx_kai_messages_conversation").on(table.conversationId),
-	index("idx_kai_messages_org_conversation").on(table.organizationId, table.conversationId),
-	index("idx_kai_messages_created").on(table.createdAt),
-]);
+});
+
+export const kioskLocations = mysqlTable("kiosk_locations", {
+	id: int().autoincrement().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	locationId: int(),
+	isActive: int().default(1),
+	settings: text(),
+	kioskAppearanceDraft: text(),
+	kioskAppearancePublished: text(),
+	kioskAppearanceVersion: int().default(1),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP'),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+	kioskSlug: varchar({ length: 255 }),
+});
 
 export const leadActivities = mysqlTable("lead_activities", {
 	id: int().autoincrement().notNull(),
@@ -673,7 +662,7 @@ export const locations = mysqlTable("locations", {
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 	kioskEnabled: int().default(0).notNull(),
 	kioskSlug: varchar({ length: 255 }),
-	kioskSettings: json().$type<KioskSettings>().default(JSON.stringify(getDefaultKioskSettings())),
+	kioskSettings: text(),
 	organizationId: int(),
 },
 (table) => [
@@ -743,19 +732,13 @@ export const messageThreads = mysqlTable("message_threads", {
 });
 
 export const messages = mysqlTable("messages", {
-	id: int().autoincrement().notNull().primaryKey(),
+	id: int().autoincrement().notNull(),
 	conversationId: int().notNull(),
-	organizationId: int().notNull(),
-	role: mysqlEnum(['user','assistant','system']).notNull(),
+	role: mysqlEnum(['user','assistant']).notNull(),
 	content: text().notNull(),
-	metadata: text(),
+	attachments: json(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_messages_conversation").on(table.conversationId),
-	index("idx_messages_org_conversation").on(table.organizationId, table.conversationId),
-	index("idx_messages_created").on(table.createdAt),
-]);
+});
 
 export const onboardingProgress = mysqlTable("onboarding_progress", {
 	id: int().autoincrement().notNull(),
@@ -841,8 +824,6 @@ export const organizations = mysqlTable("organizations", {
 	settings: text(),
 	onboardingStatus: mysqlEnum(['not_started','in_progress','completed','skipped']).default('not_started').notNull(),
 	onboardingStep: int().default(1).notNull(),
-	onboardingChecklist: json().default(sql`(JSON_OBJECT())`).notNull(),
-	onboardingCompletedAt: timestamp({ mode: 'string' }),
 });
 
 export const ownerProfiles = mysqlTable("owner_profiles", {
@@ -858,7 +839,7 @@ export const ownerProfiles = mysqlTable("owner_profiles", {
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 },
 (table) => [
-	index("organizationId").on(table.organizationId),
+	index("idx_organizationId").on(table.organizationId),
 ]);
 
 export const planEntitlements = mysqlTable("plan_entitlements", {
@@ -896,6 +877,27 @@ export const platformSubscriptions = mysqlTable("platform_subscriptions", {
 },
 (table) => [
 	index("organizationId").on(table.organizationId),
+]);
+
+export const presetBackgrounds = mysqlTable("preset_backgrounds", {
+	id: int().autoincrement().notNull(),
+	key: varchar({ length: 100 }).notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	category: varchar({ length: 50 }).default('neutral').notNull(),
+	imageUrl: varchar({ length: 500 }).notNull(),
+	thumbnailUrl: varchar({ length: 500 }),
+	blurDefault: int().default(0).notNull(),
+	dimDefault: int().default(0).notNull(),
+	sortOrder: int().default(0).notNull(),
+	isActive: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("preset_backgrounds_key_unique").on(table.key),
+	index("idx_category").on(table.category),
+	index("idx_active").on(table.isActive),
 ]);
 
 export const programEnrollments = mysqlTable("program_enrollments", {
@@ -1094,6 +1096,20 @@ export const studentAttendance = mysqlTable("student_attendance", {
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 });
 
+export const studentContacts = mysqlTable("student_contacts", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	contactDate: timestamp({ mode: 'string' }).notNull(),
+	contactType: mysqlEnum(['call','sms','email','in_person','message']).notNull(),
+	notes: text(),
+	contactedBy: varchar({ length: 255 }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_contact_student").on(table.studentId),
+	index("idx_contact_date").on(table.contactDate),
+]);
+
 export const studentDocuments = mysqlTable("student_documents", {
 	id: int().autoincrement().notNull(),
 	studentId: int().notNull(),
@@ -1214,6 +1230,24 @@ export const studentPasswords = mysqlTable("student_passwords", {
 	index("student_passwords_studentId_unique").on(table.studentId),
 ]);
 
+export const studentTuition = mysqlTable("student_tuition", {
+	id: int().autoincrement().notNull(),
+	studentId: int().notNull(),
+	amount: int().notNull(),
+	dueDate: timestamp({ mode: 'string' }).notNull(),
+	paidDate: timestamp({ mode: 'string' }),
+	status: mysqlEnum(['pending','paid','overdue','cancelled']).default('pending').notNull(),
+	paymentMethod: varchar({ length: 100 }),
+	notes: text(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_tuition_student").on(table.studentId),
+	index("idx_tuition_status").on(table.status),
+	index("idx_tuition_due_date").on(table.dueDate),
+]);
+
 export const students = mysqlTable("students", {
 	id: int().autoincrement().notNull(),
 	firstName: varchar({ length: 255 }).notNull(),
@@ -1240,48 +1274,7 @@ export const students = mysqlTable("students", {
 	guardianPhone: varchar({ length: 20 }),
 	guardianEmail: varchar({ length: 320 }),
 	organizationId: int(),
-	deletedAt: timestamp({ mode: 'string' }),
-	deletedByUserId: int(),
-	deletionRequestId: int(),
 });
-
-export const studentDeletionRequests = mysqlTable("student_deletion_requests", {
-	id: int().autoincrement().notNull(),
-	orgId: int().notNull(),
-	studentId: int().notNull(),
-	requestedByUserId: int().notNull(),
-	approvedByUserId: int(),
-	status: mysqlEnum(['pending','approved','denied','executed','expired']).default('pending').notNull(),
-	reason: text().notNull(),
-	isPayingMemberAtRequestTime: int().default(0).notNull(),
-	billingDecision: mysqlEnum(['cancel_subscription','keep_active','abort']),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_org_student").on(table.orgId, table.studentId),
-	index("idx_status").on(table.status),
-	index("idx_created").on(table.createdAt),
-]);
-
-export const auditLogs = mysqlTable("audit_logs", {
-	id: int().autoincrement().notNull(),
-	orgId: int().notNull(),
-	actorUserId: int().notNull(),
-	actorName: varchar({ length: 255 }),
-	eventType: mysqlEnum(['DELETE_REQUESTED','DELETE_APPROVED','DELETE_DENIED','DELETE_EXECUTED','DELETE_ANONYMIZED']).notNull(),
-	studentId: int(),
-	studentName: varchar({ length: 255 }),
-	deletionRequestId: int(),
-	description: text(),
-	metadata: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_org_event").on(table.orgId, table.eventType),
-	index("idx_student").on(table.studentId),
-	index("idx_created").on(table.createdAt),
-]);
 
 export const subscriptionPlans = mysqlTable("subscription_plans", {
 	id: int().autoincrement().notNull(),
@@ -1417,748 +1410,18 @@ export const waiverTemplates = mysqlTable("waiver_templates", {
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 });
 
-
-// Billing Application Tables
-export const billingApplications = mysqlTable("billing_applications", {
-	id: int().autoincrement().notNull(),
-	userId: int(),
-	provider: varchar({ length: 50 }),
-	status: mysqlEnum(['draft','submitted','approved','rejected']).default('draft').notNull(),
-	businessName: varchar({ length: 255 }),
-	dbaName: varchar({ length: 255 }),
-	businessAddress: text(),
-	businessPhone: varchar({ length: 20 }),
-	ownerName: varchar({ length: 255 }),
-	ownerCell: varchar({ length: 20 }),
-	managerName: varchar({ length: 255 }),
-	managerCell: varchar({ length: 20 }),
-	hoursOfOperation: varchar({ length: 255 }),
-	daysOfOperation: varchar({ length: 255 }),
-	estimatedMonthlyVolume: int(),
-	specialInstructions: text(),
-	submittedAt: timestamp({ mode: 'string' }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_billing_applications_user").on(table.userId),
-]);
-
-export const billingDocuments = mysqlTable("billing_documents", {
-	id: int().autoincrement().notNull(),
-	applicationId: int().notNull(),
-	documentType: mysqlEnum(['drivers_license','voided_check','state_ein','address_verification','bank_letter']).notNull(),
-	s3Key: varchar({ length: 500 }).notNull(),
-	s3Url: varchar({ length: 500 }).notNull(),
-	fileName: varchar({ length: 255 }),
-	fileSize: int(),
-	mimeType: varchar({ length: 100 }),
-	verified: int().default(0).notNull(),
-	verifiedBy: int(),
-	verifiedAt: timestamp({ mode: 'string' }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_billing_documents_application").on(table.applicationId),
-]);
-
-export const paymentMethods = mysqlTable("payment_methods", {
-	id: int().autoincrement().notNull(),
-	userId: int(),
-	studentId: int(),
-	type: mysqlEnum(['card','bank_account','cash','check']).default('card').notNull(),
-	provider: varchar({ length: 50 }),
-	last4: varchar({ length: 4 }),
-	brand: varchar({ length: 50 }),
-	expiryMonth: int(),
-	expiryYear: int(),
-	isDefault: int().default(0).notNull(),
-	stripePaymentMethodId: varchar({ length: 255 }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_payment_methods_user").on(table.userId),
-	index("idx_payment_methods_student").on(table.studentId),
-]);
-
-export const billingTransactions = mysqlTable("billing_transactions", {
-	id: int().autoincrement().notNull(),
-	userId: int(),
-	studentId: int(),
-	paymentMethodId: int(),
-	amount: int().notNull(),
-	currency: varchar({ length: 3 }).default('USD').notNull(),
-	status: mysqlEnum(['pending','completed','failed','refunded']).default('pending').notNull(),
-	type: mysqlEnum(['payment','refund','adjustment']).default('payment').notNull(),
-	description: text(),
-	stripePaymentIntentId: varchar({ length: 255 }),
-	metadata: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_billing_transactions_user").on(table.userId),
-	index("idx_billing_transactions_student").on(table.studentId),
-]);
-
-
-// Webhook Keys Table
-export const webhookKeys = mysqlTable("webhook_keys", {
-	id: int().autoincrement().notNull(),
+export const kiosks = mysqlTable("kiosks", {
+	id: int().autoincrement().notNull().primaryKey(),
+	organizationId: int().notNull(),
+	locationId: int().notNull(),
 	name: varchar({ length: 255 }).notNull(),
-	apiKey: varchar({ length: 255 }).notNull(),
-	isActive: int().default(1).notNull(),
-	lastUsedAt: timestamp({ mode: 'string' }),
-	usageCount: int().default(0).notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_webhook_keys_api_key").on(table.apiKey),
-]);
-
-
-// Campaigns Tables
-export const campaigns = mysqlTable("campaigns", {
-	id: int().autoincrement().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	type: mysqlEnum(['email','sms','push']).default('email').notNull(),
-	status: mysqlEnum(['draft','scheduled','active','paused','completed']).default('draft').notNull(),
-	subject: varchar({ length: 255 }),
-	content: text(),
-	scheduledAt: timestamp({ mode: 'string' }),
-	sentAt: timestamp({ mode: 'string' }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-});
-
-export const campaignRecipients = mysqlTable("campaign_recipients", {
-	id: int().autoincrement().notNull(),
-	campaignId: int().notNull(),
-	recipientType: mysqlEnum(['lead','student']).notNull(),
-	recipientId: int().notNull(),
-	status: mysqlEnum(['pending','sent','delivered','opened','clicked','bounced','failed']).default('pending').notNull(),
-	sentAt: timestamp({ mode: 'string' }),
-	openedAt: timestamp({ mode: 'string' }),
-	clickedAt: timestamp({ mode: 'string' }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_campaign_recipients_campaign").on(table.campaignId),
-]);
-
-// Automation Templates
-export const automationTemplates = mysqlTable("automation_templates", {
-	id: int().autoincrement().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	description: text(),
-	category: varchar({ length: 100 }),
-	isActive: int().default(1).notNull(),
+	slug: varchar({ length: 255 }).notNull(),
+	isActive: tinyint().default(1).notNull(),
 	config: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-});
-
-export const automationStepExecutions = mysqlTable("automation_step_executions", {
-	id: int().autoincrement().notNull(),
-	enrollmentId: int().notNull(),
-	stepId: int().notNull(),
-	status: mysqlEnum(['pending','completed','failed','skipped']).default('pending').notNull(),
-	executedAt: timestamp({ mode: 'string' }),
-	result: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 },
 (table) => [
-	index("idx_automation_step_executions_enrollment").on(table.enrollmentId),
+	index("idx_kiosks_org_location").on(table.organizationId, table.locationId),
+	index("idx_kiosks_slug").on(table.organizationId, table.slug),
 ]);
-
-// Kiosk Tables
-export const kioskCheckIns = mysqlTable("kiosk_check_ins", {
-	id: int().autoincrement().notNull(),
-	studentId: int(),
-	visitorId: int(),
-	checkInType: mysqlEnum(['student','visitor','trial']).default('student').notNull(),
-	checkInTime: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	checkOutTime: timestamp({ mode: 'string' }),
-	classSessionId: int(),
-	notes: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_kiosk_check_ins_student").on(table.studentId),
-]);
-
-export const kioskVisitors = mysqlTable("kiosk_visitors", {
-	id: int().autoincrement().notNull(),
-	firstName: varchar({ length: 255 }).notNull(),
-	lastName: varchar({ length: 255 }).notNull(),
-	email: varchar({ length: 320 }),
-	phone: varchar({ length: 20 }),
-	visitPurpose: varchar({ length: 255 }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-});
-
-export const kioskWaivers = mysqlTable("kiosk_waivers", {
-	id: int().autoincrement().notNull(),
-	visitorId: int(),
-	studentId: int(),
-	waiverTemplateId: int().notNull(),
-	signatureData: text(),
-	signedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	ipAddress: varchar({ length: 45 }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_kiosk_waivers_visitor").on(table.visitorId),
-	index("idx_kiosk_waivers_student").on(table.studentId),
-]);
-
-export const kiosk_locations = mysqlTable("kiosk_locations", {
-	id: int().autoincrement().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	locationId: int(),
-	isActive: int().default(1).notNull(),
-	settings: text(),
-	// Draft/Published Settings with versioning
-	kioskAppearanceDraft: text(), // JSON: { background, typography, layout, content, behavior }
-	kioskAppearancePublished: text(), // JSON: { background, typography, layout, content, behavior }
-	kioskAppearanceVersion: int().default(1).notNull(), // Incremented on publish
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-});
-
-// Lead Sources
-export const leadSources = mysqlTable("lead_sources", {
-	id: int().autoincrement().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	type: varchar({ length: 100 }),
-	isActive: int().default(1).notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-});
-
-// Message Templates
-export const messageTemplates = mysqlTable("message_templates", {
-	id: int().autoincrement().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	type: mysqlEnum(['email','sms']).default('email').notNull(),
-	subject: varchar({ length: 255 }),
-	content: text().notNull(),
-	variables: text(),
-	isActive: int().default(1).notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-});
-
-// Attendance Table (alias for studentAttendance)
-export const attendance = mysqlTable("attendance", {
-	id: int().autoincrement().notNull(),
-	studentId: int().notNull(),
-	classSessionId: int(),
-	status: mysqlEnum(['present','absent','late','excused']).default('present').notNull(),
-	checkInTime: timestamp({ mode: 'string' }),
-	checkOutTime: timestamp({ mode: 'string' }),
-	notes: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-	(table) => [
-		index("idx_attendance_student").on(table.studentId),
-		index("idx_attendance_session").on(table.classSessionId),
-	]);
-
-// Setup Wizard Tables
-export const setupImports = mysqlTable("setup_imports", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	importType: mysqlEnum(['programs','classes','pricing','staff','locations']).notNull(),
-	status: mysqlEnum(['pending','processing','completed','failed','cancelled']).default('pending').notNull(),
-	totalRows: int().default(0).notNull(),
-	processedRows: int().default(0).notNull(),
-	filename: varchar({ length: 500 }).notNull(),
-	mimeType: varchar({ length: 100 }).notNull(),
-	metadata: text(),
-	errorMessage: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_org_import").on(table.organizationId, table.importType),
-	index("idx_import_status").on(table.status),
-]);
-
-export const setupImportRows = mysqlTable("setup_import_rows", {
-	id: int().autoincrement().notNull(),
-	importId: int().notNull(),
-	rowNumber: int().notNull(),
-	rowData: text().notNull(),
-	status: mysqlEnum(['pending','processed','failed','skipped']).default('pending').notNull(),
-	errorMessage: text(),
-	createdEntityId: int(),
-	createdEntityType: mysqlEnum(['program','class','pricing_plan','staff','location']),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_import_row").on(table.importId),
-]);
-
-export const setupImportMappings = mysqlTable("setup_import_mappings", {
-	id: int().autoincrement().notNull(),
-	importId: int().notNull(),
-	columnName: varchar({ length: 255 }).notNull(),
-	targetField: varchar({ length: 255 }).notNull(),
-	dataType: mysqlEnum(['text','number','date','enum','boolean']).default('text').notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_mapping_import").on(table.importId),
-]);
-
-export const setupConflicts = mysqlTable("setup_conflicts", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	importId: int(),
-	conflictType: mysqlEnum(['overlapping_class','duplicate_name','invalid_data','belt_rank_mismatch','capacity_invalid']).notNull(),
-	details: text().notNull(),
-	affectedIds: text(),
-	resolvedAt: timestamp({ mode: 'string' }),
-	resolution: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_org_conflict").on(table.organizationId),
-	index("idx_conflict_type").on(table.conflictType),
-]);
-
-export const setupProgress = mysqlTable("setup_progress", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	currentStep: int().default(1).notNull(),
-	stepsCompleted: text(),
-	snoozeUntil: timestamp({ mode: 'string' }),
-	isCompleted: int().default(0).notNull(),
-	completedAt: timestamp({ mode: 'string' }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_org_progress").on(table.organizationId),
-]);
-
-// Type exports for insert operations
-export type InsertStaffPin = typeof staffPins.$inferInsert;
-export type InsertStudentMessage = typeof studentMessages.$inferInsert;
-export type InsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
-
-// Subscription and Credit Type Exports
-export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
-export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
-export type OrganizationSubscription = typeof organizationSubscriptions.$inferSelect;
-export type InsertOrganizationSubscription = typeof organizationSubscriptions.$inferInsert;
-export type AiCreditBalance = typeof aiCreditBalance.$inferSelect;
-export type InsertAiCreditBalance = typeof aiCreditBalance.$inferInsert;
-export type AiCreditTransaction = typeof aiCreditTransactions.$inferSelect;
-export type InsertAiCreditTransaction = typeof aiCreditTransactions.$inferInsert;
-export type CreditTopUp = typeof creditTopUps.$inferSelect;
-export type InsertCreditTopUp = typeof creditTopUps.$inferInsert;
-
-// Setup Wizard Type Exports
-export type SetupImport = typeof setupImports.$inferSelect;
-export type InsertSetupImport = typeof setupImports.$inferInsert;
-export type SetupImportRow = typeof setupImportRows.$inferSelect;
-export type InsertSetupImportRow = typeof setupImportRows.$inferInsert;
-export type SetupImportMapping = typeof setupImportMappings.$inferSelect;
-export type InsertSetupImportMapping = typeof setupImportMappings.$inferInsert;
-export type SetupConflict = typeof setupConflicts.$inferSelect;
-export type InsertSetupConflict = typeof setupConflicts.$inferInsert;
-export type SetupProgress = typeof setupProgress.$inferSelect;
-export type InsertSetupProgress = typeof setupProgress.$inferInsert;
-
-// Conversation and Message Type Exports
-export type Conversation = typeof conversations.$inferSelect;
-export type InsertConversation = typeof conversations.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = typeof messages.$inferInsert;
-
-
-// ============================================================================
-// KAI COMMAND - Operational Status Dashboard
-// ============================================================================
-
-/**
- * Incidents table - tracks operational incidents and issues
- * Used for the KAI Command dashboard to display critical events
- */
-export const kaiIncidents = mysqlTable("kai_incidents", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	title: varchar({ length: 255 }).notNull(),
-	description: text(),
-	severity: mysqlEnum(['critical', 'high', 'medium', 'low']).default('medium').notNull(),
-	status: mysqlEnum(['open', 'acknowledged', 'in_progress', 'resolved', 'closed']).default('open').notNull(),
-	category: mysqlEnum(['system', 'infrastructure', 'security', 'performance', 'other']).default('other').notNull(),
-	assignedTo: int(),
-	createdBy: int(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-	resolvedAt: timestamp({ mode: 'string' }),
-	deletedAt: timestamp({ mode: 'string' }),
-},
-(table) => [
-	index("idx_kai_incidents_org").on(table.organizationId),
-	index("idx_kai_incidents_status").on(table.status),
-	index("idx_kai_incidents_severity").on(table.severity),
-	index("idx_kai_incidents_created").on(table.createdAt),
-]);
-
-/**
- * Alerts table - real-time alerts and notifications
- * Used to display priority actions and system alerts
- */
-export const kaiAlerts = mysqlTable("kai_alerts", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	type: mysqlEnum(['warning', 'error', 'info', 'success']).default('info').notNull(),
-	title: varchar({ length: 255 }).notNull(),
-	message: text(),
-	severity: mysqlEnum(['critical', 'high', 'medium', 'low']).default('medium').notNull(),
-	dismissed: int().default(0).notNull(),
-	dismissedAt: timestamp({ mode: 'string' }),
-	dismissedBy: int(),
-	actionUrl: varchar({ length: 500 }),
-	metadata: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_kai_alerts_org").on(table.organizationId),
-	index("idx_kai_alerts_dismissed").on(table.dismissed),
-	index("idx_kai_alerts_severity").on(table.severity),
-	index("idx_kai_alerts_created").on(table.createdAt),
-]);
-
-/**
- * Operations log - audit trail of operational events
- * Used to display the operations log in KAI Command dashboard
- */
-export const kaiOperationsLog = mysqlTable("kai_operations_log", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	action: varchar({ length: 255 }).notNull(),
-	actionType: mysqlEnum(['create', 'update', 'delete', 'execute', 'query', 'other']).default('other').notNull(),
-	details: text(),
-	status: mysqlEnum(['success', 'pending', 'failed']).default('pending').notNull(),
-	performedBy: int(),
-	relatedIncidentId: int(),
-	metadata: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_kai_operations_org").on(table.organizationId),
-	index("idx_kai_operations_type").on(table.actionType),
-	index("idx_kai_operations_status").on(table.status),
-	index("idx_kai_operations_created").on(table.createdAt),
-]);
-
-/**
- * System status table - tracks health of monitored systems
- * Used to display system status in KAI Command dashboard
- */
-export const kaiSystemStatus = mysqlTable("kai_system_status", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	systemName: varchar({ length: 255 }).notNull(),
-	status: mysqlEnum(['healthy', 'degraded', 'offline', 'unknown']).default('unknown').notNull(),
-	uptime: int(),
-	lastCheckedAt: timestamp({ mode: 'string' }),
-	responseTime: int(),
-	metadata: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_kai_system_org").on(table.organizationId),
-	index("idx_kai_system_status").on(table.status),
-	index("idx_kai_system_checked").on(table.lastCheckedAt),
-]);
-
-// KAI Command Type Exports
-export type KaiIncident = typeof kaiIncidents.$inferSelect;
-export type InsertKaiIncident = typeof kaiIncidents.$inferInsert;
-export type KaiAlert = typeof kaiAlerts.$inferSelect;
-export type InsertKaiAlert = typeof kaiAlerts.$inferInsert;
-export type KaiOperationLog = typeof kaiOperationsLog.$inferSelect;
-export type InsertKaiOperationLog = typeof kaiOperationsLog.$inferInsert;
-export type KaiSystemStatus = typeof kaiSystemStatus.$inferSelect;
-export type InsertKaiSystemStatus = typeof kaiSystemStatus.$inferInsert;
-
-
-/**
- * Student Segments - for grouping students by criteria
- * Used in Students Dashboard for segmentation and bulk actions
- */
-export const studentSegments = mysqlTable("student_segments", {
-	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	description: text(),
-	criteria: text(), // JSON criteria for segment (status, program, belt rank, date ranges, etc.)
-	studentCount: int().default(0).notNull(),
-	isActive: int().default(1).notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_segment_org").on(table.organizationId),
-	index("idx_segment_active").on(table.isActive),
-]);
-
-/**
- * Student Segment Members - junction table for students in segments
- */
-export const studentSegmentMembers = mysqlTable("student_segment_members", {
-	id: int().autoincrement().notNull(),
-	segmentId: int().notNull(),
-	studentId: int().notNull(),
-	addedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_member_segment").on(table.segmentId),
-	index("idx_member_student").on(table.studentId),
-]);
-
-/**
- * Student Contacts - tracks last contact date and method
- * Extends studentMessages/studentNotes with structured contact tracking
- */
-export const studentContacts = mysqlTable("student_contacts", {
-	id: int().autoincrement().notNull(),
-	studentId: int().notNull(),
-	contactDate: timestamp({ mode: 'string' }).notNull(),
-	contactType: mysqlEnum(['call', 'sms', 'email', 'in_person', 'message']).notNull(),
-	notes: text(),
-	contactedBy: varchar({ length: 255 }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-},
-(table) => [
-	index("idx_contact_student").on(table.studentId),
-	index("idx_contact_date").on(table.contactDate),
-]);
-
-/**
- * Student Tuition - tracks tuition payments and status
- * For billing dashboard in Students view
- */
-export const studentTuition = mysqlTable("student_tuition", {
-	id: int().autoincrement().notNull(),
-	studentId: int().notNull(),
-	amount: int().notNull(), // in cents
-	dueDate: timestamp({ mode: 'string' }).notNull(),
-	paidDate: timestamp({ mode: 'string' }),
-	status: mysqlEnum(['pending', 'paid', 'overdue', 'cancelled']).default('pending').notNull(),
-	paymentMethod: varchar({ length: 100 }),
-	notes: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_tuition_student").on(table.studentId),
-	index("idx_tuition_status").on(table.status),
-	index("idx_tuition_due_date").on(table.dueDate),
-]);
-
-/**
- * Student Cancellation Requests - tracks student cancellations
- * For analytics and follow-up in Students Dashboard
- */
-export const studentCancellationRequests = mysqlTable("student_cancellation_requests", {
-	id: int().autoincrement().notNull(),
-	studentId: int().notNull(),
-	requestDate: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	cancellationDate: timestamp({ mode: 'string' }),
-	reason: text(),
-	status: mysqlEnum(['pending', 'approved', 'rejected', 'completed']).default('pending').notNull(),
-	notes: text(),
-	processedBy: varchar({ length: 255 }),
-	processedAt: timestamp({ mode: 'string' }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_cancellation_student").on(table.studentId),
-	index("idx_cancellation_status").on(table.status),
-	index("idx_cancellation_date").on(table.requestDate),
-]);
-
-// Type Exports for Students Dashboard
-export type StudentSegment = typeof studentSegments.$inferSelect;
-export type InsertStudentSegment = typeof studentSegments.$inferInsert;
-export type StudentSegmentMember = typeof studentSegmentMembers.$inferSelect;
-export type InsertStudentSegmentMember = typeof studentSegmentMembers.$inferInsert;
-export type StudentContact = typeof studentContacts.$inferSelect;
-export type InsertStudentContact = typeof studentContacts.$inferInsert;
-export type StudentTuition = typeof studentTuition.$inferSelect;
-export type InsertStudentTuition = typeof studentTuition.$inferInsert;
-export type StudentCancellationRequest = typeof studentCancellationRequests.$inferSelect;
-export type InsertStudentCancellationRequest = typeof studentCancellationRequests.$inferInsert;
-
-
-/**
- * Kiosk Devices - Physical/virtual kiosk devices deployed at locations
- */
-export const kioskDevices = mysqlTable("kiosk_devices", {
-	id: int().autoincrement().notNull().primaryKey(),
-	organizationId: int().notNull(),
-	deviceName: varchar({ length: 255 }).notNull(),
-	location: varchar({ length: 255 }).notNull(),
-	deviceType: mysqlEnum(['physical', 'virtual', 'web']).default('physical').notNull(),
-	status: mysqlEnum(['active', 'inactive', 'maintenance', 'offline']).default('offline').notNull(),
-	lastSyncAt: timestamp({ mode: 'string' }),
-	onlineStatus: int().default(0).notNull(), // 1 = online, 0 = offline
-	ipAddress: varchar({ length: 50 }),
-	deviceId: varchar({ length: 255 }).unique(), // unique device identifier
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_org_devices").on(table.organizationId),
-	index("idx_device_status").on(table.status),
-]);
-
-/**
- * Kiosk Themes - Design themes for kiosks (default, holiday, event-based)
- */
-export const kioskThemes = mysqlTable("kiosk_themes", {
-	id: int().autoincrement().notNull().primaryKey(),
-	organizationId: int().notNull(),
-	name: varchar({ length: 255 }).notNull(),
-	description: text(),
-	isActive: int().default(0).notNull(),
-	isDefault: int().default(0).notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_org_themes").on(table.organizationId),
-	index("idx_theme_active").on(table.isActive),
-]);
-
-/**
- * Kiosk Theme Assets - Customization data for themes (colors, images, text, etc.)
- */
-export const kioskThemeAssets = mysqlTable("kiosk_theme_assets", {
-	id: int().autoincrement().notNull().primaryKey(),
-	themeId: int().notNull(),
-	assetType: mysqlEnum(['logo', 'background_image', 'background_video', 'overlay_graphic', 'color_primary', 'color_accent', 'button_style', 'welcome_text', 'idle_message', 'holiday_message', 'theme_mode', 'other']).notNull(),
-	assetKey: varchar({ length: 255 }).notNull(), // e.g., "primary_color", "logo_url"
-	assetValue: text().notNull(), // JSON or URL or color value
-	assetUrl: varchar({ length: 500 }), // S3 URL if applicable
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_theme_assets").on(table.themeId),
-	index("idx_asset_type").on(table.assetType),
-]);
-
-/**
- * Kiosk Assignments - Maps themes to devices
- */
-export const kioskAssignments = mysqlTable("kiosk_assignments", {
-	id: int().autoincrement().notNull().primaryKey(),
-	deviceId: int().notNull(),
-	themeId: int().notNull(),
-	assignedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	assignedBy: int(), // user ID who assigned
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_device_assignments").on(table.deviceId),
-	index("idx_theme_assignments").on(table.themeId),
-]);
-
-/**
- * Kiosk Deployments - Track theme deployments to devices
- */
-export const kioskDeployments = mysqlTable("kiosk_deployments", {
-	id: int().autoincrement().notNull().primaryKey(),
-	deviceId: int().notNull(),
-	themeId: int().notNull(),
-	deploymentStatus: mysqlEnum(['pending', 'in_progress', 'deployed', 'failed', 'rolled_back']).default('pending').notNull(),
-	deployedAt: timestamp({ mode: 'string' }),
-	deployedBy: int(), // user ID who deployed
-	errorMessage: text(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_deployment_device").on(table.deviceId),
-	index("idx_deployment_theme").on(table.themeId),
-	index("idx_deployment_status").on(table.deploymentStatus),
-]);
-
-/**
- * Kiosk Schedules - Schedule theme changes (e.g., Halloween theme Oct 25-31)
- */
-export const kioskSchedules = mysqlTable("kiosk_schedules", {
-	id: int().autoincrement().notNull().primaryKey(),
-	themeId: int().notNull(),
-	startDate: timestamp({ mode: 'string' }).notNull(),
-	endDate: timestamp({ mode: 'string' }).notNull(),
-	isRecurring: int().default(0).notNull(),
-	cronExpression: varchar({ length: 255 }), // for recurring schedules
-	autoRevert: int().default(1).notNull(), // auto-revert to previous theme after end date
-	revertThemeId: int(), // theme to revert to (if null, revert to default)
-	isActive: int().default(1).notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_schedule_theme").on(table.themeId),
-	index("idx_schedule_dates").on(table.startDate, table.endDate),
-	index("idx_schedule_active").on(table.isActive),
-]);
-
-/**
- * Preset Kiosk Backgrounds - Library of curated background images
- */
-export const presetBackgrounds = mysqlTable("preset_backgrounds", {
-	id: int().autoincrement().notNull().primaryKey(),
-	key: varchar({ length: 100 }).notNull().unique(),
-	name: varchar({ length: 255 }).notNull(),
-	description: text(),
-	category: varchar({ length: 50 }).default('neutral').notNull(), // dojo, gym, gradient, pattern, nature, etc.
-	imageUrl: varchar({ length: 500 }).notNull(),
-	thumbnailUrl: varchar({ length: 500 }),
-	blurDefault: int().default(0).notNull(),
-	dimDefault: int().default(0).notNull(),
-	sortOrder: int().default(0).notNull(),
-	isActive: int().default(1).notNull(),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-},
-(table) => [
-	index("idx_category").on(table.category),
-	index("idx_active").on(table.isActive),
-]);
-
-// Type Exports for Kiosk Designer
-export type PresetBackground = typeof presetBackgrounds.$inferSelect;
-export type InsertPresetBackground = typeof presetBackgrounds.$inferInsert;
-export type KioskDevice = typeof kioskDevices.$inferSelect;
-export type InsertKioskDevice = typeof kioskDevices.$inferInsert;
-export type KioskTheme = typeof kioskThemes.$inferSelect;
-export type InsertKioskTheme = typeof kioskThemes.$inferInsert;
-export type KioskThemeAsset = typeof kioskThemeAssets.$inferSelect;
-export type InsertKioskThemeAsset = typeof kioskThemeAssets.$inferInsert;
-export type KioskAssignment = typeof kioskAssignments.$inferSelect;
-export type InsertKioskAssignment = typeof kioskAssignments.$inferInsert;
-export type KioskDeployment = typeof kioskDeployments.$inferSelect;
-export type InsertKioskDeployment = typeof kioskDeployments.$inferInsert;
-export type KioskSchedule = typeof kioskSchedules.$inferSelect;
-export type InsertKioskSchedule = typeof kioskSchedules.$inferInsert;
-export type PresetBackground = typeof presetBackgrounds.$inferSelect;
-export type InsertPresetBackground = typeof presetBackgrounds.$inferInsert;
