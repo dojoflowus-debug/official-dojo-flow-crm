@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, Save, Zap, Code, Plus, MoreVertical, Trash2, Copy, Edit2 } from 'lucide-react';
+import { AlertCircle, Save, Zap, Code, Plus, MoreVertical, Trash2, Copy, Edit2, Eye } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { KioskTypographyControls } from '@/components/KioskTypographyControls';
@@ -7,6 +7,7 @@ import { KioskBackgroundControls } from '@/components/KioskBackgroundControls';
 import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
 
 interface Kiosk {
   id: number;
@@ -38,6 +39,7 @@ export default function KioskStudio() {
   const [newKioskNameInput, setNewKioskNameInput] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'draft' | 'published'>('draft');
 
   // Fetch locations
   const { data: locationsData } = trpc.kiosk.listLocations.useQuery(undefined, { enabled: true })
@@ -55,22 +57,37 @@ export default function KioskStudio() {
   );
 
   // Initialize mutations
-  const saveDraftMutation = trpc.kioskSettings.saveDraft.useMutation();
-  const publishMutation = trpc.kioskSettings.publish.useMutation();
+  const saveDraftMutation = trpc.kioskDevice.saveDraft.useMutation();
+  const publishMutation = trpc.kioskDevice.publish.useMutation();
   const createKioskMutation = trpc.kioskDevice.create.useMutation();
   const updateKioskMutation = trpc.kioskDevice.update.useMutation();
   const deleteKioskMutation = trpc.kioskDevice.delete.useMutation();
   const duplicateKioskMutation = trpc.kioskDevice.duplicate.useMutation();
+  const getKioskQuery = trpc.kioskDevice.getById.useQuery(
+    { kioskId: selectedKiosk! },
+    { enabled: !!selectedKiosk }
+  );
 
-  // Initialize draft settings from fetched data
+  // Load kiosk data when selected
   useEffect(() => {
-    if (settingsData?.settings) {
-      const config = settingsData.settings as KioskConfig;
-      setDraftConfig(config);
-      setLastSavedConfig(config);
-      setPublishedConfig(config);
+    if (getKioskQuery.data) {
+      const kiosk = getKioskQuery.data;
+      if (kiosk.draftConfig) {
+        setDraftConfig(kiosk.draftConfig);
+        setLastSavedConfig(kiosk.draftConfig);
+      }
+      if (kiosk.publishedConfig) {
+        setPublishedConfig(kiosk.publishedConfig);
+      }
     }
-  }, [settingsData]);
+  }, [getKioskQuery.data]);
+
+  // Auto-select first kiosk when kiosks list loads
+  useEffect(() => {
+    if (kiosksData && kiosksData.length > 0 && !selectedKiosk) {
+      setSelectedKiosk(kiosksData[0].id);
+    }
+  }, [kiosksData, selectedKiosk]);
 
   // Set default location on mount
   useEffect(() => {
@@ -96,6 +113,14 @@ export default function KioskStudio() {
     }
   }, [kiosksData, selectedKiosk]);
 
+
+  // Preview config selection
+  const getPreviewConfig = (): KioskConfig => {
+    if (previewMode === 'published' && publishedConfig) {
+      return publishedConfig;
+    }
+    return draftConfig;
+  };
   // Send draft to iframe preview
   const sendPreviewUpdate = (config: KioskConfig) => {
     const previewFrame = document.getElementById('kiosk-preview') as HTMLIFrameElement;
@@ -156,11 +181,11 @@ export default function KioskStudio() {
   const handleScreensaverChange = (key: string, value: any) => updateConfig('screensaver', key, value);
 
   const handleSaveDraft = async () => {
-    if (!selectedLocation) return;
+    if (!selectedKiosk) return;
     setIsSaving(true);
     try {
       await saveDraftMutation.mutateAsync({
-        locationSlug: selectedLocation.toString(),
+        kioskId: selectedKiosk,
         config: draftConfig,
       });
       setLastSavedConfig(draftConfig);
@@ -175,11 +200,11 @@ export default function KioskStudio() {
   };
 
   const handlePublish = async () => {
-    if (!selectedLocation) return;
+    if (!selectedKiosk) return;
     setIsSaving(true);
     try {
       await publishMutation.mutateAsync({
-        locationSlug: selectedLocation.toString(),
+        kioskId: selectedKiosk,
         config: draftConfig,
       });
       setPublishedConfig(draftConfig);
@@ -759,21 +784,50 @@ export default function KioskStudio() {
         </div>
 
         {/* Right Panel - Preview */}
-        <div className="flex-1 bg-slate-950 flex items-center justify-center p-8">
-          {hasNoKiosks ? (
-            <div className="text-center">
-              <AlertCircle className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <h2 className="text-xl font-bold mb-2">No Kiosks Yet</h2>
-              <p className="text-slate-400 mb-6">Create your first kiosk to start designing</p>
+        <div className="flex-1 bg-slate-950 flex flex-col">
+          {!hasNoKiosks && (
+            <div className="flex items-center justify-between px-6 py-3 border-b border-slate-800 bg-slate-900/50">
+              <h3 className="font-semibold text-white">Live Preview</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPreviewMode('draft')}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    previewMode === 'draft'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Draft
+                </button>
+                <button
+                  onClick={() => setPreviewMode('published')}
+                  disabled={!publishedConfig}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    previewMode === 'published'
+                      ? 'bg-green-600 text-white'
+                      : publishedConfig
+                      ? 'bg-slate-800 text-slate-400 hover:text-white'
+                      : 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  Published
+                </button>
+              </div>
             </div>
-          ) : (
-            <iframe
-              id="kiosk-preview"
-              src="/kiosk-preview"
-              className="w-full h-full border-0 rounded-lg"
-              title="Kiosk Preview"
-            />
           )}
+          <div className="flex-1 overflow-hidden">
+            {hasNoKiosks ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <AlertCircle className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                  <h2 className="text-xl font-bold mb-2">No Kiosks Yet</h2>
+                  <p className="text-slate-400 mb-6">Create your first kiosk to start designing</p>
+                </div>
+              </div>
+            ) : (
+              <KioskPreviewLive config={getPreviewConfig()} />
+            )}
+          </div>
         </div>
       </div>
     </div>

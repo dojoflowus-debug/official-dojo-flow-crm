@@ -1,9 +1,9 @@
-import { router, protectedProcedure } from './_core/trpc';
 import { TRPCError } from '@trpc/server';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { kiosks } from '../drizzle/schema';
 import { getDb } from './db';
+import { router, protectedProcedure, publicProcedure } from './_core/trpc';
 import { KioskConfigSchema } from '../shared/kioskConfigSchema';
 
 /**
@@ -11,6 +11,34 @@ import { KioskConfigSchema } from '../shared/kioskConfigSchema';
  */
 function generateSlug(name: string, orgId: number): string {
   return `${name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Date.now()}`;
+}
+
+/**
+ * Parse kiosk config from JSON string
+ * Handles both legacy (single config) and new (draft/published) formats
+ */
+function parseKioskConfig(configStr: string | null) {
+  if (!configStr) return { draft: null, published: null, enabled: true };
+  
+  try {
+    const parsed = JSON.parse(configStr);
+    // Check if it's the new format (has draft/published keys)
+    if (parsed.draft !== undefined || parsed.published !== undefined) {
+      return {
+        draft: parsed.draft || null,
+        published: parsed.published || null,
+        enabled: parsed.enabled !== false,
+      };
+    }
+    // Legacy format - single config, treat as draft
+    return {
+      draft: parsed,
+      published: null,
+      enabled: true,
+    };
+  } catch (e) {
+    return { draft: null, published: null, enabled: true };
+  }
 }
 
 export const kioskDeviceRouter = router({
@@ -38,15 +66,20 @@ export const kioskDeviceRouter = router({
             )
           );
 
-        return result.map(k => ({
-          id: k.id,
-          name: k.name,
-          slug: k.slug,
-          isActive: k.isActive,
-          config: k.config ? JSON.parse(k.config) : null,
-          createdAt: k.createdAt,
-          updatedAt: k.updatedAt,
-        }));
+        return result.map(k => {
+          const configData = parseKioskConfig(k.config);
+          return {
+            id: k.id,
+            name: k.name,
+            slug: k.slug,
+            isActive: k.isActive,
+            draftConfig: configData.draft,
+            publishedConfig: configData.published,
+            enabled: configData.enabled,
+            createdAt: k.createdAt,
+            updatedAt: k.updatedAt,
+          };
+        });
       } catch (e) {
         console.error('[Kiosk Device] List by location error:', e);
         throw new TRPCError({
@@ -76,8 +109,15 @@ export const kioskDeviceRouter = router({
       }
 
       try {
-        const orgId = ctx.currentOrganizationId || 180001; // Fallback to default org
-        const slug = generateSlug(input.name, orgId)
+        const orgId = ctx.currentOrganizationId || ctx.organizationId;
+        const slug = generateSlug(input.name, orgId);
+        
+        // Store config in new format (draft/published)
+        const configData = {
+          draft: input.config || null,
+          published: null,
+          enabled: true,
+        };
         
         const result = await ctx.db
           .insert(kiosks)
@@ -87,10 +127,10 @@ export const kioskDeviceRouter = router({
             name: input.name,
             slug: slug,
             isActive: 1,
-            config: input.config ? JSON.stringify(input.config) : null,
+            config: JSON.stringify(configData),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-          })
+          });
 
         const kioskId = result[0];
 
@@ -99,7 +139,9 @@ export const kioskDeviceRouter = router({
           name: input.name,
           slug: slug,
           isActive: 1,
-          config: input.config || null,
+          draftConfig: input.config || null,
+          publishedConfig: null,
+          enabled: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -109,7 +151,245 @@ export const kioskDeviceRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Failed to create kiosk: ${errorMsg}`,
-        })
+        });
+      }
+    }),
+
+  /**
+   * Get kiosk by ID with draft and published configs
+   */
+  getById: protectedProcedure
+    .input(z.object({ kioskId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        const result = await ctx.db
+          .select()
+          .from(kiosks)
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          )
+          .limit(1);
+
+        if (!result || result.length === 0) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not found',
+          });
+        }
+
+        const kiosk = result[0];
+        const configData = parseKioskConfig(kiosk.config);
+
+        return {
+          id: kiosk.id,
+          name: kiosk.name,
+          slug: kiosk.slug,
+          isActive: kiosk.isActive,
+          draftConfig: configData.draft,
+          publishedConfig: configData.published,
+          enabled: configData.enabled,
+          createdAt: kiosk.createdAt,
+          updatedAt: kiosk.updatedAt,
+        };
+      } catch (e) {
+        console.error('[Kiosk Device] Get by ID error:', e);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get kiosk',
+        });
+      }
+    }),
+
+  /**
+   * Get kiosk by slug (public, returns published config only)
+   */
+  getBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        const result = await ctx.db
+          .select()
+          .from(kiosks)
+          .where(eq(kiosks.slug, input.slug))
+          .limit(1);
+
+        if (!result || result.length === 0) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not found',
+          });
+        }
+
+        const kiosk = result[0];
+        const configData = parseKioskConfig(kiosk.config);
+
+        // Only return published config, check if enabled
+        if (!configData.enabled || !configData.published) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not published or disabled',
+          });
+        }
+
+        return {
+          id: kiosk.id,
+          name: kiosk.name,
+          slug: kiosk.slug,
+          isActive: kiosk.isActive,
+          publishedConfig: configData.published,
+          enabled: configData.enabled,
+        };
+      } catch (e) {
+        if (e instanceof TRPCError) throw e;
+        console.error('[Kiosk Device] Get by slug error:', e);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get kiosk',
+        });
+      }
+    }),
+
+  /**
+   * Save draft configuration for a kiosk
+   */
+  saveDraft: protectedProcedure
+    .input(
+      z.object({
+        kioskId: z.number(),
+        config: KioskConfigSchema,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        // Get current config
+        const current = await ctx.db
+          .select()
+          .from(kiosks)
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          )
+          .limit(1);
+
+        if (!current || current.length === 0) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not found',
+          });
+        }
+
+        const currentConfig = parseKioskConfig(current[0].config);
+        
+        // Update draft, keep published
+        const newConfig = {
+          draft: input.config,
+          published: currentConfig.published,
+          enabled: currentConfig.enabled,
+        };
+
+        await ctx.db
+          .update(kiosks)
+          .set({
+            config: JSON.stringify(newConfig),
+            updatedAt: new Date().toISOString(),
+          })
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          );
+
+        return {
+          success: true,
+          message: 'Draft saved',
+        };
+      } catch (e) {
+        console.error('[Kiosk Device] Save draft error:', e);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to save draft',
+        });
+      }
+    }),
+
+  /**
+   * Publish kiosk configuration
+   */
+  publish: protectedProcedure
+    .input(
+      z.object({
+        kioskId: z.number(),
+        config: KioskConfigSchema,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        // Store both draft and published config
+        const newConfig = {
+          draft: input.config,
+          published: input.config,
+          enabled: true,
+        };
+
+        await ctx.db
+          .update(kiosks)
+          .set({
+            config: JSON.stringify(newConfig),
+            isActive: 1,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          );
+
+        return {
+          success: true,
+          message: 'Published successfully',
+          publishedAt: new Date().toISOString(),
+        };
+      } catch (e) {
+        console.error('[Kiosk Device] Publish error:', e);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to publish',
+        });
       }
     }),
 
@@ -259,10 +539,8 @@ export const kioskDeviceRouter = router({
             updatedAt: new Date().toISOString(),
           });
 
-        const newKioskId = result[0];
-
         return {
-          id: newKioskId,
+          id: result[0],
           name: newName,
           slug: newSlug,
           isActive: 1,
@@ -275,57 +553,6 @@ export const kioskDeviceRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to duplicate kiosk',
-        });
-      }
-    }),
-
-  /**
-   * Get a single kiosk by ID
-   */
-  getById: protectedProcedure
-    .input(z.object({ kioskId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      if (!ctx.db) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Database not available',
-        });
-      }
-
-      try {
-        const result = await ctx.db
-          .select()
-          .from(kiosks)
-          .where(
-            and(
-              eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
-            )
-          )
-          .limit(1);
-
-        if (!result || result.length === 0) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Kiosk not found',
-          });
-        }
-
-        const k = result[0];
-        return {
-          id: k.id,
-          name: k.name,
-          slug: k.slug,
-          isActive: k.isActive,
-          config: k.config ? JSON.parse(k.config) : null,
-          createdAt: k.createdAt,
-          updatedAt: k.updatedAt,
-        };
-      } catch (e) {
-        console.error('[Kiosk Device] Get by ID error:', e);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to get kiosk',
         });
       }
     }),

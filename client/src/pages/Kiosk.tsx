@@ -32,14 +32,10 @@ export default function Kiosk() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Fetch kiosk location by slug
-  const { data: kioskLocations } = trpc.kioskManager.getKioskLocations.useQuery();
-  const kioskLocation = kioskLocations?.find(loc => loc.slug === locationSlug);
-
-  // Fetch kiosk config with published settings
-  const { data: kioskConfig, isLoading, error } = trpc.kioskManager.getKioskConfig.useQuery(
-    kioskLocation ? { kioskLocationId: kioskLocation.id } : { kioskLocationId: 0 },
-    { enabled: !!kioskLocation }
+  // Fetch kiosk by slug to get published config
+  const { data: kiosk, isLoading, error } = trpc.kioskDevice.getBySlug.useQuery(
+    { slug: locationSlug! },
+    { enabled: !!locationSlug }
   );
 
   // Loading state
@@ -88,7 +84,7 @@ export default function Kiosk() {
   }
 
   // Use published settings, fallback to draft if in preview mode
-  const effectiveSettings = draftSettings || kioskConfig?.published;
+  const effectiveSettings = draftSettings || kiosk?.publishedConfig;
   
   if (!effectiveSettings) {
     return (
