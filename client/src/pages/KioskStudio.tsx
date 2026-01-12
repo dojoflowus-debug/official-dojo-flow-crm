@@ -38,11 +38,43 @@ interface DraftSettings {
   };
 }
 
+const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
+  theme: {
+    mode: 'dark',
+    primaryColor: '#ef4444',
+    accentColor: '#ef4444',
+  },
+  appearance: {
+    accentColor: '#ef4444',
+    headline: 'Welcome',
+    subtext: 'Check in here',
+    backgroundImageUrl: undefined,
+    backgroundIntensity: 0.5,
+    backgroundBlur: 0,
+    fontFamily: 'system',
+    titleSize: 48,
+    titleWeight: 700,
+    subtitleSize: 24,
+    letterSpacing: 0,
+    buttonFontSize: 16,
+    backgroundFitMode: 'cover',
+  },
+  behavior: {
+    showMemberLogin: true,
+    showNewStudent: true,
+    idleTimeout: 60,
+    idleSeconds: 60,
+    autoReturn: true,
+    kaiEnrollment: false,
+    facialRecognition: false,
+  },
+};
+
 export default function KioskStudio() {
   const { locationId } = useParams<{ locationId: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'appearance' | 'behavior' | 'preview'>('appearance');
-  const [draftSettings, setDraftSettings] = useState<DraftSettings | null>(null);
+  const [activeTab, setActiveTab] = useState<'design' | 'content' | 'behavior' | 'screensaver'>('design');
+  const [draftSettings, setDraftSettings] = useState<DraftSettings>(DEFAULT_DRAFT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState<string>('');
@@ -160,7 +192,7 @@ export default function KioskStudio() {
     }
   };
 
-  if (!selectedLocation && !settingsLoading && locationsData) {
+  if (!selectedLocation && !settingsLoading && locationsData && locationsData.length === 0) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-md p-8 text-center space-y-4">
@@ -233,24 +265,32 @@ export default function KioskStudio() {
 
           {/* Tab Navigation */}
           <div className="flex border-b border-slate-800 px-6">
-            {(['appearance', 'behavior', 'preview'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize ${
-                  activeTab === tab
-                    ? 'border-red-500 text-red-400'
-                    : 'border-transparent text-slate-400 hover:text-white'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+            {(['design', 'content', 'behavior', 'screensaver'] as const).map((tab) => {
+              const tabLabels: Record<string, string> = {
+                design: 'Design',
+                content: 'Content',
+                behavior: 'Behavior',
+                screensaver: 'Screensaver',
+              };
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab
+                      ? 'border-red-500 text-red-400'
+                      : 'border-transparent text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {tabLabels[tab]}
+                </button>
+              );
+            })}
           </div>
 
           {/* Tab Content */}
           <div className="p-6 space-y-6">
-            {activeTab === 'appearance' && draftSettings && (
+            {activeTab === 'design' && draftSettings && (
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Typography</h3>
@@ -269,6 +309,29 @@ export default function KioskStudio() {
               </div>
             )}
 
+            {activeTab === 'content' && draftSettings && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Headline</label>
+                  <input
+                    type="text"
+                    value={draftSettings.appearance.headline || 'Welcome'}
+                    onChange={(e) => handleAppearanceChange('headline', e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Subtext</label>
+                  <input
+                    type="text"
+                    value={draftSettings.appearance.subtext || 'Check in here'}
+                    onChange={(e) => handleAppearanceChange('subtext', e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
             {activeTab === 'behavior' && draftSettings && (
               <BehaviorControls
                 settings={draftSettings.behavior}
@@ -276,9 +339,9 @@ export default function KioskStudio() {
               />
             )}
 
-            {activeTab === 'preview' && (
+            {activeTab === 'screensaver' && (
               <div className="text-sm text-slate-400">
-                <p>Live preview updates appear on the right side.</p>
+                <p>Screensaver settings coming soon.</p>
               </div>
             )}
           </div>

@@ -294,9 +294,14 @@
 
 - [x] Change student page filter default from "at risk" to "All status"
 
-## Current Issues - In Progress
+#### Current Issues - In Progress
 
-- [x] Change default student status filter from "At Risk" to "All Status"
+- [x] Change student page filter default from "at risk" to "All status"
+- [x] Fix menu dashboard to display /kiosk-studio/1 on bottom menu selection
+  - Updated KioskStudio page tabs from 'Appearance, Behavior, Preview' to 'Design, Content, Behavior, Screensaver'
+  - Added Content tab with headline and subtext controls
+  - Added Screensaver tab placeholder
+  - Page now displays correctly at /kiosk-studio/1 with proper menu structure
   - Verified: Students page already defaults to "All Status" on initial load
   - All 30 students are displayed by default when users first visit the page
   - Filter state initialized to 'all' on line 99 of Students.tsx

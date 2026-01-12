@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 /**
  * KioskTypographyControls - Typography settings for kiosk
  * 
@@ -28,12 +30,22 @@ export function KioskTypographyControls({
   settings,
   onChange,
 }: KioskTypographyControlsProps) {
+  // Provide default values if settings is undefined
+  const safeSettings = settings || {
+    fontFamily: 'system',
+    titleSize: 48,
+    titleWeight: 700,
+    subtitleSize: 24,
+    letterSpacing: 0,
+    buttonFontSize: 16,
+  };
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">Font Family</label>
         <select
-          value={settings.fontFamily || 'system'}
+          value={safeSettings.fontFamily || 'system'}
           onChange={(e) => onChange('fontFamily', e.target.value)}
           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
         >
@@ -54,18 +66,18 @@ export function KioskTypographyControls({
             type="range"
             min="24"
             max="72"
-            value={settings.titleSize || 48}
+            value={safeSettings.titleSize || 48}
             onChange={(e) => onChange('titleSize', parseInt(e.target.value))}
             className="flex-1"
           />
-          <span className="text-xs text-slate-400 w-12 text-right">{settings.titleSize || 48}px</span>
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.titleSize || 48}px</span>
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium mb-2">Title Weight</label>
         <select
-          value={settings.titleWeight || 700}
+          value={safeSettings.titleWeight || 700}
           onChange={(e) => onChange('titleWeight', parseInt(e.target.value))}
           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
         >
@@ -85,11 +97,11 @@ export function KioskTypographyControls({
             type="range"
             min="14"
             max="48"
-            value={settings.subtitleSize || 24}
+            value={safeSettings.subtitleSize || 24}
             onChange={(e) => onChange('subtitleSize', parseInt(e.target.value))}
             className="flex-1"
           />
-          <span className="text-xs text-slate-400 w-12 text-right">{settings.subtitleSize || 24}px</span>
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.subtitleSize || 24}px</span>
         </div>
       </div>
 
@@ -101,11 +113,11 @@ export function KioskTypographyControls({
             min="-2"
             max="4"
             step="0.1"
-            value={settings.letterSpacing || 0}
+            value={safeSettings.letterSpacing || 0}
             onChange={(e) => onChange('letterSpacing', parseFloat(e.target.value))}
             className="flex-1"
           />
-          <span className="text-xs text-slate-400 w-12 text-right">{settings.letterSpacing || 0}px</span>
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.letterSpacing || 0}px</span>
         </div>
       </div>
 
@@ -116,11 +128,11 @@ export function KioskTypographyControls({
             type="range"
             min="12"
             max="24"
-            value={settings.buttonFontSize || 16}
+            value={safeSettings.buttonFontSize || 16}
             onChange={(e) => onChange('buttonFontSize', parseInt(e.target.value))}
             className="flex-1"
           />
-          <span className="text-xs text-slate-400 w-12 text-right">{settings.buttonFontSize || 16}px</span>
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.buttonFontSize || 16}px</span>
         </div>
       </div>
     </div>

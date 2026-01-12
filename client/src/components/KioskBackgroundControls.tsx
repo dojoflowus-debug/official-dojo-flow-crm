@@ -37,6 +37,16 @@ export function KioskBackgroundControls({
   settings,
   onChange,
 }: KioskBackgroundControlsProps) {
+  // Provide default values if settings is undefined
+  const safeSettings = settings || {
+    backgroundImageUrl: undefined,
+    presetKey: undefined,
+    backgroundColor: undefined,
+    backgroundIntensity: 0.5,
+    backgroundBlur: 0,
+    backgroundFitMode: 'cover',
+  };
+
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -88,7 +98,7 @@ export function KioskBackgroundControls({
                 onChange('backgroundImageUrl', undefined);
               }}
               className={`p-3 rounded-lg border-2 transition-all text-left ${
-                settings.presetKey === preset.key
+                safeSettings.presetKey === preset.key
                   ? 'border-red-500 bg-red-500/10'
                   : 'border-slate-700 hover:border-slate-600'
               }`}
@@ -138,11 +148,11 @@ export function KioskBackgroundControls({
             )}
           </label>
         </div>
-        {settings.backgroundImageUrl && (
+        {safeSettings.backgroundImageUrl && (
           <div className="mt-3 flex items-center gap-2">
             <div
               className="w-12 h-12 rounded bg-cover bg-center"
-              style={{ backgroundImage: `url(${settings.backgroundImageUrl})` }}
+              style={{ backgroundImage: `url(${safeSettings.backgroundImageUrl})` }}
             />
             <div className="flex-1">
               <div className="text-xs text-slate-400">Custom background uploaded</div>
@@ -165,11 +175,11 @@ export function KioskBackgroundControls({
             type="range"
             min="0"
             max="100"
-            value={settings.backgroundIntensity || 0}
+            value={safeSettings.backgroundIntensity || 0}
             onChange={(e) => onChange('backgroundIntensity', parseInt(e.target.value))}
             className="flex-1"
           />
-          <span className="text-xs text-slate-400 w-12 text-right">{settings.backgroundIntensity || 0}%</span>
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.backgroundIntensity || 0}%</span>
         </div>
         <p className="text-xs text-slate-500 mt-1">Controls the darkness overlay</p>
       </div>
@@ -182,11 +192,11 @@ export function KioskBackgroundControls({
             type="range"
             min="0"
             max="24"
-            value={settings.backgroundBlur || 0}
+            value={safeSettings.backgroundBlur || 0}
             onChange={(e) => onChange('backgroundBlur', parseInt(e.target.value))}
             className="flex-1"
           />
-          <span className="text-xs text-slate-400 w-12 text-right">{settings.backgroundBlur || 0}px</span>
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.backgroundBlur || 0}px</span>
         </div>
         <p className="text-xs text-slate-500 mt-1">Controls the blur amount</p>
       </div>
@@ -195,7 +205,7 @@ export function KioskBackgroundControls({
       <div>
         <label className="block text-sm font-medium mb-2">Background Fit</label>
         <select
-          value={settings.backgroundFitMode || 'cover'}
+          value={safeSettings.backgroundFitMode || 'cover'}
           onChange={(e) => onChange('backgroundFitMode', e.target.value)}
           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
         >
@@ -212,13 +222,13 @@ export function KioskBackgroundControls({
         <div className="flex gap-2">
           <input
             type="color"
-            value={settings.backgroundColor || '#ffffff'}
+            value={safeSettings.backgroundColor || '#ffffff'}
             onChange={(e) => onChange('backgroundColor', e.target.value)}
             className="w-12 h-10 rounded cursor-pointer"
           />
           <input
             type="text"
-            value={settings.backgroundColor || '#ffffff'}
+            value={safeSettings.backgroundColor || '#ffffff'}
             onChange={(e) => onChange('backgroundColor', e.target.value)}
             className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
             placeholder="#ffffff"

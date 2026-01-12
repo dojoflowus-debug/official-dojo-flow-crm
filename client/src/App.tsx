@@ -274,6 +274,7 @@ function Router() {
       <Route path="/settings/webhooks" element={<WebhookSettings />} />
       <Route path="/settings/kiosk" element={<KioskSettings />} />
       <Route path="/settings/kiosk/studio" element={<ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>} />
+      <Route path="/kiosk-studio/:locationId" element={<ProtectedRoute><KioskStudio /></ProtectedRoute>} />
       <Route path="/kiosk-studio-builder/:locationId" element={<ProtectedRoute><KioskStudioBuilder2 /></ProtectedRoute>} />
       <Route path="/settings/floor-plans" element={<FloorPlanBuilder />} />
       <Route path="/settings/profile" element={<ProfileSettings />} />
