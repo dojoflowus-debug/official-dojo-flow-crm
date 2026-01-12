@@ -318,10 +318,20 @@ export const kioskDeviceRouter = router({
           });
         }
 
+        // Validate the input config using safeParse
+        const validationResult = KioskConfigSchema.safeParse(input.config);
+        if (!validationResult.success) {
+          console.error('[Kiosk Device] Draft config validation failed:', validationResult.error);
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid kiosk configuration',
+          });
+        }
+
         // Update draft in config field
         const currentConfig = parseKioskConfig(current[0].config);
         const newConfig = {
-          draft: input.config || DEFAULT_KIOSK_CONFIG,
+          draft: validationResult.data,
           published: currentConfig.published || DEFAULT_KIOSK_CONFIG,
           enabled: currentConfig.enabled,
         };
@@ -410,8 +420,21 @@ export const kioskDeviceRouter = router({
           }
         }
 
-        // Ensure we have a valid config, use DEFAULT if needed
-        configToPublish = configToPublish || DEFAULT_KIOSK_CONFIG;
+        // Validate the config using safeParse to avoid _zod errors
+        if (configToPublish) {
+          const validationResult = KioskConfigSchema.safeParse(configToPublish);
+          if (!validationResult.success) {
+            console.error('[Kiosk Device] Config validation failed:', validationResult.error);
+            // Use DEFAULT_KIOSK_CONFIG if validation fails
+            configToPublish = DEFAULT_KIOSK_CONFIG;
+          } else {
+            // Use the validated config
+            configToPublish = validationResult.data;
+          }
+        } else {
+          // Ensure we have a valid config, use DEFAULT if needed
+          configToPublish = DEFAULT_KIOSK_CONFIG;
+        }
 
         const now = new Date().toISOString();
         

@@ -184,9 +184,12 @@ export default function KioskStudio() {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
+      // Ensure we have a valid config
+      const safeConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
+      console.log('[KioskStudio] Saving draft with config:', safeConfig);
       await saveDraftMutation.mutateAsync({
         kioskId: selectedKiosk,
-        config: draftConfig,
+        config: safeConfig,
       });
       setLastSavedConfig(draftConfig);
       setSaveMessage({ type: 'success', text: '✓ Draft saved' });
@@ -203,16 +206,21 @@ export default function KioskStudio() {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
+      // Ensure we have a valid config
+      const safeConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
+      console.log('[KioskStudio] Publishing with config:', safeConfig);
       await publishMutation.mutateAsync({
         kioskId: selectedKiosk,
-        config: draftConfig,
+        config: safeConfig,
       });
       setPublishedConfig(draftConfig);
       setSaveMessage({ type: 'success', text: '✓ Published successfully' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
-      setSaveMessage({ type: 'error', text: '✗ Failed to publish' });
-      setTimeout(() => setSaveMessage(null), 3000);
+      console.error('[KioskStudio] Publish error:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setSaveMessage({ type: 'error', text: `✗ Failed to publish: ${errorMsg}` });
+      setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsSaving(false);
     }
