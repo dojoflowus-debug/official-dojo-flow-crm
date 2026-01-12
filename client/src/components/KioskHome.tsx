@@ -203,7 +203,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
           >
             {/* Icon Circle */}
             <div className="relative flex justify-center mb-8">
-              <div className="relative p-8 rounded-full bg-blue-500 shadow-2xl">
+              <div className="relative p-8 rounded-full shadow-2xl" style={{ backgroundColor: config?.theme?.accentColor || '#ef4444' }}>
                 <svg
                   className="h-16 w-16 text-white"
                   fill="none"
@@ -232,7 +232,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
 
             {/* Bottom Button */}
             <div className="relative mt-8 pt-8 border-t border-gray-300">
-              <div className="w-full py-4 rounded-2xl bg-blue-500 text-white text-center font-bold text-lg shadow-lg hover:bg-blue-600 transition-all">
+              <div className="w-full py-4 rounded-2xl text-white text-center font-bold text-lg shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: config?.theme?.accentColor || '#ef4444' }}>
                 {config?.content?.tileLeft?.button || 'Check In'}
               </div>
             </div>

@@ -2344,3 +2344,25 @@ All three errors have been fixed by adding proper error handling and graceful fa
   - [x] Ensure DEFAULT_KIOSK_CONFIG is always used as fallback
   - [x] Add proper error handling and logging to debug validation issues
   - [x] Implement config validation before sending to server
+
+## Phase 0: Editor-Preview Real-Time Wiring (COMPLETED - Jan 12, 2026)
+- [x] Verify preview component receives config prop correctly
+- [x] Add debug HUD to preview showing live config values
+- [x] Bind accent color to Check In button for visual proof
+- [x] Test real-time updates work when accent color changes
+- [x] Confirm KioskPreviewLive re-renders with updated config
+- [x] Confirm KioskHome uses config.theme.accentColor correctly
+- [x] Remove temporary logging from components
+- [x] Verify system works consistently across multiple color changes
+
+**Status:** ✅ WORKING - Editor controls now update preview in real-time
+- Accent color changes instantly reflected in preview buttons
+- Config flows correctly through KioskStudioBuilder2 → KioskPreviewLive → KioskHome
+- Debug HUD confirms config values updating live
+- System tested with multiple color changes (red → green → blue)
+
+**Next Steps:**
+- Wire remaining controls (blur, dim, typography, layout, content)
+- Implement Save/Publish functionality
+- Test all controls work end-to-end
+- Add visual feedback for unsaved changes

@@ -29,10 +29,33 @@ export default function KioskPreviewLive({ config, isLoading = false }: KioskPre
   }
 
   return (
-    <div className="w-full h-full overflow-hidden">
+    <div className="w-full h-full overflow-hidden relative">
       <KioskLayout config={config}>
         <KioskHome config={config} />
       </KioskLayout>
+      
+      {/* Debug HUD - Shows live config values */}
+      <div style={{
+        position: 'fixed',
+        bottom: 12,
+        left: 12,
+        fontSize: 12,
+        background: 'rgba(0, 0, 0, 0.8)',
+        color: '#fff',
+        padding: 8,
+        borderRadius: 8,
+        fontFamily: 'monospace',
+        zIndex: 9999,
+        maxWidth: 300,
+        wordBreak: 'break-word'
+      }}>
+        <div style={{ fontWeight: 'bold', marginBottom: 4 }}>LIVE CONFIG DEBUG</div>
+        <div>accentColor: <span style={{ color: config?.theme?.accentColor || '#ef4444' }}>{config?.theme?.accentColor || '#ef4444'}</span></div>
+        <div>blur: {config?.background?.blur || 0}px</div>
+        <div>dim: {config?.background?.dim || 0}%</div>
+        <div>bgType: {config?.background?.type || 'color'}</div>
+        <div>bgColor: {config?.background?.color || '#fff'}</div>
+      </div>
     </div>
   );
 }
