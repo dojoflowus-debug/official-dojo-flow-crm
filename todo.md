@@ -259,6 +259,24 @@
   - The error "Invalid input: expected object, received undefined" was caused by incorrect input validation
   - Page now loads successfully with all data displaying correctly
 
+## Phase 17: Kiosk Studio (Admin Builder) - FIXED
+- [x] Diagnose Kiosk Studio page hanging on "Loading..."
+- [x] Fix circular auth dependency (getCurrentUser as publicProcedure)
+- [x] Fix useAuth hook loading logic when user not authenticated
+- [x] Fix organization context not available error
+- [x] Change getLocations to use orgScopedProcedure
+- [x] Update all kiosk CRUD procedures to use orgScopedProcedure
+- [x] Fix context references (ctx.organizationId -> ctx.currentOrganizationId)
+- [x] Implement location dropdown selection
+- [x] Implement kiosk CRUD operations (create, rename, duplicate, delete)
+- [x] Implement live preview binding
+- [x] Add error handling and user feedback
+- [ ] Test creating a location
+- [ ] Test creating a kiosk
+- [ ] Test editing kiosk appearance
+- [ ] Test kiosk preview updates
+- [ ] Link Kiosk menu to Kiosk Studio
+
 ## Current Issues - FIXED
 - [x] Fix Students page showing 8 active students in stats but empty list
   - Root cause: Query was selecting non-existent `deletedAt` column which caused 500 error
@@ -2154,3 +2172,42 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Verify database persistence (kiosks table)
 - [x] Verify query key alignment (kiosk.listByLocation)
 - [ ] Test all acceptance criteria
+
+
+## Phase 17: Kiosk Studio (Admin Builder) - CRITICAL FIXES
+
+### Location & Kiosk Management
+- [ ] Fix location dropdown selection (clicking does nothing)
+- [ ] Implement kiosk CRUD operations (createKiosk, deleteKiosk, updateKiosk, listKiosksByLocation)
+- [ ] Add "Add Kiosk" button that creates kiosk records
+- [ ] Add ability to delete kiosks
+- [ ] Add ability to rename kiosks
+- [ ] Add ability to duplicate kiosks
+- [ ] Ensure each kiosk has unique slug and URL preview link
+
+### Live Preview Binding
+- [ ] Implement live preview binding (controls update preview instantly)
+- [ ] Wire all sidebar controls to update kiosk_config in real-time
+- [ ] Ensure single source of truth for kiosk configuration
+
+### Persistence & Publishing
+- [ ] Implement Save Draft functionality (saves to DB)
+- [ ] Implement Publish functionality (sets isPublished=true)
+- [ ] Ensure kiosk display (/kiosk/:slug) reads published config
+
+### Screensaver & Idle Behavior
+- [ ] Implement idle timeout detection
+- [ ] Implement screensaver overlay with logo + "Tap to Begin"
+- [ ] Make screensaver configurable (timeout, message, logo, background)
+
+### Menu Integration
+- [ ] Update DojoFlow left menu to link "Kiosk" to /kiosk-studio
+- [ ] Replace old kiosk settings page route
+
+### Testing & Validation
+- [ ] Test location dropdown selection
+- [ ] Test Add Kiosk button creates records
+- [ ] Test live preview binding
+- [ ] Test Save Draft persistence
+- [ ] Test Publish functionality
+- [ ] Verify kiosk display reads published config

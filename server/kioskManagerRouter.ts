@@ -1,9 +1,9 @@
-import { router, protectedProcedure, publicProcedure } from './_core/trpc';
 import { TRPCError } from '@trpc/server';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
-import { locations, kioskLocations } from '../drizzle/schema';
+import { locations, kioskLocations, kiosks } from '../drizzle/schema';
 import { getDb } from './db';
+import { router, protectedProcedure, publicProcedure, orgScopedProcedure } from './_core/trpc';
 
 // Default kiosk settings
 const DEFAULT_SETTINGS = {
@@ -114,20 +114,22 @@ export const kioskManagerRouter = router({
   /**
    * Get all locations for the organization (original method)
    */
-  getLocations: protectedProcedure
+  getLocations: orgScopedProcedure
     .query(async ({ ctx }) => {
-      if (!ctx.db || !ctx.organizationId) {
+      console.log('[getLocations] START - orgId:', ctx.currentOrganizationId);
+      if (!ctx.db || !ctx.currentOrganizationId) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Database or organization context not available',
         });
       }
 
+        console.log('[getLocations] Querying locations...');
       try {
         const result = await ctx.db
           .select()
           .from(locations)
-          .where(eq(locations.organizationId, ctx.organizationId));
+          .where(eq(locations.organizationId, ctx.currentOrganizationId));
 
         return result.map(loc => ({
           id: loc.id,
@@ -687,6 +689,262 @@ export const kioskManagerRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to archive location',
+        });
+      }
+    }),
+
+  /**
+   * List all kiosks for a location
+   */
+  listKiosksByLocation: orgScopedProcedure
+    .input(z.object({ locationId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db || !ctx.currentOrganizationId) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database or organization context not available',
+        });
+      }
+
+      try {
+        const result = await ctx.db
+          .select()
+          .from(kiosks)
+          .where(
+            and(
+              eq(kiosks.organizationId, ctx.currentOrganizationId),
+              eq(kiosks.locationId, input.locationId)
+            )
+          );
+
+        return result.map(k => ({
+          id: k.id,
+          name: k.name,
+          slug: k.slug,
+          isActive: k.isActive,
+          config: k.config ? JSON.parse(k.config) : null,
+          createdAt: k.createdAt,
+          updatedAt: k.updatedAt,
+        }));
+      } catch (error) {
+        console.error('Error listing kiosks:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to list kiosks',
+        });
+      }
+    }),
+
+  /**
+   * Create a new kiosk
+   */
+  createKiosk: orgScopedProcedure
+    .input(
+      z.object({
+        locationId: z.number(),
+        name: z.string().min(1, 'Kiosk name is required'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db || !ctx.currentOrganizationId) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database or organization context not available',
+        });
+      }
+
+      try {
+        const slug = input.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+        const result = await ctx.db
+          .insert(kiosks)
+          .values({
+            organizationId: ctx.organizationId,
+            locationId: input.locationId,
+            name: input.name,
+            slug: slug,
+            isActive: 1,
+            config: JSON.stringify(DEFAULT_SETTINGS),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+
+        return {
+          id: result[0],
+          name: input.name,
+          slug: slug,
+          isActive: 1,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        console.error('Error creating kiosk:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create kiosk',
+        });
+      }
+    }),
+
+  /**
+   * Update kiosk name or config
+   */
+  updateKiosk: orgScopedProcedure
+    .input(
+      z.object({
+        kioskId: z.number(),
+        name: z.string().optional(),
+        config: z.record(z.any()).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db || !ctx.organizationId) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database or organization context not available',
+        });
+      }
+
+      try {
+        const updateData: any = { updatedAt: new Date().toISOString() };
+
+        if (input.name) {
+          updateData.name = input.name;
+          updateData.slug = input.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        }
+
+        if (input.config) {
+          updateData.config = JSON.stringify(input.config);
+        }
+
+        await ctx.db
+          .update(kiosks)
+          .set(updateData)
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          );
+
+        return { success: true, message: 'Kiosk updated' };
+      } catch (error) {
+        console.error('Error updating kiosk:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update kiosk',
+        });
+      }
+    }),
+
+  /**
+   * Delete a kiosk
+   */
+  deleteKiosk: orgScopedProcedure
+    .input(z.object({ kioskId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db || !ctx.organizationId) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database or organization context not available',
+        });
+      }
+
+      try {
+        const result = await ctx.db
+          .delete(kiosks)
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          );
+
+        if (result.rowsAffected === 0) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not found',
+          });
+        }
+
+        return { success: true, message: 'Kiosk deleted' };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error('Error deleting kiosk:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete kiosk',
+        });
+      }
+    }),
+
+  /**
+   * Duplicate a kiosk with all its settings
+   */
+  duplicateKiosk: orgScopedProcedure
+    .input(
+      z.object({
+        kioskId: z.number(),
+        name: z.string().min(1, 'Kiosk name is required'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.db || !ctx.currentOrganizationId) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database or organization context not available',
+        });
+      }
+
+      try {
+        const source = await ctx.db
+          .select()
+          .from(kiosks)
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.organizationId)
+            )
+          )
+          .limit(1);
+
+        if (source.length === 0) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not found',
+          });
+        }
+
+        const sourceKiosk = source[0];
+        const slug = input.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+        const result = await ctx.db
+          .insert(kiosks)
+          .values({
+            organizationId: ctx.organizationId,
+            locationId: sourceKiosk.locationId,
+            name: input.name,
+            slug: slug,
+            isActive: 1,
+            config: sourceKiosk.config,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+
+        return {
+          id: result[0],
+          name: input.name,
+          slug: slug,
+          isActive: 1,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error('Error duplicating kiosk:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to duplicate kiosk',
         });
       }
     }),

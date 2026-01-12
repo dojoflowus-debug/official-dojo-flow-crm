@@ -4,9 +4,11 @@ import {
   organizationSubscriptions,
   aiCreditBalance,
   aiCreditTransactions,
-  type SubscriptionPlan,
-  type OrganizationSubscription,
 } from "../drizzle/schema";
+import { InferSelectModel } from "drizzle-orm";
+
+type SubscriptionPlan = InferSelectModel<typeof subscriptionPlans>;
+type OrganizationSubscription = InferSelectModel<typeof organizationSubscriptions>;
 // TODO: These types don't exist in schema
 type AiCreditBalance = any;
 type AiCreditTransaction = any;

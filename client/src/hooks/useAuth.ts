@@ -50,23 +50,32 @@ export function useAuth() {
   );
 
   useEffect(() => {
-    if (!userLoading && !settingsLoading) {
-      if (currentUser) {
-        setUser({
-          id: currentUser.id,
-          openId: currentUser.openId,
-          name: currentUser.name,
-          email: currentUser.email,
-          role: currentUser.role,
-          setupCompleted: dojoSettings?.setupCompleted === 1,
-          photoUrl: currentUser.photoUrl,
-          photoUrlSmall: currentUser.photoUrlSmall,
-        });
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
+    // If user query is still loading, don't proceed
+    if (userLoading) {
+      return;
     }
+    
+    // If user is authenticated, wait for settings to load
+    if (currentUser && settingsLoading) {
+      return;
+    }
+    
+    // User is authenticated and settings loaded, or user is not authenticated
+    if (currentUser) {
+      setUser({
+        id: currentUser.id,
+        openId: currentUser.openId,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
+        setupCompleted: dojoSettings?.setupCompleted === 1,
+        photoUrl: currentUser.photoUrl,
+        photoUrlSmall: currentUser.photoUrlSmall,
+      });
+    } else {
+      setUser(null);
+    }
+    setIsLoading(false);
   }, [currentUser, dojoSettings, userLoading, settingsLoading]);
 
   const logout = async () => {

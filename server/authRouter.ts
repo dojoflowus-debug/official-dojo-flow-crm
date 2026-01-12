@@ -1,4 +1,4 @@
-import { router, protectedProcedure } from "./_core/trpc";
+import { router, protectedProcedure, publicProcedure } from "./_core/trpc";
 import { getUserByOpenId, getDb } from "./db";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -17,7 +17,8 @@ export const authRouter = router({
    * Get current authenticated user
    * Returns user profile with role information
    */
-  getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+  getCurrentUser: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.user) return null;
     const user = await getUserByOpenId(ctx.user.openId);
     
     if (!user) {

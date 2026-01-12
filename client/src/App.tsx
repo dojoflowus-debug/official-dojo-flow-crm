@@ -175,8 +175,8 @@ function Router() {
       <Route path="/test-brand" element={<TestBrand />} />
       
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
-      {/* Kiosk Manager Dashboard */}
-      <Route path="/kiosk" element={<KioskManager />} />
+      {/* Kiosk Studio Builder - New Location/Kiosk Management */}
+      <Route path="/kiosk" element={<ProtectedRoute requireSetup={false}><KioskStudioBuilder2 /></ProtectedRoute>} />
       <Route path="/kiosk-manager" element={<KioskManager />} />
       
       {/* Kiosk Runtime - Tablet Interface */}

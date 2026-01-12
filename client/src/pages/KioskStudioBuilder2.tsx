@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Save, Zap, RotateCcw, Palette, Type, Layout, FileText, Zap as Zap2, MoreVertical } from 'lucide-react';
+import { Save, Zap, RotateCcw, Palette, Type, Layout, FileText, Zap as Zap2, MoreVertical, Plus } from 'lucide-react';
 import ConfirmationModal from '@/components/kiosk/ConfirmationModal';
 
 interface KioskAppearance {
@@ -51,10 +51,24 @@ interface KioskAppearance {
   };
 }
 
-interface KioskLocation {
+interface Location {
   id: number;
   name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   isActive: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Kiosk {
+  id: number;
+  name: string;
+  slug: string;
+  isActive: number;
+  config: KioskAppearance | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,7 +114,8 @@ const DEFAULT_APPEARANCE: KioskAppearance = {
 };
 
 export default function KioskStudioBuilder2() {
-  const { locationId } = useParams<{ locationId: string }>();
+  console.log('[KioskStudioBuilder2] Component mounted');
+  const { locationId: paramLocationId } = useParams<{ locationId: string }>();
   const [activeTab, setActiveTab] = useState<'appearance' | 'typography' | 'layout' | 'content' | 'behavior'>('appearance');
   const [draft, setDraft] = useState<KioskAppearance>(DEFAULT_APPEARANCE);
   const [isSaving, setIsSaving] = useState(false);
@@ -108,12 +123,15 @@ export default function KioskStudioBuilder2() {
   const [editorWidth, setEditorWidth] = useState(600);
   const [isResizing, setIsResizing] = useState(false);
   const [isPreviewFocus, setIsPreviewFocus] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
-  const [locations, setLocations] = useState<KioskLocation[]>([]);
+  
+  // Location and kiosk state
+  const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
-  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; locationId?: number }>({ isOpen: false });
+  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
+  const [selectedKioskId, setSelectedKioskId] = useState<number | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; kioskId?: number }>({ isOpen: false });
+  
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -121,34 +139,97 @@ export default function KioskStudioBuilder2() {
   const MIN_PREVIEW_WIDTH = 360;
   const LOCATIONS_WIDTH = 280;
   const ICON_RAIL_WIDTH = 60;
-  const locId = locationId ? parseInt(locationId) : 0;
 
-  const { data: fetchedLocations, refetch: refetchLocations } = trpc.kioskManager.getKioskLocations.useQuery();
-  const { data: settingsData, isLoading: isSettingsLoading } = trpc.kioskStudio.getSettings.useQuery(
-    { locationId: selectedLocationId || locId || 0 },
-    { enabled: !!(selectedLocationId || locId) }
+  // Fetch locations for the organization
+  const { data: locationsData, isLoading: locationsLoading, error: locationsError, refetch: refetchLocations } = trpc.kioskManager.getLocations.useQuery(
+    undefined,
+    {
+      retry: 1,
+      retryDelay: 1000,
+    }
+  );
+  
+  // Fetch kiosks for the selected location
+  const { data: kiosksList, isLoading: kioskLoading, refetch: refetchKiosks } = trpc.kioskManager.listKiosksByLocation.useQuery(
+    { locationId: selectedLocationId || 0 },
+    { enabled: !!(selectedLocationId) }
   );
 
-  useEffect(() => {
-    if (settingsData?.draft) {
-      setDraft(settingsData.draft);
-    }
-  }, [settingsData]);
+  // Mutations
+  const createKioskMutation = trpc.kioskManager.createKiosk.useMutation({
+    onSuccess: (data) => {
+      refetchKiosks();
+      setSelectedKioskId(data.id);
+      toast.success('Kiosk created');
+    },
+    onError: (error) => toast.error('Error', { description: error.message }),
+  });
 
+  const updateKioskMutation = trpc.kioskManager.updateKiosk.useMutation({
+    onSuccess: () => {
+      refetchKiosks();
+      toast.success('Kiosk updated');
+    },
+    onError: (error) => toast.error('Error', { description: error.message }),
+  });
+
+  const deleteKioskMutation = trpc.kioskManager.deleteKiosk.useMutation({
+    onSuccess: () => {
+      refetchKiosks();
+      setSelectedKioskId(null);
+      toast.success('Kiosk deleted');
+      setConfirmModal({ isOpen: false });
+    },
+    onError: (error) => toast.error('Error', { description: error.message }),
+  });
+
+  const duplicateKioskMutation = trpc.kioskManager.duplicateKiosk.useMutation({
+    onSuccess: (data) => {
+      refetchKiosks();
+      setSelectedKioskId(data.id);
+      toast.success('Kiosk duplicated');
+      setMenuOpen(null);
+    },
+    onError: (error) => toast.error('Error', { description: error.message }),
+  });
+
+  // Initialize locations
   useEffect(() => {
-    if (fetchedLocations) {
-      setLocations(fetchedLocations as KioskLocation[]);
-      if (!selectedLocationId && fetchedLocations.length > 0) {
-        setSelectedLocationId(fetchedLocations[0].id);
+    if (locationsData) {
+      setLocations(locationsData as Location[]);
+      if (!selectedLocationId && locationsData.length > 0) {
+        const defaultLoc = paramLocationId ? parseInt(paramLocationId) : locationsData[0].id;
+        setSelectedLocationId(defaultLoc);
       }
     }
-  }, [fetchedLocations, selectedLocationId]);
+  }, [locationsData, selectedLocationId, paramLocationId]);
 
+  // Initialize kiosks and select first one
+  useEffect(() => {
+    if (kiosksList) {
+      setKiosks(kiosksList as Kiosk[]);
+      if (!selectedKioskId && kiosksList.length > 0) {
+        setSelectedKioskId(kiosksList[0].id);
+        setDraft(kiosksList[0].config || DEFAULT_APPEARANCE);
+      }
+    }
+  }, [kiosksList, selectedKioskId]);
+
+  // Update draft when selected kiosk changes
+  useEffect(() => {
+    const kiosk = kiosks.find(k => k.id === selectedKioskId);
+    if (kiosk) {
+      setDraft(kiosk.config || DEFAULT_APPEARANCE);
+    }
+  }, [selectedKioskId, kiosks]);
+
+  // Restore editor width from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('kioskBuilder.splitRatio');
     if (saved) setEditorWidth(parseInt(saved, 10));
   }, []);
 
+  // Handle resizing
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!containerRef.current) return;
     setIsResizing(true);
@@ -178,62 +259,6 @@ export default function KioskStudioBuilder2() {
     document.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
   };
-
-  const saveDraftMutation = trpc.kioskStudio.saveDraft.useMutation({
-    onSuccess: () => toast.success('Draft saved'),
-    onError: (error) => toast.error('Error', { description: error.message }),
-  });
-
-  const publishMutation = trpc.kioskStudio.publish.useMutation({
-    onSuccess: (data) => {
-      toast.success('Published', { description: `Version ${data.version} is now live` });
-      setPreviewKey(prev => prev + 1);
-    },
-    onError: (error) => toast.error('Error', { description: error.message }),
-  });
-
-  const resetMutation = trpc.kioskStudio.resetToDefault.useMutation({
-    onSuccess: (data) => {
-      setDraft(data.appearance);
-      toast.success('Reset');
-    },
-    onError: (error) => toast.error('Error', { description: error.message }),
-  });
-
-  const renameLocationMutation = trpc.kioskManager.renameLocation.useMutation({
-    onSuccess: () => {
-      refetchLocations();
-      toast.success('Location renamed');
-      setMenuOpen(null);
-    },
-    onError: (error) => toast.error('Failed to rename', { description: error.message }),
-  });
-
-  const duplicateLocationMutation = trpc.kioskManager.duplicateLocation.useMutation({
-    onSuccess: (newLocation) => {
-      refetchLocations();
-      setSelectedLocationId(newLocation.id);
-      toast.success('Location duplicated');
-      setMenuOpen(null);
-    },
-    onError: (error) => toast.error('Failed to duplicate', { description: error.message }),
-  });
-
-  const archiveLocationMutation = trpc.kioskManager.archiveLocation.useMutation({
-    onSuccess: () => {
-      refetchLocations();
-      if (selectedLocationId === confirmModal.locationId) {
-        const nextActive = locations.find(l => l.isActive === 1 && l.id !== confirmModal.locationId);
-        setSelectedLocationId(nextActive?.id || null);
-      }
-      toast.success('Location archived');
-      setConfirmModal({ isOpen: false });
-    },
-    onError: (error) => {
-      toast.error('Failed to archive', { description: error.message });
-      setConfirmModal({ isOpen: false });
-    },
-  });
 
   const sendPreviewUpdate = (appearance: KioskAppearance) => {
     if (previewFrameRef.current?.contentWindow) {
@@ -284,72 +309,53 @@ export default function KioskStudioBuilder2() {
   };
 
   const handleSaveDraft = async () => {
-    if (!draft || !selectedLocationId) return;
+    if (!draft || !selectedKioskId) return;
     setIsSaving(true);
     try {
-      await saveDraftMutation.mutateAsync({ locationId: selectedLocationId, appearance: draft });
+      await updateKioskMutation.mutateAsync({ kioskId: selectedKioskId, config: draft });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handlePublish = async () => {
-    if (!draft || !selectedLocationId) return;
-    setIsSaving(true);
-    try {
-      await saveDraftMutation.mutateAsync({ locationId: selectedLocationId, appearance: draft });
-      await publishMutation.mutateAsync({ locationId: selectedLocationId });
-    } finally {
-      setIsSaving(false);
+  const handleCreateKiosk = () => {
+    if (!selectedLocationId) return;
+    const name = prompt('Kiosk name:', 'New Kiosk');
+    if (name && name.trim()) {
+      createKioskMutation.mutate({ locationId: selectedLocationId, name: name.trim() });
     }
   };
 
-  const handleReset = () => {
-    if (confirm('Reset all settings to default?')) {
-      resetMutation.mutate({ locationId: selectedLocationId || locId });
-    }
-  };
-
-  const handleRename = (locationId: number) => {
-    const location = locations.find(l => l.id === locationId);
-    if (!location) return;
-    const newName = prompt('New location name:', location.name);
+  const handleRenameKiosk = (kioskId: number) => {
+    const kiosk = kiosks.find(k => k.id === kioskId);
+    if (!kiosk) return;
+    const newName = prompt('New kiosk name:', kiosk.name);
     if (newName && newName.trim()) {
-      renameLocationMutation.mutate({ locationId, name: newName.trim() });
+      updateKioskMutation.mutate({ kioskId, name: newName.trim() });
     }
   };
 
-  const handleDuplicate = (locationId: number) => {
-    const location = locations.find(l => l.id === locationId);
-    if (!location) return;
-    const newName = prompt('New location name:', `${location.name} (Copy)`);
+  const handleDuplicateKiosk = (kioskId: number) => {
+    const kiosk = kiosks.find(k => k.id === kioskId);
+    if (!kiosk) return;
+    const newName = prompt('New kiosk name:', `${kiosk.name} (Copy)`);
     if (newName && newName.trim()) {
-      duplicateLocationMutation.mutate({ locationId, name: newName.trim() });
+      duplicateKioskMutation.mutate({ kioskId, name: newName.trim() });
     }
   };
 
-  const handleArchiveClick = (locationId: number) => {
-    const activeCount = locations.filter(l => l.isActive === 1).length;
-    if (activeCount === 1) {
-      toast.error('Cannot archive the last location', { description: 'You must have at least one active location' });
-      return;
-    }
-    setConfirmModal({ isOpen: true, locationId });
+  const handleDeleteClick = (kioskId: number) => {
+    setConfirmModal({ isOpen: true, kioskId });
   };
 
-  const handleConfirmArchive = () => {
-    if (confirmModal.locationId) {
-      archiveLocationMutation.mutate({ locationId: confirmModal.locationId });
+  const handleConfirmDelete = () => {
+    if (confirmModal.kioskId) {
+      deleteKioskMutation.mutate({ kioskId: confirmModal.kioskId });
     }
   };
-
-  const filteredLocations = locations.filter(loc => {
-    const isArchived = loc.isActive === 0;
-    const matchesSearch = loc.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch && (showArchived || !isArchived);
-  });
 
   const selectedLocation = locations.find(loc => loc.id === selectedLocationId);
+  const selectedKiosk = kiosks.find(k => k.id === selectedKioskId);
 
   useEffect(() => {
     const handleClickOutside = () => setMenuOpen(null);
@@ -357,44 +363,72 @@ export default function KioskStudioBuilder2() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Show loading only if we're waiting for initial data
-  const isInitializing = isSettingsLoading || !selectedLocationId;
+  const isInitializing = locationsLoading || (selectedLocationId && kioskLoading);
+  const hasNoLocations = locationsData && locationsData.length === 0;
+  
+  if (locationsError) {
+    return <div className="flex items-center justify-center h-screen text-destructive">Error loading locations: {locationsError.message}</div>;
+  }
+  
   if (isInitializing) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+  
+  if (hasNoLocations) {
+    return <div className="flex items-center justify-center h-screen text-muted-foreground">No locations found. Please create a location first.</div>;
+  }
+  
+  if (!selectedLocationId) {
+    return <div className="flex items-center justify-center h-screen text-muted-foreground">Please select a location.</div>;
   }
 
   return (
     <div ref={containerRef} className="flex h-screen bg-background overflow-hidden" style={{ userSelect: isResizing ? 'none' : 'auto', cursor: isResizing ? 'col-resize' : 'auto' }}>
-      {/* Left: Locations List */}
+      {/* Left: Locations & Kiosks */}
       <div className="w-[280px] border-r border-border bg-card flex flex-col overflow-hidden">
         <div className="p-4 border-b border-border space-y-3">
-          <h2 className="text-sm font-semibold">Locations</h2>
-          <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="w-3 h-3" />
-            <span className="text-muted-foreground">Show archived</span>
-          </label>
+          <h2 className="text-sm font-semibold">Location</h2>
+          <Select value={selectedLocationId?.toString()} onValueChange={(v) => setSelectedLocationId(parseInt(v))}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select location" />
+            </SelectTrigger>
+            <SelectContent>
+              {locations.map(loc => (
+                <SelectItem key={loc.id} value={loc.id.toString()}>{loc.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        <div className="p-4 border-b border-border space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Kiosks</h3>
+            <button onClick={handleCreateKiosk} className="p-1 hover:bg-accent rounded-md transition-colors" title="Add kiosk">
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto">
-          {filteredLocations.length === 0 ? (
-            <div className="p-4 text-center text-xs text-muted-foreground">{searchQuery ? 'No locations found' : 'No locations'}</div>
+          {kiosks.length === 0 ? (
+            <div className="p-4 text-center text-xs text-muted-foreground">No kiosks. Create one to start.</div>
           ) : (
             <div className="space-y-1 p-2">
-              {filteredLocations.map((location) => (
-                <div key={location.id} className="relative group">
-                  <button onClick={() => setSelectedLocationId(location.id)} className={`w-full text-left p-2.5 rounded-md text-sm transition-colors ${selectedLocationId === location.id ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-                    <div className="font-medium truncate">{location.name}</div>
-                    <div className="text-xs opacity-60 mt-0.5">{location.isActive === 1 ? '✓ Active' : '○ Archived'}</div>
+              {kiosks.map((kiosk) => (
+                <div key={kiosk.id} className="relative group">
+                  <button onClick={() => setSelectedKioskId(kiosk.id)} className={`w-full text-left p-2.5 rounded-md text-sm transition-colors ${selectedKioskId === kiosk.id ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                    <div className="font-medium truncate">{kiosk.name}</div>
+                    <div className="text-xs opacity-60 mt-0.5">{kiosk.slug}</div>
                   </button>
                   <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === location.id ? null : location.id); }} className="p-1 hover:bg-accent rounded-md">
+                    <button onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === kiosk.id ? null : kiosk.id); }} className="p-1 hover:bg-accent rounded-md">
                       <MoreVertical className="w-4 h-4" />
                     </button>
-                    {menuOpen === location.id && (
+                    {menuOpen === kiosk.id && (
                       <div className="absolute right-0 mt-1 w-40 bg-popover border border-border rounded-md shadow-md z-50" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={(e) => { e.stopPropagation(); handleRename(location.id); }} className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors">Rename</button>
-                        <button onClick={(e) => { e.stopPropagation(); handleDuplicate(location.id); }} className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors">Duplicate</button>
-                        <button onClick={(e) => { e.stopPropagation(); handleArchiveClick(location.id); }} className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 text-destructive transition-colors border-t border-border">{location.isActive === 1 ? 'Archive' : 'Restore'}</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleRenameKiosk(kiosk.id); }} className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors">Rename</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDuplicateKiosk(kiosk.id); }} className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors">Duplicate</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(kiosk.id); }} className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 text-destructive transition-colors border-t border-border">Delete</button>
                       </div>
                     )}
                   </div>
@@ -418,18 +452,14 @@ export default function KioskStudioBuilder2() {
         </div>
       ) : (
         <div style={{ width: `${editorWidth}px` }} className="border-r border-border bg-card flex flex-col overflow-hidden">
-          {selectedLocation ? (
+          {selectedKiosk ? (
             <>
               <div className="p-4 border-b border-border">
-                <h2 className="font-semibold">{selectedLocation.name}</h2>
+                <h2 className="font-semibold">{selectedKiosk.name}</h2>
                 <p className="text-xs text-muted-foreground mt-1">Customize appearance</p>
               </div>
               <div className="p-4 border-b border-border space-y-2">
-                <div className="flex gap-2">
-                  <button onClick={handleSaveDraft} disabled={isSaving} className="flex-1 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />Save</button>
-                  <button onClick={handlePublish} disabled={isSaving} className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"><Zap className="w-4 h-4 inline mr-2" />Publish</button>
-                </div>
-                <button onClick={handleReset} className="w-full px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-muted/80"><RotateCcw className="w-4 h-4 inline mr-2" />Reset</button>
+                <button onClick={handleSaveDraft} disabled={isSaving} className="w-full px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"><Save className="w-4 h-4 inline mr-2" />Save</button>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="h-full">
@@ -475,7 +505,7 @@ export default function KioskStudioBuilder2() {
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">Select a location</div>
+            <div className="flex items-center justify-center h-full text-muted-foreground">Select or create a kiosk</div>
           )}
         </div>
       )}
@@ -498,21 +528,32 @@ export default function KioskStudioBuilder2() {
           <button
             onClick={() => setIsPreviewFocus(!isPreviewFocus)}
             className="px-3 py-1.5 text-sm bg-muted text-muted-foreground rounded-md hover:bg-muted/80 transition-colors"
-            title={isPreviewFocus ? 'Show Editor' : 'Collapse Editor'}
           >
-            {isPreviewFocus ? 'Show Editor' : 'Focus Preview'}
+            {isPreviewFocus ? 'Expand' : 'Focus'}
           </button>
         </div>
-        <div className="flex-1 overflow-hidden flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
-          {selectedLocation ? (
-            <iframe ref={previewFrameRef} src={`/kiosk/${selectedLocation.id}?studioPreview=1&v=${settingsData?.version || 1}&ts=${previewKey}`} className="w-full h-full border-none" title="Kiosk Preview" />
-          ) : (
-            <div className="text-center text-muted-foreground"><p>Select a location to preview</p></div>
-          )}
+        <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+          <iframe
+            key={previewKey}
+            ref={previewFrameRef}
+            src={`/kiosk/${selectedKiosk?.slug || 'preview'}`}
+            className="w-full h-full border border-border rounded-lg shadow-lg"
+            title="Kiosk Preview"
+          />
         </div>
       </div>
 
-      <ConfirmationModal isOpen={confirmModal.isOpen} title="Archive Location" message={`Are you sure you want to archive "${locations.find(l => l.id === confirmModal.locationId)?.name}"? This will disable its kiosk route.`} confirmText="Archive" cancelText="Cancel" isDangerous={true} onConfirm={handleConfirmArchive} onCancel={() => setConfirmModal({ isOpen: false })} />
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title="Delete Kiosk"
+        message="Are you sure you want to delete this kiosk? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmModal({ isOpen: false })}
+        isDangerous
+      />
     </div>
   );
 }
