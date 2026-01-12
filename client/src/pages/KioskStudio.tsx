@@ -52,7 +52,7 @@ export default function KioskStudio() {
 
   // Fetch current kiosk settings
   const { data: settingsData, isLoading: settingsLoading } = trpc.kioskSettings.getSettings.useQuery(
-    { locationSlug: selectedLocation?.toString() || '' },
+    selectedLocation ? { locationSlug: selectedLocation.toString() } : undefined,
     { enabled: !!selectedLocation }
   );
 

@@ -8,9 +8,12 @@ import { KioskConfigSchema } from '../shared/kioskConfigSchema';
 
 export const kioskSettingsRouter = router({
   getSettings: protectedProcedure
-    .input(z.object({ locationSlug: z.string() }))
+    .input(z.object({ locationSlug: z.string().min(1) }).optional())
     .query(async ({ input }) => {
       try {
+        if (!input?.locationSlug) {
+          return { success: false, settings: null, error: 'Location slug is required' };
+        }
         const settings = await getKioskSettingsByLocationSlug(input.locationSlug);
         return { success: true, settings };
       } catch (error) {

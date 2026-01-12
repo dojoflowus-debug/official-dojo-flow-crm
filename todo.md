@@ -2278,3 +2278,12 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - Database: locations and kiosks tables with proper relationships
 - CRUD: All operations working
 - Testing: Created 1 location and 2 kiosks successfully
+
+
+## Bug Fix: TRPC Validation Error on /kiosk-studio
+- [x] Fixed TRPC validation error on /kiosk-studio page
+  - Error: "Invalid input: expected object, received undefined"
+  - Root cause: KioskStudio.tsx was passing empty string for locationSlug when selectedLocation was null
+  - Solution: Updated kioskSettingsRouter.ts to accept optional input and handle undefined gracefully
+  - Updated KioskStudio.tsx to pass undefined instead of empty string when selectedLocation is not set
+  - Page now loads successfully without validation errors
