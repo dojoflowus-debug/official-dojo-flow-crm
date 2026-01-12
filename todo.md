@@ -2334,3 +2334,13 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Disable incomplete features with "Coming soon" tooltips (background controls simplified)
 - [x] Test kiosk display and settings
 - [x] Publish and verify working kiosk
+
+## BUG FIX: Kiosk Studio Save/Publish _zod Error
+- [x] Fix the _zod error in the shared persist pipeline
+  - [x] Verify KioskConfigSchema is properly exported and accessible
+  - [x] Ensure no circular dependencies between kioskConfig and kioskConfigSchema
+  - [x] Fix client-side validation to handle undefined schema
+  - [x] Fix server-side TRPC validation to properly validate input
+  - [x] Ensure DEFAULT_KIOSK_CONFIG is always used as fallback
+  - [x] Add proper error handling and logging to debug validation issues
+  - [x] Implement config validation before sending to server

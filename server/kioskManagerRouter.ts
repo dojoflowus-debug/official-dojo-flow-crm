@@ -806,6 +806,7 @@ export const kioskManagerRouter = router({
       }
 
       try {
+        console.log('[KioskManager] updateKiosk called with input:', { kioskId: input.kioskId, hasConfig: !!input.config });
         const updateData: any = { updatedAt: new Date().toISOString() };
 
         if (input.name) {
@@ -814,7 +815,26 @@ export const kioskManagerRouter = router({
         }
 
         if (input.config) {
-          updateData.config = JSON.stringify(input.config);
+          console.log('[KioskManager] Config keys:', Object.keys(input.config));
+          // Ensure config is not undefined or null
+          if (!input.config || Object.keys(input.config).length === 0) {
+            console.error('[KioskManager] Config is empty or invalid');
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Configuration cannot be empty',
+            });
+          }
+          // Store config as JSON string - ensure it's valid
+          try {
+            updateData.config = JSON.stringify(input.config);
+            console.log('[KioskManager] Config stringified successfully');
+          } catch (e) {
+            console.error('[KioskManager] Failed to stringify config:', e);
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Invalid configuration format',
+            });
+          }
         }
 
         await ctx.db
@@ -829,6 +849,7 @@ export const kioskManagerRouter = router({
 
         return { success: true, message: 'Kiosk updated' };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         console.error('Error updating kiosk:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

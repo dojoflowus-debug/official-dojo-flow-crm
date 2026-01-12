@@ -185,11 +185,11 @@ export default function KioskStudio() {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
-      // Ensure we have a valid config
-      const safeConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
+      // Ensure we have a valid config - use DEFAULT as fallback
+      const payloadConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
       
-      // Validate the config before saving
-      const validationResult = KioskConfigSchema.safeParse(safeConfig);
+      // Validate the config BEFORE sending to server
+      const validationResult = KioskConfigSchema.safeParse(payloadConfig);
       if (!validationResult.success) {
         console.error('[KioskStudio] Config validation failed:', validationResult.error);
         setSaveMessage({ type: 'error', text: '✗ Invalid configuration' });
@@ -198,18 +198,23 @@ export default function KioskStudio() {
         return;
       }
       
-      console.log('[KioskStudio] Saving draft with config:', validationResult.data);
+      // Use validated data only
+      const validatedConfig = validationResult.data;
+      console.log('[KioskStudio] Saving draft with validated config:', validatedConfig);
+      
       await saveDraftMutation.mutateAsync({
         kioskId: selectedKiosk,
-        config: validationResult.data,
+        config: validatedConfig,
       });
-      setLastSavedConfig(draftConfig);
+      
+      setLastSavedConfig(validatedConfig);
       setSaveMessage({ type: 'success', text: '✓ Draft saved' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       console.error('[KioskStudio] Save error:', error);
-      setSaveMessage({ type: 'error', text: '✗ Failed to save draft' });
-      setTimeout(() => setSaveMessage(null), 3000);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setSaveMessage({ type: 'error', text: `✗ Failed to save draft: ${errorMsg}` });
+      setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -219,14 +224,29 @@ export default function KioskStudio() {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
-      // Ensure we have a valid config
-      const safeConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
-      console.log('[KioskStudio] Publishing with config:', safeConfig);
+      // Ensure we have a valid config - use DEFAULT as fallback
+      const payloadConfig = draftConfig ?? DEFAULT_KIOSK_CONFIG;
+      
+      // Validate the config BEFORE sending to server
+      const validationResult = KioskConfigSchema.safeParse(payloadConfig);
+      if (!validationResult.success) {
+        console.error('[KioskStudio] Publish validation failed:', validationResult.error);
+        setSaveMessage({ type: 'error', text: '✗ Invalid configuration' });
+        setTimeout(() => setSaveMessage(null), 3000);
+        setIsSaving(false);
+        return;
+      }
+      
+      // Use validated data only
+      const validatedConfig = validationResult.data;
+      console.log('[KioskStudio] Publishing with validated config:', validatedConfig);
+      
       await publishMutation.mutateAsync({
         kioskId: selectedKiosk,
-        config: safeConfig,
+        config: validatedConfig,
       });
-      setPublishedConfig(draftConfig);
+      
+      setPublishedConfig(validatedConfig);
       setSaveMessage({ type: 'success', text: '✓ Published successfully' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
@@ -237,7 +257,7 @@ export default function KioskStudio() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }
 
   const handleCreateKiosk = async (useDefaultName: boolean = false) => {
     if (!selectedLocation) {

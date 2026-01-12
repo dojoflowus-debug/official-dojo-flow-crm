@@ -335,7 +335,16 @@ export default function KioskStudioBuilder2() {
     if (!draft || !selectedKioskId) return;
     setIsSaving(true);
     try {
+      // Ensure config is not undefined or null
+      if (!draft || Object.keys(draft).length === 0) {
+        toast.error('Configuration is empty');
+        setIsSaving(false);
+        return;
+      }
+      // Send the config as-is (it's already a valid KioskAppearance object)
       await updateKioskMutation.mutateAsync({ kioskId: selectedKioskId, config: draft });
+    } catch (error) {
+      console.error('Save error:', error);
     } finally {
       setIsSaving(false);
     }
@@ -347,9 +356,17 @@ export default function KioskStudioBuilder2() {
     try {
       // First save the draft
       if (selectedKioskId && draft) {
+        // Ensure config is not undefined or null
+        if (!draft || Object.keys(draft).length === 0) {
+          toast.error('Configuration is empty');
+          setIsSaving(false);
+          return;
+        }
         await updateKioskMutation.mutateAsync({ kioskId: selectedKioskId, config: draft });
       }
       toast.success('Configuration published and live');
+    } catch (error) {
+      console.error('Publish error:', error);
     } finally {
       setIsSaving(false);
     }

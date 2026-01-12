@@ -318,6 +318,14 @@ export const kioskDeviceRouter = router({
           });
         }
 
+        // Ensure input.config is not undefined
+        if (!input.config) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Configuration is required',
+          });
+        }
+
         // Validate the input config using safeParse
         const validationResult = KioskConfigSchema.safeParse(input.config);
         if (!validationResult.success) {
@@ -328,12 +336,12 @@ export const kioskDeviceRouter = router({
           });
         }
 
-        // Update draft in config field
+        // Update draft in config field - ensure all values are defined
         const currentConfig = parseKioskConfig(current[0].config);
         const newConfig = {
-          draft: validationResult.data,
+          draft: validationResult.data || DEFAULT_KIOSK_CONFIG,
           published: currentConfig.published || DEFAULT_KIOSK_CONFIG,
-          enabled: currentConfig.enabled,
+          enabled: currentConfig.enabled !== false,
         };
 
         await ctx.db
@@ -420,20 +428,20 @@ export const kioskDeviceRouter = router({
           }
         }
 
-        // Validate the config using safeParse to avoid _zod errors
-        if (configToPublish) {
-          const validationResult = KioskConfigSchema.safeParse(configToPublish);
-          if (!validationResult.success) {
-            console.error('[Kiosk Device] Config validation failed:', validationResult.error);
-            // Use DEFAULT_KIOSK_CONFIG if validation fails
-            configToPublish = DEFAULT_KIOSK_CONFIG;
-          } else {
-            // Use the validated config
-            configToPublish = validationResult.data;
-          }
-        } else {
-          // Ensure we have a valid config, use DEFAULT if needed
+        // Ensure we have a config before validation
+        if (!configToPublish) {
           configToPublish = DEFAULT_KIOSK_CONFIG;
+        }
+
+        // Validate the config using safeParse
+        const validationResult = KioskConfigSchema.safeParse(configToPublish);
+        if (!validationResult.success) {
+          console.error('[Kiosk Device] Config validation failed:', validationResult.error);
+          // Use DEFAULT_KIOSK_CONFIG if validation fails
+          configToPublish = DEFAULT_KIOSK_CONFIG;
+        } else {
+          // Use the validated config
+          configToPublish = validationResult.data;
         }
 
         const now = new Date().toISOString();
