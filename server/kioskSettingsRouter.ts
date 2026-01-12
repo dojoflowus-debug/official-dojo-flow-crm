@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { router, protectedProcedure } from './_core/trpc';
 import { storagePut } from './storage';
 import { getKioskSettingsByLocationSlug, updateKioskBackgroundImage, resetKioskBackground, updateKioskBackgroundEffects, updateLocationKioskTheme, getKioskSettingsByLocationId } from './db';
+import { eq } from 'drizzle-orm';
+import { kiosk_locations } from '../drizzle/schema';
 
 export const kioskSettingsRouter = router({
   getSettings: protectedProcedure
@@ -102,6 +104,94 @@ export const kioskSettingsRouter = router({
       } catch (error) {
         console.error('[Kiosk Settings] Update theme error:', error);
         throw new Error('Failed to update theme');
+      }
+    }),
+
+  /**
+   * Save draft configuration for a kiosk location
+   */
+  saveDraft: protectedProcedure
+    .input(z.object({
+      locationSlug: z.string(),
+      config: z.any(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        if (!ctx.db) throw new Error('Database not available');
+        
+        const locations = await ctx.db
+          .select()
+          .from(kiosk_locations)
+          .where(eq(kiosk_locations.name, input.locationSlug))
+          .limit(1);
+        
+        if (!locations || locations.length === 0) {
+          throw new Error('Location not found');
+        }
+        
+        const location = locations[0];
+        
+        await ctx.db
+          .update(kiosk_locations)
+          .set({
+            kioskAppearanceDraft: JSON.stringify(input.config),
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(kiosk_locations.id, location.id));
+        
+        return {
+          success: true,
+          message: 'Draft saved successfully',
+          draftSavedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        console.error('[Kiosk Settings] Save draft error:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to save draft');
+      }
+    }),
+
+  /**
+   * Publish configuration for a kiosk location
+   */
+  publish: protectedProcedure
+    .input(z.object({
+      locationSlug: z.string(),
+      config: z.any(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        if (!ctx.db) throw new Error('Database not available');
+        
+        const locations = await ctx.db
+          .select()
+          .from(kiosk_locations)
+          .where(eq(kiosk_locations.name, input.locationSlug))
+          .limit(1);
+        
+        if (!locations || locations.length === 0) {
+          throw new Error('Location not found');
+        }
+        
+        const location = locations[0];
+        
+        await ctx.db
+          .update(kiosk_locations)
+          .set({
+            kioskAppearancePublished: JSON.stringify(input.config),
+            kioskAppearanceVersion: (location.kioskAppearanceVersion || 0) + 1,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(kiosk_locations.id, location.id));
+        
+        return {
+          success: true,
+          message: 'Published successfully',
+          publishedAt: new Date().toISOString(),
+          version: (location.kioskAppearanceVersion || 0) + 1,
+        };
+      } catch (error) {
+        console.error('[Kiosk Settings] Publish error:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to publish');
       }
     }),
 });

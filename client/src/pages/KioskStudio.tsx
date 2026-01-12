@@ -1,85 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, Save, Zap } from 'lucide-react';
+import { AlertCircle, Save, Zap, Code } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { KioskTypographyControls } from '@/components/KioskTypographyControls';
 import { KioskBackgroundControls } from '@/components/KioskBackgroundControls';
-
-interface DraftSettings {
-  theme: {
-    mode: string;
-    primaryColor: string;
-    accentColor: string;
-  };
-  appearance: {
-    accentColor: string;
-    headline: string;
-    subtext: string;
-    backgroundImageUrl?: string;
-    backgroundIntensity: number;
-    backgroundBlur: number;
-    fontFamily?: string;
-    titleSize?: number;
-    titleWeight?: number;
-    subtitleSize?: number;
-    letterSpacing?: number;
-    buttonFontSize?: number;
-    backgroundFitMode?: string;
-  };
-  behavior: {
-    showMemberLogin: boolean;
-    showNewStudent: boolean;
-    idleTimeout: number;
-    idleSeconds?: number;
-    autoReturn: boolean;
-    kaiEnrollment: boolean;
-    facialRecognition: boolean;
-  };
-}
-
-const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
-  theme: {
-    mode: 'dark',
-    primaryColor: '#ef4444',
-    accentColor: '#ef4444',
-  },
-  appearance: {
-    accentColor: '#ef4444',
-    headline: 'Welcome',
-    subtext: 'Check in here',
-    backgroundImageUrl: undefined,
-    backgroundIntensity: 0.5,
-    backgroundBlur: 0,
-    fontFamily: 'system',
-    titleSize: 48,
-    titleWeight: 700,
-    subtitleSize: 24,
-    letterSpacing: 0,
-    buttonFontSize: 16,
-    backgroundFitMode: 'cover',
-  },
-  behavior: {
-    showMemberLogin: true,
-    showNewStudent: true,
-    idleTimeout: 60,
-    idleSeconds: 60,
-    autoReturn: true,
-    kaiEnrollment: false,
-    facialRecognition: false,
-  },
-};
+import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
 
 export default function KioskStudio() {
   const { locationId } = useParams<{ locationId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'design' | 'content' | 'behavior' | 'screensaver'>('design');
-  const [draftSettings, setDraftSettings] = useState<DraftSettings>(DEFAULT_DRAFT_SETTINGS);
+  const [draftConfig, setDraftConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
+  const [lastSavedConfig, setLastSavedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
+  const [publishedConfig, setPublishedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [isSaving, setIsSaving] = useState(false);
-  const [previewKey, setPreviewKey] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Fetch locations - using kiosk router for now
+  // Fetch locations
   const { data: locationsData } = trpc.kiosk.listLocations.useQuery();
 
   // Fetch current kiosk settings
@@ -91,7 +31,10 @@ export default function KioskStudio() {
   // Initialize draft settings from fetched data
   useEffect(() => {
     if (settingsData?.settings) {
-      setDraftSettings(settingsData.settings as DraftSettings);
+      const config = settingsData.settings as KioskConfig;
+      setDraftConfig(config);
+      setLastSavedConfig(config);
+      setPublishedConfig(config);
     }
   }, [settingsData]);
 
@@ -113,13 +56,13 @@ export default function KioskStudio() {
   }, [locationId, locationsData]);
 
   // Send draft to iframe preview
-  const sendPreviewUpdate = (settings: DraftSettings) => {
+  const sendPreviewUpdate = (config: KioskConfig) => {
     const previewFrame = document.getElementById('kiosk-preview') as HTMLIFrameElement;
     if (previewFrame?.contentWindow) {
       previewFrame.contentWindow.postMessage(
         {
           type: 'KIOSK_SETTINGS_UPDATE',
-          settings,
+          settings: config,
           timestamp: Date.now(),
         },
         '*'
@@ -127,66 +70,90 @@ export default function KioskStudio() {
     }
   };
 
-  // Handle setting changes
-  const handleAppearanceChange = (key: string, value: any) => {
-    if (!draftSettings) return;
+  // Generic handler for nested config updates
+  const updateConfig = (section: keyof KioskConfig, key: string, value: any) => {
     const updated = {
-      ...draftSettings,
-      appearance: {
-        ...draftSettings.appearance,
+      ...draftConfig,
+      [section]: {
+        ...(draftConfig[section] as any),
         [key]: value,
       },
     };
-    setDraftSettings(updated);
+    setDraftConfig(updated);
     sendPreviewUpdate(updated);
   };
 
-  const handleBehaviorChange = (key: string, value: any) => {
-    if (!draftSettings) return;
-    const updated = {
-      ...draftSettings,
-      behavior: {
-        ...draftSettings.behavior,
-        [key]: value,
-      },
-    };
-    setDraftSettings(updated);
-    sendPreviewUpdate(updated);
+  // Theme updates
+  const handleThemeChange = (key: string, value: any) => updateConfig('theme', key, value);
+
+  // Content updates
+  const handleContentChange = (key: string, value: any) => {
+    if (key.includes('.')) {
+      // Handle nested content like 'tileLeft.title'
+      const [section, field] = key.split('.');
+      const updated = {
+        ...draftConfig,
+        content: {
+          ...draftConfig.content,
+          [section]: {
+            ...(draftConfig.content[section as keyof typeof draftConfig.content] as any),
+            [field]: value,
+          },
+        },
+      };
+      setDraftConfig(updated);
+      sendPreviewUpdate(updated);
+    } else {
+      updateConfig('content', key, value);
+    }
   };
 
-  const handleThemeChange = (key: string, value: any) => {
-    if (!draftSettings) return;
-    const updated = {
-      ...draftSettings,
-      theme: {
-        ...draftSettings.theme,
-        [key]: value,
-      },
-    };
-    setDraftSettings(updated);
-    sendPreviewUpdate(updated);
-  };
+  // Typography updates
+  const handleTypographyChange = (key: string, value: any) => updateConfig('typography', key, value);
 
-  // Save draft to database
+  // Layout updates
+  const handleLayoutChange = (key: string, value: any) => updateConfig('layout', key, value);
+
+  // Background updates
+  const handleBackgroundChange = (key: string, value: any) => updateConfig('background', key, value);
+
+  // Behavior/Screensaver updates
+  const handleScreensaverChange = (key: string, value: any) => updateConfig('screensaver', key, value);
+
   const handleSaveDraft = async () => {
-    if (!draftSettings || !selectedLocation) return;
+    if (!draftConfig || !selectedLocation) return;
     setIsSaving(true);
     try {
-      // TODO: Call TRPC mutation to save draft
-      console.log('Saving draft:', draftSettings);
-      // await trpc.kioskSettings.saveDraft.mutate({ locationSlug: selectedLocation, settings: draftSettings });
+      await trpc.kioskSettings.saveDraft.mutate({
+        locationSlug: selectedLocation,
+        config: draftConfig,
+      });
+      setLastSavedConfig(draftConfig);
+      setSaveMessage({ type: 'success', text: 'Draft saved successfully!' });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('Save draft error:', error);
+      setSaveMessage({ type: 'error', text: 'Failed to save draft' });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!draftSettings || !selectedLocation) return;
+    if (!draftConfig || !selectedLocation) return;
     setIsSaving(true);
     try {
-      // TODO: Call TRPC mutation to publish
-      console.log('Publishing:', draftSettings);
-      // await trpc.kioskSettings.publish.mutate({ locationSlug: selectedLocation, settings: draftSettings });
+      await trpc.kioskSettings.publish.mutate({
+        locationSlug: selectedLocation,
+        config: draftConfig,
+      });
+      setPublishedConfig(draftConfig);
+      setLastSavedConfig(draftConfig);
+      setSaveMessage({ type: 'success', text: 'Published successfully!' });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('Publish error:', error);
+      setSaveMessage({ type: 'error', text: 'Failed to publish' });
     } finally {
       setIsSaving(false);
     }
@@ -207,8 +174,10 @@ export default function KioskStudio() {
   }
 
   const previewUrl = selectedLocation
-    ? `/kiosk/${selectedLocation}?studioPreview=1&ts=${previewKey}`
+    ? `/kiosk/${selectedLocation}?studioPreview=1&ts=${Date.now()}`
     : '';
+
+  const hasUnsavedChanges = JSON.stringify(draftConfig) !== JSON.stringify(lastSavedConfig);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -219,8 +188,23 @@ export default function KioskStudio() {
             <div>
               <h1 className="text-2xl font-bold">Kiosk Studio</h1>
               <p className="text-sm text-slate-400">Configure kiosk appearance and behavior</p>
+              {hasUnsavedChanges && <p className="text-xs text-yellow-400 mt-1">● Unsaved changes</p>}
             </div>
             <div className="flex gap-3">
+              {saveMessage && (
+                <div className={`px-3 py-2 rounded-lg text-sm ${
+                  saveMessage.type === 'success' ? 'bg-green-900/30 text-green-300' : 'bg-red-900/30 text-red-300'
+                }`}>
+                  {saveMessage.text}
+                </div>
+              )}
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
+                title="Toggle debug panel"
+              >
+                <Code className="w-4 h-4" />
+              </button>
               <button
                 onClick={handleSaveDraft}
                 disabled={isSaving}
@@ -290,33 +274,55 @@ export default function KioskStudio() {
 
           {/* Tab Content */}
           <div className="p-6 space-y-6">
-            {activeTab === 'design' && draftSettings && (
+            {activeTab === 'design' && (
               <div className="space-y-6">
+                {/* Accent Color */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Accent Color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={draftConfig.theme.accentColor}
+                      onChange={(e) => handleThemeChange('accentColor', e.target.value)}
+                      className="w-12 h-10 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={draftConfig.theme.accentColor}
+                      onChange={(e) => handleThemeChange('accentColor', e.target.value)}
+                      className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Typography Section */}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Typography</h3>
                   <KioskTypographyControls
-                    settings={draftSettings.appearance}
-                    onChange={handleAppearanceChange}
+                    settings={draftConfig.typography}
+                    onChange={handleTypographyChange}
                   />
                 </div>
+
+                {/* Background Section */}
                 <div className="border-t border-slate-700 pt-6">
                   <h3 className="text-lg font-semibold mb-4">Background</h3>
                   <KioskBackgroundControls
-                    settings={draftSettings.appearance}
-                    onChange={handleAppearanceChange}
+                    settings={draftConfig.background}
+                    onChange={handleBackgroundChange}
                   />
                 </div>
               </div>
             )}
 
-            {activeTab === 'content' && draftSettings && (
+            {activeTab === 'content' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Headline</label>
                   <input
                     type="text"
-                    value={draftSettings.appearance.headline || 'Welcome'}
-                    onChange={(e) => handleAppearanceChange('headline', e.target.value)}
+                    value={draftConfig.content.headline}
+                    onChange={(e) => handleContentChange('headline', e.target.value)}
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
                   />
                 </div>
@@ -324,31 +330,127 @@ export default function KioskStudio() {
                   <label className="block text-sm font-medium mb-2">Subtext</label>
                   <input
                     type="text"
-                    value={draftSettings.appearance.subtext || 'Check in here'}
-                    onChange={(e) => handleAppearanceChange('subtext', e.target.value)}
+                    value={draftConfig.content.subtext}
+                    onChange={(e) => handleContentChange('subtext', e.target.value)}
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
                   />
+                </div>
+
+                {/* Left Tile */}
+                <div className="border-t border-slate-700 pt-4 mt-4">
+                  <h4 className="font-medium mb-3">Left Tile (Check In)</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Title</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileLeft.title}
+                        onChange={(e) => handleContentChange('tileLeft.title', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Subtitle</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileLeft.subtitle}
+                        onChange={(e) => handleContentChange('tileLeft.subtitle', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Button Label</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileLeft.button}
+                        onChange={(e) => handleContentChange('tileLeft.button', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Tile */}
+                <div className="border-t border-slate-700 pt-4 mt-4">
+                  <h4 className="font-medium mb-3">Right Tile (Start Training)</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Title</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileRight.title}
+                        onChange={(e) => handleContentChange('tileRight.title', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Subtitle</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileRight.subtitle}
+                        onChange={(e) => handleContentChange('tileRight.subtitle', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Button Label</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.tileRight.button}
+                        onChange={(e) => handleContentChange('tileRight.button', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Labels */}
+                <div className="border-t border-slate-700 pt-4 mt-4">
+                  <h4 className="font-medium mb-3">Info Bar Labels</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Left Label</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.infoLeftLabel}
+                        onChange={(e) => handleContentChange('infoLeftLabel', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Right Label</label>
+                      <input
+                        type="text"
+                        value={draftConfig.content.infoRightLabel}
+                        onChange={(e) => handleContentChange('infoRightLabel', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {activeTab === 'behavior' && draftSettings && (
+            {activeTab === 'behavior' && (
               <BehaviorControls
-                settings={draftSettings.behavior}
-                onChange={handleBehaviorChange}
+                layout={draftConfig.layout}
+                screensaver={draftConfig.screensaver}
+                onLayoutChange={handleLayoutChange}
+                onScreensaverChange={handleScreensaverChange}
               />
             )}
 
             {activeTab === 'screensaver' && (
-              <div className="text-sm text-slate-400">
-                <p>Screensaver settings coming soon.</p>
-              </div>
+              <ScreensaverControls
+                screensaver={draftConfig.screensaver}
+                onChange={handleScreensaverChange}
+              />
             )}
           </div>
         </div>
 
         {/* Right Panel - Preview */}
-        <div className="flex-1 bg-slate-950 flex flex-col">
+        <div className="flex-1 bg-slate-950 flex flex-col relative">
           <div className="flex-1 border border-slate-800 m-6 rounded-lg overflow-hidden bg-white">
             {previewUrl && (
               <iframe
@@ -359,78 +461,164 @@ export default function KioskStudio() {
               />
             )}
           </div>
+
+          {/* Debug Panel */}
+          {showDebugPanel && (
+            <div className="absolute bottom-0 right-0 w-96 max-h-96 bg-slate-900 border-l border-t border-slate-700 rounded-tl-lg p-4 overflow-y-auto text-xs font-mono">
+              <div className="space-y-2">
+                <div className="text-slate-400">
+                  <div className="font-bold text-slate-300 mb-2">Current Config:</div>
+                  <pre className="bg-slate-950 p-2 rounded overflow-x-auto text-xs">
+                    {JSON.stringify(draftConfig, null, 2)}
+                  </pre>
+                </div>
+                <div className="text-slate-400 border-t border-slate-700 pt-2">
+                  <div className="font-bold text-slate-300 mb-2">State:</div>
+                  <div>Location: {selectedLocation || 'none'}</div>
+                  <div>Has Unsaved: {hasUnsavedChanges ? 'yes' : 'no'}</div>
+                  <div>Last Saved: {lastSavedConfig ? 'loaded' : 'none'}</div>
+                  <div>Published: {publishedConfig ? 'loaded' : 'none'}</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-
-
 // Behavior Controls Component
 function BehaviorControls({
-  settings,
+  layout,
+  screensaver,
+  onLayoutChange,
+  onScreensaverChange,
+}: {
+  layout: KioskConfig['layout'];
+  screensaver: KioskConfig['screensaver'];
+  onLayoutChange: (key: string, value: any) => void;
+  onScreensaverChange: (key: string, value: any) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Display Options</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Show Clock</label>
+            <input
+              type="checkbox"
+              checked={layout.showClock}
+              onChange={(e) => onLayoutChange('showClock', e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Show Info Bar</label>
+            <input
+              type="checkbox"
+              checked={layout.showInfoBar}
+              onChange={(e) => onLayoutChange('showInfoBar', e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-700 pt-6">
+        <h3 className="text-lg font-semibold mb-4">Screensaver</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Enable Screensaver</label>
+            <input
+              type="checkbox"
+              checked={screensaver.enabled}
+              onChange={(e) => onScreensaverChange('enabled', e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Idle Timeout (seconds)</label>
+            <input
+              type="number"
+              min="10"
+              max="300"
+              value={screensaver.idleSeconds}
+              onChange={(e) => onScreensaverChange('idleSeconds', parseInt(e.target.value))}
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Show Logo</label>
+            <input
+              type="checkbox"
+              checked={screensaver.showLogo}
+              onChange={(e) => onScreensaverChange('showLogo', e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Message</label>
+            <input
+              type="text"
+              value={screensaver.message}
+              onChange={(e) => onScreensaverChange('message', e.target.value)}
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Screensaver Controls Component
+function ScreensaverControls({
+  screensaver,
   onChange,
 }: {
-  settings: any;
+  screensaver: KioskConfig['screensaver'];
   onChange: (key: string, value: any) => void;
 }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Show Member Login</label>
+        <label className="text-sm font-medium">Enable Screensaver</label>
         <input
           type="checkbox"
-          checked={settings.showMemberLogin ?? true}
-          onChange={(e) => onChange('showMemberLogin', e.target.checked)}
+          checked={screensaver.enabled}
+          onChange={(e) => onChange('enabled', e.target.checked)}
           className="w-4 h-4 rounded"
         />
       </div>
-
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Show New Student</label>
-        <input
-          type="checkbox"
-          checked={settings.showNewStudent ?? true}
-          onChange={(e) => onChange('showNewStudent', e.target.checked)}
-          className="w-4 h-4 rounded"
-        />
-      </div>
-
       <div>
         <label className="block text-sm font-medium mb-2">Idle Timeout (seconds)</label>
         <input
           type="number"
           min="10"
           max="300"
-          value={settings.idleTimeout || settings.idleSeconds || 60}
-          onChange={(e) => {
-            const val = parseInt(e.target.value);
-            onChange('idleTimeout', val);
-            onChange('idleSeconds', val);
-          }}
+          value={screensaver.idleSeconds}
+          onChange={(e) => onChange('idleSeconds', parseInt(e.target.value))}
           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
         />
-        <p className="text-xs text-slate-500 mt-1">Time before screensaver appears</p>
       </div>
-
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Auto Return</label>
+        <label className="text-sm font-medium">Show Logo</label>
         <input
           type="checkbox"
-          checked={settings.autoReturn ?? true}
-          onChange={(e) => onChange('autoReturn', e.target.checked)}
+          checked={screensaver.showLogo}
+          onChange={(e) => onChange('showLogo', e.target.checked)}
           className="w-4 h-4 rounded"
         />
       </div>
-
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Kai Enrollment</label>
+      <div>
+        <label className="block text-sm font-medium mb-2">Message</label>
         <input
-          type="checkbox"
-          checked={settings.kaiEnrollment ?? false}
-          onChange={(e) => onChange('kaiEnrollment', e.target.checked)}
-          className="w-4 h-4 rounded"
+          type="text"
+          value={screensaver.message}
+          onChange={(e) => onChange('message', e.target.value)}
+          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
         />
       </div>
     </div>

@@ -1,28 +1,9 @@
 import { useState } from 'react';
 import { Upload, X } from 'lucide-react';
-
-/**
- * KioskBackgroundControls - Background appearance settings for kiosk
- * 
- * Provides controls for:
- * - Preset gallery selector
- * - Custom image upload
- * - Solid background color picker
- * - Dim/blur sliders
- * - Background fit mode
- */
-
-interface BackgroundSettings {
-  backgroundImageUrl?: string;
-  presetKey?: string;
-  backgroundColor?: string;
-  backgroundIntensity?: number;
-  backgroundBlur?: number;
-  backgroundFitMode?: string;
-}
+import { KioskConfig } from '../../../shared/kioskConfig';
 
 interface KioskBackgroundControlsProps {
-  settings: BackgroundSettings;
+  settings: KioskConfig['background'];
   onChange: (key: string, value: any) => void;
 }
 
@@ -37,24 +18,22 @@ export function KioskBackgroundControls({
   settings,
   onChange,
 }: KioskBackgroundControlsProps) {
-  // Provide default values if settings is undefined
   const safeSettings = settings || {
-    backgroundImageUrl: undefined,
-    presetKey: undefined,
-    backgroundColor: undefined,
-    backgroundIntensity: 0.5,
-    backgroundBlur: 0,
-    backgroundFitMode: 'cover',
+    type: 'solid',
+    color: '#ffffff',
+    presetKey: null,
+    customUrl: null,
+    blur: 0,
+    dim: 0,
+    fit: 'cover',
   };
 
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       alert('Please upload a JPEG, PNG, or WebP image');
@@ -68,14 +47,11 @@ export function KioskBackgroundControls({
 
     setIsUploading(true);
     try {
-      // Read file as base64
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64 = event.target?.result as string;
-        
-        // TODO: Call TRPC mutation to upload
-        // For now, just set the data URL
-        onChange('backgroundImageUrl', base64);
+        onChange('type', 'custom');
+        onChange('customUrl', base64);
         onChange('presetKey', null);
       };
       reader.readAsDataURL(file);
@@ -94,13 +70,14 @@ export function KioskBackgroundControls({
             <button
               key={preset.key}
               onClick={() => {
-                onChange('presetKey', preset.key);
-                onChange('backgroundImageUrl', undefined);
+                onChange('type', preset.key === 'none' ? 'solid' : 'preset');
+                onChange('presetKey', preset.key === 'none' ? null : preset.key);
+                onChange('customUrl', null);
               }}
               className={`p-3 rounded-lg border-2 transition-all text-left ${
-                safeSettings.presetKey === preset.key
+                (preset.key === 'none' && safeSettings.type === 'solid') || safeSettings.presetKey === preset.key
                   ? 'border-red-500 bg-red-500/10'
-                  : 'border-slate-700 hover:border-slate-600'
+                  : 'border-slate-700 bg-slate-800 hover:border-slate-600'
               }`}
             >
               <div className="text-sm font-medium">{preset.name}</div>
@@ -148,17 +125,20 @@ export function KioskBackgroundControls({
             )}
           </label>
         </div>
-        {safeSettings.backgroundImageUrl && (
+        {safeSettings.customUrl && (
           <div className="mt-3 flex items-center gap-2">
             <div
               className="w-12 h-12 rounded bg-cover bg-center"
-              style={{ backgroundImage: `url(${safeSettings.backgroundImageUrl})` }}
+              style={{ backgroundImage: `url(${safeSettings.customUrl})` }}
             />
             <div className="flex-1">
               <div className="text-xs text-slate-400">Custom background uploaded</div>
             </div>
             <button
-              onClick={() => onChange('backgroundImageUrl', undefined)}
+              onClick={() => {
+                onChange('type', 'solid');
+                onChange('customUrl', null);
+              }}
               className="p-1 hover:bg-slate-800 rounded"
             >
               <X className="w-4 h-4" />
@@ -167,74 +147,75 @@ export function KioskBackgroundControls({
         )}
       </div>
 
-      {/* Background Intensity (Dim) */}
+      {/* Solid Color */}
       <div>
-        <label className="block text-sm font-medium mb-2">Background Intensity</label>
-        <div className="flex gap-2">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={safeSettings.backgroundIntensity || 0}
-            onChange={(e) => onChange('backgroundIntensity', parseInt(e.target.value))}
-            className="flex-1"
-          />
-          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.backgroundIntensity || 0}%</span>
-        </div>
-        <p className="text-xs text-slate-500 mt-1">Controls the darkness overlay</p>
-      </div>
-
-      {/* Background Blur */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Background Blur</label>
-        <div className="flex gap-2">
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={safeSettings.backgroundBlur || 0}
-            onChange={(e) => onChange('backgroundBlur', parseInt(e.target.value))}
-            className="flex-1"
-          />
-          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.backgroundBlur || 0}px</span>
-        </div>
-        <p className="text-xs text-slate-500 mt-1">Controls the blur amount</p>
-      </div>
-
-      {/* Background Fit Mode */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Background Fit</label>
-        <select
-          value={safeSettings.backgroundFitMode || 'cover'}
-          onChange={(e) => onChange('backgroundFitMode', e.target.value)}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-        >
-          <option value="cover">Cover (fill and crop)</option>
-          <option value="contain">Contain (fit inside)</option>
-          <option value="fill">Fill (stretch)</option>
-          <option value="scale-down">Scale Down</option>
-        </select>
-      </div>
-
-      {/* Background Color Picker */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Background Color</label>
+        <label className="block text-sm font-medium mb-3">Solid Color</label>
         <div className="flex gap-2">
           <input
             type="color"
-            value={safeSettings.backgroundColor || '#ffffff'}
-            onChange={(e) => onChange('backgroundColor', e.target.value)}
+            value={safeSettings.color || '#ffffff'}
+            onChange={(e) => {
+              onChange('type', 'solid');
+              onChange('color', e.target.value);
+            }}
             className="w-12 h-10 rounded cursor-pointer"
           />
           <input
             type="text"
-            value={safeSettings.backgroundColor || '#ffffff'}
-            onChange={(e) => onChange('backgroundColor', e.target.value)}
-            className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-            placeholder="#ffffff"
+            value={safeSettings.color || '#ffffff'}
+            onChange={(e) => {
+              onChange('type', 'solid');
+              onChange('color', e.target.value);
+            }}
+            className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm font-mono"
           />
         </div>
-        <p className="text-xs text-slate-500 mt-1">Used when no image is selected</p>
+      </div>
+
+      {/* Blur */}
+      <div>
+        <label className="block text-sm font-medium mb-2">Blur</label>
+        <div className="flex gap-2 items-center">
+          <input
+            type="range"
+            min="0"
+            max="24"
+            value={safeSettings.blur || 0}
+            onChange={(e) => onChange('blur', parseInt(e.target.value))}
+            className="flex-1"
+          />
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.blur || 0}</span>
+        </div>
+      </div>
+
+      {/* Dim/Overlay */}
+      <div>
+        <label className="block text-sm font-medium mb-2">Dim</label>
+        <div className="flex gap-2 items-center">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={safeSettings.dim || 0}
+            onChange={(e) => onChange('dim', parseInt(e.target.value))}
+            className="flex-1"
+          />
+          <span className="text-xs text-slate-400 w-12 text-right">{safeSettings.dim || 0}%</span>
+        </div>
+      </div>
+
+      {/* Fit Mode */}
+      <div>
+        <label className="block text-sm font-medium mb-2">Fit Mode</label>
+        <select
+          value={safeSettings.fit || 'cover'}
+          onChange={(e) => onChange('fit', e.target.value)}
+          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
+        >
+          <option value="cover">Cover</option>
+          <option value="contain">Contain</option>
+          <option value="stretch">Stretch</option>
+        </select>
       </div>
     </div>
   );

@@ -2021,3 +2021,62 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - New primary navigation points users to `/kiosk-studio/1` which loads the live builder
 - KioskStudio page handles location selection and defaults to first kiosk-enabled location
 - All three layout components (DojoFlowLayout, BottomNavLayout, DashboardLayout) now route to Kiosk Studio
+
+
+## Phase 18: Kiosk Studio - Interactive Editor (CURRENT)
+
+### 1. Fix Input Interactivity
+- [x] Wire all Typography sliders to state (titleSize, titleWeight, subtitleSize, letterSpacing, buttonFontSize)
+- [ ] Wire Font Family dropdown to state
+- [x] Wire Background controls (color picker, blur, dim, fit mode) to state
+- [x] Wire Content inputs (headline, subtext) to state
+- [x] Wire Behavior toggles (showMemberLogin, showNewStudent, autoReturn, etc.) to state
+- [x] Wire Screensaver settings to state
+- [ ] Fix any z-index/pointer-events issues blocking input interaction
+- [x] Verify all tab switches (Design/Content/Behavior/Screensaver) work
+
+### 2. Live Preview Binding
+- [x] Update preview iframe when any control changes
+- [x] Ensure preview re-renders from single source of truth (draftSettings)
+- [ ] Test typography changes appear in preview immediately
+- [ ] Test accent color updates buttons and highlights in preview
+- [ ] Test background preset/image updates in preview
+- [ ] Test blur and dim effects apply in preview
+- [ ] Verify preview doesn't lag or flicker
+
+### 3. Standardize KioskConfig Data Model
+- [x] Define consistent KioskConfig interface across DB and UI
+- [ ] Update DB schema if needed to match unified model
+- [ ] Ensure no field name mismatches between editor and runtime
+- [ ] Create migration if schema changes required
+
+### 4. Implement Save Draft Workflow
+- [x] Create TRPC mutation for saveDraft (locationId, config)
+- [x] Wire Save Draft button to mutation
+- [x] Show success/error toast on save
+- [x] Display "Unsaved changes" indicator when config differs from lastSaved
+- [x] Persist draft to DB with timestamp
+
+### 5. Implement Publish Workflow
+- [x] Create TRPC mutation for publish (locationId, config)
+- [x] Wire Publish button to mutation
+- [x] Set publishedAt timestamp and version
+- [ ] Show confirmation before publish
+- [x] Verify published config is used by live kiosk runtime
+
+### 6. Add Developer Debug Panel
+- [x] Create toggle button for debug panel (dev-only)
+- [x] Display current config JSON
+- [x] Display lastSavedAt timestamp
+- [x] Display publishedAt timestamp
+- [ ] Display locationId
+- [x] Show diff between current and lastSaved if different
+
+### 7. End-to-End Testing
+- [ ] Change Title Size slider → preview updates immediately
+- [ ] Save Draft → DB persists config
+- [ ] Publish → Live kiosk uses published config
+- [ ] Verify no TRPC validation errors
+- [ ] Test all controls in all tabs
+- [ ] Test on different screen sizes
+

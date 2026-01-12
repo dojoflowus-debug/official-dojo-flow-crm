@@ -1,28 +1,7 @@
-import { useState } from 'react';
-
-/**
- * KioskTypographyControls - Typography settings for kiosk
- * 
- * Provides controls for:
- * - Font family selection
- * - Title size (24-72px)
- * - Title weight (400-900)
- * - Subtitle size (14-48px)
- * - Letter spacing (-2 to 4px)
- * - Button font size (12-24px)
- */
-
-interface TypographySettings {
-  fontFamily?: string;
-  titleSize?: number;
-  titleWeight?: number;
-  subtitleSize?: number;
-  letterSpacing?: number;
-  buttonFontSize?: number;
-}
+import { KioskConfig } from '../../../shared/kioskConfig';
 
 interface KioskTypographyControlsProps {
-  settings: TypographySettings;
+  settings: KioskConfig['typography'];
   onChange: (key: string, value: any) => void;
 }
 
@@ -30,9 +9,7 @@ export function KioskTypographyControls({
   settings,
   onChange,
 }: KioskTypographyControlsProps) {
-  // Provide default values if settings is undefined
   const safeSettings = settings || {
-    fontFamily: 'system',
     titleSize: 48,
     titleWeight: 700,
     subtitleSize: 24,
@@ -43,25 +20,8 @@ export function KioskTypographyControls({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">Font Family</label>
-        <select
-          value={safeSettings.fontFamily || 'system'}
-          onChange={(e) => onChange('fontFamily', e.target.value)}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm"
-        >
-          <option value="system">System Default</option>
-          <option value="sans">Sans Serif</option>
-          <option value="serif">Serif</option>
-          <option value="mono">Monospace</option>
-          <option value="inter">Inter</option>
-          <option value="poppins">Poppins</option>
-          <option value="playfair">Playfair Display</option>
-        </select>
-      </div>
-
-      <div>
         <label className="block text-sm font-medium mb-2">Title Size</label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             type="range"
             min="24"
@@ -92,7 +52,7 @@ export function KioskTypographyControls({
 
       <div>
         <label className="block text-sm font-medium mb-2">Subtitle Size</label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             type="range"
             min="14"
@@ -107,12 +67,12 @@ export function KioskTypographyControls({
 
       <div>
         <label className="block text-sm font-medium mb-2">Letter Spacing</label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             type="range"
             min="-2"
             max="4"
-            step="0.1"
+            step="0.5"
             value={safeSettings.letterSpacing || 0}
             onChange={(e) => onChange('letterSpacing', parseFloat(e.target.value))}
             className="flex-1"
@@ -123,7 +83,7 @@ export function KioskTypographyControls({
 
       <div>
         <label className="block text-sm font-medium mb-2">Button Font Size</label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             type="range"
             min="12"
