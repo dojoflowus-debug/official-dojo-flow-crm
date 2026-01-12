@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Save, Zap, RotateCcw, RefreshCw, Palette, Type, Layout, FileText, Zap as Zap2 } from 'lucide-react';
+import { Save, Zap, RotateCcw, RefreshCw, Palette, Type, Layout, FileText, Zap as Zap2, Maximize2, Minimize2 } from 'lucide-react';
 
 interface KioskAppearance {
   background: {
@@ -60,7 +60,68 @@ export default function KioskStudioBuilder() {
   const [previewKey, setPreviewKey] = useState(0);
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
 
+  // Resizable split view state
+  const [splitRatio, setSplitRatio] = useState(() => {
+    const saved = localStorage.getItem('kioskBuilder.splitRatio');
+    return saved ? parseFloat(saved) : 0.5;
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPreviewFocused, setIsPreviewFocused] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const locId = locationId ? parseInt(locationId) : 0;
+
+  // Persist split ratio to localStorage
+  useEffect(() => {
+    localStorage.setItem('kioskBuilder.splitRatio', splitRatio.toString());
+  }, [splitRatio]);
+
+  // Handle split view dragging
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDragging || !containerRef.current) return;
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const offsetX = e.clientX - containerRect.left;
+      let newRatio = offsetX / containerWidth;
+
+      // Enforce min widths: editor >= 520px, preview >= 360px
+      const minEditorWidth = 520;
+      const minPreviewWidth = 360;
+      const minEditorRatio = minEditorWidth / containerWidth;
+      const maxEditorRatio = (containerWidth - minPreviewWidth) / containerWidth;
+
+      newRatio = Math.max(minEditorRatio, Math.min(maxEditorRatio, newRatio));
+      setSplitRatio(newRatio);
+    };
+
+    const handlePointerUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+    };
+
+    if (isDragging) {
+      document.addEventListener('pointermove', handlePointerMove);
+      document.addEventListener('pointerup', handlePointerUp);
+    }
+
+    return () => {
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [isDragging]);
+
+  // Toggle preview focus mode
+  const togglePreviewFocus = () => {
+    setIsPreviewFocused(!isPreviewFocused);
+  };
 
   // Fetch current settings
   const { data: settingsData, isLoading } = trpc.kioskStudio.getSettings.useQuery(
@@ -269,9 +330,19 @@ export default function KioskStudioBuilder() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div 
+      ref={containerRef}
+      className="h-screen bg-gray-50"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: isPreviewFocused 
+          ? '64px 4px 1fr' 
+          : `${splitRatio * 100}% 4px ${(1 - splitRatio) * 100}%`,
+        transition: isPreviewFocused ? 'grid-template-columns 0.3s ease' : 'none',
+      }}
+    >
       {/* Left Panel - Controls */}
-      <div className="w-1/2 overflow-y-auto border-r border-gray-200 bg-white">
+      <div className="overflow-y-auto border-r border-gray-200 bg-white" style={{ minWidth: isPreviewFocused ? '64px' : '520px' }}>
         <div className="p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Kiosk Studio</h1>
@@ -699,18 +770,47 @@ export default function KioskStudioBuilder() {
         </div>
       </div>
 
+      {/* Draggable Divider */}
+      <div
+        onPointerDown={handlePointerDown}
+        className="cursor-col-resize bg-gray-300 hover:bg-blue-500 transition-colors relative group"
+        style={{ width: '4px' }}
+      >
+        <div className="absolute inset-y-0 -left-1 -right-1" />
+      </div>
+
       {/* Right Panel - Live Preview */}
-      <div className="w-1/2 bg-gray-100 flex flex-col">
+      <div className="bg-gray-100 flex flex-col" style={{ minWidth: '360px' }}>
         <div className="p-4 border-b border-gray-200 bg-white flex items-center justify-between">
           <h2 className="font-semibold">Live Preview</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPreviewKey(prev => prev + 1)}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={togglePreviewFocus}
+              title={isPreviewFocused ? 'Restore Editor' : 'Focus Preview'}
+            >
+              {isPreviewFocused ? (
+                <>
+                  <Minimize2 className="w-4 h-4 mr-2" />
+                  Restore
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-4 h-4 mr-2" />
+                  Focus Preview
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPreviewKey(prev => prev + 1)}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
         <div className="flex-1 overflow-hidden">
           <iframe

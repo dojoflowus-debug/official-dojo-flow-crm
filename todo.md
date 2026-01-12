@@ -1949,3 +1949,14 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - Backend API errors (500 status) preventing page load in browser - unrelated to split view implementation
 - These errors appear to be in kioskManager.getKioskLocations or kioskStudio.getSettings queries
 - Split view code is complete and ready for testing once backend issues are resolved
+
+## Phase 17: Kiosk Builder - Resizable Split View (Phase 1)
+
+- [x] Add draggable vertical divider between editor and preview panels
+- [x] Implement smooth resize with pointer events (onPointerDown/Move/Up)
+- [x] Enforce min widths (editor >= 520px, preview >= 360px)
+- [x] Persist split ratio in localStorage (key: kioskBuilder.splitRatio)
+- [x] Add "Focus Preview" button to collapse/restore editor panel
+- [x] Set document.body.style.userSelect='none' while dragging
+- [x] Use CSS grid with CSS variable for editor width or ratio
+- [x] Verify ratio persists after page refresh
