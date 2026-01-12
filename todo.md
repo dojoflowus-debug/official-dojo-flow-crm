@@ -2080,3 +2080,12 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Test all controls in all tabs
 - [ ] Test on different screen sizes
 
+
+## Bug Fix: tRPC Mutation Hook Error in KioskStudio (2026-01-12)
+- [x] Fixed "hooks[lastArg] is not a function" error in KioskStudio component
+  - Issue: handleSaveDraft and handlePublish were calling `.mutate()` directly on tRPC procedures
+  - Solution: Changed to use `.useMutation()` hook pattern with `.mutateAsync()`
+  - Files modified: client/src/pages/KioskStudio.tsx
+  - Added saveDraftMutation and publishMutation hooks at component level
+  - Changed mutation calls from `trpc.kioskSettings.saveDraft.mutate()` to `saveDraftMutation.mutateAsync()`
+  - Changed mutation calls from `trpc.kioskSettings.publish.mutate()` to `publishMutation.mutateAsync()`

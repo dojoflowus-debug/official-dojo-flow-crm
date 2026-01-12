@@ -28,6 +28,10 @@ export default function KioskStudio() {
     { enabled: !!selectedLocation }
   );
 
+  // Initialize mutations
+  const saveDraftMutation = trpc.kioskSettings.saveDraft.useMutation();
+  const publishMutation = trpc.kioskSettings.publish.useMutation();
+
   // Initialize draft settings from fetched data
   useEffect(() => {
     if (settingsData?.settings) {
@@ -124,7 +128,7 @@ export default function KioskStudio() {
     if (!draftConfig || !selectedLocation) return;
     setIsSaving(true);
     try {
-      await trpc.kioskSettings.saveDraft.mutate({
+      await saveDraftMutation.mutateAsync({
         locationSlug: selectedLocation,
         config: draftConfig,
       });
@@ -143,7 +147,7 @@ export default function KioskStudio() {
     if (!draftConfig || !selectedLocation) return;
     setIsSaving(true);
     try {
-      await trpc.kioskSettings.publish.mutate({
+      await publishMutation.mutateAsync({
         locationSlug: selectedLocation,
         config: draftConfig,
       });
