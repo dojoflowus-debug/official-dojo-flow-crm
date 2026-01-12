@@ -794,11 +794,51 @@ export const kioskManagerRouter = router({
       z.object({
         kioskId: z.number(),
         name: z.string().optional(),
-        config: z.record(z.any()).optional(),
+        config: z.object({
+          background: z.object({
+            type: z.enum(['color', 'image', 'preset']).optional(),
+            color: z.string().optional(),
+            presetKey: z.string().nullable().optional(),
+            customUrl: z.string().nullable().optional(),
+            blur: z.number().optional(),
+            dim: z.number().optional(),
+            fit: z.enum(['cover', 'contain', 'stretch']).optional(),
+          }).optional(),
+          typography: z.object({
+            fontFamily: z.string().optional(),
+            titleSize: z.number().optional(),
+            titleWeight: z.number().optional(),
+            subtitleSize: z.number().optional(),
+            letterSpacing: z.number().optional(),
+            buttonFontSize: z.number().optional(),
+          }).optional(),
+          layout: z.object({
+            spacing: z.enum(['compact', 'comfortable', 'spacious']).optional(),
+            alignment: z.enum(['left', 'center', 'right']).optional(),
+            maxWidth: z.number().optional(),
+          }).optional(),
+          content: z.object({
+            headline: z.string().optional(),
+            subtext: z.string().optional(),
+            logoUrl: z.string().nullable().optional(),
+            accentColor: z.string().optional(),
+          }).optional(),
+          behavior: z.object({
+            showMemberLogin: z.boolean().optional(),
+            showNewStudent: z.boolean().optional(),
+            idleSeconds: z.number().optional(),
+            autoReturn: z.boolean().optional(),
+            screensaverEnabled: z.boolean().optional(),
+            screensaverMessage: z.string().optional(),
+            screensaverLogoUrl: z.string().nullable().optional(),
+          }).optional(),
+        }).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.db || !ctx.organizationId) {
+      const orgId = ctx.currentOrganizationId;
+      console.log('[KioskManager] updateKiosk context check:', { hasDb: !!ctx.db, currentOrganizationId: orgId });
+      if (!ctx.db || !orgId) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Database or organization context not available',
@@ -806,7 +846,7 @@ export const kioskManagerRouter = router({
       }
 
       try {
-        console.log('[KioskManager] updateKiosk called with input:', { kioskId: input.kioskId, hasConfig: !!input.config });
+        console.log('[KioskManager] updateKiosk called with input:', { kioskId: input.kioskId, hasConfig: !!input.config, orgId });
         const updateData: any = { updatedAt: new Date().toISOString() };
 
         if (input.name) {
@@ -815,7 +855,10 @@ export const kioskManagerRouter = router({
         }
 
         if (input.config) {
+          console.log('[KioskManager] Config received:', JSON.stringify(input.config, null, 2));
           console.log('[KioskManager] Config keys:', Object.keys(input.config));
+          console.log('[KioskManager] Config type:', typeof input.config);
+          
           // Ensure config is not undefined or null
           if (!input.config || Object.keys(input.config).length === 0) {
             console.error('[KioskManager] Config is empty or invalid');
@@ -837,15 +880,17 @@ export const kioskManagerRouter = router({
           }
         }
 
-        await ctx.db
+        console.log('[KioskManager] About to update kiosk:', { kioskId: input.kioskId, orgId });
+        const result = await ctx.db
           .update(kiosks)
           .set(updateData)
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, orgId)
             )
           );
+        console.log('[KioskManager] Update result:', result);
 
         return { success: true, message: 'Kiosk updated' };
       } catch (error) {

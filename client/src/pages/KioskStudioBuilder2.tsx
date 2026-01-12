@@ -13,6 +13,37 @@ import ConfirmationModal from '@/components/kiosk/ConfirmationModal';
 import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
 
 interface KioskAppearance {
+  theme: {
+    accentColor: string;
+    fontFamily: string;
+  };
+  content: {
+    headline: string;
+    subtext: string;
+    tileLeft: {
+      title: string;
+      subtitle: string;
+      button: string;
+    };
+    tileRight: {
+      title: string;
+      subtitle: string;
+      button: string;
+    };
+    infoLeftLabel: string;
+    infoRightLabel: string;
+  };
+  typography: {
+    titleSize: number;
+    titleWeight: number;
+    subtitleSize: number;
+    letterSpacing: number;
+    buttonFontSize: number;
+  };
+  layout: {
+    showClock: boolean;
+    showInfoBar: boolean;
+  };
   background: {
     type: 'color' | 'image' | 'preset';
     color: string;
@@ -22,33 +53,16 @@ interface KioskAppearance {
     dim: number;
     fit: 'cover' | 'contain' | 'stretch';
   };
-  typography: {
-    fontFamily: string;
-    titleSize: number;
-    titleWeight: number;
-    subtitleSize: number;
-    letterSpacing: number;
-    buttonFontSize: number;
-  };
-  layout: {
-    spacing: 'compact' | 'comfortable' | 'spacious';
-    alignment: 'left' | 'center' | 'right';
-    maxWidth: number;
-  };
-  content: {
-    headline: string;
-    subtext: string;
-    logoUrl: string | null;
-    accentColor: string;
-  };
   behavior: {
-    showMemberLogin: boolean;
-    showNewStudent: boolean;
+    autoAdvanceSeconds?: number;
+    enableSound?: boolean;
+    enableHaptics?: boolean;
+  };
+  screensaver: {
+    enabled: boolean;
     idleSeconds: number;
-    autoReturn: boolean;
-    screensaverEnabled: boolean;
-    screensaverMessage: string;
-    screensaverLogoUrl: string | null;
+    message: string;
+    showLogo: boolean;
   };
 }
 
@@ -74,7 +88,74 @@ interface Kiosk {
   updatedAt: string;
 }
 
+/**
+ * Normalize kiosk appearance config to ensure compatibility
+ * Transforms legacy 'solid' type to 'color'
+ */
+function normalizeAppearance(config: any): KioskAppearance {
+  if (!config) {
+    console.log('[normalizeAppearance] Config is null/undefined, using DEFAULT');
+    return DEFAULT_APPEARANCE;
+  }
+  
+  console.log('[normalizeAppearance] Config loaded:', { hasBackground: !!config.background, bgType: config.background?.type, accentColor: config.theme?.accentColor });
+  
+  // Transform background type if needed
+  if (config.background?.type === 'solid') {
+    console.log('[normalizeAppearance] Transforming solid -> color');
+    config.background.type = 'color';
+  }
+  
+  // Merge with defaults to fill in missing fields
+  const merged = {
+    ...DEFAULT_APPEARANCE,
+    ...config,
+    theme: { ...DEFAULT_APPEARANCE.theme, ...config.theme },
+    content: { ...DEFAULT_APPEARANCE.content, ...config.content },
+    typography: { ...DEFAULT_APPEARANCE.typography, ...config.typography },
+    layout: { ...DEFAULT_APPEARANCE.layout, ...config.layout },
+    background: { ...DEFAULT_APPEARANCE.background, ...config.background },
+    behavior: { ...DEFAULT_APPEARANCE.behavior, ...config.behavior },
+    screensaver: { ...DEFAULT_APPEARANCE.screensaver, ...config.screensaver },
+  };
+  
+  console.log('[normalizeAppearance] After merge:', { accentColor: merged.theme?.accentColor });
+  
+  return merged as KioskAppearance;
+}
+
 const DEFAULT_APPEARANCE: KioskAppearance = {
+  theme: {
+    accentColor: '#ef4444',
+    fontFamily: 'Inter',
+  },
+  content: {
+    headline: 'Welcome to Training',
+    subtext: 'Tap to begin',
+    tileLeft: {
+      title: 'Check In',
+      subtitle: 'Tap here to check into class',
+      button: 'Check In',
+    },
+    tileRight: {
+      title: 'Start Training',
+      subtitle: 'New students start here',
+      button: 'Start Training',
+    },
+    infoLeftLabel: 'Next Class',
+    infoRightLabel: "Today's Focus",
+  },
+  typography: {
+    titleSize: 48,
+    titleWeight: 700,
+    subtitleSize: 24,
+    letterSpacing: 0,
+    buttonFontSize: 16,
+  },
+  layout: {
+    showClock: true,
+    showInfoBar: true,
+  },
   background: {
     type: 'color',
     color: '#ffffff',
@@ -84,33 +165,16 @@ const DEFAULT_APPEARANCE: KioskAppearance = {
     dim: 0,
     fit: 'cover',
   },
-  typography: {
-    fontFamily: 'system-ui',
-    titleSize: 48,
-    titleWeight: 700,
-    subtitleSize: 24,
-    letterSpacing: 0,
-    buttonFontSize: 16,
-  },
-  layout: {
-    spacing: 'comfortable',
-    alignment: 'center',
-    maxWidth: 800,
-  },
-  content: {
-    headline: 'Welcome to Training',
-    subtext: 'Sign in or get started below',
-    logoUrl: null,
-    accentColor: '#ef4444',
-  },
   behavior: {
-    showMemberLogin: true,
-    showNewStudent: true,
+    autoAdvanceSeconds: undefined,
+    enableSound: false,
+    enableHaptics: false,
+  },
+  screensaver: {
+    enabled: true,
     idleSeconds: 60,
-    autoReturn: true,
-    screensaverEnabled: true,
-    screensaverMessage: 'Tap to continue',
-    screensaverLogoUrl: null,
+    message: 'Tap the screen to check-in',
+    showLogo: true,
   },
 };
 
@@ -230,10 +294,13 @@ export default function KioskStudioBuilder2() {
   // Initialize kiosks and select first one
   useEffect(() => {
     if (kiosksList) {
+      console.log('[useEffect] kiosksList loaded:', { count: kiosksList.length, firstKioskConfig: kiosksList[0]?.config });
       setKiosks(kiosksList as Kiosk[]);
       if (!selectedKioskId && kiosksList.length > 0) {
         setSelectedKioskId(kiosksList[0].id);
-        setDraft(kiosksList[0].config || DEFAULT_APPEARANCE);
+        const normalized = normalizeAppearance(kiosksList[0].config) || DEFAULT_APPEARANCE;
+        console.log('[useEffect] Setting draft to:', { accentColor: normalized.content?.accentColor });
+        setDraft(normalized);
       }
     }
   }, [kiosksList, selectedKioskId]);
@@ -242,7 +309,10 @@ export default function KioskStudioBuilder2() {
   useEffect(() => {
     const kiosk = kiosks.find(k => k.id === selectedKioskId);
     if (kiosk) {
-      setDraft(kiosk.config || DEFAULT_APPEARANCE);
+      console.log('[useEffect] Kiosk selected:', { id: selectedKioskId, hasConfig: !!kiosk.config, config: kiosk.config });
+      const normalized = normalizeAppearance(kiosk.config) || DEFAULT_APPEARANCE;
+      console.log('[useEffect] Setting draft to normalized:', { accentColor: normalized.content?.accentColor });
+      setDraft(normalized);
     }
   }, [selectedKioskId, kiosks]);
 
@@ -306,6 +376,13 @@ export default function KioskStudioBuilder2() {
   const updateTypography = (updates: Partial<KioskAppearance['typography']>) => {
     if (!draft) return;
     const updated = { ...draft, typography: { ...draft.typography, ...updates } };
+    setDraft(updated);
+    sendPreviewUpdate(updated);
+  };
+
+  const updateTheme = (updates: Partial<KioskAppearance['theme']>) => {
+    if (!draft) return;
+    const updated = { ...draft, theme: { ...draft.theme, ...updates } };
     setDraft(updated);
     sendPreviewUpdate(updated);
   };
@@ -556,7 +633,7 @@ export default function KioskStudioBuilder2() {
                   <TabsContent value="appearance" className="p-4 space-y-4">
                     <div><Label>Background Type</Label><Select value={draft.background.type} onValueChange={(v: any) => updateBackground({ type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="color">Solid Color</SelectItem><SelectItem value="image">Image</SelectItem><SelectItem value="preset">Preset</SelectItem></SelectContent></Select></div>
                     {draft.background.type === 'color' && (<div><Label>Color</Label><div className="flex gap-2"><input type="color" value={draft.background.color} onChange={(e) => updateBackground({ color: e.target.value })} className="w-12 h-10 rounded border border-border cursor-pointer" /><Input value={draft.background.color} onChange={(e) => updateBackground({ color: e.target.value })} className="flex-1" /></div></div>)}
-                    <div><Label>Accent Color</Label><div className="flex gap-2"><input type="color" value={draft.content.accentColor} onChange={(e) => updateContent({ accentColor: e.target.value })} className="w-12 h-10 rounded border border-border cursor-pointer" /><Input value={draft.content.accentColor} onChange={(e) => updateContent({ accentColor: e.target.value })} className="flex-1" /></div></div>
+                    <div><Label>Accent Color</Label><div className="flex gap-2"><input type="color" value={draft?.theme?.accentColor || '#ef4444'} onChange={(e) => updateTheme({ accentColor: e.target.value })} className="w-12 h-10 rounded border border-border cursor-pointer" /><Input value={draft?.theme?.accentColor || '#ef4444'} onChange={(e) => updateTheme({ accentColor: e.target.value })} className="flex-1" /></div></div>
                     <div><Label>Blur: {draft.background.blur}px</Label><Slider value={[draft.background.blur]} onValueChange={(v) => updateBackground({ blur: v[0] })} min={0} max={20} step={1} /></div>
                     <div><Label>Dim: {draft.background.dim}%</Label><Slider value={[draft.background.dim]} onValueChange={(v) => updateBackground({ dim: v[0] })} min={0} max={100} step={5} /></div>
                   </TabsContent>
