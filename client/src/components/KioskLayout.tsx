@@ -74,11 +74,11 @@ export default function KioskLayout({
   // Get background configuration with priority:
   // 1. Custom image (type=custom and customUrl)
   // 2. Preset (type=preset and presetKey)
-  // 3. Solid color (type=solid and color)
+  // 3. Solid color (type=color)
   // 4. Default white
   const getBackgroundStyle = (): React.CSSProperties => {
     const settings = config?.background || {};
-    const type = settings.type || 'solid';
+    const type = settings.type || 'color';
     const blur = settings.blur || 0;
     const dim = settings.dim || 0;
     const fit = settings.fit || 'cover';
@@ -114,7 +114,7 @@ export default function KioskLayout({
     }
 
     // Priority 3: Solid color
-    if (type === 'solid') {
+    if (type === 'color') {
       return {
         backgroundColor: settings.color || '#ffffff',
         backgroundImage: 'none',

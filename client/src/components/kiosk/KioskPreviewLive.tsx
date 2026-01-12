@@ -3,8 +3,9 @@ import { KioskConfig } from '../../../shared/kioskConfig';
 import KioskHome from '../KioskHome';
 import KioskLayout from '../KioskLayout';
 
+// Accept both KioskConfig and any config-like object (for compatibility with KioskAppearance)
 interface KioskPreviewLiveProps {
-  config: KioskConfig;
+  config: KioskConfig | any;
   isLoading?: boolean;
 }
 

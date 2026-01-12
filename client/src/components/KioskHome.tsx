@@ -28,7 +28,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
   const slug = propSlug || routeSlug;
   
   // Use provided config or fallback to default
-  const config = propConfig || DEFAULT_KIOSK_CONFIG;
+  const cfg = propConfig || DEFAULT_KIOSK_CONFIG;
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [fadeIn, setFadeIn] = useState(false);
@@ -42,6 +42,9 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
     { slug: slug || '' },
     { enabled: !!slug }
   );
+
+  // Define config shorthand for easier access
+  const config = cfg;
 
   // Update clock every second
   useEffect(() => {
@@ -68,7 +71,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
   }, []);
 
   // Idle detection and screensaver
-  const idleTimeout = (config?.screensaver?.idleSeconds || 60) * 1000;
+  const idleTimeout = (cfg?.screensaver?.idleSeconds || 60) * 1000;
 
   const resetIdleTimer = () => {
     // Clear existing timers
@@ -81,7 +84,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
     // Set new idle timer
     idleTimeoutRef.current = setTimeout(() => {
       setIsIdle(true);
-      if (config?.screensaver?.enabled !== false) {
+      if (cfg?.screensaver?.enabled !== false) {
         setShowScreensaver(true);
       }
     }, idleTimeout);
@@ -107,14 +110,14 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
       if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
     };
-  }, [idleTimeout, config?.screensaver?.enabled]);
+  }, [idleTimeout, cfg?.screensaver?.enabled]);
 
   // Show screensaver if idle
   if (showScreensaver) {
     return (
       <KioskScreensaver
-        message={config?.screensaver?.message || 'Tap the screen to check-in'}
-        showLogo={config?.screensaver?.showLogo !== false}
+        message={cfg?.screensaver?.message || 'Tap the screen to check-in'}
+        showLogo={cfg?.screensaver?.showLogo !== false}
         onActivity={() => {
           setShowScreensaver(false);
           resetIdleTimer();
@@ -133,7 +136,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
   const todaysFocus = kioskData?.todaysFocus || ['Discipline', 'Confidence', 'Fitness'];
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8 bg-white">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8" style={{ fontFamily: cfg?.theme?.fontFamily || 'Inter', backgroundColor: '#f5f5f5' }}>
       {/* Header Section */}
       <div
         className={`w-full max-w-6xl transition-all duration-1000 ${
@@ -150,44 +153,44 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
               className="h-10 w-10 object-contain drop-shadow-lg"
             />
             <div>
-              <p className="text-gray-500 text-xs font-medium tracking-wide uppercase">DojoFlow</p>
-              <p className="text-black text-xl font-bold tracking-tight">
+              <p style={{ color: '#999', fontSize: '12px', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>DojoFlow</p>
+              <p style={{ color: cfg?.theme?.accentColor || '#111', fontSize: '20px', fontWeight: 700, letterSpacing: '0px' }}>
                 {displayName}
               </p>
             </div>
           </div>
 
           {/* Live Clock */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-6 py-3 border border-gray-300">
-            <Clock className="h-5 w-5 text-gray-700" />
-            <span className="text-black font-mono text-lg font-semibold">
+          <div className="flex items-center gap-2 rounded-full px-6 py-3 border border-gray-300" style={{ backgroundColor: '#f0f0f0' }}>
+            <Clock className="h-5 w-5" style={{ color: '#666' }} />
+            <span style={{ color: '#111', fontFamily: 'monospace', fontSize: '18px', fontWeight: 600 }}>
               {currentTime || '--:--:--'}
             </span>
           </div>
         </div>
 
         {/* Info Bar */}
-        {config?.layout?.showInfoBar !== false && (
+        {cfg?.layout?.showInfoBar !== false && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
             {/* Next Class */}
-            <div className="bg-gray-100 rounded-2xl px-6 py-4 border border-gray-300">
-              <p className="text-gray-600 text-sm font-medium mb-1">
-                {config?.content?.infoLeftLabel || 'Next Class'}
+            <div className="rounded-2xl px-6 py-4 border border-gray-300" style={{ backgroundColor: '#f0f0f0' }}>
+              <p style={{ color: '#666', fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
+                {cfg?.content?.infoLeftLabel || 'Next Class'}
               </p>
-              <p className="text-black text-lg font-semibold">
+              <p style={{ color: '#111', fontSize: '18px', fontWeight: 600 }}>
                 {nextClass?.name} at {nextClass?.time}
               </p>
-              <p className="text-gray-500 text-xs mt-1">
+              <p style={{ color: '#999', fontSize: '12px', marginTop: '4px' }}>
                 in {nextClass?.minutesUntil} minutes
               </p>
             </div>
 
             {/* Today's Focus */}
-            <div className="bg-gray-100 rounded-2xl px-6 py-4 border border-gray-300">
-              <p className="text-gray-600 text-sm font-medium mb-1">
-                {config?.content?.infoRightLabel || "Today's Focus"}
+            <div className="rounded-2xl px-6 py-4 border border-gray-300" style={{ backgroundColor: '#f0f0f0' }}>
+              <p style={{ color: '#666', fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
+                {cfg?.content?.infoRightLabel || "Today's Focus"}
               </p>
-              <p className="text-black text-lg font-semibold">
+              <p style={{ color: '#111', fontSize: '18px', fontWeight: 600 }}>
                 {todaysFocus.join(' • ')}
               </p>
             </div>
@@ -203,7 +206,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
           >
             {/* Icon Circle */}
             <div className="relative flex justify-center mb-8">
-              <div className="relative p-8 rounded-full shadow-2xl" style={{ backgroundColor: config?.theme?.accentColor || '#ef4444' }}>
+              <div className="relative p-8 rounded-full shadow-2xl" style={{ backgroundColor: cfg?.theme?.accentColor || '#ef4444' }}>
                 <svg
                   className="h-16 w-16 text-white"
                   fill="none"
@@ -222,18 +225,26 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
 
             {/* Text Content */}
             <div className="relative text-center space-y-2">
-              <h2 className="text-black text-4xl font-bold">
-                {config?.content?.tileLeft?.title || 'Check In'}
+              <h2 style={{
+                color: cfg?.theme?.accentColor || '#111',
+                fontSize: (cfg?.typography?.titleSize || 48) + 'px',
+                fontWeight: cfg?.typography?.titleWeight || 700,
+                letterSpacing: (cfg?.typography?.letterSpacing || 0) + 'px',
+              }}>
+                {cfg?.content?.tileLeft?.title || 'Check In'}
               </h2>
-              <p className="text-gray-600 text-lg">
-                {config?.content?.tileLeft?.subtitle || 'Tap here to check into class'}
+              <p style={{
+                color: '#666',
+                fontSize: (cfg?.typography?.subtitleSize || 24) + 'px',
+              }}>
+                {cfg?.content?.tileLeft?.subtitle || 'Tap here to check into class'}
               </p>
             </div>
 
             {/* Bottom Button */}
             <div className="relative mt-8 pt-8 border-t border-gray-300">
-              <div className="w-full py-4 rounded-2xl text-white text-center font-bold text-lg shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: config?.theme?.accentColor || '#ef4444' }}>
-                {config?.content?.tileLeft?.button || 'Check In'}
+              <div className="w-full py-4 rounded-2xl text-white text-center font-bold shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: cfg?.theme?.accentColor || '#ef4444', fontSize: (cfg?.typography?.buttonFontSize || 16) + 'px' }}>
+                {cfg?.content?.tileLeft?.button || 'Check In'}
               </div>
             </div>
           </button>
@@ -245,7 +256,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
           >
             {/* Icon Circle */}
             <div className="relative flex justify-center mb-8">
-              <div className="relative p-8 rounded-full bg-red-500 shadow-2xl">
+              <div className="relative p-8 rounded-full shadow-2xl" style={{ backgroundColor: cfg?.theme?.accentColor || '#ef4444' }}>
                 <svg
                   className="h-16 w-16 text-white"
                   fill="none"
@@ -264,18 +275,26 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
 
             {/* Text Content */}
             <div className="relative text-center space-y-2">
-              <h2 className="text-black text-4xl font-bold">
-                {config?.content?.tileRight?.title || 'Start Training'}
+              <h2 style={{
+                color: cfg?.theme?.accentColor || '#111',
+                fontSize: (cfg?.typography?.titleSize || 48) + 'px',
+                fontWeight: cfg?.typography?.titleWeight || 700,
+                letterSpacing: (cfg?.typography?.letterSpacing || 0) + 'px',
+              }}>
+                {cfg?.content?.tileRight?.title || 'Start Training'}
               </h2>
-              <p className="text-gray-600 text-lg">
-                {config?.content?.tileRight?.subtitle || 'New students start here'}
+              <p style={{
+                color: '#666',
+                fontSize: (cfg?.typography?.subtitleSize || 24) + 'px',
+              }}>
+                {cfg?.content?.tileRight?.subtitle || 'New students start here'}
               </p>
             </div>
 
             {/* Bottom Button */}
             <div className="relative mt-8 pt-8 border-t border-gray-300">
-              <div className="w-full py-4 rounded-2xl bg-red-500 text-white text-center font-bold text-lg shadow-lg hover:bg-red-600 transition-all">
-                {config?.content?.tileRight?.button || 'Start Training'}
+              <div className="w-full py-4 rounded-2xl text-white text-center font-bold shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: cfg?.theme?.accentColor || '#ef4444', fontSize: (cfg?.typography?.buttonFontSize || 16) + 'px' }}>
+                {cfg?.content?.tileRight?.button || 'Start Training'}
               </div>
             </div>
           </button>
@@ -285,7 +304,8 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
         <div className="text-center">
           <button
             onClick={() => navigate(`/kiosk/${slug}/staff-login`)}
-            className="flex items-center gap-2 mx-auto text-gray-500 hover:text-gray-700 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 mx-auto transition-colors text-sm font-medium"
+            style={{ color: '#999' }}
           >
             <Settings className="h-4 w-4" />
             Staff Login
