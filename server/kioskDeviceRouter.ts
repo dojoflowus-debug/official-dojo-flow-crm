@@ -6,6 +6,7 @@ import { kiosks } from '../drizzle/schema';
 import { getDb } from './db';
 import { router, protectedProcedure, publicProcedure } from './_core/trpc';
 import { KioskConfigSchema } from '../shared/kioskConfigSchema';
+import { DEFAULT_KIOSK_CONFIG } from '../shared/kioskConfig';
 
 /**
  * Generate a unique slug from a name
@@ -74,8 +75,8 @@ export const kioskDeviceRouter = router({
             name: k.name,
             slug: k.slug,
             isActive: k.isActive,
-            draftConfig: configData.draft,
-            publishedConfig: configData.published,
+            draftConfig: configData.draft || DEFAULT_KIOSK_CONFIG,
+            publishedConfig: configData.published || DEFAULT_KIOSK_CONFIG,
             enabled: configData.enabled,
             createdAt: k.createdAt,
             updatedAt: k.updatedAt,
@@ -140,8 +141,8 @@ export const kioskDeviceRouter = router({
           name: input.name,
           slug: slug,
           isActive: 1,
-          draftConfig: input.config || null,
-          publishedConfig: null,
+          draftConfig: input.config || DEFAULT_KIOSK_CONFIG,
+          publishedConfig: DEFAULT_KIOSK_CONFIG,
           enabled: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -196,8 +197,8 @@ export const kioskDeviceRouter = router({
           name: kiosk.name,
           slug: kiosk.slug,
           isActive: kiosk.isActive,
-          draftConfig: configData.draft,
-          publishedConfig: configData.published,
+          draftConfig: configData.draft || DEFAULT_KIOSK_CONFIG,
+          publishedConfig: configData.published || DEFAULT_KIOSK_CONFIG,
           enabled: configData.enabled,
           createdAt: kiosk.createdAt,
           updatedAt: kiosk.updatedAt,
@@ -258,13 +259,8 @@ export const kioskDeviceRouter = router({
         const configData = parseKioskConfig(kiosk.config);
         const publishedConfig = configData.published;
 
-        if (!publishedConfig) {
-          console.log('[Kiosk Device] No published config for kiosk:', kiosk.id);
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'NO_PUBLISHED_CONFIG',
-          });
-        }
+        // Use published config or fallback to DEFAULT_KIOSK_CONFIG
+        const finalConfig = publishedConfig || DEFAULT_KIOSK_CONFIG;
 
         return {
           id: kiosk.id,
@@ -272,7 +268,7 @@ export const kioskDeviceRouter = router({
           name: kiosk.name,
           slug: kiosk.slug,
           isActive: kiosk.isActive,
-          publishedConfig,
+          publishedConfig: finalConfig,
         };
       } catch (e) {
         if (e instanceof TRPCError) throw e;
@@ -325,8 +321,8 @@ export const kioskDeviceRouter = router({
         // Update draft in config field
         const currentConfig = parseKioskConfig(current[0].config);
         const newConfig = {
-          draft: input.config,
-          published: currentConfig.published,
+          draft: input.config || DEFAULT_KIOSK_CONFIG,
+          published: currentConfig.published || DEFAULT_KIOSK_CONFIG,
           enabled: currentConfig.enabled,
         };
 
@@ -414,19 +410,15 @@ export const kioskDeviceRouter = router({
           }
         }
 
-        if (!configToPublish) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'No configuration to publish',
-          });
-        }
+        // Ensure we have a valid config, use DEFAULT if needed
+        configToPublish = configToPublish || DEFAULT_KIOSK_CONFIG;
 
         const now = new Date().toISOString();
         
-        // Store both draft and published config
+        // Store both draft and published config (ensure not undefined)
         const newConfig = {
-          draft: configToPublish,
-          published: configToPublish,
+          draft: configToPublish || DEFAULT_KIOSK_CONFIG,
+          published: configToPublish || DEFAULT_KIOSK_CONFIG,
           enabled: true,
         };
 

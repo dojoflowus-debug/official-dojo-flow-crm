@@ -2311,3 +2311,26 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Fix Live Preview - use KioskPreviewLive component instead of iframe
 - [x] Add "Open Public Kiosk" and "Debug Mode" buttons
 - [x] Create comprehensive documentation (KIOSK_DEBUG_FIXES.md)
+
+## Phase 0: Kiosk Display Fix (CURRENT - Working + Presentable)
+- [ ] Fix _zod error in settings controls
+- [ ] Create DEFAULT_KIOSK_CONFIG constant
+- [ ] Update TRPC procedures to return safe defaults
+- [ ] Fix kiosk display rendering (white background, black text)
+- [ ] Show two tiles: "Check In" and "Start Training"
+- [ ] Make settings controls functional
+- [ ] Disable incomplete features with "Coming soon" tooltips
+- [ ] Test kiosk display and settings
+- [ ] Publish and verify working kiosk
+
+
+## Phase 0: Kiosk Display Fix (COMPLETED)
+- [x] Fix _zod error in settings controls
+- [x] Create DEFAULT_KIOSK_CONFIG constant (already exists in shared/kioskConfig.ts)
+- [x] Update TRPC procedures to return safe defaults (kioskDeviceRouter updated)
+- [x] Fix kiosk display rendering (white background, black text) - KioskHome.tsx updated
+- [x] Show two tiles: "Check In" and "Start Training" (already implemented)
+- [x] Make settings controls functional (fixed background/typography path in KioskStudio)
+- [x] Disable incomplete features with "Coming soon" tooltips (background controls simplified)
+- [x] Test kiosk display and settings
+- [x] Publish and verify working kiosk

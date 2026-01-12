@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, LogIn, UserPlus, Settings } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import KioskScreensaver from './KioskScreensaver';
+import { DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
 
 interface KioskHomeProps {
   locationName?: string;
@@ -21,10 +22,13 @@ interface KioskHomeProps {
  * - Discreet staff login button
  * - iPad optimized
  */
-export default function KioskHome({ locationName, locationSlug: propSlug, settings }: KioskHomeProps) {
+export default function KioskHome({ locationName, locationSlug: propSlug, settings: propSettings }: KioskHomeProps) {
   const navigate = useNavigate();
   const { locationSlug: routeSlug } = useParams<{ locationSlug: string }>();
   const slug = propSlug || routeSlug;
+  
+  // Ensure settings always has a safe default
+  const settings = propSettings || DEFAULT_KIOSK_CONFIG;
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [fadeIn, setFadeIn] = useState(false);
@@ -129,7 +133,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
   const todaysFocus = kioskData?.todaysFocus || ['Discipline', 'Confidence', 'Fitness'];
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8 bg-white">
       {/* Header Section */}
       <div
         className={`w-full max-w-6xl transition-all duration-1000 ${
@@ -146,17 +150,17 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
               className="h-10 w-10 object-contain drop-shadow-lg"
             />
             <div>
-              <p className="text-white/60 text-xs font-medium tracking-wide uppercase">DojoFlow</p>
-              <p className="text-white text-xl font-bold tracking-tight">
+              <p className="text-gray-500 text-xs font-medium tracking-wide uppercase">DojoFlow</p>
+              <p className="text-black text-xl font-bold tracking-tight">
                 {displayName}
               </p>
             </div>
           </div>
 
           {/* Live Clock */}
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20">
-            <Clock className="h-5 w-5 text-white/80" />
-            <span className="text-white font-mono text-lg font-semibold">
+          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-6 py-3 border border-gray-300">
+            <Clock className="h-5 w-5 text-gray-700" />
+            <span className="text-black font-mono text-lg font-semibold">
               {currentTime || '--:--:--'}
             </span>
           </div>
@@ -166,24 +170,24 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
         {settings?.layout?.showInfoBar !== false && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
             {/* Next Class */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20">
-              <p className="text-white/60 text-sm font-medium mb-1">
+            <div className="bg-gray-100 rounded-2xl px-6 py-4 border border-gray-300">
+              <p className="text-gray-600 text-sm font-medium mb-1">
                 {settings?.content?.infoLeftLabel || 'Next Class'}
               </p>
-              <p className="text-white text-lg font-semibold">
+              <p className="text-black text-lg font-semibold">
                 {nextClass?.name} at {nextClass?.time}
               </p>
-              <p className="text-white/50 text-xs mt-1">
+              <p className="text-gray-500 text-xs mt-1">
                 in {nextClass?.minutesUntil} minutes
               </p>
             </div>
 
             {/* Today's Focus */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20">
-              <p className="text-white/60 text-sm font-medium mb-1">
+            <div className="bg-gray-100 rounded-2xl px-6 py-4 border border-gray-300">
+              <p className="text-gray-600 text-sm font-medium mb-1">
                 {settings?.content?.infoRightLabel || "Today's Focus"}
               </p>
-              <p className="text-white text-lg font-semibold">
+              <p className="text-black text-lg font-semibold">
                 {todaysFocus.join(' • ')}
               </p>
             </div>
@@ -195,15 +199,11 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
           {/* Check In Tile */}
           <button
             onClick={() => navigate(`/kiosk/${slug}/checkin`)}
-            className="group relative bg-gradient-to-br from-blue-600/40 to-blue-700/40 backdrop-blur-md rounded-3xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-blue-400/30 hover:border-blue-300/60 overflow-hidden"
+            className="group relative bg-white border-2 border-gray-300 rounded-3xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl overflow-hidden"
           >
-            {/* Animated background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
             {/* Icon Circle */}
             <div className="relative flex justify-center mb-8">
-              <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
-              <div className="relative p-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-2xl">
+              <div className="relative p-8 rounded-full bg-blue-500 shadow-2xl">
                 <svg
                   className="h-16 w-16 text-white"
                   fill="none"
@@ -222,17 +222,17 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
 
             {/* Text Content */}
             <div className="relative text-center space-y-2">
-              <h2 className="text-white text-4xl font-bold">
+              <h2 className="text-black text-4xl font-bold">
                 {settings?.content?.tileLeft?.title || 'Check In'}
               </h2>
-              <p className="text-white/70 text-lg">
+              <p className="text-gray-600 text-lg">
                 {settings?.content?.tileLeft?.subtitle || 'Tap here to check into class'}
               </p>
             </div>
 
             {/* Bottom Button */}
-            <div className="relative mt-8 pt-8 border-t border-white/10">
-              <div className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center font-bold text-lg shadow-lg group-hover:from-blue-400 group-hover:to-blue-500 transition-all">
+            <div className="relative mt-8 pt-8 border-t border-gray-300">
+              <div className="w-full py-4 rounded-2xl bg-blue-500 text-white text-center font-bold text-lg shadow-lg hover:bg-blue-600 transition-all">
                 {settings?.content?.tileLeft?.button || 'Check In'}
               </div>
             </div>
@@ -241,15 +241,11 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
           {/* Start Training Tile */}
           <button
             onClick={() => navigate(`/kiosk/${slug}/new-student`)}
-            className="group relative bg-gradient-to-br from-red-600/40 to-red-700/40 backdrop-blur-md rounded-3xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-red-400/30 hover:border-red-300/60 overflow-hidden"
+            className="group relative bg-white border-2 border-gray-300 rounded-3xl p-8 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl overflow-hidden"
           >
-            {/* Animated background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
             {/* Icon Circle */}
             <div className="relative flex justify-center mb-8">
-              <div className="absolute inset-0 bg-red-500/30 rounded-full blur-2xl group-hover:blur-3xl transition-all" />
-              <div className="relative p-8 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-2xl">
+              <div className="relative p-8 rounded-full bg-red-500 shadow-2xl">
                 <svg
                   className="h-16 w-16 text-white"
                   fill="none"
@@ -268,17 +264,17 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
 
             {/* Text Content */}
             <div className="relative text-center space-y-2">
-              <h2 className="text-white text-4xl font-bold">
+              <h2 className="text-black text-4xl font-bold">
                 {settings?.content?.tileRight?.title || 'Start Training'}
               </h2>
-              <p className="text-white/70 text-lg">
+              <p className="text-gray-600 text-lg">
                 {settings?.content?.tileRight?.subtitle || 'New students start here'}
               </p>
             </div>
 
             {/* Bottom Button */}
-            <div className="relative mt-8 pt-8 border-t border-white/10">
-              <div className="w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 text-white text-center font-bold text-lg shadow-lg group-hover:from-red-400 group-hover:to-red-500 transition-all">
+            <div className="relative mt-8 pt-8 border-t border-gray-300">
+              <div className="w-full py-4 rounded-2xl bg-red-500 text-white text-center font-bold text-lg shadow-lg hover:bg-red-600 transition-all">
                 {settings?.content?.tileRight?.button || 'Start Training'}
               </div>
             </div>
@@ -289,7 +285,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, settin
         <div className="text-center">
           <button
             onClick={() => navigate(`/kiosk/${slug}/staff-login`)}
-            className="flex items-center gap-2 mx-auto text-white/50 hover:text-white/80 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 mx-auto text-gray-500 hover:text-gray-700 transition-colors text-sm font-medium"
           >
             <Settings className="h-4 w-4" />
             Staff Login

@@ -641,16 +641,13 @@ export default function KioskStudio() {
 
                     {/* Background */}
                     <KioskBackgroundControls
-                      background={draftConfig.theme.background}
+                      background={draftConfig.background}
                       onChange={(key, value) => {
                         const updated = {
                           ...draftConfig,
-                          theme: {
-                            ...draftConfig.theme,
-                            background: {
-                              ...draftConfig.theme.background,
-                              [key]: value,
-                            },
+                          background: {
+                            ...draftConfig.background,
+                            [key]: value,
                           },
                         };
                         setDraftConfig(updated);
@@ -660,16 +657,13 @@ export default function KioskStudio() {
 
                     {/* Typography */}
                     <KioskTypographyControls
-                      typography={draftConfig.theme.typography}
+                      typography={draftConfig.typography}
                       onChange={(key, value) => {
                         const updated = {
                           ...draftConfig,
-                          theme: {
-                            ...draftConfig.theme,
-                            typography: {
-                              ...draftConfig.theme.typography,
-                              [key]: value,
-                            },
+                          typography: {
+                            ...draftConfig.typography,
+                            [key]: value,
                           },
                         };
                         setDraftConfig(updated);
