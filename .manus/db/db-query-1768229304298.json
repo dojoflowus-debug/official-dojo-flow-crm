@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, organizationId, name FROM locations LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, organizationId, name FROM locations LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "organizationId": "NULL",
+      "name": "Main Dojo"
+    },
+    {
+      "id": "60001",
+      "organizationId": "NULL",
+      "name": "Test Dojo Background"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torganizationId\tname\n1\tNULL\tMain Dojo\n60001\tNULL\tTest Dojo Background\n",
+  "stderr": "",
+  "execution_time_ms": 410
+}

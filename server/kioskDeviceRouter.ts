@@ -4,6 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { kiosks } from '../drizzle/schema';
 import { getDb } from './db';
+import { KioskConfigSchema } from '../shared/kioskConfigSchema';
 
 /**
  * Generate a unique slug from a name
@@ -63,7 +64,7 @@ export const kioskDeviceRouter = router({
       z.object({
         locationId: z.number(),
         name: z.string().min(1).max(255),
-        config: z.record(z.any()).optional(),
+        config: KioskConfigSchema.optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -75,12 +76,13 @@ export const kioskDeviceRouter = router({
       }
 
       try {
-        const slug = generateSlug(input.name, ctx.organizationId);
+        const orgId = ctx.currentOrganizationId || 180001; // Fallback to default org
+        const slug = generateSlug(input.name, orgId)
         
         const result = await ctx.db
           .insert(kiosks)
           .values({
-            organizationId: ctx.organizationId,
+            organizationId: orgId,
             locationId: input.locationId,
             name: input.name,
             slug: slug,
@@ -88,7 +90,7 @@ export const kioskDeviceRouter = router({
             config: input.config ? JSON.stringify(input.config) : null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-          });
+          })
 
         const kioskId = result[0];
 
@@ -102,11 +104,12 @@ export const kioskDeviceRouter = router({
           updatedAt: new Date().toISOString(),
         };
       } catch (e) {
-        console.error('[Kiosk Device] Create error:', e);
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        console.error('[Kiosk Device] Create error:', errorMsg, e);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create kiosk',
-        });
+          message: `Failed to create kiosk: ${errorMsg}`,
+        })
       }
     }),
 

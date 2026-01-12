@@ -54,13 +54,20 @@ export interface KioskConfig {
     fit: 'cover' | 'contain' | 'stretch'; // Image fit mode
   };
 
+  // Behavior - Kiosk interaction settings
+  behavior: {
+    autoAdvanceSeconds?: number; // Auto-advance to next screen
+    enableSound?: boolean; // Enable audio feedback
+    enableHaptics?: boolean; // Enable haptic feedback
+  };
+
   // Screensaver - Idle behavior
   screensaver: {
     enabled: boolean; // Show screensaver on idle
     idleSeconds: number; // Seconds before screensaver appears
     message: string; // Message to display
     showLogo: boolean; // Show logo on screensaver
-  };
+  }
 }
 
 /**
@@ -106,6 +113,11 @@ export const DEFAULT_KIOSK_CONFIG: KioskConfig = {
     blur: 0,
     dim: 0,
     fit: 'cover',
+  },
+  behavior: {
+    autoAdvanceSeconds: undefined,
+    enableSound: false,
+    enableHaptics: false,
   },
   screensaver: {
     enabled: true,

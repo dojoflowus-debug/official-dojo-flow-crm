@@ -40,7 +40,7 @@ export default function KioskStudio() {
   const [isCreating, setIsCreating] = useState(false);
 
   // Fetch locations
-  const { data: locationsData } = trpc.kiosk.listLocations.useQuery();
+  const { data: locationsData } = trpc.kiosk.listLocations.useQuery(undefined, { enabled: true })
 
   // Fetch kiosks for selected location
   const { data: kiosksData, refetch: refetchKiosks } = trpc.kioskDevice.listByLocation.useQuery(
@@ -353,7 +353,7 @@ export default function KioskStudio() {
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm"
             >
               <option value="">Select a location...</option>
-              {locationsData?.filter(l => l.kioskEnabled === 1).map((loc) => (
+              {locationsData?.filter(l => l.kioskEnabled).map((loc) => (
                 <option key={loc.id} value={loc.id}>
                   {loc.name}
                 </option>

@@ -4,6 +4,7 @@ import { storagePut } from './storage';
 import { getKioskSettingsByLocationSlug, updateKioskBackgroundImage, resetKioskBackground, updateKioskBackgroundEffects, updateLocationKioskTheme, getKioskSettingsByLocationId } from './db';
 import { eq } from 'drizzle-orm';
 import { kioskLocations } from '../drizzle/schema';
+import { KioskConfigSchema } from '../shared/kioskConfigSchema';
 
 export const kioskSettingsRouter = router({
   getSettings: protectedProcedure
@@ -113,7 +114,7 @@ export const kioskSettingsRouter = router({
   saveDraft: protectedProcedure
     .input(z.object({
       locationSlug: z.string(),
-      config: z.any(),
+      config: KioskConfigSchema,
     }))
     .mutation(async ({ input, ctx }) => {
       try {
@@ -156,7 +157,7 @@ export const kioskSettingsRouter = router({
   publish: protectedProcedure
     .input(z.object({
       locationSlug: z.string(),
-      config: z.any(),
+      config: KioskConfigSchema,
     }))
     .mutation(async ({ input, ctx }) => {
       try {
