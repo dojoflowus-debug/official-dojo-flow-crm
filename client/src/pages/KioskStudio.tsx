@@ -6,6 +6,7 @@ import { KioskTypographyControls } from '@/components/KioskTypographyControls';
 import { KioskBackgroundControls } from '@/components/KioskBackgroundControls';
 import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Kiosk {
   id: number;
@@ -20,6 +21,7 @@ interface Kiosk {
 export default function KioskStudio() {
   const { locationId } = useParams<{ locationId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'design' | 'content' | 'behavior' | 'screensaver'>('design');
   const [draftConfig, setDraftConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [lastSavedConfig, setLastSavedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
@@ -34,6 +36,8 @@ export default function KioskStudio() {
   const [newKioskName, setNewKioskName] = useState('');
   const [showAddKiosk, setShowAddKiosk] = useState(false);
   const [newKioskNameInput, setNewKioskNameInput] = useState('');
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Fetch locations
   const { data: locationsData } = trpc.kiosk.listLocations.useQuery();
@@ -157,7 +161,7 @@ export default function KioskStudio() {
     try {
       await saveDraftMutation.mutateAsync({
         locationSlug: selectedLocation.toString(),
-        settings: draftConfig,
+        config: draftConfig,
       });
       setLastSavedConfig(draftConfig);
       setSaveMessage({ type: 'success', text: '✓ Draft saved' });
@@ -176,7 +180,7 @@ export default function KioskStudio() {
     try {
       await publishMutation.mutateAsync({
         locationSlug: selectedLocation.toString(),
-        settings: draftConfig,
+        config: draftConfig,
       });
       setPublishedConfig(draftConfig);
       setSaveMessage({ type: 'success', text: '✓ Published successfully' });
@@ -189,19 +193,56 @@ export default function KioskStudio() {
     }
   };
 
-  const handleCreateKiosk = async () => {
-    if (!selectedLocation || !newKioskNameInput.trim()) return;
+  const handleCreateKiosk = async (useDefaultName: boolean = false) => {
+    if (!selectedLocation) {
+      setCreateError('Please select a location first.');
+      return;
+    }
+
+    let kioskName = useDefaultName ? 'Front Desk iPad' : newKioskNameInput.trim();
+    
+    if (!kioskName) {
+      setCreateError('Kiosk name is required.');
+      return;
+    }
+
+    // If not using default name and we have existing kiosks, auto-increment the name
+    if (!useDefaultName && kiosksForLocation && kiosksForLocation.length > 0) {
+      const count = kiosksForLocation.length + 1;
+      kioskName = `Kiosk ${count}`;
+    }
+
+    setIsCreating(true);
+    setCreateError(null);
+
     try {
-      await createKioskMutation.mutateAsync({
+      const newKiosk = await createKioskMutation.mutateAsync({
         locationId: selectedLocation,
-        name: newKioskNameInput,
+        name: kioskName,
         config: DEFAULT_KIOSK_CONFIG,
       });
+      
       setNewKioskNameInput('');
       setShowAddKiosk(false);
-      refetchKiosks();
+      
+      // Invalidate and refetch kiosks query
+      await queryClient.invalidateQueries({
+        queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
+      });
+      await refetchKiosks();
+      setSelectedKiosk(newKiosk.id);
+      
+      // Show success toast
+      setSaveMessage({ type: 'success', text: `✓ Kiosk "${kioskName}" created` });
+      setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
-      console.error('Failed to create kiosk:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create kiosk';
+      console.error('[KioskStudio] Create error:', { locationId: selectedLocation, orgId: 'ctx.organizationId', error });
+      setCreateError(errorMsg);
+      setSaveMessage({ type: 'error', text: `✗ ${errorMsg}` });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -212,7 +253,11 @@ export default function KioskStudio() {
       if (selectedKiosk === kioskId) {
         setSelectedKiosk(null);
       }
-      refetchKiosks();
+      // Invalidate and refetch kiosks query
+      await queryClient.invalidateQueries({
+        queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
+      });
+      await refetchKiosks();
     } catch (error) {
       console.error('Failed to delete kiosk:', error);
     }
@@ -221,7 +266,11 @@ export default function KioskStudio() {
   const handleDuplicateKiosk = async (kioskId: number) => {
     try {
       await duplicateKioskMutation.mutateAsync({ kioskId });
-      refetchKiosks();
+      // Invalidate and refetch kiosks query
+      await queryClient.invalidateQueries({
+        queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
+      });
+      await refetchKiosks();
     } catch (error) {
       console.error('Failed to duplicate kiosk:', error);
     }
@@ -236,7 +285,11 @@ export default function KioskStudio() {
       });
       setRenameKioskId(null);
       setNewKioskName('');
-      refetchKiosks();
+      // Invalidate and refetch kiosks query
+      await queryClient.invalidateQueries({
+        queryKey: ['kioskDevice.listByLocation', { locationId: selectedLocation }],
+      });
+      await refetchKiosks();
     } catch (error) {
       console.error('Failed to rename kiosk:', error);
     }
@@ -314,8 +367,16 @@ export default function KioskStudio() {
               <div className="flex items-center justify-between mb-4">
                 <label className="block text-sm font-medium">Kiosks</label>
                 <button
-                  onClick={() => setShowAddKiosk(true)}
-                  className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs font-medium transition-colors flex items-center gap-1"
+                  onClick={() => {
+                    if (!selectedLocation) {
+                      setCreateError('Please select a location first.');
+                      return;
+                    }
+                    setShowAddKiosk(true);
+                    setCreateError(null);
+                  }}
+                  disabled={!selectedLocation || isCreating}
+                  className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
                   Add
@@ -324,13 +385,29 @@ export default function KioskStudio() {
 
               {hasNoKiosks ? (
                 <div className="text-center py-8">
-                  <p className="text-sm text-slate-400 mb-4">No kiosks yet. Create one to get started.</p>
-                  <button
-                    onClick={() => setShowAddKiosk(true)}
-                    className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Create First Kiosk
-                  </button>
+                  {!selectedLocation ? (
+                    <>
+                      <p className="text-sm text-slate-400 mb-4">Select a location to create kiosks</p>
+                      <button
+                        disabled
+                        className="w-full px-4 py-2 bg-slate-700 rounded-lg text-sm font-medium transition-colors opacity-50 cursor-not-allowed"
+                      >
+                        Create First Kiosk
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-slate-400 mb-4">No kiosks yet. Create one to get started.</p>
+                      <button
+                        onClick={() => handleCreateKiosk(true)}
+                        disabled={isCreating}
+                        className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isCreating && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                        {isCreating ? 'Creating...' : 'Create First Kiosk'}
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -408,24 +485,39 @@ export default function KioskStudio() {
                     type="text"
                     placeholder="Kiosk name (e.g., Front Desk iPad)"
                     value={newKioskNameInput}
-                    onChange={(e) => setNewKioskNameInput(e.target.value)}
+                    onChange={(e) => {
+                      setNewKioskNameInput(e.target.value);
+                      setCreateError(null);
+                    }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreateKiosk();
+                      if (e.key === 'Enter') handleCreateKiosk(false);
                       if (e.key === 'Escape') setShowAddKiosk(false);
                     }}
                     className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm mb-2"
                     autoFocus
+                    disabled={isCreating}
                   />
+                  {createError && (
+                    <div className="px-3 py-2 mb-2 bg-red-900/30 border border-red-700/50 rounded text-xs text-red-300">
+                      {createError}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <button
-                      onClick={handleCreateKiosk}
-                      className="flex-1 px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
+                      onClick={() => handleCreateKiosk(false)}
+                      disabled={isCreating}
+                      className="flex-1 px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
                     >
-                      Create
+                      {isCreating && <div className="w-2 h-2 border border-white border-t-transparent rounded-full animate-spin" />}
+                      {isCreating ? 'Creating...' : 'Create'}
                     </button>
                     <button
-                      onClick={() => setShowAddKiosk(false)}
-                      className="flex-1 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium transition-colors"
+                      onClick={() => {
+                        setShowAddKiosk(false);
+                        setCreateError(null);
+                      }}
+                      disabled={isCreating}
+                      className="flex-1 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Cancel
                     </button>

@@ -2138,3 +2138,19 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Test: Duplicate kiosk and verify copy has same config
 - [x] Test: Verify Publish button disabled when no kiosk exists
 - [x] Write comprehensive vitest tests for kiosk device system (16 tests passing)
+
+
+## Kiosk Creation Feature (Current Sprint - Jan 12, 2026)
+
+- [x] Implement kiosk.create tRPC mutation with auto-naming logic
+- [x] Add location validation to prevent null locationId
+- [x] Disable buttons when no location selected + show guidance text
+- [x] Wire "Create First Kiosk" button handler
+- [x] Wire "+Add" button handler with loading state
+- [x] Implement query invalidation after create
+- [x] Add auto-select of newly created kiosk
+- [x] Implement error toast notifications
+- [x] Add inline error display under buttons
+- [x] Verify database persistence (kiosks table)
+- [x] Verify query key alignment (kiosk.listByLocation)
+- [ ] Test all acceptance criteria
