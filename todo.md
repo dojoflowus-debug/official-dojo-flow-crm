@@ -2001,3 +2001,23 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Create checkpoint after all phases complete
 - [ ] User review and feedback
 - [ ] Final adjustments based on feedback
+
+
+## Phase 17: Kiosk Studio Integration (COMPLETED)
+- [x] Add "Kiosk Studio" menu item to DojoFlowLayout navigation
+- [x] Add "Kiosk Studio" menu item to BottomNavLayout navigation
+- [x] Update DashboardLayout Kiosk menu item to point to Kiosk Studio
+- [x] Update menu items to route to `/kiosk-studio/1` instead of old `/kiosk` route
+- [x] Add page title mapping for `/kiosk-studio` route
+- [x] Test routing from menu to Kiosk Studio builder
+- [x] Verify Kiosk Studio page loads with proper layout and controls
+- [x] Verify location selector works in Kiosk Studio
+- [x] Verify live preview of kiosk interface works
+- [x] Confirm old KioskManager route still exists for backward compatibility
+- [x] Verify no broken links or navigation issues
+
+### Notes:
+- Old `/kiosk` and `/kiosk-manager` routes still point to KioskManager for backward compatibility
+- New primary navigation points users to `/kiosk-studio/1` which loads the live builder
+- KioskStudio page handles location selection and defaults to first kiosk-enabled location
+- All three layout components (DojoFlowLayout, BottomNavLayout, DashboardLayout) now route to Kiosk Studio

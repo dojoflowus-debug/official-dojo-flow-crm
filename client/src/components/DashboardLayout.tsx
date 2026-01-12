@@ -31,7 +31,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/kai" },
   { icon: Users, label: "Students", path: "/students" },
-  { icon: Monitor, label: "Kiosk", path: "/kiosk", allowedRoles: ["admin", "owner", "staff"] },
+  { icon: Monitor, label: "Kiosk", path: "/kiosk-studio/1", allowedRoles: ["admin", "owner", "staff"] },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

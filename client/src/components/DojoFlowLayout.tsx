@@ -40,7 +40,7 @@ const NAVIGATION = [
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
   { id: 'kai-command', name: 'Kai Command', href: '/kai', icon: Sparkles },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
-  // Kiosk removed - Kai Command is the central focus
+  { id: 'kiosk-studio', name: 'Kiosk Studio', href: '/kiosk-studio/1', icon: Tablet },
   { id: 'receptionist', name: 'Receptionist', href: '/receptionist', icon: Headphones },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'billing', name: 'Billing', href: '/billing', icon: CreditCard },
@@ -58,7 +58,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/kai-command': 'Kai Command',
   '/kai-chat': 'Kai Command',
   '/classes': 'Classes',
-  // Kiosk removed
+  '/kiosk-studio': 'Kiosk Studio',
   '/receptionist': 'Receptionist',
   '/staff': 'Staff',
   '/billing': 'Billing',
