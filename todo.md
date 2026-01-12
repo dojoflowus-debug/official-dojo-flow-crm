@@ -1960,3 +1960,39 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Set document.body.style.userSelect='none' while dragging
 - [x] Use CSS grid with CSS variable for editor width or ratio
 - [x] Verify ratio persists after page refresh
+
+
+## Phase 17: Kiosk Studio Builder Enhancements
+
+### Phase 1: Resizable Split View (COMPLETED - TESTED & WORKING)
+- [x] Implement draggable divider between editor and preview panels
+- [x] Add smooth resizing with enforced minimum widths (editor ≥ 520px, preview ≥ 360px)
+- [x] Persist split ratio to localStorage
+- [x] Implement "Focus Preview" button to collapse editor to thin rail
+- [x] Fixed missing zod import in kioskStudioRouter.ts
+- [x] Fixed initialization logic to properly load locations and settings
+- [x] Verified page loads successfully at /kiosk-studio-builder/1
+
+### Phase 2: Keyboard Shortcuts
+- [ ] Add Cmd/Ctrl + B to toggle Focus Preview mode
+- [ ] Add keyboard shortcuts documentation/help overlay
+- [ ] Implement keyboard event listeners with proper focus management
+
+### Phase 3: Responsive Design
+- [ ] Implement responsive breakpoints for mobile/tablet (< 1024px)
+- [ ] Auto-collapse editor on smaller screens
+- [ ] Test on various device sizes and orientations
+- [ ] Ensure touch-friendly divider on mobile devices
+
+### Testing & QA
+- [ ] Manual testing of split view resizing
+- [ ] Verify localStorage persistence across page refreshes
+- [ ] Test Focus Preview button functionality
+- [ ] Test keyboard shortcuts on different browsers
+- [ ] Cross-browser compatibility testing
+- [ ] Mobile device testing
+
+### Deployment
+- [ ] Create checkpoint after all phases complete
+- [ ] User review and feedback
+- [ ] Final adjustments based on feedback

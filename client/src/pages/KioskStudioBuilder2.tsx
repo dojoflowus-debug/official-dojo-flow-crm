@@ -59,10 +59,50 @@ interface KioskLocation {
   updatedAt: string;
 }
 
+const DEFAULT_APPEARANCE: KioskAppearance = {
+  background: {
+    type: 'color',
+    color: '#ffffff',
+    presetKey: null,
+    customUrl: null,
+    blur: 0,
+    dim: 0,
+    fit: 'cover',
+  },
+  typography: {
+    fontFamily: 'system-ui',
+    titleSize: 48,
+    titleWeight: 700,
+    subtitleSize: 24,
+    letterSpacing: 0,
+    buttonFontSize: 16,
+  },
+  layout: {
+    spacing: 'comfortable',
+    alignment: 'center',
+    maxWidth: 800,
+  },
+  content: {
+    headline: 'Welcome to Training',
+    subtext: 'Sign in or get started below',
+    logoUrl: null,
+    accentColor: '#ef4444',
+  },
+  behavior: {
+    showMemberLogin: true,
+    showNewStudent: true,
+    idleSeconds: 60,
+    autoReturn: true,
+    screensaverEnabled: true,
+    screensaverMessage: 'Tap to continue',
+    screensaverLogoUrl: null,
+  },
+};
+
 export default function KioskStudioBuilder2() {
   const { locationId } = useParams<{ locationId: string }>();
   const [activeTab, setActiveTab] = useState<'appearance' | 'typography' | 'layout' | 'content' | 'behavior'>('appearance');
-  const [draft, setDraft] = useState<KioskAppearance | null>(null);
+  const [draft, setDraft] = useState<KioskAppearance>(DEFAULT_APPEARANCE);
   const [isSaving, setIsSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [editorWidth, setEditorWidth] = useState(600);
@@ -84,7 +124,7 @@ export default function KioskStudioBuilder2() {
   const locId = locationId ? parseInt(locationId) : 0;
 
   const { data: fetchedLocations, refetch: refetchLocations } = trpc.kioskManager.getKioskLocations.useQuery();
-  const { data: settingsData, isLoading } = trpc.kioskStudio.getSettings.useQuery(
+  const { data: settingsData, isLoading: isSettingsLoading } = trpc.kioskStudio.getSettings.useQuery(
     { locationId: selectedLocationId || locId || 0 },
     { enabled: !!(selectedLocationId || locId) }
   );
@@ -317,7 +357,9 @@ export default function KioskStudioBuilder2() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  if (isLoading || !draft) {
+  // Show loading only if we're waiting for initial data
+  const isInitializing = isSettingsLoading || !selectedLocationId;
+  if (isInitializing) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
