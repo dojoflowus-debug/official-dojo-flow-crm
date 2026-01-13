@@ -305,7 +305,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, ctx.currentOrganizationId)
             )
           )
           .limit(1);
@@ -352,7 +352,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, ctx.currentOrganizationId)
             )
           );
 
@@ -397,7 +397,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, ctx.currentOrganizationId)
             )
           )
           .limit(1);
@@ -462,7 +462,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, ctx.currentOrganizationId)
             )
           );
 
@@ -526,7 +526,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, ctx.currentOrganizationId)
             )
           );
 
@@ -563,7 +563,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, ctx.currentOrganizationId)
             )
           );
 

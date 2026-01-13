@@ -11,14 +11,17 @@ interface KioskLayoutProps {
 }
 
 /**
- * KioskLayout - Isolated container for kiosk routes
+ * KioskLayout - Isolated container for kiosk routes with proper background layering
  * 
- * Features:
- * - Kiosk-only background system (not shared with website)
- * - Conditional background: white default, image only when configured
- * - Idle detection with screensaver mode
- * - Touch-first, full-screen experience
- * - No website styles or navigation leakage
+ * Layer Structure (from back to front):
+ * 1. Background Layer - Image/color with blur applied ONLY to this layer
+ * 2. Dim Overlay Layer - Semi-transparent overlay (no blur)
+ * 3. Content Layer - Sharp UI, cards, buttons, text (z-10, no blur)
+ * 
+ * This ensures:
+ * - Blur only affects the background image
+ * - Dim only darkens the background
+ * - UI content remains crisp and sharp
  */
 export default function KioskLayout({
   children,
@@ -72,12 +75,8 @@ export default function KioskLayout({
     };
   }, [IDLE_TIMEOUT]);
 
-  // Get background configuration with priority:
-  // 1. Preset (type=preset and presetKey) - from new presets system
-  // 2. Custom image (type=custom and customUrl)
-  // 3. Solid color (type=color)
-  // 4. Default white
-  const getBackgroundStyle = (): React.CSSProperties => {
+  // Get background image and settings
+  const getBackgroundImage = (): { url: string | null; blur: number; dim: number; fit: string } => {
     const settings = config?.background || {};
     const type = settings.type || 'color';
     const blur = settings.blur || 0;
@@ -91,11 +90,10 @@ export default function KioskLayout({
         const presetBlur = blur || preset.blur || 0;
         const presetDim = dim || preset.dim || 0;
         return {
-          backgroundImage: `url(${preset.imageUrl})`,
-          backgroundSize: fit,
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          filter: `blur(${presetBlur}px) brightness(${1 - presetDim / 100})`,
+          url: preset.imageUrl,
+          blur: presetBlur,
+          dim: presetDim,
+          fit: fit,
         };
       }
     }
@@ -103,27 +101,33 @@ export default function KioskLayout({
     // Priority 2: Custom image
     if (type === 'custom' && settings.customUrl && typeof settings.customUrl === 'string' && settings.customUrl.trim()) {
       return {
-        backgroundImage: `url(${settings.customUrl})`,
-        backgroundSize: fit,
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        filter: `blur(${blur}px) brightness(${1 - dim / 100})`,
+        url: settings.customUrl,
+        blur: blur,
+        dim: dim,
+        fit: fit,
       };
     }
 
-    // Priority 3: Solid color
-    if (type === 'color') {
-      return {
-        backgroundColor: settings.color || '#ffffff',
-        backgroundImage: 'none',
-      };
-    }
-
-    // Fallback: white
+    // No image (solid color or default)
     return {
-      backgroundColor: '#ffffff',
-      backgroundImage: 'none',
+      url: null,
+      blur: 0,
+      dim: 0,
+      fit: fit,
     };
+  };
+
+  // Get background color
+  const getBackgroundColor = (): string => {
+    const settings = config?.background || {};
+    const type = settings.type || 'color';
+
+    if (type === 'color') {
+      return settings.color || '#ffffff';
+    }
+
+    // Default white for image backgrounds
+    return '#ffffff';
   };
 
   // If idle, show screensaver (disabled in studio preview mode)
@@ -131,22 +135,42 @@ export default function KioskLayout({
     return <KioskScreensaver onReturn={() => setIsIdle(false)} message={config?.screensaver?.message} showLogo={config?.screensaver?.showLogo} />;
   }
 
-  const backgroundStyle = getBackgroundStyle();
-  const hasImage = backgroundStyle.backgroundImage && backgroundStyle.backgroundImage !== 'none';
+  const backgroundInfo = getBackgroundImage();
+  const backgroundColor = getBackgroundColor();
+  const hasImage = backgroundInfo.url !== null;
 
   return (
-    <div className="kiosk-root relative min-h-screen w-full overflow-hidden" style={backgroundStyle}>
-      {/* Blur overlay for background - only when image exists */}
+    <div className="kiosk-root relative min-h-screen w-full overflow-hidden" style={{ backgroundColor }}>
+      {/* LAYER 1: Background Image with Blur (z-0) */}
       {hasImage && (
-        <div className="absolute inset-0 backdrop-blur-sm bg-black/20" />
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url(${backgroundInfo.url})`,
+            backgroundSize: backgroundInfo.fit,
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+            filter: `blur(${backgroundInfo.blur}px)`,
+          }}
+        />
       )}
 
-      {/* Vignette overlay - only when image exists */}
-      {hasImage && (
-        <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/30" />
+      {/* LAYER 2: Dim Overlay (z-1) - Semi-transparent, no blur */}
+      {hasImage && backgroundInfo.dim > 0 && (
+        <div
+          className="absolute inset-0 z-1"
+          style={{
+            backgroundColor: `rgba(0, 0, 0, ${backgroundInfo.dim / 100})`,
+          }}
+        />
       )}
 
-      {/* Content */}
+      {/* Optional: Vignette effect for better text readability (z-2) */}
+      {hasImage && (
+        <div className="absolute inset-0 z-2 bg-gradient-to-br from-black/5 via-transparent to-black/10 pointer-events-none" />
+      )}
+
+      {/* LAYER 3: Content (z-10) - Sharp, no blur, interactive */}
       <div className="relative z-10 w-full h-full">
         {children}
       </div>

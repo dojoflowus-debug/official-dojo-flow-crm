@@ -2527,3 +2527,39 @@ All three errors have been fixed by adding proper error handling and graceful fa
 4. Wire remaining content controls (headline, subtext, etc.)
 5. Test public kiosk route loads saved config
 6. Verify database persistence after save/publish
+
+
+## Phase 19: Background System Complete Rebuild (Jan 13, 2026)
+
+### A) Fix Preset Backgrounds
+- [ ] Organize background images in client/public/kiosk-backgrounds/
+- [ ] Update preset definitions with correct image paths
+- [ ] Verify thumbnails render with actual images
+- [ ] Test preset selection applies to preview instantly
+
+### B) Implement Background Upload
+- [ ] Add file input for background upload
+- [ ] Implement server-side upload handler
+- [ ] Store uploaded image URL in kiosk config
+- [ ] Show uploaded images as selectable thumbnails
+- [ ] Test upload and preview binding
+
+### C) Fix Background Layering
+- [ ] Separate background layer (image/color)
+- [ ] Add dim overlay layer (semi-transparent)
+- [ ] Keep content layer (cards/buttons/text) sharp
+- [ ] Apply blur ONLY to background layer
+- [ ] Apply dim ONLY to overlay layer
+- [ ] Verify UI remains crisp
+
+### D) Wire Controls to Preview
+- [ ] Test accent color changes update preview
+- [ ] Test background selection updates preview
+- [ ] Test blur/dim sliders update preview
+- [ ] Verify no refresh needed for live updates
+
+### E) Test Persistence
+- [ ] Save Draft persists to database
+- [ ] Publish persists published config
+- [ ] Refresh page loads saved config
+- [ ] Public kiosk route loads published config
