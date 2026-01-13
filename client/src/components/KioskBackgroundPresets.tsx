@@ -13,10 +13,23 @@ export function KioskBackgroundPresets({
   onSelectPreset,
 }: KioskBackgroundPresetsProps) {
   const [selectedCategory, setSelectedCategory] = React.useState<string>('martial-arts');
+  const [imageErrors, setImageErrors] = React.useState<Set<string>>(new Set());
 
   const filteredPresets = KIOSK_BACKGROUND_PRESETS.filter(
     p => p.category === selectedCategory
   );
+
+  const handleImageError = (presetId: string, imageUrl: string) => {
+    console.error(`[Preset Image Error] Failed to load image for preset: ${presetId}`, {
+      imageUrl,
+      fullUrl: new URL(imageUrl, window.location.origin).href,
+    });
+    setImageErrors(prev => new Set([...prev, presetId]));
+  };
+
+  const handleImageLoad = (presetId: string) => {
+    console.log(`[Preset Image Loaded] ${presetId}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -47,17 +60,23 @@ export function KioskBackgroundPresets({
             }`}
             onClick={() => onSelectPreset(preset.id)}
           >
-            <div className="relative w-full h-32 bg-gray-200">
-              <img
-                src={preset.imageUrl}
-                alt={preset.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ccc" width="100" height="100"/%3E%3C/svg%3E';
-                }}
-              />
+            <div className="relative w-full h-32 bg-gray-300 flex items-center justify-center">
+              {imageErrors.has(preset.id) ? (
+                <div className="text-center text-gray-500 text-xs p-2">
+                  <div>Image not found</div>
+                  <div className="text-xs mt-1 break-all">{preset.imageUrl}</div>
+                </div>
+              ) : (
+                <img
+                  src={preset.imageUrl}
+                  alt={preset.name}
+                  className="w-full h-full object-cover"
+                  onError={() => handleImageError(preset.id, preset.imageUrl)}
+                  onLoad={() => handleImageLoad(preset.id)}
+                />
+              )}
               {/* Dim overlay preview */}
-              {preset.dim > 0 && (
+              {preset.dim > 0 && !imageErrors.has(preset.id) && (
                 <div
                   className="absolute inset-0"
                   style={{

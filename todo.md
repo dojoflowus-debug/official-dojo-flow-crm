@@ -2500,3 +2500,30 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] All major features implemented
 - [ ] Minor UI polish needed (toast notifications)
 - [ ] Ready to push live update
+
+## Phase 18: Kiosk Studio Rebuild - COMPLETE (Jan 13, 2026)
+
+### CRITICAL FIXES COMPLETED:
+- [x] Fixed debug overlay - now toggles with ?debug=1 query param (default OFF)
+- [x] Fixed preset thumbnail images - moved static file serving before Vite middlewares
+- [x] Fixed multi-tenancy bug - ctx.organizationId to ctx.currentOrganizationId in kioskDeviceRouter
+- [x] Implemented 7 background presets with real images (Martial Arts, Nature, Zen, Kids, Yoga, Fitness, Dance)
+- [x] Background preset selection with live preview working
+- [x] Accent color control with real-time preview working
+- [x] Location and kiosk selection working
+- [x] All appearance controls wired to preview
+- [x] Blur and Dim overlay controls visible
+
+### KNOWN ISSUES TO INVESTIGATE:
+- [ ] Save Draft returns 500 error (needs debugging)
+- [ ] Publish returns 500 error (needs debugging)
+- [ ] Toast notifications not showing (UI component missing)
+- [ ] Typography sliders may need visual verification
+
+### NEXT STEPS (For Future Work):
+1. Debug the 500 error in save/publish mutations (check TRPC procedure error logs)
+2. Implement background image upload system
+3. Add toast notification UI component
+4. Wire remaining content controls (headline, subtext, etc.)
+5. Test public kiosk route loads saved config
+6. Verify database persistence after save/publish

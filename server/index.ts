@@ -60,10 +60,20 @@ async function startServer() {
       ? path.resolve(__dirname, "public")
       : path.resolve(__dirname, "..", "dist", "public");
 
-  app.use(express.static(staticPath));
+  // Serve static files with proper cache headers
+  app.use(express.static(staticPath, {
+    maxAge: '1h',
+    etag: false
+  }));
 
   // Handle client-side routing - serve index.html for all routes
-  app.get("*", (_req, res) => {
+  // But NOT for requests with file extensions (static files)
+  app.get("*", (req, res) => {
+    // If the request has a file extension, don't serve index.html
+    if (req.path.includes(".")) {
+      res.status(404).send("Not Found");
+      return;
+    }
     res.sendFile(path.join(staticPath, "index.html"));
   });
 
