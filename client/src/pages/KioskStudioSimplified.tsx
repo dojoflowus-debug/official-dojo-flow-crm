@@ -238,7 +238,23 @@ export default function KioskStudioRefactored() {
   };
 
   // RENDER: Loading states
-  if (kiosksLoading) {
+  if (!locationsData || locationsData.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p className="text-muted-foreground">No locations available</p>
+      </div>
+    );
+  }
+
+  if (!selectedLocation) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p className="text-muted-foreground">Selecting location...</p>
+      </div>
+    );
+  }
+
+  if (kiosksLoading || !kiosksData) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <p className="text-muted-foreground">Loading kiosks...</p>
@@ -246,10 +262,36 @@ export default function KioskStudioRefactored() {
     );
   }
 
-  if (!selectedKiosk || !currentKiosk) {
+  if (kiosksData.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p className="text-muted-foreground">No kiosks in this location</p>
+      </div>
+    );
+  }
+
+  if (!selectedKiosk) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <p className="text-muted-foreground">Select a kiosk to begin</p>
+      </div>
+    );
+  }
+
+  if (kioskLoading || !currentKiosk) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p className="text-muted-foreground">Loading kiosk...</p>
+      </div>
+    );
+  }
+
+  // Ensure draftConfig is always valid
+  const safeConfig = draftConfig || DEFAULT_KIOSK_CONFIG;
+  if (!safeConfig.background) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p className="text-muted-foreground">Invalid configuration</p>
       </div>
     );
   }
@@ -349,7 +391,7 @@ export default function KioskStudioRefactored() {
             <TabsContent value="background" className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="space-y-2">
                 <Label>Background Type</Label>
-                <Select value={draftConfig.background.type} onValueChange={(val: any) => handleBackgroundChange('type', val)}>
+                <Select value={safeConfig.background.type || 'solid'} onValueChange={(val: any) => handleBackgroundChange('type', val)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -361,29 +403,29 @@ export default function KioskStudioRefactored() {
                 </Select>
               </div>
 
-              {draftConfig.background.type === 'solid' && (
+              {safeConfig.background.type === 'solid' && (
                 <div className="space-y-2">
                   <Label>Color</Label>
                   <input
                     type="color"
-                    value={draftConfig.background.color || '#000000'}
+                    value={safeConfig.background.color || '#000000'}
                     onChange={(e) => handleBackgroundChange('color', e.target.value)}
                     className="w-full h-10 rounded border border-border cursor-pointer"
                   />
                 </div>
               )}
 
-              {draftConfig.background.type === 'preset' && (
+              {safeConfig.background.type === 'preset' && (
                 <div className="space-y-2">
                   <Label>Preset</Label>
                   <KioskBackgroundPresets
-                    selectedPresetId={draftConfig.background.presetKey}
+                    selectedPresetId={safeConfig.background.presetKey || undefined}
                     onSelectPreset={(presetId) => handleBackgroundChange('presetKey', presetId)}
                   />
                 </div>
               )}
 
-              {draftConfig.background.type === 'custom' && (
+              {safeConfig.background.type === 'custom' && (
                 <div className="space-y-2">
                   <Label>Upload Image</Label>
                   <KioskBackgroundUpload
@@ -393,27 +435,27 @@ export default function KioskStudioRefactored() {
                 </div>
               )}
 
-              {(draftConfig.background.type === 'preset' || draftConfig.background.type === 'custom') && (
+              {(safeConfig.background.type === 'preset' || safeConfig.background.type === 'custom') && (
                 <>
                   <div className="space-y-2">
-                    <Label>Blur ({draftConfig.background.blur}px)</Label>
+                    <Label>Blur ({safeConfig.background.blur}px)</Label>
                     <input
                       type="range"
                       min="0"
                       max="20"
-                      value={draftConfig.background.blur || 0}
+                      value={safeConfig.background.blur || 0}
                       onChange={(e) => handleBackgroundChange('blur', parseInt(e.target.value))}
                       className="w-full"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Dim ({draftConfig.background.dim}%)</Label>
+                    <Label>Dim ({safeConfig.background.dim}%)</Label>
                     <input
                       type="range"
                       min="0"
                       max="100"
-                      value={draftConfig.background.dim || 0}
+                      value={safeConfig.background.dim || 0}
                       className="w-full"
                       onChange={(e) => handleBackgroundChange('dim', parseInt(e.target.value))}
                     />
@@ -428,7 +470,7 @@ export default function KioskStudioRefactored() {
                 <Label>Accent Color</Label>
                 <input
                   type="color"
-                  value={draftConfig.theme.accentColor || '#ef4444'}
+                  value={safeConfig.theme.accentColor || '#ef4444'}
                   onChange={(e) => handleThemeChange('accentColor', e.target.value)}
                   className="w-full h-10 rounded border border-border cursor-pointer"
                 />
@@ -436,7 +478,7 @@ export default function KioskStudioRefactored() {
 
               <div className="space-y-2">
                 <Label>Font Family</Label>
-                <Select value={draftConfig.theme.fontFamily} onValueChange={(val) => handleThemeChange('fontFamily', val)}>
+                <Select value={safeConfig.theme.fontFamily || 'system'} onValueChange={(val) => handleThemeChange('fontFamily', val)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -449,12 +491,12 @@ export default function KioskStudioRefactored() {
               </div>
 
               <div className="space-y-2">
-                <Label>Title Size ({draftConfig.typography.titleSize}px)</Label>
+                <Label>Title Size ({safeConfig.typography.titleSize}px)</Label>
                 <input
                   type="range"
                   min="24"
                   max="72"
-                  value={draftConfig.typography.titleSize || 48}
+                  value={safeConfig.typography.titleSize || 48}
                   onChange={(e) => handleTypographyChange('titleSize', parseInt(e.target.value))}
                   className="w-full"
                 />
@@ -462,7 +504,7 @@ export default function KioskStudioRefactored() {
 
               <div className="space-y-2">
                 <Label>Title Weight</Label>
-                <Select value={draftConfig.typography.titleWeight?.toString()} onValueChange={(val) => handleTypographyChange('titleWeight', parseInt(val))}>
+                <Select value={(safeConfig.typography.titleWeight || 400).toString()} onValueChange={(val) => handleTypographyChange('titleWeight', parseInt(val))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -475,25 +517,25 @@ export default function KioskStudioRefactored() {
               </div>
 
               <div className="space-y-2">
-                <Label>Letter Spacing ({draftConfig.typography.letterSpacing}px)</Label>
+                <Label>Letter Spacing ({safeConfig.typography.letterSpacing}px)</Label>
                 <input
                   type="range"
                   min="0"
                   max="4"
                   step="0.1"
-                  value={draftConfig.typography.letterSpacing || 0}
+                  value={safeConfig.typography.letterSpacing || 0}
                   onChange={(e) => handleTypographyChange('letterSpacing', parseFloat(e.target.value))}
                   className="w-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Button Font Size ({draftConfig.typography.buttonFontSize}px)</Label>
+                <Label>Button Font Size ({safeConfig.typography.buttonFontSize}px)</Label>
                 <input
                   type="range"
                   min="12"
                   max="24"
-                  value={draftConfig.typography.buttonFontSize || 16}
+                  value={safeConfig.typography.buttonFontSize || 16}
                   onChange={(e) => handleTypographyChange('buttonFontSize', parseInt(e.target.value))}
                   className="w-full"
                 />
@@ -505,8 +547,8 @@ export default function KioskStudioRefactored() {
               <div className="space-y-2">
                 <Label>Left Tile Title</Label>
                 <Input
-                  value={draftConfig.content.leftTile?.title || ''}
-                  onChange={(e) => handleContentChange('leftTile', { ...draftConfig.content.leftTile, title: e.target.value })}
+                  value={safeConfig.content.leftTile?.title || ''}
+                  onChange={(e) => handleContentChange('leftTile', { ...safeConfig.content.leftTile, title: e.target.value })}
                   placeholder="e.g., Next Class"
                 />
               </div>
@@ -514,8 +556,8 @@ export default function KioskStudioRefactored() {
               <div className="space-y-2">
                 <Label>Right Tile Title</Label>
                 <Input
-                  value={draftConfig.content.rightTile?.title || ''}
-                  onChange={(e) => handleContentChange('rightTile', { ...draftConfig.content.rightTile, title: e.target.value })}
+                  value={safeConfig.content.rightTile?.title || ''}
+                  onChange={(e) => handleContentChange('rightTile', { ...safeConfig.content.rightTile, title: e.target.value })}
                   placeholder="e.g., Today's Focus"
                 />
               </div>
