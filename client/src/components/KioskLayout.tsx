@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import KioskScreensaver from './KioskScreensaver';
 import { KioskConfig } from '../../../shared/kioskConfig';
+import { getPresetById } from '../../../shared/kioskBackgroundPresets';
 
 interface KioskLayoutProps {
   children: ReactNode;
@@ -72,8 +73,8 @@ export default function KioskLayout({
   }, [IDLE_TIMEOUT]);
 
   // Get background configuration with priority:
-  // 1. Custom image (type=custom and customUrl)
-  // 2. Preset (type=preset and presetKey)
+  // 1. Preset (type=preset and presetKey) - from new presets system
+  // 2. Custom image (type=custom and customUrl)
   // 3. Solid color (type=color)
   // 4. Default white
   const getBackgroundStyle = (): React.CSSProperties => {
@@ -83,7 +84,23 @@ export default function KioskLayout({
     const dim = settings.dim || 0;
     const fit = settings.fit || 'cover';
 
-    // Priority 1: Custom image
+    // Priority 1: Preset from new presets system
+    if (type === 'preset' && settings.presetKey) {
+      const preset = getPresetById(settings.presetKey);
+      if (preset && preset.imageUrl) {
+        const presetBlur = blur || preset.blur || 0;
+        const presetDim = dim || preset.dim || 0;
+        return {
+          backgroundImage: `url(${preset.imageUrl})`,
+          backgroundSize: fit,
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          filter: `blur(${presetBlur}px) brightness(${1 - presetDim / 100})`,
+        };
+      }
+    }
+
+    // Priority 2: Custom image
     if (type === 'custom' && settings.customUrl && typeof settings.customUrl === 'string' && settings.customUrl.trim()) {
       return {
         backgroundImage: `url(${settings.customUrl})`,
@@ -92,25 +109,6 @@ export default function KioskLayout({
         backgroundAttachment: 'fixed',
         filter: `blur(${blur}px) brightness(${1 - dim / 100})`,
       };
-    }
-
-    // Priority 2: Preset
-    if (type === 'preset' && settings.presetKey) {
-      const presets: Record<string, string> = {
-        'dojo-warm-lights': '/kiosk-welcome-bg.jpg',
-        'dojo-dark': '/kiosk-dark-bg.jpg',
-        'dojo-minimal': '/kiosk-minimal-bg.jpg',
-      };
-      const presetUrl = presets[settings.presetKey];
-      if (presetUrl) {
-        return {
-          backgroundImage: `url(${presetUrl})`,
-          backgroundSize: fit,
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          filter: `blur(${blur}px) brightness(${1 - dim / 100})`,
-        };
-      }
     }
 
     // Priority 3: Solid color

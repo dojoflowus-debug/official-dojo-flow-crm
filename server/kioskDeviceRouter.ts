@@ -63,7 +63,7 @@ export const kioskDeviceRouter = router({
           .from(kiosks)
           .where(
             and(
-              eq(kiosks.organizationId, ctx.organizationId),
+              eq(kiosks.organizationId, ctx.currentOrganizationId!),
               eq(kiosks.locationId, input.locationId)
             )
           );
@@ -111,7 +111,7 @@ export const kioskDeviceRouter = router({
       }
 
       try {
-        const orgId = ctx.currentOrganizationId || ctx.organizationId;
+        const orgId = ctx.currentOrganizationId;
         const slug = generateSlug(input.name, orgId);
         
         // Store config in new format (draft/published)
@@ -148,17 +148,16 @@ export const kioskDeviceRouter = router({
           updatedAt: new Date().toISOString(),
         };
       } catch (e) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        console.error('[Kiosk Device] Create error:', errorMsg, e);
+        console.error('[Kiosk Device] Create error:', e);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to create kiosk: ${errorMsg}`,
+          message: 'Failed to create kiosk',
         });
       }
     }),
 
   /**
-   * Get kiosk by ID with draft and published configs
+   * Get a specific kiosk by ID
    */
   getById: protectedProcedure
     .input(z.object({ kioskId: z.number() }))
@@ -177,7 +176,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
+              eq(kiosks.organizationId, ctx.currentOrganizationId!)
             )
           )
           .limit(1);
@@ -599,8 +598,7 @@ export const kioskDeviceRouter = router({
           .where(
             and(
               eq(kiosks.id, input.kioskId),
-              eq(kiosks.organizationId, ctx.organizationId)
-            )
+              eq(kiosks.organizationId, ctx.currentOrganizationId!),            )
           )
           .limit(1);
 
@@ -613,12 +611,12 @@ export const kioskDeviceRouter = router({
 
         const orig = original[0];
         const newName = `${orig.name} (Copy)`;
-        const newSlug = generateSlug(newName, ctx.organizationId);
+        const newSlug = generateSlug(newName, ctx.currentOrganizationId!);
 
         const result = await ctx.db
           .insert(kiosks)
           .values({
-            organizationId: ctx.organizationId,
+            organizationId: ctx.currentOrganizationId!,
             locationId: orig.locationId,
             name: newName,
             slug: newSlug,

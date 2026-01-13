@@ -1,0 +1,80 @@
+{
+  "query": "SELECT k.id, k.name, k.locationId, k.organizationId, l.name as locationName FROM kiosks k LEFT JOIN locations l ON k.locationId = l.id WHERE k.locationId = 1 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT k.id, k.name, k.locationId, k.organizationId, l.name as locationName FROM kiosks k LEFT JOIN locations l ON k.locationId = l.id WHERE k.locationId = 1 LIMIT 10;",
+  "rows": [
+    {
+      "id": "30007",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "30006",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "30005",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "30004",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "30003",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "30002",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "4",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "3",
+      "name": "Lobby",
+      "locationId": "1",
+      "organizationId": "120001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "2",
+      "name": "Test Kiosk",
+      "locationId": "1",
+      "organizationId": "180001",
+      "locationName": "Main Dojo"
+    },
+    {
+      "id": "1",
+      "name": "Front Desk iPad",
+      "locationId": "1",
+      "organizationId": "180001",
+      "locationName": "Main Dojo"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tlocationId\torganizationId\tlocationName\n30007\tFront Desk iPad\t1\t120001\tMain Dojo\n30006\tFront Desk iPad\t1\t120001\tMain Dojo\n30005\tFront Desk iPad\t1\t120001\tMain Dojo\n30004\tFront Desk iPad\t1\t120001\tMain Dojo\n30003\tFront Desk iPad\t1\t120001\tMain Dojo\n30002\tFront Desk iPad\t1\t120001\tMain Dojo\n4\tFront Desk iPad\t1\t120001\tMain Dojo\n3\tLobby\t1\t120001\tMain Dojo\n2\tTest Kiosk\t1\t180001\tMain Dojo\n1\tFront Desk iPad\t1\t180001\tMain Dojo\n",
+  "stderr": "",
+  "execution_time_ms": 116
+}
