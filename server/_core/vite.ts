@@ -21,16 +21,25 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   // Serve static files BEFORE Vite middlewares so they don't get intercepted
+  const publicPath = path.resolve(import.meta.dirname, "../..", "public");
   const distPath = path.resolve(import.meta.dirname, "../..", "dist", "public");
+  
+  // Serve from /public directory (source)
+  if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+  }
+  
+  // Also serve from /dist/public if it exists (built assets)
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
   }
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
-    // Skip Vite HTML transformation for API routes and static files
+    // Skip Vite HTML transformation for API routes and static files with extensions
     if (req.path.startsWith('/api/') || req.path.includes('.')) {
-      return next();
+      // If file doesn't exist, don't transform - let it 404
+      return res.status(404).end('Not Found');
     }
     
     const url = req.originalUrl;
