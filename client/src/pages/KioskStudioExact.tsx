@@ -15,6 +15,7 @@ import { KioskBackgroundUpload } from '@/components/KioskBackgroundUpload';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { DeviceEmulator } from '@/components/DeviceEmulator';
+import { KioskThumbnail } from '@/components/KioskThumbnail';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface Kiosk {
@@ -255,17 +256,13 @@ export default function KioskStudioExact() {
             <button
               key={kiosk.id}
               onClick={() => setSelectedKiosk(kiosk.id)}
-              className={`w-full text-left rounded-lg overflow-hidden transition-all ${
-                selectedKiosk === kiosk.id
-                  ? 'ring-2 ring-blue-500 opacity-100'
-                  : 'opacity-60 hover:opacity-100'
-              }`}
+              className="w-full text-left rounded-lg overflow-hidden transition-all focus:outline-none"
             >
-              {/* Placeholder thumbnail */}
-              <div className="w-full aspect-square bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                <span className="text-xs text-slate-400">{kiosk.name}</span>
-              </div>
-              <p className="text-xs text-slate-300 mt-1 truncate">{kiosk.name}</p>
+              <KioskThumbnail
+                config={selectedKiosk === kiosk.id && currentKiosk ? draftConfig : (kiosk.draftConfig ? JSON.parse(JSON.stringify(kiosk.draftConfig)) : JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)))}
+                kioskName={kiosk.name}
+                isSelected={selectedKiosk === kiosk.id}
+              />
             </button>
           ))}
         </div>
