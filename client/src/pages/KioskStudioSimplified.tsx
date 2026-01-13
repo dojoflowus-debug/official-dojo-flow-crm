@@ -15,6 +15,7 @@ import { KioskBackgroundPresets } from '@/components/KioskBackgroundPresets';
 import { KioskBackgroundUpload } from '@/components/KioskBackgroundUpload';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
+import { DeviceEmulator } from '@/components/DeviceEmulator';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface Kiosk {
@@ -584,13 +585,24 @@ export default function KioskStudioSimplified() {
           </div>
 
           {/* Preview Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden p-4">
             {kioskLoading ? (
               <div className="w-full h-full flex items-center justify-center">
                 <p className="text-sm text-muted-foreground">Loading...</p>
               </div>
+            ) : selectedLocation && selectedKiosk && currentKiosk ? (
+              <DeviceEmulator
+                orgId={1} // TODO: Get from context
+                locationId={selectedLocation}
+                kioskId={selectedKiosk}
+                kioskSlug={currentKiosk.slug}
+              >
+                <KioskPreviewLive config={getPreviewConfig()} />
+              </DeviceEmulator>
             ) : (
-              <KioskPreviewLive config={getPreviewConfig()} />
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">Select a location and kiosk to preview</p>
+              </div>
             )}
           </div>
         </div>
