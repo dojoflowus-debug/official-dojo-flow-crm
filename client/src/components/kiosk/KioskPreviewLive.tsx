@@ -55,11 +55,19 @@ export default function KioskPreviewLive({ config, isLoading = false }: KioskPre
           wordBreak: 'break-word'
         }}>
           <div style={{ fontWeight: 'bold', marginBottom: 4 }}>LIVE CONFIG DEBUG</div>
-          <div>accentColor: <span style={{ color: config?.theme?.accentColor || '#ef4444' }}>{config?.theme?.accentColor || '#ef4444'}</span></div>
-          <div>blur: {config?.background?.blur || 0}px</div>
-          <div>dim: {config?.background?.dim || 0}%</div>
-          <div>bgType: {config?.background?.type || 'color'}</div>
-          <div>bgColor: {config?.background?.color || '#fff'}</div>
+          <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+            <div style={{ color: '#aaa', fontSize: 10 }}>THEME</div>
+            <div>accentColor: <span style={{ color: config?.theme?.accentColor || '#ef4444' }}>{config?.theme?.accentColor || '#ef4444'}</span></div>
+          </div>
+          <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+            <div style={{ color: '#aaa', fontSize: 10 }}>BACKGROUND</div>
+            <div>bgType: {config?.background?.type || 'color'}</div>
+            <div>bgColor: {config?.background?.color || '#fff'}</div>
+            <div>bgPresetId: {config?.background?.presetKey || 'none'}</div>
+            <div>bgCustomUrl: {config?.background?.customUrl || 'none'}</div>
+            <div>blur: {config?.background?.blur || 0}px</div>
+            <div>dim: {config?.background?.dim || 0}%</div>
+          </div>
         </div>
       )}
     </div>

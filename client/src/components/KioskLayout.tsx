@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import KioskScreensaver from './KioskScreensaver';
 import { KioskConfig } from '../../../shared/kioskConfig';
-import { getPresetById } from '../../../shared/kioskBackgroundPresets';
+import { getPresetById, resolvePresetImageUrl } from '../../../shared/kioskBackgroundPresets';
 
 interface KioskLayoutProps {
   children: ReactNode;
@@ -86,16 +86,27 @@ export default function KioskLayout({
     // Priority 1: Preset from new presets system
     if (type === 'preset' && settings.presetKey) {
       const preset = getPresetById(settings.presetKey);
-      if (preset && preset.imageUrl) {
-        const presetBlur = blur || preset.blur || 0;
-        const presetDim = dim || preset.dim || 0;
-        return {
-          url: preset.imageUrl,
-          blur: presetBlur,
-          dim: presetDim,
-          fit: fit,
-        };
+      if (preset) {
+        const resolvedUrl = resolvePresetImageUrl(preset);
+        if (resolvedUrl) {
+          const presetBlur = blur !== undefined ? blur : (preset.blur || 0);
+          const presetDim = dim !== undefined ? dim : (preset.dim || 0);
+          console.log('[KioskLayout] Preset background:', {
+            presetId: settings.presetKey,
+            presetName: preset.name,
+            resolvedUrl,
+            blur: presetBlur,
+            dim: presetDim,
+          });
+          return {
+            url: resolvedUrl,
+            blur: presetBlur,
+            dim: presetDim,
+            fit: fit,
+          };
+        }
       }
+      console.warn('[KioskLayout] Preset not found:', settings.presetKey);
     }
 
     // Priority 2: Custom image

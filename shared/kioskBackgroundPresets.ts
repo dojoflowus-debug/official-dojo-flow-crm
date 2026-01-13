@@ -64,8 +64,8 @@ export const KIOSK_BACKGROUND_PRESETS: BackgroundPreset[] = [
   {
     id: 'yoga-nature',
     name: 'Yoga in Nature',
-    category: 'yoga',
-    imageUrl: '/kiosk-backgrounds/fitness-battle-ropes.png',
+    category: 'nature',
+    imageUrl: '/kiosk-backgrounds/japanese-nature.png',
     blur: 0,
     dim: 15,
     description: 'Outdoor yoga with nature background',
@@ -74,7 +74,7 @@ export const KIOSK_BACKGROUND_PRESETS: BackgroundPreset[] = [
     id: 'fitness-ropes',
     name: 'Fitness Battle Ropes',
     category: 'fitness',
-    imageUrl: '/kiosk-backgrounds/fitness-battle-ropes.png',
+    imageUrl: '/kiosk-backgrounds/fitness-battle-ropes.jpg',
     blur: 0,
     dim: 20,
     description: 'High-intensity fitness training',
@@ -99,6 +99,14 @@ export const BACKGROUND_CATEGORIES = [
   { id: 'dance', label: 'Dance' },
   { id: 'studio', label: 'Studio' },
 ];
+
+// Helper function to resolve preset image URL
+export function resolvePresetImageUrl(preset: BackgroundPreset | undefined): string | null {
+  if (!preset || !preset.imageUrl) return null;
+  // Ensure URL is absolute or relative to root
+  if (preset.imageUrl.startsWith('/')) return preset.imageUrl;
+  return `/${preset.imageUrl}`;
+}
 
 export function getPresetById(id: string): BackgroundPreset | undefined {
   return KIOSK_BACKGROUND_PRESETS.find(p => p.id === id);

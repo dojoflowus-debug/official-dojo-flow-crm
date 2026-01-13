@@ -2563,3 +2563,13 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Publish persists published config
 - [ ] Refresh page loads saved config
 - [ ] Public kiosk route loads published config
+
+## Phase 20: Fix Preset Background Binding & Rendering
+
+- [ ] Verify preset image URLs are publicly accessible
+- [ ] Fix KioskLayout background rendering logic (bgType + bgImageUrl not applied)
+- [ ] Verify preset selection updates config correctly
+- [ ] Add debug logging for bgType, bgImageUrl, resolvedBackgroundUrl
+- [ ] Test Save/Publish persistence with backgrounds
+- [ ] Test public kiosk loads saved background config
+- [ ] Fix preset filename mismatches (fitness-battle-ropes.jpg vs .png)
