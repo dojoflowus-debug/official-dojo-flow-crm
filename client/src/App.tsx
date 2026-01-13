@@ -87,7 +87,7 @@ import KioskSettings from "./pages/KioskSettings";
 import KioskStudio from "./pages/KioskStudio";
 import KioskStudioBuilder2 from "./pages/KioskStudioBuilder2";
 import KioskStudioSimplified from "./pages/KioskStudioSimplified";
-import KioskStudioPremium from "./pages/KioskStudioPremium";
+import KioskStudioExact from "./pages/KioskStudioExact";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -178,8 +178,8 @@ function Router() {
       
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
       {/* Kiosk Studio Builder - New Location/Kiosk Management - CANONICAL ENTRY POINT */}
-      <Route path="/kiosk-studio" element={<ProtectedRoute requireSetup={false}><KioskStudioPremium /></ProtectedRoute>} />
-      <Route path="/kiosk-studio/:locationId" element={<ProtectedRoute requireSetup={false}><KioskStudioPremium /></ProtectedRoute>} />
+      <Route path="/kiosk-studio" element={<ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute>} />
+      <Route path="/kiosk-studio/:locationId" element={<ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute>} />
       {/* Redirect old /kiosk to /kiosk-studio */}
       <Route path="/kiosk" element={<Navigate to="/kiosk-studio" replace />} />
       <Route path="/kiosk-manager" element={<KioskManager />} />
