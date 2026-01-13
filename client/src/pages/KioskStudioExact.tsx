@@ -427,10 +427,13 @@ export default function KioskStudioExact() {
           {/* CENTER: Device Emulator Preview */}
           <div className="flex-1 flex flex-col items-center justify-center">
             <DeviceEmulator
-              config={previewConfig}
-              kioskId={selectedKiosk}
-              onOpenPublicKiosk={handleOpenPublicKiosk}
-            />
+              orgId={selectedLocation || 1}
+              locationId={selectedLocation || 1}
+              kioskId={selectedKiosk || 1}
+              kioskSlug={currentKiosk?.slug}
+            >
+              <KioskPreviewLive config={previewConfig} />
+            </DeviceEmulator>
           </div>
         </div>
       </div>
