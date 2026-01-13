@@ -45,7 +45,7 @@ export interface KioskConfig {
 
   // Background - Image, color, effects
   background: {
-    type: 'color' | 'image' | 'preset' | 'custom'; // Background type
+    type: 'solid' | 'preset' | 'custom'; // Background type
     color: string; // Hex color for solid backgrounds
     presetKey: string | null; // Preset identifier (e.g., 'dojo-warm-lights')
     customUrl: string | null; // Custom image URL
@@ -109,7 +109,7 @@ export const DEFAULT_KIOSK_CONFIG: KioskConfig = {
     showInfoBar: true,
   },
   background: {
-    type: 'color',
+    type: 'solid',
     color: '#ffffff',
     presetKey: null,
     customUrl: null,

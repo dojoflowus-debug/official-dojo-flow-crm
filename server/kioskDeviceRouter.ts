@@ -7,6 +7,7 @@ import { getDb } from './db';
 import { router, protectedProcedure, publicProcedure } from './_core/trpc';
 import { KioskConfigSchema } from '../shared/kioskConfigSchema';
 import { DEFAULT_KIOSK_CONFIG } from '../shared/kioskConfig';
+import { storagePut } from './storage';
 
 /**
  * Generate a unique slug from a name
@@ -640,6 +641,60 @@ export const kioskDeviceRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to duplicate kiosk',
+        });
+      }
+    }),
+
+  /**
+   * Upload a background image for a kiosk
+   */
+  uploadBackground: protectedProcedure
+    .input(
+      z.object({
+        kioskId: z.number(),
+        imageData: z.string(), // base64 encoded image
+        fileName: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // Verify kiosk exists and belongs to this org
+        const kiosk = await ctx.db
+          .select()
+          .from(kiosks)
+          .where(
+            and(
+              eq(kiosks.id, input.kioskId),
+              eq(kiosks.organizationId, ctx.currentOrganizationId!)
+            )
+          )
+          .limit(1);
+
+        if (!kiosk || kiosk.length === 0) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Kiosk not found',
+          });
+        }
+
+        // Convert base64 to buffer
+        const buffer = Buffer.from(input.imageData, 'base64');
+
+        // Upload to S3
+        const storagePath = `kiosk-backgrounds/${ctx.currentOrganizationId}/${input.kioskId}/${Date.now()}-${input.fileName}`;
+        const { url } = await storagePut(storagePath, buffer, 'image/jpeg');
+
+        return {
+          success: true,
+          url,
+          fileName: input.fileName,
+        };
+      } catch (e) {
+        console.error('[Kiosk Device] Upload background error:', e);
+        if (e instanceof TRPCError) throw e;
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to upload background image',
         });
       }
     }),

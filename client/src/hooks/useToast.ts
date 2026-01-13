@@ -37,9 +37,25 @@ export function useToast() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const success = useCallback(
+    (message: string, title = 'Success') => {
+      return showToast({ type: 'success', title, message });
+    },
+    [showToast]
+  );
+
+  const error = useCallback(
+    (message: string, title = 'Error') => {
+      return showToast({ type: 'error', title, message });
+    },
+    [showToast]
+  );
+
   return {
     toasts,
     showToast,
     removeToast,
+    success,
+    error,
   };
 }

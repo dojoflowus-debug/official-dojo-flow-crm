@@ -12,6 +12,9 @@ import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
 import { KioskConfigSchema } from '../../../shared/kioskConfigSchema';
 import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
 import { KioskBackgroundPresets } from '@/components/KioskBackgroundPresets';
+import { KioskBackgroundUpload } from '@/components/KioskBackgroundUpload';
+import Toast from '@/components/Toast';
+import { useToast } from '@/hooks/useToast';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface Kiosk {
@@ -28,6 +31,7 @@ interface Kiosk {
 export default function KioskStudioSimplified() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toasts, success, error, removeToast } = useToast();
   const [draftConfig, setDraftConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [lastSavedConfig, setLastSavedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
   const [publishedConfig, setPublishedConfig] = useState<KioskConfig>(DEFAULT_KIOSK_CONFIG);
@@ -63,22 +67,22 @@ export default function KioskStudioSimplified() {
   const saveDraftMutation = trpc.kioskDevice.saveDraft.useMutation({
     onSuccess: () => {
       setLastSavedConfig(draftConfig);
-      toast.success('Draft saved');
+      success('Draft saved');
       queryClient.invalidateQueries({ queryKey: ['kioskDevice.getById'] });
     },
-    onError: (error) => {
-      toast.error(`Save failed: ${error.message}`);
+    onError: (err) => {
+      error(`Save failed: ${err.message}`);
     },
   });
 
   const publishMutation = trpc.kioskDevice.publish.useMutation({
     onSuccess: () => {
       setPublishedConfig(draftConfig);
-      toast.success('Published successfully');
+      success('Published successfully');
       queryClient.invalidateQueries({ queryKey: ['kioskDevice.getById'] });
     },
-    onError: (error) => {
-      toast.error(`Publish failed: ${error.message}`);
+    onError: (err) => {
+      error(`Publish failed: ${err.message}`);
     },
   });
 
@@ -201,6 +205,12 @@ export default function KioskStudioSimplified() {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      {/* Toast Container */}
+      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+        {toasts.map((t) => (
+          <Toast key={t.id} toast={t} onClose={removeToast} />
+        ))}
+      </div>
       {/* LEFT PANEL - EDITOR */}
       <div className="w-96 border-r border-border overflow-y-auto bg-gradient-to-b from-background to-background/95">
         <div className="p-6 space-y-6">
@@ -226,7 +236,7 @@ export default function KioskStudioSimplified() {
                 className="w-full px-3 py-2 rounded border border-border bg-background text-sm mt-1"
               >
                 <option value="">Select location...</option>
-                {locationsData?.map(loc => (
+                {locationsData?.map((loc: any) => (
                   <option key={loc.id} value={loc.id.toString()}>{loc.name}</option>
                 ))}
               </select>
@@ -248,7 +258,7 @@ export default function KioskStudioSimplified() {
                 disabled={!selectedLocation}
               >
                 <option value="">Select kiosk...</option>
-                {kiosksData?.map(kiosk => (
+                {kiosksData?.map((kiosk: any) => (
                   <option key={kiosk.id} value={kiosk.id.toString()}>{kiosk.name}</option>
                 ))}
               </select>
@@ -272,14 +282,14 @@ export default function KioskStudioSimplified() {
                   onChange={(e) => handleBackgroundChange('type', e.target.value)}
                   className="w-full px-3 py-2 rounded border border-border bg-background text-sm"
                 >
-                  <option value="color">Solid Color</option>
+                  <option value="solid">Solid Color</option>
                   <option value="preset">Preset Theme</option>
                   <option value="custom">Custom Image</option>
                 </select>
               </div>
 
               {/* Solid Color */}
-              {draftConfig.background.type === 'color' && (
+              {draftConfig.background.type === 'solid' && (
                 <div className="space-y-2">
                   <Label className="text-xs">Color</Label>
                   <div className="flex gap-2">
@@ -306,17 +316,18 @@ export default function KioskStudioSimplified() {
                 />
               )}
 
-              {/* Custom Image */}
-              {draftConfig.background.type === 'custom' && (
-                <div className="space-y-2">
-                  <Label className="text-xs">Image URL</Label>
-                  <Input
-                    value={draftConfig.background.customUrl || ''}
-                    onChange={(e) => handleBackgroundChange('customUrl', e.target.value)}
-                    placeholder="https://..."
-                    className="text-sm"
-                  />
-                </div>
+              {/* Custom Image Upload */}
+              {draftConfig.background.type === 'custom' && selectedKiosk && (
+                <KioskBackgroundUpload
+                  kioskId={selectedKiosk}
+                  onUploadComplete={(url) => {
+                    handleBackgroundChange('customUrl', url);
+                    success('Background uploaded successfully');
+                  }}
+                  onError={(err) => {
+                    error(`Upload failed: ${err}`);
+                  }}
+                />
               )}
 
               {/* Blur & Dim */}

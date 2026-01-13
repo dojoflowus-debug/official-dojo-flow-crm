@@ -2573,3 +2573,12 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Test Save/Publish persistence with backgrounds
 - [ ] Test public kiosk loads saved background config
 - [ ] Fix preset filename mismatches (fitness-battle-ropes.jpg vs .png)
+
+## Phase 21: Background Upload with S3 and Toast Notifications
+
+- [ ] Check S3 storage helpers and implement upload endpoint
+- [ ] Add toast notification component to Kiosk Studio
+- [ ] Create background upload UI control
+- [ ] Wire upload to S3 and save to database
+- [ ] Test upload, save, and publish workflow
+- [ ] Verify public kiosk loads uploaded backgrounds
