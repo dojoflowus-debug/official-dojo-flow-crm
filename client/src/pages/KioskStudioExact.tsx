@@ -422,16 +422,44 @@ export default function KioskStudioExact() {
             </Tabs>
           </div>
 
-          {/* CENTER: Device Emulator Preview */}
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <DeviceEmulator
-              orgId={selectedLocation || 1}
-              locationId={selectedLocation || 1}
-              kioskId={selectedKiosk || 1}
-              kioskSlug={currentKiosk?.slug}
-            >
-              <KioskPreviewLive config={previewConfig} />
-            </DeviceEmulator>
+          {/* CENTER: Device Emulator Preview with Dojo Background */}
+          <div 
+            className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+            style={{
+              backgroundImage: 'url(/dojo-studio-bg.png)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundAttachment: 'fixed',
+            }}
+          >
+            {/* Cinematic vignette overlay */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%)',
+              }}
+            />
+            
+            {/* Subtle blur and depth effect */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backdropFilter: 'blur(1px)',
+                background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.2) 100%)',
+              }}
+            />
+            
+            {/* Device Emulator */}
+            <div className="relative z-10">
+              <DeviceEmulator
+                orgId={selectedLocation || 1}
+                locationId={selectedLocation || 1}
+                kioskId={selectedKiosk || 1}
+                kioskSlug={currentKiosk?.slug}
+              >
+                <KioskPreviewLive config={previewConfig} />
+              </DeviceEmulator>
+            </div>
           </div>
         </div>
       </div>
