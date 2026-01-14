@@ -4,6 +4,8 @@
  * Supports luxury, kids, zen, dark, and minimal kiosk designs
  */
 
+import type { ButtonStyleConfig } from './buttonStyleConfig'
+
 // ============================================================================
 // CARD & PANEL STYLES
 // ============================================================================

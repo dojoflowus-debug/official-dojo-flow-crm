@@ -5,6 +5,9 @@ import { KIOSK_BACKGROUND_PRESETS } from '../../../shared/kioskBackgroundPresets
 import { Accordion } from '@/components/Accordion';
 import { GlassMorphismEngine } from '@/components/GlassMorphismEngine';
 import { TypographyPanel } from '@/components/TypographyPanel';
+import { ButtonStylePanel } from '@/components/ButtonStylePanel';
+import type { ButtonStyleConfig } from '../../../shared/buttonStyleConfig';
+import { DEFAULT_BUTTON_STYLE } from '../../../shared/buttonStyleConfig';
 
 interface ThemeTabPhase1Props {
   draftConfig: KioskConfig;
@@ -17,6 +20,8 @@ interface ThemeTabPhase1Props {
   onThemeChange: (key: string, value: any) => void;
   onSliderChange: (callback: () => void) => void;
   onTypographyChange?: (typography: any) => void;
+  onButtonStyleChange?: (buttonStyle: ButtonStyleConfig) => void;
+  onResetButtonStyle?: () => void;
 }
 
 const BACKGROUND_THEMES = KIOSK_BACKGROUND_PRESETS.slice(0, 6).map(preset => ({
@@ -38,6 +43,8 @@ export function ThemeTabPhase1({
   onThemeChange,
   onSliderChange,
   onTypographyChange,
+  onButtonStyleChange,
+  onResetButtonStyle,
 }: ThemeTabPhase1Props) {
   const [applyToAll, setApplyToAll] = useState(true);
   const [selectedCardType, setSelectedCardType] = useState<CardType>('next-class');
@@ -233,6 +240,19 @@ export function ThemeTabPhase1({
               }
             },
           },
+          ...(onButtonStyleChange ? [{
+            id: 'button-style',
+            title: 'Button Styling',
+            description: 'Customize button appearance and animations',
+            content: (
+              <ButtonStylePanel
+                config={draftConfig.buttonStyle || DEFAULT_BUTTON_STYLE}
+                onChange={onButtonStyleChange}
+                onReset={onResetButtonStyle || (() => onButtonStyleChange(DEFAULT_BUTTON_STYLE))}
+              />
+            ),
+            onReset: onResetButtonStyle || (() => onButtonStyleChange(DEFAULT_BUTTON_STYLE)),
+          }] : []),
         ]}
         defaultOpenId="mood-presets"
       />

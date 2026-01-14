@@ -2663,3 +2663,32 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Test preset switching
 - [ ] Verify consistency across all presets
 - [ ] Save Phase 2 checkpoint
+
+
+## Phase 18: Kiosk Studio Phase 2B - Button Styling System (IN PROGRESS)
+
+### Button Style Configuration
+- [ ] Create ButtonStyleConfig interface with style types (Solid, Glass, Outline, Neon)
+- [ ] Add radius, glow, animation controls to config
+- [ ] Extend KioskConfig to include button styling
+
+### Button Style Panel Component
+- [ ] Build ButtonStylePanel component with style selector
+- [ ] Implement radius slider (0-50px)
+- [ ] Implement glow intensity slider (0-100%)
+- [ ] Implement animation selector (None, Pulse, Breathing Glow, Subtle Lift)
+- [ ] Add per-button override toggle (Check In vs Start Training)
+- [ ] Add preview showing button styles in real-time
+
+### Integration & Live Preview
+- [ ] Integrate ButtonStylePanel into ThemeTabPhase1
+- [ ] Update KioskPreviewLive to apply button styles to Check In and Start Training buttons
+- [ ] Ensure live preview updates instantly on all changes
+- [ ] Test all 4 button styles (Solid, Glass, Outline, Neon)
+
+### Testing & Polish
+- [ ] Verify button styles apply correctly to both buttons
+- [ ] Test animations (pulse, breathing glow, subtle lift)
+- [ ] Test glow effects on different button styles
+- [ ] Verify responsive behavior on different devices
+- [ ] Test per-button override functionality

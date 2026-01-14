@@ -22,8 +22,10 @@ import '@/styles/scrollHide.css';
 import { Accordion } from '@/components/Accordion';
 import { MOOD_PRESETS, CardStyle } from '../../../shared/kioskConfig';
 import { ThemeTabPhase1 } from '@/components/ThemeTabPhase1';
+import type { ButtonStyleConfig } from '../../../shared/buttonStyleConfig';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { DEFAULT_BUTTON_STYLE } from '../../../shared/buttonStyleConfig';
 
 interface Kiosk {
   id: number;
@@ -379,6 +381,24 @@ export default function KioskStudioExact() {
                 onBackgroundChange={handleBackgroundChange}
                 onThemeChange={handleThemeChange}
                 onSliderChange={handleSliderChange}
+                onTypographyChange={(typography) => {
+                  setDraftConfig(prev => ({
+                    ...prev,
+                    typographySystem: typography,
+                  }));
+                }}
+                onButtonStyleChange={(buttonStyle) => {
+                  setDraftConfig(prev => ({
+                    ...prev,
+                    buttonStyle,
+                  }));
+                }}
+                onResetButtonStyle={() => {
+                  setDraftConfig(prev => ({
+                    ...prev,
+                    buttonStyle: DEFAULT_BUTTON_STYLE,
+                  }));
+                }}
               />
             )}
 
