@@ -199,37 +199,6 @@ export default function KioskStudioExact() {
 
   return (
     <div className="flex h-full bg-black">
-      {/* LEFT SIDEBAR: Kiosk Thumbnails */}
-      <div className="w-36 bg-slate-900 border-r border-slate-800 flex flex-col p-4 overflow-y-auto">
-        <div className="space-y-4">
-          {kiosksData?.map((kiosk) => (
-            <button
-              key={kiosk.id}
-              onClick={() => setSelectedKiosk(kiosk.id)}
-              className="w-full text-left rounded-lg overflow-hidden transition-all focus:outline-none"
-            >
-              <KioskThumbnail
-                config={selectedKiosk === kiosk.id && currentKiosk ? draftConfig : (kiosk.draftConfig ? JSON.parse(JSON.stringify(kiosk.draftConfig)) : JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)))}
-                kioskName={kiosk.name}
-                isSelected={selectedKiosk === kiosk.id}
-              />
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-auto pt-4 border-t border-slate-800">
-          <Button
-            onClick={handleRestoreDefaults}
-            variant="ghost"
-            size="sm"
-            className="w-full text-xs text-slate-400 hover:text-slate-200"
-          >
-            <RotateCcw className="w-3 h-3 mr-2" />
-            Restore Defaults
-          </Button>
-        </div>
-      </div>
-
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col">
         {/* TOP BAR */}
