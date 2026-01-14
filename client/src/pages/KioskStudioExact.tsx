@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { DeviceEmulator } from '@/components/DeviceEmulator';
 import { KioskThumbnail } from '@/components/KioskThumbnail';
 import { KIOSK_BACKGROUND_PRESETS } from '../../../shared/kioskBackgroundPresets';
 import BottomNavLayout from '@/components/BottomNavLayout';
+import { useScrollHide } from '@/hooks/useScrollHide';
+import '@/styles/scrollHide.css';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -67,6 +69,10 @@ export default function KioskStudioExact() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [activeStudioTab, setActiveStudioTab] = useState<'theme' | 'layout' | 'content' | 'behavior'>('theme');
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
+
+  // SCROLL HIDE: Track scroll direction for auto-hiding UI
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isUIHidden = useScrollHide({ threshold: 10, scrollElement: scrollContainerRef.current });
 
   // QUERIES
   const { data: locationsData } = trpc.kiosk.listLocations.useQuery(undefined, { enabled: true });
@@ -201,11 +207,11 @@ export default function KioskStudioExact() {
 
   return (
     <BottomNavLayout>
-    <div className="flex h-full bg-black">
+    <div ref={scrollContainerRef} className={`flex h-full bg-black transition-all duration-300 overflow-y-auto ${isUIHidden ? 'ui-hidden' : ''}`}>
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col">
         {/* TOP BAR */}
-        <div className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between">
+        <div id="kiosk-top-toolbar" className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">D</div>
             <span className="text-xs font-medium text-slate-400 letter-spacing-wide">DojoFlow</span>
@@ -247,7 +253,7 @@ export default function KioskStudioExact() {
         )}
 
         {/* CONTENT AREA */}
-        <div className="flex-1 flex overflow-hidden gap-6 p-6">
+        <div id="kiosk-preview-wrapper" className="flex-1 flex overflow-hidden gap-6 p-6 flex-shrink-0">
           {/* LEFT PANEL: Studio Controls */}
           <div className="w-64 bg-slate-900 rounded-lg border border-slate-800 p-4 flex flex-col overflow-y-auto">
             {/* Studio Panel Header */}
@@ -444,7 +450,7 @@ export default function KioskStudioExact() {
       </div>
 
       {/* TOAST CONTAINER */}
-      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+      <div id="kiosk-toast-container" className="fixed bottom-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
           <Toast
             key={toast.id}
@@ -456,5 +462,6 @@ export default function KioskStudioExact() {
       </div>
     </div>
     </BottomNavLayout>
+    
   );
 }

@@ -1,0 +1,49 @@
+/* Scroll Hide Animations for Kiosk Studio */
+
+/* Base styles for elements that will animate */
+#kiosk-top-toolbar {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.25s ease 0.1s;
+  transform: translateY(0);
+  opacity: 1;
+  will-change: transform, opacity;
+}
+
+#kiosk-bottom-nav {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.25s ease 0.1s;
+  transform: translateY(0);
+  opacity: 1;
+  will-change: transform, opacity;
+}
+
+#kiosk-preview-wrapper {
+  transition: margin 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: margin;
+}
+
+/* Hidden state - triggered by ui-hidden class on parent */
+.ui-hidden #kiosk-top-toolbar {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui-hidden #kiosk-bottom-nav {
+  transform: translateY(110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui-hidden #kiosk-preview-wrapper {
+  /* Expand preview to fill freed space */
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Ensure smooth transitions when toggling */
+.ui-hidden #kiosk-top-toolbar,
+.ui-hidden #kiosk-bottom-nav {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.25s ease;
+}
