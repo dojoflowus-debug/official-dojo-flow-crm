@@ -19,6 +19,9 @@ import { KIOSK_BACKGROUND_PRESETS } from '../../../shared/kioskBackgroundPresets
 import BottomNavLayout from '@/components/BottomNavLayout';
 import { useScrollHide } from '@/hooks/useScrollHide';
 import '@/styles/scrollHide.css';
+import { Accordion } from '@/components/Accordion';
+import { MOOD_PRESETS, CardStyle } from '../../../shared/kioskConfig';
+import { ThemeTabPhase1 } from '@/components/ThemeTabPhase1';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -69,6 +72,8 @@ export default function KioskStudioExact() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [activeStudioTab, setActiveStudioTab] = useState<'theme' | 'layout' | 'content' | 'behavior'>('theme');
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const [currentMoodPreset, setCurrentMoodPreset] = useState<string>('dojo-dark');
+  const [applyCardStyleGlobally, setApplyCardStyleGlobally] = useState(true);
 
   // SCROLL HIDE: Track scroll direction for auto-hiding UI with hysteresis and edge-reveal
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -226,6 +231,37 @@ export default function KioskStudioExact() {
     setDraftConfig((prev) => ({ ...prev, ...updates }));
   };
 
+  const handleMoodPresetSelect = (presetKey: string, presetConfig: Partial<KioskConfig>) => {
+    registerInteraction();
+    setCurrentMoodPreset(presetKey);
+    updateConfig(presetConfig);
+  };
+
+  const handleCardStyleChange = (cardStyle: CardStyle) => {
+    registerInteraction();
+    updateConfig({ cardStyle });
+  };
+
+  const handleResetCardStyle = () => {
+    const preset = MOOD_PRESETS[currentMoodPreset];
+    if (preset) {
+      handleCardStyleChange(preset.cardStyle);
+    }
+  };
+
+  const handleResetMoodPreset = () => {
+    const preset = MOOD_PRESETS['dojo-dark'];
+    if (preset) {
+      setCurrentMoodPreset('dojo-dark');
+      updateConfig({
+        cardStyle: preset.cardStyle,
+        typographySystem: preset.typography,
+        accentSystem: preset.accent,
+        uiControls: preset.uiControls,
+      });
+    }
+  };
+
   return (
     <BottomNavLayout>
     <div ref={scrollContainerRef} className={`kiosk-studio-container flex h-full bg-black transition-all duration-300 ${isUIHidden ? 'ui-hidden' : ''}`}>
@@ -331,79 +367,19 @@ export default function KioskStudioExact() {
               </button>
             </div>
 
-            {/* Theme Panel */}
+            {/* Theme Panel - Phase 1 */}
             {activeStudioTab === 'theme' && (
-              <div className="flex-1 space-y-4">
-                {/* Background Themes */}
-                <div>
-                  <Label className="text-xs font-semibold mb-3 block" style={{color: 'rgba(255,255,255,0.7)'}}>Background Themes</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {BACKGROUND_THEMES.map((theme) => (
-                      <button
-                        key={theme.id}
-                        onClick={() => updateConfig({ background: { ...draftConfig.background, type: 'preset', presetKey: theme.id } })}
-                        className="group relative overflow-hidden border-2 transition-all aspect-square"
-                        style={{
-                          borderColor: draftConfig.background.presetKey === theme.id ? '#ef4444' : 'rgba(255,255,255,0.1)',
-                        }}
-                      >
-                        <img
-                          src={theme.image}
-                          alt={theme.name}
-                          className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
-                        />
-                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-end">
-                          <p className="text-xs text-white font-medium p-2 w-full">{theme.name}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Background Controls */}
-                <div className="pt-4 space-y-3" style={{borderTop: '1px solid rgba(255,255,255,0.06)'}}>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium">Blur</Label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={draftConfig.background.blur || 0}
-                      onChange={(e) => handleBackgroundChange('blur', parseInt(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium">Dim</Label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={draftConfig.background.dim || 0}
-                      onChange={(e) => handleBackgroundChange('dim', parseInt(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium">Accent Color</Label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={draftConfig.theme.accentColor || '#ef4444'}
-                        onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                        className="w-8 h-8 rounded cursor-pointer" style={{border: '1px solid rgba(255,255,255,0.1)'}}
-                      />
-                      <Input
-                        value={draftConfig.theme.accentColor || '#ef4444'}
-                        onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                        className="flex-1 text-white text-xs h-8" style={{backgroundColor: '#12151B', border: '1px solid rgba(255,255,255,0.1)'}}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ThemeTabPhase1
+                draftConfig={draftConfig}
+                currentMoodPreset={currentMoodPreset}
+                onMoodPresetSelect={handleMoodPresetSelect}
+                onCardStyleChange={handleCardStyleChange}
+                onResetCardStyle={handleResetCardStyle}
+                onResetMoodPreset={handleResetMoodPreset}
+                onBackgroundChange={handleBackgroundChange}
+                onThemeChange={handleThemeChange}
+                onSliderChange={handleSliderChange}
+              />
             )}
 
             {/* Layout Panel */}
