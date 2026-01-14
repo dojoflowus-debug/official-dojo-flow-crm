@@ -426,12 +426,14 @@ export default function KioskStudioExact() {
 
           {/* CENTER: Device Emulator Preview with Dojo Background */}
           <div 
-            className="flex-1 flex flex-col items-center justify-center relative overflow-hidden rounded-lg"
+            className="flex-1 flex flex-col items-center justify-start relative overflow-hidden rounded-lg"
             style={{
               backgroundImage: 'url(/dojo-studio-bg.png)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundAttachment: 'fixed',
+              maxHeight: 'calc(100vh - 200px)',
+              overflowY: 'auto',
             }}
           >
             {/* Cinematic vignette overlay */}
@@ -452,7 +454,9 @@ export default function KioskStudioExact() {
             />
             
             {/* Device Emulator */}
-            <div className="relative z-10">
+            <div className="relative z-10 pt-6 px-6" style={{
+              filter: 'drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5))',
+            }}>
               <DeviceEmulator
                 orgId={selectedLocation || 1}
                 locationId={selectedLocation || 1}
