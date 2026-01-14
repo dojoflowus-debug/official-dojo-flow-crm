@@ -1,25 +1,34 @@
-/* Scroll Hide Animations for Kiosk Studio */
+/* Scroll Hide Animations for Kiosk Studio - Premium Edition */
 
 /* Base styles for elements that will animate */
 #kiosk-top-toolbar {
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.25s ease 0.1s;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transition: transform 0.20s ease-out, opacity 0.20s ease-out;
   transform: translateY(0);
   opacity: 1;
   will-change: transform, opacity;
 }
 
 #kiosk-bottom-nav {
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.25s ease 0.1s;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transition: transform 0.20s ease-out, opacity 0.20s ease-out;
   transform: translateY(0);
   opacity: 1;
   will-change: transform, opacity;
 }
 
+/* Preview wrapper stays in normal flow - no layout shift */
 #kiosk-preview-wrapper {
-  transition: margin 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: margin;
+  position: relative;
+  z-index: 1;
 }
 
 /* Hidden state - triggered by ui-hidden class on parent */
@@ -35,15 +44,23 @@
   pointer-events: none;
 }
 
-.ui-hidden #kiosk-preview-wrapper {
-  /* Expand preview to fill freed space */
-  margin-top: 0;
-  margin-bottom: 0;
+/* Ensure smooth transitions */
+#kiosk-top-toolbar,
+#kiosk-bottom-nav {
+  transition: transform 0.20s ease-out, opacity 0.20s ease-out;
 }
 
-/* Ensure smooth transitions when toggling */
-.ui-hidden #kiosk-top-toolbar,
-.ui-hidden #kiosk-bottom-nav {
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.25s ease;
+/* Main container - allow scrolling without affecting preview */
+.kiosk-studio-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Prevent layout shift by padding for fixed elements */
+.kiosk-studio-container {
+  padding-top: 0; /* Toolbar is fixed, so no padding needed */
+  padding-bottom: 0; /* Nav is fixed, so no padding needed */
 }

@@ -70,9 +70,30 @@ export default function KioskStudioExact() {
   const [activeStudioTab, setActiveStudioTab] = useState<'theme' | 'layout' | 'content' | 'behavior'>('theme');
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
 
-  // SCROLL HIDE: Track scroll direction for auto-hiding UI
+  // SCROLL HIDE: Track scroll direction for auto-hiding UI with hysteresis and edge-reveal
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const isUIHidden = useScrollHide({ threshold: 10, scrollElement: scrollContainerRef.current });
+  const { isUIHidden, isAutoHideEnabled, setIsAutoHideEnabled, registerInteraction } = useScrollHide({
+    hideThreshold: 15,
+    showThreshold: 8,
+    edgeRevealZone: 40,
+    scrollElement: scrollContainerRef.current,
+  });
+
+  // Wrap interaction handlers to register activity
+  const handleSliderChange = (callback: () => void) => {
+    registerInteraction();
+    callback();
+  };
+
+  const handleTabClick = (tab: 'theme' | 'layout' | 'content' | 'behavior') => {
+    registerInteraction();
+    setActiveStudioTab(tab);
+  };
+
+  const handleDeviceSelect = (callback: () => void) => {
+    registerInteraction();
+    callback();
+  };
 
   // QUERIES
   const { data: locationsData } = trpc.kiosk.listLocations.useQuery(undefined, { enabled: true });
@@ -207,11 +228,11 @@ export default function KioskStudioExact() {
 
   return (
     <BottomNavLayout>
-    <div ref={scrollContainerRef} className={`flex h-full bg-black transition-all duration-300 overflow-y-auto ${isUIHidden ? 'ui-hidden' : ''}`}>
+    <div ref={scrollContainerRef} className={`kiosk-studio-container flex h-full bg-black transition-all duration-300 ${isUIHidden ? 'ui-hidden' : ''}`}>
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col">
-        {/* TOP BAR */}
-        <div id="kiosk-top-toolbar" className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between">
+        {/* TOP BAR - Fixed positioning for no layout shift */}
+        <div id="kiosk-top-toolbar" className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">D</div>
             <span className="text-xs font-medium text-slate-400 letter-spacing-wide">DojoFlow</span>
@@ -265,7 +286,7 @@ export default function KioskStudioExact() {
             {/* Studio Tabs Navigation */}
             <div className="flex flex-col gap-2 mb-6">
               <button
-                onClick={() => setActiveStudioTab('theme')}
+                onClick={() => handleTabClick('theme')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'theme'
                     ? 'bg-blue-600 text-white'
@@ -276,7 +297,7 @@ export default function KioskStudioExact() {
                 Theme
               </button>
               <button
-                onClick={() => setActiveStudioTab('layout')}
+                onClick={() => handleTabClick('layout')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'layout'
                     ? 'bg-blue-600 text-white'
@@ -287,7 +308,7 @@ export default function KioskStudioExact() {
                 Layout
               </button>
               <button
-                onClick={() => setActiveStudioTab('content')}
+                onClick={() => handleTabClick('content')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'content'
                     ? 'bg-blue-600 text-white'
@@ -298,7 +319,7 @@ export default function KioskStudioExact() {
                 Content
               </button>
               <button
-                onClick={() => setActiveStudioTab('behavior')}
+                onClick={() => handleTabClick('behavior')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'behavior'
                     ? 'bg-blue-600 text-white'
