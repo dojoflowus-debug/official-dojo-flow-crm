@@ -311,10 +311,10 @@ export default function KioskStudioExact() {
           </div>
         )}
 
-        {/* CONTENT AREA */}
-        <div id="kiosk-preview-wrapper" className="flex-1 flex overflow-hidden gap-6 p-6 flex-shrink-0">
-          {/* LEFT PANEL: Studio Controls */}
-          <div className="w-64 rounded-lg p-4 flex flex-col overflow-y-auto" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', border: '1px solid rgba(255,255,255,0.06)'}}>
+        {/* CONTENT AREA - Two layer layout: fixed left sidebar + scrollable right workspace */}
+        <div id="kiosk-preview-wrapper" className="flex-1 flex overflow-hidden gap-6 p-6">
+          {/* LEFT PANEL: Studio Controls - Fixed width, scrollable content */}
+          <div className="w-64 rounded-lg p-4 flex flex-col overflow-y-auto flex-shrink-0" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', border: '1px solid rgba(255,255,255,0.06)'}}>
             {/* Studio Panel Header */}
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-white">Kiosk Studio</h2>
@@ -424,16 +424,14 @@ export default function KioskStudioExact() {
             )}
           </div>
 
-          {/* CENTER: Device Emulator Preview with Dojo Background */}
+          {/* CENTER: Device Canvas - Single scrollable workspace for device + preview */}
           <div 
-            className="flex-1 flex flex-col items-center justify-start relative overflow-hidden rounded-lg"
+            className="flex-1 flex flex-col items-center justify-start relative overflow-y-auto rounded-lg"
             style={{
               backgroundImage: 'url(/dojo-studio-bg.png)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundAttachment: 'fixed',
-              maxHeight: 'calc(100vh - 200px)',
-              overflowY: 'auto',
             }}
           >
             {/* Cinematic vignette overlay */}
@@ -453,9 +451,10 @@ export default function KioskStudioExact() {
               }}
             />
             
-            {/* Device Emulator */}
-            <div className="relative z-10 pt-6 px-6" style={{
+            {/* Device Canvas Container - Anchored device + preview unit */}
+            <div className="relative z-10 pt-6 px-6 pb-6" style={{
               filter: 'drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5))',
+              flexShrink: 0,
             }}>
               <DeviceEmulator
                 orgId={selectedLocation || 1}
