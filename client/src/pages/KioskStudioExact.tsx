@@ -15,6 +15,8 @@ import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { DeviceEmulator } from '@/components/DeviceEmulator';
 import { KioskThumbnail } from '@/components/KioskThumbnail';
+import { KIOSK_BACKGROUND_PRESETS } from '../../../shared/kioskBackgroundPresets';
+import BottomNavLayout from '@/components/BottomNavLayout';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -29,15 +31,12 @@ interface Kiosk {
   updatedAt: string;
 }
 
-// Background theme categories
-const BACKGROUND_THEMES = [
-  { id: 'martial-arts', name: 'Martial Arts', image: '/kiosk-backgrounds/martial-arts-dojo.png' },
-  { id: 'kids', name: 'Kids', image: '/kiosk-backgrounds/kids-martial-arts.png' },
-  { id: 'yoga', name: 'Yoga', image: '/kiosk-backgrounds/yoga-studio.png' },
-  { id: 'dance', name: 'Dance', image: '/kiosk-backgrounds/dance-studio.png' },
-  { id: 'nature', name: 'Nature', image: '/kiosk-backgrounds/japanese-nature.png' },
-  { id: 'fitness', name: 'Fitness', image: '/kiosk-backgrounds/fitness-battle-ropes.png' },
-];
+// Background theme categories - using canonical presets
+const BACKGROUND_THEMES = KIOSK_BACKGROUND_PRESETS.slice(0, 6).map(preset => ({
+  id: preset.id,
+  name: preset.name,
+  image: preset.imageUrl,
+}));
 
 /**
  * KioskStudioExact - Premium design studio interface
@@ -196,13 +195,25 @@ export default function KioskStudioExact() {
     setDraftConfig(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
   };
 
+  const updateConfig = (updates: Partial<KioskConfig>) => {
+    setDraftConfig((prev) => ({ ...prev, ...updates }));
+  };
+
   return (
+    <BottomNavLayout>
     <div className="flex h-full bg-black">
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col">
         {/* TOP BAR */}
         <div className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-white">Live Preview</h1>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">D</div>
+            <span className="text-xs font-medium text-slate-400 letter-spacing-wide">DojoFlow</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-base font-semibold text-white">Main Dojo</span>
+            <span className="text-slate-600">·</span>
+            <span className="text-xs font-medium text-slate-400">Live Preview</span>
+          </div>
           
           <div className="flex items-center gap-3">
             <Button
@@ -303,10 +314,10 @@ export default function KioskStudioExact() {
                     {BACKGROUND_THEMES.map((theme) => (
                       <button
                         key={theme.id}
-                        onClick={() => updateConfig({ background: { ...draftConfig.background, preset: theme.id } })}
+                        onClick={() => updateConfig({ background: { ...draftConfig.background, type: 'preset', presetKey: theme.id } })}
                         className="group relative overflow-hidden border-2 transition-all aspect-square"
                         style={{
-                          borderColor: draftConfig.background.preset === theme.id ? '#3b82f6' : '#334155',
+                          borderColor: draftConfig.background.presetKey === theme.id ? '#3b82f6' : '#334155',
                         }}
                       >
                         <img
@@ -444,5 +455,6 @@ export default function KioskStudioExact() {
         ))}
       </div>
     </div>
+    </BottomNavLayout>
   );
 }

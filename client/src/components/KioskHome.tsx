@@ -136,7 +136,7 @@ export default function KioskHome({ locationName, locationSlug: propSlug, config
   const todaysFocus = kioskData?.todaysFocus || ['Discipline', 'Confidence', 'Fitness'];
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8" style={{ fontFamily: cfg?.theme?.fontFamily || 'Inter', backgroundColor: '#f5f5f5' }}>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8" style={{ fontFamily: cfg?.theme?.fontFamily || 'Inter' }}>
       {/* Header Section */}
       <div
         className={`w-full max-w-6xl transition-all duration-1000 ${

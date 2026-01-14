@@ -62,13 +62,21 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
       <div
         className={`overflow-hidden bg-black ${className}`}
         style={{
-          width: width * scale,
-          height: height * scale,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
+          width: width,
+          height: height,
         }}
       >
-        {children}
+        <div
+          style={{
+            width: width,
+            height: height,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top center',
+            display: 'inline-block',
+          }}
+        >
+          {children}
+        </div>
       </div>
     );
   }
@@ -77,10 +85,8 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
     <div
       className={`relative bg-gray-900 rounded-2xl ${className}`}
       style={{
-        width: totalWidth * scale,
-        height: totalHeight * scale,
-        transform: `scale(${scale})`,
-        transformOrigin: 'top left',
+        width: totalWidth,
+        height: totalHeight,
         boxShadow: '0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 0, 0, 0.5)',
         filter: 'drop-shadow(0 20px 60px rgba(0, 0, 0, 0.6))',
       }}
@@ -113,7 +119,17 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
           borderRadius: preset.id.includes('iphone') ? '40px' : '8px',
         }}
       >
-        {children}
+        <div
+          style={{
+            width: width,
+            height: height,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top center',
+            display: 'inline-block',
+          }}
+        >
+          {children}
+        </div>
       </div>
 
       {/* Device notch for iPhone (optional visual detail) */}
@@ -138,6 +154,8 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
           }}
         />
       )}
+
+
     </div>
   );
 };
