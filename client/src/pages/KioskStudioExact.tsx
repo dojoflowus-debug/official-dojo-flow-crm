@@ -1,4 +1,3 @@
-'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Zap, AlertCircle, RotateCcw } from 'lucide-react';
+import { Save, Zap, AlertCircle, RotateCcw, Palette, Layout, FileText, Zap as ZapIcon } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
 import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
@@ -30,15 +29,26 @@ interface Kiosk {
   updatedAt: string;
 }
 
+// Background theme categories
+const BACKGROUND_THEMES = [
+  { id: 'martial-arts', name: 'Martial Arts', image: '/kiosk-backgrounds/martial-arts-dojo.png' },
+  { id: 'kids', name: 'Kids', image: '/kiosk-backgrounds/kids-class.png' },
+  { id: 'yoga', name: 'Yoga', image: '/kiosk-backgrounds/yoga-studio.png' },
+  { id: 'dance', name: 'Dance', image: '/kiosk-backgrounds/dance-studio.png' },
+  { id: 'nature', name: 'Nature', image: '/kiosk-backgrounds/nature-escape.png' },
+  { id: 'fitness', name: 'Fitness', image: '/kiosk-backgrounds/fitness-studio.png' },
+  { id: 'studio', name: 'Studio', image: '/kiosk-backgrounds/studio-space.png' },
+];
+
 /**
- * KioskStudioExact - Matches the reference image layout exactly
+ * KioskStudioExact - Premium design studio interface
  * 
  * Layout:
- * - Left sidebar: Location/Kiosk selector with thumbnails
- * - Top bar: "Live Preview" + Save/Publish buttons + device controls
- * - Left panel: Theme/Layout/Content/Behavior tabs
- * - Center: Device emulator with preview
- * - Bottom: Restore Defaults button
+ * - Left sidebar: Kiosk thumbnails (location/device selector removed)
+ * - Top bar: "Live Preview" + Save/Publish buttons
+ * - Left panel: Theme/Layout/Content/Behavior studio controls
+ * - Center: Device emulator with dojo background
+ * - Device controls: Above preview (not in sidebar)
  */
 export default function KioskStudioExact() {
   const queryClient = useQueryClient();
@@ -47,9 +57,8 @@ export default function KioskStudioExact() {
    // STATE: Kiosk selection
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
   const [selectedKiosk, setSelectedKiosk] = useState<number | null>(null);
-  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
 
-  // STATE: Configurationn
+  // STATE: Configuration
   const [draftConfig, setDraftConfig] = useState<KioskConfig>(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
   const [lastSavedConfig, setLastSavedConfig] = useState<KioskConfig>(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
   const [publishedConfig, setPublishedConfig] = useState<KioskConfig>(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
@@ -58,7 +67,7 @@ export default function KioskStudioExact() {
   const [previewMode, setPreviewMode] = useState<'draft' | 'published'>('draft');
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [activeEditorTab, setActiveEditorTab] = useState<'theme' | 'layout' | 'content' | 'behavior'>('theme');
+  const [activeStudioTab, setActiveStudioTab] = useState<'theme' | 'layout' | 'content' | 'behavior'>('theme');
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
 
   // QUERIES
@@ -101,92 +110,64 @@ export default function KioskStudioExact() {
     },
   });
 
-  // EFFECTS: Auto-select first location
+  // EFFECTS
   useEffect(() => {
     if (locationsData && locationsData.length > 0 && !selectedLocation) {
       setSelectedLocation(locationsData[0].id);
     }
   }, [locationsData, selectedLocation]);
 
-  // EFFECTS: Auto-select first kiosk
   useEffect(() => {
     if (kiosksData && kiosksData.length > 0 && !selectedKiosk) {
       setSelectedKiosk(kiosksData[0].id);
     }
   }, [kiosksData, selectedKiosk]);
 
-  // EFFECTS: Load kiosk config when selected
   useEffect(() => {
-    if (currentKiosk) {
-      const draft = currentKiosk.draftConfig ? JSON.parse(JSON.stringify(currentKiosk.draftConfig)) : JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG));
-      const published = currentKiosk.publishedConfig ? JSON.parse(JSON.stringify(currentKiosk.publishedConfig)) : JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG));
-      
-      setDraftConfig(draft);
-      setLastSavedConfig(draft);
-      setPublishedConfig(published);
+    if (currentKiosk?.draftConfig) {
+      const parsed = typeof currentKiosk.draftConfig === 'string'
+        ? JSON.parse(currentKiosk.draftConfig)
+        : currentKiosk.draftConfig;
+      setDraftConfig(JSON.parse(JSON.stringify(parsed)));
+      setLastSavedConfig(JSON.parse(JSON.stringify(parsed)));
+    }
+    if (currentKiosk?.publishedConfig) {
+      const parsed = typeof currentKiosk.publishedConfig === 'string'
+        ? JSON.parse(currentKiosk.publishedConfig)
+        : currentKiosk.publishedConfig;
+      setPublishedConfig(JSON.parse(JSON.stringify(parsed)));
     }
   }, [currentKiosk]);
 
-  // COMPUTED: Dirty state
+  // HANDLERS
   const isDirty = useMemo(() => {
     return JSON.stringify(draftConfig) !== JSON.stringify(lastSavedConfig);
   }, [draftConfig, lastSavedConfig]);
 
-  // COMPUTED: Preview config
-  const previewConfig = useMemo(() => {
-    if (previewMode === 'published' && publishedConfig) {
-      return publishedConfig;
-    }
-    return draftConfig;
-  }, [previewMode, draftConfig, publishedConfig]);
+  const previewConfig = previewMode === 'draft' ? draftConfig : publishedConfig;
 
-  // HANDLERS: Config updates
-  const updateConfig = useCallback((updates: Partial<KioskConfig>) => {
-    setDraftConfig(prev => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      Object.assign(updated, updates);
-      return updated;
-    });
+  const handleThemeChange = useCallback((key: string, value: any) => {
+    setDraftConfig((prev) => ({
+      ...prev,
+      theme: { ...prev.theme, [key]: value },
+    }));
   }, []);
 
   const handleBackgroundChange = useCallback((key: string, value: any) => {
-    setDraftConfig(prev => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      if (!updated.background) updated.background = {};
-      (updated.background as any)[key] = value;
-      return updated;
-    });
-  }, []);
-
-  const handleThemeChange = useCallback((key: string, value: any) => {
-    setDraftConfig(prev => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      if (!updated.theme) updated.theme = {};
-      (updated.theme as any)[key] = value;
-      return updated;
-    });
+    setDraftConfig((prev) => ({
+      ...prev,
+      background: { ...prev.background, [key]: value },
+    }));
   }, []);
 
   const handleTypographyChange = useCallback((key: string, value: any) => {
-    setDraftConfig(prev => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      if (!updated.typography) updated.typography = {};
-      (updated.typography as any)[key] = value;
-      return updated;
-    });
+    setDraftConfig((prev) => ({
+      ...prev,
+      typography: { ...prev.typography, [key]: value },
+    }));
   }, []);
 
-  const handleContentChange = useCallback((key: string, value: any) => {
-    setDraftConfig(prev => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      if (!updated.content) updated.content = {};
-      (updated.content as any)[key] = value;
-      return updated;
-    });
-  }, []);
-
-  // HANDLERS: Save/Publish
-  const handleSaveDraft = useCallback(async () => {
+  const handleSaveDraft = async () => {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
@@ -197,9 +178,9 @@ export default function KioskStudioExact() {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedKiosk, draftConfig, saveDraftMutation]);
+  };
 
-  const handlePublish = useCallback(async () => {
+  const handlePublish = async () => {
     if (!selectedKiosk) return;
     setIsPublishing(true);
     try {
@@ -210,48 +191,15 @@ export default function KioskStudioExact() {
     } finally {
       setIsPublishing(false);
     }
-  }, [selectedKiosk, draftConfig, publishMutation]);
+  };
 
-  const handleRestoreDefaults = useCallback(() => {
-    if (confirm('Are you sure you want to restore to default settings?')) {
-      setDraftConfig(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
-    }
-  }, []);
-
-  const handleOpenPublicKiosk = useCallback(() => {
-    if (currentKiosk?.slug) {
-      window.open(`/kiosk/${currentKiosk.slug}`, '_blank');
-    }
-  }, [currentKiosk?.slug]);
-
-  // RENDER: Loading states
-  if (!locationsData || locationsData.length === 0) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-black">
-        <p className="text-slate-400">No locations available</p>
-      </div>
-    );
-  }
-
-  if (!selectedLocation || kiosksLoading || !kiosksData || kiosksData.length === 0 || !selectedKiosk || kioskLoading || !currentKiosk) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-black">
-        <p className="text-slate-400">Loading studio...</p>
-      </div>
-    );
-  }
-
-  if (!draftConfig || !draftConfig.background || !draftConfig.theme || !draftConfig.typography || !draftConfig.content) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-black">
-        <p className="text-slate-400">Invalid configuration</p>
-      </div>
-    );
-  }
+  const handleRestoreDefaults = () => {
+    setDraftConfig(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
+  };
 
   return (
     <div className="flex h-full bg-black">
-      {/* LEFT SIDEBAR: Location/Kiosk Selector */}
+      {/* LEFT SIDEBAR: Kiosk Thumbnails */}
       <div className="w-36 bg-slate-900 border-r border-slate-800 flex flex-col p-4 overflow-y-auto">
         <div className="space-y-4">
           {kiosksData?.map((kiosk) => (
@@ -321,110 +269,161 @@ export default function KioskStudioExact() {
 
         {/* CONTENT AREA */}
         <div className="flex-1 flex overflow-hidden gap-6 p-6">
-          {/* LEFT PANEL: Controls */}
-          <div className="w-40 bg-slate-900 rounded-lg border border-slate-800 p-4 flex flex-col overflow-y-auto">
-            <Tabs value={activeEditorTab} onValueChange={(val: any) => setActiveEditorTab(val)} className="flex flex-col h-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-800">
-                <TabsTrigger value="theme" className="text-xs">Theme</TabsTrigger>
-                <TabsTrigger value="layout" className="text-xs">Layout</TabsTrigger>
-              </TabsList>
+          {/* LEFT PANEL: Studio Controls */}
+          <div className="w-64 bg-slate-900 rounded-lg border border-slate-800 p-4 flex flex-col overflow-y-auto">
+            {/* Studio Panel Header */}
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-white">Kiosk Studio</h2>
+              <p className="text-xs text-slate-400 mt-1">Design your kiosk experience</p>
+            </div>
 
-              <TabsContent value="theme" className="flex-1 space-y-3 text-sm">
-                <Button
-                  onClick={() => setShowTemplateGallery(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs mb-4"
-                >
-                  ✨ Apply Template
-                </Button>
+            {/* Studio Tabs Navigation */}
+            <div className="flex flex-col gap-2 mb-6">
+              <button
+                onClick={() => setActiveStudioTab('theme')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                  activeStudioTab === 'theme'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <Palette className="w-4 h-4" />
+                Theme
+              </button>
+              <button
+                onClick={() => setActiveStudioTab('layout')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                  activeStudioTab === 'layout'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <Layout className="w-4 h-4" />
+                Layout
+              </button>
+              <button
+                onClick={() => setActiveStudioTab('content')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                  activeStudioTab === 'content'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                Content
+              </button>
+              <button
+                onClick={() => setActiveStudioTab('behavior')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                  activeStudioTab === 'behavior'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <ZapIcon className="w-4 h-4" />
+                Behavior
+              </button>
+            </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium">Accent Color</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={draftConfig.theme.accentColor || '#ef4444'}
-                      onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                      className="w-8 h-8 rounded border border-slate-700 cursor-pointer"
-                    />
-                    <Input
-                      value={draftConfig.theme.accentColor || '#ef4444'}
-                      onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                      className="flex-1 bg-slate-800 border-slate-700 text-white text-xs h-8"
-                    />
+            {/* Theme Panel */}
+            {activeStudioTab === 'theme' && (
+              <div className="flex-1 space-y-4">
+                {/* Background Themes */}
+                <div>
+                  <Label className="text-xs font-semibold text-slate-300 mb-3 block">Background Themes</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {BACKGROUND_THEMES.map((theme) => (
+                      <button
+                        key={theme.id}
+                        className="group relative rounded-lg overflow-hidden border-2 transition-all"
+                        style={{
+                          borderColor: draftConfig.background.preset === theme.id ? '#3b82f6' : '#334155',
+                        }}
+                      >
+                        <img
+                          src={theme.image}
+                          alt={theme.name}
+                          className="w-full h-20 object-cover group-hover:opacity-75 transition-opacity"
+                        />
+                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-end">
+                          <p className="text-xs text-white font-medium p-2 w-full">{theme.name}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium">Background Type</Label>
-                  <Select value={draftConfig.background.type || 'solid'} onValueChange={(val: any) => handleBackgroundChange('type', val)}>
-                    <SelectTrigger className="bg-slate-800 border-slate-700 text-white text-xs h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="solid">Solid</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                      <SelectItem value="preset">Preset</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {draftConfig.background.type === 'solid' && (
+                {/* Background Controls */}
+                <div className="pt-4 border-t border-slate-800 space-y-3">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium">Color</Label>
+                    <Label className="text-xs font-medium">Blur</Label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={draftConfig.background.blur || 0}
+                      onChange={(e) => handleBackgroundChange('blur', parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Dim</Label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={draftConfig.background.dim || 0}
+                      onChange={(e) => handleBackgroundChange('dim', parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Accent Color</Label>
                     <div className="flex gap-2">
                       <input
                         type="color"
-                        value={draftConfig.background.color || '#000000'}
-                        onChange={(e) => handleBackgroundChange('color', e.target.value)}
+                        value={draftConfig.theme.accentColor || '#ef4444'}
+                        onChange={(e) => handleThemeChange('accentColor', e.target.value)}
                         className="w-8 h-8 rounded border border-slate-700 cursor-pointer"
                       />
                       <Input
-                        value={draftConfig.background.color || '#000000'}
-                        onChange={(e) => handleBackgroundChange('color', e.target.value)}
+                        value={draftConfig.theme.accentColor || '#ef4444'}
+                        onChange={(e) => handleThemeChange('accentColor', e.target.value)}
                         className="flex-1 bg-slate-800 border-slate-700 text-white text-xs h-8"
                       />
                     </div>
                   </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="layout" className="flex-1 space-y-3 text-sm">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium">Title Size</Label>
-                    <span className="text-xs text-slate-400">{draftConfig.typography.titleSize}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="24"
-                    max="72"
-                    value={draftConfig.typography.titleSize || 48}
-                    onChange={(e) => handleTypographyChange('titleSize', parseInt(e.target.value))}
-                    className="w-full"
-                  />
                 </div>
+              </div>
+            )}
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium">Button Size</Label>
-                    <span className="text-xs text-slate-400">{draftConfig.typography.buttonFontSize}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="12"
-                    max="24"
-                    value={draftConfig.typography.buttonFontSize || 16}
-                    onChange={(e) => handleTypographyChange('buttonFontSize', parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
+            {/* Layout Panel */}
+            {activeStudioTab === 'layout' && (
+              <div className="flex-1 space-y-4">
+                <p className="text-sm text-slate-400">Layout controls coming next</p>
+              </div>
+            )}
+
+            {/* Content Panel */}
+            {activeStudioTab === 'content' && (
+              <div className="flex-1 space-y-4">
+                <p className="text-sm text-slate-400">Kiosk content configuration</p>
+              </div>
+            )}
+
+            {/* Behavior Panel */}
+            {activeStudioTab === 'behavior' && (
+              <div className="flex-1 space-y-4">
+                <p className="text-sm text-slate-400">Kiosk behavior & automation</p>
+              </div>
+            )}
           </div>
 
           {/* CENTER: Device Emulator Preview with Dojo Background */}
           <div 
-            className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+            className="flex-1 flex flex-col items-center justify-center relative overflow-hidden rounded-lg"
             style={{
               backgroundImage: 'url(/dojo-studio-bg.png)',
               backgroundSize: 'cover',
@@ -475,8 +474,6 @@ export default function KioskStudioExact() {
           />
         ))}
       </div>
-
-
     </div>
   );
 }
