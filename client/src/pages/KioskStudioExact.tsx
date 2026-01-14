@@ -32,12 +32,11 @@ interface Kiosk {
 // Background theme categories
 const BACKGROUND_THEMES = [
   { id: 'martial-arts', name: 'Martial Arts', image: '/kiosk-backgrounds/martial-arts-dojo.png' },
-  { id: 'kids', name: 'Kids', image: '/kiosk-backgrounds/kids-class.png' },
+  { id: 'kids', name: 'Kids', image: '/kiosk-backgrounds/kids-martial-arts.png' },
   { id: 'yoga', name: 'Yoga', image: '/kiosk-backgrounds/yoga-studio.png' },
   { id: 'dance', name: 'Dance', image: '/kiosk-backgrounds/dance-studio.png' },
-  { id: 'nature', name: 'Nature', image: '/kiosk-backgrounds/nature-escape.png' },
-  { id: 'fitness', name: 'Fitness', image: '/kiosk-backgrounds/fitness-studio.png' },
-  { id: 'studio', name: 'Studio', image: '/kiosk-backgrounds/studio-space.png' },
+  { id: 'nature', name: 'Nature', image: '/kiosk-backgrounds/japanese-nature.png' },
+  { id: 'fitness', name: 'Fitness', image: '/kiosk-backgrounds/fitness-battle-ropes.png' },
 ];
 
 /**
@@ -300,11 +299,12 @@ export default function KioskStudioExact() {
                 {/* Background Themes */}
                 <div>
                   <Label className="text-xs font-semibold text-slate-300 mb-3 block">Background Themes</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {BACKGROUND_THEMES.map((theme) => (
                       <button
                         key={theme.id}
-                        className="group relative rounded-lg overflow-hidden border-2 transition-all"
+                        onClick={() => updateConfig({ background: { ...draftConfig.background, preset: theme.id } })}
+                        className="group relative overflow-hidden border-2 transition-all aspect-square"
                         style={{
                           borderColor: draftConfig.background.preset === theme.id ? '#3b82f6' : '#334155',
                         }}
@@ -312,7 +312,7 @@ export default function KioskStudioExact() {
                         <img
                           src={theme.image}
                           alt={theme.name}
-                          className="w-full h-20 object-cover group-hover:opacity-75 transition-opacity"
+                          className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
                         />
                         <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-end">
                           <p className="text-xs text-white font-medium p-2 w-full">{theme.name}</p>
