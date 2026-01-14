@@ -1,0 +1,761 @@
+import React, { useState, useEffect } from 'react'
+import Layout from '../components/Layout'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  User,
+  Camera,
+  Mail,
+  Phone,
+  Briefcase,
+  Users,
+  Shield,
+  Loader2,
+  Check,
+  X
+} from 'lucide-react'
+
+export default function Staff({ onLogout, theme, toggleTheme }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [selectedStaff, setSelectedStaff] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  
+  const [stats, setStats] = useState({
+    total_staff: 0,
+    instructors: 0,
+    assistants: 0,
+    admin_staff: 0
+  })
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'Instructor',
+    bio: '',
+    photo_url: '',
+    status: 'Active'
+  })
+  
+  const [staffMembers, setStaffMembers] = useState([
+    {
+      id: 1,
+      first_name: 'John',
+      last_name: 'Smith',
+      email: 'john.smith@dojo.com',
+      phone: '555-0101',
+      role: 'Master Instructor',
+      bio: 'Head instructor with 20+ years of martial arts experience',
+      photo_url: 'https://i.pravatar.cc/150?img=12',
+      status: 'Active'
+    },
+    {
+      id: 2,
+      first_name: 'Sarah',
+      last_name: 'Johnson',
+      email: 'sarah.j@dojo.com',
+      phone: '555-0102',
+      role: 'Instructor',
+      bio: 'Specializes in youth programs and beginner classes',
+      photo_url: 'https://i.pravatar.cc/150?img=45',
+      status: 'Active'
+    },
+    {
+      id: 3,
+      first_name: 'Mike',
+      last_name: 'Chen',
+      email: 'mike.chen@dojo.com',
+      phone: '555-0103',
+      role: 'Assistant Instructor',
+      bio: 'Black belt with focus on advanced techniques',
+      photo_url: 'https://i.pravatar.cc/150?img=33',
+      status: 'Active'
+    }
+  ])
+
+  useEffect(() => {
+    calculateStats()
+  }, [staffMembers])
+
+  const calculateStats = () => {
+    const activeStaff = staffMembers.filter(s => s.status === 'Active')
+    setStats({
+      total_staff: activeStaff.length,
+      instructors: activeStaff.filter(s => s.role === 'Instructor' || s.role === 'Master Instructor').length,
+      assistants: activeStaff.filter(s => s.role === 'Assistant Instructor').length,
+      admin_staff: activeStaff.filter(s => s.role === 'Admin' || s.role === 'Receptionist').length
+    })
+  }
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'Instructor',
+      bio: '',
+      photo_url: '',
+      status: 'Active'
+    })
+  }
+
+  const handleAddStaff = async () => {
+    setSubmitting(true)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    const [firstName, ...lastNameParts] = formData.name.split(' ')
+    const newStaff = {
+      id: staffMembers.length + 1,
+      first_name: firstName,
+      last_name: lastNameParts.join(' ') || '',
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.role,
+      bio: formData.bio,
+      photo_url: formData.photo_url,
+      status: formData.status
+    }
+    
+    setStaffMembers([...staffMembers, newStaff])
+    setSubmitting(false)
+    setShowAddModal(false)
+    resetForm()
+  }
+
+  const openEditModal = (staff) => {
+    setSelectedStaff(staff)
+    setFormData({
+      name: `${staff.first_name} ${staff.last_name}`,
+      email: staff.email,
+      phone: staff.phone,
+      role: staff.role,
+      bio: staff.bio || '',
+      photo_url: staff.photo_url || '',
+      status: staff.status
+    })
+    setShowEditModal(true)
+  }
+
+  const handleEditStaff = async () => {
+    setSubmitting(true)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    const [firstName, ...lastNameParts] = formData.name.split(' ')
+    setStaffMembers(staffMembers.map(staff =>
+      staff.id === selectedStaff.id
+        ? {
+            ...staff,
+            first_name: firstName,
+            last_name: lastNameParts.join(' ') || '',
+            email: formData.email,
+            phone: formData.phone,
+            role: formData.role,
+            bio: formData.bio,
+            photo_url: formData.photo_url,
+            status: formData.status
+          }
+        : staff
+    ))
+    
+    setSubmitting(false)
+    setShowEditModal(false)
+    setSelectedStaff(null)
+    resetForm()
+  }
+
+  const openDeleteDialog = (staff) => {
+    setSelectedStaff(staff)
+    setShowDeleteDialog(true)
+  }
+
+  const handleDeleteStaff = async () => {
+    setSubmitting(true)
+    await new Promise(resolve => setTimeout(resolve, 500))
+    setStaffMembers(staffMembers.filter(staff => staff.id !== selectedStaff.id))
+    setSubmitting(false)
+    setShowDeleteDialog(false)
+    setSelectedStaff(null)
+  }
+
+  const getRoleColor = (role) => {
+    const colors = {
+      'Master Instructor': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Instructor': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Assistant Instructor': 'bg-green-100 text-green-800 border-green-200',
+      'Admin': 'bg-orange-100 text-orange-800 border-orange-200',
+      'Receptionist': 'bg-pink-100 text-pink-800 border-pink-200'
+    }
+    return colors[role] || 'bg-gray-100 text-gray-800 border-gray-200'
+  }
+
+  const getRoleIcon = (role) => {
+    if (role === 'Master Instructor') return <Shield className="h-4 w-4" />
+    if (role.includes('Instructor')) return <Users className="h-4 w-4" />
+    return <Briefcase className="h-4 w-4" />
+  }
+
+  const filteredStaff = staffMembers.filter(staff =>
+    `${staff.first_name} ${staff.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    staff.role.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  return (
+    <Layout onLogout={onLogout} theme={theme} toggleTheme={toggleTheme}>
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Staff</h1>
+            <p className="text-muted-foreground mt-1">Manage your dojo's staff members and instructors</p>
+          </div>
+          <Button 
+            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Staff Member
+          </Button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <Card>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Total Staff</p>
+                  <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">{stats.total_staff}</p>
+                </div>
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Instructors</p>
+                  <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">{stats.instructors}</p>
+                </div>
+                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Assistants</p>
+                  <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">{stats.assistants}</p>
+                </div>
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Admin Staff</p>
+                  <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">{stats.admin_staff}</p>
+                </div>
+                <Briefcase className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search staff by name, email, or role..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Staff Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredStaff.map((staff) => (
+            <Card key={staff.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center">
+                  {/* Photo */}
+                  <div className="relative mb-4">
+                    {staff.photo_url ? (
+                      <img 
+                        src={staff.photo_url} 
+                        alt={`${staff.first_name} ${staff.last_name}`}
+                        className="w-24 h-24 rounded-full object-cover border-4 border-border"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-4 border-border">
+                        <User className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Name & Role */}
+                  <h3 className="font-bold text-lg text-foreground mb-1">
+                    {staff.first_name} {staff.last_name}
+                  </h3>
+                  <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border mb-3 ${getRoleColor(staff.role)}`}>
+                    {getRoleIcon(staff.role)}
+                    {staff.role}
+                  </div>
+
+                  {/* Bio */}
+                  {staff.bio && (
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {staff.bio}
+                    </p>
+                  )}
+
+                  {/* Contact */}
+                  <div className="w-full space-y-2 mb-4">
+                    <div className="flex items-center justify-center text-sm text-muted-foreground">
+                      <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">{staff.email}</span>
+                    </div>
+                    <div className="flex items-center justify-center text-sm text-muted-foreground">
+                      <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                      {staff.phone}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 w-full">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => openEditModal(staff)}
+                      className="flex-1"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => openDeleteDialog(staff)}
+                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredStaff.length === 0 && (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No staff members found</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Add Staff Modal */}
+        <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+          <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center">
+                <Plus className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-primary" />
+                Add Staff Member
+              </DialogTitle>
+              <DialogDescription className="text-sm">
+                Enter the staff member's information.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4 overflow-y-auto flex-1 px-1">
+              {/* Photo Upload */}
+              <div className="grid gap-2">
+                <Label>Photo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {formData.photo_url ? (
+                      <img 
+                        src={formData.photo_url} 
+                        alt="Staff" 
+                        className="w-20 h-20 rounded-full object-cover border-2 border-border"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                        <User className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5">
+                      <Camera className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      id="photo"
+                      type="url"
+                      placeholder="Enter photo URL"
+                      value={formData.photo_url}
+                      onChange={(e) => handleInputChange('photo_url', e.target.value)}
+                      disabled={submitting}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Paste an image URL or leave blank</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="name">Full Name *</Label>
+                <Input
+                  id="name"
+                  placeholder="Enter full name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="staff@email.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="role">Role *</Label>
+                <Select 
+                  value={formData.role} 
+                  onValueChange={(value) => handleInputChange('role', value)}
+                  disabled={submitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Master Instructor">Master Instructor</SelectItem>
+                    <SelectItem value="Instructor">Instructor</SelectItem>
+                    <SelectItem value="Assistant Instructor">Assistant Instructor</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Receptionist">Receptionist</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="bio">Bio</Label>
+                <textarea
+                  id="bio"
+                  placeholder="Brief bio or description..."
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  disabled={submitting}
+                  className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => handleInputChange('status', value)}
+                  disabled={submitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter className="flex-shrink-0 mt-4 pt-4 border-t gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddModal(false)}
+                disabled={submitting}
+                className="flex-1 sm:flex-none"
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="bg-primary hover:bg-primary/90 flex-1 sm:flex-none"
+                onClick={handleAddStaff}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Staff
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Staff Modal - Similar structure */}
+        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+          <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center">
+                <Edit className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-primary" />
+                Edit Staff Member
+              </DialogTitle>
+              <DialogDescription className="text-sm">
+                Update the staff member's information.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4 overflow-y-auto flex-1 px-1">
+              {/* Same fields as Add Modal */}
+              <div className="grid gap-2">
+                <Label>Photo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {formData.photo_url ? (
+                      <img 
+                        src={formData.photo_url} 
+                        alt="Staff" 
+                        className="w-20 h-20 rounded-full object-cover border-2 border-border"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                        <User className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5">
+                      <Camera className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      type="url"
+                      placeholder="Enter photo URL"
+                      value={formData.photo_url}
+                      onChange={(e) => handleInputChange('photo_url', e.target.value)}
+                      disabled={submitting}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Paste an image URL or leave blank</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Full Name *</Label>
+                <Input
+                  placeholder="Enter full name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Email Address *</Label>
+                <Input
+                  type="email"
+                  placeholder="staff@email.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Phone Number *</Label>
+                <Input
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Role *</Label>
+                <Select 
+                  value={formData.role} 
+                  onValueChange={(value) => handleInputChange('role', value)}
+                  disabled={submitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Master Instructor">Master Instructor</SelectItem>
+                    <SelectItem value="Instructor">Instructor</SelectItem>
+                    <SelectItem value="Assistant Instructor">Assistant Instructor</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Receptionist">Receptionist</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Bio</Label>
+                <textarea
+                  placeholder="Brief bio or description..."
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  disabled={submitting}
+                  className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Status</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => handleInputChange('status', value)}
+                  disabled={submitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter className="flex-shrink-0 mt-4 pt-4 border-t gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowEditModal(false)}
+                disabled={submitting}
+                className="flex-1 sm:flex-none"
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="bg-primary hover:bg-primary/90 flex-1 sm:flex-none"
+                onClick={handleEditStaff}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Staff Member</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete {selectedStaff?.first_name} {selectedStaff?.last_name}? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleDeleteStaff}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </Layout>
+  )
+}

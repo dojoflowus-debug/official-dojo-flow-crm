@@ -4,9 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
-import App from "./App";
-import { getLoginUrl } from "./const";
+import App from "./App.tsx";
 import "./index.css";
+import "./styles/dojo-animations.css";
+
+console.log('DojoFlow Kiosk - main.tsx loaded');
 
 const queryClient = new QueryClient();
 
@@ -18,7 +20,8 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  window.location.href = getLoginUrl();
+  // Redirect to owner login page
+  window.location.href = "/owner";
 };
 
 queryClient.getQueryCache().subscribe(event => {

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'dojo_settings' AND COLUMN_NAME LIKE '%logo%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'dojo_settings' AND COLUMN_NAME LIKE '%logo%'",
+  "rows": [
+    {
+      "COLUMN_NAME": "logoSquare"
+    },
+    {
+      "COLUMN_NAME": "logoHorizontal"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nlogoSquare\nlogoHorizontal\n",
+  "stderr": "",
+  "execution_time_ms": 182
+}

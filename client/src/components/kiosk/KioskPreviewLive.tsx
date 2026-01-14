@@ -1,0 +1,75 @@
+import React from 'react';
+import { KioskConfig } from '../../../shared/kioskConfig';
+import KioskHome from '../KioskHome';
+import KioskLayout from '../KioskLayout';
+
+// Accept both KioskConfig and any config-like object (for compatibility with KioskAppearance)
+interface KioskPreviewLiveProps {
+  config: KioskConfig | any;
+  isLoading?: boolean;
+}
+
+/**
+ * KioskPreviewLive - Local React component for live preview
+ * 
+ * Renders the kiosk UI using the provided config without iframe or API calls.
+ * Updates instantly as the user edits the configuration.
+ */
+export default function KioskPreviewLive({ config, isLoading = false }: KioskPreviewLiveProps) {
+  // Check if debug mode is enabled via query parameter
+  const showDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1';
+  
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/10 animate-pulse">
+            <div className="w-8 h-8 rounded-full border-2 border-transparent border-t-white border-r-white animate-spin" />
+          </div>
+          <p className="text-white/60 text-sm">Loading preview...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full overflow-hidden relative">
+      <KioskLayout config={config}>
+        <KioskHome config={config} />
+      </KioskLayout>
+      
+      {/* Debug HUD - Shows live config values (only when ?debug=1) */}
+      {showDebug && (
+        <div style={{
+          position: 'fixed',
+          bottom: 12,
+          left: 12,
+          fontSize: 12,
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: '#fff',
+          padding: 8,
+          borderRadius: 8,
+          fontFamily: 'monospace',
+          zIndex: 9999,
+          maxWidth: 300,
+          wordBreak: 'break-word'
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: 4 }}>LIVE CONFIG DEBUG</div>
+          <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+            <div style={{ color: '#aaa', fontSize: 10 }}>THEME</div>
+            <div>accentColor: <span style={{ color: config?.theme?.accentColor || '#ef4444' }}>{config?.theme?.accentColor || '#ef4444'}</span></div>
+          </div>
+          <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+            <div style={{ color: '#aaa', fontSize: 10 }}>BACKGROUND</div>
+            <div>bgType: {config?.background?.type || 'color'}</div>
+            <div>bgColor: {config?.background?.color || '#fff'}</div>
+            <div>bgPresetId: {config?.background?.presetKey || 'none'}</div>
+            <div>bgCustomUrl: {config?.background?.customUrl || 'none'}</div>
+            <div>blur: {config?.background?.blur || 0}px</div>
+            <div>dim: {config?.background?.dim || 0}%</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

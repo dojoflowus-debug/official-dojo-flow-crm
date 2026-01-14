@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET password = '$2b$10$7aefzTHYieU8YjCvg.Sy5O4Vf4C4WPPSPLeBVOU0rZjpoLNsMnCfK' WHERE email = 'admin@dojoflow.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute UPDATE users SET password = '$2b$10$7aefzTHYieU8YjCvg.Sy5O4Vf4C4WPPSPLeBVOU0rZjpoLNsMnCfK' WHERE email = 'admin@dojoflow.com';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 108
+}

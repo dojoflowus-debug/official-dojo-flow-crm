@@ -1,0 +1,14 @@
+{
+  "query": "SELECT organizationId, COUNT(*) as tx_count FROM ai_credit_transactions GROUP BY organizationId ORDER BY tx_count DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT organizationId, COUNT(*) as tx_count FROM ai_credit_transactions GROUP BY organizationId ORDER BY tx_count DESC LIMIT 10;",
+  "rows": [
+    {
+      "organizationId": "1",
+      "tx_count": "11"
+    }
+  ],
+  "messages": [],
+  "stdout": "organizationId\ttx_count\n1\t11\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

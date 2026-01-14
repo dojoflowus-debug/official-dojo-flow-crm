@@ -1,0 +1,100 @@
+{
+  "query": "SELECT id, firstName, lastName, status FROM leads LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.root --database bGed8yr8ACVWMUwug5SgAL --execute SELECT id, firstName, lastName, status FROM leads LIMIT 20;",
+  "rows": [
+    {
+      "id": "90001",
+      "firstName": "Chris",
+      "lastName": "Adams",
+      "status": "Interested"
+    },
+    {
+      "id": "90002",
+      "firstName": "Sam",
+      "lastName": "Baker",
+      "status": "Not Interested"
+    },
+    {
+      "id": "90003",
+      "firstName": "Pat",
+      "lastName": "Carter",
+      "status": "New"
+    },
+    {
+      "id": "90004",
+      "firstName": "Drew",
+      "lastName": "Dixon",
+      "status": "New"
+    },
+    {
+      "id": "90005",
+      "firstName": "Jesse",
+      "lastName": "Evans",
+      "status": "Interested"
+    },
+    {
+      "id": "90006",
+      "firstName": "Skyler",
+      "lastName": "Foster",
+      "status": "New"
+    },
+    {
+      "id": "90007",
+      "firstName": "Rowan",
+      "lastName": "Gray",
+      "status": "Contacted"
+    },
+    {
+      "id": "90008",
+      "firstName": "Sage",
+      "lastName": "Hunt",
+      "status": "New"
+    },
+    {
+      "id": "90009",
+      "firstName": "River",
+      "lastName": "Irwin",
+      "status": "Not Interested"
+    },
+    {
+      "id": "90010",
+      "firstName": "Phoenix",
+      "lastName": "James",
+      "status": "Converted"
+    },
+    {
+      "id": "90011",
+      "firstName": "Dakota",
+      "lastName": "King",
+      "status": "Interested"
+    },
+    {
+      "id": "90012",
+      "firstName": "Reese",
+      "lastName": "Long",
+      "status": "Interested"
+    },
+    {
+      "id": "90013",
+      "firstName": "Cameron",
+      "lastName": "Mills",
+      "status": "Interested"
+    },
+    {
+      "id": "90014",
+      "firstName": "Kendall",
+      "lastName": "Nash",
+      "status": "Not Interested"
+    },
+    {
+      "id": "90015",
+      "firstName": "Peyton",
+      "lastName": "Owen",
+      "status": "Converted"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tstatus\n90001\tChris\tAdams\tInterested\n90002\tSam\tBaker\tNot Interested\n90003\tPat\tCarter\tNew\n90004\tDrew\tDixon\tNew\n90005\tJesse\tEvans\tInterested\n90006\tSkyler\tFoster\tNew\n90007\tRowan\tGray\tContacted\n90008\tSage\tHunt\tNew\n90009\tRiver\tIrwin\tNot Interested\n90010\tPhoenix\tJames\tConverted\n90011\tDakota\tKing\tInterested\n90012\tReese\tLong\tInterested\n90013\tCameron\tMills\tInterested\n90014\tKendall\tNash\tNot Interested\n90015\tPeyton\tOwen\tConverted\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

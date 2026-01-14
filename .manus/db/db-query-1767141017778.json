@@ -1,0 +1,64 @@
+{
+  "query": "SELECT \n  tm.id as staff_id,\n  tm.name as staff_name,\n  tm.email as staff_email,\n  tm.role as staff_role,\n  tm.organizationId,\n  tm.isActive,\n  o.name as organization_name\nFROM team_members tm\nLEFT JOIN organizations o ON tm.organizationId = o.id\nORDER BY o.name, tm.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT \n  tm.id as staff_id,\n  tm.name as staff_name,\n  tm.email as staff_email,\n  tm.role as staff_role,\n  tm.organizationId,\n  tm.isActive,\n  o.name as organization_name\nFROM team_members tm\nLEFT JOIN organizations o ON tm.organizationId = o.id\nORDER BY o.name, tm.name;",
+  "rows": [
+    {
+      "staff_id": "4",
+      "staff_name": "David Kim",
+      "staff_email": "david.kim@dojoflow.com",
+      "staff_role": "front_desk",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "organization_name": "NULL"
+    },
+    {
+      "staff_id": "5",
+      "staff_name": "Emily Johnson",
+      "staff_email": "emily.johnson@dojoflow.com",
+      "staff_role": "coach",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "organization_name": "NULL"
+    },
+    {
+      "staff_id": "2",
+      "staff_name": "James Chen",
+      "staff_email": "james.chen@dojoflow.com",
+      "staff_role": "manager",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "organization_name": "NULL"
+    },
+    {
+      "staff_id": "3",
+      "staff_name": "Maria Santos",
+      "staff_email": "maria.santos@dojoflow.com",
+      "staff_role": "instructor",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "organization_name": "NULL"
+    },
+    {
+      "staff_id": "6",
+      "staff_name": "Michael Brown",
+      "staff_email": "michael.brown@dojoflow.com",
+      "staff_role": "assistant",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "organization_name": "NULL"
+    },
+    {
+      "staff_id": "1",
+      "staff_name": "Sarah Martinez",
+      "staff_email": "sarah.martinez@dojoflow.com",
+      "staff_role": "instructor",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "organization_name": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "staff_id\tstaff_name\tstaff_email\tstaff_role\torganizationId\tisActive\torganization_name\n4\tDavid Kim\tdavid.kim@dojoflow.com\tfront_desk\tNULL\t1\tNULL\n5\tEmily Johnson\temily.johnson@dojoflow.com\tcoach\tNULL\t1\tNULL\n2\tJames Chen\tjames.chen@dojoflow.com\tmanager\tNULL\t1\tNULL\n3\tMaria Santos\tmaria.santos@dojoflow.com\tinstructor\tNULL\t1\tNULL\n6\tMichael Brown\tmichael.brown@dojoflow.com\tassistant\tNULL\t1\tNULL\n1\tSarah Martinez\tsarah.martinez@dojoflow.com\tinstructor\tNULL\t1\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, billingFrequency, priceAmount, monthlyAmount FROM membership_plans ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, billingFrequency, priceAmount, monthlyAmount FROM membership_plans ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "55",
+      "name": "Test Convertible Plan",
+      "billingFrequency": "monthly",
+      "priceAmount": "0",
+      "monthlyAmount": "890000"
+    },
+    {
+      "id": "54",
+      "name": "Test Drop-in Plan",
+      "billingFrequency": "monthly",
+      "priceAmount": "0",
+      "monthlyAmount": "200000"
+    },
+    {
+      "id": "53",
+      "name": "Test Daily Plan",
+      "billingFrequency": "monthly",
+      "priceAmount": "0",
+      "monthlyAmount": "250000"
+    },
+    {
+      "id": "52",
+      "name": "Test Weekly Plan",
+      "billingFrequency": "monthly",
+      "priceAmount": "0",
+      "monthlyAmount": "790000"
+    },
+    {
+      "id": "51",
+      "name": "Test Monthly Plan",
+      "billingFrequency": "monthly",
+      "priceAmount": "0",
+      "monthlyAmount": "1490000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tbillingFrequency\tpriceAmount\tmonthlyAmount\n55\tTest Convertible Plan\tmonthly\t0\t890000\n54\tTest Drop-in Plan\tmonthly\t0\t200000\n53\tTest Daily Plan\tmonthly\t0\t250000\n52\tTest Weekly Plan\tmonthly\t0\t790000\n51\tTest Monthly Plan\tmonthly\t0\t1490000\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

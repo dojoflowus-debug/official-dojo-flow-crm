@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, billingFrequency, priceAmount FROM membership_plans WHERE name = 'Manual Weekly Test';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, billingFrequency, priceAmount FROM membership_plans WHERE name = 'Manual Weekly Test';",
+  "rows": [
+    {
+      "id": "77",
+      "name": "Manual Weekly Test",
+      "billingFrequency": "weekly",
+      "priceAmount": "5000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tbillingFrequency\tpriceAmount\n77\tManual Weekly Test\tweekly\t5000\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

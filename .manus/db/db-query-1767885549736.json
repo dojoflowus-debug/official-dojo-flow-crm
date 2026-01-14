@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, firstName, lastName, status, organizationId FROM students LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, status, organizationId FROM students LIMIT 10;",
+  "rows": [
+    {
+      "id": "360001",
+      "firstName": "Emma",
+      "lastName": "Rodriguez",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360002",
+      "firstName": "Liam",
+      "lastName": "Chen",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360003",
+      "firstName": "Sophia",
+      "lastName": "Johnson",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360004",
+      "firstName": "Noah",
+      "lastName": "Williams",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360005",
+      "firstName": "Olivia",
+      "lastName": "Brown",
+      "status": "On Hold",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360006",
+      "firstName": "Ethan",
+      "lastName": "Davis",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360007",
+      "firstName": "Ava",
+      "lastName": "Martinez",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360008",
+      "firstName": "Mason",
+      "lastName": "Garcia",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360009",
+      "firstName": "Isabella",
+      "lastName": "Anderson",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360010",
+      "firstName": "Lucas",
+      "lastName": "Taylor",
+      "status": "Active",
+      "organizationId": "180001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tstatus\torganizationId\n360001\tEmma\tRodriguez\tActive\t180001\n360002\tLiam\tChen\tActive\t180001\n360003\tSophia\tJohnson\tActive\t180001\n360004\tNoah\tWilliams\tActive\t180001\n360005\tOlivia\tBrown\tOn Hold\t180001\n360006\tEthan\tDavis\tActive\t180001\n360007\tAva\tMartinez\tActive\t180001\n360008\tMason\tGarcia\tActive\t180001\n360009\tIsabella\tAnderson\tActive\t180001\n360010\tLucas\tTaylor\tActive\t180001\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

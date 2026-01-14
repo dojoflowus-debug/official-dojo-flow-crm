@@ -1,0 +1,306 @@
+import { invokeLLM } from '../_core/llm';
+
+// Define CRM function tools for the LLM
+const crmTools = [
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_student_count',
+      description: 'Get the total number of students in the dojo',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['active', 'inactive', 'all'],
+            description: 'Filter by student status',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'find_student',
+      description: 'Find a student by name, email, or phone number',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'Student name, email, or phone to search for',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_revenue',
+      description: 'Get revenue information for the dojo',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: {
+            type: 'string',
+            enum: ['today', 'week', 'month', 'year'],
+            description: 'Time period for revenue calculation',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_leads',
+      description: 'Get information about leads (prospective students)',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['new', 'contacted', 'converted', 'all'],
+            description: 'Filter by lead status',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'search_students',
+      description: 'Search for students by name, email, or phone number. Returns a list of matching students with their IDs.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'Search query (name, email, or phone)',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_student',
+      description: 'Get full details for a specific student by ID',
+      parameters: {
+        type: 'object',
+        properties: {
+          studentId: {
+            type: 'number',
+            description: 'Student ID',
+          },
+        },
+        required: ['studentId'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'list_at_risk_students',
+      description: 'Find students who are inactive or on hold. Returns a list of at-risk students.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'list_late_payments',
+      description: 'Find students with overdue payments. Returns a list of students with late payments.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'search_leads',
+      description: 'Search for leads by name, email, or phone number. Returns a list of matching leads with their IDs.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'Search query (name, email, or phone)',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_lead',
+      description: 'Get full details for a specific lead by ID',
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: {
+            type: 'number',
+            description: 'Lead ID',
+          },
+        },
+        required: ['leadId'],
+      },
+    },
+  },
+];
+
+export interface KaiConversationMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export async function chatWithKai(
+  userMessage: string,
+  conversationHistory: KaiConversationMessage[] = [],
+  avatarName: string = 'Kai'
+): Promise<{
+  response: string;
+  functionCalls?: Array<{ name: string; arguments: any }>;
+  ui_blocks?: Array<{
+    type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
+    studentId?: number;
+    studentIds?: number[];
+    leadId?: number;
+    leadIds?: number[];
+    label: string;
+  }>;
+}> {
+  try {
+    // Build the system prompt
+    const systemPrompt = `You are ${avatarName}, a calm, professional AI operations assistant and guardian of this martial arts dojo.
+
+**Your Core Identity:**
+- You're a seasoned operations leader with deep martial arts wisdom
+- You speak with confidence, clarity, and purpose
+- You're warm but professional - like a trusted executive advisor
+- You celebrate wins and provide strategic guidance during challenges
+
+**Your Capabilities:**
+- Student management and growth tracking
+- Class schedules and attendance patterns
+- Revenue insights and financial health
+- Lead nurturing and conversion strategies
+- Search and retrieve detailed student/lead information
+
+**Data Query Tools Available:**
+You have access to these functions for querying data:
+- search_students: Search for students by name, email, or phone
+- get_student: Get full details for a specific student by ID
+- list_at_risk_students: Find students who are inactive or on hold
+- list_late_payments: Find students with overdue payments
+- search_leads: Search for leads by name, email, or phone
+- get_lead: Get full details for a specific lead by ID
+
+**Response Format:**
+After using function calls to retrieve data, format your response as conversational text.
+When you retrieve student or lead data via functions, the system will automatically create UI blocks for you.
+Just respond naturally - for example: "I found Emma Johnson. She's a blue belt in the Kids program."
+
+**IMPORTANT:** The UI will automatically render interactive cards when you mention students or leads you've retrieved via functions.
+
+**VOICE OUTPUT RULES (Critical for Spoken Responses):**
+- Never read aloud formatting symbols, markdown, punctuation, or code characters
+- Ignore asterisks, bullets, numbers, backticks, or emphasis markers when speaking
+- Speak in complete, conversational sentences
+- Do not announce that you are listing items or reading steps
+- Use sequencing language instead of bullet language ("first," "next," "then")
+- Sound like a seasoned operations leader, not a narrator or screen reader
+
+**THINKING STATE BEHAVIOR:**
+When a response requires a noticeable pause (>2 seconds), acknowledge the pause with ONE short, natural transitional phrase:
+- "Hmm… let me think for a moment."
+- "Alright, give me a second."
+- "Let me take a quick look."
+- "I'm working through that now."
+- "Okay… pulling that together."
+
+Rules:
+- Speak only ONE thinking phrase per response cycle
+- Do not repeat or stack thinking phrases
+- After the thinking phrase, continue with the full answer in a confident, composed tone
+- Silence is acceptable for very short pauses; thinking phrases are used only when needed
+
+**Response Guidelines:**
+- Keep responses concise but warm (2-4 sentences typically)
+- Always format numbers clearly ("$1,234" for money, "42 students")
+- When sharing data, add brief context or insight
+- Be encouraging and positive
+- Maintain a professional executive presence at all times
+- Avoid filler words, repetition, or excessive enthusiasm
+- Be concise, reassuring, and purposeful
+
+Remember: You're a trusted operations companion helping build a thriving dojo.`;
+
+    // Build messages array
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      ...conversationHistory.map((msg) => ({
+        role: msg.role as 'user' | 'assistant' | 'system',
+        content: msg.content,
+      })),
+      { role: 'user' as const, content: userMessage },
+    ];
+
+    console.log('[Kai] Calling Manus LLM with message:', userMessage);
+
+    // Call the Manus built-in LLM
+    const response = await invokeLLM({
+      messages,
+      tools: crmTools,
+      tool_choice: 'auto',
+    });
+
+    console.log('[Kai] LLM response:', JSON.stringify(response, null, 2));
+
+    const assistantMessage = response.choices?.[0]?.message;
+
+    if (!assistantMessage) {
+      throw new Error('No response from LLM');
+    }
+
+    // Check if LLM wants to call functions
+    const toolCalls = assistantMessage.tool_calls;
+    if (toolCalls && toolCalls.length > 0) {
+      const functionCalls = toolCalls.map((call: any) => ({
+        name: call.function.name,
+        arguments: JSON.parse(call.function.arguments),
+      }));
+
+      return {
+        response: assistantMessage.content || '',
+        functionCalls,
+      };
+    }
+
+    // Return conversational response (no function calls)
+    return {
+      response: assistantMessage.content || 'I apologize, but I couldn\'t process that request.',
+      ui_blocks: [],
+    };
+  } catch (error) {
+    console.error('[Kai] LLM Error:', error);
+    // Return a friendly fallback response instead of throwing
+    return {
+      response: `I'm here to help! You asked: "${userMessage}". Let me check the data for you.`,
+      ui_blocks: [],
+    };
+  }
+}

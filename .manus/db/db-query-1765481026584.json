@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS dojo_settings (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  businessName VARCHAR(255),\n  dbaName VARCHAR(255),\n  operatorName VARCHAR(255),\n  preferredName VARCHAR(255),\n  pronounsTone VARCHAR(50),\n  timezone VARCHAR(100) DEFAULT 'America/New_York',\n  primaryColor VARCHAR(20) DEFAULT '#3b82f6',\n  secondaryColor VARCHAR(20) DEFAULT '#8b5cf6',\n  logoSquare TEXT,\n  logoHorizontal TEXT,\n  setupCompleted TINYINT DEFAULT 0,\n  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS dojo_settings (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  businessName VARCHAR(255),\n  dbaName VARCHAR(255),\n  operatorName VARCHAR(255),\n  preferredName VARCHAR(255),\n  pronounsTone VARCHAR(50),\n  timezone VARCHAR(100) DEFAULT 'America/New_York',\n  primaryColor VARCHAR(20) DEFAULT '#3b82f6',\n  secondaryColor VARCHAR(20) DEFAULT '#8b5cf6',\n  logoSquare TEXT,\n  logoHorizontal TEXT,\n  setupCompleted TINYINT DEFAULT 0,\n  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 197
+}

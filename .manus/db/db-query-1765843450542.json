@@ -1,0 +1,49 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'classes';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'classes';",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "name"
+    },
+    {
+      "COLUMN_NAME": "time"
+    },
+    {
+      "COLUMN_NAME": "enrolled"
+    },
+    {
+      "COLUMN_NAME": "capacity"
+    },
+    {
+      "COLUMN_NAME": "instructor"
+    },
+    {
+      "COLUMN_NAME": "dayOfWeek"
+    },
+    {
+      "COLUMN_NAME": "isActive"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "instructorId"
+    },
+    {
+      "COLUMN_NAME": "program"
+    },
+    {
+      "COLUMN_NAME": "level"
+    },
+    {
+      "COLUMN_NAME": "room"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nname\ntime\nenrolled\ncapacity\ninstructor\ndayOfWeek\nisActive\ncreatedAt\ninstructorId\nprogram\nlevel\nroom\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

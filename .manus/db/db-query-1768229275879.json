@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, organizationId, locationId, name, slug FROM kiosks ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, organizationId, locationId, name, slug FROM kiosks ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "2",
+      "organizationId": "180001",
+      "locationId": "1",
+      "name": "Test Kiosk",
+      "slug": "test-kiosk-1768229226966"
+    },
+    {
+      "id": "1",
+      "organizationId": "180001",
+      "locationId": "1",
+      "name": "Front Desk iPad",
+      "slug": "front-desk-ipad-1768229203345"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torganizationId\tlocationId\tname\tslug\n2\t180001\t1\tTest Kiosk\ttest-kiosk-1768229226966\n1\t180001\t1\tFront Desk iPad\tfront-desk-ipad-1768229203345\n",
+  "stderr": "",
+  "execution_time_ms": 452
+}

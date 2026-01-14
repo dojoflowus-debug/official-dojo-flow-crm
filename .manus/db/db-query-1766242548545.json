@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, name, type, defaultPrice, imageUrl FROM merchandise_items ORDER BY id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, type, defaultPrice, imageUrl FROM merchandise_items ORDER BY id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Test White Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242522068-product_05.jpg"
+    },
+    {
+      "id": "2",
+      "name": "Test Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "3",
+      "name": "Test White Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "imageUrl": "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "4",
+      "name": "Test Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "5",
+      "name": "White Karate Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "imageUrl": "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "6",
+      "name": "Black Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "7",
+      "name": "Trial Uniform",
+      "type": "uniform",
+      "defaultPrice": "0",
+      "imageUrl": "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "8",
+      "name": "Bulk Test Uniform",
+      "type": "uniform",
+      "defaultPrice": "5000",
+      "imageUrl": "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "9",
+      "name": "Bulk Test Belt",
+      "type": "belt",
+      "defaultPrice": "1500",
+      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "10",
+      "name": "Bulk Test Gear",
+      "type": "gear",
+      "defaultPrice": "2500",
+      "imageUrl": "https://images.unsplash.com/photo-1517438322307-e67111335449?w=400&h=400&fit=crop"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttype\tdefaultPrice\timageUrl\n1\tTest White Uniform\tuniform\t5000\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242522068-product_05.jpg\n2\tTest Belt\tbelt\t1500\thttps://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop\n3\tTest White Uniform\tuniform\t5000\thttps://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop\n4\tTest Belt\tbelt\t1500\thttps://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop\n5\tWhite Karate Uniform\tuniform\t5000\thttps://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop\n6\tBlack Belt\tbelt\t1500\thttps://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop\n7\tTrial Uniform\tuniform\t0\thttps://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop\n8\tBulk Test Uniform\tuniform\t5000\thttps://images.unsplash.com/photo-1555597673-b21d5c935865?w=400&h=400&fit=crop\n9\tBulk Test Belt\tbelt\t1500\thttps://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop\n10\tBulk Test Gear\tgear\t2500\thttps://images.unsplash.com/photo-1517438322307-e67111335449?w=400&h=400&fit=crop\n",
+  "stderr": "",
+  "execution_time_ms": 76
+}

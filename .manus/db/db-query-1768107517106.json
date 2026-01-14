@@ -1,0 +1,37 @@
+{
+  "query": "SELECT * FROM students LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM students LIMIT 1;",
+  "rows": [
+    {
+      "id": "360001",
+      "firstName": "Emma",
+      "lastName": "Rodriguez",
+      "email": "emma.r@example.com",
+      "phone": "(555) 101-0001",
+      "dateOfBirth": "NULL",
+      "age": "8",
+      "beltRank": "Yellow Belt",
+      "status": "Active",
+      "membershipStatus": "Premium",
+      "createdAt": "2025-12-31 00:21:45",
+      "updatedAt": "2026-01-01 20:44:50",
+      "photoUrl": "NULL",
+      "program": "Kids Karate",
+      "streetAddress": "NULL",
+      "city": "NULL",
+      "state": "NULL",
+      "zipCode": "NULL",
+      "latitude": "29.7604",
+      "longitude": "-95.3698",
+      "guardianName": "Maria Rodriguez",
+      "guardianRelationship": "NULL",
+      "guardianPhone": "(555) 101-0002",
+      "guardianEmail": "maria.r@example.com",
+      "organizationId": "180001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\tphone\tdateOfBirth\tage\tbeltRank\tstatus\tmembershipStatus\tcreatedAt\tupdatedAt\tphotoUrl\tprogram\tstreetAddress\tcity\tstate\tzipCode\tlatitude\tlongitude\tguardianName\tguardianRelationship\tguardianPhone\tguardianEmail\torganizationId\n360001\tEmma\tRodriguez\temma.r@example.com\t(555) 101-0001\tNULL\t8\tYellow Belt\tActive\tPremium\t2025-12-31 00:21:45\t2026-01-01 20:44:50\tNULL\tKids Karate\tNULL\tNULL\tNULL\tNULL\t29.7604\t-95.3698\tMaria Rodriguez\tNULL\t(555) 101-0002\tmaria.r@example.com\t180001\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

@@ -1,0 +1,26 @@
+{
+  "query": "SELECT ou.organizationId, ou.userId, ou.role, ou.isPrimary, u.email, u.name FROM organization_users ou JOIN users u ON ou.userId = u.id WHERE u.email IN ('sensei30002003@gmail.com', 'solbittech@gmail.com');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT ou.organizationId, ou.userId, ou.role, ou.isPrimary, u.email, u.name FROM organization_users ou JOIN users u ON ou.userId = u.id WHERE u.email IN ('sensei30002003@gmail.com', 'solbittech@gmail.com');",
+  "rows": [
+    {
+      "organizationId": "120001",
+      "userId": "2580004",
+      "role": "owner",
+      "isPrimary": "1",
+      "email": "solbittech@gmail.com",
+      "name": "New User"
+    },
+    {
+      "organizationId": "180001",
+      "userId": "1",
+      "role": "owner",
+      "isPrimary": "1",
+      "email": "sensei30002003@gmail.com",
+      "name": "Vincent Holmes"
+    }
+  ],
+  "messages": [],
+  "stdout": "organizationId\tuserId\trole\tisPrimary\temail\tname\n120001\t2580004\towner\t1\tsolbittech@gmail.com\tNew User\n180001\t1\towner\t1\tsensei30002003@gmail.com\tVincent Holmes\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

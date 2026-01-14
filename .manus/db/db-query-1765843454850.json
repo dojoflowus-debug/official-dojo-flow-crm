@@ -1,0 +1,25 @@
+{
+  "query": "SELECT * FROM classes LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM classes LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Kids Karate",
+      "time": "4:00 PM - 5:00 PM",
+      "enrolled": "0",
+      "capacity": "15",
+      "instructor": "Coach Sarah",
+      "dayOfWeek": "Mon, Wed",
+      "isActive": "0",
+      "createdAt": "2025-12-15 18:08:45",
+      "instructorId": "NULL",
+      "program": "NULL",
+      "level": "NULL",
+      "room": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttime\tenrolled\tcapacity\tinstructor\tdayOfWeek\tisActive\tcreatedAt\tinstructorId\tprogram\tlevel\troom\n1\tKids Karate\t4:00 PM - 5:00 PM\t0\t15\tCoach Sarah\tMon, Wed\t0\t2025-12-15 18:08:45\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}

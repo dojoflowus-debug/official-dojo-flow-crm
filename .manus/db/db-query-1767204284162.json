@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, firstName, lastName, organizationId, status, createdAt FROM leads ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, organizationId, status, createdAt FROM leads ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "390003",
+      "firstName": "Test",
+      "lastName": "Lead",
+      "organizationId": "NULL",
+      "status": "New Lead",
+      "createdAt": "2025-12-31 18:03:34"
+    },
+    {
+      "id": "390002",
+      "firstName": "Test",
+      "lastName": "Lead",
+      "organizationId": "NULL",
+      "status": "New Lead",
+      "createdAt": "2025-12-31 18:02:25"
+    },
+    {
+      "id": "390001",
+      "firstName": "Vincent",
+      "lastName": "Holmes",
+      "organizationId": "NULL",
+      "status": "New Lead",
+      "createdAt": "2025-12-31 17:58:54"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\torganizationId\tstatus\tcreatedAt\n390003\tTest\tLead\tNULL\tNew Lead\t2025-12-31 18:03:34\n390002\tTest\tLead\tNULL\tNew Lead\t2025-12-31 18:02:25\n390001\tVincent\tHolmes\tNULL\tNew Lead\t2025-12-31 17:58:54\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

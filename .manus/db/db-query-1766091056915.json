@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, type, stockQuantity, lowStockThreshold FROM merchandise_items WHERE name = 'Sparring Gloves';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, type, stockQuantity, lowStockThreshold FROM merchandise_items WHERE name = 'Sparring Gloves';",
+  "rows": [
+    {
+      "id": "30001",
+      "name": "Sparring Gloves",
+      "type": "gear",
+      "stockQuantity": "NULL",
+      "lowStockThreshold": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttype\tstockQuantity\tlowStockThreshold\n30001\tSparring Gloves\tgear\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

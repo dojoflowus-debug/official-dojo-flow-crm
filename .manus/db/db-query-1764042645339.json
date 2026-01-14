@@ -1,0 +1,59 @@
+{
+  "query": "SELECT id, name, `trigger`, isActive, enrollmentCount FROM automation_sequences WHERE `trigger` = 'new_lead' AND isActive = 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.root --database bGed8yr8ACVWMUwug5SgAL --execute SELECT id, name, `trigger`, isActive, enrollmentCount FROM automation_sequences WHERE `trigger` = 'new_lead' AND isActive = 1",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Test Sequence",
+      "trigger": "new_lead",
+      "isActive": "1",
+      "enrollmentCount": "0"
+    },
+    {
+      "id": "30003",
+      "name": "New Lead Welcome Sequence",
+      "trigger": "new_lead",
+      "isActive": "1",
+      "enrollmentCount": "1"
+    },
+    {
+      "id": "30004",
+      "name": "New Lead Welcome Sequence",
+      "trigger": "new_lead",
+      "isActive": "1",
+      "enrollmentCount": "1"
+    },
+    {
+      "id": "60001",
+      "name": "New Lead Welcome Sequence",
+      "trigger": "new_lead",
+      "isActive": "1",
+      "enrollmentCount": "1"
+    },
+    {
+      "id": "60003",
+      "name": "Test Sequence",
+      "trigger": "new_lead",
+      "isActive": "1",
+      "enrollmentCount": "0"
+    },
+    {
+      "id": "90003",
+      "name": "Updated Test Sequence",
+      "trigger": "new_lead",
+      "isActive": "1",
+      "enrollmentCount": "0"
+    },
+    {
+      "id": "90004",
+      "name": "Updated Test Sequence",
+      "trigger": "new_lead",
+      "isActive": "1",
+      "enrollmentCount": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttrigger\tisActive\tenrollmentCount\n1\tTest Sequence\tnew_lead\t1\t0\n30003\tNew Lead Welcome Sequence\tnew_lead\t1\t1\n30004\tNew Lead Welcome Sequence\tnew_lead\t1\t1\n60001\tNew Lead Welcome Sequence\tnew_lead\t1\t1\n60003\tTest Sequence\tnew_lead\t1\t0\n90003\tUpdated Test Sequence\tnew_lead\t1\t0\n90004\tUpdated Test Sequence\tnew_lead\t1\t0\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

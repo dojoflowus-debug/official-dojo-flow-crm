@@ -1,0 +1,9 @@
+{
+  "query": "DROP TABLE IF EXISTS users;\nCREATE TABLE users (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  provider VARCHAR(64),\n  providerId VARCHAR(255),\n  name TEXT,\n  email VARCHAR(320),\n  password VARCHAR(255),\n  resetToken VARCHAR(255),\n  resetTokenExpiry TIMESTAMP NULL,\n  loginMethod VARCHAR(64),\n  role ENUM('user', 'admin', 'owner', 'staff') DEFAULT 'user' NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,\n  lastSignedIn TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute DROP TABLE IF EXISTS users;\nCREATE TABLE users (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  provider VARCHAR(64),\n  providerId VARCHAR(255),\n  name TEXT,\n  email VARCHAR(320),\n  password VARCHAR(255),\n  resetToken VARCHAR(255),\n  resetTokenExpiry TIMESTAMP NULL,\n  loginMethod VARCHAR(64),\n  role ENUM('user', 'admin', 'owner', 'staff') DEFAULT 'user' NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,\n  lastSignedIn TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 502
+}

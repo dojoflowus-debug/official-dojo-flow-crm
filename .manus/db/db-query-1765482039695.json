@@ -1,0 +1,26 @@
+{
+  "query": "SELECT * FROM dojo_settings LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM dojo_settings LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "businessName": "DojoFlow",
+      "dbaName": "NULL",
+      "operatorName": "NULL",
+      "preferredName": "NULL",
+      "pronounsTone": "NULL",
+      "timezone": "America/New_York",
+      "primaryColor": "#3b82f6",
+      "secondaryColor": "#8b5cf6",
+      "logoSquare": "NULL",
+      "logoHorizontal": "NULL",
+      "setupCompleted": "0",
+      "createdAt": "2025-12-11 19:23:52",
+      "updatedAt": "2025-12-11 19:23:52"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tbusinessName\tdbaName\toperatorName\tpreferredName\tpronounsTone\ttimezone\tprimaryColor\tsecondaryColor\tlogoSquare\tlogoHorizontal\tsetupCompleted\tcreatedAt\tupdatedAt\n1\tDojoFlow\tNULL\tNULL\tNULL\tNULL\tAmerica/New_York\t#3b82f6\t#8b5cf6\tNULL\tNULL\t0\t2025-12-11 19:23:52\t2025-12-11 19:23:52\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

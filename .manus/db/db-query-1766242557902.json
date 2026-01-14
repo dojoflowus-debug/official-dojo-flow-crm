@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE merchandise_items \nSET imageUrl = CASE id\n  WHEN 1 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521338-product_01.jpg'\n  WHEN 2 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521680-product_02.jpg'\n  WHEN 3 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521801-product_03.jpg'\n  WHEN 4 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521932-product_04.jpg'\n  WHEN 5 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242522068-product_05.jpg'\n  ELSE imageUrl\nEND\nWHERE id IN (1, 2, 3, 4, 5);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute UPDATE merchandise_items \nSET imageUrl = CASE id\n  WHEN 1 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521338-product_01.jpg'\n  WHEN 2 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521680-product_02.jpg'\n  WHEN 3 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521801-product_03.jpg'\n  WHEN 4 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242521932-product_04.jpg'\n  WHEN 5 THEN 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/merchandise/1766242522068-product_05.jpg'\n  ELSE imageUrl\nEND\nWHERE id IN (1, 2, 3, 4, 5);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 94
+}

@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM leads LIKE 'status'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.root --database bGed8yr8ACVWMUwug5SgAL --execute SHOW COLUMNS FROM leads LIKE 'status'",
+  "rows": [
+    {
+      "Field": "status",
+      "Type": "enum('New Lead','Attempting Contact','Contact Made','Intro Scheduled','Offer Presented','Enrolled','Nurture','Lost/Winback')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "New Lead",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nstatus\tenum('New Lead','Attempting Contact','Contact Made','Intro Scheduled','Offer Presented','Enrolled','Nurture','Lost/Winback')\tNO\t\tNew Lead\t\n",
+  "stderr": "",
+  "execution_time_ms": 122
+}

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO organizations (id, name, timezone, subscriptionStatus, createdAt, updatedAt) VALUES (180001, 'MyDojo', 'America/New_York', 'trial', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO organizations (id, name, timezone, subscriptionStatus, createdAt, updatedAt) VALUES (180001, 'MyDojo', 'America/New_York', 'trial', NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 51
+}

@@ -1,0 +1,121 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "automation_enrollments"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "automation_sequences"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "automation_steps"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "belt_progress"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "belt_test_registrations"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "belt_tests"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "class_enrollments"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "class_reminders"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "classes"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "conversations"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "direct_messages"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "dojo_settings"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "kai_conversations"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "kai_messages"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "lead_activities"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "lead_scoring_rules"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "leads"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "locations"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "message_threads"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "messages"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "program_enrollments"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "programs"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "signed_waivers"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "sms_preferences"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_accounts"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_attendance"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_documents"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_message_attachments"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_messages"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_notes"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_password_reset_tokens"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "student_passwords"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "students"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "unread_message_counts"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "users"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx": "waiver_templates"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_2Awpr243D2Jitpj6Cn66Rx\n__drizzle_migrations\nautomation_enrollments\nautomation_sequences\nautomation_steps\nbelt_progress\nbelt_test_registrations\nbelt_tests\nclass_enrollments\nclass_reminders\nclasses\nconversations\ndirect_messages\ndojo_settings\nkai_conversations\nkai_messages\nlead_activities\nlead_scoring_rules\nleads\nlocations\nmessage_threads\nmessages\nprogram_enrollments\nprograms\nsigned_waivers\nsms_preferences\nstudent_accounts\nstudent_attendance\nstudent_documents\nstudent_message_attachments\nstudent_messages\nstudent_notes\nstudent_password_reset_tokens\nstudent_passwords\nstudents\nunread_message_counts\nusers\nwaiver_templates\n",
+  "stderr": "",
+  "execution_time_ms": 48
+}

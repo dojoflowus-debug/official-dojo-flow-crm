@@ -1,0 +1,70 @@
+{
+  "query": "SELECT DISTINCT beltRank, membershipStatus FROM students;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT DISTINCT beltRank, membershipStatus FROM students;",
+  "rows": [
+    {
+      "beltRank": "Yellow Belt",
+      "membershipStatus": "Standard"
+    },
+    {
+      "beltRank": "White Belt",
+      "membershipStatus": "Standard"
+    },
+    {
+      "beltRank": "Black Belt",
+      "membershipStatus": "Premium"
+    },
+    {
+      "beltRank": "Blue Belt",
+      "membershipStatus": "Standard"
+    },
+    {
+      "beltRank": "Green Belt",
+      "membershipStatus": "Premium"
+    },
+    {
+      "beltRank": "Purple Belt",
+      "membershipStatus": "Premium"
+    },
+    {
+      "beltRank": "White Belt",
+      "membershipStatus": "Trial"
+    },
+    {
+      "beltRank": "Green Belt",
+      "membershipStatus": "Standard"
+    },
+    {
+      "beltRank": "Purple Belt",
+      "membershipStatus": "Standard"
+    },
+    {
+      "beltRank": "Orange Belt",
+      "membershipStatus": "Standard"
+    },
+    {
+      "beltRank": "Brown Belt",
+      "membershipStatus": "Expired"
+    },
+    {
+      "beltRank": "White",
+      "membershipStatus": "Active"
+    },
+    {
+      "beltRank": "Blue Belt",
+      "membershipStatus": "Premium"
+    },
+    {
+      "beltRank": "Orange Belt",
+      "membershipStatus": "Premium"
+    },
+    {
+      "beltRank": "Brown Belt",
+      "membershipStatus": "Premium"
+    }
+  ],
+  "messages": [],
+  "stdout": "beltRank\tmembershipStatus\nYellow Belt\tStandard\nWhite Belt\tStandard\nBlack Belt\tPremium\nBlue Belt\tStandard\nGreen Belt\tPremium\nPurple Belt\tPremium\nWhite Belt\tTrial\nGreen Belt\tStandard\nPurple Belt\tStandard\nOrange Belt\tStandard\nBrown Belt\tExpired\nWhite\tActive\nBlue Belt\tPremium\nOrange Belt\tPremium\nBrown Belt\tPremium\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

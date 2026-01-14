@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, firstName, lastName, email FROM students LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, email FROM students LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john.smith@dojo.com"
+    },
+    {
+      "id": "30001",
+      "firstName": "Marcus",
+      "lastName": "Johnson",
+      "email": "marcus.johnson@email.com"
+    },
+    {
+      "id": "30002",
+      "firstName": "Sophia",
+      "lastName": "Williams",
+      "email": "sophia.williams@email.com"
+    },
+    {
+      "id": "30003",
+      "firstName": "Ethan",
+      "lastName": "Brown",
+      "email": "ethan.brown@email.com"
+    },
+    {
+      "id": "30004",
+      "firstName": "Olivia",
+      "lastName": "Davis",
+      "email": "olivia.davis@email.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\temail\n1\tJohn\tSmith\tjohn.smith@dojo.com\n30001\tMarcus\tJohnson\tmarcus.johnson@email.com\n30002\tSophia\tWilliams\tsophia.williams@email.com\n30003\tEthan\tBrown\tethan.brown@email.com\n30004\tOlivia\tDavis\tolivia.davis@email.com\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

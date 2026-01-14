@@ -1,0 +1,80 @@
+{
+  "query": "SELECT ou.id, ou.userId, ou.organizationId, ou.role, o.name as org_name FROM organization_users ou LEFT JOIN organizations o ON ou.organizationId = o.id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT ou.id, ou.userId, ou.organizationId, ou.role, o.name as org_name FROM organization_users ou LEFT JOIN organizations o ON ou.organizationId = o.id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "userId": "1740075",
+      "organizationId": "1",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "60001",
+      "userId": "2550002",
+      "organizationId": "90001",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "90001",
+      "userId": "2580004",
+      "organizationId": "120001",
+      "role": "owner",
+      "org_name": "MyDojo"
+    },
+    {
+      "id": "90003",
+      "userId": "2580009",
+      "organizationId": "120004",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "90005",
+      "userId": "2580017",
+      "organizationId": "120006",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "120002",
+      "userId": "2610009",
+      "organizationId": "150003",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "120003",
+      "userId": "2610011",
+      "organizationId": "150004",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "120005",
+      "userId": "2610038",
+      "organizationId": "150006",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "120007",
+      "userId": "2610067",
+      "organizationId": "150010",
+      "role": "owner",
+      "org_name": "NULL"
+    },
+    {
+      "id": "150001",
+      "userId": "1",
+      "organizationId": "180001",
+      "role": "owner",
+      "org_name": "MyDojo"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\torganizationId\trole\torg_name\n1\t1740075\t1\towner\tNULL\n60001\t2550002\t90001\towner\tNULL\n90001\t2580004\t120001\towner\tMyDojo\n90003\t2580009\t120004\towner\tNULL\n90005\t2580017\t120006\towner\tNULL\n120002\t2610009\t150003\towner\tNULL\n120003\t2610011\t150004\towner\tNULL\n120005\t2610038\t150006\towner\tNULL\n120007\t2610067\t150010\towner\tNULL\n150001\t1\t180001\towner\tMyDojo\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

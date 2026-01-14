@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, firstName, lastName, createdAt, updatedAt FROM students WHERE id = 1350002 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, createdAt, updatedAt FROM students WHERE id = 1350002 LIMIT 1;",
+  "rows": [
+    {
+      "id": "1350002",
+      "firstName": "Ashley",
+      "lastName": "Boyd",
+      "createdAt": "2026-01-09 16:16:55",
+      "updatedAt": "2026-01-09 16:16:55"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tcreatedAt\tupdatedAt\n1350002\tAshley\tBoyd\t2026-01-09 16:16:55\t2026-01-09 16:16:55\n",
+  "stderr": "",
+  "execution_time_ms": 386
+}

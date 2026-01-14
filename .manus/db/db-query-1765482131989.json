@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE dojo_settings ADD COLUMN IF NOT EXISTS industry VARCHAR(50), ADD COLUMN IF NOT EXISTS businessModel VARCHAR(50), ADD COLUMN IF NOT EXISTS usePreset INT DEFAULT 1, ADD COLUMN IF NOT EXISTS businessName VARCHAR(255), ADD COLUMN IF NOT EXISTS dbaName VARCHAR(255), ADD COLUMN IF NOT EXISTS operatorName VARCHAR(255), ADD COLUMN IF NOT EXISTS preferredName VARCHAR(255), ADD COLUMN IF NOT EXISTS pronounsTone VARCHAR(50), ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'America/New_York', ADD COLUMN IF NOT EXISTS primaryColor VARCHAR(20), ADD COLUMN IF NOT EXISTS secondaryColor VARCHAR(20);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE dojo_settings ADD COLUMN IF NOT EXISTS industry VARCHAR(50), ADD COLUMN IF NOT EXISTS businessModel VARCHAR(50), ADD COLUMN IF NOT EXISTS usePreset INT DEFAULT 1, ADD COLUMN IF NOT EXISTS businessName VARCHAR(255), ADD COLUMN IF NOT EXISTS dbaName VARCHAR(255), ADD COLUMN IF NOT EXISTS operatorName VARCHAR(255), ADD COLUMN IF NOT EXISTS preferredName VARCHAR(255), ADD COLUMN IF NOT EXISTS pronounsTone VARCHAR(50), ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'America/New_York', ADD COLUMN IF NOT EXISTS primaryColor VARCHAR(20), ADD COLUMN IF NOT EXISTS secondaryColor VARCHAR(20);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1033
+}

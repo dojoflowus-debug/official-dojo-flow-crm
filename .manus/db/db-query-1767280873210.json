@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, email, firstName, lastName FROM students WHERE email IS NOT NULL LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, email, firstName, lastName FROM students WHERE email IS NOT NULL LIMIT 3;",
+  "rows": [
+    {
+      "id": "360001",
+      "email": "emma.r@example.com",
+      "firstName": "Emma",
+      "lastName": "Rodriguez"
+    },
+    {
+      "id": "360002",
+      "email": "liam.c@example.com",
+      "firstName": "Liam",
+      "lastName": "Chen"
+    },
+    {
+      "id": "360003",
+      "email": "sophia.j@example.com",
+      "firstName": "Sophia",
+      "lastName": "Johnson"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tfirstName\tlastName\n360001\temma.r@example.com\tEmma\tRodriguez\n360002\tliam.c@example.com\tLiam\tChen\n360003\tsophia.j@example.com\tSophia\tJohnson\n",
+  "stderr": "",
+  "execution_time_ms": 123
+}

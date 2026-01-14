@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO ai_credit_balance (organizationId, balance, creditsUsed, lastResetAt, createdAt, updatedAt) \nVALUES (1, 1000, 0, NOW(), NOW(), NOW()) \nON DUPLICATE KEY UPDATE balance = 1000, updatedAt = NOW();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO ai_credit_balance (organizationId, balance, creditsUsed, lastResetAt, createdAt, updatedAt) \nVALUES (1, 1000, 0, NOW(), NOW(), NOW()) \nON DUPLICATE KEY UPDATE balance = 1000, updatedAt = NOW();",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'creditsUsed' in 'field list'"
+  ]
+}

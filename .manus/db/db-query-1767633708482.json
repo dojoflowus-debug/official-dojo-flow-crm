@@ -1,0 +1,66 @@
+{
+  "query": "SELECT COLUMN_NAME, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'kai_conversations' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COLUMN_NAME, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'kai_conversations' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "COLUMN_TYPE": "int(11)"
+    },
+    {
+      "COLUMN_NAME": "userId",
+      "COLUMN_TYPE": "int(11)"
+    },
+    {
+      "COLUMN_NAME": "title",
+      "COLUMN_TYPE": "varchar(500)"
+    },
+    {
+      "COLUMN_NAME": "preview",
+      "COLUMN_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "threadType",
+      "COLUMN_TYPE": "enum('kai_direct','group')"
+    },
+    {
+      "COLUMN_NAME": "status",
+      "COLUMN_TYPE": "enum('active','archived')"
+    },
+    {
+      "COLUMN_NAME": "category",
+      "COLUMN_TYPE": "enum('kai','growth','billing','operations','general')"
+    },
+    {
+      "COLUMN_NAME": "priority",
+      "COLUMN_TYPE": "enum('neutral','attention','urgent')"
+    },
+    {
+      "COLUMN_NAME": "lastMessageAt",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "createdAt",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "updatedAt",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "deletedAt",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "archivedAt",
+      "COLUMN_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "participantIds",
+      "COLUMN_TYPE": "text"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tCOLUMN_TYPE\nid\tint(11)\nuserId\tint(11)\ntitle\tvarchar(500)\npreview\ttext\nthreadType\tenum('kai_direct','group')\nstatus\tenum('active','archived')\ncategory\tenum('kai','growth','billing','operations','general')\npriority\tenum('neutral','attention','urgent')\nlastMessageAt\ttimestamp\ncreatedAt\ttimestamp\nupdatedAt\ttimestamp\ndeletedAt\ttimestamp\narchivedAt\ttimestamp\nparticipantIds\ttext\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

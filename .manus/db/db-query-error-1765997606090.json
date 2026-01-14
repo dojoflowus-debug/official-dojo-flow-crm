@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE membership_plans \nADD COLUMN billingInterval INT DEFAULT 1 AFTER priceAmount,\nADD COLUMN billingAnchorDayOfWeek INT AFTER billingInterval,\nADD COLUMN termLengthUnits ENUM('months', 'weeks', 'days', 'visits') AFTER termLength,\nADD COLUMN termLengthValue INT AFTER termLengthUnits,\nADD COLUMN perVisitPrice INT AFTER termLengthValue,\nADD COLUMN visitPackSize INT AFTER perVisitPrice,\nADD COLUMN visitPackExpiryDays INT AFTER visitPackSize,\nADD COLUMN chargeOnAttendance INT DEFAULT 0 AFTER visitPackExpiryDays;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE membership_plans \nADD COLUMN billingInterval INT DEFAULT 1 AFTER priceAmount,\nADD COLUMN billingAnchorDayOfWeek INT AFTER billingInterval,\nADD COLUMN termLengthUnits ENUM('months', 'weeks', 'days', 'visits') AFTER termLength,\nADD COLUMN termLengthValue INT AFTER termLengthUnits,\nADD COLUMN perVisitPrice INT AFTER termLengthValue,\nADD COLUMN visitPackSize INT AFTER perVisitPrice,\nADD COLUMN visitPackExpiryDays INT AFTER visitPackSize,\nADD COLUMN chargeOnAttendance INT DEFAULT 0 AFTER visitPackExpiryDays;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'billinginterval' in 'membership_plans'"
+  ]
+}

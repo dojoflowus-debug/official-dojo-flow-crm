@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO locations (name, address, kioskEnabled, kioskSlug, kioskSettings, isActive) \nVALUES (\n  'Main Dojo', \n  '123 Martial Arts Way, Training City, TX 75001', \n  1, \n  'main-dojo',\n  '{\"theme\":\"default\",\"appearance\":{\"accentColor\":\"#ef4444\",\"headline\":\"Welcome to Training\",\"subtext\":\"Sign in or get started below\",\"backgroundIntensity\":70,\"backgroundBlur\":3},\"behavior\":{\"showMemberLogin\":true,\"showNewStudent\":true,\"idleTimeout\":30,\"autoReturn\":true,\"kaiEnrollment\":false,\"facialRecognition\":false}}',\n  1\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO locations (name, address, kioskEnabled, kioskSlug, kioskSettings, isActive) \nVALUES (\n  'Main Dojo', \n  '123 Martial Arts Way, Training City, TX 75001', \n  1, \n  'main-dojo',\n  '{\"theme\":\"default\",\"appearance\":{\"accentColor\":\"#ef4444\",\"headline\":\"Welcome to Training\",\"subtext\":\"Sign in or get started below\",\"backgroundIntensity\":70,\"backgroundBlur\":3},\"behavior\":{\"showMemberLogin\":true,\"showNewStudent\":true,\"idleTimeout\":30,\"autoReturn\":true,\"kaiEnrollment\":false,\"facialRecognition\":false}}',\n  1\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 62
+}

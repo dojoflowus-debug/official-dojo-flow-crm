@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, COUNT(DISTINCT organizationId) as orgs, GROUP_CONCAT(DISTINCT organizationId) as org_ids FROM students;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COUNT(*) as total, COUNT(DISTINCT organizationId) as orgs, GROUP_CONCAT(DISTINCT organizationId) as org_ids FROM students;",
+  "rows": [
+    {
+      "total": "204",
+      "orgs": "4",
+      "org_ids": "180001,120001,330001,1"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\torgs\torg_ids\n204\t4\t180001,120001,330001,1\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

@@ -1,0 +1,9 @@
+## Image Upload Feature for Create Item Dialog
+- [x] Add image upload UI component to Create Item dialog
+- [x] Implement file selection and preview
+- [x] Add S3 upload functionality for merchandise images
+- [x] Update createItem mutation to accept imageUrl
+- [x] Install multer dependency for file uploads
+- [x] Create upload router with S3 integration
+- [x] Test Create Item dialog displays image upload UI
+- [ ] Save checkpoint

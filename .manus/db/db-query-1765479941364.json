@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE leads SET \n  address = '14055 FM 2920 Rd',\n  city = 'Tomball',\n  state = 'TX',\n  zipCode = '77377',\n  lat = '30.0974',\n  lng = '-95.6158'\nWHERE id = 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute UPDATE leads SET \n  address = '14055 FM 2920 Rd',\n  city = 'Tomball',\n  state = 'TX',\n  zipCode = '77377',\n  lat = '30.0974',\n  lng = '-95.6158'\nWHERE id = 1",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 144
+}

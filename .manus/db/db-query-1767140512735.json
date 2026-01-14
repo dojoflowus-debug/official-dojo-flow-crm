@@ -1,0 +1,100 @@
+{
+  "query": "SELECT id, firstName, lastName, program, beltRank, status, organizationId FROM students LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, program, beltRank, status, organizationId FROM students LIMIT 10;",
+  "rows": [
+    {
+      "id": "360001",
+      "firstName": "Emma",
+      "lastName": "Rodriguez",
+      "program": "Kids Karate",
+      "beltRank": "Yellow Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360002",
+      "firstName": "Liam",
+      "lastName": "Chen",
+      "program": "Kids Karate",
+      "beltRank": "Orange Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360003",
+      "firstName": "Sophia",
+      "lastName": "Johnson",
+      "program": "Kids Karate",
+      "beltRank": "White Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360004",
+      "firstName": "Noah",
+      "lastName": "Williams",
+      "program": "Kids BJJ",
+      "beltRank": "Green Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360005",
+      "firstName": "Olivia",
+      "lastName": "Brown",
+      "program": "Kids Karate",
+      "beltRank": "Yellow Belt",
+      "status": "On Hold",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360006",
+      "firstName": "Ethan",
+      "lastName": "Davis",
+      "program": "Teen BJJ",
+      "beltRank": "Blue Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360007",
+      "firstName": "Ava",
+      "lastName": "Martinez",
+      "program": "Teen MMA",
+      "beltRank": "Purple Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360008",
+      "firstName": "Mason",
+      "lastName": "Garcia",
+      "program": "Teen Karate",
+      "beltRank": "Green Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360009",
+      "firstName": "Isabella",
+      "lastName": "Anderson",
+      "program": "Teen Karate",
+      "beltRank": "Orange Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    },
+    {
+      "id": "360010",
+      "firstName": "Lucas",
+      "lastName": "Taylor",
+      "program": "Teen BJJ",
+      "beltRank": "Brown Belt",
+      "status": "Active",
+      "organizationId": "180001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tprogram\tbeltRank\tstatus\torganizationId\n360001\tEmma\tRodriguez\tKids Karate\tYellow Belt\tActive\t180001\n360002\tLiam\tChen\tKids Karate\tOrange Belt\tActive\t180001\n360003\tSophia\tJohnson\tKids Karate\tWhite Belt\tActive\t180001\n360004\tNoah\tWilliams\tKids BJJ\tGreen Belt\tActive\t180001\n360005\tOlivia\tBrown\tKids Karate\tYellow Belt\tOn Hold\t180001\n360006\tEthan\tDavis\tTeen BJJ\tBlue Belt\tActive\t180001\n360007\tAva\tMartinez\tTeen MMA\tPurple Belt\tActive\t180001\n360008\tMason\tGarcia\tTeen Karate\tGreen Belt\tActive\t180001\n360009\tIsabella\tAnderson\tTeen Karate\tOrange Belt\tActive\t180001\n360010\tLucas\tTaylor\tTeen BJJ\tBrown Belt\tActive\t180001\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

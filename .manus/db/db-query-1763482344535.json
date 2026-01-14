@@ -1,0 +1,130 @@
+{
+  "query": "SELECT * FROM lead_sources ORDER BY displayOrder;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.root --database bGed8yr8ACVWMUwug5SgAL --execute SELECT * FROM lead_sources ORDER BY displayOrder;",
+  "rows": [
+    {
+      "id": "1",
+      "sourceKey": "website_form",
+      "name": "Website Form",
+      "icon": "Globe",
+      "enabled": "1",
+      "displayOrder": "1",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:11:09"
+    },
+    {
+      "id": "2",
+      "sourceKey": "chat_widget",
+      "name": "Chat Widget",
+      "icon": "MessageSquare",
+      "enabled": "1",
+      "displayOrder": "2",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "3",
+      "sourceKey": "landing_pages",
+      "name": "Landing Pages",
+      "icon": "Layout",
+      "enabled": "1",
+      "displayOrder": "3",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "4",
+      "sourceKey": "kiosk",
+      "name": "Kiosk",
+      "icon": "Monitor",
+      "enabled": "1",
+      "displayOrder": "4",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "5",
+      "sourceKey": "qr_code",
+      "name": "QR Code",
+      "icon": "QrCode",
+      "enabled": "1",
+      "displayOrder": "5",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "6",
+      "sourceKey": "facebook_instagram_dms",
+      "name": "Facebook / Instagram DMs",
+      "icon": "Facebook",
+      "enabled": "1",
+      "displayOrder": "6",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "7",
+      "sourceKey": "google_messages",
+      "name": "Google Messages",
+      "icon": "MessageCircle",
+      "enabled": "1",
+      "displayOrder": "7",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "8",
+      "sourceKey": "phone_call",
+      "name": "Phone Call",
+      "icon": "Phone",
+      "enabled": "1",
+      "displayOrder": "8",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "9",
+      "sourceKey": "missed_call_text",
+      "name": "Missed Call Text",
+      "icon": "PhoneOff",
+      "enabled": "1",
+      "displayOrder": "9",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "10",
+      "sourceKey": "sms_keyword",
+      "name": "SMS Keyword",
+      "icon": "MessageSquareText",
+      "enabled": "1",
+      "displayOrder": "10",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "11",
+      "sourceKey": "import_from_email",
+      "name": "Import from Email",
+      "icon": "Mail",
+      "enabled": "1",
+      "displayOrder": "11",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    },
+    {
+      "id": "12",
+      "sourceKey": "other_sources",
+      "name": "Other Sources",
+      "icon": "Settings",
+      "enabled": "1",
+      "displayOrder": "12",
+      "createdAt": "2025-11-18 16:01:26",
+      "updatedAt": "2025-11-18 16:01:26"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsourceKey\tname\ticon\tenabled\tdisplayOrder\tcreatedAt\tupdatedAt\n1\twebsite_form\tWebsite Form\tGlobe\t1\t1\t2025-11-18 16:01:26\t2025-11-18 16:11:09\n2\tchat_widget\tChat Widget\tMessageSquare\t1\t2\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n3\tlanding_pages\tLanding Pages\tLayout\t1\t3\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n4\tkiosk\tKiosk\tMonitor\t1\t4\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n5\tqr_code\tQR Code\tQrCode\t1\t5\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n6\tfacebook_instagram_dms\tFacebook / Instagram DMs\tFacebook\t1\t6\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n7\tgoogle_messages\tGoogle Messages\tMessageCircle\t1\t7\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n8\tphone_call\tPhone Call\tPhone\t1\t8\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n9\tmissed_call_text\tMissed Call Text\tPhoneOff\t1\t9\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n10\tsms_keyword\tSMS Keyword\tMessageSquareText\t1\t10\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n11\timport_from_email\tImport from Email\tMail\t1\t11\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n12\tother_sources\tOther Sources\tSettings\t1\t12\t2025-11-18 16:01:26\t2025-11-18 16:01:26\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

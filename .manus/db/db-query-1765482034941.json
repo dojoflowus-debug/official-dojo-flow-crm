@@ -1,0 +1,122 @@
+{
+  "query": "DESCRIBE dojo_settings;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute DESCRIBE dojo_settings;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "businessName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dbaName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "operatorName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "preferredName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pronounsTone",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "timezone",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "America/New_York",
+      "Extra": ""
+    },
+    {
+      "Field": "primaryColor",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "#3b82f6",
+      "Extra": ""
+    },
+    {
+      "Field": "secondaryColor",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "#8b5cf6",
+      "Extra": ""
+    },
+    {
+      "Field": "logoSquare",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "logoHorizontal",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "setupCompleted",
+      "Type": "tinyint(4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "datetime",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "datetime",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nbusinessName\tvarchar(255)\tYES\t\tNULL\t\ndbaName\tvarchar(255)\tYES\t\tNULL\t\noperatorName\tvarchar(255)\tYES\t\tNULL\t\npreferredName\tvarchar(255)\tYES\t\tNULL\t\npronounsTone\tvarchar(50)\tYES\t\tNULL\t\ntimezone\tvarchar(100)\tYES\t\tAmerica/New_York\t\nprimaryColor\tvarchar(20)\tYES\t\t#3b82f6\t\nsecondaryColor\tvarchar(20)\tYES\t\t#8b5cf6\t\nlogoSquare\ttext\tYES\t\tNULL\t\nlogoHorizontal\ttext\tYES\t\tNULL\t\nsetupCompleted\ttinyint(4)\tYES\t\t0\t\ncreatedAt\tdatetime\tYES\t\tCURRENT_TIMESTAMP\t\nupdatedAt\tdatetime\tYES\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\n",
+  "stderr": "",
+  "execution_time_ms": 96
+}

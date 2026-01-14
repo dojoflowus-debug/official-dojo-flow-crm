@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO belt_tests (name, beltLevel, testDate, startTime, endTime, location, maxCapacity, currentRegistrations, instructorName, fee, status, notes, minAttendanceRequired, minClassesRequired, createdAt, updatedAt)\nVALUES \n('Yellow Belt Promotion Test', 'Yellow', DATE_ADD(NOW(), INTERVAL 14 DAY), '10:00 AM', '12:00 PM', 'Main Dojo', 15, 0, 'Sensei John Smith', 5000, 'open', 'Please arrive 15 minutes early. Wear a clean gi.', 80, 20, NOW(), NOW()),\n('Yellow Belt Test - December', 'Yellow', DATE_ADD(NOW(), INTERVAL 30 DAY), '2:00 PM', '4:00 PM', 'Main Dojo', 20, 0, 'Sensei Sarah Johnson', 5000, 'open', 'Winter promotion ceremony. Family welcome to attend.', 80, 20, NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO belt_tests (name, beltLevel, testDate, startTime, endTime, location, maxCapacity, currentRegistrations, instructorName, fee, status, notes, minAttendanceRequired, minClassesRequired, createdAt, updatedAt)\nVALUES \n('Yellow Belt Promotion Test', 'Yellow', DATE_ADD(NOW(), INTERVAL 14 DAY), '10:00 AM', '12:00 PM', 'Main Dojo', 15, 0, 'Sensei John Smith', 5000, 'open', 'Please arrive 15 minutes early. Wear a clean gi.', 80, 20, NOW(), NOW()),\n('Yellow Belt Test - December', 'Yellow', DATE_ADD(NOW(), INTERVAL 30 DAY), '2:00 PM', '4:00 PM', 'Main Dojo', 20, 0, 'Sensei Sarah Johnson', 5000, 'open', 'Winter promotion ceremony. Family welcome to attend.', 80, 20, NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 69
+}

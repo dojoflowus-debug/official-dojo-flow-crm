@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS stripeApiKey VARCHAR(255),\nADD COLUMN IF NOT EXISTS stripePublishableKey VARCHAR(255),\nADD COLUMN IF NOT EXISTS stripeWebhookSecret VARCHAR(255),\nADD COLUMN IF NOT EXISTS squareAccessToken VARCHAR(255),\nADD COLUMN IF NOT EXISTS squareLocationId VARCHAR(255),\nADD COLUMN IF NOT EXISTS paymentProcessor VARCHAR(50) DEFAULT 'stripe',\nADD COLUMN IF NOT EXISTS paymentApiKey VARCHAR(500),\nADD COLUMN IF NOT EXISTS paymentMerchantId VARCHAR(500),\nADD COLUMN IF NOT EXISTS paymentSetupLater INT DEFAULT 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE dojo_settings \nADD COLUMN IF NOT EXISTS stripeApiKey VARCHAR(255),\nADD COLUMN IF NOT EXISTS stripePublishableKey VARCHAR(255),\nADD COLUMN IF NOT EXISTS stripeWebhookSecret VARCHAR(255),\nADD COLUMN IF NOT EXISTS squareAccessToken VARCHAR(255),\nADD COLUMN IF NOT EXISTS squareLocationId VARCHAR(255),\nADD COLUMN IF NOT EXISTS paymentProcessor VARCHAR(50) DEFAULT 'stripe',\nADD COLUMN IF NOT EXISTS paymentApiKey VARCHAR(500),\nADD COLUMN IF NOT EXISTS paymentMerchantId VARCHAR(500),\nADD COLUMN IF NOT EXISTS paymentSetupLater INT DEFAULT 0;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2734
+}

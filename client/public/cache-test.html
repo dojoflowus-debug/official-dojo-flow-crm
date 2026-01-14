@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cache Test</title>
+</head>
+<body style="background: #1a1a2e; color: white; font-family: sans-serif; padding: 40px; text-align: center;">
+    <h1>Cache Test Page</h1>
+    <p style="font-size: 24px; color: #00ff00;">Version: <strong>TIMESTAMP_<?php echo time(); ?>_2025-11-13_08:20:00</strong></p>
+    <p>If you see this timestamp, the server is serving fresh content.</p>
+    <p>Current time: <span id="time"></span></p>
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+{
+  "query": "SELECT u.id, u.name, u.email, ou.organizationId, o.name as org_name FROM users u LEFT JOIN organization_users ou ON u.id = ou.userId LEFT JOIN organizations o ON ou.organizationId = o.id WHERE u.email LIKE '%@%' ORDER BY u.id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT u.id, u.name, u.email, ou.organizationId, o.name as org_name FROM users u LEFT JOIN organization_users ou ON u.id = ou.userId LEFT JOIN organizations o ON ou.organizationId = o.id WHERE u.email LIKE '%@%' ORDER BY u.id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "2670119",
+      "name": "Test Owner",
+      "email": "test-owner-1767132616415@example.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    },
+    {
+      "id": "2670118",
+      "name": "Test retention",
+      "email": "test-retention@example.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    },
+    {
+      "id": "2670117",
+      "name": "Test billing",
+      "email": "test-billing@example.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    },
+    {
+      "id": "2670116",
+      "name": "Test health",
+      "email": "test-health@example.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    },
+    {
+      "id": "2670115",
+      "name": "Test growth",
+      "email": "test-growth@example.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    },
+    {
+      "id": "2640005",
+      "name": "testuser",
+      "email": "testuser@dojoflow.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    },
+    {
+      "id": "2580004",
+      "name": "New User",
+      "email": "solbittech@gmail.com",
+      "organizationId": "120001",
+      "org_name": "MyDojo"
+    },
+    {
+      "id": "2550002",
+      "name": "Mydojo",
+      "email": "vincent.holmes00@gmail.com",
+      "organizationId": "90001",
+      "org_name": "NULL"
+    },
+    {
+      "id": "2070001",
+      "name": "Platform Admin",
+      "email": "admin@dojoflow.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    },
+    {
+      "id": "690017",
+      "name": "Export Test User",
+      "email": "export-test-1765925647226@test.com",
+      "organizationId": "NULL",
+      "org_name": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\torganizationId\torg_name\n2670119\tTest Owner\ttest-owner-1767132616415@example.com\tNULL\tNULL\n2670118\tTest retention\ttest-retention@example.com\tNULL\tNULL\n2670117\tTest billing\ttest-billing@example.com\tNULL\tNULL\n2670116\tTest health\ttest-health@example.com\tNULL\tNULL\n2670115\tTest growth\ttest-growth@example.com\tNULL\tNULL\n2640005\ttestuser\ttestuser@dojoflow.com\tNULL\tNULL\n2580004\tNew User\tsolbittech@gmail.com\t120001\tMyDojo\n2550002\tMydojo\tvincent.holmes00@gmail.com\t90001\tNULL\n2070001\tPlatform Admin\tadmin@dojoflow.com\tNULL\tNULL\n690017\tExport Test User\texport-test-1765925647226@test.com\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 83
+}

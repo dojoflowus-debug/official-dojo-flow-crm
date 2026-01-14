@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, logoSquare, logoHorizontal, businessName FROM dojo_settings LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, logoSquare, logoHorizontal, businessName FROM dojo_settings LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "logoSquare": "https://test-logo-url.com/logo.png",
+      "logoHorizontal": "NULL",
+      "businessName": "DojoFlow"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tlogoSquare\tlogoHorizontal\tbusinessName\n1\thttps://test-logo-url.com/logo.png\tNULL\tDojoFlow\n",
+  "stderr": "",
+  "execution_time_ms": 856
+}
