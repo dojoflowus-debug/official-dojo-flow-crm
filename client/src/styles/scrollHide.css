@@ -1,4 +1,4 @@
-/* Scroll Hide Animations for Kiosk Studio - Premium Edition */
+/* Scroll Hide Animations for Kiosk Studio - Cinematic Black Theme */
 
 /* Base styles for elements that will animate */
 #kiosk-top-toolbar {
@@ -11,6 +11,11 @@
   transform: translateY(0);
   opacity: 1;
   will-change: transform, opacity;
+  
+  /* Cinematic glass layering */
+  background: rgba(11, 13, 16, 0.65);
+  backdrop-filter: blur(14px) saturate(120%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 #kiosk-bottom-nav {
@@ -23,6 +28,11 @@
   transform: translateY(0);
   opacity: 1;
   will-change: transform, opacity;
+  
+  /* Cinematic glass layering */
+  background: rgba(11, 13, 16, 0.65);
+  backdrop-filter: blur(14px) saturate(120%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Preview wrapper stays in normal flow - no layout shift */
@@ -57,6 +67,7 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  background: #000000;
 }
 
 /* Prevent layout shift by padding for fixed elements */
@@ -64,3 +75,55 @@
   padding-top: 0; /* Toolbar is fixed, so no padding needed */
   padding-bottom: 0; /* Nav is fixed, so no padding needed */
 }
+
+/* Cinematic color palette - no gradients, pure black/charcoal */
+:root {
+  --kiosk-primary: #0B0D10;      /* Near-black primary */
+  --kiosk-secondary: #12151B;    /* Charcoal secondary */
+  --kiosk-border: rgba(255, 255, 255, 0.06); /* Subtle borders */
+  --kiosk-hover: #161A22;        /* Hover surfaces */
+  --kiosk-glass: rgba(10, 12, 16, 0.65); /* Glass layering */
+}
+
+/* Glass morphism effect for floating panels */
+.glass-panel {
+  background: var(--kiosk-glass);
+  backdrop-filter: blur(14px) saturate(120%);
+  border: 1px solid var(--kiosk-border);
+}
+
+/* Text hierarchy - all white/gray, no blue */
+.text-primary {
+  color: #ffffff;
+}
+
+.text-secondary {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.text-tertiary {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.text-muted {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Red accent - the only strong color */
+.accent-red {
+  color: #ef4444;
+}
+
+.accent-red-bg {
+  background-color: #ef4444;
+}
+
+/* Hover states - subtle, cinematic */
+.hover-surface:hover {
+  background-color: var(--kiosk-hover);
+  transition: background-color 0.20s ease-out;
+}
+
+/* No gradients - pure flat colors */
+/* No blue tones anywhere */
+/* Everything is dark, cinematic, and invisible around the kiosk */

@@ -232,14 +232,14 @@ export default function KioskStudioExact() {
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col">
         {/* TOP BAR - Fixed positioning for no layout shift */}
-        <div id="kiosk-top-toolbar" className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shadow-lg">
+        <div id="kiosk-top-toolbar" className="h-16 px-6 flex items-center justify-between shadow-lg" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">D</div>
-            <span className="text-xs font-medium text-slate-400 letter-spacing-wide">DojoFlow</span>
-            <span className="text-slate-600">|</span>
+            <span className="text-xs font-medium letter-spacing-wide" style={{color: 'rgba(255,255,255,0.5)'}}>DojoFlow</span>
+            <span style={{color: 'rgba(255,255,255,0.2)'}}>|</span>
             <span className="text-base font-semibold text-white">Main Dojo</span>
-            <span className="text-slate-600">·</span>
-            <span className="text-xs font-medium text-slate-400">Live Preview</span>
+            <span style={{color: 'rgba(255,255,255,0.2)'}}>·</span>
+            <span className="text-xs font-medium" style={{color: 'rgba(255,255,255,0.5)'}}>Live Preview</span>
           </div>
           
           <div className="flex items-center gap-3">
@@ -248,7 +248,7 @@ export default function KioskStudioExact() {
               disabled={!isDirty || isSaving}
               size="sm"
               variant="outline"
-              className="border-slate-700 hover:border-slate-600"
+              style={{borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)'}} className="transition-colors hover:bg-opacity-10"
             >
               <Save className="w-4 h-4 mr-2" />
               Save Draft
@@ -276,11 +276,11 @@ export default function KioskStudioExact() {
         {/* CONTENT AREA */}
         <div id="kiosk-preview-wrapper" className="flex-1 flex overflow-hidden gap-6 p-6 flex-shrink-0">
           {/* LEFT PANEL: Studio Controls */}
-          <div className="w-64 bg-slate-900 rounded-lg border border-slate-800 p-4 flex flex-col overflow-y-auto">
+          <div className="w-64 rounded-lg p-4 flex flex-col overflow-y-auto" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', border: '1px solid rgba(255,255,255,0.06)'}}>
             {/* Studio Panel Header */}
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-white">Kiosk Studio</h2>
-              <p className="text-xs text-slate-400 mt-1">Design your kiosk experience</p>
+              <p className="text-xs mt-1" style={{color: 'rgba(255,255,255,0.4)'}}>Design your kiosk experience</p>
             </div>
 
             {/* Studio Tabs Navigation */}
@@ -289,8 +289,8 @@ export default function KioskStudioExact() {
                 onClick={() => handleTabClick('theme')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'theme'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800'
+                    ? 'text-white'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Palette className="w-4 h-4" />
@@ -300,8 +300,8 @@ export default function KioskStudioExact() {
                 onClick={() => handleTabClick('layout')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'layout'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800'
+                    ? 'text-white'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Layout className="w-4 h-4" />
@@ -311,8 +311,8 @@ export default function KioskStudioExact() {
                 onClick={() => handleTabClick('content')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'content'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800'
+                    ? 'text-white'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <FileText className="w-4 h-4" />
@@ -322,8 +322,8 @@ export default function KioskStudioExact() {
                 onClick={() => handleTabClick('behavior')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
                   activeStudioTab === 'behavior'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800'
+                    ? 'text-white'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <ZapIcon className="w-4 h-4" />
@@ -336,7 +336,7 @@ export default function KioskStudioExact() {
               <div className="flex-1 space-y-4">
                 {/* Background Themes */}
                 <div>
-                  <Label className="text-xs font-semibold text-slate-300 mb-3 block">Background Themes</Label>
+                  <Label className="text-xs font-semibold mb-3 block" style={{color: 'rgba(255,255,255,0.7)'}}>Background Themes</Label>
                   <div className="grid grid-cols-2 gap-3">
                     {BACKGROUND_THEMES.map((theme) => (
                       <button
@@ -344,7 +344,7 @@ export default function KioskStudioExact() {
                         onClick={() => updateConfig({ background: { ...draftConfig.background, type: 'preset', presetKey: theme.id } })}
                         className="group relative overflow-hidden border-2 transition-all aspect-square"
                         style={{
-                          borderColor: draftConfig.background.presetKey === theme.id ? '#3b82f6' : '#334155',
+                          borderColor: draftConfig.background.presetKey === theme.id ? '#ef4444' : 'rgba(255,255,255,0.1)',
                         }}
                       >
                         <img
@@ -361,7 +361,7 @@ export default function KioskStudioExact() {
                 </div>
 
                 {/* Background Controls */}
-                <div className="pt-4 border-t border-slate-800 space-y-3">
+                <div className="pt-4 space-y-3" style={{borderTop: '1px solid rgba(255,255,255,0.06)'}}>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Blur</Label>
                     <input
@@ -393,12 +393,12 @@ export default function KioskStudioExact() {
                         type="color"
                         value={draftConfig.theme.accentColor || '#ef4444'}
                         onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                        className="w-8 h-8 rounded border border-slate-700 cursor-pointer"
+                        className="w-8 h-8 rounded cursor-pointer" style={{border: '1px solid rgba(255,255,255,0.1)'}}
                       />
                       <Input
                         value={draftConfig.theme.accentColor || '#ef4444'}
                         onChange={(e) => handleThemeChange('accentColor', e.target.value)}
-                        className="flex-1 bg-slate-800 border-slate-700 text-white text-xs h-8"
+                        className="flex-1 text-white text-xs h-8" style={{backgroundColor: '#12151B', border: '1px solid rgba(255,255,255,0.1)'}}
                       />
                     </div>
                   </div>
@@ -409,21 +409,21 @@ export default function KioskStudioExact() {
             {/* Layout Panel */}
             {activeStudioTab === 'layout' && (
               <div className="flex-1 space-y-4">
-                <p className="text-sm text-slate-400">Layout controls coming next</p>
+                <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Layout controls coming next</p>
               </div>
             )}
 
             {/* Content Panel */}
             {activeStudioTab === 'content' && (
               <div className="flex-1 space-y-4">
-                <p className="text-sm text-slate-400">Kiosk content configuration</p>
+                <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Kiosk content configuration</p>
               </div>
             )}
 
             {/* Behavior Panel */}
             {activeStudioTab === 'behavior' && (
               <div className="flex-1 space-y-4">
-                <p className="text-sm text-slate-400">Kiosk behavior & automation</p>
+                <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Kiosk behavior & automation</p>
               </div>
             )}
           </div>
