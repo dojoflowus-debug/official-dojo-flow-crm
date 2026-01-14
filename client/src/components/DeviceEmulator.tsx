@@ -79,50 +79,62 @@ export const DeviceEmulator: React.FC<DeviceEmulatorProps> = ({
         onOpenPublic={kioskSlug ? handleOpenPublic : undefined}
       />
 
-      {/* Preview Container */}
+      {/* Preview Container with Vignette */}
       <div
         ref={containerRef}
-        className="bg-gray-900 rounded-lg p-4 flex items-start justify-center overflow-auto"
+        className="bg-gray-900 rounded-lg p-4 flex items-start justify-center overflow-auto relative"
         style={{
           minHeight: '400px',
           maxHeight: '80vh',
+          background: 'radial-gradient(ellipse at center, rgba(30, 30, 30, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%)',
         }}
       >
-        {/* Touch Simulation Styles */}
-        {emulator.state.simulateTouch && (
-          <style>{`
-            #device-preview * {
-              pointer-events: auto;
-            }
-            #device-preview button,
-            #device-preview a,
-            #device-preview [role="button"] {
-              pointer-events: auto;
-              -webkit-user-select: none;
-              user-select: none;
-            }
-            #device-preview {
-              --pointer-coarse: true;
-            }
-          `}</style>
-        )}
-
-        {/* Device Frame with Preview */}
+        {/* Vignette Overlay */}
         <div
-          id="device-preview"
+          className="absolute inset-0 pointer-events-none rounded-lg"
           style={{
-            transformOrigin: 'top center',
-            marginTop: emulator.state.showFrame ? '20px' : '0',
+            background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%)',
+            boxShadow: 'inset 0 0 60px rgba(0, 0, 0, 0.5)',
           }}
-        >
-          <DeviceFrame
-            preset={emulator.currentPreset!}
-            orientation={emulator.state.orientation}
-            showFrame={emulator.state.showFrame}
-            scale={zoomScale}
+        />
+        {/* Content wrapper for proper z-index */}
+        <div className="relative z-10 flex items-start justify-center w-full h-full">
+          {/* Touch Simulation Styles */}
+          {emulator.state.simulateTouch && (
+            <style>{`
+              #device-preview * {
+                pointer-events: auto;
+              }
+              #device-preview button,
+              #device-preview a,
+              #device-preview [role="button"] {
+                pointer-events: auto;
+                -webkit-user-select: none;
+                user-select: none;
+              }
+              #device-preview {
+                --pointer-coarse: true;
+              }
+            `}</style>
+          )}
+
+          {/* Device Frame with Preview */}
+          <div
+            id="device-preview"
+            style={{
+              transformOrigin: 'top center',
+              marginTop: emulator.state.showFrame ? '20px' : '0',
+            }}
           >
-            {children}
-          </DeviceFrame>
+            <DeviceFrame
+              preset={emulator.currentPreset!}
+              orientation={emulator.state.orientation}
+              showFrame={emulator.state.showFrame}
+              scale={zoomScale}
+            >
+              {children}
+            </DeviceFrame>
+          </div>
         </div>
       </div>
 

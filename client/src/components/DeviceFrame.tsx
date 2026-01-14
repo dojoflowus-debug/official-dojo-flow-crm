@@ -75,12 +75,14 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
 
   return (
     <div
-      className={`relative bg-gray-900 rounded-2xl shadow-2xl ${className}`}
+      className={`relative bg-gray-900 rounded-2xl ${className}`}
       style={{
         width: totalWidth * scale,
         height: totalHeight * scale,
         transform: `scale(${scale})`,
         transformOrigin: 'top left',
+        boxShadow: '0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 0, 0, 0.5)',
+        filter: 'drop-shadow(0 20px 60px rgba(0, 0, 0, 0.6))',
       }}
     >
       {/* Device bezel/frame */}
