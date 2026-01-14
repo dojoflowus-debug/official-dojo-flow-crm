@@ -1,1 +1,0 @@
-ALTER TABLE `students` ADD `photoUrl` varchar(1024);

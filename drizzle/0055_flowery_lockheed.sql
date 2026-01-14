@@ -1,1 +1,0 @@
-ALTER TABLE `locations` MODIFY COLUMN `kioskSettings` json DEFAULT ('{"theme":{"mode":"dark","primaryColor":"#2563EB","accentColor":"#EF4444"},"background":{"type":"none","presetKey":null,"blur":0,"dim":0,"vignette":false}}');

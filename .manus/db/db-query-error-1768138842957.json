@@ -1,8 +1,0 @@
-{
-  "query": "SELECT `id`, `firstName`, `lastName`, `email`, `phone`, `dateOfBirth`, `age`, `beltRank`, `status`, `membershipStatus`, `createdAt`, `updatedAt`, `photoUrl`, `program`, `streetAddress`, `city`, `state`, `zipCode`, `latitude`, `longitude`, `guardianName`, `guardianRelationship`, `guardianPhone`, `guardianEmail`, `organizationId`, `deletedAt`, `deletedByUserId`, `deletionRequestId` FROM `students` WHERE `organizationId` = 180001 ORDER BY `firstName` ASC LIMIT 20;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT `id`, `firstName`, `lastName`, `email`, `phone`, `dateOfBirth`, `age`, `beltRank`, `status`, `membershipStatus`, `createdAt`, `updatedAt`, `photoUrl`, `program`, `streetAddress`, `city`, `state`, `zipCode`, `latitude`, `longitude`, `guardianName`, `guardianRelationship`, `guardianPhone`, `guardianEmail`, `organizationId`, `deletedAt`, `deletedByUserId`, `deletionRequestId` FROM `students` WHERE `organizationId` = 180001 ORDER BY `firstName` ASC LIMIT 20;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'deletedat' in 'field list'"
-  ]
-}

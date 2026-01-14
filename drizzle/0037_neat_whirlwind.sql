@@ -1,1 +1,0 @@
-ALTER TABLE `classes` ADD `instructorId` int;

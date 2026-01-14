@@ -1,9 +1,0 @@
-{
-  "query": "UPDATE locations SET kioskSettings = JSON_OBJECT('theme', JSON_OBJECT('mode', 'dark', 'primaryColor', '#2563EB', 'accentColor', '#EF4444'), 'background', JSON_OBJECT('type', 'none', 'presetKey', NULL, 'imageUrl', NULL, 'blur', 0, 'dim', 0, 'vignette', false)) WHERE name LIKE '%main%dojo%';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute UPDATE locations SET kioskSettings = JSON_OBJECT('theme', JSON_OBJECT('mode', 'dark', 'primaryColor', '#2563EB', 'accentColor', '#EF4444'), 'background', JSON_OBJECT('type', 'none', 'presetKey', NULL, 'imageUrl', NULL, 'blur', 0, 'dim', 0, 'vignette', false)) WHERE name LIKE '%main%dojo%';",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 419
-}

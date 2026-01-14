@@ -3,8 +3,6 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
-import { organizationUsers, organizations } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -35,7 +33,7 @@ export function registerOAuthRoutes(app: Express) {
         name: userInfo.name || null,
         email: userInfo.email ?? null,
         loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-        lastSignedIn:new Date().toISOString(),
+        lastSignedIn: new Date(),
       });
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
@@ -46,33 +44,7 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Get user's organization for multi-tenancy
-      const dbConn = await db.getDb();
-      const user = await db.getUserByOpenId(userInfo.openId);
-      let currentOrganizationId: number | null = null;
-      
-      if (dbConn && user) {
-        const orgMemberships = await dbConn
-          .select({ organizationId: organizationUsers.organizationId })
-          .from(organizationUsers)
-          .where(eq(organizationUsers.userId, user.id))
-          .limit(1);
-        
-        if (orgMemberships.length > 0) {
-          currentOrganizationId = orgMemberships[0].organizationId;
-        }
-      }
-
-      // Set session cookie with organization context
-      const sessionData = {
-        userId: user?.id,
-        email: userInfo.email,
-        name: userInfo.name,
-        currentOrganizationId,
-      };
-      res.cookie("session", JSON.stringify(sessionData), { ...cookieOptions, maxAge: ONE_YEAR_MS });
-
-      res.redirect(302, "/kai");
+      res.redirect(302, "/");
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });

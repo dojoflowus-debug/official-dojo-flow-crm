@@ -1,1 +1,0 @@
-ALTER TABLE `dojo_settings` MODIFY COLUMN `paymentProcessor` enum('stripe','square','clover','pc_bancard','none') DEFAULT 'stripe';

@@ -1,1 +1,0 @@
-ALTER TABLE `kai_conversations` ADD `deletedAt` timestamp;

@@ -1,1 +1,0 @@
-ALTER TABLE `leads` MODIFY COLUMN `status` enum('New Lead','Attempting Contact','Contact Made','Intro Scheduled','Offer Presented','Enrolled','Nurture','Lost/Winback') NOT NULL DEFAULT 'New Lead';
