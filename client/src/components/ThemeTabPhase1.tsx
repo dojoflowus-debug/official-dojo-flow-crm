@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { KioskConfig, MOOD_PRESETS, CardStyle } from '../../../shared/kioskConfig';
 import { KIOSK_BACKGROUND_PRESETS } from '../../../shared/kioskBackgroundPresets';
 import { Accordion } from '@/components/Accordion';
+import { GlassMorphismEngine } from '@/components/GlassMorphismEngine';
+import { TypographyPanel } from '@/components/TypographyPanel';
 
 interface ThemeTabPhase1Props {
   draftConfig: KioskConfig;
@@ -14,6 +16,7 @@ interface ThemeTabPhase1Props {
   onBackgroundChange: (key: string, value: any) => void;
   onThemeChange: (key: string, value: any) => void;
   onSliderChange: (callback: () => void) => void;
+  onTypographyChange?: (typography: any) => void;
 }
 
 const BACKGROUND_THEMES = KIOSK_BACKGROUND_PRESETS.slice(0, 6).map(preset => ({
@@ -21,6 +24,8 @@ const BACKGROUND_THEMES = KIOSK_BACKGROUND_PRESETS.slice(0, 6).map(preset => ({
   name: preset.name,
   image: preset.imageUrl,
 }));
+
+type CardType = 'next-class' | 'today-focus' | 'check-in' | 'start-training' | 'time-pill';
 
 export function ThemeTabPhase1({
   draftConfig,
@@ -32,7 +37,42 @@ export function ThemeTabPhase1({
   onBackgroundChange,
   onThemeChange,
   onSliderChange,
+  onTypographyChange,
 }: ThemeTabPhase1Props) {
+  const [applyToAll, setApplyToAll] = useState(true);
+  const [selectedCardType, setSelectedCardType] = useState<CardType>('next-class');
+  const [perCardStyles, setPerCardStyles] = useState<Record<CardType, CardStyle>>({
+    'next-class': draftConfig.cardStyle || {},
+    'today-focus': draftConfig.cardStyle || {},
+    'check-in': draftConfig.cardStyle || {},
+    'start-training': draftConfig.cardStyle || {},
+    'time-pill': draftConfig.cardStyle || {},
+  } as any);
+
+  const handleCardStyleChange = (style: CardStyle) => {
+    if (applyToAll) {
+      // Apply to all cards
+      onCardStyleChange(style);
+      // Update all per-card styles
+      const updated = { ...perCardStyles };
+      Object.keys(updated).forEach(key => {
+        updated[key as CardType] = style;
+      });
+      setPerCardStyles(updated);
+    } else {
+      // Apply only to selected card
+      const updated = { ...perCardStyles };
+      updated[selectedCardType] = style;
+      setPerCardStyles(updated);
+      // Still update main config for preview
+      onCardStyleChange(style);
+    }
+  };
+
+  const currentCardStyle = applyToAll 
+    ? (draftConfig.cardStyle || {})
+    : (perCardStyles[selectedCardType] || draftConfig.cardStyle || {});
+
   return (
     <div className="flex-1 space-y-4 overflow-y-auto">
       {/* PREMIUM DESIGN SYSTEM - Phase 1 */}
@@ -97,194 +137,101 @@ export function ThemeTabPhase1({
           {
             id: 'card-appearance',
             title: 'Card Appearance',
-            description: 'Customize the white panels on your kiosk',
+            description: 'Customize the white panels on your kiosk with glass morphism',
             content: (
-              <div className="space-y-4">
-                {/* Background Type */}
-                <div>
-                  <label className="text-xs text-gray-400 mb-2 block">Background Type</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['solid', 'glass', 'dark-glass', 'transparent'] as const).map((type) => (
-                      <button
-                        key={type}
-                        onClick={() =>
-                          onCardStyleChange({
-                            ...draftConfig.cardStyle!,
-                            backgroundType: type,
-                          })
-                        }
-                        className={`px-3 py-2 rounded text-xs font-medium transition ${
-                          draftConfig.cardStyle?.backgroundType === type
-                            ? 'bg-red-500 text-white'
-                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                        }`}
-                      >
-                        {type === 'dark-glass' ? 'Dark Glass' : type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Opacity */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs text-gray-400">Opacity</label>
-                    <span className="text-xs text-white font-mono">{draftConfig.cardStyle?.opacity}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={draftConfig.cardStyle?.opacity || 100}
-                    onChange={(e) =>
-                      onSliderChange(() =>
-                        onCardStyleChange({
-                          ...draftConfig.cardStyle!,
-                          opacity: parseInt(e.target.value),
-                        })
-                      )
-                    }
-                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                {/* Blur */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs text-gray-400">Blur</label>
-                    <span className="text-xs text-white font-mono">{draftConfig.cardStyle?.blur}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="30"
-                    value={draftConfig.cardStyle?.blur || 0}
-                    onChange={(e) =>
-                      onSliderChange(() =>
-                        onCardStyleChange({
-                          ...draftConfig.cardStyle!,
-                          blur: parseInt(e.target.value),
-                        })
-                      )
-                    }
-                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                {/* Saturate */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs text-gray-400">Saturate</label>
-                    <span className="text-xs text-white font-mono">{draftConfig.cardStyle?.saturate}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="80"
-                    max="150"
-                    value={draftConfig.cardStyle?.saturate || 100}
-                    onChange={(e) =>
-                      onSliderChange(() =>
-                        onCardStyleChange({
-                          ...draftConfig.cardStyle!,
-                          saturate: parseInt(e.target.value),
-                        })
-                      )
-                    }
-                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                {/* Border Strength */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs text-gray-400">Border Strength</label>
-                    <span className="text-xs text-white font-mono">{draftConfig.cardStyle?.borderStrength}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={draftConfig.cardStyle?.borderStrength || 0}
-                    onChange={(e) =>
-                      onSliderChange(() =>
-                        onCardStyleChange({
-                          ...draftConfig.cardStyle!,
-                          borderStrength: parseInt(e.target.value),
-                        })
-                      )
-                    }
-                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                {/* Shadow Depth */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs text-gray-400">Shadow Depth</label>
-                    <span className="text-xs text-white font-mono">{draftConfig.cardStyle?.shadowDepth}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={draftConfig.cardStyle?.shadowDepth || 0}
-                    onChange={(e) =>
-                      onSliderChange(() =>
-                        onCardStyleChange({
-                          ...draftConfig.cardStyle!,
-                          shadowDepth: parseInt(e.target.value),
-                        })
-                      )
-                    }
-                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                {/* Corner Radius */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs text-gray-400">Corner Radius</label>
-                    <span className="text-xs text-white font-mono">{draftConfig.cardStyle?.cornerRadius}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="32"
-                    value={draftConfig.cardStyle?.cornerRadius || 0}
-                    onChange={(e) =>
-                      onSliderChange(() =>
-                        onCardStyleChange({
-                          ...draftConfig.cardStyle!,
-                          cornerRadius: parseInt(e.target.value),
-                        })
-                      )
-                    }
-                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                {/* Live Preview */}
-                <div className="mt-4 p-4 rounded-lg border border-white/20 bg-white/5">
-                  <p className="text-xs text-gray-400 mb-2">Preview</p>
-                  <div
-                    style={{
-                      background: draftConfig.cardStyle?.backgroundColor || '#ffffff',
-                      border: `${((draftConfig.cardStyle?.borderStrength || 0) / 100) * 2}px solid ${draftConfig.cardStyle?.borderColor || 'transparent'}`,
-                      borderRadius: `${draftConfig.cardStyle?.cornerRadius || 0}px`,
-                      backdropFilter: `blur(${draftConfig.cardStyle?.blur || 0}px) saturate(${draftConfig.cardStyle?.saturate || 100}%)`,
-                      opacity: (draftConfig.cardStyle?.opacity || 100) / 100,
-                      boxShadow: `0 20px 60px ${draftConfig.cardStyle?.shadowColor || 'rgba(0,0,0,0.3)'}`,
-                      padding: '16px',
-                      minHeight: '80px',
-                    }}
-                    className="flex items-center justify-center text-gray-800 text-sm font-medium"
+              <div className="space-y-6">
+                {/* Apply to All vs Per-Card Toggle */}
+                <div className="flex gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <button
+                    onClick={() => setApplyToAll(true)}
+                    className={`flex-1 px-3 py-2 rounded text-xs font-medium transition ${
+                      applyToAll
+                        ? 'bg-red-500 text-white'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    }`}
                   >
-                    Card Preview
-                  </div>
+                    Apply to All
+                  </button>
+                  <button
+                    onClick={() => setApplyToAll(false)}
+                    className={`flex-1 px-3 py-2 rounded text-xs font-medium transition ${
+                      !applyToAll
+                        ? 'bg-red-500 text-white'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    }`}
+                  >
+                    Per-Card
+                  </button>
                 </div>
+
+                {/* Per-Card Selector */}
+                {!applyToAll && (
+                  <div>
+                    <Label className="text-xs font-semibold mb-3 block">Select Card</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'next-class', label: 'Next Class' },
+                        { id: 'today-focus', label: 'Today\'s Focus' },
+                        { id: 'check-in', label: 'Check In' },
+                        { id: 'start-training', label: 'Start Training' },
+                        { id: 'time-pill', label: 'Time Pill' },
+                      ].map((card) => (
+                        <button
+                          key={card.id}
+                          onClick={() => setSelectedCardType(card.id as CardType)}
+                          className={`px-3 py-2 rounded text-xs font-medium transition ${
+                            selectedCardType === card.id
+                              ? 'bg-red-500 text-white'
+                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          }`}
+                        >
+                          {card.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Glass Morphism Engine */}
+                <GlassMorphismEngine
+                  cardStyle={currentCardStyle}
+                  onStyleChange={handleCardStyleChange}
+                  onSliderChange={onSliderChange}
+                />
               </div>
             ),
             onReset: onResetCardStyle,
+          },
+          {
+            id: 'typography',
+            title: 'Typography',
+            description: 'Customize fonts and text styling',
+            content: onTypographyChange ? (
+              <TypographyPanel
+                typography={draftConfig.typographySystem || {}}
+                onChange={onTypographyChange}
+                onSliderChange={onSliderChange}
+              />
+            ) : null,
+            onReset: () => {
+              if (onTypographyChange) {
+                onTypographyChange({
+                  fontFamily: 'Inter',
+                  fontWeight: 400,
+                  letterSpacing: 0,
+                  headerColor: '#ffffff',
+                  bodyColor: 'rgba(255, 255, 255, 0.8)',
+                  buttonTextColor: '#ffffff',
+                  timeWidgetColor: 'rgba(255, 255, 255, 0.9)',
+                  enableGlow: false,
+                  glowColor: '#ffffff',
+                  glowBlur: 0,
+                  enableShadow: false,
+                  shadowColor: 'rgba(0, 0, 0, 0)',
+                  shadowBlur: 0,
+                });
+              }
+            },
           },
         ]}
         defaultOpenId="mood-presets"

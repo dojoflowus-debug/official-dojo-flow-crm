@@ -2582,3 +2582,84 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Wire upload to S3 and save to database
 - [ ] Test upload, save, and publish workflow
 - [ ] Verify public kiosk loads uploaded backgrounds
+
+
+## Phase 18: Kiosk Studio Phase 1 - Premium Design System (COMPLETED)
+- [x] Implement Mood Presets (6 presets: Dojo Dark, Kids Bright, Zen, Luxury, High-Contrast, Minimal)
+- [x] Build Card Appearance panel with glass morphism controls
+- [x] Create Accordion component for collapsible sections
+- [x] Integrate live preview updates
+- [x] Preserve existing background themes and controls
+- [x] Test preset switching and live preview
+- [x] Save Phase 1 checkpoint
+
+## Phase 19: Kiosk Studio Phase 2 - Visual Design System & Polish (In Progress)
+#### 1. Integrate GlassMorphismEngine (COMPLETED ✅)
+- [x] Create GlassMorphismEngine component
+- [x] Update CardStyle interface with new properties
+- [x] Replace basic Card Appearance UI with GlassMorphismEngine
+- [x] Add Apply to all cards toggle
+- [x] Add per-card override system
+- [x] Ensure live preview updates instantly
+- [x] Set default preset to premium frosted glass
+
+### 2. Typography & Text Styling Panel
+- [ ] Global font family selector (modern kiosk-safe fonts)
+- [ ] Header font weight control
+- [ ] Body font weight control
+- [ ] Letter spacing slider
+- [ ] Line height slider
+- [ ] Title text color picker
+- [ ] Card body text color picker
+- [ ] Button text color picker
+- [ ] Subtext/helper text color picker
+- [ ] Time pill text color picker
+- [ ] Text glow toggle
+- [ ] Text shadow toggle
+- [ ] High-contrast mode toggle
+- [ ] Live preview updates for typography
+
+### 3. Button Styling System
+- [ ] Button style selector (Solid, Glass, Outline, Neon)
+- [ ] Button radius slider
+- [ ] Button height slider
+- [ ] Button glow slider
+- [ ] Button hover/press animation selector
+- [ ] Primary button styling controls
+- [ ] Secondary button styling controls
+- [ ] Separate styling for Check In button
+- [ ] Separate styling for Start Training button
+- [ ] Live preview updates for buttons
+
+### 4. Layout & Spacing Polish
+- [ ] Card spacing slider
+- [ ] Card max-width slider
+- [ ] Vertical positioning slider (move kiosk UI up/down)
+- [ ] Safe-area padding controls
+- [ ] Live preview updates for layout
+
+### 5. Visual Bugs & Consistency Fix
+- [ ] Fix background thumbnail images not matching
+- [ ] Add missing thumbnail images
+- [ ] Fix device switching issues
+- [ ] Fix kiosk scaling inconsistencies
+- [ ] Ensure all presets correctly populate all controls
+- [ ] Verify preset consistency across all sections
+
+### 6. UI/UX Polish
+- [ ] Clean grouping of controls
+- [ ] Premium spacing and typography
+- [ ] Live feedback indicators
+- [ ] Apple + Unreal Engine aesthetic
+- [ ] Remove UI clutter
+- [ ] Organize sliders logically
+
+### 7. Testing & Verification
+- [ ] Test all glass morphism controls
+- [ ] Test typography controls
+- [ ] Test button styling
+- [ ] Test layout controls
+- [ ] Verify live preview updates
+- [ ] Test preset switching
+- [ ] Verify consistency across all presets
+- [ ] Save Phase 2 checkpoint

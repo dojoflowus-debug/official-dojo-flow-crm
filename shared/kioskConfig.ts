@@ -10,16 +10,20 @@
 
 export interface CardStyle {
   // Background type
-  backgroundType: 'solid' | 'glass' | 'dark-glass' | 'transparent';
+  backgroundType: 'solid' | 'glass' | 'dark-glass' | 'ultra-glass' | 'transparent';
   
   // Glass morphism properties
   opacity: number; // 0-100%
   blur: number; // 0-30px
   saturate: number; // 80-150%
+  brightness: number; // 50-150%
+  frostAmount: number; // 0-100% (frost/noise effect)
   
   // Visual properties
   borderStrength: number; // 0-100% (controls border opacity)
+  borderGlowIntensity: number; // 0-100% (glow on border)
   shadowDepth: number; // 0-100% (controls shadow intensity)
+  shadowSoftness: number; // 0-100% (controls shadow blur)
   cornerRadius: number; // 0-32px
   
   // Colors
@@ -251,6 +255,10 @@ export const MOOD_PRESETS: Record<string, MoodPreset> = {
       backgroundColor: 'rgba(11, 13, 16, 0.65)',
       borderColor: 'rgba(255, 255, 255, 0.1)',
       shadowColor: 'rgba(0, 0, 0, 0.45)',
+      brightness: 100,
+      frostAmount: 0,
+      borderGlowIntensity: 0,
+      shadowSoftness: 0,
     },
     typography: {
       fontFamily: 'Inter',
@@ -309,6 +317,10 @@ export const MOOD_PRESETS: Record<string, MoodPreset> = {
       backgroundColor: 'rgba(255, 255, 255, 0.9)',
       borderColor: 'rgba(59, 130, 246, 0.3)',
       shadowColor: 'rgba(0, 0, 0, 0.1)',
+      brightness: 100,
+      frostAmount: 0,
+      borderGlowIntensity: 0,
+      shadowSoftness: 0,
     },
     typography: {
       fontFamily: 'Inter',
@@ -367,6 +379,10 @@ export const MOOD_PRESETS: Record<string, MoodPreset> = {
       backgroundColor: 'rgba(255, 255, 255, 0.5)',
       borderColor: 'rgba(255, 255, 255, 0.05)',
       shadowColor: 'rgba(0, 0, 0, 0.05)',
+      brightness: 100,
+      frostAmount: 0,
+      borderGlowIntensity: 0,
+      shadowSoftness: 0,
     },
     typography: {
       fontFamily: 'Inter',
@@ -425,6 +441,10 @@ export const MOOD_PRESETS: Record<string, MoodPreset> = {
       backgroundColor: 'rgba(30, 30, 35, 0.75)',
       borderColor: 'rgba(215, 180, 130, 0.3)',
       shadowColor: 'rgba(0, 0, 0, 0.6)',
+      brightness: 100,
+      frostAmount: 0,
+      borderGlowIntensity: 0,
+      shadowSoftness: 0,
     },
     typography: {
       fontFamily: 'Inter',
@@ -483,6 +503,10 @@ export const MOOD_PRESETS: Record<string, MoodPreset> = {
       backgroundColor: '#ffffff',
       borderColor: '#000000',
       shadowColor: 'rgba(0, 0, 0, 0.3)',
+      brightness: 100,
+      frostAmount: 0,
+      borderGlowIntensity: 0,
+      shadowSoftness: 0,
     },
     typography: {
       fontFamily: 'Inter',
@@ -541,6 +565,10 @@ export const MOOD_PRESETS: Record<string, MoodPreset> = {
       backgroundColor: '#ffffff',
       borderColor: 'rgba(0, 0, 0, 0)',
       shadowColor: 'rgba(0, 0, 0, 0.05)',
+      brightness: 100,
+      frostAmount: 0,
+      borderGlowIntensity: 0,
+      shadowSoftness: 0,
     },
     typography: {
       fontFamily: 'Inter',

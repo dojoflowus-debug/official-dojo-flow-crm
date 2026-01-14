@@ -47,7 +47,7 @@ export const KIOSK_BACKGROUND_PRESETS: BackgroundPreset[] = [
     id: 'karate-training',
     name: 'Karate Training',
     category: 'martial-arts',
-    imageUrl: '/kiosk-backgrounds/kids-martial-arts.png',
+    imageUrl: '/kiosk-backgrounds/martial-arts-dojo.png',
     blur: 0,
     dim: 25,
     description: 'Advanced karate training session',
