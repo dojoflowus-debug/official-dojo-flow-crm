@@ -1425,3 +1425,23 @@ export const waiverTemplates = mysqlTable("waiver_templates", {
 		index("idx_kiosks_org_location").on(table.organizationId, table.locationId),
 		index("idx_kiosks_slug").on(table.organizationId, table.slug),
 	]);
+
+
+export const kioskDesignTemplates = mysqlTable("kiosk_design_templates", {
+	id: int().autoincrement().notNull().primaryKey(),
+	organizationId: int().notNull(),
+	createdByUserId: varchar({ length: 255 }).notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	config: text().notNull(), // Serialized KioskConfig JSON
+	thumbnailUrl: varchar({ length: 500 }),
+	isPublic: tinyint().default(0).notNull(),
+	usageCount: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_templates_org").on(table.organizationId),
+	index("idx_templates_user").on(table.createdByUserId),
+	index("idx_templates_public").on(table.isPublic),
+]);

@@ -2692,3 +2692,28 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Test glow effects on different button styles
 - [ ] Verify responsive behavior on different devices
 - [ ] Test per-button override functionality
+
+
+## Phase 19: Save Design as Template Feature (IN PROGRESS)
+
+### 1. Database Schema
+- [ ] Create kioskDesignTemplates table with name, description, config, owner, created/updated timestamps
+- [ ] Add template management endpoints (create, read, update, delete, list)
+
+### 2. UI Components
+- [ ] Build SaveTemplateModal with name/description input
+- [ ] Build TemplateLibrary component to browse saved templates
+- [ ] Add template preview thumbnails
+- [ ] Implement template management (edit, delete, duplicate)
+
+### 3. Integration
+- [ ] Add "Save as Template" button to KioskStudioExact toolbar
+- [ ] Implement template loading and application to current kiosk
+- [ ] Add template selection dropdown to Theme tab
+- [ ] Persist template selections per user/org
+
+### 4. Testing & Polish
+- [ ] Test save/load workflow
+- [ ] Verify template persistence across kiosks
+- [ ] Test template sharing (optional)
+- [ ] Verify brand consistency across applied templates

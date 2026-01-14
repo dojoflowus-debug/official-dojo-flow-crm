@@ -26,6 +26,10 @@ import type { ButtonStyleConfig } from '../../../shared/buttonStyleConfig';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { DEFAULT_BUTTON_STYLE } from '../../../shared/buttonStyleConfig';
+import { SaveTemplateModal } from '@/components/SaveTemplateModal';
+import { TemplateLibrary } from '@/components/TemplateLibrary';
+import { useTemplateLibrary } from '@/hooks/useTemplateLibrary';
+import { BookMarked } from 'lucide-react';
 
 interface Kiosk {
   id: number;
@@ -76,6 +80,12 @@ export default function KioskStudioExact() {
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [currentMoodPreset, setCurrentMoodPreset] = useState<string>('dojo-dark');
   const [applyCardStyleGlobally, setApplyCardStyleGlobally] = useState(true);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+  // TEMPLATES: Template library management
+  const { templates, saveTemplate, deleteTemplate, duplicateTemplate, applyTemplate } = useTemplateLibrary();
 
   // SCROLL HIDE: Track scroll direction for auto-hiding UI with hysteresis and edge-reveal
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -100,6 +110,30 @@ export default function KioskStudioExact() {
   const handleDeviceSelect = (callback: () => void) => {
     registerInteraction();
     callback();
+  };
+
+  // TEMPLATES: Handle save template
+  const handleSaveTemplate = async (name: string, description: string) => {
+    setIsSavingTemplate(true);
+    try {
+      await saveTemplate(name, draftConfig, description);
+      success('Template saved successfully');
+      setShowSaveTemplateModal(false);
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Failed to save template');
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  // TEMPLATES: Handle apply template
+  const handleApplyTemplate = (templateId: string) => {
+    const config = applyTemplate(templateId);
+    if (config) {
+      setDraftConfig(config);
+      setShowTemplateLibrary(false);
+      success('Template applied');
+    }
   };
 
   // QUERIES
@@ -281,6 +315,15 @@ export default function KioskStudioExact() {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setShowTemplateLibrary(!showTemplateLibrary)}
+              size="sm"
+              variant="outline"
+              style={{borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)'}} className="transition-colors hover:bg-opacity-10"
+            >
+              <BookMarked className="w-4 h-4 mr-2" />
+              Templates
+            </Button>
             <Button
               onClick={handleSaveDraft}
               disabled={!isDirty || isSaving}
