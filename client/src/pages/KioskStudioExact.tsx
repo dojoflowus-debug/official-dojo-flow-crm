@@ -76,6 +76,8 @@ export default function KioskStudioExact() {
   const [kioskConfig, setKioskConfig] = useState<KioskConfigType | null>(null);
   const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
   const [contentData, setContentData] = useState({ headline: 'Welcome', subheadline: 'Tap the screen to begin', helper: '', footer: '' });
+  const [publishedVersion, setPublishedVersion] = useState<number>(0);
+  const [publishedAt, setPublishedAt] = useState<string | null>(null);
 
   // TEMPLATES
   const { templates, saveTemplate, deleteTemplate, duplicateTemplate, applyTemplate } = useTemplateLibrary();
@@ -150,21 +152,36 @@ export default function KioskStudioExact() {
     }
   };
 
-  // Publish
+  // Publish (Option A: Local publish with localStorage)
   const handlePublish = async () => {
-    if (!selectedKiosk) return;
     setIsPublishing(true);
     try {
-      await publishKioskMutation.mutateAsync({
-        kioskId: selectedKiosk,
-        config: draftConfig,
-      });
-      setPublishedConfig(JSON.parse(JSON.stringify(draftConfig)));
-      success('Kiosk published successfully');
-      queryClient.invalidateQueries({ queryKey: ['kiosk.getKiosk'] });
+      const { publishKiosk } = await import("@/lib/publishHandler");
+      
+      const locationId = selectedLocation || "Main Dojo";
+      const deviceType = currentDeviceProfile?.id || "wall_kiosk";
+      
+      const published = publishKiosk(locationId, deviceType, draftConfig);
+      
+      setPublishedConfig(published.config);
+      setPublishedVersion(published.version);
+      setPublishedAt(published.publishedAt);
+      
+      success(`Kiosk published successfully (v${published.version})`);
+      queryClient.invalidateQueries({ queryKey: ["kiosk.getKiosk"] });
     } catch (err) {
-      error('Failed to publish kiosk');
-      setPersistenceError('Failed to publish kiosk');
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      
+      console.error("[Publish Error]", {
+        error: errorMessage,
+        locationId: selectedLocation,
+        deviceType: currentDeviceProfile?.id,
+        configExists: !!draftConfig,
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+      
+      error(`Failed to publish kiosk: ${errorMessage}`);
+      setPersistenceError(`Failed to publish kiosk: ${errorMessage}`);
     } finally {
       setIsPublishing(false);
     }
