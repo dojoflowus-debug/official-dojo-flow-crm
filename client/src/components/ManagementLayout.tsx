@@ -68,9 +68,19 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { isFocusMode } = useFocusMode()
   const [kaiOverlayOpen, setKaiOverlayOpen] = useState(false)
   
   const isDark = theme === 'dark' || theme === 'cinematic'
+  
+  // Hide header in Focus Mode
+  if (isFocusMode) {
+    return (
+      <AppShell hideBottomNav={false}>
+        {children}
+      </AppShell>
+    )
+  }
   
   // Keyboard shortcut for Kai Command (Cmd+K / Ctrl+K)
   useEffect(() => {

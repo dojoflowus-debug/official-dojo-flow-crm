@@ -3063,3 +3063,12 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Update App.tsx routing to use AppShell
 - [x] Remove legacy dashboard layouts and old components
 - [x] Test navigation consistency across all pages
+
+
+## Phase 36: Unify Navigation with /settings AppShell (Jan 15, 2026) - COMPLETED
+- [x] Identified ManagementLayout + AppShell as the universal layout
+- [x] Wrapped all main pages with ManagementLayout in routing
+- [x] Removed GlobalAppShell wrapper from App.tsx
+- [x] Implemented Focus Mode in ManagementLayout (hides header + nav)
+- [x] Verified consistent BottomNav across all routes
+- [x] All pages now use single AppShell from ManagementLayout
