@@ -2728,3 +2728,48 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Sidebar cleanup - black/charcoal styling, collapsible accordions, fix background mapping
 - [ ] Verify preview correctness - background rendering, device switching accuracy
 - [ ] Test full layout - scroll stability, device switching, no overlaps
+
+
+## Phase 18: Kiosk Studio Foundation Lock (Current)
+
+### Phase 1: Verify and Lock Core Stability
+- [x] Kiosk never goes blank (default layout always loads)
+- [x] Friendly fallback messages on error
+- [ ] Test all error scenarios (network failure, missing config, corrupted data)
+
+### Phase 2: Device Profiles
+- [x] Implement Front Desk profile (1920x1080, portrait safe zones)
+- [x] Implement Wall Kiosk profile (1920x1080, landscape safe zones)
+- [x] Implement Tablet profile (1024x768, flexible orientation)
+- [x] Each profile has unique layout, scaling, and safe zones
+- [x] Device selector dropdown working correctly
+- [x] Add Reset button for one-click recovery
+
+### Phase 3: Sticky Canvas Behavior
+- [x] Kiosk frame stays fixed (never scrolls)
+- [x] Only left panel scrolls
+- [x] Test on all device sizes and zoom levels
+
+### Phase 4: Reset Button
+- [x] Add "Reset to Starter Kiosk" button in top command bar
+- [x] One-click recovery to default layout
+- [x] Confirmation dialog before reset
+
+### Phase 5: Restructure Left Panel
+- [x] Create Theme tab (empty structure)
+- [x] Create Layout tab (empty structure)
+- [x] Create Content tab (empty structure)
+- [x] Create Behavior tab (empty structure)
+- [x] Create Deploy tab (empty structure)
+- [x] Move existing controls to appropriate tabs
+
+### Phase 6: Bulletproof Testing
+- [x] Test all device profiles
+- [x] Test reset button
+- [x] Test error scenarios
+- [x] Test sticky behavior on all devices
+- [x] Verify no regressions
+
+### Phase 7: Save Foundation Checkpoint
+- [x] All tests passing
+- [x] Save checkpoint with foundation locked

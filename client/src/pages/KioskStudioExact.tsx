@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Zap, BookMarked, Monitor, Smartphone } from 'lucide-react';
+import { Save, Zap, BookMarked, Monitor, Smartphone, RotateCcw } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { KioskConfig, DEFAULT_KIOSK_CONFIG } from '../../../shared/kioskConfig';
 import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
@@ -23,6 +23,7 @@ import { DEFAULT_BUTTON_STYLE } from '../../../shared/buttonStyleConfig';
 import { SaveTemplateModal } from '@/components/SaveTemplateModal';
 import { TemplateLibrary } from '@/components/TemplateLibrary';
 import { useTemplateLibrary } from '@/hooks/useTemplateLibrary';
+import { getDeviceProfile, getAllDeviceProfiles, DeviceProfileType } from '@/lib/deviceProfiles';
 
 interface Kiosk {
   id: number;
@@ -63,7 +64,8 @@ export default function KioskStudioExact() {
   const [activeStudioTab, setActiveStudioTab] = useState<'theme' | 'layout' | 'content' | 'behavior' | 'deployment'>('theme');
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [currentMoodPreset, setCurrentMoodPreset] = useState<string>('dojo-dark');
-  const [deviceMode, setDeviceMode] = useState<'ipad' | 'wall-kiosk' | 'front-desk'>('wall-kiosk');
+  const [deviceMode, setDeviceMode] = useState<DeviceProfileType>('wall-kiosk');
+  const currentDeviceProfile = getDeviceProfile(deviceMode);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
@@ -131,6 +133,16 @@ export default function KioskStudioExact() {
     }
   };
 
+  // Reset to starter layout
+  const handleReset = () => {
+    const confirmed = window.confirm('Reset kiosk to starter layout? This cannot be undone.');
+    if (confirmed) {
+      setDraftConfig(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
+      setCurrentMoodPreset('dojo-dark');
+      success('Kiosk reset to starter layout');
+    }
+  };
+
   // Publish
   const handlePublish = async () => {
     if (!selectedKiosk) return;
@@ -180,7 +192,7 @@ export default function KioskStudioExact() {
             </SelectContent>
           </Select>
 
-          <Select value={deviceMode} onValueChange={(val: any) => setDeviceMode(val)}>
+          <Select value={deviceMode} onValueChange={(val: any) => setDeviceMode(val as DeviceProfileType)}>
             <SelectTrigger className="w-32 h-8 text-xs" style={{
               background: 'rgba(22, 27, 34, 0.8)',
               borderColor: 'rgba(255,255,255,0.08)',
@@ -189,9 +201,11 @@ export default function KioskStudioExact() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent style={{background: 'rgba(22, 27, 34, 0.95)', borderColor: 'rgba(255,255,255,0.08)'}}>
-              <SelectItem value="ipad" style={{color: 'rgba(255,255,255,0.92)'}}>iPad</SelectItem>
-              <SelectItem value="wall-kiosk" style={{color: 'rgba(255,255,255,0.92)'}}>Wall Kiosk</SelectItem>
-              <SelectItem value="front-desk" style={{color: 'rgba(255,255,255,0.92)'}}>Front Desk</SelectItem>
+              {getAllDeviceProfiles().map(profile => (
+                <SelectItem key={profile.id} value={profile.id} style={{color: 'rgba(255,255,255,0.92)'}}>
+                  {profile.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -244,6 +258,16 @@ export default function KioskStudioExact() {
             className="text-xs"
           >
             <BookMarked className="w-3 h-3" />
+          </Button>
+          <Button
+            onClick={handleReset}
+            size="sm"
+            variant="outline"
+            style={{borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)'}}
+            className="text-xs"
+            title="Reset to Starter Kiosk"
+          >
+            <RotateCcw className="w-3 h-3" />
           </Button>
         </div>
       </div>
