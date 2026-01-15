@@ -144,6 +144,7 @@ import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
 import KioskManager from "./pages/KioskManager";
+import ManagementLayout from "./components/ManagementLayout";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -232,7 +233,7 @@ function Router() {
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
 
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
-      <Route path="/students" element={<StudentsElevated />} />
+      <Route path="/students" element={<ManagementLayout><StudentsElevated /></ManagementLayout>} />
       <Route path="/students/:id" element={<StudentCommandProfile />} />
       <Route path="/students-classic" element={<Students />} />
       <Route path="/students-old" element={<StudentsDashboard />} />
@@ -240,13 +241,13 @@ function Router() {
       <Route path="/students-command" element={<StudentsCommandCenter />} />
       <Route path="/students-split" element={<StudentsSplitScreen />} />
       <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />
-      <Route path="/leads" element={<Leads />} />
+      <Route path="/leads" element={<ManagementLayout><Leads /></ManagementLayout>} />
       <Route path="/test-data" element={<TestData />} />
-      <Route path="/classes" element={<Classes />} />
-      <Route path="/floor-plans" element={<FloorPlans />} />
+      <Route path="/classes" element={<ManagementLayout><Classes /></ManagementLayout>} />
+      <Route path="/floor-plans" element={<ManagementLayout><FloorPlans /></ManagementLayout>} />
       <Route path="/programs" element={<Programs />} />
-      <Route path="/staff" element={<Staff />} />
-      <Route path="/billing" element={<Billing />} />
+      <Route path="/staff" element={<ManagementLayout><Staff /></ManagementLayout>} />
+      <Route path="/billing" element={<ManagementLayout><Billing /></ManagementLayout>} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/billing/success" element={<BillingSuccess />} />
       {/* Legal pages */}
@@ -259,14 +260,14 @@ function Router() {
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />
       <Route path="/billing/stripe-setup" element={<StripeSetup />} />
       <Route path="/billing/applications" element={<BillingApplications />} />
-      <Route path="/operations" element={<Operations />} />
-      <Route path="/operations/merchandise" element={<Operations />} />
-      <Route path="/operations/merchandise/manage" element={<Operations />} />
+      <Route path="/operations" element={<ManagementLayout><Operations /></ManagementLayout>} />
+      <Route path="/operations/merchandise" element={<ManagementLayout><Operations /></ManagementLayout>} />
+      <Route path="/operations/merchandise/manage" element={<ManagementLayout><Operations /></ManagementLayout>} />
       <Route path="/operations/merchandise/alert-settings" element={<AlertSettings />} />
       <Route path="/print-fulfillment-sheet" element={<PrintFulfillmentSheet />} />
       <Route path="/confirm-receipt/:token" element={<ConfirmReceipt />} />
-      <Route path="/reports" element={<Reports />} />
-      <Route path="/marketing" element={<Marketing />} />
+      <Route path="/reports" element={<ManagementLayout><Reports /></ManagementLayout>} />
+      <Route path="/marketing" element={<ManagementLayout><Marketing /></ManagementLayout>} />
       <Route path="/marketing-test" element={<MarketingTest />} />
       <Route path="/subscription" element={<SubscriptionDashboard />} />
       <Route path="/billing/credits" element={<CreditTransactions />} />
