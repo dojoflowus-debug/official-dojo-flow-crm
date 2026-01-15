@@ -11,7 +11,9 @@ import { Accordion } from '@/components/Accordion';
 import { GlassMorphismEngine } from '@/components/GlassMorphismEngine';
 import { TypographyPanel } from '@/components/TypographyPanel';
 import { ButtonStylePanel } from '@/components/ButtonStylePanel';
-import { MoodPresetSelectorEnhanced } from '@/components/MoodPresetSelectorEnhanced';
+import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector';
+import { StudioProfilesSelector } from '@/components/StudioProfilesSelector';
+import { StudioInstrumentsPanel } from '@/components/StudioInstrumentsPanel';
 import type { ButtonStyleConfig } from '../../../shared/buttonStyleConfig';
 import { DEFAULT_BUTTON_STYLE } from '../../../shared/buttonStyleConfig';
 import { useThemePreset } from '@/hooks/useThemePreset';
@@ -117,21 +119,43 @@ export function ThemeTabWithPresets({
 
   return (
     <div className="flex-1 space-y-6 overflow-y-auto">
-      {/* MOOD PRESETS - Primary control */}
-      <MoodPresetSelectorEnhanced
-        selectedPresetKey={themePreset.selectedPresetKey}
+      {/* CINEMATIC ENVIRONMENT - Primary Feature */}
+      <CinematicEnvironmentSelector
+        selectedEnvironmentId={draftConfig.backgroundIntelligence?.type}
+        onEnvironmentSelect={(envId, imageUrl) => {
+          onBackgroundChange('type', 'preset');
+          onBackgroundChange('presetId', envId);
+        }}
+      />
+
+      {/* STUDIO INSTRUMENTS - Main Control Panel */}
+      <div className="space-y-4 border-t border-white/10 pt-6">
+        <div>
+          <h3 className="text-sm font-bold text-white">Studio Instruments</h3>
+          <p className="text-xs mt-1" style={{color: 'rgba(255,255,255,0.4)'}}>Fine-tune lighting, atmosphere, depth, and accents</p>
+        </div>
+        <StudioInstrumentsPanel
+          cardStyle={currentCardStyle}
+          onChange={handleCardStyleChange}
+          onSliderChange={onSliderChange}
+        />
+      </div>
+
+      {/* STUDIO PROFILES - Secondary Feature */}
+      <StudioProfilesSelector
+        selectedProfileKey={themePreset.selectedPresetKey}
         isCustom={themePreset.isCustom}
-        onPresetSelect={handlePresetSelect}
+        onProfileSelect={handlePresetSelect}
         onResetAll={handleResetAll}
       />
 
-      {/* PREMIUM DESIGN SYSTEM - Phase 1 */}
+      {/* ADVANCED CONTROLS - Collapsed by default */}
       <Accordion
         items={[
           {
-            id: 'card-appearance',
-            title: 'Card Appearance',
-            description: 'Customize the white panels on your kiosk with glass morphism',
+            id: 'advanced-card-controls',
+            title: 'Advanced Card Controls',
+            description: 'Per-card styling and glass morphism effects',
             content: (
               <div className="space-y-6">
                 {/* Apply to All vs Per-Card Toggle */}
@@ -195,7 +219,7 @@ export function ThemeTabWithPresets({
                   className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition text-sm text-gray-400 hover:text-gray-300"
                 >
                   <RotateCcw size={16} />
-                  Reset Card Style to Preset
+                  Reset to Profile
                 </button>
               </div>
             ),
