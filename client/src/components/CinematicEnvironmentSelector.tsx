@@ -132,17 +132,19 @@ export function CinematicEnvironmentSelector({
                 </div>
               )}
 
-              {/* Overlay with name and description */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
-                <p className="text-xs font-semibold text-white">{env.name}</p>
-                <p className="text-xs text-gray-300 mt-0.5">{env.description}</p>
+              {/* Bottom Gradient Bar with Environment Name */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent px-3 py-2">
+                <p className="text-xs font-semibold text-white truncate">{env.name}</p>
               </div>
 
-              {/* Selection indicator */}
+              {/* Selected State: Red Border + Selected Pill */}
               {isSelected && (
-                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border border-white/20">
-                  <span className="text-white text-xs font-bold">✓</span>
-                </div>
+                <>
+                  <div className="absolute inset-0 border-2 border-red-500 rounded-lg pointer-events-none" />
+                  <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    Selected
+                  </div>
+                </>
               )}
             </button>
           );

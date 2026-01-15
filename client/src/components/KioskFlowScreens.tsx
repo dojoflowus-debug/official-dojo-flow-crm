@@ -31,8 +31,8 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
 
   // Home Screen
   if (state.currentScreen === 'home') {
-    // Get background image from kioskConfig or use fallback gradient
-    const backgroundImage = kioskConfig?.backgroundImage || 'linear-gradient(to bottom, rgb(120, 53, 15), rgb(92, 51, 23))';
+    // Get background image from kioskConfig
+    const backgroundImage = kioskConfig?.backgroundImage;
     
     // DEBUG: Log the background image value
     if (process.env.NODE_ENV === 'development') {
@@ -40,48 +40,82 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
         value: backgroundImage,
         type: typeof backgroundImage,
         length: typeof backgroundImage === 'string' ? backgroundImage.length : 'N/A',
-        isGradient: typeof backgroundImage === 'string' && (backgroundImage.startsWith('linear-gradient') || backgroundImage.startsWith('radial-gradient')),
+        environmentId: kioskConfig?.environmentId,
       });
     }
     
-    // Handle bundled image imports and gradients properly
-    let bgImageValue = backgroundImage;
-    if (typeof backgroundImage === 'string' && !backgroundImage.startsWith('linear-gradient') && !backgroundImage.startsWith('radial-gradient')) {
-      bgImageValue = `url(${backgroundImage})`;
+    // Handle bundled image imports properly
+    let bgImageUrl = '';
+    if (typeof backgroundImage === 'string') {
+      if (backgroundImage.startsWith('linear-gradient') || backgroundImage.startsWith('radial-gradient')) {
+        bgImageUrl = backgroundImage;
+      } else {
+        bgImageUrl = `url(${backgroundImage})`;
+      }
     }
     
-    const backgroundStyle: React.CSSProperties = {
-      backgroundImage: bgImageValue,
+    // Background layer style (z-index: 0 - lowest)
+    const backgroundLayerStyle: React.CSSProperties = {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundImage: bgImageUrl,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
+      zIndex: 0,
+    };
+    
+    // Tint/overlay layer style (z-index: 1 - above background, below content)
+    const overlayLayerStyle: React.CSSProperties = {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: `rgba(0, 0, 0, ${kioskConfig?.dim || 0})`,
+      zIndex: 1,
+      transition: 'background-color 0.3s ease',
     };
 
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8" style={backgroundStyle} onClick={handleInteraction}>
-        {/* DEBUG: Show environment and background info in dev mode */}
+      <div className="relative flex flex-col items-center justify-center h-full p-8" style={{ position: 'relative' }} onClick={handleInteraction}>
+        {/* Background Image Layer - z-index: 0 */}
+        <div style={backgroundLayerStyle} />
+        
+        {/* Tint/Dim Overlay Layer - z-index: 1 */}
+        <div style={overlayLayerStyle} />
+        {/* DEBUG: Show environment and background info in dev mode - z-index: 999 */}
         {process.env.NODE_ENV === 'development' && (
           <div style={{
             position: 'absolute',
             top: '12px',
             right: '12px',
             fontSize: '11px',
-            color: 'rgba(255,255,255,0.6)',
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            padding: '6px 10px',
+            color: 'rgba(255,255,255,0.8)',
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            padding: '8px 12px',
             borderRadius: '4px',
             fontFamily: 'monospace',
-            border: '1px solid rgba(255,255,255,0.2)',
+            border: '1px solid rgba(255,255,255,0.3)',
             zIndex: 999,
-            maxWidth: '220px'
+            maxWidth: '280px',
+            lineHeight: '1.4'
           }}>
-            <div>Env: {kioskConfig?.environmentId || 'none'}</div>
-            <div style={{ fontSize: '9px', marginTop: '3px', opacity: 0.7 }}>BG: {kioskConfig?.backgroundImage ? 'loaded' : 'fallback'}</div>
+            <div><strong>Background Debug</strong></div>
+            <div style={{ fontSize: '10px', marginTop: '4px' }}>Env: <strong>{kioskConfig?.environmentId || 'none'}</strong></div>
+            <div style={{ fontSize: '9px', marginTop: '2px', opacity: 0.8, wordBreak: 'break-all' }}>URL: {kioskConfig?.backgroundImage ? kioskConfig.backgroundImage.substring(0, 50) + '...' : 'no image'}</div>
+            <div style={{ fontSize: '9px', marginTop: '2px' }}>Dim: {kioskConfig?.dim || 0}</div>
           </div>
         )}
-        {/* Logo with hidden staff login activation */}
-        <div
-          className="mb-8 cursor-pointer select-none"
+        
+        {/* Content Layer - z-index: 10 (above background and overlay) */}
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          {/* Logo with hidden staff login activation */}
+          <div
+            className="mb-8 cursor-pointer select-none"
           onMouseDown={() => setLogoPressDuration(0)}
           onMouseUp={() => {
             if (logoPressDuration > 3000) {
@@ -106,80 +140,81 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
               🥋
             </div>
           )}
-        </div>
-
-        {/* Time Display */}
-        <div className="text-white text-4xl font-bold mb-16">
-          {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-        </div>
-
-        {/* Headline */}
-        {content.headline && (
-          <div className="text-white text-3xl font-bold mb-4 text-center">
-            {content.headline}
           </div>
-        )}
 
-        {/* Subheadline */}
-        {content.subheadline && (
-          <div className="text-amber-100 text-lg mb-12 text-center">
-            {content.subheadline}
+          {/* Time Display */}
+          <div className="text-white text-4xl font-bold mb-16">
+            {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
           </div>
-        )}
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-2 gap-6 w-full max-w-2xl">
-          {/* Check In Card */}
-          <button
-            onClick={() => {
+          {/* Headline */}
+          {content.headline && (
+            <div className="text-white text-3xl font-bold mb-4 text-center">
+              {content.headline}
+            </div>
+          )}
+
+          {/* Subheadline */}
+          {content.subheadline && (
+            <div className="text-amber-100 text-lg mb-12 text-center">
+              {content.subheadline}
+            </div>
+          )}
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-2 gap-6 w-full max-w-2xl">
+            {/* Check In Card */}
+            <button
+              onClick={() => {
               handleInteraction();
               navigateTo('check-in-search');
-            }}
-            className="bg-amber-700 hover:bg-amber-600 rounded-2xl p-8 text-center transition-all transform hover:scale-105 shadow-lg"
-          >
-            <div className="text-5xl mb-4">✓</div>
-            <div className="text-white text-2xl font-bold">Check In</div>
-            <div className="text-amber-100 text-sm mt-2">Tap here to check into class</div>
-          </button>
+              }}
+              className="bg-amber-700 hover:bg-amber-600 rounded-2xl p-8 text-center transition-all transform hover:scale-105 shadow-lg"
+            >
+              <div className="text-5xl mb-4">✓</div>
+              <div className="text-white text-2xl font-bold">Check In</div>
+              <div className="text-amber-100 text-sm mt-2">Tap here to check into class</div>
+            </button>
 
-          {/* Start Training Card */}
-          <button
-            onClick={() => {
+            {/* Start Training Card */}
+            <button
+              onClick={() => {
               handleInteraction();
               navigateTo('start-training-lead');
-            }}
-            className="bg-amber-700 hover:bg-amber-600 rounded-2xl p-8 text-center transition-all transform hover:scale-105 shadow-lg"
-          >
-            <div className="text-5xl mb-4">+</div>
-            <div className="text-white text-2xl font-bold">Start Training</div>
-            <div className="text-amber-100 text-sm mt-2">New students start here</div>
-          </button>
-        </div>
+              }}
+              className="bg-amber-700 hover:bg-amber-600 rounded-2xl p-8 text-center transition-all transform hover:scale-105 shadow-lg"
+            >
+              <div className="text-5xl mb-4">+</div>
+              <div className="text-white text-2xl font-bold">Start Training</div>
+              <div className="text-amber-100 text-sm mt-2">New students start here</div>
+            </button>
+          </div>
 
-        {/* Get Started Button */}
-        <button
-          onClick={() => {
+          {/* Get Started Button */}
+          <button
+            onClick={() => {
             handleInteraction();
             navigateTo('start-training-lead');
-          }}
-          className="mt-12 bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg transition-all"
-        >
-          Get Started
-        </button>
+            }}
+            className="mt-12 bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg transition-all"
+          >
+            Get Started
+          </button>
 
-        {/* Helper Text */}
-        {content.helper && (
-          <div className="text-amber-100 text-sm mt-8 text-center">
-            {content.helper}
-          </div>
-        )}
+          {/* Helper Text */}
+          {content.helper && (
+            <div className="text-amber-100 text-sm mt-8 text-center">
+              {content.helper}
+            </div>
+          )}
 
-        {/* Footer Text */}
-        {content.footer && (
-          <div className="text-amber-100 text-xs mt-4 text-center opacity-75">
-            {content.footer}
-          </div>
-        )}
+          {/* Footer Text */}
+          {content.footer && (
+            <div className="text-amber-100 text-xs mt-4 text-center opacity-75">
+              {content.footer}
+            </div>
+          )}
+        </div>
       </div>
     );
   }

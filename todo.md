@@ -2968,3 +2968,76 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Add visual feedback showing current effect values
 - [x] Test all sliders and verify real-time updates
 - [x] Verify "Custom adjustments applied" badge appears
+
+
+## Phase 31: Background Layering Fix
+- [ ] Fix background layering with proper z-index
+- [ ] Create dedicated background image layer (lowest z-index)
+- [ ] Create tint/dim overlay layer above image
+- [ ] Remove hardcoded brown fallback
+- [ ] Add Background Debug label with environmentId and image URL
+- [ ] Test environment selection changes background
+- [ ] Verify layering and overlay effects
+
+
+## Phase 32: Make Save/Publish Reliable (Option A)
+- [ ] Create localStorage utility for Save/Publish operations
+- [ ] Implement Save Draft to write kioskConfig to localStorage
+- [ ] Implement Publish to create snapshot with version and timestamp
+- [ ] Add success/error toasts with real error messages
+- [ ] Add Last Saved and Last Published status indicators
+- [ ] Wire Save/Publish buttons to new handlers
+- [ ] Test Save and Publish operations
+
+
+## Phase 32: Make Save/Publish Reliable (Option A) - COMPLETED
+- [x] Create localStorage utility for Save/Publish operations (saveHandler.ts)
+- [x] Implement Save Draft to write kioskConfig to localStorage
+- [x] Implement Publish to create snapshot with version and timestamp
+- [x] Add success/error toasts with real error messages
+- [x] Add Last Saved and Last Published status indicators (SavePublishStatusIndicator component)
+- [x] Wire Save/Publish buttons to new handlers in KioskStudioExact
+- [x] Test Save and Publish operations
+
+### Implementation Details:
+- Created `saveHandler.ts` with localStorage persistence for drafts
+  - `saveDraft()` - Saves config with version tracking and timestamps
+  - `loadDraft()` - Retrieves saved draft
+  - `getLastSavedTime()` - Gets last save timestamp
+  - `getDraftVersion()` - Gets draft version number
+  - `hasUnsavedChanges()` - Detects changes via config hash
+  - Real error messages with detailed diagnostics
+
+- Enhanced `publishHandler.ts` with snapshot management
+  - `publishKiosk()` - Creates published snapshot with version and timestamp
+  - `getPublishedVersion()` - Gets published version number
+  - `getLastPublishedTime()` - Gets last publish timestamp
+  - `getVersionHistory()` - Tracks last 10 versions
+  - Real error messages with detailed diagnostics
+
+- Created `SavePublishStatusIndicator.tsx` component
+  - Displays "Last saved" with relative time (e.g., "2 minutes ago")
+  - Displays "Last published" with relative time
+  - Shows version numbers (v1, v2, etc.)
+  - Shows "Unsaved changes" warning
+  - Absolute time on hover
+  - Auto-updates every 30 seconds
+
+- Updated `KioskStudioExact.tsx`
+  - Integrated new save/publish handlers
+  - Added state tracking for save/publish times and versions
+  - Integrated SavePublishStatusIndicator in left panel
+  - Loads saved state from localStorage on location/device change
+  - Success toasts: "Draft saved successfully (v1)"
+  - Error toasts: "Failed to save draft: Location ID is required"
+  - Persistence errors displayed in banner below command bar
+
+### Key Features:
+- ✅ localStorage-only (no backend/TRPC in Option A)
+- ✅ Version tracking with auto-incrementing numbers
+- ✅ ISO timestamps with relative time display
+- ✅ Real error messages instead of generic failures
+- ✅ Status indicators always visible in left panel
+- ✅ Unsaved changes detection via config hash
+- ✅ Atomic config updates (complete snapshots)
+- ✅ Per-location/device storage separation
