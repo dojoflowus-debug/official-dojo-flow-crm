@@ -877,4 +877,56 @@ export const kioskRouter = router({
 
       return { success: true, message: "Custom background removed" };
     }),
+
+  /**
+   * Get a specific kiosk by ID
+   */
+  getKiosk: protectedProcedure
+    .input(z.object({ kioskId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      const { kiosks } = await import("../drizzle/schema");
+      const kiosk = await ctx.db
+        .select()
+        .from(kiosks)
+        .where(eq(kiosks.id, input.kioskId))
+        .limit(1);
+
+      if (!kiosk || kiosk.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Kiosk not found",
+        });
+      }
+
+      const k = kiosk[0];
+      let config = {};
+
+      if (k.config) {
+        try {
+          config = JSON.parse(k.config);
+        } catch (e) {
+          console.error("Failed to parse kiosk config:", e);
+          config = {};
+        }
+      }
+
+      return {
+        id: k.id,
+        organizationId: k.organizationId,
+        locationId: k.locationId,
+        name: k.name,
+        slug: k.slug,
+        isActive: k.isActive === 1,
+        config,
+        createdAt: k.createdAt,
+        updatedAt: k.updatedAt,
+      };
+    }),
 });
