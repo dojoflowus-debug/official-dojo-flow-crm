@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight, Eye, Play } from "lucide-react";
 import { toast } from "sonner";
-import BottomNavLayout from "@/components/BottomNavLayout";
+import ManagementLayout from '@/components/ManagementLayout';
 import { Link } from "react-router-dom";
 import { FloorPlanViewer } from "@/components/FloorPlanViewer";
 
@@ -573,8 +573,8 @@ function FloorPlansContent() {
 
 export default function FloorPlans() {
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <FloorPlansContent />
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }

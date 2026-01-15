@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { trpc } from '@/lib/trpc'
 import { cn } from '@/lib/utils'
-import BottomNavLayout from '@/components/BottomNavLayout'
+import ManagementLayout from '@/components/ManagementLayout';
 import { useState, useMemo, useEffect } from 'react'
 
 // UI Components
@@ -372,8 +372,8 @@ function StudentsElevatedContent() {
 
 export default function StudentsElevated() {
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <StudentsElevatedContent />
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }

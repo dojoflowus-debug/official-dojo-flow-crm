@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { trpc } from '@/lib/trpc'
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 import RedVortexKai from '../components/RedVortexKai'
 import VoiceInput from '../components/VoiceInput'
 import { LowStockAlerts } from '../components/LowStockAlerts'
@@ -620,7 +620,7 @@ export default function Dashboard() {
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden">
         {/* Main Kai Interface - Center */}
         <div className="flex-1 flex flex-col min-h-0">
@@ -1207,7 +1207,7 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }
 

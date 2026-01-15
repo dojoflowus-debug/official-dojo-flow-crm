@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,7 +40,7 @@ export default function BillingNew() {
   };
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -507,6 +507,6 @@ export default function BillingNew() {
           </TabsContent>
         </Tabs>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }

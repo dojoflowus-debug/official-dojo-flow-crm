@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -632,7 +632,7 @@ function StudentsDashboard() {
     </div>
   );
 
-  return <BottomNavLayout>{pageContent}</BottomNavLayout>;
+  return <ManagementLayout>{pageContent}</ManagementLayout>;
 }
 
 export default StudentsDashboard;

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { toast } from 'sonner'
 import { trpc } from '../lib/trpc'
 import { useTheme } from '@/contexts/ThemeContext'
-import BottomNavLayout from '@/components/BottomNavLayout'
+import ManagementLayout from '@/components/ManagementLayout';
 import LeafletMap, { StudentMarker, LeafletMapHandle } from '../components/LeafletMap'
 import MapOverlay from '../components/MapOverlay'
 import StudentCardOverlay from '../components/StudentCardOverlay'
@@ -786,7 +786,7 @@ export default function StudentsSplitScreen() {
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
     <div className={`min-h-screen flex flex-col relative ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-br from-slate-50 to-slate-100/80'}`}>
       {/* Breadcrumb Navigation */}
       <div className={`backdrop-blur-sm border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A]/80 border-white/5' : 'bg-white/80 border-slate-200/40'}`}>
@@ -1359,6 +1359,6 @@ export default function StudentsSplitScreen() {
         }}
       />
     </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }

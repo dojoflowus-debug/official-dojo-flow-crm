@@ -279,7 +279,7 @@ const CreditTransactions = () => {
   // Loading skeleton
   if (isInitialLoad) {
     return (
-      <BottomNavLayout>
+      <ManagementLayout>
         <div className="p-6">
           <div className="max-w-[1600px] mx-auto">
             <div className="flex gap-6">
@@ -298,12 +298,12 @@ const CreditTransactions = () => {
             </div>
           </div>
         </div>
-      </BottomNavLayout>
+      </ManagementLayout>
     );
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="p-6">
         <div className="max-w-[1600px] mx-auto">
           <div className="flex gap-6">
@@ -921,7 +921,7 @@ const CreditTransactions = () => {
           </div>
         </div>
       )}
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 };
 

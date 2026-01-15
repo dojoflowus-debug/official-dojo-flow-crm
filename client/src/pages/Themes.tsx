@@ -41,7 +41,7 @@ export default function Themes({ theme, toggleTheme }) {
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Themes & Preferences</h1>
@@ -218,6 +218,6 @@ export default function Themes({ theme, toggleTheme }) {
           </Card>
         </div>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }

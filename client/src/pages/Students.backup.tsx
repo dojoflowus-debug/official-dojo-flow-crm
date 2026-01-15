@@ -527,16 +527,16 @@ export default function Students({ onLogout, theme, toggleTheme }) {
 
   if (loading) {
     return (
-      <BottomNavLayout>
+      <ManagementLayout>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </BottomNavLayout>
+      </ManagementLayout>
     )
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1712,7 +1712,7 @@ export default function Students({ onLogout, theme, toggleTheme }) {
           onStudentCreated={handleStudentCreated}
         />
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }
 

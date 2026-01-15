@@ -56,7 +56,7 @@ export default function Marketing({ onLogout, theme, toggleTheme }) {
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="space-y-6 px-4 md:px-6 pb-8">
         {/* Header */}
         <div className="space-y-3">
@@ -264,6 +264,6 @@ export default function Marketing({ onLogout, theme, toggleTheme }) {
           </TabsContent>
         </Tabs>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }

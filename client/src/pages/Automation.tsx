@@ -44,7 +44,7 @@ export default function Automation() {
   };
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="min-h-screen bg-black text-white p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -236,6 +236,6 @@ export default function Automation() {
         />
         </div>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }

@@ -257,16 +257,16 @@ export default function StudentsRedesign({ onLogout, theme, toggleTheme }) {
 
   if (loading) {
     return (
-      <BottomNavLayout>
+      <ManagementLayout>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </BottomNavLayout>
+      </ManagementLayout>
     )
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="space-y-6 pb-8">
         {/* Hero Header */}
         <div className="space-y-2">
@@ -611,6 +611,6 @@ export default function StudentsRedesign({ onLogout, theme, toggleTheme }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }

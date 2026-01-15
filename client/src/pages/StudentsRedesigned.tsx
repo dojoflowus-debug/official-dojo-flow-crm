@@ -236,7 +236,7 @@ export default function StudentsRedesigned({ onLogout, theme, toggleTheme }) {
   const filtered = filteredStudents()
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="space-y-6">
         {/* Header with Add Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -365,6 +365,6 @@ export default function StudentsRedesigned({ onLogout, theme, toggleTheme }) {
           onStudentCreated={handleStudentCreated}
         />
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }

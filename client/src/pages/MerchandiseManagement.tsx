@@ -190,7 +190,7 @@ export default function MerchandiseManagement() {
   };
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="container mx-auto py-8 space-y-6">
         {/* Reorder Suggestions Section */}
         <ReorderSuggestions />
@@ -586,6 +586,6 @@ export default function MerchandiseManagement() {
         }}
         />
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }

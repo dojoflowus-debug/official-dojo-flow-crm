@@ -15,7 +15,7 @@ export default function Attendance({ onLogout, theme, toggleTheme }) {
   ]
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex items-center justify-between">
           <div>
@@ -129,7 +129,7 @@ export default function Attendance({ onLogout, theme, toggleTheme }) {
           </CardContent>
         </Card>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }
 

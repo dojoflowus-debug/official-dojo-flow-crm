@@ -3072,3 +3072,23 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Verify all 7 environments render with correct backgrounds and atmosphere
 - [x] Confirm persistence across page reloads (localStorage working!)
 - [x] Verify no "Env: none" or stuck backgrounds
+
+
+## Phase 39: Fix Universal AppShell Architecture (DEPLOYMENT BLOCKER)
+
+### Root Cause Analysis
+- [x] Identified canonical AppShell in /components/AppShell.tsx
+- [x] Found ManagementLayout correctly wraps AppShell
+- [x] Discovered most pages use BottomNavLayout (pass-through, no AppShell)
+- [x] Pages affected: KaiCommand, Students, Leads, Classes, Staff, Billing, Reports, FloorPlans, Operations, Marketing, KioskStudio
+
+### Implementation Complete
+- [x] Created AppShellMissingError guard for developer detection
+- [x] Updated all authenticated routes to wrap with ManagementLayout
+- [x] Fixed KaiCommand JSX tag mismatch
+- [x] Verified Focus Mode works correctly in AppShell
+- [x] Tested all routes for menu bar persistence
+- [x] Verified refresh on each route maintains menu bar
+- [x] Verified /kai, /students, /leads all show universal menu bar
+- [x] No more "Env: none" or stuck backgrounds
+- [x] DEPLOYMENT BLOCKER RESOLVED

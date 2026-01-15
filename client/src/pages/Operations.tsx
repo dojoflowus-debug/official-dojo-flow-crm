@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import BottomNavLayout from "@/components/BottomNavLayout";
+import ManagementLayout from '@/components/ManagementLayout';
 import MerchandiseFulfillmentContent from "./MerchandiseFulfillmentContent";
 import MerchandiseManagementContent from "./MerchandiseManagementContent";
 
@@ -8,7 +8,7 @@ export default function Operations() {
   const [activeView, setActiveView] = useState<"fulfillment" | "manage">("fulfillment");
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="border-b bg-card">
@@ -48,6 +48,6 @@ export default function Operations() {
           {activeView === "manage" && <MerchandiseManagementContent />}
         </div>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }

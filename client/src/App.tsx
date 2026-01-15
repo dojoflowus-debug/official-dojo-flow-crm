@@ -124,6 +124,7 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { AppShellGuard } from "./components/AppShellGuard";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import OrganizationList from "./pages/OrganizationList";
 import OrganizationDetail from "./pages/OrganizationDetail";
@@ -329,7 +330,9 @@ function App() {
               <TooltipProvider>
                 <Toaster />
                 <BrowserRouter>
-                  <Router />
+                  <AppShellGuard>
+                    <Router />
+                  </AppShellGuard>
                 </BrowserRouter>
               </TooltipProvider>
             </FocusModeProvider>

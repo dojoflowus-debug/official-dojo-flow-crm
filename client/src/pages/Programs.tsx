@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -389,7 +389,7 @@ export default function Programs() {
   );
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className={`min-h-screen ${isDark ? 'bg-[#0F1115]' : 'bg-gray-50'}`}>
         {/* Breadcrumb */}
         <div className={`sticky top-[72px] z-10 backdrop-blur-sm border-b ${isDark ? 'bg-[#0F1115]/80 border-white/10' : 'bg-white/80 border-gray-200'}`}>
@@ -581,6 +581,6 @@ export default function Programs() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }

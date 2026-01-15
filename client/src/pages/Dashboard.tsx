@@ -426,7 +426,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className={`flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden ${isDarkMode ? 'bg-[#0F1115]' : ''}`}>
         {/* Main Kai Interface - Center */}
         <div className="flex-1 flex flex-col min-h-0">
@@ -706,7 +706,7 @@ export default function Dashboard({ onLogout, theme, toggleTheme }: { onLogout: 
           </Card>
         </div>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   )
 }
 

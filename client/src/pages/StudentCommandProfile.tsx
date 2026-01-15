@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -187,17 +187,17 @@ function StudentCommandProfile() {
 
   if (isLoading) {
     return (
-      <BottomNavLayout>
+      <ManagementLayout>
         <div className="min-h-screen bg-background flex items-center justify-center">
           <p className="text-muted-foreground">Loading student profile...</p>
         </div>
-      </BottomNavLayout>
+      </ManagementLayout>
     );
   }
 
   if (error || !student) {
     return (
-      <BottomNavLayout>
+      <ManagementLayout>
         <div className="min-h-screen bg-background pb-24">
           <div className="container mx-auto px-4 py-6">
             <Button variant="ghost" size="sm" onClick={() => navigate('/students')} className="gap-2 mb-6">
@@ -221,12 +221,12 @@ function StudentCommandProfile() {
             </div>
           </div>
         </div>
-      </BottomNavLayout>
+      </ManagementLayout>
     );
   }
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="min-h-screen bg-background pb-24">
         <div className="sticky top-0 z-30 bg-background/50 backdrop-blur-xl border-b border-white/5">
           <div className="container mx-auto px-4 py-4">
@@ -590,7 +590,7 @@ function StudentCommandProfile() {
           }}
         />
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }
 

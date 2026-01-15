@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusMode } from '@/contexts/FocusModeContext';
@@ -2205,7 +2205,7 @@ export default function KaiCommand() {
   };
 
   return (
-    <BottomNavLayout hiddenInFocusMode={isFocusMode} isUIHidden={isUIHidden}>
+    <ManagementLayout>
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
       <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${getKaiCommandBgClass()} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
@@ -3443,7 +3443,7 @@ export default function KaiCommand() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }
 

@@ -33,17 +33,17 @@ const SubscriptionDashboard = () => {
 
   if (loading) {
     return (
-      <BottomNavLayout>
+      <ManagementLayout>
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-white text-xl">Loading subscription data...</div>
         </div>
-      </BottomNavLayout>
+      </ManagementLayout>
     );
   }
 
   if (!subscription) {
     return (
-      <BottomNavLayout>
+      <ManagementLayout>
         <div className="flex items-center justify-center min-h-[80vh] flex-col gap-4">
           <AlertCircle className="w-16 h-16 text-red-400" />
           <div className="text-red-400 text-xl">No active subscription found</div>
@@ -54,7 +54,7 @@ const SubscriptionDashboard = () => {
             View Pricing Plans
           </Link>
         </div>
-      </BottomNavLayout>
+      </ManagementLayout>
     );
   }
 
@@ -69,7 +69,7 @@ const SubscriptionDashboard = () => {
     : 0;
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -348,7 +348,7 @@ const SubscriptionDashboard = () => {
           </div>
         </div>
       )}
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 };
 

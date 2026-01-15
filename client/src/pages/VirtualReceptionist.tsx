@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import BottomNavLayout from '@/components/BottomNavLayout';
+import ManagementLayout from '@/components/ManagementLayout';
 import { Button } from '@/components/ui/button';
 import { Phone, Mail, MessageSquare, UserPlus, Calendar, Clock, User, CheckCircle } from 'lucide-react';
 
@@ -47,7 +47,7 @@ export default function VirtualReceptionist({ onLogout, theme, toggleTheme }) {
   });
 
   return (
-    <BottomNavLayout>
+    <ManagementLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -231,7 +231,7 @@ export default function VirtualReceptionist({ onLogout, theme, toggleTheme }) {
           </div>
         </div>
       </div>
-    </BottomNavLayout>
+    </ManagementLayout>
   );
 }
 
