@@ -2924,3 +2924,16 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Add console error logging for thumbnail failures
 - [x] Test all 6 thumbnails visible and clickable
 - [x] Verify environment selection works correctly
+
+
+## Phase 24: Studio Environment Asset Resolution Fix
+
+- [x] Create 6 thumbnail images in /client/src/assets/environments/
+- [x] Create 6 background images in /client/src/assets/environments/
+- [x] Create studioEnvironments.ts config with bundled imports
+- [x] Update CinematicEnvironmentSelector with real img elements
+- [x] Add fallback rendering for failed image loads
+- [x] Create assetLoader utility with comprehensive logging
+- [x] Test all 6 thumbnails rendering correctly
+- [x] Verify environment selection works with visual indicators
+- [x] Confirm "Loaded 6/6 thumbnails" status message displays
