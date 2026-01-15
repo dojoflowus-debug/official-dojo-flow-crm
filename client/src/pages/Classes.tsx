@@ -670,13 +670,13 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const [classes, setClasses] = useState([]);
   
   // Fetch programs from database
-  const { data: programs = [] } = trpc.programs.list.useQuery();
+  const { data: programs = [] } = trpc.programs.list.useQuery({});
   
   // Fetch floor plans
-  const { data: floorPlansData } = trpc.floorPlans.list.useQuery();
+  const { data: floorPlansData } = trpc.floorPlans.list.useQuery({});
   
   // Fetch dojo settings for schedule branding
-  const { data: dojoSettings } = trpc.settings.getSettings.useQuery();
+  const { data: dojoSettings } = trpc.settings.getSettings.useQuery({});
   const [stats, setStats] = useState({
     totalClasses: 0,
     totalStudents: 0,
@@ -806,7 +806,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   }, [isEnrollmentModalOpen, selectedClassForEnrollment]);
 
   // Fetch instructors using tRPC
-  const { data: instructorsData } = trpc.staff.getInstructors.useQuery();
+  const { data: instructorsData } = trpc.staff.getInstructors.useQuery({});
   
   // Update instructors state when data changes
   useEffect(() => {
