@@ -31,7 +31,6 @@ import { EditableContentSection } from '@/components/EditableContentSection';
 import { getKioskConfig, type KioskConfig as KioskConfigType } from '@/lib/kioskConfigProvider';
 import { DeployTab } from '@/components/DeployTab';
 import { EnvironmentEffectsPanel, type EnvironmentEffects } from '@/components/EnvironmentEffectsPanel';
-import DojoFlowLayout from '@/components/DojoFlowLayout';
 
 interface Kiosk {
   id: number;
@@ -55,7 +54,7 @@ interface Kiosk {
  * 
  * The kiosk is the hero. It never moves. Only left panel scrolls.
  */
-function KioskStudioExactContent() {
+export default function KioskStudioExact() {
   const queryClient = useQueryClient();
   const { toasts, success, error, removeToast } = useToast();
   const navigate = useNavigate();
@@ -237,7 +236,7 @@ function KioskStudioExactContent() {
   const currentConfig = previewMode === 'draft' ? draftConfig : publishedConfig;
 
   return (
-    <div className="flex flex-col h-full" style={{backgroundColor: '#0B0D10'}}>
+    <div className="flex flex-col h-screen" style={{backgroundColor: '#0B0D10'}}>
       {/* TOP COMMAND BAR - Slim, minimal, professional */}
       <div className="flex items-center justify-between px-6 py-3 border-b flex-shrink-0" style={{
         background: 'rgba(18, 22, 28, 0.95)',
@@ -628,13 +627,5 @@ function KioskStudioExactContent() {
         />
       ))}
     </div>
-  );
-}
-
-export default function KioskStudioExact() {
-  return (
-    <DojoFlowLayout>
-      <KioskStudioExactContent />
-    </DojoFlowLayout>
   );
 }

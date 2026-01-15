@@ -20,11 +20,8 @@ import {
   ChevronDown,
   LogOut,
   Menu,
-  X,
-  Maximize,
-  Minimize
+  X
 } from 'lucide-react'
-import { useFocusMode } from '@/contexts/FocusModeContext'
 import { APP_LOGO } from '@/const'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -78,7 +75,6 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const { isFocusMode, toggleFocusMode } = useFocusMode()
 
   // Get user initials for avatar
   const getUserInitials = () => {
@@ -111,15 +107,6 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
   
   // Hover reveal state for collapsed sidebar
   const [hoverRevealed, setHoverRevealed] = useState(false)
-
-  // Adjust main content padding based on focus mode
-  useEffect(() => {
-    if (isFocusMode) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'auto'
-    }
-  }, [isFocusMode])
 
   // Persist sidebar state
   useEffect(() => {
@@ -170,9 +157,6 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
 
   // Determine if sidebar should be shown (either visible or hover revealed)
   const showSidebar = sidebarVisible || hoverRevealed
-
-  // Determine if bottom nav should be shown
-  const showBottomNav = !isFocusMode
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -426,57 +410,10 @@ export default function DojoFlowLayout({ children }: DojoFlowLayoutProps) {
         )}
 
         {/* Page Content */}
-        <main className={`flex-1 ${location.pathname === '/kai' ? 'p-0' : 'p-6'} transition-all duration-300 ${isFocusMode ? 'pb-0' : 'pb-24'}`}>
+        <main className={`flex-1 ${location.pathname === '/kai' ? 'p-0' : 'p-6'}`}>
           {children}
         </main>
       </div>
-
-      {/* Bottom Navigation Bar */}
-      <nav
-        className={`fixed bottom-0 left-0 right-0 bg-black border-t border-slate-900 z-40 transition-all duration-300 ease-in-out ${
-          showBottomNav ? 'h-20 translate-y-0' : 'h-20 translate-y-full'
-        }`}
-      >
-        <div className="flex items-center justify-between h-full px-4 max-w-full overflow-x-auto">
-          {/* Navigation Items */}
-          <div className="flex items-center gap-1 flex-1 overflow-x-auto pb-2">
-            {NAVIGATION.map((item) => {
-              const Icon = item.icon
-              const active = isActive(item.href)
-              return (
-                <Link
-                  key={item.id}
-                  to={item.href}
-                  className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-all duration-200 whitespace-nowrap text-xs ${
-                    active
-                      ? 'bg-[#ED393D] text-white'
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                  }`}
-                  title={item.name}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs mt-0.5">{item.name}</span>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Focus Mode Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleFocusMode}
-            className="ml-2 h-10 w-10 text-slate-400 hover:text-white hover:bg-slate-900"
-            title={isFocusMode ? 'Exit Focus Mode (ESC)' : 'Enter Focus Mode'}
-          >
-            {isFocusMode ? (
-              <Minimize className="h-5 w-5" />
-            ) : (
-              <Maximize className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-      </nav>
     </div>
   )
 }
