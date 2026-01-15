@@ -20,6 +20,8 @@ import { useFocusMode } from '@/contexts/FocusModeContext'
 import { trpc } from '@/lib/trpc'
 import { BadgeCount } from '@/components/ui/badge-count'
 import { ScrollableNav } from '@/components/ScrollableNav'
+import { CinematicFocusOverlay } from '@/components/CinematicFocusOverlay'
+import { EscHintLabel } from '@/components/EscHintLabel'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -43,7 +45,7 @@ interface AppShellProps {
 export default function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const location = useLocation()
   const { theme } = useTheme()
-  const { isFocusMode, toggleFocusMode } = useFocusMode()
+  const { isFocusMode, toggleFocusMode, showOverlay, isEntering, showEscHint } = useFocusMode()
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
@@ -232,6 +234,18 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
           </button>
         </nav>
       )}
+
+      {/* Cinematic Focus Mode Overlay */}
+      <CinematicFocusOverlay 
+        isVisible={showOverlay}
+        isEntering={isEntering}
+        onAnimationComplete={() => {
+          // Animation complete, overlay will fade out
+        }}
+      />
+
+      {/* ESC Hint Label */}
+      <EscHintLabel show={showEscHint} />
     </div>
   )
 }

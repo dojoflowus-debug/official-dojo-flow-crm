@@ -5,6 +5,8 @@ interface FocusModeContextType {
   isFullscreen: boolean
   isAnimating: boolean
   showOverlay: boolean
+  isEntering: boolean
+  showEscHint: boolean
   toggleFocusMode: () => void
   setFocusMode: (value: boolean) => void
   enterFullscreen: () => Promise<void>
@@ -22,25 +24,24 @@ export function FocusModeProvider({ children }: { children: ReactNode }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showOverlay, setShowOverlay] = useState(false)
+  const [isEntering, setIsEntering] = useState(false)
+  const [showEscHint, setShowEscHint] = useState(false)
 
   // Listen for fullscreen changes (user can exit with Esc)
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
-      // If exiting fullscreen, also exit focus mode
-      if (!document.fullscreenElement && isFocusMode) {
-        // Keep focus mode but update fullscreen state
-      }
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  }, [isFocusMode])
+  }, [])
 
-  // Keyboard shortcut: Esc to exit focus mode, F to toggle fullscreen
+  // Keyboard shortcut: Esc to exit focus mode
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Esc to exit focus mode (only if not in fullscreen - browser handles that)
-      if (e.key === 'Escape' && isFocusMode && !document.fullscreenElement) {
+      // Esc to exit focus mode (always works)
+      if (e.key === 'Escape' && isFocusMode) {
+        e.preventDefault()
         toggleFocusMode()
       }
       // F to toggle fullscreen (only when focus mode is active)
@@ -92,32 +93,47 @@ export function FocusModeProvider({ children }: { children: ReactNode }) {
     
     if (newValue) {
       // Entering Focus Mode - show overlay
+      setIsEntering(true)
       setShowOverlay(true)
+      setShowEscHint(false)
       
-      // After slide animation (400ms), start fade
+      // Update state after initial animation
       setTimeout(() => {
         setIsFocusMode(true)
         localStorage.setItem('dojoFlowFocusMode', 'on')
       }, 100)
       
-      // Hide overlay after 2.5 seconds total (fade in + hold + fade out)
+      // Show ESC hint after overlay fades
+      setTimeout(() => {
+        setShowEscHint(true)
+      }, 1600)
+      
+      // Hide overlay after 1.5s
       setTimeout(() => {
         setShowOverlay(false)
-      }, 2500)
+        setIsEntering(false)
+      }, 1500)
       
       // End animation state
       setTimeout(() => {
         setIsAnimating(false)
-      }, 600)
+      }, 1800)
     } else {
       // Exiting Focus Mode
-      setIsFocusMode(false)
-      localStorage.setItem('dojoFlowFocusMode', 'off')
+      setIsEntering(false)
+      setShowEscHint(false)
+      setShowOverlay(true)
+      
+      setTimeout(() => {
+        setIsFocusMode(false)
+        localStorage.setItem('dojoFlowFocusMode', 'off')
+        setShowOverlay(false)
+      }, 300)
       
       // End animation after menus slide back
       setTimeout(() => {
         setIsAnimating(false)
-      }, 500)
+      }, 600)
     }
   }
 
@@ -132,6 +148,8 @@ export function FocusModeProvider({ children }: { children: ReactNode }) {
       isFullscreen,
       isAnimating, 
       showOverlay,
+      isEntering,
+      showEscHint,
       toggleFocusMode, 
       setFocusMode,
       enterFullscreen,
