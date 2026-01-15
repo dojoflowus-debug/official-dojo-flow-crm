@@ -2913,3 +2913,14 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Test preset switching and atomic theme updates
 - [x] Test environment selection and preview updates
 - [x] Verify functionality preserved (no blank/black screens)
+
+
+## Phase 23: Studio Environment Thumbnail Rendering Fix
+
+- [x] Create 6 environment thumbnail images in /client/src/assets/environments/
+- [x] Create studioEnvironments.ts config with bundled image imports
+- [x] Update CinematicEnvironmentSelector to render real img elements
+- [x] Add fallback states for failed image loads
+- [x] Add console error logging for thumbnail failures
+- [x] Test all 6 thumbnails visible and clickable
+- [x] Verify environment selection works correctly

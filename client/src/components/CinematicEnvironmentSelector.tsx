@@ -1,9 +1,10 @@
 /**
  * CinematicEnvironmentSelector - Premium environment selection for studio control
- * Displays 6 cinematic backgrounds as primary feature, not secondary thumbnails
+ * Displays 6 cinematic backgrounds as primary feature with bundled images and fallback states
  */
 
-import React from 'react';
+import React, { useState } from 'react';
+import { STUDIO_ENVIRONMENTS, getEnvironmentById } from '@/config/studioEnvironments';
 import { KIOSK_BACKGROUND_PRESETS } from '../../../shared/kioskBackgroundPresets';
 
 interface CinematicEnvironmentSelectorProps {
@@ -12,20 +13,13 @@ interface CinematicEnvironmentSelectorProps {
   onCustomUpload?: (file: File) => void;
 }
 
-const ENVIRONMENTS = [
-  { id: 'martial-arts-dojo', name: 'Martial Arts Dojo', icon: '🥋' },
-  { id: 'kids-dojo', name: 'Kids Dojo', icon: '👶' },
-  { id: 'zen-studio', name: 'Zen Studio', icon: '🧘' },
-  { id: 'luxury-gym', name: 'Luxury Gym', icon: '💎' },
-  { id: 'kickboxing-floor', name: 'Kickboxing Floor', icon: '🔥' },
-  { id: 'custom-upload', name: 'Custom Upload', icon: '📸' },
-];
-
 export function CinematicEnvironmentSelector({
   selectedEnvironmentId,
   onEnvironmentSelect,
   onCustomUpload,
 }: CinematicEnvironmentSelectorProps) {
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
   const handleEnvironmentClick = (envId: string) => {
     if (envId === 'custom-upload') {
       // Trigger file upload
@@ -48,6 +42,21 @@ export function CinematicEnvironmentSelector({
     }
   };
 
+  const handleImageError = (envId: string) => {
+    console.error(`[CinematicEnvironmentSelector] Failed to load thumbnail for environment: ${envId}`);
+    setImageErrors(prev => new Set(prev).add(envId));
+  };
+
+  const handleImageLoad = (envId: string) => {
+    console.log(`[CinematicEnvironmentSelector] Successfully loaded thumbnail for environment: ${envId}`);
+    // Remove from error set if it was previously errored
+    setImageErrors(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(envId);
+      return newSet;
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -60,10 +69,11 @@ export function CinematicEnvironmentSelector({
 
       {/* Environment Grid - Visually Dominant */}
       <div className="grid grid-cols-2 gap-3">
-        {ENVIRONMENTS.map(env => {
+        {STUDIO_ENVIRONMENTS.map(env => {
           const isSelected = selectedEnvironmentId === env.id;
+          const hasImageError = imageErrors.has(env.id);
           const preset = KIOSK_BACKGROUND_PRESETS.find(p => p.id === env.id);
-          const backgroundImage = preset?.imageUrl || '';
+          const backgroundImageUrl = preset?.imageUrl || '';
 
           return (
             <button
@@ -74,17 +84,24 @@ export function CinematicEnvironmentSelector({
                   ? 'ring-2 ring-red-500 shadow-lg shadow-red-500/50'
                   : 'ring-1 ring-white/10 hover:ring-white/20'
               }`}
+              title={env.description}
             >
-              {/* Background Image */}
-              {backgroundImage && env.id !== 'custom-upload' ? (
+              {/* Thumbnail Image - Real img element */}
+              {!hasImageError ? (
                 <img
-                  src={backgroundImage}
+                  src={env.thumbnailImage}
                   alt={env.name}
                   className="w-full h-full object-cover"
+                  onError={() => handleImageError(env.id)}
+                  onLoad={() => handleImageLoad(env.id)}
                 />
               ) : (
+                /* Fallback: Dark card with environment name */
                 <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-                  <span className="text-3xl">{env.icon}</span>
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-white">{env.name}</p>
+                    <p className="text-xs text-gray-400 mt-1">Image unavailable</p>
+                  </div>
                 </div>
               )}
 
