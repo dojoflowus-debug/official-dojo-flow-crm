@@ -2773,3 +2773,88 @@ All three errors have been fixed by adding proper error handling and graceful fa
 ### Phase 7: Save Foundation Checkpoint
 - [x] All tests passing
 - [x] Save checkpoint with foundation locked
+
+
+## Phase 19: Functional Kiosk Implementation (Current)
+
+### Phase 1: Kiosk Action System & Flow Architecture
+- [ ] Design action system (NAVIGATE, START_FLOW, OPEN_MODAL, STAFF_LOGIN)
+- [ ] Create flow state management (current flow, screen, data)
+- [ ] Implement card action binding system
+- [ ] Create flow context provider
+
+### Phase 2: Check In Flow
+- [ ] Student lookup screen (search by name/phone)
+- [ ] Student selection and confirmation
+- [ ] Attendance marking (mock API)
+- [ ] Success screen with 5s auto-return
+
+### Phase 3: Start Training Flow
+- [ ] Lead capture form (name, phone, email)
+- [ ] Program selection (Kids/Teens/Adults/Kickboxing)
+- [ ] Schedule intro class time picker
+- [ ] Confirmation screen with staff notification
+
+### Phase 4: Staff Login Flow
+- [ ] Hidden 3-second logo press activation
+- [ ] PIN entry screen
+- [ ] Staff tools panel (placeholder)
+- [ ] Staff mode indicators
+
+### Phase 5: Device Behaviors
+- [ ] Idle timer (30s to attract mode)
+- [ ] Auto-reset (60s inactivity in flow)
+- [ ] Back button on all screens
+- [ ] Home escape button
+- [ ] Attract mode screen
+
+### Phase 6: Deploy Tab
+- [ ] Location + device type selector
+- [ ] Publish creates version
+- [ ] Version tracking and history
+- [ ] Last deployed timestamp display
+- [ ] Deployment status indicator
+
+### Phase 7: End-to-End Testing
+- [ ] Test all flows from start to finish
+- [ ] Test idle timer and auto-reset
+- [ ] Test back button and home escape
+- [ ] Test staff login activation
+- [ ] Verify demo-ready functionality
+
+### Phase 8: Save Functional Kiosk Checkpoint
+- [ ] All flows working end-to-end
+- [ ] Device behaviors functional
+- [ ] Deploy tab operational
+- [ ] Save checkpoint with fully functional kiosk
+
+
+## Phase 19: Functional Kiosk Implementation (MVP with Mock Data)
+
+### Completed:
+- [x] Created kioskDataProvider.ts with mock data layer (adapter pattern)
+- [x] Created kioskFlowContext.tsx with flow state machine
+- [x] Created KioskFlowScreens.tsx with all flow screens (Check In, Start Training, Staff Login)
+- [x] Implemented mock student dataset and attendance tracking
+- [x] Implemented mock lead capture and program selection
+- [x] Implemented staff login with PIN entry
+- [x] Implemented idle timer and attract mode logic
+- [x] Implemented auto-reset to home after inactivity
+- [x] Integrated KioskFlowScreens into KioskPreviewRenderer
+
+### In Progress / TODO:
+- [ ] Debug KioskFlowContext provider - buttons not responding to clicks
+- [ ] Fix context initialization and state management
+- [ ] Test all flows end-to-end
+- [ ] Verify localStorage persistence for mock data
+- [ ] Test idle timer and auto-reset behavior
+- [ ] Implement Deploy tab MVP (versioning, localStorage, push simulation)
+- [ ] Add keyboard shortcuts (Cmd/Ctrl+S for Save, Cmd/Ctrl+P for Publish)
+- [ ] Create vitest tests for kiosk flows
+- [ ] Test on all device profiles (Front Desk, Wall Kiosk, Tablet)
+- [ ] Verify demo stability and no regressions
+
+### Known Issues:
+- KioskFlowContext provider may not be properly wrapping KioskFlowScreens
+- Button click handlers in KioskFlowScreens not firing
+- Need to verify React context is properly initialized
