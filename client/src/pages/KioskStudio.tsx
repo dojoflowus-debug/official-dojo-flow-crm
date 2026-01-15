@@ -46,7 +46,7 @@ export default function KioskStudio() {
   const isDirty = JSON.stringify(draftConfig) !== JSON.stringify(lastSavedConfig);
 
   // Fetch locations
-  const { data: locationsData } = trpc.kiosk.listLocations.useQuery(void 0, { enabled: true })
+  const { data: locationsData } = trpc.kiosk.listLocations.useQuery(undefined, { enabled: true })
 
   // Fetch kiosks for selected location
   const { data: kiosksData, refetch: refetchKiosks } = trpc.kioskDevice.listByLocation.useQuery(

@@ -59,9 +59,9 @@ export default function Dashboard() {
   })
 
   // Fetch kiosk stats using trpc
-  const kioskCheckInsQuery = trpc.kiosk.checkIns.useQuery(void 0, { refetchInterval: 30000 });
-  const kioskVisitorsQuery = trpc.kiosk.visitors.useQuery(void 0, { refetchInterval: 30000 });
-  const kioskWaiversQuery = trpc.kiosk.waivers.useQuery(void 0, { refetchInterval: 30000 });
+  const kioskCheckInsQuery = trpc.kiosk.checkIns.useQuery(undefined, { refetchInterval: 30000 });
+  const kioskVisitorsQuery = trpc.kiosk.visitors.useQuery(undefined, { refetchInterval: 30000 });
+  const kioskWaiversQuery = trpc.kiosk.waivers.useQuery(undefined, { refetchInterval: 30000 });
 
   // Fallback: Direct API fetch for kiosk stats
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function Dashboard() {
   ])
 
   // Fetch real-time stats from API using trpc
-  const dashboardStatsQuery = trpc.dashboard.stats.useQuery(void 0, { refetchInterval: 30000 });
+  const dashboardStatsQuery = trpc.dashboard.stats.useQuery(undefined, { refetchInterval: 30000 });
 
   // Fallback: Direct API fetch if tRPC fails
   useEffect(() => {

@@ -123,7 +123,7 @@ const CreditTransactions = () => {
   }, [dateRange]);
 
   // Fetch credit balance - use staleTime for instant subsequent loads
-  const { data: creditBalance, isLoading: balanceLoading, isError: balanceError } = trpc.credits.getBalance.useQuery(void 0, {
+  const { data: creditBalance, isLoading: balanceLoading, isError: balanceError } = trpc.credits.getBalance.useQuery(undefined, {
     refetchInterval: 60000,
     retry: false,
     staleTime: 30000, // Cache for 30 seconds - prevents loading state on navigation
@@ -139,7 +139,7 @@ const CreditTransactions = () => {
   );
 
   // Fetch all plans for upgrade options
-  const { data: allPlans } = trpc.subscription.getPlans.useQuery(void 0, {
+  const { data: allPlans } = trpc.subscription.getPlans.useQuery(undefined, {
     staleTime: 300000, // Cache for 5 minutes - plans rarely change
   });
 

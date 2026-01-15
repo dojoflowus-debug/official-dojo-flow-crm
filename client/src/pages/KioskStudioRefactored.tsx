@@ -59,7 +59,7 @@ export default function KioskStudioRefactored() {
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
 
   // QUERIES
-  const { data: locationsData } = trpc.kiosk.listLocations.useQuery(void 0, { enabled: true });
+  const { data: locationsData } = trpc.kiosk.listLocations.useQuery(undefined, { enabled: true });
 
   const { data: kiosksData, refetch: refetchKiosks, isLoading: kiosksLoading } = trpc.kioskDevice.listByLocation.useQuery(
     { locationId: selectedLocation! },

@@ -108,7 +108,7 @@ function StudentsElevatedContent() {
   })
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(void 0)
+  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(undefined)
   
   useEffect(() => {
     if (studentsError) console.error('Students error:', studentsError)
