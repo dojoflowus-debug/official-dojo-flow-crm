@@ -196,7 +196,7 @@ export default function KioskStudioExact() {
   });
 
   // TRPC QUERIES
-  const locationsQuery = trpc.locations.listLocations.useQuery();
+  const locationsQuery = trpc.kiosk.listLocations.useQuery();
   const kioskQuery = trpc.kiosk.getKiosk.useQuery(
     { kioskId: selectedKiosk || 1 },
     { enabled: !!selectedKiosk }
