@@ -144,14 +144,14 @@ import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
 import KioskManager from "./pages/KioskManager";
-import GlobalBottomNavigation from "./components/GlobalBottomNavigation";
+import UnifiedBottomNav from "./components/UnifiedBottomNav";
 import { useFocusMode } from "./contexts/FocusModeContext";
 
 function RouterWithNav() {
   const { isFocusMode } = useFocusMode();
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#0F0F11' }}>
       {/* Main content with bottom padding */}
       <div
         className="flex-1 transition-all duration-300"
@@ -162,7 +162,7 @@ function RouterWithNav() {
         <Router />
       </div>
       {/* Global bottom navigation */}
-      <GlobalBottomNavigation />
+      <UnifiedBottomNav />
     </div>
   );
 }

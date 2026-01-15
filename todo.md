@@ -3051,3 +3051,13 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Implement Focus Mode toggle in Kiosk Studio
 - [x] Add smooth transitions and test layout stability
 - [x] Test navigation across all pages
+
+
+## Phase 34: Consolidate Duplicate Navigation (Jan 15, 2026) - COMPLETED
+- [x] Identify all bottom nav implementations across the app
+- [x] Remove duplicate/legacy bottom nav from Kiosk Studio
+- [x] Update GlobalBottomNavigation with dark cinematic theme (black/charcoal, red active)
+- [x] Create AppShell layout wrapper for consistent header/nav
+- [x] Update App.tsx routing to use AppShell
+- [x] Remove legacy dashboard layouts and old components
+- [x] Test navigation consistency across all pages
