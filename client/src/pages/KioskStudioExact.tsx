@@ -38,6 +38,7 @@ import { DEFAULT_BUTTON_STYLE } from "../../../shared/buttonStyleConfig";
 import { SaveTemplateModal } from "@/components/SaveTemplateModal";
 import { TemplateLibrary } from "@/components/TemplateLibrary";
 import { useTemplateLibrary } from "@/hooks/useTemplateLibrary";
+import AppShell from "@/components/AppShell";
 import {
   getDeviceProfile,
   getAllDeviceProfiles,
@@ -329,10 +330,11 @@ export default function KioskStudioExact() {
   const currentConfig = previewMode === "draft" ? draftConfig : publishedConfig;
 
   return (
-    <div
-      className="flex flex-col h-screen"
-      style={{ backgroundColor: "#0B0D10" }}
-    >
+    <AppShell>
+      <div
+        className="flex flex-col h-screen"
+        style={{ backgroundColor: "#0B0D10" }}
+      >
       {/* TOP COMMAND BAR - Slim, minimal, professional */}
       <div
         className="flex items-center justify-between px-6 py-3 border-b flex-shrink-0"
@@ -868,5 +870,6 @@ export default function KioskStudioExact() {
         />
       ))}
     </div>
+    </AppShell>
   );
 }
