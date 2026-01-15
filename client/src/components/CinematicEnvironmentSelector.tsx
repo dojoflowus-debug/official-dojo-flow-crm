@@ -73,6 +73,22 @@ export function CinematicEnvironmentSelector({
       </div>
 
       {/* Environment Grid - Visually Dominant with Real Images */}
+      <style>{`
+        @keyframes zoomIn {
+          from {
+            transform: scale(1);
+          }
+          to {
+            transform: scale(1.08);
+          }
+        }
+        .env-thumbnail {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .env-thumbnail:hover {
+          animation: zoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+      `}</style>
       <div className="grid grid-cols-2 gap-3">
         {STUDIO_ENVIRONMENTS.map(env => {
           const isSelected = selectedEnvironmentId === env.id;
@@ -83,7 +99,7 @@ export function CinematicEnvironmentSelector({
             <button
               key={env.id}
               onClick={() => handleEnvironmentClick(env.id)}
-              className={`relative h-32 rounded-lg overflow-hidden transition-all ${
+              className={`env-thumbnail relative h-32 rounded-lg overflow-hidden transition-all ${
                 isSelected
                   ? 'ring-2 ring-red-500 shadow-lg shadow-red-500/50'
                   : 'ring-1 ring-white/10 hover:ring-white/20'
