@@ -2858,3 +2858,42 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - KioskFlowContext provider may not be properly wrapping KioskFlowScreens
 - Button click handlers in KioskFlowScreens not firing
 - Need to verify React context is properly initialized
+
+
+## Phase 21: Integrate ThemeTabWithPresets into KioskStudioExact
+
+### Integration Complete:
+- [x] Updated KioskStudioExact imports to use ThemeTabWithPresets instead of ThemeTabPhase1
+- [x] Added useThemePreset hook to KioskStudioExact state management
+- [x] Replaced Theme tab content with ThemeTabWithPresets component
+- [x] Connected preset changes to draft config updates
+- [x] Added themePreset.markCustom() calls on all manual adjustments
+- [x] Passed draftConfig to KioskPreviewRenderer for live preview
+- [x] Updated KioskPreviewRenderer to accept and pass kioskConfig to KioskFlowScreens
+- [x] Updated KioskFlowScreens to accept kioskConfig parameter
+
+### Files Created/Modified:
+- [x] client/src/lib/themePresetProvider.ts - Core state management with localStorage
+- [x] client/src/hooks/useThemePreset.ts - React hook for preset management
+- [x] client/src/components/MoodPresetSelectorEnhanced.tsx - Visual preset selector
+- [x] client/src/components/ThemeTabWithPresets.tsx - Complete theme editor
+- [x] client/src/pages/KioskStudioExact.tsx - Integrated preset system
+- [x] client/src/components/KioskPreviewRenderer.tsx - Updated to accept kioskConfig
+- [x] client/src/components/KioskFlowScreens.tsx - Updated to accept kioskConfig
+
+### Features Integrated:
+- [x] Atomic preset application (single state update)
+- [x] localStorage persistence per location:deviceType
+- [x] Custom state tracking with visual indicators
+- [x] Reset section functionality
+- [x] Reset all functionality with "Reset All" button
+- [x] Per-card and all-cards styling options
+- [x] Background blur and dim controls
+- [x] Typography customization
+- [x] Button styling customization
+- [x] Live preview updates on preset changes
+
+### Status:
+✅ All infrastructure files created and integrated
+✅ Dev server running without import errors
+✅ Ready for end-to-end testing

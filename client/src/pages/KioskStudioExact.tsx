@@ -16,7 +16,9 @@ import { useToast } from '@/hooks/useToast';
 import { DeviceEmulator } from '@/components/DeviceEmulator';
 import { KioskPreviewRenderer } from '@/components/KioskPreviewRenderer';
 import { normalizeKioskConfig } from '@/lib/defaultKioskConfig';
-import { ThemeTabPhase1 } from '@/components/ThemeTabPhase1';
+import { ThemeTabWithPresets } from '@/components/ThemeTabWithPresets';
+import { useThemePreset } from '@/hooks/useThemePreset';
+import { validateKioskConfig } from '@/lib/themePresetValidator';
 import type { ButtonStyleConfig } from '../../../shared/buttonStyleConfig';
 import { useQueryClient } from '@tanstack/react-query';
 import { DEFAULT_BUTTON_STYLE } from '../../../shared/buttonStyleConfig';
@@ -81,6 +83,19 @@ export default function KioskStudioExact() {
 
   // TEMPLATES
   const { templates, saveTemplate, deleteTemplate, duplicateTemplate, applyTemplate } = useTemplateLibrary();
+
+  // THEME PRESET MANAGEMENT
+  const themePreset = useThemePreset({
+    locationId: selectedLocation || 1,
+    deviceType: deviceMode,
+    defaultPresetKey: 'dojo-dark',
+    onThemeChange: (themeValues) => {
+      setDraftConfig(prev => ({
+        ...prev,
+        ...themeValues,
+      }));
+    },
+  });
 
   // TRPC QUERIES
   const locationsQuery = trpc.locations.listLocations.useQuery();
@@ -332,50 +347,39 @@ export default function KioskStudioExact() {
             {/* THEME TAB */}
             <TabsContent value="theme" className="space-y-4">
               {draftConfig && (
-                <ThemeTabPhase1
+                <ThemeTabWithPresets
                   draftConfig={draftConfig}
-                  currentMoodPreset={currentMoodPreset}
-                  onMoodPresetSelect={(presetKey, presetConfig) => {
-                    setCurrentMoodPreset(presetKey);
-                    setDraftConfig(prev => ({ ...prev, ...presetConfig }));
+                  locationId={selectedLocation || 1}
+                  deviceType={deviceMode}
+                  onConfigChange={(config) => {
+                    setDraftConfig(prev => ({ ...prev, ...config }));
                   }}
                   onCardStyleChange={(cardStyle) => {
                     setDraftConfig(prev => ({ ...prev, cardStyle }));
-                  }}
-                  onResetCardStyle={() => {
-                    setDraftConfig(prev => ({
-                      ...prev,
-                      cardStyle: DEFAULT_KIOSK_CONFIG.cardStyle,
-                    }));
-                  }}
-                  onResetMoodPreset={() => {
-                    setCurrentMoodPreset('dojo-dark');
-                    setDraftConfig(DEFAULT_KIOSK_CONFIG);
+                    themePreset.markCustom();
                   }}
                   onBackgroundChange={(key, value) => {
                     setDraftConfig(prev => ({
                       ...prev,
-                      background: { ...prev.background, [key]: value },
+                      backgroundIntelligence: { ...prev.backgroundIntelligence, [key]: value },
                     }));
+                    themePreset.markCustom();
                   }}
                   onThemeChange={(key, value) => {
                     setDraftConfig(prev => ({
                       ...prev,
                       [key]: value,
                     }));
+                    themePreset.markCustom();
                   }}
                   onSliderChange={() => {}}
                   onTypographyChange={(typography) => {
-                    setDraftConfig(prev => ({ ...prev, typography }));
+                    setDraftConfig(prev => ({ ...prev, typographySystem: typography }));
+                    themePreset.markCustom();
                   }}
                   onButtonStyleChange={(buttonStyle) => {
                     setDraftConfig(prev => ({ ...prev, buttonStyle }));
-                  }}
-                  onResetButtonStyle={() => {
-                    setDraftConfig(prev => ({
-                      ...prev,
-                      buttonStyle: DEFAULT_BUTTON_STYLE,
-                    }));
+                    themePreset.markCustom();
                   }}
                 />
               )}
@@ -497,6 +501,7 @@ export default function KioskStudioExact() {
                       isLiveMode={isLiveMode}
                       logoDataUrl={logoDataUrl}
                       contentData={contentData}
+                      kioskConfig={draftConfig}
                     />
                   </DeviceEmulator>
                 ) : (

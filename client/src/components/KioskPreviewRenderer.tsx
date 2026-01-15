@@ -7,6 +7,7 @@ interface KioskPreviewRendererProps {
   className?: string;
   logoDataUrl?: string;
   contentData?: { headline: string; subheadline: string; helper?: string; footer?: string };
+  kioskConfig?: any; // Full kiosk config with theme values
 }
 
 /**
@@ -23,7 +24,11 @@ export const KioskPreviewRenderer: React.FC<KioskPreviewRendererProps> = ({
   return (
     <div className={`w-full h-full ${className}`}>
       <KioskFlowProvider>
-        <KioskFlowScreens logoDataUrl={logoDataUrl} contentData={contentData} />
+        <KioskFlowScreens 
+          logoDataUrl={logoDataUrl} 
+          contentData={contentData}
+          kioskConfig={kioskConfig}
+        />
       </KioskFlowProvider>
     </div>
   );

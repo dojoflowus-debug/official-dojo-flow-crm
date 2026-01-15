@@ -5,9 +5,10 @@ import * as kioskDataProvider from '@/lib/kioskDataProvider';
 interface KioskFlowScreensProps {
   logoDataUrl?: string;
   contentData?: { headline: string; subheadline: string; helper?: string; footer?: string };
+  kioskConfig?: any; // Full kiosk config with theme values
 }
 
-export function KioskFlowScreens({ logoDataUrl, contentData }: KioskFlowScreensProps) {
+export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: KioskFlowScreensProps) {
   const { state, navigateTo, updateFlowData, goHome, goBack, recordActivity, enterStaffMode, exitStaffMode } = useKioskFlow();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
