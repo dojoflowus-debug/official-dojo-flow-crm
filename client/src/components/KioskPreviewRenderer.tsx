@@ -1,4 +1,3 @@
-import React from 'react';
 import { KioskFlowProvider } from '@/lib/kioskFlowContext';
 import { KioskFlowScreens } from './KioskFlowScreens';
 
@@ -6,6 +5,8 @@ interface KioskPreviewRendererProps {
   config?: any;
   isLiveMode?: boolean;
   className?: string;
+  logoDataUrl?: string;
+  contentData?: { headline: string; subheadline: string; helper?: string; footer?: string };
 }
 
 /**
@@ -16,11 +17,13 @@ export const KioskPreviewRenderer: React.FC<KioskPreviewRendererProps> = ({
   config,
   isLiveMode = false,
   className = '',
+  logoDataUrl,
+  contentData,
 }) => {
   return (
     <div className={`w-full h-full ${className}`}>
       <KioskFlowProvider>
-        <KioskFlowScreens />
+        <KioskFlowScreens logoDataUrl={logoDataUrl} contentData={contentData} />
       </KioskFlowProvider>
     </div>
   );

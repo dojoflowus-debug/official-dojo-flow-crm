@@ -463,6 +463,8 @@ export default function KioskStudioExact() {
                     <KioskPreviewRenderer
                       config={currentConfig || normalizeKioskConfig(null)}
                       isLiveMode={isLiveMode}
+                      logoDataUrl={logoDataUrl}
+                      contentData={contentData}
                     />
                   </DeviceEmulator>
                 ) : (
