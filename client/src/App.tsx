@@ -144,6 +144,28 @@ import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
 import KioskManager from "./pages/KioskManager";
+import GlobalBottomNavigation from "./components/GlobalBottomNavigation";
+import { useFocusMode } from "./contexts/FocusModeContext";
+
+function RouterWithNav() {
+  const { isFocusMode } = useFocusMode();
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Main content with bottom padding */}
+      <div
+        className="flex-1 transition-all duration-300"
+        style={{
+          paddingBottom: isFocusMode ? '0px' : '72px',
+        }}
+      >
+        <Router />
+      </div>
+      {/* Global bottom navigation */}
+      <GlobalBottomNavigation />
+    </div>
+  );
+}
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -328,7 +350,7 @@ function App() {
               <TooltipProvider>
                 <Toaster />
                 <BrowserRouter>
-                  <Router />
+                  <RouterWithNav />
                 </BrowserRouter>
               </TooltipProvider>
             </FocusModeProvider>

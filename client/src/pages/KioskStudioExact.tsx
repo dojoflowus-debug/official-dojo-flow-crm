@@ -66,6 +66,8 @@ import {
   getPublishedVersion,
 } from "@/lib/publishHandler";
 import SavePublishStatusIndicator from "@/components/SavePublishStatusIndicator";
+import { useFocusMode } from "@/contexts/FocusModeContext";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 interface Kiosk {
   id: number;
@@ -93,6 +95,7 @@ export default function KioskStudioExact() {
   const queryClient = useQueryClient();
   const { toasts, success, error, removeToast } = useToast();
   const navigate = useNavigate();
+  const { isFocusMode, toggleFocusMode } = useFocusMode();
 
   // STATE
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
@@ -473,6 +476,24 @@ export default function KioskStudioExact() {
             className="text-xs"
           >
             <BookMarked className="w-3 h-3" />
+          </Button>
+          <Button
+            onClick={toggleFocusMode}
+            size="sm"
+            variant="outline"
+            style={{
+              borderColor: isFocusMode ? "rgba(239, 68, 68, 0.3)" : "rgba(255,255,255,0.1)",
+              backgroundColor: isFocusMode ? "rgba(239, 68, 68, 0.15)" : "rgba(255,255,255,0.05)",
+              color: isFocusMode ? "#EF4444" : "rgba(255,255,255,0.92)",
+            }}
+            className="text-xs"
+            title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+          >
+            {isFocusMode ? (
+              <Minimize2 className="w-3 h-3" />
+            ) : (
+              <Maximize2 className="w-3 h-3" />
+            )}
           </Button>
           <Button
             onClick={handleReset}

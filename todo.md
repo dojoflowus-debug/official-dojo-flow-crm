@@ -3041,3 +3041,13 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - ✅ Unsaved changes detection via config hash
 - ✅ Atomic config updates (complete snapshots)
 - ✅ Per-location/device storage separation
+
+
+## Phase 33: Re-add Global Bottom Navigation (Jan 15, 2026) - COMPLETED
+- [x] Examine current app structure and layout
+- [x] Create global BottomNavigation component with 12 menu items
+- [x] Create Focus Mode hook for localStorage persistence
+- [x] Update App.tsx to wrap content with proper padding and nav
+- [x] Implement Focus Mode toggle in Kiosk Studio
+- [x] Add smooth transitions and test layout stability
+- [x] Test navigation across all pages
