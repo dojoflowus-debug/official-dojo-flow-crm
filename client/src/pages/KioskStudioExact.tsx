@@ -24,6 +24,9 @@ import { SaveTemplateModal } from '@/components/SaveTemplateModal';
 import { TemplateLibrary } from '@/components/TemplateLibrary';
 import { useTemplateLibrary } from '@/hooks/useTemplateLibrary';
 import { getDeviceProfile, getAllDeviceProfiles, DeviceProfileType } from '@/lib/deviceProfiles';
+import { LogoUploadSection } from '@/components/LogoUploadSection';
+import { EditableContentSection } from '@/components/EditableContentSection';
+import { getKioskConfig, type KioskConfig as KioskConfigType } from '@/lib/kioskConfigProvider';
 
 interface Kiosk {
   id: number;
@@ -69,6 +72,9 @@ export default function KioskStudioExact() {
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [kioskConfig, setKioskConfig] = useState<KioskConfigType | null>(null);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
+  const [contentData, setContentData] = useState({ headline: 'Welcome', subheadline: 'Tap the screen to begin', helper: '', footer: '' });
 
   // TEMPLATES
   const { templates, saveTemplate, deleteTemplate, duplicateTemplate, applyTemplate } = useTemplateLibrary();
@@ -364,7 +370,18 @@ export default function KioskStudioExact() {
 
             {/* CONTENT TAB */}
             <TabsContent value="content" className="space-y-4">
-              <p className="text-xs" style={{color: 'rgba(255,255,255,0.5)'}}>Content controls coming soon</p>
+              <LogoUploadSection
+                locationId={selectedLocation?.toString() || '1'}
+                deviceType={deviceMode}
+                logoDataUrl={logoDataUrl}
+                onLogoChange={setLogoDataUrl}
+              />
+              <EditableContentSection
+                locationId={selectedLocation?.toString() || '1'}
+                deviceType={deviceMode}
+                content={contentData}
+                onContentChange={setContentData}
+              />
             </TabsContent>
 
             {/* BEHAVIOR TAB */}
