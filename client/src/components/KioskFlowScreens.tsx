@@ -31,8 +31,54 @@ export function KioskFlowScreens({ logoDataUrl, contentData, kioskConfig }: Kios
 
   // Home Screen
   if (state.currentScreen === 'home') {
+    // Get background image from kioskConfig or use fallback gradient
+    const backgroundImage = kioskConfig?.backgroundImage || 'linear-gradient(to bottom, rgb(120, 53, 15), rgb(92, 51, 23))';
+    
+    // DEBUG: Log the background image value
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[KioskFlowScreens] Background image value:', {
+        value: backgroundImage,
+        type: typeof backgroundImage,
+        length: typeof backgroundImage === 'string' ? backgroundImage.length : 'N/A',
+        isGradient: typeof backgroundImage === 'string' && (backgroundImage.startsWith('linear-gradient') || backgroundImage.startsWith('radial-gradient')),
+      });
+    }
+    
+    // Handle bundled image imports and gradients properly
+    let bgImageValue = backgroundImage;
+    if (typeof backgroundImage === 'string' && !backgroundImage.startsWith('linear-gradient') && !backgroundImage.startsWith('radial-gradient')) {
+      bgImageValue = `url(${backgroundImage})`;
+    }
+    
+    const backgroundStyle: React.CSSProperties = {
+      backgroundImage: bgImageValue,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+    };
+
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-b from-amber-900 to-amber-800 p-8" onClick={handleInteraction}>
+      <div className="flex flex-col items-center justify-center h-full p-8" style={backgroundStyle} onClick={handleInteraction}>
+        {/* DEBUG: Show environment and background info in dev mode */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            fontSize: '11px',
+            color: 'rgba(255,255,255,0.6)',
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            padding: '6px 10px',
+            borderRadius: '4px',
+            fontFamily: 'monospace',
+            border: '1px solid rgba(255,255,255,0.2)',
+            zIndex: 999,
+            maxWidth: '220px'
+          }}>
+            <div>Env: {kioskConfig?.environmentId || 'none'}</div>
+            <div style={{ fontSize: '9px', marginTop: '3px', opacity: 0.7 }}>BG: {kioskConfig?.backgroundImage ? 'loaded' : 'fallback'}</div>
+          </div>
+        )}
         {/* Logo with hidden staff login activation */}
         <div
           className="mb-8 cursor-pointer select-none"

@@ -14,6 +14,7 @@ import { ButtonStylePanel } from '@/components/ButtonStylePanel';
 import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector';
 import { StudioProfilesSelector } from '@/components/StudioProfilesSelector';
 import { StudioInstrumentsPanel } from '@/components/StudioInstrumentsPanel';
+import { EnvironmentEffectsPanel, type EnvironmentEffects } from '@/components/EnvironmentEffectsPanel';
 import type { ButtonStyleConfig } from '../../../shared/buttonStyleConfig';
 import { DEFAULT_BUTTON_STYLE } from '../../../shared/buttonStyleConfig';
 import { useThemePreset } from '@/hooks/useThemePreset';
@@ -30,6 +31,7 @@ interface ThemeTabWithPresetsProps {
   onSliderChange: (callback: () => void) => void;
   onTypographyChange?: (typography: any) => void;
   onButtonStyleChange?: (buttonStyle: ButtonStyleConfig) => void;
+  onEnvironmentEffectsChange?: (effects: EnvironmentEffects) => void;
 }
 
 const BACKGROUND_THEMES = KIOSK_BACKGROUND_PRESETS.slice(0, 6).map(preset => ({
@@ -61,6 +63,16 @@ export function ThemeTabWithPresets({
     'start-training': draftConfig.cardStyle || {},
     'time-pill': draftConfig.cardStyle || {},
   } as any);
+  const [environmentEffects, setEnvironmentEffects] = useState<EnvironmentEffects>(
+    draftConfig.environmentEffects || {
+      blur: 0,
+      glow: 0,
+      opacity: 65,
+      saturation: 0,
+      shadow: 0,
+      border: 0,
+    }
+  );
 
   // Use theme preset hook for localStorage persistence
   const themePreset = useThemePreset({
@@ -113,6 +125,14 @@ export function ThemeTabWithPresets({
     themePreset.resetSectionToPreset('backgroundIntelligence');
   };
 
+  const handleEnvironmentEffectsChange = (effects: EnvironmentEffects) => {
+    setEnvironmentEffects(effects);
+    if (onEnvironmentEffectsChange) {
+      onEnvironmentEffectsChange(effects);
+    }
+    onConfigChange({ environmentEffects: effects });
+  };
+
   const currentCardStyle = applyToAll 
     ? (draftConfig.cardStyle || {})
     : (perCardStyles[selectedCardType] || draftConfig.cardStyle || {});
@@ -121,10 +141,13 @@ export function ThemeTabWithPresets({
     <div className="flex-1 space-y-6 overflow-y-auto">
       {/* CINEMATIC ENVIRONMENT - Primary Feature */}
       <CinematicEnvironmentSelector
-        selectedEnvironmentId={draftConfig.backgroundIntelligence?.type}
+        selectedEnvironmentId={draftConfig.environmentId}
         onEnvironmentSelect={(envId, imageUrl) => {
-          onBackgroundChange('type', 'preset');
-          onBackgroundChange('presetId', envId);
+          onConfigChange({
+            environmentId: envId,
+            backgroundImage: imageUrl
+          });
+          console.log(`[ThemeTabWithPresets] Environment selected: ${envId}, image: ${imageUrl}`);
         }}
       />
 
@@ -134,10 +157,9 @@ export function ThemeTabWithPresets({
           <h3 className="text-sm font-bold text-white">Studio Instruments</h3>
           <p className="text-xs mt-1" style={{color: 'rgba(255,255,255,0.4)'}}>Fine-tune lighting, atmosphere, depth, and accents</p>
         </div>
-        <StudioInstrumentsPanel
-          cardStyle={currentCardStyle}
-          onChange={handleCardStyleChange}
-          onSliderChange={onSliderChange}
+        <EnvironmentEffectsPanel
+          effects={environmentEffects}
+          onChange={handleEnvironmentEffectsChange}
         />
       </div>
 

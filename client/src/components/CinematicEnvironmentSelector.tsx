@@ -35,10 +35,11 @@ export function CinematicEnvironmentSelector({
       };
       input.click();
     } else {
-      // Find the preset and get its image URL
-      const preset = KIOSK_BACKGROUND_PRESETS.find(p => p.id === envId);
-      if (preset) {
-        onEnvironmentSelect(envId, preset.imageUrl);
+      // Find the environment and get its bundled background image
+      const env = STUDIO_ENVIRONMENTS.find(e => e.id === envId);
+      if (env) {
+        console.log(`[CinematicEnvironmentSelector] Selected environment: ${envId}, background: ${env.background}`);
+        onEnvironmentSelect(envId, env.background);
       }
     }
   };

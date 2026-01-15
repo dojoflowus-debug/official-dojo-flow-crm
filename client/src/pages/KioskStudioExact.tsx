@@ -30,6 +30,7 @@ import { LogoUploadSection } from '@/components/LogoUploadSection';
 import { EditableContentSection } from '@/components/EditableContentSection';
 import { getKioskConfig, type KioskConfig as KioskConfigType } from '@/lib/kioskConfigProvider';
 import { DeployTab } from '@/components/DeployTab';
+import { EnvironmentEffectsPanel, type EnvironmentEffects } from '@/components/EnvironmentEffectsPanel';
 
 interface Kiosk {
   id: number;
@@ -70,9 +71,31 @@ export default function KioskStudioExact() {
   const [activeStudioTab, setActiveStudioTab] = useState<'theme' | 'layout' | 'content' | 'behavior' | 'deployment'>('theme');
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [currentMoodPreset, setCurrentMoodPreset] = useState<string>('dojo-dark');
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>('martial-arts-dojo');
   const [deviceMode, setDeviceMode] = useState<DeviceProfileType>('wall-kiosk');
   const currentDeviceProfile = getDeviceProfile(deviceMode);
   const [isLiveMode, setIsLiveMode] = useState(true);
+
+  // Handle environment selection and update draftConfig
+  const handleEnvironmentSelect = (envId: string, imageUrl: string) => {
+    setSelectedEnvironmentId(envId);
+    setDraftConfig(prev => ({
+      ...prev,
+      environmentId: envId,
+      backgroundImage: imageUrl,
+      environmentEffects: environmentEffects,
+    }));
+    console.log(`[KioskStudioExact] Environment selected: ${envId}, image: ${imageUrl}`);
+  };
+
+  // Handle environment effects changes
+  const handleEnvironmentEffectsChange = (effects: EnvironmentEffects) => {
+    setEnvironmentEffects(effects);
+    setDraftConfig(prev => ({
+      ...prev,
+      environmentEffects: effects,
+    }));
+  };
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [kioskConfig, setKioskConfig] = useState<KioskConfigType | null>(null);
@@ -80,6 +103,14 @@ export default function KioskStudioExact() {
   const [contentData, setContentData] = useState({ headline: 'Welcome', subheadline: 'Tap the screen to begin', helper: '', footer: '' });
   const [publishedVersion, setPublishedVersion] = useState<number>(0);
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
+  const [environmentEffects, setEnvironmentEffects] = useState<EnvironmentEffects>({
+    blur: 0,
+    glow: 0,
+    opacity: 65,
+    saturation: 0,
+    shadow: 0,
+    border: 0,
+  });
 
   // TEMPLATES
   const { templates, saveTemplate, deleteTemplate, duplicateTemplate, applyTemplate } = useTemplateLibrary();

@@ -2947,3 +2947,24 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Test hover effect on all 6 environment thumbnails
 - [x] Verify smooth animation and no performance issues
 - [x] Confirm no console errors during hover interactions
+
+
+## Phase 26: Kiosk Background Rendering Fix
+
+- [ ] Inspect KioskFlowScreens DOM to identify brown background source
+- [ ] Wire environment selection to kioskConfig.environmentId
+- [ ] Pass environment background image URL through kioskConfig
+- [ ] Replace hardcoded bg-gradient-to-b with dynamic backgroundImage
+- [ ] Fix CSS to use backgroundImage instead of background shorthand
+- [ ] Add debug indicator showing current environmentId and backgroundImage URL
+- [ ] Test environment selection updates kiosk background immediately
+- [ ] Verify all 6 environments display correct background images
+
+
+## Phase 27: Studio Instruments Control Panel
+- [x] Create EnvironmentEffectsPanel component with Lighting, Atmosphere, Depth controls
+- [x] Wire controls to update environmentEffects state in KioskStudioExact
+- [x] Integrate EnvironmentEffectsPanel into ThemeTabWithPresets
+- [x] Add visual feedback showing current effect values
+- [x] Test all sliders and verify real-time updates
+- [x] Verify "Custom adjustments applied" badge appears
