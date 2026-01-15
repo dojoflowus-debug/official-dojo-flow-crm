@@ -139,7 +139,7 @@ function StudentsDashboard() {
   const { data: studentsData, isLoading: isLoadingStudents, error: studentsError } = trpc.students.getListWithFilters.useQuery(queryParams);
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(undefined);
+  const { data: analyticsData, isLoading: isLoadingAnalytics, error: analyticsError } = trpc.students.getAnalytics.useQuery(void 0);
   
   useEffect(() => {
     if (studentsError) console.error('Students error:', studentsError);

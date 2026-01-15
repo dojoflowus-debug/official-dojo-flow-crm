@@ -427,7 +427,7 @@ export default function StudentsSplitScreen() {
   // View mode is now controlled by viewMode state ('split' | 'fullMap' | 'list')
   
   // Fetch school logo for brand consistency
-  const { data: brandData } = trpc.setupWizard.getBrand.useQuery(undefined, {
+  const { data: brandData } = trpc.setupWizard.getBrand.useQuery(void 0, {
     staleTime: 0,
   })
   const schoolLogo = brandData?.logoSquare || null

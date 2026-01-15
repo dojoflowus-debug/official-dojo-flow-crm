@@ -102,7 +102,7 @@ export default function StudentsDashboard() {
   });
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: isLoadingAnalytics } = trpc.students.getAnalytics.useQuery(undefined);
+  const { data: analyticsData, isLoading: isLoadingAnalytics } = trpc.students.getAnalytics.useQuery(void 0);
 
   // Fetch student detail when selected
   const { data: studentDetail } = trpc.students.getDetail.useQuery(
