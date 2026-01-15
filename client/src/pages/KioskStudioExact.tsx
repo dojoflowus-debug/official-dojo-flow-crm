@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useRef, useEffect, ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,14 +50,13 @@ const BACKGROUND_THEMES = KIOSK_BACKGROUND_PRESETS.slice(0, 6).map(preset => ({
 }));
 
 /**
- * KioskStudioExact - Premium design studio interface
+ * KioskStudioExact - Premium design studio interface with sticky preview
  * 
  * Layout:
- * - Left sidebar: Kiosk thumbnails (location/device selector removed)
  * - Top bar: "Live Preview" + Save/Publish buttons
- * - Left panel: Theme/Layout/Content/Behavior studio controls
- * - Center: Device emulator with dojo background
- * - Device controls: Above preview (not in sidebar)
+ * - Left sidebar: Theme/Layout/Content/Behavior studio controls (scrollable)
+ * - Right column: Device emulator with sticky positioning (stays visible while scrolling)
+ * - Sticky Preview toggle to enable/disable sticky behavior
  */
 export default function KioskStudioExact() {
   const queryClient = useQueryClient();
@@ -83,6 +82,10 @@ export default function KioskStudioExact() {
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [isStickyPreviewEnabled, setIsStickyPreviewEnabled] = useState(() => {
+    const stored = localStorage.getItem('dojoFlow:stickyPreview');
+    return stored ? JSON.parse(stored) : true;
+  });
 
   // TEMPLATES: Template library management
   const { templates, saveTemplate, deleteTemplate, duplicateTemplate, applyTemplate } = useTemplateLibrary();
@@ -149,34 +152,7 @@ export default function KioskStudioExact() {
     { enabled: !!selectedKiosk }
   );
 
-  // MUTATIONS
-  const saveDraftMutation = trpc.kioskDevice.saveDraft.useMutation({
-    onSuccess: (result) => {
-      setLastSavedConfig(JSON.parse(JSON.stringify(draftConfig)));
-      setPersistenceError(null);
-      success('Draft saved successfully');
-      refetchCurrentKiosk();
-    },
-    onError: (err) => {
-      setPersistenceError(`Save failed: ${err.message}`);
-      error(`Save failed: ${err.message}`);
-    },
-  });
-
-  const publishMutation = trpc.kioskDevice.publish.useMutation({
-    onSuccess: (result) => {
-      setPublishedConfig(JSON.parse(JSON.stringify(draftConfig)));
-      setPersistenceError(null);
-      success('Published successfully');
-      refetchCurrentKiosk();
-    },
-    onError: (err) => {
-      setPersistenceError(`Publish failed: ${err.message}`);
-      error(`Publish failed: ${err.message}`);
-    },
-  });
-
-  // EFFECTS
+  // EFFECTS: Initialize location/kiosk selection
   useEffect(() => {
     if (locationsData && locationsData.length > 0 && !selectedLocation) {
       setSelectedLocation(locationsData[0].id);
@@ -189,315 +165,307 @@ export default function KioskStudioExact() {
     }
   }, [kiosksData, selectedKiosk]);
 
-  useEffect(() => {
-    if (currentKiosk?.draftConfig) {
-      const parsed = typeof currentKiosk.draftConfig === 'string'
-        ? JSON.parse(currentKiosk.draftConfig)
-        : currentKiosk.draftConfig;
-      setDraftConfig(JSON.parse(JSON.stringify(parsed)));
-      setLastSavedConfig(JSON.parse(JSON.stringify(parsed)));
-    }
-    if (currentKiosk?.publishedConfig) {
-      const parsed = typeof currentKiosk.publishedConfig === 'string'
-        ? JSON.parse(currentKiosk.publishedConfig)
-        : currentKiosk.publishedConfig;
-      setPublishedConfig(JSON.parse(JSON.stringify(parsed)));
-    }
-  }, [currentKiosk]);
-
-  // HANDLERS
-  const isDirty = useMemo(() => {
-    return JSON.stringify(draftConfig) !== JSON.stringify(lastSavedConfig);
-  }, [draftConfig, lastSavedConfig]);
-
-  const previewConfig = previewMode === 'draft' ? draftConfig : publishedConfig;
-
-  const handleThemeChange = useCallback((key: string, value: any) => {
-    setDraftConfig((prev) => ({
+  // HANDLERS: Mood preset selection
+  const handleMoodPresetSelect = (presetKey: string, presetConfig: Partial<KioskConfig>) => {
+    setCurrentMoodPreset(presetKey);
+    setDraftConfig(prev => ({
       ...prev,
-      theme: { ...prev.theme, [key]: value },
+      ...presetConfig,
     }));
-  }, []);
+  };
 
-  const handleBackgroundChange = useCallback((key: string, value: any) => {
-    setDraftConfig((prev) => ({
+  // HANDLERS: Card style changes
+  const handleCardStyleChange = (cardStyle: CardStyle) => {
+    setDraftConfig(prev => ({
       ...prev,
-      background: { ...prev.background, [key]: value },
+      cardStyle,
     }));
-  }, []);
+  };
 
-  const handleTypographyChange = useCallback((key: string, value: any) => {
-    setDraftConfig((prev) => ({
+  const handleResetCardStyle = () => {
+    setDraftConfig(prev => ({
       ...prev,
-      typography: { ...prev.typography, [key]: value },
+      cardStyle: {},
     }));
-  }, []);
+  };
 
+  const handleResetMoodPreset = () => {
+    setCurrentMoodPreset('dojo-dark');
+    setDraftConfig(prev => ({
+      ...prev,
+      cardStyle: MOOD_PRESETS['dojo-dark'].cardStyle,
+      typographySystem: MOOD_PRESETS['dojo-dark'].typography,
+      accentSystem: MOOD_PRESETS['dojo-dark'].accent,
+    }));
+  };
+
+  // HANDLERS: Background changes
+  const handleBackgroundChange = (key: string, value: any) => {
+    setDraftConfig(prev => ({
+      ...prev,
+      backgroundIntelligence: {
+        ...prev.backgroundIntelligence,
+        [key]: value,
+      },
+    }));
+  };
+
+  // HANDLERS: Theme changes
+  const handleThemeChange = (key: string, value: any) => {
+    setDraftConfig(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // HANDLERS: Save draft
   const handleSaveDraft = async () => {
     if (!selectedKiosk) return;
     setIsSaving(true);
     try {
-      await saveDraftMutation.mutateAsync({
+      await trpc.kioskDevice.updateDraftConfig.mutate({
         kioskId: selectedKiosk,
-        config: draftConfig,
+        draftConfig,
       });
+      setLastSavedConfig(JSON.parse(JSON.stringify(draftConfig)));
+      success('Draft saved successfully');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Failed to save draft');
+      setPersistenceError(err instanceof Error ? err.message : 'Failed to save draft');
     } finally {
       setIsSaving(false);
     }
   };
 
+  // HANDLERS: Publish
   const handlePublish = async () => {
     if (!selectedKiosk) return;
     setIsPublishing(true);
     try {
-      await publishMutation.mutateAsync({
+      await trpc.kioskDevice.publishConfig.mutate({
         kioskId: selectedKiosk,
-        config: draftConfig,
+        draftConfig,
       });
+      setPublishedConfig(JSON.parse(JSON.stringify(draftConfig)));
+      setLastSavedConfig(JSON.parse(JSON.stringify(draftConfig)));
+      success('Kiosk published successfully');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Failed to publish');
+      setPersistenceError(err instanceof Error ? err.message : 'Failed to publish');
     } finally {
       setIsPublishing(false);
     }
   };
 
-  const handleRestoreDefaults = () => {
-    setDraftConfig(JSON.parse(JSON.stringify(DEFAULT_KIOSK_CONFIG)));
-  };
-
-  const updateConfig = (updates: Partial<KioskConfig>) => {
-    setDraftConfig((prev) => ({ ...prev, ...updates }));
-  };
-
-  const handleMoodPresetSelect = (presetKey: string, presetConfig: Partial<KioskConfig>) => {
-    registerInteraction();
-    setCurrentMoodPreset(presetKey);
-    updateConfig(presetConfig);
-  };
-
-  const handleCardStyleChange = (cardStyle: CardStyle) => {
-    registerInteraction();
-    updateConfig({ cardStyle });
-  };
-
-  const handleResetCardStyle = () => {
-    const preset = MOOD_PRESETS[currentMoodPreset];
-    if (preset) {
-      handleCardStyleChange(preset.cardStyle);
-    }
-  };
-
-  const handleResetMoodPreset = () => {
-    const preset = MOOD_PRESETS['dojo-dark'];
-    if (preset) {
-      setCurrentMoodPreset('dojo-dark');
-      updateConfig({
-        cardStyle: preset.cardStyle,
-        typographySystem: preset.typography,
-        accentSystem: preset.accent,
-        uiControls: preset.uiControls,
-      });
-    }
-  };
+  // Determine preview config based on mode
+  const previewConfig = previewMode === 'published' ? publishedConfig : draftConfig;
 
   return (
     <BottomNavLayout>
-    <div ref={scrollContainerRef} className={`kiosk-studio-container flex h-full bg-black transition-all duration-300 ${isUIHidden ? 'ui-hidden' : ''}`}>
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col">
-        {/* TOP BAR - Fixed positioning for no layout shift */}
-        <div id="kiosk-top-toolbar" className="h-16 px-6 flex items-center justify-between shadow-lg" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">D</div>
-            <span className="text-xs font-medium letter-spacing-wide" style={{color: 'rgba(255,255,255,0.5)'}}>DojoFlow</span>
-            <span style={{color: 'rgba(255,255,255,0.2)'}}>|</span>
-            <span className="text-base font-semibold text-white">Main Dojo</span>
-            <span style={{color: 'rgba(255,255,255,0.2)'}}>·</span>
-            <span className="text-xs font-medium" style={{color: 'rgba(255,255,255,0.5)'}}>Live Preview</span>
+    <div className="flex flex-col h-screen bg-black" style={{backgroundColor: '#0B0D10'}}>
+      {/* TOP BAR */}
+      <div className="flex items-center justify-between px-6 py-4 border-b" style={{borderColor: 'rgba(255,255,255,0.06)'}}>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold text-white">DojoFlow | Main Dojo · Live Preview</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setShowSaveTemplateModal(true)}
+            variant="outline"
+            size="sm"
+            style={{borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)'}} className="transition-colors hover:bg-opacity-10"
+          >
+            <BookMarked className="w-4 h-4 mr-2" />
+            Templates
+          </Button>
+          <Button
+            onClick={handleSaveDraft}
+            disabled={isSaving}
+            variant="outline"
+            size="sm"
+            style={{borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)'}} className="transition-colors hover:bg-opacity-10"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save Draft
+          </Button>
+          <Button
+            onClick={handlePublish}
+            disabled={isPublishing}
+            size="sm"
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            Publish
+          </Button>
+        </div>
+      </div>
+
+      {/* ERROR BANNER */}
+      {persistenceError && (
+        <div className="flex items-center gap-2 px-6 py-3 bg-red-950/50 border-b border-red-900/50 text-red-300">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">{persistenceError}</span>
+        </div>
+      )}
+
+      {/* MAIN WORKSPACE - 2-column editor layout with independent scroll containers */}
+      <div className="flex-1 flex overflow-hidden gap-6 p-6">
+        {/* LEFT PANEL: Studio Controls - Independent scroll container */}
+        <div className="w-80 rounded-lg p-6 flex flex-col overflow-y-auto flex-shrink-0" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', border: '1px solid rgba(255,255,255,0.06)', maxHeight: 'calc(100vh - 200px)'}}>
+          {/* Studio Panel Header */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-white">Kiosk Studio</h2>
+            <p className="text-xs mt-1" style={{color: 'rgba(255,255,255,0.4)'}}>Design your kiosk experience</p>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setShowTemplateLibrary(!showTemplateLibrary)}
-              size="sm"
-              variant="outline"
-              style={{borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)'}} className="transition-colors hover:bg-opacity-10"
+
+          {/* Studio Tabs Navigation */}
+          <div className="flex flex-col gap-2 mb-6">
+            <button
+              onClick={() => handleTabClick('theme')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                activeStudioTab === 'theme'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
-              <BookMarked className="w-4 h-4 mr-2" />
-              Templates
-            </Button>
-            <Button
-              onClick={handleSaveDraft}
-              disabled={!isDirty || isSaving}
-              size="sm"
-              variant="outline"
-              style={{borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)'}} className="transition-colors hover:bg-opacity-10"
+              <Palette className="w-4 h-4" />
+              Theme
+            </button>
+            <button
+              onClick={() => handleTabClick('layout')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                activeStudioTab === 'layout'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
-              <Save className="w-4 h-4 mr-2" />
-              Save Draft
-            </Button>
-            <Button
-              onClick={handlePublish}
-              disabled={isPublishing}
-              size="sm"
-              className="bg-red-600 hover:bg-red-700 text-white"
+              <Layout className="w-4 h-4" />
+              Layout
+            </button>
+            <button
+              onClick={() => handleTabClick('content')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                activeStudioTab === 'content'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
-              <Zap className="w-4 h-4 mr-2" />
-              Publish
-            </Button>
+              <FileText className="w-4 h-4" />
+              Content
+            </button>
+            <button
+              onClick={() => handleTabClick('behavior')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                activeStudioTab === 'behavior'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <ZapIcon className="w-4 h-4" />
+              Behavior
+            </button>
           </div>
+
+          {/* Theme Panel - Phase 1 */}
+          {activeStudioTab === 'theme' && (
+            <ThemeTabPhase1
+              draftConfig={draftConfig}
+              currentMoodPreset={currentMoodPreset}
+              onMoodPresetSelect={handleMoodPresetSelect}
+              onCardStyleChange={handleCardStyleChange}
+              onResetCardStyle={handleResetCardStyle}
+              onResetMoodPreset={handleResetMoodPreset}
+              onBackgroundChange={handleBackgroundChange}
+              onThemeChange={handleThemeChange}
+              onSliderChange={handleSliderChange}
+              onTypographyChange={(typography) => {
+                setDraftConfig(prev => ({
+                  ...prev,
+                  typographySystem: typography,
+                }));
+              }}
+              onButtonStyleChange={(buttonStyle) => {
+                setDraftConfig(prev => ({
+                  ...prev,
+                  buttonStyle,
+                }));
+              }}
+              onResetButtonStyle={() => {
+                setDraftConfig(prev => ({
+                  ...prev,
+                  buttonStyle: DEFAULT_BUTTON_STYLE,
+                }));
+              }}
+            />
+          )}
+
+          {/* Layout Panel */}
+          {activeStudioTab === 'layout' && (
+            <div className="flex-1 space-y-4">
+              <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Layout controls coming next</p>
+            </div>
+          )}
+
+          {/* Content Panel */}
+          {activeStudioTab === 'content' && (
+            <div className="flex-1 space-y-4">
+              <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Kiosk content configuration</p>
+            </div>
+          )}
+
+          {/* Behavior Panel */}
+          {activeStudioTab === 'behavior' && (
+            <div className="flex-1 space-y-4">
+              <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Kiosk behavior & automation</p>
+            </div>
+          )}
         </div>
 
-        {/* ERROR BANNER */}
-        {persistenceError && (
-          <div className="flex items-center gap-2 px-6 py-3 bg-red-950/50 border-b border-red-900/50 text-red-300">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span className="text-sm">{persistenceError}</span>
-          </div>
-        )}
-
-        {/* CONTENT AREA - Two layer layout: fixed left sidebar + scrollable right workspace */}
-        <div id="kiosk-preview-wrapper" className="flex-1 flex overflow-hidden gap-6 p-6">
-          {/* LEFT PANEL: Studio Controls - Fixed width, scrollable content */}
-          <div className="w-80 rounded-lg p-6 flex flex-col overflow-y-auto flex-shrink-0" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', border: '1px solid rgba(255,255,255,0.06)'}}>
-            {/* Studio Panel Header */}
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-white">Kiosk Studio</h2>
-              <p className="text-xs mt-1" style={{color: 'rgba(255,255,255,0.4)'}}>Design your kiosk experience</p>
-            </div>
-
-            {/* Studio Tabs Navigation */}
-            <div className="flex flex-col gap-2 mb-6">
-              <button
-                onClick={() => handleTabClick('theme')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
-                  activeStudioTab === 'theme'
-                    ? 'text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Palette className="w-4 h-4" />
-                Theme
-              </button>
-              <button
-                onClick={() => handleTabClick('layout')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
-                  activeStudioTab === 'layout'
-                    ? 'text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Layout className="w-4 h-4" />
-                Layout
-              </button>
-              <button
-                onClick={() => handleTabClick('content')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
-                  activeStudioTab === 'content'
-                    ? 'text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <FileText className="w-4 h-4" />
-                Content
-              </button>
-              <button
-                onClick={() => handleTabClick('behavior')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
-                  activeStudioTab === 'behavior'
-                    ? 'text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <ZapIcon className="w-4 h-4" />
-                Behavior
-              </button>
-            </div>
-
-            {/* Theme Panel - Phase 1 */}
-            {activeStudioTab === 'theme' && (
-              <ThemeTabPhase1
-                draftConfig={draftConfig}
-                currentMoodPreset={currentMoodPreset}
-                onMoodPresetSelect={handleMoodPresetSelect}
-                onCardStyleChange={handleCardStyleChange}
-                onResetCardStyle={handleResetCardStyle}
-                onResetMoodPreset={handleResetMoodPreset}
-                onBackgroundChange={handleBackgroundChange}
-                onThemeChange={handleThemeChange}
-                onSliderChange={handleSliderChange}
-                onTypographyChange={(typography) => {
-                  setDraftConfig(prev => ({
-                    ...prev,
-                    typographySystem: typography,
-                  }));
-                }}
-                onButtonStyleChange={(buttonStyle) => {
-                  setDraftConfig(prev => ({
-                    ...prev,
-                    buttonStyle,
-                  }));
-                }}
-                onResetButtonStyle={() => {
-                  setDraftConfig(prev => ({
-                    ...prev,
-                    buttonStyle: DEFAULT_BUTTON_STYLE,
-                  }));
-                }}
-              />
-            )}
-
-            {/* Layout Panel */}
-            {activeStudioTab === 'layout' && (
-              <div className="flex-1 space-y-4">
-                <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Layout controls coming next</p>
-              </div>
-            )}
-
-            {/* Content Panel */}
-            {activeStudioTab === 'content' && (
-              <div className="flex-1 space-y-4">
-                <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Kiosk content configuration</p>
-              </div>
-            )}
-
-            {/* Behavior Panel */}
-            {activeStudioTab === 'behavior' && (
-              <div className="flex-1 space-y-4">
-                <p className="text-sm" style={{color: 'rgba(255,255,255,0.4)'}}>Kiosk behavior & automation</p>
-              </div>
-            )}
-          </div>
-
-          {/* CENTER: Device Canvas - Single scrollable workspace for device + preview */}
+        {/* RIGHT PANEL: Sticky Preview Column - Independent scroll container */}
+        <div className="flex-1 flex flex-col overflow-y-auto rounded-lg" style={{
+          backgroundImage: 'url(/dojo-studio-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          maxHeight: 'calc(100vh - 200px)',
+        }}>
+          {/* Cinematic vignette overlay */}
           <div 
-            className="flex-1 flex flex-col items-center justify-start relative overflow-y-auto rounded-lg"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              backgroundImage: 'url(/dojo-studio-bg.png)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundAttachment: 'fixed',
+              background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%)',
             }}
-          >
-            {/* Cinematic vignette overlay */}
-            <div 
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%)',
+          />
+          
+          {/* Sticky Preview Header - Always visible at top of scroll container */}
+          <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b" style={{
+            background: 'rgba(18, 22, 28, 0.95)',
+            backdropFilter: 'blur(8px)',
+            borderColor: 'rgba(255,255,255,0.08)',
+          }}>
+            <span className="text-xs font-semibold" style={{color: 'rgba(255,255,255,0.65)'}}>Preview</span>
+            <button
+              onClick={() => {
+                const newState = !isStickyPreviewEnabled;
+                setIsStickyPreviewEnabled(newState);
+                localStorage.setItem('dojoFlow:stickyPreview', JSON.stringify(newState));
               }}
-            />
-            
-            {/* Subtle blur and depth effect */}
-            <div 
-              className="absolute inset-0 pointer-events-none"
+              className="px-2 py-1 text-xs rounded transition"
               style={{
-                backdropFilter: 'blur(1px)',
-                background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.2) 100%)',
+                background: isStickyPreviewEnabled ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.05)',
+                color: isStickyPreviewEnabled ? '#EF4444' : 'rgba(255,255,255,0.65)',
+                border: `1px solid ${isStickyPreviewEnabled ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255,255,255,0.08)'}`,
               }}
-            />
-            
-            {/* Device Canvas Container - Anchored device + preview unit */}
-            <div className="relative z-10 pt-6 px-6 pb-6" style={{
+            >
+              {isStickyPreviewEnabled ? 'Sticky: ON' : 'Sticky: OFF'}
+            </button>
+          </div>
+          
+          {/* Scrollable Preview Content */}
+          <div className="relative z-10 flex flex-col flex-1">
+            {/* Device Preview Container */}
+            <div className="flex flex-col items-center justify-start pt-6 px-6 pb-6" style={{
               filter: 'drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5))',
-              flexShrink: 0,
             }}>
               <DeviceEmulator
                 orgId={selectedLocation || 1}
