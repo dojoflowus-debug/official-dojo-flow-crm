@@ -14,6 +14,8 @@ import KioskPreviewLive from '@/components/kiosk/KioskPreviewLive';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { DeviceEmulator } from '@/components/DeviceEmulator';
+import { KioskPreviewRenderer } from '@/components/KioskPreviewRenderer';
+import { normalizeKioskConfig } from '@/lib/defaultKioskConfig';
 import { ThemeTabPhase1 } from '@/components/ThemeTabPhase1';
 import type { ButtonStyleConfig } from '../../../shared/buttonStyleConfig';
 import { useQueryClient } from '@tanstack/react-query';
@@ -411,14 +413,17 @@ export default function KioskStudioExact() {
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-                {selectedLocation && selectedKiosk && currentConfig ? (
+                {selectedLocation && selectedKiosk ? (
                   <DeviceEmulator
                     orgId={selectedLocation}
                     locationId={selectedLocation}
                     kioskId={selectedKiosk}
-                    config={currentConfig}
-                    isLiveMode={isLiveMode}
-                  />
+                  >
+                    <KioskPreviewRenderer
+                      config={currentConfig || normalizeKioskConfig(null)}
+                      isLiveMode={isLiveMode}
+                    />
+                  </DeviceEmulator>
                 ) : (
                   <div style={{
                     color: 'rgba(239, 68, 68, 0.6)',
