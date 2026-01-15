@@ -27,6 +27,7 @@ import { getDeviceProfile, getAllDeviceProfiles, DeviceProfileType } from '@/lib
 import { LogoUploadSection } from '@/components/LogoUploadSection';
 import { EditableContentSection } from '@/components/EditableContentSection';
 import { getKioskConfig, type KioskConfig as KioskConfigType } from '@/lib/kioskConfigProvider';
+import { DeployTab } from '@/components/DeployTab';
 
 interface Kiosk {
   id: number;
@@ -391,7 +392,21 @@ export default function KioskStudioExact() {
 
             {/* DEPLOYMENT TAB */}
             <TabsContent value="deployment" className="space-y-4">
-              <p className="text-xs" style={{color: 'rgba(255,255,255,0.5)'}}>Deployment controls coming soon</p>
+              <DeployTab
+                locationId={selectedLocation?.id || 'default'}
+                deviceType={currentDeviceProfile?.type || 'wall-kiosk'}
+                currentConfig={{
+                  logoDataUrl: logoDataUrl,
+                  contentData: contentData,
+                  theme: draftConfig?.theme,
+                  layout: draftConfig?.layout,
+                  behavior: draftConfig?.behavior,
+                }}
+                onVersionDeployed={(version) => {
+                  console.log('Version deployed:', version);
+                  toast.success(`Version "${version.name}" deployed successfully!`);
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>
