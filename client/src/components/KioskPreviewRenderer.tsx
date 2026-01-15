@@ -20,6 +20,7 @@ export const KioskPreviewRenderer: React.FC<KioskPreviewRendererProps> = ({
   className = '',
   logoDataUrl,
   contentData,
+  kioskConfig,
 }) => {
   return (
     <div className={`w-full h-full ${className}`}>

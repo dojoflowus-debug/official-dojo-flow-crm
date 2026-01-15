@@ -3,7 +3,8 @@
  * Features: atomic updates, custom tracking, reset functionality
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import React from 'react';
 import { MOOD_PRESETS } from '../../../shared/kioskConfig';
 import {
   loadThemePresetState,
@@ -42,12 +43,18 @@ export function useThemePreset(options: UseThemePresetOptions) {
     saveThemePresetState(locationId, deviceType, state);
   }, [state, locationId, deviceType]);
 
-  // Notify parent when theme values change
+  // Notify parent when theme values change (only on initial mount and when manually changed)
+  // Use a ref to track if this is the first render to avoid infinite loops
+  const isInitialMount = React.useRef(true);
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if (onThemeChange) {
       onThemeChange(state.themeValues);
     }
-  }, [state.themeValues, onThemeChange]);
+  }, [state.themeValues]);
 
   const selectPreset = useCallback((presetKey: string) => {
     const newState = applyPreset(presetKey);
