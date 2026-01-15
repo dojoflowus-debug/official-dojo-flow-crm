@@ -68,21 +68,9 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
-  const { isFocusMode } = useFocusMode()
   const [kaiOverlayOpen, setKaiOverlayOpen] = useState(false)
   
   const isDark = theme === 'dark' || theme === 'cinematic'
-  
-  // In Focus Mode, render only children without header
-  if (isFocusMode) {
-    return (
-      <AppShell hideBottomNav={false}>
-        {children}
-      </AppShell>
-    )
-  }
-  
-  // Normal mode: render with header and BottomNav
   
   // Keyboard shortcut for Kai Command (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -147,11 +135,10 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
         isDark ? "bg-[#0a0a0b]" : "bg-[#FAFBFC]"
       )}>
       {/* Low Credit Banner */}
-      {!isFocusMode && <LowCreditBanner />}
+      <LowCreditBanner />
       
-      {/* Top Navigation Bar - Hidden in Focus Mode */}
-      {!isFocusMode && (
-        <header className={cn(
+      {/* Top Navigation Bar */}
+      <header className={cn(
         "sticky top-0 z-50 h-16 border-b flex items-center justify-between px-4 lg:px-6",
         isDark 
           ? "bg-[#111113] border-white/10" 
@@ -360,7 +347,6 @@ export default function ManagementLayout({ children, title }: ManagementLayoutPr
           </DropdownMenu>
         </div>
       </header>
-      )}
       
       {/* Mobile Bottom Navigation */}
       <nav className={cn(

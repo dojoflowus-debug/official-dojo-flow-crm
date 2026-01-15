@@ -144,7 +144,6 @@ import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
 import KioskManager from "./pages/KioskManager";
-import ManagementLayout from "./components/ManagementLayout";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -178,9 +177,9 @@ function Router() {
       <Route path="/test-brand" element={<TestBrand />} />
       
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
-      {/* Kiosk Studio Builder - New L      <Route path="/kai" element={<ManagementLayout><KaiCommand /></ManagementLayout>} />
-      <Route path="/kiosk-studio" element={<ProtectedRoute requireSetup={false}><ManagementLayout><KioskStudioExact /></ManagementLayout></ProtectedRoute>} />
-      <Route path="/kiosk-studio/:locationId" element={<ProtectedRoute requireSetup={false}><ManagementLayout><KioskStudioExact /></ManagementLayout></ProtectedRoute>} />
+      {/* Kiosk Studio Builder - New Location/Kiosk Management - CANONICAL ENTRY POINT */}
+      <Route path="/kiosk-studio" element={<ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute>} />
+      <Route path="/kiosk-studio/:locationId" element={<ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute>} />
       {/* Redirect old /kiosk to /kiosk-studio */}
       <Route path="/kiosk" element={<Navigate to="/kiosk-studio" replace />} />
       <Route path="/kiosk-manager" element={<KioskManager />} />
@@ -233,21 +232,21 @@ function Router() {
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
 
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
-      <Route path="/students" element={<ManagementLayout><StudentsElevated /></ManagementLayout>} />
-      <Route path="/students/:id" element={<ManagementLayout><StudentCommandProfile /></ManagementLayout>} />
+      <Route path="/students" element={<StudentsElevated />} />
+      <Route path="/students/:id" element={<StudentCommandProfile />} />
       <Route path="/students-classic" element={<Students />} />
       <Route path="/students-old" element={<StudentsDashboard />} />
       <Route path="/students-management" element={<StudentsManagement />} />
       <Route path="/students-command" element={<StudentsCommandCenter />} />
       <Route path="/students-split" element={<StudentsSplitScreen />} />
       <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />
-      <Route path="/leads" element={<ManagementLayout><Leads /></ManagementLayout>} />
+      <Route path="/leads" element={<Leads />} />
       <Route path="/test-data" element={<TestData />} />
-      <Route path="/classes" element={<ManagementLayout><Classes /></ManagementLayout>} />
-      <Route path="/floor-plans" element={<ManagementLayout><FloorPlans /></ManagementLayout>} />
+      <Route path="/classes" element={<Classes />} />
+      <Route path="/floor-plans" element={<FloorPlans />} />
       <Route path="/programs" element={<Programs />} />
-      <Route path="/staff" element={<ManagementLayout><Staff /></ManagementLayout>} />
-      <Route path="/billing" element={<ManagementLayout><Billing /></ManagementLayout>} />
+      <Route path="/staff" element={<Staff />} />
+      <Route path="/billing" element={<Billing />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/billing/success" element={<BillingSuccess />} />
       {/* Legal pages */}
@@ -255,19 +254,19 @@ function Router() {
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/cookies" element={<CookiePolicy />} />
       <Route path="/dmca" element={<DMCAPolicy />} />
-      <Route path="/billing/structure" element={<ManagementLayout><BillingStructure /></ManagementLayout>} />
+      <Route path="/billing/structure" element={<BillingStructure />} />
       <Route path="/billing/setup" element={<BillingSetup />} />
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />
       <Route path="/billing/stripe-setup" element={<StripeSetup />} />
       <Route path="/billing/applications" element={<BillingApplications />} />
-      <Route path="/operations" element={<ManagementLayout><Operations /></ManagementLayout>} />
-      <Route path="/operations/merchandise" element={<ManagementLayout><Operations /></ManagementLayout>} />
-      <Route path="/operations/merchandise/manage" element={<ManagementLayout><Operations /></ManagementLayout>} />
+      <Route path="/operations" element={<Operations />} />
+      <Route path="/operations/merchandise" element={<Operations />} />
+      <Route path="/operations/merchandise/manage" element={<Operations />} />
       <Route path="/operations/merchandise/alert-settings" element={<AlertSettings />} />
       <Route path="/print-fulfillment-sheet" element={<PrintFulfillmentSheet />} />
       <Route path="/confirm-receipt/:token" element={<ConfirmReceipt />} />
-      <Route path="/reports" element={<ManagementLayout><Reports /></ManagementLayout>} />
-      <Route path="/marketing" element={<ManagementLayout><Marketing /></ManagementLayout>} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="/marketing" element={<Marketing />} />
       <Route path="/marketing-test" element={<MarketingTest />} />
       <Route path="/subscription" element={<SubscriptionDashboard />} />
       <Route path="/billing/credits" element={<CreditTransactions />} />
