@@ -2717,3 +2717,14 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Verify template persistence across kiosks
 - [ ] Test template sharing (optional)
 - [ ] Verify brand consistency across applied templates
+
+
+## Phase 20: Kiosk Studio UI/UX Cleanup (IN PROGRESS)
+
+- [ ] Implement preview-first layout - reduce padding, move preview higher
+- [ ] Anchor kiosk frame with sticky positioning - prevent scroll desync
+- [ ] Compact preview controls - segmented device selector, dropdown for sanity checks
+- [ ] Implement bottom menu auto-hide behavior with subtle indicator
+- [ ] Sidebar cleanup - black/charcoal styling, collapsible accordions, fix background mapping
+- [ ] Verify preview correctness - background rendering, device switching accuracy
+- [ ] Test full layout - scroll stability, device switching, no overlaps
