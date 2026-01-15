@@ -3041,3 +3041,34 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - ✅ Unsaved changes detection via config hash
 - ✅ Atomic config updates (complete snapshots)
 - ✅ Per-location/device storage separation
+
+
+## Phase 38: Fix Kiosk Environment Rendering & Persistence (Jan 15, 2026)
+- [ ] Audit current environment implementation and identify gaps
+- [ ] Create comprehensive environment definitions with thumbnails and backgrounds
+- [ ] Fix background layering (image + tint overlay, no hardcoded brown)
+- [ ] Implement environment selection with kioskConfig update
+- [ ] Add environment + atmosphere persistence per location:device
+- [ ] Test environment rendering and persistence on Kiosk Studio
+
+
+## Phase 38: Fix Kiosk Environment Rendering and Persistence (COMPLETED)
+
+- [x] Audit current environment implementation and identify gaps
+- [x] Create comprehensive environment definitions (kioskEnvironments.ts) with:
+  - [x] 7 complete environments (Martial Arts, Karate, Zen, Luxury, Kickboxing, Kids, Modern)
+  - [x] Imported thumbnail assets (not string paths)
+  - [x] Background image URLs pointing to existing public files
+  - [x] Default lighting/atmosphere values per environment
+- [x] Fix background layering in KioskLayout:
+  - [x] Image layer with proper blur
+  - [x] Atmosphere overlay layer (no hardcoded brown)
+  - [x] Content layer (sharp UI)
+- [x] Implement environment selection with kioskConfig.environmentId updates
+- [x] Add environment + atmosphere persistence per location:device
+- [x] Update CinematicEnvironmentSelector to use kioskEnvironments system
+- [x] Fix handleEnvironmentSelect to set backgroundImageUrl from environment
+- [x] Test environment rendering and persistence on Kiosk Studio
+- [x] Verify all 7 environments render with correct backgrounds and atmosphere
+- [x] Confirm persistence across page reloads (localStorage working!)
+- [x] Verify no "Env: none" or stuck backgrounds

@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { STUDIO_ENVIRONMENTS, getEnvironmentBackground } from '@/config/studioEnvironments';
-import { KIOSK_BACKGROUND_PRESETS } from '../../../shared/kioskBackgroundPresets';
+import { KIOSK_ENVIRONMENTS } from '@shared/kioskEnvironments';
+import { KIOSK_BACKGROUND_PRESETS } from '@shared/kioskBackgroundPresets';
 
 interface CinematicEnvironmentSelectorProps {
   selectedEnvironmentId?: string;
@@ -35,11 +35,11 @@ export function CinematicEnvironmentSelector({
       };
       input.click();
     } else {
-      // Find the environment and get its bundled background image
-      const env = STUDIO_ENVIRONMENTS.find(e => e.id === envId);
+      // Find the environment and get its background image URL
+      const env = KIOSK_ENVIRONMENTS.find(e => e.id === envId);
       if (env) {
-        console.log(`[CinematicEnvironmentSelector] Selected environment: ${envId}, background: ${env.background}`);
-        onEnvironmentSelect(envId, env.background);
+        console.log(`[CinematicEnvironmentSelector] Selected environment: ${envId}, background: ${env.backgroundImageUrl}`);
+        onEnvironmentSelect(envId, env.backgroundImageUrl);
       }
     }
   };
@@ -91,7 +91,7 @@ export function CinematicEnvironmentSelector({
         }
       `}</style>
       <div className="grid grid-cols-2 gap-3">
-        {STUDIO_ENVIRONMENTS.map(env => {
+        {KIOSK_ENVIRONMENTS.map(env => {
           const isSelected = selectedEnvironmentId === env.id;
           const hasImageError = imageErrors.has(env.id);
           const isLoaded = loadedImages.has(env.id);
@@ -111,7 +111,7 @@ export function CinematicEnvironmentSelector({
               {!hasImageError ? (
                 <>
                   <img
-                    src={env.thumbnail}
+                    src={env.thumbnailPath}
                     alt={env.name}
                     className="w-full h-full object-cover"
                     onError={() => handleImageError(env.id)}
@@ -159,7 +159,7 @@ export function CinematicEnvironmentSelector({
       {/* Debug info - show loaded count */}
       {loadedImages.size > 0 && (
         <p className="text-xs text-gray-600">
-          Loaded {loadedImages.size}/{STUDIO_ENVIRONMENTS.length} thumbnails
+          Loaded {loadedImages.size}/{KIOSK_ENVIRONMENTS.length} thumbnails
         </p>
       )}
     </div>

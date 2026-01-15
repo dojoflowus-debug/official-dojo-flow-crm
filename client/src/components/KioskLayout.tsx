@@ -3,6 +3,11 @@ import { useParams } from 'react-router-dom';
 import KioskScreensaver from './KioskScreensaver';
 import { KioskConfig } from '../../../shared/kioskConfig';
 import { getPresetById, resolvePresetImageUrl } from '../../../shared/kioskBackgroundPresets';
+import {
+  getEnvironmentById,
+  getAtmosphereFilter,
+  getAtmosphereOverlayColor,
+} from '@shared/kioskEnvironments';
 
 interface KioskLayoutProps {
   children: ReactNode;
@@ -76,14 +81,37 @@ export default function KioskLayout({
   }, [IDLE_TIMEOUT]);
 
   // Get background image and settings
-  const getBackgroundImage = (): { url: string | null; blur: number; dim: number; fit: string } => {
+  const getBackgroundImage = (): { url: string | null; blur: number; dim: number; fit: string; overlayColor?: string } => {
     const settings = config?.background || {};
     const type = settings.type || 'color';
     const blur = settings.blur || 0;
     const dim = settings.dim || 0;
     const fit = settings.fit || 'cover';
 
-    // Priority 1: Preset from new presets system
+    // Priority 1: Environment from environment system
+    if (config?.environmentId) {
+      const environment = getEnvironmentById(config.environmentId);
+      if (environment) {
+        const atmosphere = environment.atmosphere;
+        const overlayColor = getAtmosphereOverlayColor(atmosphere);
+        console.log('[KioskLayout] Environment background:', {
+          environmentId: config.environmentId,
+          environmentName: environment.name,
+          backgroundUrl: environment.backgroundImageUrl,
+          atmosphere,
+          overlayColor,
+        });
+        return {
+          url: environment.backgroundImageUrl,
+          blur: atmosphere.blur,
+          dim: atmosphere.dim,
+          fit: fit,
+          overlayColor: overlayColor,
+        };
+      }
+    }
+
+    // Priority 2: Preset from new presets system
     if (type === 'preset' && settings.presetKey) {
       const preset = getPresetById(settings.presetKey);
       if (preset) {
@@ -103,19 +131,21 @@ export default function KioskLayout({
             blur: presetBlur,
             dim: presetDim,
             fit: fit,
+            overlayColor: `rgba(0, 0, 0, ${presetDim / 100})`,
           };
         }
       }
       console.warn('[KioskLayout] Preset not found:', settings.presetKey);
     }
 
-    // Priority 2: Custom image
+    // Priority 3: Custom image
     if (type === 'custom' && settings.customUrl && typeof settings.customUrl === 'string' && settings.customUrl.trim()) {
       return {
         url: settings.customUrl,
         blur: blur,
         dim: dim,
         fit: fit,
+        overlayColor: `rgba(0, 0, 0, ${dim / 100})`,
       };
     }
 
@@ -166,22 +196,22 @@ export default function KioskLayout({
         />
       )}
 
-      {/* LAYER 2: Dim Overlay (z-1) - Semi-transparent, no blur */}
+      {/* LAYER 2: Atmosphere Overlay (z-1) - Tint/dim with proper color */}
       {hasImage && backgroundInfo.dim > 0 && (
         <div
-          className="absolute inset-0 z-1"
+          className="absolute inset-0 z-1 pointer-events-none"
           style={{
-            backgroundColor: `rgba(0, 0, 0, ${backgroundInfo.dim / 100})`,
+            backgroundColor: backgroundInfo.overlayColor || `rgba(0, 0, 0, ${backgroundInfo.dim / 100})`,
           }}
         />
       )}
 
-      {/* Optional: Vignette effect for better text readability (z-2) */}
+      {/* LAYER 3: Vignette effect for better text readability (z-2) */}
       {hasImage && (
         <div className="absolute inset-0 z-2 bg-gradient-to-br from-black/5 via-transparent to-black/10 pointer-events-none" />
       )}
 
-      {/* LAYER 3: Content (z-10) - Sharp, no blur, interactive */}
+      {/* LAYER 4: Content (z-10) - Sharp, no blur, interactive */}
       <div className="relative z-10 w-full h-full">
         {children}
       </div>

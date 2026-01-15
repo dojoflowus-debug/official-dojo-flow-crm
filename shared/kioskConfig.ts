@@ -191,6 +191,9 @@ export interface KioskConfig {
     showInfoBar: boolean;
   };
 
+  // Environment - Selected kiosk environment
+  environmentId?: string; // e.g., 'martial-arts-dojo', 'zen-garden'
+
   // Background - Image, color, effects
   background: {
     type: 'solid' | 'preset' | 'custom';
@@ -620,6 +623,7 @@ export const MOOD_PRESETS: Record<string, MoodPreset> = {
  * Default kiosk configuration
  */
 export const DEFAULT_KIOSK_CONFIG: KioskConfig = {
+  environmentId: 'martial-arts-dojo',
   theme: {
     accentColor: '#ef4444',
     fontFamily: 'Inter',

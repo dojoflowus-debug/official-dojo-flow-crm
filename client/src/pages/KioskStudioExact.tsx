@@ -38,6 +38,9 @@ import { DEFAULT_BUTTON_STYLE } from "../../../shared/buttonStyleConfig";
 import { SaveTemplateModal } from "@/components/SaveTemplateModal";
 import { TemplateLibrary } from "@/components/TemplateLibrary";
 import { useTemplateLibrary } from "@/hooks/useTemplateLibrary";
+import EnvironmentSelector from "@/components/kiosk/EnvironmentSelector";
+import { getEnvironmentById } from "@shared/kioskEnvironments";
+import type { EnvironmentDefinition } from "@shared/kioskEnvironments";
 import AppShell from "@/components/AppShell";
 import {
   getDeviceProfile,
@@ -57,6 +60,7 @@ import {
 } from "@/components/EnvironmentEffectsPanel";
 import {
   saveDraft,
+  loadDraft,
   getLastSavedTime,
   getDraftVersion,
   hasUnsavedChanges,
@@ -125,16 +129,20 @@ export default function KioskStudioExact() {
   const [isLiveMode, setIsLiveMode] = useState(true);
 
   // Handle environment selection and update draftConfig
-  const handleEnvironmentSelect = (envId: string, imageUrl: string) => {
-    setSelectedEnvironmentId(envId);
+  const handleEnvironmentSelect = (environment: EnvironmentDefinition) => {
+    setSelectedEnvironmentId(environment.id);
     setDraftConfig(prev => ({
       ...prev,
-      environmentId: envId,
-      backgroundImage: imageUrl,
-      environmentEffects: environmentEffects,
+      environmentId: environment.id,
+      background: {
+        ...prev.background,
+        type: 'preset',
+        presetKey: null,
+        customUrl: environment.backgroundImageUrl,
+      },
     }));
     console.log(
-      `[KioskStudioExact] Environment selected: ${envId}, image: ${imageUrl}`
+      `[KioskStudioExact] Environment selected: ${environment.id}, name: ${environment.name}, image: ${environment.backgroundImageUrl}`
     );
   };
 
@@ -222,6 +230,14 @@ export default function KioskStudioExact() {
   // Load saved state from localStorage when location/device changes
   useEffect(() => {
     if (selectedLocation) {
+      // Try to load saved draft
+      const savedDraft = loadDraft(selectedLocation, deviceMode);
+      if (savedDraft?.config) {
+        setDraftConfig(savedDraft.config);
+        setLastSavedConfig(savedDraft.config);
+        setSelectedEnvironmentId(savedDraft.config.environmentId || 'martial-arts-dojo');
+      }
+
       const savedTime = getLastSavedTime(selectedLocation, deviceMode);
       const pubTime = getLastPublishedTime(selectedLocation, deviceMode);
       const draftVer = getDraftVersion(selectedLocation, deviceMode);
@@ -238,7 +254,7 @@ export default function KioskStudioExact() {
       setPublishedVersion(pubVer);
       setHasUnsaved(unsaved);
     }
-  }, [selectedLocation, deviceMode, draftConfig]);
+  }, [selectedLocation, deviceMode]);
 
   // Fallback initialization
   useEffect(() => {
@@ -564,6 +580,11 @@ export default function KioskStudioExact() {
 
               {/* THEME TAB */}
               <TabsContent value="theme" className="space-y-4">
+                <EnvironmentSelector
+                  selectedEnvironmentId={draftConfig?.environmentId || 'martial-arts-dojo'}
+                  onEnvironmentSelect={handleEnvironmentSelect}
+                />
+                <div className="h-px bg-white/10" />
                 {draftConfig && (
                   <ThemeTabWithPresets
                     draftConfig={draftConfig}
