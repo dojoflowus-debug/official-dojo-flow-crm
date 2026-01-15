@@ -61,14 +61,19 @@ export function GlassMorphismEngine({
             <button
               key={mode.id}
               onClick={() => handleGlassModeChange(mode.id as any)}
-              className={`p-3 rounded-lg border-2 transition text-left ${
+              className={`p-3 rounded-lg border transition text-left ${
                 glassMode === mode.id
-                  ? 'bg-red-500/20 border-red-500 shadow-lg shadow-red-500/20'
-                  : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                  ? 'shadow-lg'
+                  : 'hover:bg-white/5'
               }`}
+              style={{
+                background: glassMode === mode.id ? 'rgba(239, 68, 68, 0.15)' : 'rgba(18, 22, 28, 0.5)',
+                border: glassMode === mode.id ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.08)',
+                boxShadow: glassMode === mode.id ? '0 0 12px rgba(239, 68, 68, 0.2)' : 'none',
+              }}
             >
-              <p className="text-xs font-semibold text-white">{mode.label}</p>
-              <p className="text-xs text-gray-400 mt-1">{mode.desc}</p>
+              <p className="text-xs font-semibold" style={{color: 'rgba(255,255,255,0.92)'}}>{mode.label}</p>
+              <p className="text-xs mt-1" style={{color: 'rgba(255,255,255,0.65)'}}>{mode.desc}</p>
             </button>
           ))}
         </div>
@@ -76,8 +81,8 @@ export function GlassMorphismEngine({
 
       {/* Glass Effect Controls */}
       {glassMode !== 'solid' && (
-        <div className="space-y-4 p-4 rounded-lg bg-white/5 border border-white/10">
-          <p className="text-xs font-semibold text-white mb-4">Glass Effect</p>
+        <div className="space-y-4 p-4 rounded-lg border" style={{background: 'rgba(18, 22, 28, 0.5)', border: '1px solid rgba(255,255,255,0.08)'}}>
+          <p className="text-xs font-semibold mb-4" style={{color: 'rgba(255,255,255,0.92)'}}>Glass Effect</p>
 
           {/* Blur Strength */}
           <div>

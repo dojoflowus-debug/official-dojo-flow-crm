@@ -28,20 +28,21 @@ export function TypographyPanel({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Font Family */}
       <div>
-        <Label className="text-xs font-semibold mb-2 block">Font Family</Label>
+        <Label className="text-xs font-semibold mb-3 block" style={{color: 'rgba(255,255,255,0.92)'}}>Font Family</Label>
         <div className="grid grid-cols-2 gap-2">
           {FONT_FAMILIES.map((font) => (
             <button
               key={font.id}
               onClick={() => handleChange('fontFamily', font.id)}
-              className={`px-3 py-2 rounded text-xs font-medium transition ${
-                typography.fontFamily === font.id
-                  ? 'bg-red-500 text-white'
-                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
-              }`}
+              className="px-3 py-2 rounded-lg text-xs font-medium transition"
+              style={{
+                background: typography.fontFamily === font.id ? '#EF4444' : 'rgba(18, 22, 28, 0.5)',
+                color: typography.fontFamily === font.id ? 'white' : 'rgba(255,255,255,0.92)',
+                border: `1px solid ${typography.fontFamily === font.id ? '#EF4444' : 'rgba(255,255,255,0.08)'}`,
+              }}
             >
               {font.name}
             </button>
@@ -52,8 +53,8 @@ export function TypographyPanel({
       {/* Header Weight */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <Label className="text-xs text-gray-400">Header Weight</Label>
-          <span className="text-xs text-white font-mono">{typography.fontWeight}</span>
+          <Label className="text-xs font-medium" style={{color: 'rgba(255,255,255,0.65)'}}>Header Weight</Label>
+          <span className="text-xs font-mono" style={{color: 'rgba(255,255,255,0.92)'}}>{typography.fontWeight}</span>
         </div>
         <input
           type="range"
@@ -73,8 +74,8 @@ export function TypographyPanel({
       {/* Body Weight */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <Label className="text-xs text-gray-400">Body Weight</Label>
-          <span className="text-xs text-white font-mono">{typography.fontWeight}</span>
+          <Label className="text-xs font-medium" style={{color: 'rgba(255,255,255,0.65)'}}>Body Weight</Label>
+          <span className="text-xs font-mono" style={{color: 'rgba(255,255,255,0.92)'}}>{typography.fontWeight}</span>
         </div>
         <input
           type="range"
@@ -92,8 +93,8 @@ export function TypographyPanel({
       </div>
 
       {/* Text Colors */}
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold block">Text Colors</Label>
+      <div className="space-y-3">
+        <Label className="text-xs font-semibold block" style={{color: 'rgba(255,255,255,0.92)'}}>Text Colors</Label>
 
         {/* Title Color */}
         <div className="flex items-center gap-2">

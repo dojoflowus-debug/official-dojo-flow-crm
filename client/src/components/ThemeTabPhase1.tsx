@@ -81,7 +81,7 @@ export function ThemeTabPhase1({
     : (perCardStyles[selectedCardType] || draftConfig.cardStyle || {});
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto">
+    <div className="flex-1 space-y-6 overflow-y-auto">
       {/* PREMIUM DESIGN SYSTEM - Phase 1 */}
       <Accordion
         items={[

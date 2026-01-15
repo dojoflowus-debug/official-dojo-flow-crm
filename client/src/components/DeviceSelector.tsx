@@ -1,5 +1,5 @@
-import React from 'react';
-import { Smartphone, Tablet, Monitor, Maximize2, Minimize2, RotateCw, Frame, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Smartphone, Tablet, Monitor, Maximize2, Minimize2, RotateCw, Frame, Zap, ChevronDown } from 'lucide-react';
 import {
   DEVICE_PRESETS,
   DevicePreset,
@@ -40,6 +40,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   onTouchToggle,
   onOpenPublic,
 }) => {
+  const [showSanityChecks, setShowSanityChecks] = useState(false);
   const currentPreset = DEVICE_PRESETS[currentDeviceId];
   const kioskDevices = getKioskDevices();
   const sanityCheckDevices = getSanityCheckDevices();
@@ -48,73 +49,50 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Device Tabs */}
+      {/* Device Selector Dropdown */}
       <div className="space-y-2">
-        {/* Kiosk-first devices */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Kiosk-First
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {kioskDevices.map(device => (
-              <button
-                key={device.id}
-                onClick={() => onDeviceChange(device.id)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentDeviceId === device.id
-                    ? 'bg-accent text-white'
-                    : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                }`}
-                title={device.description}
-              >
-                <div className="flex items-center gap-1">
-                  <Tablet className="w-4 h-4" />
+        <label className="text-xs font-semibold text-white/65 uppercase tracking-wider">Device</label>
+        <div className="relative">
+          <select
+            value={currentDeviceId}
+            onChange={(e) => onDeviceChange(e.target.value)}
+            className="w-full appearance-none px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: '#12161C',
+              color: 'rgba(255,255,255,0.92)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <optgroup label="Kiosk-First">
+              {kioskDevices.map(device => (
+                <option key={device.id} value={device.id}>
                   {device.name}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Sanity check devices */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Sanity Checks
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {sanityCheckDevices.map(device => (
-              <button
-                key={device.id}
-                onClick={() => onDeviceChange(device.id)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentDeviceId === device.id
-                    ? 'bg-accent text-white'
-                    : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                }`}
-                title={device.description}
-              >
-                <div className="flex items-center gap-1">
-                  {device.id.includes('iphone') || device.id.includes('android') ? (
-                    <Smartphone className="w-4 h-4" />
-                  ) : (
-                    <Monitor className="w-4 h-4" />
-                  )}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Sanity Checks">
+              {sanityCheckDevices.map(device => (
+                <option key={device.id} value={device.id}>
                   {device.name}
-                </div>
-              </button>
-            ))}
-          </div>
+                </option>
+              ))}
+            </optgroup>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{color: 'rgba(255,255,255,0.65)'}} />
         </div>
       </div>
 
       {/* Device Info and Controls */}
-      <div className="bg-gray-800 rounded-lg p-3 space-y-3">
+      <div className="rounded-lg p-4 space-y-4" style={{
+        background: '#12161C',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}>
         {/* Device Info */}
         {currentPreset && (
           <div className="flex items-center justify-between text-sm">
             <div className="space-y-1">
-              <p className="font-semibold text-white">{currentPreset.name}</p>
-              <p className="text-gray-400">
+              <p className="font-semibold" style={{color: 'rgba(255,255,255,0.92)'}}>{currentPreset.name}</p>
+              <p style={{color: 'rgba(255,255,255,0.65)'}}>
                 {currentOrientation === 'landscape' ? currentPreset.height : currentPreset.width}
                 ×
                 {currentOrientation === 'landscape' ? currentPreset.width : currentPreset.height}
@@ -122,58 +100,69 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-gray-400">Scale</p>
-              <p className="font-semibold text-white">
+              <p className="text-xs" style={{color: 'rgba(255,255,255,0.65)'}}>Scale</p>
+              <p className="font-semibold" style={{color: 'rgba(255,255,255,0.92)'}}>
                 {currentZoomLevel === 'fit' ? 'Fit' : `${currentZoomLevel}%`}
               </p>
             </div>
           </div>
         )}
 
-        {/* Toolbar Controls */}
-        <div className="flex flex-wrap gap-2">
-          {/* Orientation Toggle */}
+        {/* Compact Toolbar Controls */}
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Orientation Dropdown */}
           {supportsOrientation && (
-            <button
-              onClick={onOrientationToggle}
-              className="flex items-center gap-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-200 transition-colors"
-              title={`Switch to ${currentOrientation === 'portrait' ? 'landscape' : 'portrait'}`}
-            >
-              <RotateCw className="w-4 h-4" />
-              {currentOrientation === 'portrait' ? 'Portrait' : 'Landscape'}
-            </button>
+            <div className="relative">
+              <select
+                value={currentOrientation}
+                onChange={(e) => {
+                  if (e.target.value !== currentOrientation) {
+                    onOrientationToggle();
+                  }
+                }}
+                className="appearance-none px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  background: '#161B22',
+                  color: 'rgba(255,255,255,0.92)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{color: 'rgba(255,255,255,0.65)'}} />
+            </div>
           )}
 
-          {/* Zoom Controls */}
-          <div className="flex gap-1">
-            {([50, 75, 100, 'fit'] as const).map(zoom => (
-              <button
-                key={zoom}
-                onClick={() => onZoomChange(zoom)}
-                className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentZoomLevel === zoom
-                    ? 'bg-accent text-white'
-                    : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                }`}
-                title={zoom === 'fit' ? 'Fit to container' : `Zoom to ${zoom}%`}
-              >
-                {zoom === 'fit' ? (
-                  <Maximize2 className="w-4 h-4" />
-                ) : (
-                  <span>{zoom}%</span>
-                )}
-              </button>
-            ))}
+          {/* Zoom Dropdown */}
+          <div className="relative">
+            <select
+              value={currentZoomLevel}
+              onChange={(e) => onZoomChange(e.target.value as ZoomLevel)}
+              className="appearance-none px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: '#161B22',
+                color: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <option value="50">50%</option>
+              <option value="75">75%</option>
+              <option value="100">100%</option>
+              <option value="fit">Fit</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{color: 'rgba(255,255,255,0.65)'}} />
           </div>
 
           {/* Frame Toggle */}
           <button
             onClick={onFrameToggle}
-            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-colors ${
-              showFrame
-                ? 'bg-accent text-white'
-                : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-            }`}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: showFrame ? '#EF4444' : '#161B22',
+              color: showFrame ? 'white' : 'rgba(255,255,255,0.92)',
+              border: `1px solid ${showFrame ? '#EF4444' : 'rgba(255,255,255,0.08)'}`,
+            }}
             title={showFrame ? 'Hide device frame' : 'Show device frame'}
           >
             <Frame className="w-4 h-4" />
@@ -183,11 +172,12 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
           {/* Touch Simulation Toggle */}
           <button
             onClick={onTouchToggle}
-            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-colors ${
-              simulateTouch
-                ? 'bg-accent text-white'
-                : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-            }`}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: simulateTouch ? '#EF4444' : '#161B22',
+              color: simulateTouch ? 'white' : 'rgba(255,255,255,0.92)',
+              border: `1px solid ${simulateTouch ? '#EF4444' : 'rgba(255,255,255,0.08)'}`,
+            }}
             title={simulateTouch ? 'Disable touch simulation' : 'Enable touch simulation'}
           >
             <Zap className="w-4 h-4" />
@@ -198,7 +188,12 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
           {onOpenPublic && (
             <button
               onClick={onOpenPublic}
-              className="flex items-center gap-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-200 transition-colors ml-auto"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ml-auto"
+              style={{
+                background: '#161B22',
+                color: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
               title="Open public kiosk in new tab"
             >
               <Maximize2 className="w-4 h-4" />

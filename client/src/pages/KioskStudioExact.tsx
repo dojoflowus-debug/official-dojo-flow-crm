@@ -357,7 +357,7 @@ export default function KioskStudioExact() {
         {/* CONTENT AREA - Two layer layout: fixed left sidebar + scrollable right workspace */}
         <div id="kiosk-preview-wrapper" className="flex-1 flex overflow-hidden gap-6 p-6">
           {/* LEFT PANEL: Studio Controls - Fixed width, scrollable content */}
-          <div className="w-64 rounded-lg p-4 flex flex-col overflow-y-auto flex-shrink-0" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', border: '1px solid rgba(255,255,255,0.06)'}}>
+          <div className="w-80 rounded-lg p-6 flex flex-col overflow-y-auto flex-shrink-0" style={{backgroundColor: 'rgba(11, 13, 16, 0.65)', backdropFilter: 'blur(14px) saturate(120%)', border: '1px solid rgba(255,255,255,0.06)'}}>
             {/* Studio Panel Header */}
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-white">Kiosk Studio</h2>
