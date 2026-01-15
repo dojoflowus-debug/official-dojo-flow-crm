@@ -63,6 +63,29 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
   // Hover state for Apple dock bubble effect
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   
+  // Runtime guard: Assert BottomNav exists (unless Focus Mode or explicitly hidden)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hideBottomNav && !isFocusMode) {
+        const bottomNav = document.querySelector('.app-shell-bottom-nav')
+        if (!bottomNav) {
+          console.error(
+            `🚨 BottomNavMissingError: BottomNav not rendered!
+` +
+            `route: ${location.pathname}
+` +
+            `hideBottomNav: ${hideBottomNav}
+` +
+            `focusMode: ${isFocusMode}
+` +
+            `This is a critical bug - BottomNav MUST render on all authenticated routes.`
+          )
+        }
+      }
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [location.pathname, hideBottomNav, isFocusMode])
+  
   // Check if a nav item is active
   const isActive = (href: string) => {
     if (href === '/kai' && location.pathname === '/') return true

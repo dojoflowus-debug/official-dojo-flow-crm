@@ -11,22 +11,9 @@ import { useLocation } from 'react-router-dom'
  */
 export function AppShellGuard({ children }: { children: React.ReactNode }) {
   const location = useLocation()
-  const appShellRef = useRef<HTMLDivElement>(null)
   const hasLoggedRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    // Check if we're inside an AppShell
-    const isInsideAppShell = () => {
-      let element = appShellRef.current
-      while (element) {
-        if (element.classList.contains('app-shell')) {
-          return true
-        }
-        element = element.parentElement
-      }
-      return false
-    }
-
     // Only check on authenticated routes (exclude public routes)
     const authenticatedRoutes = [
       '/students',
@@ -49,9 +36,12 @@ export function AppShellGuard({ children }: { children: React.ReactNode }) {
     )
 
     if (isAuthenticatedRoute && !hasLoggedRef.current.has(location.pathname)) {
-      // Defer check to next tick to allow AppShell to render
+      // Defer check to allow all components to render
       const timer = setTimeout(() => {
-        if (!isInsideAppShell()) {
+        // Check if .app-shell exists ANYWHERE in the document
+        const appShellElement = document.querySelector('.app-shell')
+        
+        if (!appShellElement) {
           console.error(
             `🚨 AppShellMissingError: Route "${location.pathname}" is not wrapped by AppShell!\n` +
             `This is a deployment blocker. All authenticated routes must render inside AppShell.\n` +
@@ -59,15 +49,15 @@ export function AppShellGuard({ children }: { children: React.ReactNode }) {
           )
           hasLoggedRef.current.add(location.pathname)
         }
-      }, 0)
+      }, 500) // Increased delay to ensure nested layouts render
 
       return () => clearTimeout(timer)
     }
   }, [location.pathname])
 
   return (
-    <div ref={appShellRef}>
+    <>
       {children}
-    </div>
+    </>
   )
 }

@@ -125,6 +125,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AppShellGuard } from "./components/AppShellGuard";
+import { DebugOverlay } from "./components/DebugOverlay";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import OrganizationList from "./pages/OrganizationList";
 import OrganizationDetail from "./pages/OrganizationDetail";
@@ -330,6 +331,7 @@ function App() {
               <TooltipProvider>
                 <Toaster />
                 <BrowserRouter>
+                  <DebugOverlay />
                   <AppShellGuard>
                     <Router />
                   </AppShellGuard>

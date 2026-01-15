@@ -41,7 +41,7 @@ import { useTemplateLibrary } from "@/hooks/useTemplateLibrary";
 import EnvironmentSelector from "@/components/kiosk/EnvironmentSelector";
 import { getEnvironmentById } from "@shared/kioskEnvironments";
 import type { EnvironmentDefinition } from "@shared/kioskEnvironments";
-import AppShell from "@/components/AppShell";
+import ManagementLayout from "@/components/ManagementLayout";
 import {
   getDeviceProfile,
   getAllDeviceProfiles,
@@ -346,7 +346,7 @@ export default function KioskStudioExact() {
   const currentConfig = previewMode === "draft" ? draftConfig : publishedConfig;
 
   return (
-    <AppShell>
+    <ManagementLayout>
       <div
         className="flex flex-col h-screen"
         style={{ backgroundColor: "#0B0D10" }}
@@ -891,6 +891,6 @@ export default function KioskStudioExact() {
         />
       ))}
     </div>
-    </AppShell>
+    </ManagementLayout>
   );
 }
