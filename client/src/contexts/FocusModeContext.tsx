@@ -16,8 +16,10 @@ const FocusModeContext = createContext<FocusModeContextType | undefined>(undefin
 
 export function FocusModeProvider({ children }: { children: ReactNode }) {
   const [isFocusMode, setIsFocusMode] = useState(() => {
+    // Default to OFF (false) - only ON if explicitly saved
     const saved = localStorage.getItem('dojoFlowFocusMode')
-    return saved === 'on'
+    // Only return true if explicitly saved as 'on', otherwise default to false
+    return saved === 'on' ? true : false
   })
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -110,9 +112,9 @@ export function FocusModeProvider({ children }: { children: ReactNode }) {
         setIsAnimating(false)
       }, 600)
     } else {
-      // Exiting Focus Mode
+      // Exiting Focus Mode - remove from localStorage or set to 'off'
       setIsFocusMode(false)
-      localStorage.setItem('dojoFlowFocusMode', 'off')
+      localStorage.removeItem('dojoFlowFocusMode')
       
       // End animation after menus slide back
       setTimeout(() => {
