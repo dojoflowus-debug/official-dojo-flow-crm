@@ -31,6 +31,7 @@ const NAVIGATION = [
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
   { id: 'floor-plans', name: 'Floor Plans', href: '/floor-plans', icon: Grid3x3 },
   { id: 'operations', name: 'Operations', href: '/operations/merchandise', icon: Package },
+  { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-studio', icon: Grid3x3 },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'billing', name: 'Billing', href: '/billing', icon: CreditCard },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
