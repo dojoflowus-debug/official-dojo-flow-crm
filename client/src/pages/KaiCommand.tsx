@@ -178,6 +178,9 @@ export default function KaiCommand() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Unique ID generator for messages to prevent duplicate key warnings
+  const messageIdCounterRef = useRef(Date.now());
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef(false);
   const IDLE_TIMEOUT = 2500; // 2.5 seconds
@@ -1820,7 +1823,7 @@ export default function KaiCommand() {
     }
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: (messageIdCounterRef.current++).toString(),
       role: 'user',
       content: messageContent,
       timestamp: new Date(),
@@ -1948,11 +1951,11 @@ export default function KaiCommand() {
         }
 
         const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
+          id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',
           content: response.response,
           timestamp: new Date(),
-          ui_blocks: response.ui_blocks || [],
+          attachments: response.attachments || [],
           audioUrl,
           audioDuration
         };
