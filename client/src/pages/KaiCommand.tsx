@@ -2695,7 +2695,7 @@ export default function KaiCommand() {
           >
             {/* Shared content column wrapper - max-w-4xl to match composer width */}
             <div className={`${isFocusMode ? 'max-w-4xl mx-auto px-4' : isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
-              {messages.length === 0 ? (
+              {false ? (
                 /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}

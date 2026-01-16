@@ -174,8 +174,8 @@ function Router() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/kai" element={<AppShell><KaiCommand /></AppShell>} />
-      <Route path="/kai-command" element={<KaiCommandDashboard />} />
-      <Route path="/command" element={<KaiCommandDashboard />} />
+      <Route path="/kai-command" element={<Navigate to="/kai" replace />} />
+      <Route path="/command" element={<Navigate to="/kai" replace />} />
       <Route path="/kai-onboarding" element={<KaiHeroOnboarding />} />
       <Route path="/stats" element={<MinimalDashboard />} />
       {process.env.NODE_ENV !== 'production' && <Route path="/dev/kai-debug-mock" element={<KaiDebugHarnessMock />} />}
