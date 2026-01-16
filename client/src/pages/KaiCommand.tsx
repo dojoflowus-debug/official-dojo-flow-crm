@@ -968,6 +968,14 @@ export default function KaiCommand() {
   // Use backend conversations, or show empty state if not logged in
   const conversations = convertedConversations;
 
+  // Clear messages when switching to new conversation
+  useEffect(() => {
+    if (selectedConversationId?.startsWith('new-')) {
+      console.log('[KaiCommand] Switching to new conversation, clearing messages');
+      setMessages([]);
+    }
+  }, [selectedConversationId]);
+
   // Load messages when conversation changes
   useEffect(() => {
     console.log('[KaiCommand] messagesQuery.data changed:', messagesQuery.data);
@@ -2850,7 +2858,7 @@ export default function KaiCommand() {
                   )}
                   
                   {/* Priority Actions Stack - Top 3 Critical Items */}
-                  {!isCinematic && !isFocusMode && (
+                  {messages.length === 0 && (
                     <div className="w-full max-w-xl mb-8">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
