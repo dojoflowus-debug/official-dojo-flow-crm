@@ -3378,3 +3378,56 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - Tests: 17 (all passing)
 - Integration Points: 1 (processQuery mutation in kaiConversationsRouter)
 - Features: Intent classification, natural language responses, follow-up suggestions, metric data embedding
+
+## PHASE 6: Kai Identity & Response Contract (COMPLETE)
+
+### PHASE 6A: Kai Core Identity System Prompt ✅
+- [x] Create kai-core-prompt.ts with canonical system prompt
+- [x] Define Kai's role: Head Instructor + Operations Assistant
+- [x] Establish dojo-professional tone and personality
+- [x] Include response guidelines and best practices
+- [x] Add module awareness framework
+
+### PHASE 6B: Response Contract Enforcer ✅
+- [x] Create kai-response-contract.ts with hard rules
+- [x] Implement zero results handler
+- [x] Implement multiple results handler (max 5)
+- [x] Implement exact match handler with cards
+- [x] Add response validation (prevents fragments)
+- [x] Create card formatters for students, leads, classes
+
+### PHASE 6C: Dojo Brain Domain Intelligence ✅
+- [x] Create kai-dojo-brain.ts with domain handlers
+- [x] Training question handler (with injury/form guidance)
+- [x] Curriculum handler (belt progression)
+- [x] Operations handler (retention, leads, billing)
+- [x] Safety handler (sparring, injury prevention)
+- [x] Retention, parent communication, intro conversion handlers
+- [x] Question domain classifier
+
+### PHASE 6D: Module Awareness & Quick-Action Chips ✅
+- [x] Create kai-module-awareness.ts
+- [x] Module registry (7 modules)
+- [x] Module detection from pathname
+- [x] Question routing to appropriate module
+- [x] Quick-action suggestion chips (5 predefined)
+- [x] Module source citation formatting
+
+### PHASE 6E: Acceptance Testing & Validation ✅
+- [x] Create kai-identity.test.ts with 5 test scenarios
+- [x] Test A: Show student Vincent Holmes (exact match)
+- [x] Test B: Who hasn't checked in for 14 days (at-risk list)
+- [x] Test C: What classes are today and how full (capacity info)
+- [x] Test D: How many leads stuck in pipeline (lead routing)
+- [x] Test E: Sparring safety reminders (safety guidance)
+- [x] All 21 tests passing
+
+### PHASE 6 FINAL METRICS
+- Files Created: 5 (kai-core-prompt.ts, kai-response-contract.ts, kai-dojo-brain.ts, kai-module-awareness.ts, kai-identity.test.ts)
+- System Prompt: 1 canonical prompt with 7 response guidelines
+- Response Handlers: 3 (zero results, multiple results, exact match)
+- Domain Handlers: 7 (training, curriculum, operations, safety, retention, parent, intro)
+- Modules: 7 (Students, Leads, Classes, Kiosk, Billing, Reports, Operations)
+- Quick-Action Chips: 5 (Find student, Today's attendance, Overdue accounts, New leads, Today's classes)
+- Tests: 21 (all passing)
+- Acceptance Tests: 5 (all passing)
