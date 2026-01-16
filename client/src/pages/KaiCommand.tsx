@@ -1857,6 +1857,16 @@ export default function KaiCommand() {
       }
     }
     
+    // Optimistic UI update: Add user message to local state immediately
+    const optimisticUserMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: currentInput,
+      timestamp: new Date(),
+      ui_blocks: []
+    };
+    setMessages(prev => [...prev, optimisticUserMessage]);
+    
     if (conversationId) {
       try {
         console.log('[handleSendMessage] Saving user message to conversation:', conversationId);
@@ -1870,6 +1880,8 @@ export default function KaiCommand() {
         const errorMessage = error instanceof Error ? error.message : 'Failed to save message';
         console.error('[handleSendMessage] Failed to save message:', errorMessage, error);
         toast.error(`Failed to save message: ${errorMessage}`);
+        // Remove the optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
         setIsLoading(false);
         return;
       }
