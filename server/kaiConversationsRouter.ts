@@ -6,7 +6,7 @@ import { protectedProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { processMetricQuery } from "./kai-metric-handler";
 import { classifyIntent } from "./kai-nlp-router";
-import z from "zod";
+import { kaiTools, executeKaiTool } from "./kai-tools";
 
 /**
  * Kai Conversations Router
@@ -388,23 +388,25 @@ export const kaiConversationsRouter = router({
           aiResponse = metricResult.message;
         }
       } else {
-        // Fall back to LLM for general conversation
+        // Fall back to LLM for general conversation with tool calling
         try {
           const groundedSystemPrompt = `You are Kai, an AI operations assistant for martial arts schools.
 
 CRITICAL GROUNDING RULES:
 1. NEVER invent or guess metrics. If you don't have data, say "I can't see that data yet."
-2. ALWAYS query the database for factual information about:
-   - Student counts ("How many students do I have?")
-   - Student details ("Show me student Ashley")
-   - Lead information ("Find leads from last month")
-   - Class schedules ("What classes do we have?")
+2. ALWAYS use available tools to query the database for factual information about:
+   - Student counts ("How many students do I have?" → use get_student_count)
+   - Student details ("Show me student Ashley" → use search_students)
+   - Lead information ("Find leads from last month" → use get_new_leads)
+   - Class schedules ("What classes do we have?" → use list_classes)
 3. If a query asks for data you haven't queried, respond with:
    "I can't see that data yet. Would you like me to check [specific data source]?"
 4. Be helpful, friendly, and concise.
-5. Always cite data sources: "Source: Students module", "Source: Leads module", etc.`;
+5. Always cite data sources: "Source: Students module", "Source: Leads module", etc.
+6. When you have data from a tool call, use it directly in your response.`;
 
-          const response = await invokeLLM({
+          // First attempt: Call LLM with tools
+          let response = await invokeLLM({
             messages: [
               {
                 role: "system",
@@ -415,7 +417,57 @@ CRITICAL GROUNDING RULES:
                 content: input.query,
               },
             ],
+            tools: kaiTools as any,
+            toolChoice: "auto",
           });
+          
+          // Handle tool calls
+          const toolCalls = response.choices?.[0]?.message?.tool_calls;
+          if (toolCalls && toolCalls.length > 0) {
+            console.log('[Kai] Tool calls detected:', toolCalls.map(t => t.function.name));
+            
+            // Execute tool calls and build tool results
+            const toolResults = [];
+            for (const toolCall of toolCalls) {
+              const toolName = toolCall.function.name;
+              const toolArgs = JSON.parse(toolCall.function.arguments);
+              console.log(`[Kai] Executing tool: ${toolName}`, toolArgs);
+              
+              const toolResult = await executeKaiTool(toolName, toolArgs, ctx);
+              toolResults.push({
+                toolCallId: toolCall.id,
+                toolName,
+                result: toolResult
+              });
+            }
+            
+            // Second call: Send tool results back to LLM for final response
+            const messagesWithTools = [
+              {
+                role: "system" as const,
+                content: groundedSystemPrompt,
+              },
+              {
+                role: "user" as const,
+                content: input.query,
+              },
+              {
+                role: "assistant" as const,
+                content: response.choices?.[0]?.message?.content || "",
+                tool_calls: toolCalls as any,
+              },
+              ...toolResults.map(tr => ({
+                role: "tool" as const,
+                tool_call_id: tr.toolCallId,
+                name: tr.toolName,
+                content: tr.result,
+              })),
+            ];
+            
+            response = await invokeLLM({
+              messages: messagesWithTools as any,
+            });
+          }
 
           aiResponse =
             response.choices?.[0]?.message?.content ||
@@ -425,11 +477,17 @@ CRITICAL GROUNDING RULES:
           console.log('[Kai] Grounded response generated', {
             query: input.query,
             responseLength: aiResponse.length,
-            hasDataCitation: aiResponse.includes('Source:')
+            hasDataCitation: aiResponse.includes('Source:'),
+            hadToolCalls: toolCalls && toolCalls.length > 0
           });
         } catch (error) {
           console.error("[Kai] LLM error:", error);
           aiResponse = "Sorry, I encountered an error. Please try again.";
+          // Log full error for debugging
+          console.error('[Kai] Full error details:', {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          });
         }
       }
 
