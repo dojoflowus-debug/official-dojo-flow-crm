@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
-import ManagementLayout from '@/components/ManagementLayout';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -632,7 +631,7 @@ function StudentsDashboard() {
     </div>
   );
 
-  return <ManagementLayout>{pageContent}</ManagementLayout>;
+  return pageContent;
 }
 
 export default StudentsDashboard;

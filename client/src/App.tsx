@@ -146,6 +146,7 @@ import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
 import KioskManager from "./pages/KioskManager";
+import AppShell from "./components/AppShell";
 import ManagementLayout from "./components/ManagementLayout";
 
 function Router() {
@@ -171,7 +172,7 @@ function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/kai" element={<KaiCommand />} />
+      <Route path="/kai" element={<AppShell><KaiCommand /></AppShell>} />
       <Route path="/kai-command" element={<KaiCommandDashboard />} />
       <Route path="/command" element={<KaiCommandDashboard />} />
       <Route path="/kai-onboarding" element={<KaiHeroOnboarding />} />
@@ -181,8 +182,8 @@ function Router() {
       
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
       {/* Kiosk Studio Builder - New Location/Kiosk Management - CANONICAL ENTRY POINT */}
-      <Route path="/kiosk-studio" element={<ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute>} />
-      <Route path="/kiosk-studio/:locationId" element={<ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute>} />
+      <Route path="/kiosk-studio" element={<AppShell><ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute></AppShell>} />
+      <Route path="/kiosk-studio/:locationId" element={<AppShell><ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute></AppShell>} />
       {/* Redirect old /kiosk to /kiosk-studio */}
       <Route path="/kiosk" element={<Navigate to="/kiosk-studio" replace />} />
       <Route path="/kiosk-manager" element={<KioskManager />} />
@@ -235,7 +236,7 @@ function Router() {
       <Route path="/crm-dashboard" element={<CRMDashboard />} />
 
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
-      <Route path="/students" element={<ManagementLayout><StudentsElevated /></ManagementLayout>} />
+      <Route path="/students" element={<AppShell><StudentsElevated /></AppShell>} />
       <Route path="/students/:id" element={<StudentCommandProfile />} />
       <Route path="/students-classic" element={<Students />} />
       <Route path="/students-old" element={<StudentsDashboard />} />
@@ -243,13 +244,13 @@ function Router() {
       <Route path="/students-command" element={<StudentsCommandCenter />} />
       <Route path="/students-split" element={<StudentsSplitScreen />} />
       <Route path="/student-portal" element={<ProtectedRoute><StudentPortal /></ProtectedRoute>} />
-      <Route path="/leads" element={<ManagementLayout><Leads /></ManagementLayout>} />
+      <Route path="/leads" element={<AppShell><Leads /></AppShell>} />
       <Route path="/test-data" element={<TestData />} />
-      <Route path="/classes" element={<ManagementLayout><Classes /></ManagementLayout>} />
-      <Route path="/floor-plans" element={<ManagementLayout><FloorPlans /></ManagementLayout>} />
+      <Route path="/classes" element={<AppShell><Classes /></AppShell>} />
+      <Route path="/floor-plans" element={<AppShell><FloorPlans /></AppShell>} />
       <Route path="/programs" element={<Programs />} />
-      <Route path="/staff" element={<ManagementLayout><Staff /></ManagementLayout>} />
-      <Route path="/billing" element={<ManagementLayout><Billing /></ManagementLayout>} />
+      <Route path="/staff" element={<AppShell><Staff /></AppShell>} />
+      <Route path="/billing" element={<AppShell><Billing /></AppShell>} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/billing/success" element={<BillingSuccess />} />
       {/* Legal pages */}
@@ -262,14 +263,14 @@ function Router() {
       <Route path="/billing/pcbancard-application" element={<PCBancardApplication />} />
       <Route path="/billing/stripe-setup" element={<StripeSetup />} />
       <Route path="/billing/applications" element={<BillingApplications />} />
-      <Route path="/operations" element={<ManagementLayout><Operations /></ManagementLayout>} />
-      <Route path="/operations/merchandise" element={<ManagementLayout><Operations /></ManagementLayout>} />
-      <Route path="/operations/merchandise/manage" element={<ManagementLayout><Operations /></ManagementLayout>} />
+      <Route path="/operations" element={<AppShell><Operations /></AppShell>} />
+      <Route path="/operations/merchandise" element={<AppShell><Operations /></AppShell>} />
+      <Route path="/operations/merchandise/manage" element={<AppShell><Operations /></AppShell>} />
       <Route path="/operations/merchandise/alert-settings" element={<AlertSettings />} />
       <Route path="/print-fulfillment-sheet" element={<PrintFulfillmentSheet />} />
       <Route path="/confirm-receipt/:token" element={<ConfirmReceipt />} />
-      <Route path="/reports" element={<ManagementLayout><Reports /></ManagementLayout>} />
-      <Route path="/marketing" element={<ManagementLayout><Marketing /></ManagementLayout>} />
+      <Route path="/reports" element={<AppShell><Reports /></AppShell>} />
+      <Route path="/marketing" element={<AppShell><Marketing /></AppShell>} />
       <Route path="/marketing-test" element={<MarketingTest />} />
       <Route path="/subscription" element={<SubscriptionDashboard />} />
       <Route path="/billing/credits" element={<CreditTransactions />} />
@@ -296,7 +297,7 @@ function Router() {
       <Route path="/setup-wizard" element={<ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>} />
       <Route path="/kai-setup" element={<ProtectedRoute><KaiSetupMode /></ProtectedRoute>} />
       <Route path="/setup" element={<SettingsHub />} />
-      <Route path="/settings" element={<SettingsHub />} />
+      <Route path="/settings" element={<AppShell><SettingsHub /></AppShell>} />
       <Route path="/ai-setup" element={<AISetup />} />
       {/* KioskSetup removed */}
       <Route path="/security" element={<Security />} />
