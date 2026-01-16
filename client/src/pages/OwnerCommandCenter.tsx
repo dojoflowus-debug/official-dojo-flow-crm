@@ -20,7 +20,7 @@ export function OwnerCommandCenter() {
 
   if (!isOwnerOrAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-full">
         <Card className="p-8 text-center">
           <AlertCircle className="w-12 h-12 mx-auto mb-4 text-amber-500" />
           <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>
@@ -31,7 +31,7 @@ export function OwnerCommandCenter() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-full bg-background">
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">

@@ -54,14 +54,14 @@ export default function OwnerOnboarding() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12 px-4">
+    <div className="min-h-full bg-gradient-to-b from-slate-50 to-white py-12 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">

@@ -100,7 +100,7 @@ export default function Kiosk() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-white text-xl">Loading kiosk...</div>
         {isDebugMode && <DebugPanel kiosk={null} error={null} locationSlug={locationSlug} />}
       </div>
@@ -110,7 +110,7 @@ export default function Kiosk() {
   // Missing slug state
   if (!locationSlug) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-md p-8 text-center space-y-4">
           <AlertCircle className="h-16 w-16 mx-auto text-red-500" />
           <h1 className="text-2xl font-bold">Invalid Kiosk URL</h1>
@@ -129,7 +129,7 @@ export default function Kiosk() {
   // Error state - kiosk not found or disabled
   if (error || !kiosk) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-md p-8 text-center space-y-4">
           <AlertCircle className="h-16 w-16 mx-auto text-red-500" />
           <h1 className="text-2xl font-bold">Kiosk Not Available</h1>
@@ -155,7 +155,7 @@ export default function Kiosk() {
   
   if (!effectiveSettings) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-md p-8 text-center space-y-4">
           <AlertCircle className="h-16 w-16 mx-auto text-red-500" />
           <h1 className="text-2xl font-bold">Kiosk Not Configured</h1>

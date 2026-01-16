@@ -54,7 +54,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+    <div className="relative min-h-full overflow-hidden bg-background text-foreground">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -72,7 +72,7 @@ export default function Home() {
       </nav>
 
       {/* ===== HERO SECTION: Gate Into the Kingdom ===== */}
-      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-background pt-20">
+      <section className="relative w-full min-h-full flex items-center justify-center overflow-hidden bg-background pt-20">
         {/* Cinematic Background Layer */}
         <div className="absolute inset-0 z-0">
           {/* Dark gradient base */}

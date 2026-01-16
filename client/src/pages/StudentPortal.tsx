@@ -137,7 +137,7 @@ export default function StudentPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1115] text-white pb-20">
+    <div className="min-h-full bg-[#0F1115] text-white pb-20">
       {/* Header */}
       <div className="border-b border-white/10 bg-[#18181A]">
         <div className="container py-6">

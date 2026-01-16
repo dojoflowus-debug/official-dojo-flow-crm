@@ -21,7 +21,7 @@ export function BillingSuccess() {
 
   if (!sessionId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/20">
+      <div className="min-h-full flex items-center justify-center bg-gradient-to-b from-background to-muted/20">
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Invalid Session</CardTitle>
@@ -40,7 +40,7 @@ export function BillingSuccess() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/20 p-4">
+    <div className="min-h-full flex items-center justify-center bg-gradient-to-b from-background to-muted/20 p-4">
       <Card className="max-w-lg w-full">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">

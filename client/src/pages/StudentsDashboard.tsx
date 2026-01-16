@@ -153,9 +153,9 @@ export default function StudentsDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-full bg-background">
       {/* Sticky KPI Bar */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/40">
+      <div className="relative z-40 bg-background/95 backdrop-blur-sm border-b border-border/40">
         <div className="container mx-auto px-4 py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {kpiMetrics.map((metric, idx) => (
@@ -437,7 +437,7 @@ export default function StudentsDashboard() {
           {/* Drawer */}
           <div className="fixed inset-y-0 right-0 z-50 w-full md:w-96 bg-background border-l border-border/50 shadow-lg overflow-y-auto animate-in slide-in-from-right">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 p-6">
+            <div className="relative z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <Avatar className="w-10 h-10 flex-shrink-0">

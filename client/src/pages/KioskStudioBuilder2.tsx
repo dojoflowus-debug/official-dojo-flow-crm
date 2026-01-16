@@ -516,23 +516,23 @@ export default function KioskStudioBuilder2() {
   const hasNoLocations = locationsData && locationsData.length === 0;
   
   if (locationsError) {
-    return <div className="flex items-center justify-center h-screen text-destructive">Error loading locations: {locationsError.message}</div>;
+    return <div className="flex items-center justify-center h-full text-destructive">Error loading locations: {locationsError.message}</div>;
   }
   
   if (isInitializing) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center h-full">Loading...</div>;
   }
   
   if (hasNoLocations) {
-    return <div className="flex items-center justify-center h-screen text-muted-foreground">No locations found. Please create a location first.</div>;
+    return <div className="flex items-center justify-center h-full text-muted-foreground">No locations found. Please create a location first.</div>;
   }
   
   if (!selectedLocationId) {
-    return <div className="flex items-center justify-center h-screen text-muted-foreground">Please select a location.</div>;
+    return <div className="flex items-center justify-center h-full text-muted-foreground">Please select a location.</div>;
   }
 
   return (
-    <div ref={containerRef} className="flex h-screen bg-background overflow-hidden" style={{ userSelect: isResizing ? 'none' : 'auto', cursor: isResizing ? 'col-resize' : 'auto' }}>
+    <div ref={containerRef} className="flex h-full bg-background overflow-hidden" style={{ userSelect: isResizing ? 'none' : 'auto', cursor: isResizing ? 'col-resize' : 'auto' }}>
       {/* Left: Locations & Kiosks */}
       <div className="w-[280px] border-r border-border bg-card flex flex-col overflow-hidden">
         <div className="p-4 border-b border-border space-y-3">

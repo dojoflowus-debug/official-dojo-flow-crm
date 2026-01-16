@@ -136,7 +136,7 @@ function StudentsElevatedContent() {
 
 
   const pageContent = (
-    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+    <div className="min-h-full bg-background pb-24 relative overflow-hidden">
       {/* Dojo Atmosphere Layer - Background */}
       <div className="fixed inset-0 -z-10">
         {/* Base gradient - warm dojo tones */}
@@ -159,7 +159,7 @@ function StudentsElevatedContent() {
       </div>
 
       {/* Header Section - Enhanced */}
-      <div className="sticky top-0 z-30 bg-background/30 backdrop-blur-2xl border-b border-white/5">
+      <div className="relative z-30 bg-background/30 backdrop-blur-2xl border-b border-white/5">
         <div className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             {/* Title with atmospheric feel */}

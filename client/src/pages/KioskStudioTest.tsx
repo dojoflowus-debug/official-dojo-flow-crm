@@ -26,7 +26,7 @@ export default function KioskStudioTest() {
   const handleTypographyChange = (key: string, value: any) => updateConfig('typography', key, value);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-full bg-slate-950 text-white">
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40 p-6">
         <div className="flex items-center justify-between">
@@ -44,7 +44,7 @@ export default function KioskStudioTest() {
       </div>
 
       {/* Main Content */}
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100%-80px)]">
         {/* Left Panel - Controls with RED OUTLINE */}
         <div className="w-96 border-r border-slate-800 overflow-y-auto bg-slate-900/30 border-4 border-red-500 relative z-50 pointer-events-auto">
           {/* Click Test Button */}

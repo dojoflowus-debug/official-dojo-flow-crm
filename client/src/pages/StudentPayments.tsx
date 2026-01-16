@@ -133,7 +133,7 @@ export default function StudentPayments() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-20">
+    <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-20">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">

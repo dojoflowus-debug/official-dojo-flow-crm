@@ -160,7 +160,7 @@ export default function KioskMemberLogin() {
   // Success screen after check-in
   if (checkedIn && studentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-2xl w-full border-slate-800 bg-slate-900/50 backdrop-blur-sm p-12">
           <div className="text-center space-y-6">
             <div className="flex justify-center">
@@ -202,7 +202,7 @@ export default function KioskMemberLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
       {/* Subtle background image */}
       <div className="absolute inset-0 opacity-5">
         <div 

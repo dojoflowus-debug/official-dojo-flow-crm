@@ -82,7 +82,7 @@ export default function DataDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-full bg-gray-100 flex items-center justify-center">
         <div className="text-2xl font-semibold text-gray-600">Loading...</div>
       </div>
     );
@@ -90,14 +90,14 @@ export default function DataDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-full bg-gray-100 flex items-center justify-center">
         <div className="text-2xl font-semibold text-red-600">Error: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-full bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">

@@ -98,7 +98,7 @@ export default function PublicChat() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl h-[600px] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-lg">

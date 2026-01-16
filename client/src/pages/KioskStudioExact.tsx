@@ -348,7 +348,7 @@ export default function KioskStudioExact() {
   return (
     <ManagementLayout>
       <div
-        className="flex flex-col h-screen"
+        className="flex flex-col h-full"
         style={{ backgroundColor: "#0B0D10" }}
       >
       {/* TOP COMMAND BAR - Slim, minimal, professional */}

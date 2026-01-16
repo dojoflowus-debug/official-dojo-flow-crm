@@ -180,7 +180,7 @@ export default function KioskManager() {
   const selectedLocation = locations?.find(loc => loc.id === selectedLocationId);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-full bg-background">
       {/* Left Column: Location List */}
       <div className="w-80 border-r border-border bg-card flex flex-col">
         <div className="p-4 border-b border-border space-y-4">

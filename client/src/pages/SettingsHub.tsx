@@ -206,7 +206,7 @@ export default function SettingsHub() {
 
   return (
     <ManagementLayout title="Settings">
-    <div className="min-h-screen bg-background">
+    <div className="min-h-full bg-background">
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
         <div className="space-y-4">

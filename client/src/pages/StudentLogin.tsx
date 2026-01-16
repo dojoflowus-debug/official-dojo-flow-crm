@@ -263,7 +263,7 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-950">
+    <div className="min-h-full flex bg-slate-950">
       {/* LEFT PANEL - Command Login */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-20 py-12 relative">
         {/* Subtle gradient background */}

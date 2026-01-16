@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 export default function EnrollmentStart() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
       {/* Logo and School Name */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center">
         <div className="flex items-center justify-center gap-3 mb-2">

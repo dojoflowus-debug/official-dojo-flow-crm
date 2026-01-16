@@ -326,13 +326,13 @@ export default function KioskStudioBuilder() {
   };
 
   if (isLoading || !draft) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center h-full">Loading...</div>;
   }
 
   return (
     <div 
       ref={containerRef}
-      className="h-screen bg-gray-50"
+      className="h-full bg-gray-50"
       style={{
         display: 'grid',
         gridTemplateColumns: isPreviewFocused 

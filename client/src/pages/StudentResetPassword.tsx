@@ -70,7 +70,7 @@ export default function StudentResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <div className="min-h-full flex items-center justify-center bg-white px-4">
         <div className="text-center">
           <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Invalid Link</h1>
@@ -85,7 +85,7 @@ export default function StudentResetPassword() {
 
   if (isValidating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-full flex items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
@@ -93,7 +93,7 @@ export default function StudentResetPassword() {
 
   if (tokenValidation && !tokenValidation.valid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <div className="min-h-full flex items-center justify-center bg-white px-4">
         <div className="text-center">
           <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Link Expired</h1>
@@ -107,7 +107,7 @@ export default function StudentResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-full flex">
       {/* Left Panel - Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 bg-white">
         <div className="max-w-md w-full mx-auto">

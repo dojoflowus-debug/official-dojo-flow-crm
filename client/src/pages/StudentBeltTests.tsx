@@ -378,7 +378,7 @@ export default function StudentBeltTests() {
 
   if (!studentId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
       </div>
     );
@@ -391,7 +391,7 @@ export default function StudentBeltTests() {
     .map((r: any) => r.registration.testId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 pb-20">
+    <div className="min-h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 pb-20">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">

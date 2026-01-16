@@ -207,7 +207,7 @@ export default function AutomationBuilder() {
 
   if (isEditMode && isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
+      <div className="min-h-full bg-black text-white p-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center py-12">Loading...</div>
         </div>
@@ -216,7 +216,7 @@ export default function AutomationBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-full bg-black text-white p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

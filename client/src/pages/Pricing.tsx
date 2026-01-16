@@ -108,7 +108,7 @@ export function Pricing() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="min-h-full bg-gradient-to-b from-background to-muted/20">
         {/* Header */}
         <section className="pt-28 md:pt-32">
           <div className="container text-center">

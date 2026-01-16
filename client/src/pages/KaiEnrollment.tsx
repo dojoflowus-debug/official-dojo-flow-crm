@@ -317,7 +317,7 @@ export default function KaiEnrollment() {
 
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-[#0F141A] flex items-center justify-center p-4">
+      <div className="min-h-full bg-[#0F141A] flex items-center justify-center p-4">
         <div className="max-w-2xl w-full text-center space-y-6">
           <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-red-700 to-red-500 flex items-center justify-center shadow-xl shadow-red-500/50">
             <Check className="w-10 h-10 text-white" />
@@ -343,7 +343,7 @@ export default function KaiEnrollment() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F141A]">
+    <div className="min-h-full bg-[#0F141A]">
       {/* Header with Progress */}
       <div className="border-b border-slate-800 bg-[#161C23]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -432,7 +432,7 @@ export default function KaiEnrollment() {
 
       {/* Split Layout */}
       <div className="max-w-7xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-220px)]">
           {/* Left Panel: Kai Conversation */}
           <div className="lg:col-span-2 flex flex-col">
             <Card className="flex-1 bg-[#161C23] border-slate-800 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">

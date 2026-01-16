@@ -208,9 +208,9 @@ function StudentsDashboard() {
   };
 
   const pageContent = (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-full bg-background pb-24">
       {/* Header Section */}
-      <div className="sticky top-0 z-30 bg-background/50 backdrop-blur-xl border-b border-white/5">
+      <div className="relative z-10 bg-background/50 backdrop-blur-xl border-b border-white/5">
         <div className="container mx-auto px-4 py-6">
           <div className="space-y-4">
             <div>

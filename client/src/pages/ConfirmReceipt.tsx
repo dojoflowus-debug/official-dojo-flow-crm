@@ -52,7 +52,7 @@ export default function ConfirmReceipt() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-red-600">Invalid Link</CardTitle>
@@ -65,7 +65,7 @@ export default function ConfirmReceipt() {
 
   if (status === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+      <div className="min-h-full flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -90,7 +90,7 @@ export default function ConfirmReceipt() {
 
   if (status === "error") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
+      <div className="min-h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -105,7 +105,7 @@ export default function ConfirmReceipt() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+    <div className="min-h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

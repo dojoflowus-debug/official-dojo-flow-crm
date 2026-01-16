@@ -112,7 +112,7 @@ export default function KioskPreview() {
   }, [appearance, isStudioPreview]);
 
   if (!appearance) {
-    return <div className="flex items-center justify-center h-screen bg-white">Loading...</div>;
+    return <div className="flex items-center justify-center h-full bg-white">Loading...</div>;
   }
 
   // Resolve background
@@ -152,7 +152,7 @@ export default function KioskPreview() {
 
   return (
     <div
-      className="kiosk-root w-full h-screen flex items-center justify-center overflow-hidden"
+      className="kiosk-root w-full h-full flex items-center justify-center overflow-hidden"
       style={{
         ...getBackgroundStyle(),
         filter: `blur(${appearance.background.blur}px) brightness(${100 - appearance.background.dim}%)`,

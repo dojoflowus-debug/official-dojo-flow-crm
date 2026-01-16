@@ -76,7 +76,7 @@ export default function InstructorView() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-full">
         <div className="text-xl">Loading...</div>
       </div>
     );
@@ -84,7 +84,7 @@ export default function InstructorView() {
 
   if (!classInfo) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-full">
         <h1 className="text-2xl font-bold mb-4">Class Not Found</h1>
         <Button onClick={() => navigate('/classes')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -99,7 +99,7 @@ export default function InstructorView() {
   const totalAssigned = bagAssignments.reduce((sum, bag) => sum + bag.students.length, 0);
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-full bg-background p-4 md:p-8">
       {/* Header - Hide on print */}
       <div className="max-w-7xl mx-auto mb-8 print:hidden">
         <Button

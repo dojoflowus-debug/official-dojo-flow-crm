@@ -283,11 +283,11 @@ export default function PublicLanding() {
 
   return (
     <MainLayout transparentHeader>
-      <div className="min-h-screen bg-background overflow-x-hidden">
+      <div className="min-h-full bg-background overflow-x-hidden">
       {/* Hero Section - Cinematic Kai Command Module */}
       <section 
         ref={heroRef}
-        className="relative h-screen flex items-center justify-center overflow-hidden"
+        className="relative h-full flex items-center justify-center overflow-hidden"
       >
         {/* Cinematic Hero Video Background */}
         <video

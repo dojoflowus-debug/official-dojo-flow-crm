@@ -31,14 +31,14 @@ export default function PaymentSuccess() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-full bg-slate-900 flex items-center justify-center">
         <div className="text-white text-xl">Processing payment...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900/20 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-full bg-gradient-to-br from-slate-900 via-emerald-900/20 to-slate-900 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-slate-800 rounded-2xl border-2 border-emerald-500 p-8 text-center">
         {/* Success Icon */}
         <div className="mb-6">

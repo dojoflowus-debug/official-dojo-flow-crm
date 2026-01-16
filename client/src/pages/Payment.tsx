@@ -40,7 +40,7 @@ export default function Payment() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-2xl w-full border-slate-800 bg-slate-900/50 backdrop-blur-sm p-12">
           <div className="text-center space-y-6">
             <div className="flex justify-center">
@@ -89,7 +89,7 @@ export default function Payment() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
+    <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
       <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-6 flex items-center gap-4">
           <Button

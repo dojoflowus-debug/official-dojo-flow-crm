@@ -779,7 +779,7 @@ export default function StudentsSplitScreen() {
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center h-screen ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-slate-50'}`}>
+      <div className={`flex items-center justify-center h-full ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-slate-50'}`}>
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
@@ -787,7 +787,7 @@ export default function StudentsSplitScreen() {
 
   return (
     <ManagementLayout>
-    <div className={`min-h-screen flex flex-col relative ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-br from-slate-50 to-slate-100/80'}`}>
+    <div className={`min-h-full flex flex-col relative ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-br from-slate-50 to-slate-100/80'}`}>
       {/* Breadcrumb Navigation */}
       <div className={`backdrop-blur-sm border-b px-6 py-2 ${isDarkMode ? 'bg-[#18181A]/80 border-white/5' : 'bg-white/80 border-slate-200/40'}`}>
         <Breadcrumb
@@ -852,7 +852,7 @@ export default function StudentsSplitScreen() {
             className={`flex flex-col transition-all duration-300 ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-white'} ${
               viewMode === 'fullMap' ? 'w-full h-full flex-1' : ''
             } ${
-              isMobile ? 'h-[350px] flex-shrink-0' : viewMode === 'fullMap' ? '' : 'h-[calc(100vh-200px)]'
+              isMobile ? 'h-[350px] flex-shrink-0' : viewMode === 'fullMap' ? '' : 'h-[calc(100%-200px)]'
             }`}
             style={isMobile ? {} : viewMode === 'fullMap' ? { height: '100%', minHeight: 0 } : { 
               flexBasis: `${mapWidth}%`,
@@ -945,7 +945,7 @@ export default function StudentsSplitScreen() {
         {(viewMode === 'split' || viewMode === 'list') && (
           <div 
             className={`flex ${isDarkMode ? 'bg-[#0F0F11]' : 'bg-gradient-to-b from-white to-slate-50/50'} ${
-              isMobile ? 'flex-1 flex-col' : 'h-[calc(100vh-200px)]'
+              isMobile ? 'flex-1 flex-col' : 'h-[calc(100%-200px)]'
             }`}
             style={isMobile || viewMode === 'list' ? { flex: 1 } : { flex: 1 }}
           >

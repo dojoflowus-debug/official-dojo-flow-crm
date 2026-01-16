@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function CookiePolicy() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-full bg-background">
       <div className="container max-w-4xl py-12">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="h-4 w-4" />

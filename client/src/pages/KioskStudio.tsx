@@ -378,7 +378,7 @@ export default function KioskStudio() {
       </div>
 
       {/* Main Content */}
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100%-80px)]">
         {/* Left Panel - Controls */}
         <div className="w-96 border-r border-slate-800 overflow-y-auto bg-slate-900/30 border-4 border-red-500 relative z-50 pointer-events-auto">
           {/* Location Selector */}

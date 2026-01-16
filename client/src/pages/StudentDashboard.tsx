@@ -258,7 +258,7 @@ export default function StudentDashboard() {
   // No student ID - redirect to login
   if (!studentId && !isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Please log in to view your dashboard</p>
           <Button onClick={() => navigate("/student-login")}>Go to Login</Button>
@@ -270,7 +270,7 @@ export default function StudentDashboard() {
   // Loading state
   if (isLoading || !dashboardData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-4" />
           <p className="text-gray-500">Loading your dashboard...</p>
@@ -283,7 +283,7 @@ export default function StudentDashboard() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">Failed to load dashboard data</p>
           <Button onClick={() => window.location.reload()}>Retry</Button>
@@ -319,7 +319,7 @@ export default function StudentDashboard() {
   const nextClass = enrolledClasses && enrolledClasses.length > 0 ? enrolledClasses[0] : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 pb-20">
+    <div className="min-h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 pb-20">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-gray-100">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">

@@ -887,7 +887,7 @@ export default function Marketing({ onLogout, theme, toggleTheme }) {
 
           {/* CONVERSATIONS TAB */}
           <TabsContent value="conversations" className="mt-6">
-            <div className="flex h-[calc(100vh-16rem)] gap-4">
+            <div className="flex h-[calc(100%-16rem)] gap-4">
               {/* Sidebar - Conversations List */}
               <div className="w-96 border rounded-lg flex flex-col">
                 <div className="p-4 border-b">

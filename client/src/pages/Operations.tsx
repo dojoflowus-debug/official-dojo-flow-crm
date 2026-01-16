@@ -9,7 +9,7 @@ export default function Operations() {
 
   return (
     <ManagementLayout>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-full bg-background">
         {/* Header */}
         <div className="border-b bg-card">
           <div className="container mx-auto px-4 py-6">

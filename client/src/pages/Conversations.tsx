@@ -108,8 +108,8 @@ export default function Conversations() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="flex h-screen">
+    <div className="min-h-full bg-black text-white">
+      <div className="flex h-full">
         {/* Sidebar - Conversations List */}
         <div className="w-96 border-r border-zinc-800 flex flex-col">
           <div className="p-6 border-b border-zinc-800">

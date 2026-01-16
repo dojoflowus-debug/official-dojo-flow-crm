@@ -138,7 +138,7 @@ export default function AdminStaffPins() {
 
   return (
     <SimpleLayout>
-      <div className="min-h-screen bg-slate-950 p-8">
+      <div className="min-h-full bg-slate-950 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>

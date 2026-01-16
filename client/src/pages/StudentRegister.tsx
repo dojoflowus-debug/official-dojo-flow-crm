@@ -239,7 +239,7 @@ export default function StudentRegister() {
   // Success screen
   if (registrationComplete) {
     return (
-      <div className="min-h-screen flex bg-slate-950">
+      <div className="min-h-full flex bg-slate-950">
         <div className="w-full flex flex-col items-center justify-center px-6 py-12">
           <div className="max-w-md w-full text-center">
             <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
@@ -271,7 +271,7 @@ export default function StudentRegister() {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-950">
+    <div className="min-h-full flex bg-slate-950">
       {/* LEFT PANEL - Registration Form */}
       <div className="w-full lg:w-1/2 flex flex-col px-6 sm:px-12 lg:px-16 xl:px-20 py-8 relative overflow-y-auto">
         {/* Subtle gradient background */}

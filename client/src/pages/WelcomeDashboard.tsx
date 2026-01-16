@@ -93,7 +93,7 @@ export default function WelcomeDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-background flex items-center justify-center p-6">
+    <div className="min-h-full bg-gradient-to-b from-slate-950 via-slate-900 to-background flex items-center justify-center p-6">
       <div className="max-w-4xl w-full">
         {/* Success Icon */}
         <div className="text-center mb-8">

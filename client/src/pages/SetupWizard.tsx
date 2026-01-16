@@ -282,7 +282,7 @@ export default function SetupWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-full bg-black relative overflow-hidden">
       {/* Welcome Screen Overlay */}
       {showWelcome && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">

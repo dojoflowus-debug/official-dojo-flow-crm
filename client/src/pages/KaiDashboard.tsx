@@ -532,7 +532,7 @@ export default function KaiDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative">
+    <div className="min-h-full bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative">
       {/* Starfield background */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(100)].map((_, i) => (
@@ -586,7 +586,7 @@ export default function KaiDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-200px)] px-4 -mt-24">
+      <div className="relative z-10 flex items-center justify-center min-h-[calc(100%-200px)] px-4 -mt-24">
           {/* Circular Dashboard */}
           <div className="relative w-full max-w-[600px] aspect-square">
             {/* Circular Rings - Red when speaking with pulse animation, cyan otherwise */}
@@ -797,7 +797,7 @@ export default function KaiDashboard() {
         </button>
 
         {/* History Sidebar - Slides in from right */}
-        <div className={`fixed top-24 w-80 h-[calc(100vh-200px)] max-h-[600px] bg-purple-950/30 backdrop-blur-sm rounded-2xl border border-purple-500/20 flex flex-col z-20 transition-all duration-300 ${
+        <div className={`fixed top-24 w-80 h-[calc(100%-200px)] max-h-[600px] bg-purple-950/30 backdrop-blur-sm rounded-2xl border border-purple-500/20 flex flex-col z-20 transition-all duration-300 ${
           showHistory ? 'right-8' : '-right-96'
         }`}>
             <div className="p-4 border-b border-purple-500/20">

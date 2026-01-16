@@ -92,10 +92,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#0a0a0b]">
+    <div className="min-h-full flex bg-[#0a0a0b]">
       {/* Left Panel - Form (40%) */}
       <div 
-        className={`w-full lg:w-[40%] min-h-screen flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-12 transition-all duration-700 ease-out ${
+        className={`w-full lg:w-[40%] min-h-full flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-12 transition-all duration-700 ease-out ${
           mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
         }`}
       >

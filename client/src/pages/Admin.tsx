@@ -92,7 +92,7 @@ export default function Admin() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-white text-lg">Loading kiosk data...</p>
@@ -102,7 +102,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-full bg-black flex flex-col">
       {/* Header */}
       <header className="border-b border-slate-900 bg-black">
         <div className="container mx-auto px-6 py-6 flex items-center justify-between">

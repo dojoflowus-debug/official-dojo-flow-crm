@@ -32,7 +32,7 @@ export default function CampaignDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
+      <div className="min-h-full bg-black text-white p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12 text-gray-400">Loading campaign...</div>
         </div>
@@ -42,7 +42,7 @@ export default function CampaignDetail() {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
+      <div className="min-h-full bg-black text-white p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-white mb-2">Campaign not found</h2>
@@ -81,7 +81,7 @@ export default function CampaignDetail() {
     : "0";
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-full bg-black text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">

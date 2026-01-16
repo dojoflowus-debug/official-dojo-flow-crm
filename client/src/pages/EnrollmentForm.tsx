@@ -91,7 +91,7 @@ export default function EnrollmentForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
         <div className="container mx-auto px-4 py-4">

@@ -49,7 +49,7 @@ export default function Feedback() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+      <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
         <Card className="max-w-md w-full bg-slate-900 border-slate-800 text-center p-8">
           <div className="mb-6">
             <div className="h-20 w-20 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center mx-auto mb-4">
@@ -78,7 +78,7 @@ export default function Feedback() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-6">

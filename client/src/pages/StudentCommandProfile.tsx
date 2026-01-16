@@ -188,7 +188,7 @@ function StudentCommandProfile() {
   if (isLoading) {
     return (
       <ManagementLayout>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-full bg-background flex items-center justify-center">
           <p className="text-muted-foreground">Loading student profile...</p>
         </div>
       </ManagementLayout>
@@ -198,7 +198,7 @@ function StudentCommandProfile() {
   if (error || !student) {
     return (
       <ManagementLayout>
-        <div className="min-h-screen bg-background pb-24">
+        <div className="min-h-full bg-background pb-24">
           <div className="container mx-auto px-4 py-6">
             <Button variant="ghost" size="sm" onClick={() => navigate('/students')} className="gap-2 mb-6">
               <ChevronLeft className="w-4 h-4" />
@@ -227,8 +227,8 @@ function StudentCommandProfile() {
 
   return (
     <ManagementLayout>
-      <div className="min-h-screen bg-background pb-24">
-        <div className="sticky top-0 z-30 bg-background/50 backdrop-blur-xl border-b border-white/5">
+      <div className="min-h-full bg-background pb-24">
+        <div className="relative z-30 bg-background/50 backdrop-blur-xl border-b border-white/5">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <Button variant="ghost" size="sm" onClick={() => navigate('/students')} className="gap-2">

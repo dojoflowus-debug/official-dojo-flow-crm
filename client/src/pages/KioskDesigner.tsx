@@ -155,7 +155,7 @@ export function KioskDesigner() {
   };
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-full bg-background text-foreground overflow-hidden">
       {/* LEFT PANEL - CONTROLS */}
       <div className="w-80 border-r border-border overflow-y-auto bg-gradient-to-b from-background to-background/95">
         <div className="p-6 space-y-6">
