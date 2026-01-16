@@ -20,6 +20,7 @@ import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
+import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import { 
   Search, 
   Plus, 
@@ -135,6 +136,16 @@ export default function KaiCommand() {
   const [isExtractingSchedule, setIsExtractingSchedule] = useState(false);
   const [isCreatingClasses, setIsCreatingClasses] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Error handling state
+  interface ApiError {
+    message: string;
+    type: 'timeout' | 'network' | 'validation' | 'server' | 'unknown';
+    timestamp: Date;
+    retryable: boolean;
+  }
+  const [apiError, setApiError] = useState<ApiError | null>(null);
+  const [errorDismissed, setErrorDismissed] = useState(false);
   
   // Drag-and-drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -1959,13 +1970,37 @@ export default function KaiCommand() {
           console.warn('[handleSendMessage] No conversation ID available to save AI message');
         }
       } catch (error) {
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `I can help you with "${currentInput}". Let me analyze your dojo's performance metrics and identify key areas for growth.`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMessage]);
+        // Classify error type
+        let errorType: 'timeout' | 'network' | 'validation' | 'server' | 'unknown' = 'unknown';
+        let errorMessage = 'Failed to get AI response';
+        let retryable = true;
+        
+        if (error instanceof Error) {
+          errorMessage = error.message;
+          if (error.message.includes('timeout') || error.message.includes('timed out')) {
+            errorType = 'timeout';
+          } else if (error.message.includes('network') || error.message.includes('fetch')) {
+            errorType = 'network';
+          } else if (error.message.includes('validation')) {
+            errorType = 'validation';
+            retryable = false;
+          } else if (error.message.includes('500') || error.message.includes('server')) {
+            errorType = 'server';
+          }
+        }
+        
+        console.error('[handleSendMessage] AI call failed:', { errorType, errorMessage, error });
+        
+        // Set error state for UI display
+        setApiError({
+          message: errorMessage,
+          type: errorType,
+          timestamp: new Date(),
+          retryable
+        });
+        
+        // Reset error dismissed flag so error shows
+        setErrorDismissed(false);
       } finally {
         setIsLoading(false);
       }
@@ -2206,6 +2241,18 @@ export default function KaiCommand() {
 
   return (
     <ManagementLayout>
+      {/* Error Alert for API failures */}
+      <KaiErrorAlert
+        error={apiError}
+        onDismiss={() => {
+          setApiError(null);
+          setErrorDismissed(true);
+        }}
+        onRetry={handleSendMessage}
+        isDark={isDark}
+        isCinematic={isCinematic}
+      />
+      
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
       <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-screen' : 'h-[calc(100vh-80px-64px)]'} overflow-hidden ${getKaiCommandBgClass()} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
