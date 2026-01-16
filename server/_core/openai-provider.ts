@@ -43,7 +43,7 @@ export async function invokeOpenAI(params: InvokeParams): Promise<InvokeResult> 
   const { messages, maxTokens, max_tokens } = params;
 
   const payload: Record<string, unknown> = {
-    model: 'gpt-4-turbo',
+    model: 'gpt-4o',
     messages: messages.map(normalizeMessage),
     max_tokens: maxTokens || max_tokens || 2048,
     temperature: 0.7,
