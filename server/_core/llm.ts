@@ -266,67 +266,85 @@ const normalizeResponseFormat = ({
 };
 
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
-  assertApiKey();
+  // Route to OpenAI (primary) or Forge (fallback)
+  const aiProvider = process.env.AI_PROVIDER || 'openai';
+  const startTime = Date.now();
+  const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  const {
-    messages,
-    tools,
-    toolChoice,
-    tool_choice,
-    outputSchema,
-    output_schema,
-    responseFormat,
-    response_format,
-  } = params;
+  try {
+    if (aiProvider === 'openai' && process.env.OPENAI_API_KEY) {
+      // Use OpenAI
+      const { invokeOpenAI } = await import('./openai-provider');
+      const result = await invokeOpenAI(params);
+      const latency = Date.now() - startTime;
+      console.log(`[AI_CALL_SUCCESS] requestId=${requestId} provider=openai latency=${latency}ms`);
+      return result;
+    } else if (process.env.OPENAI_API_KEY) {
+      // Fallback to OpenAI if primary fails
+      const { invokeOpenAI } = await import('./openai-provider');
+      const result = await invokeOpenAI(params);
+      const latency = Date.now() - startTime;
+      console.log(`[AI_CALL_SUCCESS] requestId=${requestId} provider=openai latency=${latency}ms`);
+      return result;
+    } else {
+      // Fallback to Forge
+      assertApiKey();
+      const payload: Record<string, unknown> = {
+        model: "gemini-2.5-flash",
+        messages: params.messages.map(normalizeMessage),
+      };
 
-  const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
-    messages: messages.map(normalizeMessage),
-  };
+      if (params.tools && params.tools.length > 0) {
+        payload.tools = params.tools;
+      }
 
-  if (tools && tools.length > 0) {
-    payload.tools = tools;
+      const normalizedToolChoice = normalizeToolChoice(
+        params.toolChoice || params.tool_choice,
+        params.tools
+      );
+      if (normalizedToolChoice) {
+        payload.tool_choice = normalizedToolChoice;
+      }
+
+      payload.max_tokens = 32768;
+      payload.thinking = { "budget_tokens": 128 };
+
+      const normalizedResponseFormat = normalizeResponseFormat({
+        responseFormat: params.responseFormat,
+        response_format: params.response_format,
+        outputSchema: params.outputSchema,
+        output_schema: params.output_schema,
+      });
+
+      if (normalizedResponseFormat) {
+        payload.response_format = normalizedResponseFormat;
+      }
+
+      const response = await fetch(resolveApiUrl(), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${ENV.forgeApiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
+        );
+      }
+
+      const result = (await response.json()) as InvokeResult;
+      const latency = Date.now() - startTime;
+      console.log(`[AI_CALL_SUCCESS] requestId=${requestId} provider=forge latency=${latency}ms`);
+      return result;
+    }
+  } catch (error) {
+    const latency = Date.now() - startTime;
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(`[AI_CALL_ERROR] requestId=${requestId} latency=${latency}ms error=${errorMsg}`);
+    throw error;
   }
-
-  const normalizedToolChoice = normalizeToolChoice(
-    toolChoice || tool_choice,
-    tools
-  );
-  if (normalizedToolChoice) {
-    payload.tool_choice = normalizedToolChoice;
-  }
-
-  payload.max_tokens = 32768
-  payload.thinking = {
-    "budget_tokens": 128
-  }
-
-  const normalizedResponseFormat = normalizeResponseFormat({
-    responseFormat,
-    response_format,
-    outputSchema,
-    output_schema,
-  });
-
-  if (normalizedResponseFormat) {
-    payload.response_format = normalizedResponseFormat;
-  }
-
-  const response = await fetch(resolveApiUrl(), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${ENV.forgeApiKey}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
-    );
-  }
-
-  return (await response.json()) as InvokeResult;
 }

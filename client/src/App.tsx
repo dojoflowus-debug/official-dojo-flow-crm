@@ -41,6 +41,7 @@ import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
 import KaiCommandDashboard from "./pages/KaiCommandDashboard";
 import CRMDashboard from "./pages/CRMDashboard";
+import KaiDebugHarnessMock from "./pages/KaiDebugHarnessMock";
 import StudentsNew from "./pages/StudentsNew";
 import StudentsSplitScreen from "./pages/StudentsSplitScreen";
 import StudentsCommandCenter from "./pages/StudentsCommandCenter";
@@ -177,6 +178,7 @@ function Router() {
       <Route path="/command" element={<KaiCommandDashboard />} />
       <Route path="/kai-onboarding" element={<KaiHeroOnboarding />} />
       <Route path="/stats" element={<MinimalDashboard />} />
+      {process.env.NODE_ENV !== 'production' && <Route path="/dev/kai-debug-mock" element={<KaiDebugHarnessMock />} />}
       <Route path="/checkin" element={<CheckIn />} />
       <Route path="/test-brand" element={<TestBrand />} />
       
