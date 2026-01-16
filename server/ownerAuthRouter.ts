@@ -284,10 +284,15 @@ export const ownerAuthRouter = router({
       }
 
       // Update last signed in
-      await db
-        .update(users)
-        .set({ lastSignedIn:new Date().toISOString() })
-        .where(eq(users.id, user.id));
+      try {
+        await db
+          .update(users)
+          .set({ lastSignedIn: new Date().toISOString() })
+          .where(eq(users.id, user.id));
+      } catch (err) {
+        console.error('[ownerAuth.login] Error updating lastSignedIn:', err);
+        // Don't fail the login if this fails
+      }
 
       // Check if owner has an organization
       const orgMemberships = await db
