@@ -462,6 +462,8 @@ export default function KaiCommand() {
       toast.error('Failed to load conversations');
     }
   });
+  const statsQuery = trpc.dashboard.stats.useQuery({});
+  
   const messagesQuery = trpc.kai.getMessages.useQuery(
     { conversationId: selectedConversationId && !selectedConversationId.startsWith('new-') ? parseInt(selectedConversationId) : 0 },
     { enabled: !!selectedConversationId && !selectedConversationId.startsWith('new-') }

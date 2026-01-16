@@ -228,8 +228,9 @@ export async function deleteStaffPin(id: number) {
 import { getDashboardAlerts } from "./alertsHelper";
 
 export async function getDashboardStats(organizationId?: number | null) {
-  const db = await getDb();
-  if (!db) return null;
+  try {
+    const db = await getDb();
+    if (!db) return null;
   
   // If no organization is provided, return zeros (no fake data for new accounts)
   if (!organizationId) {
@@ -319,6 +320,22 @@ export async function getDashboardStats(organizationId?: number | null) {
       enrolled: c.enrolled
     }))
   };
+  } catch (error) {
+    console.error('[getDashboardStats] Error:', error);
+    // Return safe defaults on error
+    return {
+      total_students: 0,
+      active_students: 0,
+      todays_attendance: 0,
+      new_leads: 0,
+      trials_scheduled: 0,
+      new_enrollments: 0,
+      monthly_revenue: 0,
+      total_leads: 0,
+      alerts: [],
+      todays_classes: []
+    };
+  }
 }
 
 // Get kiosk check-ins
