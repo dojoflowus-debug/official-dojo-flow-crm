@@ -4,6 +4,9 @@ import { conversations, messages } from "../drizzle/schema";
 import { eq, and, desc, limit } from "drizzle-orm";
 import { protectedProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
+import { processMetricQuery } from "./kai-metric-handler";
+import { classifyIntent } from "./kai-nlp-router";
+import z from "zod";
 
 /**
  * Kai Conversations Router
@@ -322,6 +325,127 @@ export const kaiConversationsRouter = router({
         console.error("Failed to generate summary:", error);
         return { summary: "Unable to generate summary" };
       }
+    }),
+
+  /**
+   * Process a user query (metric or chat)
+   * Detects if query is about metrics and routes appropriately
+   * Returns AI response with optional metric data
+   */
+  processQuery: protectedProcedure
+    .input(
+      z.object({
+        conversationId: z.number(),
+        query: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Verify conversation belongs to user
+      const [conversation] = await db
+        .select()
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.id, input.conversationId),
+            eq(conversations.organizationId, ctx.user.organizationId)
+          )
+        )
+        .limit(1);
+
+      if (!conversation) {
+        throw new Error("Conversation not found");
+      }
+
+      // Step 1: Store user message
+      await db.insert(messages).values({
+        conversationId: input.conversationId,
+        organizationId: ctx.user.organizationId,
+        role: "user",
+        content: input.query,
+        createdAt: new Date().toISOString(),
+      });
+
+      // Step 2: Classify intent
+      const classification = classifyIntent(input.query);
+      let aiResponse = "";
+      let metricData = null;
+
+      // Step 3: Route to metric handler or LLM
+      if (classification && classification.confidence > 0.5) {
+        // This is likely a metric query
+        const metricResult = await processMetricQuery(
+          input.query,
+          ctx.user.organizationId
+        );
+
+        if (metricResult.success) {
+          aiResponse = metricResult.message;
+          metricData = metricResult.data;
+        } else {
+          aiResponse = metricResult.message;
+        }
+      } else {
+        // Fall back to LLM for general conversation
+        try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are Kai, an AI operations assistant for martial arts schools. Be helpful, friendly, and concise.",
+              },
+              {
+                role: "user",
+                content: input.query,
+              },
+            ],
+          });
+
+          aiResponse =
+            response.choices?.[0]?.message?.content ||
+            "I am not sure how to help with that.";
+        } catch (error) {
+          console.error("[Kai] LLM error:", error);
+          aiResponse = "Sorry, I encountered an error. Please try again.";
+        }
+      }
+
+      // Step 4: Store AI response
+      const responseMetadata = metricData
+        ? {
+            type: "metric",
+            procedure: classification?.procedure,
+            data: metricData,
+          }
+        : { type: "chat" };
+
+      await db.insert(messages).values({
+        conversationId: input.conversationId,
+        organizationId: ctx.user.organizationId,
+        role: "assistant",
+        content: aiResponse,
+        metadata: JSON.stringify(responseMetadata),
+        createdAt: new Date().toISOString(),
+      });
+
+      // Step 5: Update conversation timestamp
+      await db
+        .update(conversations)
+        .set({
+          lastMessageAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(conversations.id, input.conversationId));
+
+      return {
+        response: aiResponse,
+        type: metricData ? "metric" : "chat",
+        procedure: classification?.procedure,
+        data: metricData,
+      };
     }),
 
   /**

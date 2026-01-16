@@ -3294,3 +3294,87 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - Charts: 2 (Revenue trend, Attendance overview)
 - Features: Date filters, refresh, responsive design
 - Data Integration: All Kai Data Tools connected
+
+
+## PHASE 5: NLU Integration for Kai Metrics (User Feature Request)
+
+### PHASE 5A: Metric Query Handler & Intent Routing
+- [ ] Create kai-metric-handler.ts for query processing
+- [ ] Integrate kai-nlp-router for intent classification
+- [ ] Create metric query type definitions
+- [ ] Implement procedure routing logic
+- [ ] Add error handling for invalid queries
+
+### PHASE 5B: Response Templates & Formatting
+- [ ] Create response template system
+- [ ] Add revenue metric response templates
+- [ ] Add overdue account response templates
+- [ ] Add class capacity response templates
+- [ ] Add kiosk activity response templates
+- [ ] Add billing metric response templates
+- [ ] Implement natural language formatting
+
+### PHASE 5C: Kai Chat Integration
+- [ ] Extend kai.chat tRPC mutation
+- [ ] Add metric query detection
+- [ ] Route metric queries to handler
+- [ ] Add metric query examples to chat
+- [ ] Implement metric response streaming
+- [ ] Add follow-up question suggestions
+
+### PHASE 5D: Testing & Validation
+- [ ] Test metric query classification
+- [ ] Test response formatting
+- [ ] Test edge cases and error handling
+- [ ] Verify natural language output quality
+- [ ] Test with various query phrasings
+
+### PHASE 5E: Delivery
+- [ ] Final integration testing
+- [ ] Create checkpoint
+- [ ] Document NLU features
+
+## PHASE 5: NLU Integration for Kai Metrics (COMPLETE)
+
+### PHASE 5A: Metric Query Handler & Intent Routing ✅
+- [x] Create kai-metric-handler.ts for query processing
+- [x] Integrate kai-nlp-router for intent classification
+- [x] Create metric query type definitions
+- [x] Implement procedure routing logic (10 handlers)
+- [x] Add error handling for invalid queries
+
+### PHASE 5B: Response Templates & Formatting ✅
+- [x] Create response template system
+- [x] Add revenue metric response templates
+- [x] Add overdue account response templates
+- [x] Add class capacity response templates
+- [x] Add kiosk activity response templates
+- [x] Add billing metric response templates
+- [x] Implement natural language formatting
+
+### PHASE 5C: Kai Chat Integration ✅
+- [x] Extend kai.chat tRPC mutation (processQuery)
+- [x] Add metric query detection
+- [x] Route metric queries to handler
+- [x] Add metric query examples to chat
+- [x] Implement metric response with data embedding
+- [x] Add follow-up question suggestions
+
+### PHASE 5D: Testing & Validation ✅
+- [x] Test metric query classification (17 tests)
+- [x] Test response formatting
+- [x] Test edge cases and error handling
+- [x] Verify natural language output quality
+- [x] Test with various query phrasings
+
+### PHASE 5E: Delivery ✅
+- [x] Final integration testing (all tests passing)
+- [x] Create checkpoint
+- [x] Document NLU features
+
+### PHASE 5 FINAL METRICS
+- Files Created: 3 (kai-metric-handler.ts, kai-nlu-integration.test.ts, updated kaiConversationsRouter.ts)
+- Metric Handlers: 10 (Revenue, Overdue, Classes, Capacity, Attendance, Kiosk, Visitors, Students, At-Risk, Leads)
+- Tests: 17 (all passing)
+- Integration Points: 1 (processQuery mutation in kaiConversationsRouter)
+- Features: Intent classification, natural language responses, follow-up suggestions, metric data embedding
