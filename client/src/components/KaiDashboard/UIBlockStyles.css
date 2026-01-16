@@ -1,0 +1,238 @@
+/* UIBlock Rendering Styles for Kai Chat */
+
+.uiBlocksContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.uiBlock {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Styles */
+.uiCard {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid #e74c3c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.cardContent {
+  font-size: 0.9rem;
+}
+
+.cardData {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.cardLabel {
+  font-weight: 500;
+  color: #34495e;
+  min-width: 120px;
+}
+
+.cardValue {
+  color: #2c3e50;
+  font-family: 'Courier New', monospace;
+}
+
+/* Table Styles */
+.uiTable {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tableTitle {
+  margin: 0;
+  padding: 1rem 1rem 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table thead {
+  background: #ecf0f1;
+}
+
+.table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #bdc3c7;
+}
+
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #ecf0f1;
+  color: #34495e;
+}
+
+.table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* Action Styles */
+.uiActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.actionButton {
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.actionButton:active {
+  transform: translateY(0);
+}
+
+/* Metric Styles */
+.uiMetric {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.metricTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.metricValue {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+.metricUnit {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.metricTrend {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.metricTrend.positive {
+  color: #2ecc71;
+}
+
+.metricTrend.negative {
+  color: #e74c3c;
+}
+
+/* Alert Styles */
+.uiAlert {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+  padding: 1rem;
+  color: #856404;
+}
+
+.alertTitle {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: #856404;
+}
+
+.uiAlert p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Debug Info */
+.debugInfo {
+  background: #f8f9fa;
+  border: 1px dashed #bdc3c7;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .uiCard {
+    padding: 0.75rem;
+  }
+
+  .table {
+    font-size: 0.8rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.5rem;
+  }
+
+  .metricValue {
+    font-size: 1.5rem;
+  }
+
+  .actionButton {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}

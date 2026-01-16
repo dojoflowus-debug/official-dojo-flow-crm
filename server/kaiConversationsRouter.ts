@@ -6,6 +6,14 @@ import { protectedProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { processMetricQuery } from "./kai-metric-handler";
 import { classifyIntent } from "./kai-nlp-router";
+import {
+  classifyUserIntent,
+  extractParameters,
+  executeProcedure,
+  requiresToolExecution,
+} from "./kai-intent-router";
+import { getKaiCorePrompt } from "./kai-core-prompt";
+import { validateKaiResponse } from "./kai-response-contract";
 import z from "zod";
 
 /**
@@ -328,9 +336,11 @@ export const kaiConversationsRouter = router({
     }),
 
   /**
-   * Process a user query (metric or chat)
-   * Detects if query is about metrics and routes appropriately
-   * Returns AI response with optional metric data
+   * Process a user query with TOOL-FIRST EXECUTION
+   * 1. Check if directive matches a known procedure
+   * 2. Execute procedure immediately (NO generic preamble)
+   * 3. Return results as UIBlocks/cards
+   * 4. Fall back to LLM only if no tool match
    */
   processQuery: protectedProcedure
     .input(
@@ -368,34 +378,65 @@ export const kaiConversationsRouter = router({
         createdAt: new Date().toISOString(),
       });
 
-      // Step 2: Classify intent
-      const classification = classifyIntent(input.query);
       let aiResponse = "";
-      let metricData = null;
+      let procedureResult = null;
+      let uiBlocks: any[] = [];
+      let executedProcedure = "";
 
-      // Step 3: Route to metric handler or LLM
-      if (classification && classification.confidence > 0.5) {
-        // This is likely a metric query
-        const metricResult = await processMetricQuery(
-          input.query,
-          ctx.user.organizationId
-        );
+      // PHASE 1: TOOL-FIRST EXECUTION
+      // Check if this is a directive that matches a known procedure
+      if (requiresToolExecution(input.query)) {
+        const intentMatch = classifyUserIntent(input.query);
 
-        if (metricResult.success) {
-          aiResponse = metricResult.message;
-          metricData = metricResult.data;
-        } else {
-          aiResponse = metricResult.message;
+        if (intentMatch) {
+          try {
+            // Extract parameters from user message
+            const params = extractParameters(input.query, intentMatch.procedure);
+            params.organizationId = ctx.user.organizationId;
+
+            // Execute the procedure immediately (NO preamble)
+            executedProcedure = intentMatch.procedure;
+            console.log(`[Kai] TOOL-FIRST EXECUTION: ${intentMatch.procedure}`, params);
+
+            // Get the tRPC caller
+            const caller = (ctx as any).caller || ctx;
+            procedureResult = await executeProcedure(caller, intentMatch.procedure, params);
+
+            // Format result as response
+            if (procedureResult) {
+              if (Array.isArray(procedureResult)) {
+                aiResponse = `Found ${procedureResult.length} results`;
+                uiBlocks = procedureResult.map((item: any) => ({
+                  type: "card",
+                  data: item,
+                }));
+              } else if (typeof procedureResult === "object" && procedureResult.message) {
+                aiResponse = procedureResult.message;
+                if (procedureResult.cards) {
+                  uiBlocks = procedureResult.cards;
+                }
+              } else {
+                aiResponse = String(procedureResult);
+              }
+            } else {
+              aiResponse = `No results from ${intentMatch.procedure}`;
+            }
+          } catch (error) {
+            console.error(`[Kai] Tool execution failed: ${intentMatch.procedure}`, error);
+            aiResponse = `Error executing ${intentMatch.procedure}: ${error instanceof Error ? error.message : "Unknown error"}`;
+          }
         }
-      } else {
-        // Fall back to LLM for general conversation
+      }
+
+      // PHASE 2: FALLBACK TO LLM
+      // Only if no tool was executed
+      if (!executedProcedure) {
         try {
           const response = await invokeLLM({
             messages: [
               {
                 role: "system",
-                content:
-                  "You are Kai, an AI operations assistant for martial arts schools. Be helpful, friendly, and concise.",
+                content: getKaiCorePrompt(),
               },
               {
                 role: "user",
@@ -413,14 +454,12 @@ export const kaiConversationsRouter = router({
         }
       }
 
-      // Step 4: Store AI response
-      const responseMetadata = metricData
-        ? {
-            type: "metric",
-            procedure: classification?.procedure,
-            data: metricData,
-          }
-        : { type: "chat" };
+      // Step 4: Store AI response with execution metadata
+      const responseMetadata = {
+        type: executedProcedure ? "tool" : "chat",
+        procedure: executedProcedure,
+        uiBlocks: uiBlocks.length > 0 ? uiBlocks : undefined,
+      };
 
       await db.insert(messages).values({
         conversationId: input.conversationId,
@@ -442,9 +481,10 @@ export const kaiConversationsRouter = router({
 
       return {
         response: aiResponse,
-        type: metricData ? "metric" : "chat",
-        procedure: classification?.procedure,
-        data: metricData,
+        type: executedProcedure ? "tool" : "chat",
+        procedure: executedProcedure,
+        uiBlocks: uiBlocks.length > 0 ? uiBlocks : undefined,
+        data: procedureResult,
       };
     }),
 
