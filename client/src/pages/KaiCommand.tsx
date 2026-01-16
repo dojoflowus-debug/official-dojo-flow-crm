@@ -1989,11 +1989,25 @@ export default function KaiCommand() {
           }
         }
         
-        console.error('[handleSendMessage] AI call failed:', { errorType, errorMessage, error });
+        // Enhanced error logging with full details
+        const errorDetails = {
+          errorType,
+          errorMessage,
+          errorStack: error instanceof Error ? error.stack : 'No stack trace',
+          errorName: error instanceof Error ? error.name : 'Unknown',
+          timestamp: new Date().toISOString(),
+          userMessage: currentInput
+        };
+        
+        console.error('[handleSendMessage] AI call failed:', errorDetails);
+        console.error('[handleSendMessage] Full error object:', error);
+        
+        // Toast notification for user
+        toast.error(`AI Error: ${errorMessage}`);
         
         // Set error state for UI display
         setApiError({
-          message: errorMessage,
+          message: errorMessage || 'An unexpected error occurred. Please try again.',
           type: errorType,
           timestamp: new Date(),
           retryable
