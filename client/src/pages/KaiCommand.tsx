@@ -182,6 +182,10 @@ export default function KaiCommand() {
   // Unique ID generator for messages to prevent duplicate key warnings
   const messageIdCounterRef = useRef(Date.now());
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // In-flight lock to prevent duplicate sends
+  const sendingRef = useRef(false);
+  const pendingMessageIdsRef = useRef(new Set<string>());
   const isScrollingRef = useRef(false);
   const IDLE_TIMEOUT = 2500; // 2.5 seconds
   const SCROLL_DEBOUNCE = 500; // 500ms after scroll stops
@@ -1771,7 +1775,12 @@ export default function KaiCommand() {
     return mentions;
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (source: 'submit' | 'click' | 'keydown' = 'click') => {
+    // CRITICAL: Prevent duplicate sends with in-flight lock
+    if (sendingRef.current) {
+      console.warn('[KaiSend] Send already in progress, ignoring duplicate call', { source });
+      return;
+    }
     if (!messageInput.trim() && attachments.length === 0) return;
     
     // Check if any attachments are still uploading
@@ -2032,12 +2041,21 @@ export default function KaiCommand() {
         
         // Reset error dismissed flag so error shows
         setErrorDismissed(false);
+        
+        // Remove from pending set on error
+        pendingMessageIdsRef.current.delete(messageId);
+        // Release lock on error
+        sendingRef.current = false;
       } finally {
         setIsLoading(false);
       }
     } else {
       // No Kai response in group conversation without @Kai mention
       setIsLoading(false);
+      // Remove from pending set
+      pendingMessageIdsRef.current.delete(messageId);
+      // Release lock
+      sendingRef.current = false;
       if (staffMentions.length === 0) {
         // No mentions at all in group conversation - show hint
         toast.info('In group conversations, use @Kai to get AI assistance or @Staff to message team members');
@@ -2048,7 +2066,7 @@ export default function KaiCommand() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessage('keydown');
     }
   };
 
@@ -3331,7 +3349,7 @@ export default function KaiCommand() {
                   onChange={setMessageInput}
                   onSubmit={(value, mentions) => {
                     console.log('Mentions:', mentions);
-                    handleSendMessage();
+                    handleSendMessage('submit');
                   }}
                   placeholder="Issue directive... Type @ to assign"
                   theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
@@ -3343,7 +3361,7 @@ export default function KaiCommand() {
                 <Button 
                   size="icon" 
                   className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage('click')}
                   disabled={(!messageInput.trim() && attachments.length === 0) || isLoading || attachments.some(att => att.uploading)}
                 >
                   <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />

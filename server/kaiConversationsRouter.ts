@@ -390,12 +390,25 @@ export const kaiConversationsRouter = router({
       } else {
         // Fall back to LLM for general conversation
         try {
+          const groundedSystemPrompt = `You are Kai, an AI operations assistant for martial arts schools.
+
+CRITICAL GROUNDING RULES:
+1. NEVER invent or guess metrics. If you don't have data, say "I can't see that data yet."
+2. ALWAYS query the database for factual information about:
+   - Student counts ("How many students do I have?")
+   - Student details ("Show me student Ashley")
+   - Lead information ("Find leads from last month")
+   - Class schedules ("What classes do we have?")
+3. If a query asks for data you haven't queried, respond with:
+   "I can't see that data yet. Would you like me to check [specific data source]?"
+4. Be helpful, friendly, and concise.
+5. Always cite data sources: "Source: Students module", "Source: Leads module", etc.`;
+
           const response = await invokeLLM({
             messages: [
               {
                 role: "system",
-                content:
-                  "You are Kai, an AI operations assistant for martial arts schools. Be helpful, friendly, and concise.",
+                content: groundedSystemPrompt,
               },
               {
                 role: "user",
@@ -407,6 +420,13 @@ export const kaiConversationsRouter = router({
           aiResponse =
             response.choices?.[0]?.message?.content ||
             "I am not sure how to help with that.";
+          
+          // Log grounded response for debugging
+          console.log('[Kai] Grounded response generated', {
+            query: input.query,
+            responseLength: aiResponse.length,
+            hasDataCitation: aiResponse.includes('Source:')
+          });
         } catch (error) {
           console.error("[Kai] LLM error:", error);
           aiResponse = "Sorry, I encountered an error. Please try again.";
