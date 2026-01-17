@@ -148,7 +148,6 @@ import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
 import KioskManager from "./pages/KioskManager";
 import AppShell from "./components/AppShell";
-import ManagementLayout from "./components/ManagementLayout";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
