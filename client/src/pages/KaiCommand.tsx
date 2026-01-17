@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePreviewCard';
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
+import { InfoPanel, InfoPanelData } from '@/components/InfoPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
@@ -166,9 +167,19 @@ export default function KaiCommand() {
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
-  
-  // Results Panel state
+    // Results Panel state
   const [resultsPanelData, setResultsPanelData] = useState<ResultsPanelData>(null);
+  
+  // Info Panel state
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false);
+  const [infoPanelData, setInfoPanelData] = useState<InfoPanelData | undefined>(undefined);
+  
+  // Auto-close panel when data is empty
+  useEffect(() => {
+    if (!infoPanelData || (!infoPanelData.studentCard && !infoPanelData.summaryCards?.length && !infoPanelData.reportCards?.length)) {
+      setInfoPanelOpen(false);
+    }
+  }, [infoPanelData]);
   
   // Voice state management
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -3392,6 +3403,15 @@ export default function KaiCommand() {
           </div>
         </div>
       </div>
+
+      {/* INFO PANEL - Third Column */}
+      <InfoPanel 
+        open={infoPanelOpen}
+        data={infoPanelData}
+        isDark={isDark}
+        isCinematic={isCinematic}
+        onClose={() => setInfoPanelOpen(false)}
+      />
       
       {/* Floating Focus Mode Toggle Button - Auto-hides when idle */}
       <div className={`fixed z-[60] flex flex-col gap-3 ${autoHideTransition} ${
