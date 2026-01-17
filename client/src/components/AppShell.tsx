@@ -22,6 +22,7 @@ import { BadgeCount } from '@/components/ui/badge-count'
 import { ScrollableNav } from '@/components/ScrollableNav'
 import { CinematicFocusOverlay } from '@/components/CinematicFocusOverlay'
 import { EscHintLabel } from '@/components/EscHintLabel'
+import CommandHeader from '@/components/CommandHeader'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -97,6 +98,9 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
 
   return (
     <div className="app-shell min-h-screen flex flex-col">
+      {/* Universal Top Header */}
+      <CommandHeader title="Operations" isDarkMode={isDark} />
+      
       {/* Main Content - with bottom padding for fixed nav */}
       <main 
         className="flex-1"
