@@ -2312,7 +2312,7 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-full' : 'h-full'} overflow-hidden ${getKaiCommandBgClass()} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex ${isFocusMode ? 'h-full' : 'h-full'} max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -2529,7 +2529,7 @@ export default function KaiCommand() {
         {/* Row 2: Scrollable content (flex-1) */}
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
-          className={`flex-1 flex flex-col relative min-w-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 h-full overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
           style={{ zIndex: 10 }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -2794,7 +2794,7 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-6 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
+            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-6 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
             style={{ zIndex: 10 }}
           >
             {/* Shared content column wrapper - max-w-4xl to match composer width */}
@@ -3210,12 +3210,15 @@ export default function KaiCommand() {
           </div>
 
           {/* COMPOSER DOCK (Row 3 of 3-row layout) */}
-          {/* flex-shrink-0 ensures this element reserves its height and doesn't get compressed */}
-          {/* This is NOT an overlay - it's a proper flex child that pushes content above it */}
+          {/* flex-shrink-0 keeps command bar visible at bottom - NOT inside scroll container */}
+          {/* z-50 ensures it stays above scrolling content */}
           <div 
-            className={`transition-all duration-500 flex-shrink-0 relative z-20 ${isFocusMode ? 'px-6 py-4' : isCinematic ? 'px-6 py-4' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/80' : 'border-slate-100 bg-white/80'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-sm' : ''}`}
+            className={`transition-all duration-500 flex-shrink-0 z-50 ${isFocusMode ? 'px-6 py-4' : isCinematic ? 'px-6 py-4' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/95 backdrop-blur-md' : 'border-slate-100 bg-white/95 backdrop-blur-md'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-md' : ''}`}
             style={(isCinematic && !isFocusMode) ? { 
-              animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both'
+              animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both',
+              background: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)'
             } : {}}>
             {/* No extra background blur layer - removed to eliminate double box */}
             {/* Shared content width wrapper - max-w-4xl to match messages area */}
