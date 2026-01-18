@@ -95,10 +95,10 @@ export default function SettingsModal({ isOpen, onClose, isDarkMode }: SettingsM
                   "w-6 h-6 rounded flex items-center justify-center text-xs font-bold",
                   isDarkMode ? "bg-white/10 text-white" : "bg-gray-200 text-gray-900"
                 )}>
-                  M
+                  D
                 </div>
                 <span className={cn("text-xs font-semibold", isDarkMode ? "text-white" : "text-gray-900")}>
-                  manus
+                  dojoflow
                 </span>
               </div>
               <button onClick={onClose} className="p-1 hover:bg-white/10 rounded">
