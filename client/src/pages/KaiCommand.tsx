@@ -19,6 +19,7 @@ import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePrevie
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { InfoPanel, InfoPanelData } from '@/components/InfoPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
+import { useKaiResponseParser } from '@/hooks/useKaiResponseParser';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
@@ -173,6 +174,9 @@ export default function KaiCommand() {
   // Info Panel state
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [infoPanelData, setInfoPanelData] = useState<InfoPanelData | undefined>(undefined);
+  
+  // Initialize response parser
+  const { parseResponse } = useKaiResponseParser();
   
   // Auto-close panel when data is empty
   useEffect(() => {
@@ -1988,6 +1992,14 @@ export default function KaiCommand() {
           audioDuration
         };
         setMessages(prev => [...prev, aiMessage]);
+        
+        // Parse response for structured data to populate InfoPanel
+        const infoPanelContent = parseResponse(response.response);
+        if (infoPanelContent) {
+          setInfoPanelData(infoPanelContent);
+          setInfoPanelOpen(true);
+          console.log('[KaiCommand] InfoPanel populated:', infoPanelContent);
+        }
         
         // Set current speech message ID for voice controls
         if (voiceEnabled && audioUrl) {
