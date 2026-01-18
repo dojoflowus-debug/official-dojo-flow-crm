@@ -3445,10 +3445,21 @@ Return the data as a structured JSON object.`
         
         // Use OpenAI GPT-4 for conversational AI
         const { chatWithKai } = await import("./services/openai");
+        const { processAbsenceReportQuery } = await import("./services/absenceReportWrapper");
         
         try {
           const aiResponse = await chatWithKai(message, conversationHistory, avatarName);
           console.log('[Kai Chat] AI response:', JSON.stringify(aiResponse, null, 2));
+          
+          // Check if this is an absence report query and wrap data for InfoPanel
+          const db = await getDb();
+          if (db && ctx.currentOrganizationId) {
+            const absenceBlocks = await processAbsenceReportQuery(message, db, ctx.currentOrganizationId);
+            if (absenceBlocks && absenceBlocks.length > 0) {
+              console.log('[Kai Chat] Absence report blocks detected, adding to ui_blocks');
+              aiResponse.ui_blocks = [...(aiResponse.ui_blocks || []), ...absenceBlocks];
+            }
+          }
           
           // If GPT-4 wants to call functions, execute them
           if (aiResponse.functionCalls && aiResponse.functionCalls.length > 0) {
@@ -3493,6 +3504,7 @@ Return the data as a structured JSON object.`
             }
           }
           
+          // Return response with ui_blocks for InfoPanel population
           return {
             response: aiResponse.response,
             ui_blocks: aiResponse.ui_blocks || [],
