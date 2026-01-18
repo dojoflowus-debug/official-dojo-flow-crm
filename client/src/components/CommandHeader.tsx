@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import SettingsModal from '@/components/SettingsModal'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ interface CommandHeaderProps {
 export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps) {
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -145,13 +147,19 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
-            <DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()} className="text-red-500">
               <LogOut className="h-4 w-4 mr-2" />Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <SettingsModal 
+          isOpen={isSettingsOpen} 
+          onClose={() => setIsSettingsOpen(false)}
+          isDarkMode={isDarkMode}
+        />
       </div>
     </header>
   )
