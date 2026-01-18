@@ -1,0 +1,25 @@
+{
+  "query": "SELECT COUNT(*) as total_records FROM student_attendance;\nSELECT COUNT(DISTINCT studentId) as students_with_attendance FROM student_attendance;\nSELECT status, COUNT(*) as count FROM student_attendance GROUP BY status;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COUNT(*) as total_records FROM student_attendance;\nSELECT COUNT(DISTINCT studentId) as students_with_attendance FROM student_attendance;\nSELECT status, COUNT(*) as count FROM student_attendance GROUP BY status;",
+  "rows": [
+    {
+      "total_records": "3"
+    },
+    {
+      "total_records": "students_with_attendance"
+    },
+    {
+      "total_records": "3"
+    },
+    {
+      "total_records": "status\tcount"
+    },
+    {
+      "total_records": "attended\t3"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_records\n3\nstudents_with_attendance\n3\nstatus\tcount\nattended\t3\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

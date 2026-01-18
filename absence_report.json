@@ -1,0 +1,118 @@
+{
+  "title": "ALERT: INACTIVE MEMBERS",
+  "subtitle": "Students with 14+ days absence detected",
+  "reportDate": "2026-01-18",
+  "totalStudents": 120,
+  "studentsWithHighAbsence": 8,
+  "students": [
+    {
+      "id": 1,
+      "name": "Ashley Walters",
+      "rank": "Yellow Belt",
+      "program": "Ki Martial Arts VA",
+      "photoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/profile-pictures/2580004-1768408586527-dttetu.jpeg",
+      "absences": 18,
+      "attended": 8,
+      "attendanceRate": 30.8,
+      "lastAbsence": "2026-01-15",
+      "riskLevel": "critical"
+    },
+    {
+      "id": 2,
+      "name": "Marcus Johnson",
+      "rank": "Orange Belt",
+      "program": "Kids Program",
+      "photoUrl": "https://via.placeholder.com/150",
+      "absences": 16,
+      "attended": 12,
+      "attendanceRate": 42.9,
+      "lastAbsence": "2026-01-16",
+      "riskLevel": "high"
+    },
+    {
+      "id": 3,
+      "name": "Sarah Chen",
+      "rank": "Green Belt",
+      "program": "Adult Program",
+      "photoUrl": "https://via.placeholder.com/150",
+      "absences": 15,
+      "attended": 14,
+      "attendanceRate": 48.3,
+      "lastAbsence": "2026-01-14",
+      "riskLevel": "high"
+    },
+    {
+      "id": 4,
+      "name": "James Rodriguez",
+      "rank": "Blue Belt",
+      "program": "Competitive Track",
+      "photoUrl": "https://via.placeholder.com/150",
+      "absences": 14,
+      "attended": 20,
+      "attendanceRate": 58.8,
+      "lastAbsence": "2026-01-17",
+      "riskLevel": "medium"
+    },
+    {
+      "id": 5,
+      "name": "Emma Williams",
+      "rank": "Red Belt",
+      "program": "Kids Program",
+      "photoUrl": "https://via.placeholder.com/150",
+      "absences": 14,
+      "attended": 18,
+      "attendanceRate": 56.3,
+      "lastAbsence": "2026-01-13",
+      "riskLevel": "medium"
+    },
+    {
+      "id": 6,
+      "name": "David Park",
+      "rank": "Yellow Belt",
+      "program": "Adult Program",
+      "photoUrl": "https://via.placeholder.com/150",
+      "absences": 13,
+      "attended": 11,
+      "attendanceRate": 45.8,
+      "lastAbsence": "2026-01-16",
+      "riskLevel": "high"
+    },
+    {
+      "id": 7,
+      "name": "Lisa Thompson",
+      "rank": "Orange Belt",
+      "program": "Kids Program",
+      "photoUrl": "https://via.placeholder.com/150",
+      "absences": 12,
+      "attended": 15,
+      "attendanceRate": 55.6,
+      "lastAbsence": "2026-01-15",
+      "riskLevel": "medium"
+    },
+    {
+      "id": 8,
+      "name": "Michael Brown",
+      "rank": "Green Belt",
+      "program": "Adult Program",
+      "photoUrl": "https://via.placeholder.com/150",
+      "absences": 11,
+      "attended": 19,
+      "attendanceRate": 63.3,
+      "lastAbsence": "2026-01-12",
+      "riskLevel": "medium"
+    }
+  ],
+  "summary": {
+    "totalAbsences": 113,
+    "averageAttendanceRate": 50.2,
+    "criticalRiskCount": 1,
+    "highRiskCount": 3,
+    "mediumRiskCount": 4,
+    "recommendedActions": [
+      "Contact Ashley Walters immediately - critical absence rate",
+      "Schedule recovery sessions for high-risk students",
+      "Send automated reminder emails to all students with 10+ absences",
+      "Consider offering make-up classes or flexible scheduling"
+    ]
+  }
+}
