@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Calendar, Users, Zap, TrendingUp } from "lucide-react";
+import { OwnerGoogleSignInButton } from "@/components/OwnerGoogleSignInButton";
 
 /**
  * Premium Owner Authentication Page
@@ -385,6 +386,26 @@ function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           "Log In"
         )}
       </Button>
+
+      {/* Divider */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-[#2a2a2c]"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-[#0a0a0b] text-gray-500">Or continue with</span>
+        </div>
+      </div>
+
+      {/* Google Sign-In Button */}
+      <OwnerGoogleSignInButton
+        onSuccess={() => {
+          // Navigation handled by component
+        }}
+        onError={(error) => {
+          // Error toast handled by component
+        }}
+      />
 
       {/* Footer Link */}
       <p className="text-center text-gray-400 text-sm">
