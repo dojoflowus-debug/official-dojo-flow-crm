@@ -1383,10 +1383,15 @@ export const users = mysqlTable("users", {
 	photoUrlSmall: varchar({ length: 500 }),
 	staffId: varchar({ length: 50 }),
 	locationIds: text(),
-},
-(table) => [
-	index("idx_users_openId").on(table.openId),
-]);
+	googleSub: varchar({ length: 255 }),
+	authProvider: mysqlEnum(['password', 'google']).default('password').notNull(),
+	emailVerified: int().default(0).notNull(),
+	},
+	(table) => [
+		index("idx_users_openId").on(table.openId),
+		index("idx_users_googleSub").on(table.googleSub),
+		index("idx_users_email").on(table.email),
+	]);
 
 export const verificationCodes = mysqlTable("verification_codes", {
 	id: int().autoincrement().notNull(),

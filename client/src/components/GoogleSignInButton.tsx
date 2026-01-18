@@ -1,0 +1,195 @@
+import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt: (callback?: (notification: any) => void) => void;
+        };
+      };
+    };
+  }
+}
+
+interface GoogleSignInButtonProps {
+  userType?: "student" | "owner" | "staff";
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
+  className?: string;
+  redirectTo?: string;
+}
+
+/**
+ * Google Sign-In Button Component
+ * 
+ * Handles Google OAuth authentication flow:
+ * 1. Loads Google Identity Services library
+ * 2. Handles sign-in and token generation
+ * 3. Sends token to backend for verification
+ * 4. Creates session and redirects
+ */
+export function GoogleSignInButton({
+  userType = "student",
+  onSuccess,
+  onError,
+  className = "",
+  redirectTo,
+}: GoogleSignInButtonProps) {
+  const navigate = useNavigate();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const verifyGoogleToken = trpc.googleAuth.verifyGoogleToken.useMutation({
+    onSuccess: (data) => {
+      setIsLoading(false);
+
+      if (data.success) {
+        toast.success(
+          data.isNewUser
+            ? "Account created successfully!"
+            : "Welcome back!"
+        );
+
+        // Redirect based on user type or custom redirect
+        const redirectUrl = redirectTo || getDefaultRedirect(userType);
+        setTimeout(() => {
+          navigate(redirectUrl);
+        }, 500);
+
+        onSuccess?.();
+      }
+    },
+    onError: (error) => {
+      setIsLoading(false);
+      const message =
+        error.data?.code === "FORBIDDEN"
+          ? error.message
+          : "Google sign-in failed. Please try again.";
+
+      toast.error(message);
+      onError?.(message);
+    },
+  });
+
+  // Load Google Identity Services library
+  useEffect(() => {
+    const loadGoogleScript = () => {
+      if (window.google) {
+        initializeGoogle();
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeGoogle;
+      script.onerror = () => {
+        console.error("Failed to load Google Identity Services");
+        onError?.("Failed to load Google Sign-In");
+      };
+      document.head.appendChild(script);
+    };
+
+    loadGoogleScript();
+  }, []);
+
+  const initializeGoogle = () => {
+    if (!window.google || isInitialized) return;
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleSignIn,
+        auto_select: false,
+      });
+
+      // Render the button if ref is available
+      if (googleButtonRef.current) {
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          type: "standard",
+          size: "large",
+          text: "signin_with",
+          theme: "outline",
+          logo_alignment: "center",
+          width: "100%",
+        });
+      }
+
+      setIsInitialized(true);
+    } catch (error) {
+      console.error("Failed to initialize Google Sign-In:", error);
+      onError?.("Failed to initialize Google Sign-In");
+    }
+  };
+
+  const handleGoogleSignIn = async (response: any) => {
+    if (!response.credential) {
+      toast.error("No credential received from Google");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Send token to backend for verification
+      verifyGoogleToken.mutate({
+        idToken: response.credential,
+        userType,
+      });
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error during Google sign-in:", error);
+      toast.error("An error occurred during sign-in");
+      onError?.("An error occurred during sign-in");
+    }
+  };
+
+  return (
+    <div className={`w-full ${className}`}>
+      {isLoading && (
+        <div className="flex items-center justify-center py-3 bg-blue-50 rounded-lg border border-blue-200">
+          <Loader2 className="w-4 h-4 animate-spin mr-2 text-blue-600" />
+          <span className="text-sm text-blue-600">Signing in with Google...</span>
+        </div>
+      )}
+
+      {!isLoading && (
+        <div
+          ref={googleButtonRef}
+          className="flex justify-center"
+          style={{ display: isInitialized ? "block" : "none" }}
+        />
+      )}
+
+      {!isInitialized && !isLoading && (
+        <div className="text-center text-sm text-gray-500">
+          Loading Google Sign-In...
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Get default redirect URL based on user type
+ */
+function getDefaultRedirect(userType: string): string {
+  switch (userType) {
+    case "owner":
+      return "/owner/command-center";
+    case "staff":
+      return "/staff/dashboard";
+    case "student":
+    default:
+      return "/student/dashboard";
+  }
+}

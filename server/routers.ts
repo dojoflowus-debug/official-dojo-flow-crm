@@ -24,6 +24,7 @@ import { ownerAuthRouter } from "./ownerAuthRouter";
 import { onboardingRouter } from "./onboardingRouter";
 import { staffAuthRouter } from "./staffAuthRouter";
 import { studentAuthRouter } from "./studentAuthRouter";
+import { googleAuthRouter } from "./googleAuthRouter";
 import { kaiOnboardingRouter } from "./kaiOnboardingRouter";
 import { setupModeRouter } from "./setupModeRouter";
 import { subscriptionRouter } from "./subscriptionRouter";
@@ -385,6 +386,7 @@ export const appRouter = router({
   ownerAuth: ownerAuthRouter,
   staffAuth: staffAuthRouter,
   studentAuth: studentAuthRouter,
+  googleAuth: googleAuthRouter,
   onboarding: onboardingRouter,
   kaiOnboarding: kaiOnboardingRouter,
   setupMode: setupModeRouter,
