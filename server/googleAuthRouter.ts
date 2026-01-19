@@ -7,7 +7,7 @@ import { getDb, getUserByOpenId, upsertUser } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
-import axios from "axios";
+import { OAuth2Client } from "google-auth-library";
 
 /**
  * Google OAuth Router
@@ -37,8 +37,10 @@ export const googleAuthRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       try {
+        console.log("[GoogleAuth] Starting token verification for userType:", input.userType);
         // Verify token with Google
         const googleUser = await verifyGoogleIdToken(input.idToken);
+        console.log("[GoogleAuth] Token verified successfully for email:", googleUser.email);
 
         if (!googleUser.email) {
           throw new TRPCError({
@@ -98,55 +100,42 @@ export const googleAuthRouter = router({
             name: googleUser.name || null,
             email: googleUser.email,
             loginMethod: "google",
-            lastSignedIn: new Date().toISOString(),
-          });
-
-          const newUser = await getUserByOpenId(openId);
-          if (!newUser) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to create user",
-            });
-          }
-
-          // Update with Google-specific fields
-          await db
-            .update(users)
-            .set({
-              googleSub: googleUser.sub,
-              authProvider: "google",
-              emailVerified: googleUser.email_verified ? 1 : 0,
-              photoUrl: googleUser.picture,
-              photoUrlSmall: googleUser.picture,
-            })
-            .where(eq(users.id, newUser.id));
-
-          user = {
-            ...newUser,
             googleSub: googleUser.sub,
             authProvider: "google",
             emailVerified: googleUser.email_verified ? 1 : 0,
-            photoUrl: googleUser.picture,
-            photoUrlSmall: googleUser.picture,
-          };
+            photoUrl: googleUser.picture || null,
+            photoUrlSmall: googleUser.picture || null,
+          });
 
+          // Fetch the newly created user
+          const [newUser] = await db
+            .select()
+            .from(users)
+            .where(eq(users.openId, openId))
+            .limit(1);
+
+          if (!newUser) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create user account",
+            });
+          }
+
+          user = newUser;
           isNewUser = true;
         }
 
-        if (!user) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to process user",
-          });
-        }
+        // Check owner authorization if userType is "owner"
+        if (input.userType === "owner") {
+          const isAuthorized =
+            user.role === "owner" ||
+            user.role === "admin" ||
+            user.role === "staff";
 
-        // For owner/staff login, check authorization
-        if (input.userType === "owner" || input.userType === "staff") {
-          // Check if user has appropriate role
-          if (user.role !== "owner" && user.role !== "staff" && user.role !== "admin") {
+          if (!isAuthorized) {
             throw new TRPCError({
               code: "FORBIDDEN",
-              message: `This email is not authorized for ${input.userType} access. Please contact your administrator.`,
+              message: `Your account (${user.email}) is not authorized to access the owner dashboard. Please contact your administrator.`,
             });
           }
         }
@@ -231,40 +220,53 @@ async function verifyGoogleIdToken(idToken: string): Promise<{
   email_verified: boolean;
 }> {
   try {
-    // Use Google's tokeninfo endpoint to verify the token
-    const response = await axios.get(
-      `https://www.googleapis.com/oauth2/v1/tokeninfo?id_token=${idToken}`,
-      {
-        timeout: 5000,
-      }
-    );
+    const clientId = process.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      throw new Error("VITE_GOOGLE_CLIENT_ID environment variable not set");
+    }
 
-    const { sub, email, name, picture, email_verified } = response.data;
+    console.log("[GoogleAuth] Verifying token with Client ID:", clientId.substring(0, 20) + "...");
+    
+    // Use google-auth-library for proper token verification
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: clientId,
+    });
+
+    const payload = ticket.getPayload();
+    
+    if (!payload) {
+      throw new Error("Invalid token payload");
+    }
+
+    const { sub, email, name, picture, email_verified } = payload;
 
     if (!sub || !email) {
       throw new Error("Invalid token: missing sub or email");
     }
 
+    console.log("[GoogleAuth] Token verified successfully for:", email);
+
     return {
-      sub,
-      email,
-      name: name || "",
-      picture: picture || "",
-      email_verified: email_verified === true || email_verified === "true",
+      sub: sub as string,
+      email: email as string,
+      name: (name as string) || "",
+      picture: (picture as string) || "",
+      email_verified: email_verified === true,
     };
   } catch (error) {
     console.error("[GoogleAuth] Token verification failed:", error);
-
-    if (axios.isAxiosError(error)) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Invalid Google token",
-      });
-    }
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("[GoogleAuth] Error details:", {
+      message: errorMessage,
+      type: error?.constructor?.name,
+    });
 
     throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to verify Google token",
+      code: "BAD_REQUEST",
+      message: `Invalid Google token: ${errorMessage}`,
     });
   }
 }

@@ -69,10 +69,22 @@ export function GoogleSignInButton({
     },
     onError: (error) => {
       setIsLoading(false);
-      const message =
-        error.data?.code === "FORBIDDEN"
-          ? error.message
-          : "Google sign-in failed. Please try again.";
+      
+      // Extract detailed error message
+      let message = "Google sign-in failed. Please try again.";
+      
+      if (error.data?.code === "FORBIDDEN") {
+        message = error.message || message;
+      } else if (error.message) {
+        // Include the backend error message for debugging
+        message = `Google sign-in failed: ${error.message}`;
+      }
+      
+      console.error("[GoogleSignIn] Error:", {
+        code: error.data?.code,
+        message: error.message,
+        fullError: error,
+      });
 
       toast.error(message);
       onError?.(message);
@@ -133,11 +145,14 @@ export function GoogleSignInButton({
 
   const handleGoogleSignIn = async (response: any) => {
     if (!response.credential) {
-      toast.error("No credential received from Google");
+      const errorMsg = "No credential received from Google";
+      console.error("[GoogleSignIn]", errorMsg);
+      toast.error(errorMsg);
       return;
     }
 
     setIsLoading(true);
+    console.log("[GoogleSignIn] Sending token to backend for userType:", userType);
 
     try {
       // Send token to backend for verification
@@ -147,7 +162,7 @@ export function GoogleSignInButton({
       });
     } catch (error) {
       setIsLoading(false);
-      console.error("Error during Google sign-in:", error);
+      console.error("[GoogleSignIn] Error during sign-in:", error);
       toast.error("An error occurred during sign-in");
       onError?.("An error occurred during sign-in");
     }
