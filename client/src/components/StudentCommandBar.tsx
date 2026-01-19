@@ -15,16 +15,9 @@ interface StudentCommandBarProps {
   stats: CommandBarStats
   onTileClick?: (tileType: string) => void
   loading?: boolean
-  isFixed?: boolean
-  commandBarHeight?: number
 }
 
-export default function StudentCommandBar({ stats, onTileClick, loading = false, isFixed = false, commandBarHeight = 0 }: StudentCommandBarProps) {
-  // When isFixed is true, this component should not render (it will be rendered from AppShell)
-  if (isFixed) {
-    return null
-  }
-
+export default function StudentCommandBar({ stats, onTileClick, loading = false }: StudentCommandBarProps) {
   const tiles = [
     {
       id: 'total',

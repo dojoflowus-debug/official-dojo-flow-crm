@@ -23,7 +23,6 @@ import { ScrollableNav } from '@/components/ScrollableNav'
 import { CinematicFocusOverlay } from '@/components/CinematicFocusOverlay'
 import { EscHintLabel } from '@/components/EscHintLabel'
 import CommandHeader from '@/components/CommandHeader'
-import StudentCommandBar from '@/components/StudentCommandBar'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -102,41 +101,15 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
       {/* Universal Top Header */}
       <CommandHeader title="Operations" isDarkMode={isDark} />
       
-      {/* Main Content - with bottom padding for fixed nav and command bar */}
+      {/* Main Content - with bottom padding for fixed nav */}
       <main 
         className="flex-1"
         style={{
-          paddingBottom: showBottomNav ? 'calc(var(--bottom-nav-height, 72px) + 220px + env(safe-area-inset-bottom, 0px))' : '0'
+          paddingBottom: showBottomNav ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px))' : '0'
         }}
       >
         {children}
       </main>
-
-      {/* Fixed Command Bar - positioned above bottom nav */}
-      {showBottomNav && (
-        <div
-          className="fixed left-0 right-0 bg-slate-950/95 backdrop-blur-sm border-t border-white/10 px-6 py-6"
-          style={{
-            bottom: 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px))',
-            zIndex: 9998,
-            maxHeight: '220px',
-            overflowY: 'auto'
-          }}
-        >
-          <StudentCommandBar
-            stats={{
-              totalStudents: 0,
-              activeToday: 0,
-              atRisk: 0,
-              inactive: 0,
-              newThisMonth: 0,
-              birthdaysThisWeek: 0,
-              averageAttendance: 0
-            }}
-            loading={false}
-          />
-        </div>
-      )}
 
       {/* Global Fixed Bottom Navigation Bar */}
       {showBottomNav && (
@@ -147,11 +120,9 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
             left: 0,
             right: 0,
             bottom: 0,
-            zIndex: 10000,
+            zIndex: 9999,
             height: 'var(--bottom-nav-height, 72px)',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-            /* Ensure nav stays above command bar */
-            zIndex: 10000,
             background: isCinematic 
               ? 'rgba(5,5,8,0.85)' 
               : isDark 
@@ -165,8 +136,6 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
                 ? '0 -2px 10px rgba(0,0,0,0.6)' 
                 : '0 -2px 8px rgba(0,0,0,0.35)',
             borderTop: isCinematic ? '1px solid rgba(255,255,255,0.06)' : 'none',
-            /* Ensure nav stays above command bar */
-            zIndex: 10000,
           }}
         >
           <ScrollableNav 
