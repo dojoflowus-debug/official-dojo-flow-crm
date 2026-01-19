@@ -1383,15 +1383,35 @@ export const users = mysqlTable("users", {
 	photoUrlSmall: varchar({ length: 500 }),
 	staffId: varchar({ length: 50 }),
 	locationIds: text(),
-	googleSub: varchar({ length: 255 }),
-	authProvider: mysqlEnum(['password', 'google']).default('password').notNull(),
-	emailVerified: int().default(0).notNull(),
+		googleSub: varchar({ length: 255 }),
+		authProvider: mysqlEnum(['password', 'google']).default('password').notNull(),
+		emailVerified: int().default(0).notNull(),
+		welcomeMessageSeen: int().default(0).notNull(),
 	},
 	(table) => [
 		index("idx_users_openId").on(table.openId),
 		index("idx_users_googleSub").on(table.googleSub),
 		index("idx_users_email").on(table.email),
 	]);
+
+export const welcomeMessages = mysqlTable("welcome_messages", {
+	id: int().autoincrement().notNull(),
+	organizationId: int(),
+	title: varchar({ length: 255 }).notNull(),
+	message: text().notNull(),
+	subMessage: text(),
+	ctaText: varchar({ length: 100 }).default('Get Started').notNull(),
+	ctaUrl: varchar({ length: 500 }),
+	imageUrl: varchar({ length: 500 }),
+	isActive: int().default(1).notNull(),
+	showForNewGoogleUsers: int().default(1).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_welcome_org").on(table.organizationId),
+	index("idx_welcome_active").on(table.isActive),
+]);
 
 export const verificationCodes = mysqlTable("verification_codes", {
 	id: int().autoincrement().notNull(),

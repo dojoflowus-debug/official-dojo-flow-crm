@@ -28,6 +28,7 @@ import { googleAuthRouter } from "./googleAuthRouter";
 import { kaiOnboardingRouter } from "./kaiOnboardingRouter";
 import { setupModeRouter } from "./setupModeRouter";
 import { subscriptionRouter } from "./subscriptionRouter";
+import { welcomeMessageRouter } from "./welcomeMessageRouter";
 import { creditRouter } from "./creditRouter";
 import { platformRouter } from "./platformRouter";
 import { platformAdminAuthRouter } from "./platformAdminAuth";
@@ -387,6 +388,7 @@ export const appRouter = router({
   staffAuth: staffAuthRouter,
   studentAuth: studentAuthRouter,
   googleAuth: googleAuthRouter,
+  welcomeMessage: welcomeMessageRouter,
   onboarding: onboardingRouter,
   kaiOnboarding: kaiOnboardingRouter,
   setupMode: setupModeRouter,
