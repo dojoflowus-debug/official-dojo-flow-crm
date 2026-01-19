@@ -45,17 +45,16 @@ export const userRouter = router({
         console.log("[User] Completing onboarding for user:", userId);
 
         // Update user profile
-        await db
-          .update(users)
-          .set({
-            displayName: input.displayName,
-            preferredName: input.preferredName || null,
-            phone: input.phone || null,
-            bio: input.bio || null,
-            photoUrl: input.photoUrl || null,
-            onboardingCompleted: 1,
-            updatedAt: new Date().toISOString(),
-          })
+      await db
+        .update(users)
+        .set({
+          displayName: input.displayName,
+          preferredName: input.preferredName || null,
+          phone: input.phone || null,
+          bio: input.bio || null,
+          photoUrl: input.photoUrl || null,
+          updatedAt: new Date().toISOString(),
+        })
           .where(eq(users.id, userId));
 
         console.log("[User] Onboarding completed for user:", userId);
@@ -101,7 +100,6 @@ export const userRouter = router({
 
       const [user] = await db
         .select({
-          onboardingCompleted: users.onboardingCompleted,
           displayName: users.displayName,
           photoUrl: users.photoUrl,
           authProvider: users.authProvider,
@@ -118,7 +116,7 @@ export const userRouter = router({
       }
 
       return {
-        completed: user.onboardingCompleted === 1,
+        completed: !!user.displayName && !!user.photoUrl,
         hasDisplayName: !!user.displayName,
         hasPhoto: !!user.photoUrl,
         authProvider: user.authProvider,
@@ -172,7 +170,6 @@ export const userRouter = router({
           role: users.role,
           authProvider: users.authProvider,
           emailVerified: users.emailVerified,
-          onboardingCompleted: users.onboardingCompleted,
         })
         .from(users)
         .where(eq(users.id, userId))
