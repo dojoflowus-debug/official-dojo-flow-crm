@@ -3233,35 +3233,22 @@ export default function KaiCommand() {
           </div>
 
           {/* COMPOSER DOCK (Row 3 of 3-row layout) */}
-          {/* Fixed positioning above bottom nav with z-index 1100 */}
+          {/* Fixed positioning above bottom nav with z-index 1100 - transparent outer container */}
           <div 
-            className={`transition-all duration-500 flex-shrink-0 z-[1100] ${isFocusMode ? 'px-6 py-4' : isCinematic ? 'px-6 py-4' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/95 backdrop-blur-md' : 'border-slate-100 bg-white/95 backdrop-blur-md'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-md' : ''}`}
-            style={(isCinematic && !isFocusMode) ? { 
-              animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both',
-              background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+            style={{
               position: 'fixed',
               left: '50%',
               transform: 'translateX(-50%)',
               bottom: 'calc(var(--nav-h, 72px) + 12px)',
               width: 'min(1100px, calc(100% - 48px))',
-              height: 'var(--kai-h, 64px)',
               zIndex: 1100,
-              pointerEvents: 'auto'
-            } : {
-              position: 'fixed',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              bottom: 'calc(var(--nav-h, 72px) + 12px)',
-              width: 'min(1100px, calc(100% - 48px))',
-              height: 'var(--kai-h, 64px)',
-              zIndex: 1100,
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              padding: 0,
+              margin: 0,
+              background: 'transparent'
             }}>
-            {/* No extra background blur layer - removed to eliminate double box */}
-            {/* Shared content width wrapper - max-w-4xl to match messages area */}
-            <div className={`max-w-4xl mx-auto relative transition-all duration-500`}>
+            {/* Floating pill-style command bar - no outer container background */}
+            <div className={`relative transition-all duration-500`}>
               {/* Expand/Collapse Button - Hidden in Focus Mode for cleaner look */}
               {!isFocusMode && (
                 <Button
@@ -3353,22 +3340,16 @@ export default function KaiCommand() {
                 </div>
               )}
 
-              {/* Input container - Single clean glass pill for Cinematic/Focus Mode */}
-              <div className={`flex items-center gap-2 transition-all duration-300 ${
-                isFocusMode 
-                  ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]'
-                  : isCinematic
-                    ? 'rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.8)] focus-within:border-[rgba(255,76,76,0.6)]'
-                    : isDark 
-                      ? 'rounded-[22px] p-2 bg-[#18181A] border border-[rgba(255,255,255,0.10)] shadow-[0_2px_12px_rgba(0,0,0,0.3)] focus-within:border-[rgba(255,255,255,0.15)]' 
-                      : 'rounded-[22px] p-2 bg-white border border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] focus-within:border-slate-300 focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
-              }`}
-              style={(isCinematic || isFocusMode) ? { 
+              {/* Input container - Clean floating pill with no outer container background */}
+              <div className={`flex items-center gap-2 transition-all duration-300 rounded-full p-3 relative z-10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-[rgba(255,76,76,0.6)]`}
+              style={{ 
                 animation: isCinematic && !isFocusMode ? 'cinematicInputGlow 3s ease-in-out infinite' : 'none',
                 background: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)'
-              } : {}}
+                WebkitBackdropFilter: 'blur(20px)',
+                width: '100%',
+                maxWidth: '100%'
+              }}
               >
                 {/* Attachment Button */}
                 <Button 
