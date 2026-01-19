@@ -58,8 +58,13 @@ export function GoogleSignInButton({
             : "Welcome back!"
         );
 
-        // Redirect based on user type or custom redirect
-        const redirectUrl = redirectTo || getDefaultRedirect(userType);
+        // Redirect new users to onboarding, existing users to dashboard
+        let redirectUrl: string;
+        if (data.isNewUser) {
+          redirectUrl = "/onboarding";
+        } else {
+          redirectUrl = redirectTo || getDefaultRedirect(userType);
+        }
         setTimeout(() => {
           navigate(redirectUrl);
         }, 500);

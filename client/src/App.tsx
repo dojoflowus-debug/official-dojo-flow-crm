@@ -147,6 +147,7 @@ import MasterSettings from "./pages/MasterSettings";
 import MasterSchoolDetail from "./pages/MasterSchoolDetail";
 import KioskDashboard from "./pages/KioskDashboard";
 import KioskManager from "./pages/KioskManager";
+import { Onboarding } from "./pages/Onboarding";
 import AppShell from "./components/AppShell";
 
 function Router() {
@@ -163,6 +164,7 @@ function Router() {
       <Route path="/owner" element={<OwnerAuth />} />
       <Route path="/owner/onboarding" element={<OwnerOnboarding />} />
       <Route path="/onboarding/setup" element={<OwnerOnboarding />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/owner/dashboard" element={<Navigate to="/kai" replace />} />
       <Route path="/dashboard/command-center" element={<OwnerCommandCenter />} />
       <Route path="/welcome" element={<WelcomeDashboard />} />

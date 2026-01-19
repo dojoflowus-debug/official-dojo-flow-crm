@@ -30,6 +30,7 @@ import { setupModeRouter } from "./setupModeRouter";
 import { subscriptionRouter } from "./subscriptionRouter";
 import { welcomeMessageRouter } from "./welcomeMessageRouter";
 import { creditRouter } from "./creditRouter";
+import { userRouter } from "./userRouter";
 import { platformRouter } from "./platformRouter";
 import { platformAdminAuthRouter } from "./platformAdminAuth";
 import { masterDashboardRouter } from "./masterDashboardRouter";
@@ -395,6 +396,7 @@ export const appRouter = router({
   subscription: subscriptionRouter,
   credits: creditRouter,
   ownerProfile: ownerProfileRouter,
+  user: userRouter,
   
   // File upload for attachments
   upload: router({

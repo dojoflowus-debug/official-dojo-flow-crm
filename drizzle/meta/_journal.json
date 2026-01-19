@@ -449,6 +449,13 @@
       "when": 1768830220587,
       "tag": "0063_legal_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "5",
+      "when": 1768831537999,
+      "tag": "0064_fixed_silver_samurai",
+      "breakpoints": true
     }
   ]
 }
