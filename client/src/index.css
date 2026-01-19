@@ -57,6 +57,45 @@
   animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Kai Command Bar Focus State Animations */
+@keyframes kaiGlow {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(255, 76, 76, 0.3), inset 0 0 0 1px rgba(255, 76, 76, 0.5);
+  }
+}
+
+@keyframes kaiScale {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes kaiFocusGlow {
+  0% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    box-shadow: 0 12px 48px rgba(255, 76, 76, 0.4), inset 0 0 0 2px rgba(255, 76, 76, 0.6), 0 0 24px rgba(255, 76, 76, 0.2);
+  }
+}
+
+.kai-command-bar-focus {
+  animation: kaiFocusGlow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.kai-command-bar-blur {
+  animation: kaiGlow 2s ease-in-out infinite;
+}
+
 /* Wave divider animations */
 @keyframes waveAnimation {
   0% {
