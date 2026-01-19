@@ -116,6 +116,8 @@
   --radius: 1rem;
   
   /* Fixed UI Chrome Heights */
+  --nav-h: 72px;
+  --kai-h: 64px;
   --bottom-nav-height: 72px;
   --topbar-h: 56px;
   --bottomnav-h: 72px;

@@ -2817,8 +2817,8 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 pb-4 px-6' : isCinematic ? 'pt-6 pb-4 px-6' : 'p-6 pt-6 pb-4'}`}
-            style={{ zIndex: 10 }}
+            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 px-6' : isCinematic ? 'pt-6 px-6' : 'p-6 pt-6'}`}
+            style={{ zIndex: 10, paddingBottom: 'calc(var(--nav-h, 72px) + var(--kai-h, 64px) + 48px + env(safe-area-inset-bottom, 0px))' }}
           >
             {/* Shared content column wrapper - max-w-4xl to match composer width */}
             <div className={`${isFocusMode ? 'max-w-4xl mx-auto px-4' : isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
@@ -3233,16 +3233,32 @@ export default function KaiCommand() {
           </div>
 
           {/* COMPOSER DOCK (Row 3 of 3-row layout) */}
-          {/* flex-shrink-0 keeps command bar visible at bottom - NOT inside scroll container */}
-          {/* z-50 ensures it stays above scrolling content */}
+          {/* Fixed positioning above bottom nav with z-index 1100 */}
           <div 
-            className={`transition-all duration-500 flex-shrink-0 z-50 ${isFocusMode ? 'px-6 py-4' : isCinematic ? 'px-6 py-4' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/95 backdrop-blur-md' : 'border-slate-100 bg-white/95 backdrop-blur-md'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-md' : ''}`}
+            className={`transition-all duration-500 flex-shrink-0 z-[1100] ${isFocusMode ? 'px-6 py-4' : isCinematic ? 'px-6 py-4' : 'p-4 border-t'} ${expandedInput && !isFocusMode && !isCinematic ? 'pb-8' : ''} ${(isCinematic || isFocusMode) ? 'border-transparent' : isDark ? 'border-[rgba(255,255,255,0.05)] bg-[#18181A]/95 backdrop-blur-md' : 'border-slate-100 bg-white/95 backdrop-blur-md'} ${!isFocusMode && !isCinematic ? 'backdrop-blur-md' : ''}`}
             style={(isCinematic && !isFocusMode) ? { 
               animation: 'cinematicInputSlideUp 0.6s ease-out 0.7s both',
               background: 'rgba(0, 0, 0, 0.85)',
               backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)'
-            } : {}}>
+              WebkitBackdropFilter: 'blur(20px)',
+              position: 'fixed',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              bottom: 'calc(var(--nav-h, 72px) + 12px)',
+              width: 'min(1100px, calc(100% - 48px))',
+              height: 'var(--kai-h, 64px)',
+              zIndex: 1100,
+              pointerEvents: 'auto'
+            } : {
+              position: 'fixed',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              bottom: 'calc(var(--nav-h, 72px) + 12px)',
+              width: 'min(1100px, calc(100% - 48px))',
+              height: 'var(--kai-h, 64px)',
+              zIndex: 1100,
+              pointerEvents: 'auto'
+            }}>
             {/* No extra background blur layer - removed to eliminate double box */}
             {/* Shared content width wrapper - max-w-4xl to match messages area */}
             <div className={`max-w-4xl mx-auto relative transition-all duration-500`}>

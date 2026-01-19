@@ -120,7 +120,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
             left: 0,
             right: 0,
             bottom: 0,
-            zIndex: 9999,
+            zIndex: 900,
             height: 'var(--bottom-nav-height, 72px)',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             background: isCinematic 
