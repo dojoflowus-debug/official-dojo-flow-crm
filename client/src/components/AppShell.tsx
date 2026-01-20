@@ -111,8 +111,8 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
           style={{
             paddingBottom: showBottomNav 
               ? isKaiRoute 
-                ? 'calc(var(--nav-h) + 64px + 48px + env(safe-area-inset-bottom, 0px))' // Include KaiBar padding on /kai
-                : 'calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))' // Only BottomNav padding on other routes
+                ? 'calc(var(--nav-h) + var(--kai-gap) + 60px + env(safe-area-inset-bottom, 0px))'
+                : 'calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))'
               : '0'
           }}
         >
