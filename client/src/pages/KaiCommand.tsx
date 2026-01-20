@@ -3234,21 +3234,23 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK (Row 3 of 3-row layout) */}
           {/* Fixed positioning above bottom nav with z-index 1100 - transparent outer container */}
+          {/* Positioned within main content area using left/right constraints */}
           <div 
             style={{
               position: 'fixed',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              left: `calc(${commandCenterWidth}px + 16px)`,
+              right: '16px',
               bottom: 'calc(var(--nav-h, 72px) + 12px)',
-              width: 'min(1100px, calc(100% - 48px))',
+              maxWidth: '1100px',
+              width: 'auto',
+              margin: '0 auto',
               zIndex: 1100,
               pointerEvents: 'auto',
               padding: 0,
-              margin: 0,
               background: 'transparent'
             }}>
             {/* Floating pill-style command bar - no outer container background */}
-            <div className={`relative transition-all duration-500`}>
+            <div className={`relative transition-all duration-500 flex justify-center`}>
               {/* Expand/Collapse Button - Hidden in Focus Mode for cleaner look */}
               {!isFocusMode && (
                 <Button
