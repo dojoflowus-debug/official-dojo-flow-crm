@@ -242,7 +242,7 @@ export async function getDashboardStats(organizationId?: number | null) {
     };
   }
   
-  const { students, leads, classes, attendance } = await import("../drizzle/schema");
+  const { students, leads, classes, attendance, enrollments } = await import("../drizzle/schema");
   const { eq, count, and, gte, lte } = await import("drizzle-orm");
   
   // Filter by organization for multi-tenancy
@@ -285,7 +285,6 @@ export async function getDashboardStats(organizationId?: number | null) {
   
   // New enrollments (approved, this week)
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const { enrollments } = await import("../drizzle/schema");
   const newEnrollmentsResult = await db.select({ count: count() }).from(enrollments).where(
     and(
       eq(enrollments.status, 'approved'),

@@ -67,14 +67,31 @@ async function startServer() {
   }));
 
   // Handle client-side routing - serve index.html for all routes
-  // But NOT for requests with file extensions (static files)
+  // But NOT for requests with file extensions (static files) or API routes
   app.get("*", (req, res) => {
     // If the request has a file extension, don't serve index.html
     if (req.path.includes(".")) {
-      res.status(404).send("Not Found");
+      res.status(404).json({ error: "Not Found" });
+      return;
+    }
+    // If it's an API request that wasn't handled, return JSON error
+    if (req.path.startsWith("/api/")) {
+      res.status(404).json({ error: "API endpoint not found" });
       return;
     }
     res.sendFile(path.join(staticPath, "index.html"));
+  });
+
+  // Global error handler for unhandled errors
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('[Server Error]', err);
+    // If it's an API request, return JSON error
+    if (req.path.startsWith("/api/")) {
+      res.status(500).json({ error: "Internal server error", message: err?.message });
+      return;
+    }
+    // Otherwise, serve index.html for client-side error handling
+    res.status(500).sendFile(path.join(staticPath, "index.html"));
   });
 
   const port = process.env.PORT || 3000;
