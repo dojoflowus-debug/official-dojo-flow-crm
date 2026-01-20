@@ -153,10 +153,11 @@
 
 :root {
   --radius: 1rem;
-  
-  /* Fixed UI Chrome Heights */
   --nav-h: 72px;
   --kai-h: 64px;
+  --header-z: 2000;
+  --nav-z: 1900;
+  --kai-z: 1950;
   --bottom-nav-height: 72px;
   --topbar-h: 56px;
   --bottomnav-h: 72px;
@@ -860,4 +861,44 @@ h3 {
 /* Light mode: Modal and overlay backgrounds */
 .light .fixed.inset-0 {
   background-color: oklch(0 0 0 / 0.15) !important;
+}
+
+
+/* Fixed positioning z-index layering */
+.topHeader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--header-z, 2000);
+  pointer-events: auto;
+}
+
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--nav-z, 1900);
+  pointer-events: auto;
+}
+
+.kaiBar {
+  position: fixed;
+  z-index: var(--kai-z, 1950);
+  pointer-events: auto;
+}
+
+/* Ensure cinematic overlays don't interfere with fixed elements */
+.cinematicOverlay {
+  pointer-events: none;
+}
+
+/* Remove transform/filter/perspective from parent containers that could break fixed positioning */
+.mainContent,
+.pageContainer,
+.appContainer {
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
 }

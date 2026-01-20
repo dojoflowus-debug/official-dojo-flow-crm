@@ -2597,7 +2597,7 @@ export default function KaiCommand() {
               />
               {/* Background Image Layer with Parallax */}
               <div 
-                className="absolute inset-0 will-change-transform"
+                className="absolute inset-0 will-change-transform pointer-events-none"
                 style={{
                   backgroundImage: `url(${currentEnvironment.backgroundImage})`,
                   backgroundSize: 'cover',
@@ -2618,7 +2618,7 @@ export default function KaiCommand() {
               />
               {/* Dark Overlay for readability */}
               <div 
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   background: currentEnvironment.overlayColor,
                   transition: 'background 0.4s ease-out'
@@ -2626,21 +2626,21 @@ export default function KaiCommand() {
               />
               {/* Soft Gradient Overlay for UI Contrast (20-30% darkening) */}
               <div 
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.20) 70%, rgba(0,0,0,0.35) 100%)'
                 }}
               />
               {/* Vignette Effect */}
               <div 
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   background: 'radial-gradient(ellipse at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)'
                 }}
               />
               {/* Spotlight behind Kai */}
               <div 
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   background: 'radial-gradient(ellipse at 50% 35%, rgba(255,76,76,0.15) 0%, transparent 40%)'
                 }}

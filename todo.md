@@ -3392,3 +3392,13 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Test layout with sample data
 - [ ] Verify no interference with left/center columns
 - [ ] Save checkpoint for INFO PANEL feature
+
+
+## Bug Fix - Cinematic Mode Overlay Issues (Jan 20, 2026)
+
+- [ ] Add pointer-events:none to cinematic overlay layers (blur, vignette, grain)
+- [ ] Enforce z-index layering: header (2000), nav (1900), Kai bar (1950)
+- [ ] Remove transform/filter/perspective from parent containers
+- [ ] Add safe area padding to main content (top + bottom)
+- [ ] Test top menu clickability in cinematic mode
+- [ ] Verify Kai command bar stays above bottom nav
