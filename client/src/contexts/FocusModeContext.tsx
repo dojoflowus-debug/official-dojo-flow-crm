@@ -58,11 +58,21 @@ export function FocusModeProvider({ children }: { children: ReactNode }) {
   }, [isFocusMode])
 
   const enterFullscreen = useCallback(async () => {
+    // Check if fullscreen API is available and allowed
+    if (!document.documentElement.requestFullscreen) {
+      console.warn('Fullscreen API not available')
+      return
+    }
     try {
       await document.documentElement.requestFullscreen()
       setIsFullscreen(true)
     } catch (err) {
-      console.error('Failed to enter fullscreen:', err)
+      // Silently handle permissions policy errors
+      if (err instanceof Error && err.message.includes('permissions policy')) {
+        console.warn('Fullscreen blocked by permissions policy')
+      } else {
+        console.error('Failed to enter fullscreen:', err)
+      }
     }
   }, [])
 

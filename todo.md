@@ -3675,4 +3675,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add CSS to sharpen icons in cinematic mode only
 - [x] Test icon sharpness in cinematic mode
 - [x] Verify light and dark modes remain unchanged
+- [x] Save checkpoint
+
+
+## Fix Permissions Policy Error in FocusModeContext (Jan 20, 2026)
+- [x] Check FocusModeContext.tsx line 41 for restricted API usage
+- [x] Add try-catch error handling for permissions-restricted operations
+- [x] Test /kai page loads without errors
 - [ ] Save checkpoint
