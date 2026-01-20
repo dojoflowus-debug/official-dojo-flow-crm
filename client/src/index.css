@@ -24,10 +24,10 @@
   border-radius: 999px !important;
 }
 
-/* KaiBar Container - Centered pill positioning */
+/* KaiBar Container - Centered pill positioning ABOVE BottomNav */
 .kaiBarContainer {
   position: fixed !important;
-  bottom: calc(var(--nav-h) + var(--kai-gap)) !important;
+  bottom: calc(var(--nav-h) + 48px) !important; /* 72px nav + 48px spacing (0.5 inch) */
   left: 50% !important;
   transform: translateX(-50%) !important;
   width: min(980px, calc(100% - 48px)) !important;

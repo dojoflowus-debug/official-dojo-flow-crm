@@ -3467,3 +3467,13 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Verified layout contract: BottomNav at bottom:0 (z:1900), KaiBar at bottom:84px (z:1950)
 - [x] Confirmed KaiBar is centered pill (980px max-width), not full-width
 - [x] Confirmed BottomNav is full-width and always visible
+
+
+## Move KaiBar Above BottomNav (Jan 20, 2026) - COMPLETED
+- [x] Update CSS to position KaiBar at top of BottomNav with 48px (0.5 inch) spacing above
+- [x] Changed bottom positioning from calc(var(--nav-h) + var(--kai-gap)) to calc(var(--nav-h) + 48px)
+- [x] KaiBar now at bottom: 120px (72px nav + 48px spacing)
+- [x] Test and verify BottomNav menu items are fully visible
+- [x] Verified spacing is exactly 48px between KaiBar and BottomNav
+- [x] All menu items (Classes, Leads, Kai, Floor Plans, Operations, Kiosk, Staff, Billing, Reports, Settings) are visible
+- [x] Save checkpoint

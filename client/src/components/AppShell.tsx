@@ -111,7 +111,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
           style={{
             paddingBottom: showBottomNav 
               ? isKaiRoute 
-                ? 'calc(var(--nav-h) + var(--kai-gap) + 60px + env(safe-area-inset-bottom, 0px))'
+                ? 'calc(var(--nav-h) + 48px + 60px + env(safe-area-inset-bottom, 0px))' /* 72px nav + 48px gap + 60px kai */
                 : 'calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))'
               : '0'
           }}
