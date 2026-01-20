@@ -3551,3 +3551,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verified: Total padding reduced from 252px to 24px
 - [x] Verified: 3-inch gap successfully removed
 - [x] Save checkpoint
+
+
+## Align Content Area Horizontally with KaiBar (Jan 20, 2026) - COMPLETED
+- [x] Calculate KaiBar's horizontal offset (96px right from center)
+- [x] Apply same offset to content-layer using marginLeft (-102px)
+- [x] Ensure content-layer left edge aligns with KaiBar left edge
+- [x] Test and verify horizontal alignment is consistent
+- [x] Verified: contentLayerLeft: 242px, kaiBarLeft: 242px (difference: 1px)
+- [x] Verified: Left edge alignment is ALIGNED ✓
+- [x] Save checkpoint
