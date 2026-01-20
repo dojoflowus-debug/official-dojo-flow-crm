@@ -3646,3 +3646,18 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Test cinematic mode KaiBar positioning
 - [x] Verify light and dark modes remain unchanged
 - [ ] Save checkpoint
+
+
+## Fix TRPC JSON Parsing Error on /owner Page (Jan 20, 2026)
+- [ ] Investigate which TRPC endpoint is returning HTML instead of JSON
+- [ ] Check server routing configuration
+- [ ] Fix middleware or route handler issue
+- [ ] Test /owner page loads without errors
+- [ ] Save checkpoint
+
+
+## Move KaiBar Down 2 Inches in Cinematic Mode (Jan 20, 2026)
+- [x] Calculate new position (current: 72px, move down 192px = -120px)
+- [x] Update CSS bottom position in cinematic mode only
+- [x] Verify light and dark modes remain unchanged
+- [ ] Save checkpoint
