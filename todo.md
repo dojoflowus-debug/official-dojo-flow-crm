@@ -3453,3 +3453,17 @@ All three errors have been fixed by adding proper error handling and graceful fa
 
 ### Phase 5: Checkpoint
 - [x] Save checkpoint after layout contract implementation
+
+
+## KaiBar Attachment Fix - DOM Structure & Anti-Attachment Guardrails (Jan 20, 2026) - COMPLETED
+
+### Critical Issue: KaiBar Still Attached to BottomNav - RESOLVED
+- [x] Verify KaiBar is NOT nested inside BottomNav in AppShell.tsx
+- [x] Ensure KaiBar is rendered as sibling of BottomNav at root level
+- [x] Check for transformed parents that break fixed positioning (none found)
+- [x] Add anti-attachment CSS guardrails with !important rules
+- [x] Verify KaiBar floats above BottomNav with proper gap (12px)
+- [x] Test that KaiBar is not attached to BottomNav visually
+- [x] Verified layout contract: BottomNav at bottom:0 (z:1900), KaiBar at bottom:84px (z:1950)
+- [x] Confirmed KaiBar is centered pill (980px max-width), not full-width
+- [x] Confirmed BottomNav is full-width and always visible
