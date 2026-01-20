@@ -3580,3 +3580,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verified: Content now has 288px top padding for 3-inch clearance
 - [x] Verified: Content starts well below KaiBar and can scroll underneath
 - [x] Save checkpoint
+
+
+## Fix KaiBar Overlapping Content (Jan 20, 2026) - COMPLETED
+- [x] Remove incorrect 288px top padding from content-layer
+- [x] Add proper bottom padding to push content up and prevent KaiBar overlap
+- [x] Calculate correct padding: 168px (KaiBar bottom) + 96px (gap) + 24px (buffer) = 288px
+- [x] Test and verify content is not hidden under KaiBar
+- [x] Verified: contentPaddingBottom: 288px, isContentOverlapping: false
+- [x] Verified: Content is not hidden under KaiBar
+- [x] Save checkpoint
