@@ -3407,16 +3407,7 @@ export default function KaiCommand() {
                   <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
                 </Button>
               </div>
-              <p 
-                className={`text-[10px] text-center mt-2 relative z-10 uppercase tracking-wider`}
-                style={(isCinematic || isFocusMode) ? { 
-                  textShadow: '0 1px 3px rgba(0,0,0,0.9)', 
-                  color: 'rgba(255,255,255,0.4)',
-                  opacity: 1
-                } : isDark ? { color: 'rgba(255,255,255,0.30)' } : { color: 'rgba(100,116,139,0.6)' }}
-              >
-                Verify critical intel before execution
-              </p>
+
             </div>
           </div>
         </div>

@@ -72,14 +72,16 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
             to="/kai" 
             className={cn(
               "px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer",
-              isDarkMode 
+              isCinematic
+                ? "text-white hover:text-white hover:bg-white/10"
+                : isDarkMode 
                 ? "text-white/60 hover:text-white hover:bg-white/5" 
                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
             )}
           >
             Dashboard
           </Link>
-          <span className={cn("text-sm font-medium", isDarkMode ? "text-white" : "text-gray-900")}>
+          <span className={cn("text-sm font-medium", isCinematic ? "text-white" : isDarkMode ? "text-white" : "text-gray-900")}>
             / {title}
           </span>
         </nav>
@@ -92,7 +94,9 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
             size="sm" 
             className={cn(
               "gap-2", 
-              isDarkMode 
+              isCinematic
+                ? "bg-red-500/30 text-white hover:bg-red-500/40"
+                : isDarkMode 
                 ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 text-red-400 hover:from-red-500/30 hover:to-orange-500/30" 
                 : "bg-gradient-to-r from-red-50 to-orange-50 text-red-600 hover:from-red-100 hover:to-orange-100"
             )}
@@ -105,18 +109,18 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("gap-2", isDarkMode ? "text-white/60 hover:text-white" : "text-gray-600 hover:text-gray-900")} 
+            className={cn("gap-2", isCinematic ? "text-white hover:text-white" : isDarkMode ? "text-white/60 hover:text-white" : "text-gray-600 hover:text-gray-900")} 
             title="View credit dashboard"
           >
             <Coins className="h-4 w-4" />Credits
           </Button>
         </Link>
         
-        <div className={cn("flex items-center rounded-lg border p-0.5", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200")}>
+        <div className={cn("flex items-center rounded-lg border p-0.5", isCinematic ? "bg-white/10 border-white/20" : isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200")}>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("h-7 px-2", theme === 'light' && "bg-white shadow-sm text-gray-900")} 
+            className={cn("h-7 px-2 text-white", theme === 'light' && (isCinematic ? "bg-white/20" : "bg-white shadow-sm text-gray-900"))} 
             onClick={() => setTheme('light')}
           >
             <Sun className="h-3.5 w-3.5 mr-1" />Light
@@ -124,7 +128,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("h-7 px-2", theme === 'dark' && (isDarkMode ? "bg-white/10 text-white" : "bg-gray-200"))} 
+            className={cn("h-7 px-2 text-white", theme === 'dark' && (isCinematic ? "bg-white/20" : isDarkMode ? "bg-white/10 text-white" : "bg-gray-200"))} 
             onClick={() => setTheme('dark')}
           >
             <Moon className="h-3.5 w-3.5 mr-1" />Dark
@@ -132,7 +136,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("h-7 px-2", theme === 'cinematic' && (isDarkMode ? "bg-white/10 text-white" : "bg-gray-200"))} 
+            className={cn("h-7 px-2 text-white", theme === 'cinematic' && (isCinematic ? "bg-white/20" : isDarkMode ? "bg-white/10 text-white" : "bg-gray-200"))} 
             onClick={() => setTheme('cinematic')}
           >
             <Clapperboard className="h-3.5 w-3.5 mr-1" />Cinematic
