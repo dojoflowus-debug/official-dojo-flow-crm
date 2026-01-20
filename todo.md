@@ -3637,4 +3637,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add missing import statement for ManagementLayout component
 - [x] Verify ManagementLayout path is correct
 - [x] Test CreditTransactions page loads without errors
+- [x] Save checkpoint
+
+
+## Adjust KaiBar Position in Cinematic Mode (Jan 20, 2026)
+- [x] Move KaiBar up by 3 inches (288px) in cinematic mode
+- [x] Update CSS bottom position calculation
+- [x] Test cinematic mode KaiBar positioning
+- [x] Verify light and dark modes remain unchanged
 - [ ] Save checkpoint
