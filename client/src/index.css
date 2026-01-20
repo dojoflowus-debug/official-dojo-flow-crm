@@ -24,6 +24,13 @@
   border-radius: 999px !important;
 }
 
+/* Kai Command Page - Match KaiBar width and alignment */
+.kai-command-page {
+  max-width: 980px !important;
+  margin-left: calc(50% + 96px) !important;
+  transform: translateX(-50%) !important;
+}
+
 /* KaiBar Container - Centered pill positioning ABOVE BottomNav, shifted 96px right */
 .kaiBarContainer {
   position: fixed !important;

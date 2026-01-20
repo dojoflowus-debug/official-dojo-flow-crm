@@ -2335,7 +2335,7 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page flex h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`} style={{ maxWidth: '980px', marginLeft: 'calc(50% + 96px)', transform: 'translateX(-50%)' }}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -2818,11 +2818,11 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16 px-6' : isCinematic ? 'pt-6 px-6' : 'p-6 pt-6'}`}
+            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
             style={{ zIndex: 10, paddingBottom: 'calc(var(--nav-h, 72px) + var(--kai-h, 64px) + 48px + env(safe-area-inset-bottom, 0px))' }}
           >
-            {/* Shared content column wrapper - max-w-4xl to match composer width */}
-            <div className={`${isFocusMode ? 'max-w-4xl mx-auto px-4' : isFocusMode && messages.length === 0 ? 'w-full max-w-[1320px]' : 'max-w-[1320px] mx-auto px-4'}`}>
+            {/* Shared content column wrapper - full width to match AppShell constraint */}
+            <div className="w-full">
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>

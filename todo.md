@@ -3497,3 +3497,22 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Test and verify KaiBar positioning
 - [x] Verified KaiBar is visibly shifted to the right
 - [x] Save checkpoint
+
+
+## Constrain Content Width to Match KaiBar (Jan 20, 2026)
+- [ ] Update main content container to match KaiBar width (980px max)
+- [ ] Align content horizontally with KaiBar position (calc(50% + 96px))
+- [ ] Ensure content doesn't exceed KaiBar width
+- [ ] Test and verify alignment on different screen sizes
+- [ ] Save checkpoint
+
+
+## Constrain Content Width to Match KaiBar (Jan 20, 2026) - IN PROGRESS
+- [x] Update main content container to match KaiBar width (980px max)
+- [x] Align content horizontally with KaiBar (shifted 96px right from center)
+- [x] Remove max-width constraints from KaiCommand content wrapper
+- [x] Add CSS class to constrain kai-command-page width and alignment
+- [ ] Test and verify content alignment with KaiBar (CSS not fully applying yet)
+- [ ] Save checkpoint
+
+Note: CSS styling added but not fully taking effect. The kai-command-page has width 540px instead of 980px. The CSS `!important` rules are being added but the transform and marginLeft are not applying correctly. Further investigation needed to understand why the CSS is not overriding the inline styles or if there's a parent container issue.
