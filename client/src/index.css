@@ -889,9 +889,65 @@ h3 {
   pointer-events: auto;
 }
 
+/* Light mode Kai command bar styling */
+.light .kaiBar {
+  background: oklch(1 0 0 / 0.9);
+  border: 1px solid oklch(0 0 0 / 0.1);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.08);
+}
+
+.light .kaiBar input,
+.light .kaiBar textarea,
+.light .kaiBar button {
+  color: oklch(0.15 0 0) !important;
+}
+
+.light .kaiBar input::placeholder,
+.light .kaiBar textarea::placeholder {
+  color: oklch(0.45 0 0) !important;
+}
+
+/* Dark mode Kai command bar styling (default) */
+.dark .kaiBar,
+.kaiBar {
+  background: oklch(0.09 0 0 / 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.3);
+}
+
+/* Cinematic mode Kai command bar - ensure it's mounted at app root level */
+.cinematic .kaiBar {
+  position: fixed;
+  bottom: calc(var(--nav-h, 72px) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--kai-z, 1950);
+  pointer-events: auto;
+  background: oklch(0.09 0 0 / 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.3);
+}
+
 /* Ensure cinematic overlays don't interfere with fixed elements */
 .cinematicOverlay {
   pointer-events: none;
+  filter: none !important;
+  transform: none !important;
+}
+
+/* UI Chrome - ensure no filters/transforms affect it */
+.uiChrome,
+.uiChrome * {
+  filter: none !important;
+  transform: none !important;
+}
+
+/* Background scene layer - only apply filters here */
+.backgroundScene {
+  filter: blur(8px) brightness(0.8);
+  transform: scale(1.05);
 }
 
 /* Remove transform/filter/perspective from parent containers that could break fixed positioning */
@@ -901,4 +957,11 @@ h3 {
   transform: none !important;
   filter: none !important;
   perspective: none !important;
+}
+
+/* Ensure modal portals have high z-index for background selector */
+[role="dialog"],
+.modal-portal,
+.modal-overlay {
+  z-index: 9999 !important;
 }
