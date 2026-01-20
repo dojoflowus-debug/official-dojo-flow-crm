@@ -2819,7 +2819,7 @@ export default function KaiCommand() {
           <div 
             ref={scrollContainerRef}
             className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
-            style={{ zIndex: 10, paddingBottom: '24px', maxWidth: '980px', marginLeft: '-102px', marginRight: 'auto' }}
+            style={{ zIndex: 10, paddingBottom: '24px', maxWidth: '980px', marginLeft: 'auto', marginRight: 'auto' }}
           >
             {/* Shared content column wrapper - full width to match AppShell constraint */}
             <div className="w-full">
