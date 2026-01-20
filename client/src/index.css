@@ -958,7 +958,7 @@ h3 {
 /* Cinematic mode Kai command bar - ensure it's mounted at app root level */
 .cinematic .kaiBar {
   position: fixed;
-  bottom: calc(var(--nav-h, 72px) + 96px);
+  bottom: calc(var(--nav-h, 72px) + 96px - 384px);
   left: 50%;
   transform: translateX(-50%);
   z-index: var(--kai-z, 1950);

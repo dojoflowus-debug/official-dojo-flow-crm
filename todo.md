@@ -3621,3 +3621,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Fix welcomeMessageRouter.ts db null checks (added 4 null checks)
 - [x] Test and verify error count decreased from 1432 to 1424
 - [x] Save checkpoint
+
+
+## Move KaiBar Down 4 Inches in Cinematic Mode (Jan 20, 2026) - COMPLETED
+- [x] Update CSS to decrease KaiBar bottom position by 384px (4 inches) in cinematic mode only
+- [x] Change from bottom: calc(var(--nav-h, 72px) + 96px) to bottom: calc(var(--nav-h, 72px) + 96px - 384px)
+- [x] Cinematic mode KaiBar now at bottom: -216px (72 + 96 - 384 = -216)
+- [x] Ensure light and dark modes remain unchanged (still at 168px)
+- [x] Verified: Only cinematic mode CSS was modified, other modes unchanged
+- [x] Save checkpoint
