@@ -3690,4 +3690,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add CSS keyframes for spin animation
 - [x] Implement loading spinner in CinematicFocusOverlay
 - [x] Test entering and exiting focus mode
+- [x] Save checkpoint
+
+
+## Center Kai Command Prompts with KaiBar (Jan 20, 2026)
+- [x] Find Kai command prompts component (suggestion chips above command bar)
+- [x] Update positioning to match KaiBar alignment (980px max-width, centered + 96px right)
+- [x] Test prompt positioning in all theme modes
 - [ ] Save checkpoint

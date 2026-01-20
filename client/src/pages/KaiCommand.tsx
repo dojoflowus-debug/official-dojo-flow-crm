@@ -2883,7 +2883,7 @@ export default function KaiCommand() {
                   
                   {/* Priority Actions Stack - HIDDEN IN CINEMATIC MODE */}
                   {messages.length === 0 && !isCinematic && (
-                    <div className="w-full max-w-xl mb-8">
+                    <div className="w-full mb-8" style={{ maxWidth: '980px', marginLeft: 'calc(50% + 96px)', transform: 'translateX(-50%)' }}>
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-red-500">PRIORITY ACTIONS</span>
