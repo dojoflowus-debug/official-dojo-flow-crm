@@ -2880,8 +2880,8 @@ export default function KaiCommand() {
                     </p>
                   )}
                   
-                  {/* Priority Actions Stack - Top 3 Critical Items */}
-                  {messages.length === 0 && (
+                  {/* Priority Actions Stack - HIDDEN IN CINEMATIC MODE */}
+                  {messages.length === 0 && !isCinematic && (
                     <div className="w-full max-w-xl mb-8">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />

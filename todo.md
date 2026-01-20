@@ -344,6 +344,11 @@
   - Result: Page now loads successfully with conversations displaying correctly
   - Note: When using `z.void()` in TRPC, the client must call the query with `void 0`, not `undefined`
 
+## Bug Fix - Cinematic Mode Regressions (Jan 20, 2026)
+- [ ] Darken cinematic mode header (bg-black/70 + blur + white/10 border, white text/icons)
+- [ ] Restore Preset Background button in cinematic mode
+- [ ] Remove Priority Actions section from cinematic mode
+
 
 ## Bug Fix - Students Page Filter Default & Map Mode (Jan 9, 2026)
 

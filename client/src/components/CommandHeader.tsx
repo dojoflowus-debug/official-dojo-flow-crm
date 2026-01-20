@@ -29,6 +29,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const isCinematic = theme === 'cinematic'
   
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -40,7 +41,11 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
     <header 
       className={cn(
         "h-14 border-b flex items-center justify-between px-4 flex-shrink-0",
-        isDarkMode ? "bg-[#0a0a0b] border-white/10" : "bg-white border-gray-200"
+        isCinematic 
+          ? "bg-black/70 backdrop-blur-md border-white/10 text-white" 
+          : isDarkMode 
+            ? "bg-[#0a0a0b] border-white/10" 
+            : "bg-white border-gray-200"
       )}
       style={{
         position: 'sticky',
