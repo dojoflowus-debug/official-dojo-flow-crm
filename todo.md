@@ -3660,4 +3660,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Calculate new position (current: 72px, move down 192px = -120px)
 - [x] Update CSS bottom position in cinematic mode only
 - [x] Verify light and dark modes remain unchanged
+- [x] Save checkpoint
+
+
+## Move KaiBar Up 0.5 Inches in Cinematic Mode (Jan 20, 2026)
+- [x] Calculate new position (current: -120px, move up 48px = -72px)
+- [x] Update CSS bottom position in cinematic mode only
+- [x] Verify light and dark modes remain unchanged
 - [ ] Save checkpoint
