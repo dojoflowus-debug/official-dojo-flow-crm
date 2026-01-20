@@ -345,9 +345,16 @@
   - Note: When using `z.void()` in TRPC, the client must call the query with `void 0`, not `undefined`
 
 ## Bug Fix - Cinematic Mode Regressions (Jan 20, 2026)
-- [ ] Darken cinematic mode header (bg-black/70 + blur + white/10 border, white text/icons)
-- [ ] Restore Preset Background button in cinematic mode
-- [ ] Remove Priority Actions section from cinematic mode
+- [x] Darken cinematic mode header (bg-black/70 + blur + white/10 border, white text/icons)
+- [x] Restore Preset Background button in cinematic mode
+- [x] Remove Priority Actions section from cinematic mode
+
+## Feature - Kai Command Bar First-Time Animation (Jan 20, 2026)
+- [x] Add bounce and glow animations to Kai command bar on first user view
+  - Create CSS keyframe animations for subtle bounce and glow effects
+  - Track if user has seen the command bar using localStorage
+  - Apply animation class on first render
+  - Animation should play once and not repeat on subsequent visits
 
 
 ## Bug Fix - Students Page Filter Default & Map Mode (Jan 9, 2026)

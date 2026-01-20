@@ -965,3 +965,34 @@ h3 {
 .modal-overlay {
   z-index: 9999 !important;
 }
+
+/* Kai Command Bar First-Time Animation */
+@keyframes kaiBounce {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes kaiFirstTimeGlow {
+  0% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 12px 48px rgba(255, 76, 76, 0.5), inset 0 0 0 2px rgba(255, 76, 76, 0.6), 0 0 32px rgba(255, 76, 76, 0.3);
+  }
+  100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.kai-command-bar-first-time {
+  animation: kaiBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), kaiFirstTimeGlow 2s ease-in-out;
+}

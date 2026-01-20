@@ -1,4 +1,5 @@
 import React from 'react'
+import { useEffect, useRef } from 'react'
 import { Users, TrendingUp, AlertTriangle, Clock, Sparkles, Cake, BarChart3 } from 'lucide-react'
 
 interface CommandBarStats {
@@ -18,6 +19,18 @@ interface StudentCommandBarProps {
 }
 
 export default function StudentCommandBar({ stats, onTileClick, loading = false }: StudentCommandBarProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const hasSeenRef = useRef(false)
+
+  useEffect(() => {
+    const hasSeen = localStorage.getItem('kai-command-bar-seen')
+    if (!hasSeen && containerRef.current) {
+      containerRef.current.classList.add('kai-command-bar-first-time')
+      localStorage.setItem('kai-command-bar-seen', 'true')
+      hasSeenRef.current = true
+    }
+  }, [])
+
   const tiles = [
     {
       id: 'total',
@@ -88,7 +101,7 @@ export default function StudentCommandBar({ stats, onTileClick, loading = false 
   ]
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={containerRef}>
       {/* Command Bar Title */}
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -98,7 +111,7 @@ export default function StudentCommandBar({ stats, onTileClick, loading = false 
       </div>
 
       {/* Tiles Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 transition-all duration-300">
         {tiles.map((tile) => {
           const Icon = tile.icon
           return (
