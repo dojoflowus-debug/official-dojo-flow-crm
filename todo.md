@@ -3667,4 +3667,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Calculate new position (current: -120px, move up 48px = -72px)
 - [x] Update CSS bottom position in cinematic mode only
 - [x] Verify light and dark modes remain unchanged
+- [x] Save checkpoint
+
+
+## Fix Blurry Icons on KaiBar in Cinematic Mode (Jan 20, 2026)
+- [x] Investigate cause of blurry icons (likely backdrop-filter blur affecting child elements)
+- [x] Add CSS to sharpen icons in cinematic mode only
+- [x] Test icon sharpness in cinematic mode
+- [x] Verify light and dark modes remain unchanged
 - [ ] Save checkpoint
