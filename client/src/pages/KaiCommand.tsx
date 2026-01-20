@@ -3344,7 +3344,7 @@ export default function KaiCommand() {
               )}
 
               {/* Input container - Clean floating pill with no outer container background */}
-              <div className={`flex items-center gap-2 transition-all duration-300 rounded-full p-3 relative z-10 border border-white/30 focus-within:kai-command-bar-focus`}
+              <div className={`kaiBar flex items-center gap-2 transition-all duration-300 rounded-full p-3 relative z-10 border border-white/30 focus-within:kai-command-bar-focus`}
               onFocus={(e) => {
                 e.currentTarget.classList.add('kai-command-bar-focus');
               }}
@@ -3353,12 +3353,13 @@ export default function KaiCommand() {
               }}
               style={{ 
                 animation: isCinematic && !isFocusMode ? 'cinematicInputGlow 3s ease-in-out infinite' : 'none',
-                background: 'rgba(0, 0, 0, 0.85)',
+                background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 width: '100%',
                 maxWidth: '100%',
-                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                borderColor: isDark || isCinematic ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.1)'
               }}
               >
                 {/* Attachment Button */}
