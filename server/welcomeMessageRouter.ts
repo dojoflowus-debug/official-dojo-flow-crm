@@ -14,6 +14,7 @@ export const welcomeMessageRouter = router({
     .query(async ({ ctx }) => {
       try {
         const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
         
         // Check if user has already seen the welcome message
         const user = await db
@@ -74,6 +75,7 @@ export const welcomeMessageRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
         
         await db
           .update(users)
@@ -118,6 +120,7 @@ export const welcomeMessageRouter = router({
         }
 
         const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
 
         if (input.id) {
           // Update existing message
@@ -138,7 +141,7 @@ export const welcomeMessageRouter = router({
           return { success: true, id: input.id };
         } else {
           // Create new message
-          const result = await db.insert(welcomeMessages).values({
+          const [result] = await db.insert(welcomeMessages).values({
             title: input.title,
             message: input.message,
             subMessage: input.subMessage,
@@ -149,7 +152,7 @@ export const welcomeMessageRouter = router({
             showForNewGoogleUsers: input.showForNewGoogleUsers,
           });
 
-          return { success: true, id: result.insertId };
+          return { success: true, id: Number(result.insertId) };
         }
       } catch (error) {
         console.error("[WelcomeMessage] Error upserting message:", error);
@@ -175,6 +178,7 @@ export const welcomeMessageRouter = router({
       }
 
       const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       const messages = await db
         .select()
         .from(welcomeMessages)
@@ -207,6 +211,7 @@ export const welcomeMessageRouter = router({
         }
 
         const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
         await db
           .delete(welcomeMessages)
           .where(eq(welcomeMessages.id, input.id));

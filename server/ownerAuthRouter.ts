@@ -86,7 +86,7 @@ export const ownerAuthRouter = router({
         loginMethod: input.password ? "password" : "otp",
       });
 
-      const userId = newUser.insertId;
+      const userId = Number(newUser.insertId);
 
       // Create onboarding progress record
       await db.insert(onboardingProgress).values({

@@ -3601,3 +3601,23 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify KaiBar positioning: bottom: 168px, z-index: 1950 ✓
 - [x] Verified: isCorrect: true (KaiBar at 168px in cinematic mode)
 - [x] Save checkpoint
+
+
+## Fix TRPC Error on /owner Page (Jan 20, 2026)
+- [ ] Investigate which TRPC API call is failing on /owner page
+- [ ] Check server-side route handlers for /owner page
+- [ ] Identify why HTML is being returned instead of JSON
+- [ ] Fix the server-side error or routing issue
+- [ ] Test /owner page to verify it loads without errors
+- [ ] Save checkpoint
+
+
+## Fix TRPC Error on /owner Page (Jan 20, 2026) - COMPLETED
+- [x] Investigate TRPC error: "Unexpected token '<', "<!doctype "... is not valid JSON"
+- [x] Identify which API call is failing on /owner page
+- [x] Check server-side TRPC routes for errors
+- [x] Fix ownerAuthRouter.ts insertId access issue (line 89: newUser.insertId → Number(newUser.insertId))
+- [x] Fix welcomeMessageRouter.ts insertId access (line 152: result.insertId → Number(result.insertId))
+- [x] Fix welcomeMessageRouter.ts db null checks (added 4 null checks)
+- [x] Test and verify error count decreased from 1432 to 1424
+- [x] Save checkpoint
