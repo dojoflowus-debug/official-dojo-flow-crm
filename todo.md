@@ -3630,3 +3630,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Ensure light and dark modes remain unchanged (still at 168px)
 - [x] Verified: Only cinematic mode CSS was modified, other modes unchanged
 - [x] Save checkpoint
+
+
+## Fix ManagementLayout Import Error in CreditTransactions (Jan 20, 2026)
+- [x] Check CreditTransactions.tsx line 264 where ManagementLayout is used
+- [x] Add missing import statement for ManagementLayout component
+- [x] Verify ManagementLayout path is correct
+- [x] Test CreditTransactions page loads without errors
+- [ ] Save checkpoint

@@ -24,6 +24,7 @@ import {
 import { trpc } from '../lib/trpc';
 import { useAuth } from '@/hooks/useAuth';
 import BottomNavLayout from '../components/BottomNavLayout';
+import ManagementLayout from '../components/ManagementLayout';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
