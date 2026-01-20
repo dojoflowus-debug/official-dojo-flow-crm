@@ -23,6 +23,8 @@ import { ScrollableNav } from '@/components/ScrollableNav'
 import { CinematicFocusOverlay } from '@/components/CinematicFocusOverlay'
 import { EscHintLabel } from '@/components/EscHintLabel'
 import CommandHeader from '@/components/CommandHeader'
+import { KaiBar } from '@/components/KaiBar'
+import { KaiBarProvider } from '@/contexts/KaiBarContext'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -51,6 +53,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
   
   const isDark = theme === 'dark'
   const isCinematic = theme === 'cinematic'
+  const isKaiRoute = location.pathname === '/kai'
   
   // Fetch badge counts with polling (every 90 seconds)
   const { data: badgeCounts } = trpc.navBadges.getActionableCounts.useQuery(
@@ -97,19 +100,24 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
   const showBottomNav = !hideBottomNav && !isFocusMode
 
   return (
-    <div className="app-shell min-h-screen flex flex-col">
-      {/* Universal Top Header */}
-      <CommandHeader title="Operations" isDarkMode={isDark} />
-      
-      {/* Main Content - with bottom padding for fixed nav */}
-      <main 
-        className="flex-1"
-        style={{
-          paddingBottom: showBottomNav ? 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px))' : '0'
-        }}
-      >
-        {children}
-      </main>
+    <KaiBarProvider>
+      <div className="app-shell min-h-screen flex flex-col">
+        {/* Universal Top Header */}
+        <CommandHeader title="Operations" isDarkMode={isDark} />
+        
+        {/* Main Content - with bottom padding for fixed nav and KaiBar (on /kai route only) */}
+        <main 
+          className="flex-1"
+          style={{
+            paddingBottom: showBottomNav 
+              ? isKaiRoute 
+                ? 'calc(var(--bottom-nav-height, 72px) + 12px + 60px + env(safe-area-inset-bottom, 0px))' // Include KaiBar padding on /kai
+                : 'calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px))' // Only BottomNav padding on other routes
+              : '0'
+          }}
+        >
+          {children}
+        </main>
 
       {/* Global Fixed Bottom Navigation Bar */}
       {showBottomNav && (
@@ -272,8 +280,12 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
         }}
       />
 
-      {/* ESC Hint Label */}
-      <EscHintLabel show={showEscHint} />
-    </div>
+        {/* ESC Hint Label */}
+        <EscHintLabel show={showEscHint} />
+      </div>
+
+      {/* Global KaiBar - Fixed at app root level */}
+      <KaiBar />
+    </KaiBarProvider>
   )
 }

@@ -3419,3 +3419,37 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Force light mode styling on Kai command bar (white/90 bg, dark text/icons, black/10 border)
 - [x] Remove blur filter from UI containers in focus mode
 - [x] Implement focus as backdrop-filter only on background layer
+
+
+## Layout Contract Implementation - Bottom Nav & KaiBar Positioning (COMPLETED)
+
+### Phase 1: Layout Architecture
+- [x] Move KaiBar from KaiCommand page to AppShell root level
+- [x] Ensure BottomNav is at app root (z-index: 900, bottom: 0)
+- [x] Position KaiBar above BottomNav (z-index: 1950, bottom: calc(navHeight + gap))
+- [x] Remove all other fixed positioned elements except BottomNav and KaiBar
+- [x] Ensure no parent elements have transform/filter/perspective that breaks fixed positioning
+- [x] Only render KaiBar on /kai route to avoid unnecessary DOM elements
+
+### Phase 2: Content Area Padding
+- [x] Add padding to main content area to prevent overlap with BottomNav
+- [x] Add padding to main content area to prevent overlap with KaiBar (on /kai route only)
+- [x] Calculate total padding: 72px (BottomNav) + 12px (gap) + 60px (KaiBar) = 144px on /kai
+- [x] Conditional padding: only include KaiBar padding on /kai route
+
+### Phase 3: KaiCommand Refactoring
+- [x] Extract KaiBar state and handlers from KaiCommand
+- [x] Create standalone KaiBar component at app root
+- [x] Update KaiCommand to remove fixed positioned container
+- [x] Create KaiBarContext for managing KaiBar state globally
+
+### Phase 4: Testing & Validation
+- [x] Test BottomNav visibility on /kai route
+- [x] Test KaiBar visibility on /kai route
+- [x] Verify z-index stacking is correct (KaiBar 1950 > BottomNav 900)
+- [x] Verify fixed positioning works correctly
+- [x] Verify content area padding prevents overlap
+- [x] Updated MapOverlay to account for KaiBar height
+
+### Phase 5: Checkpoint
+- [x] Save checkpoint after layout contract implementation

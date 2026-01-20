@@ -28,7 +28,7 @@ export const MapOverlay: React.FC<MapOverlayProps> = ({ children, isVisible }) =
         position: 'fixed',
         left: 0,
         right: 0,
-        bottom: 72, // Account for bottom navigation bar height
+        bottom: 'calc(72px + 12px + 60px)', // Account for bottom navigation bar (72px) + gap (12px) + KaiBar height (60px)
         top: 'auto',
         pointerEvents: 'none',
         zIndex: 9999,
