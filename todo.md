@@ -3516,3 +3516,15 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Save checkpoint
 
 Note: CSS styling added but not fully taking effect. The kai-command-page has width 540px instead of 980px. The CSS `!important` rules are being added but the transform and marginLeft are not applying correctly. Further investigation needed to understand why the CSS is not overriding the inline styles or if there's a parent container issue.
+
+
+## Revert kai-command-page Width Constraint (Jan 20, 2026) - COMPLETED
+- [x] Remove width constraint from kai-command-page CSS class
+- [x] Remove inline styles from kai-command-page container in KaiCommand.tsx
+- [x] Apply width constraint only to the conversation content area (content-layer)
+- [x] Ensure Command Center sidebar remains at original position and width
+- [x] Test and verify sidebar is back to original position
+- [x] Verified: Sidebar at left: 16px, width: 320px (original position)
+- [x] Verified: Content-layer constrained to max-width: 980px, actual width: 900px
+- [x] Verified: Content-layer centered with marginLeft/marginRight: auto
+- [x] Save checkpoint
