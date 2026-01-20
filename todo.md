@@ -3477,3 +3477,14 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Verified spacing is exactly 48px between KaiBar and BottomNav
 - [x] All menu items (Classes, Leads, Kai, Floor Plans, Operations, Kiosk, Staff, Billing, Reports, Settings) are visible
 - [x] Save checkpoint
+
+
+## Increase KaiBar Spacing to 1 Inch (Jan 20, 2026) - COMPLETED
+- [x] Update CSS to increase spacing from 48px to 96px (1 inch)
+- [x] Change bottom positioning from calc(var(--nav-h) + 48px) to calc(var(--nav-h) + 96px)
+- [x] KaiBar now at bottom: 168px (72px nav + 96px spacing)
+- [x] Update AppShell content padding to match new spacing (228px total on /kai route)
+- [x] Test and verify KaiBar has proper clearance above BottomNav
+- [x] Verified spacing is exactly 96px (1 inch) between KaiBar and BottomNav
+- [x] All menu items fully visible with clear separation
+- [x] Save checkpoint

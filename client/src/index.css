@@ -27,7 +27,7 @@
 /* KaiBar Container - Centered pill positioning ABOVE BottomNav */
 .kaiBarContainer {
   position: fixed !important;
-  bottom: calc(var(--nav-h) + 48px) !important; /* 72px nav + 48px spacing (0.5 inch) */
+  bottom: calc(var(--nav-h) + 96px) !important; /* 72px nav + 96px spacing (1 inch) */
   left: 50% !important;
   transform: translateX(-50%) !important;
   width: min(980px, calc(100% - 48px)) !important;
