@@ -2603,7 +2603,6 @@ export default function KaiCommand() {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   backgroundRepeat: 'no-repeat',
-                  filter: 'blur(2px)',
                   transform: `scale(1.1) translateY(${-parallaxOffset}px)`,
                   transition: 'opacity 0.4s ease-out',
                   opacity: isTransitioning ? 0 : 1,
@@ -2616,12 +2615,14 @@ export default function KaiCommand() {
                   height: '110%'
                 }}
               />
-              {/* Dark Overlay for readability */}
+              {/* Dark Overlay for readability - with backdrop blur for focus mode */}
               <div 
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background: currentEnvironment.overlayColor,
-                  transition: 'background 0.4s ease-out'
+                  transition: 'background 0.4s ease-out',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)'
                 }}
               />
               {/* Soft Gradient Overlay for UI Contrast (20-30% darkening) */}

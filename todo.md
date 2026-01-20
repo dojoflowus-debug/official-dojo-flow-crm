@@ -3414,3 +3414,8 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Add safe area padding to main content (top + bottom)
 - [ ] Test top menu clickability in cinematic mode
 - [ ] Verify Kai command bar stays above bottom nav
+
+## Bug Fix - Light Mode & Focus Mode Styling (Jan 20, 2026)
+- [x] Force light mode styling on Kai command bar (white/90 bg, dark text/icons, black/10 border)
+- [x] Remove blur filter from UI containers in focus mode
+- [x] Implement focus as backdrop-filter only on background layer
