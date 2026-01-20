@@ -3590,3 +3590,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verified: contentPaddingBottom: 288px, isContentOverlapping: false
 - [x] Verified: Content is not hidden under KaiBar
 - [x] Save checkpoint
+
+
+## Fix KaiBar Position in Cinematic Mode (Jan 20, 2026) - COMPLETED
+- [x] Check current KaiBar positioning in cinematic mode (was 84px, should be 168px)
+- [x] Identify CSS rules causing different position in cinematic mode (line 961 in index.css)
+- [x] Update CSS to ensure KaiBar has consistent bottom: 168px across all themes
+- [x] Changed from calc(var(--nav-h, 72px) + 12px) to calc(var(--nav-h, 72px) + 96px)
+- [x] Test KaiBar position in cinematic mode
+- [x] Verify KaiBar positioning: bottom: 168px, z-index: 1950 ✓
+- [x] Verified: isCorrect: true (KaiBar at 168px in cinematic mode)
+- [x] Save checkpoint
