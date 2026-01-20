@@ -109,11 +109,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
         <main 
           className="flex-1"
           style={{
-            paddingBottom: showBottomNav 
-              ? isKaiRoute 
-                ? 'calc(var(--nav-h) + 96px + 60px + env(safe-area-inset-bottom, 0px))' /* 72px nav + 96px gap + 60px kai */
-                : 'calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))'
-              : '0'
+            paddingBottom: '0px'
           }}
         >
           {children}
