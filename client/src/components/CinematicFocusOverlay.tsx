@@ -100,10 +100,20 @@ export function CinematicFocusOverlay({
           <p className="text-xs text-white/40 pt-2 font-mono">
             Press ESC anytime to return
           </p>
+
+          {/* Subtle loading spinner */}
+          <div className="flex justify-center mt-6">
+            <div
+              className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full"
+              style={{
+                animation: 'spin 1s linear infinite',
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* CSS animation for glow pulse */}
+      {/* CSS animations */}
       <style>{`
         @keyframes focusPulse {
           0% {
@@ -116,6 +126,15 @@ export function CinematicFocusOverlay({
           100% {
             transform: scale(1.4);
             opacity: 0;
+          }
+        }
+        
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
           }
         }
       `}</style>
