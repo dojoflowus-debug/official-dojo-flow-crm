@@ -71,12 +71,12 @@ export function KaiBar() {
         <div
           style={{
             position: 'fixed',
-            left: '16px',
-            right: '16px',
-            bottom: `calc(${BOTTOM_NAV_HEIGHT + KAI_BAR_GAP}px + 60px)`,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bottom: `calc(var(--nav-h) + var(--kai-gap) + 60px)`,
             zIndex: 1949,
-            maxWidth: '1100px',
-            margin: '0 auto',
+            width: 'min(980px, calc(100% - 48px))',
+            maxWidth: '980px',
             pointerEvents: 'auto',
           }}
         >
@@ -188,16 +188,16 @@ export function KaiBar() {
         </div>
       )}
 
-      {/* KaiBar - Fixed at app root level */}
+      {/* KaiBar - Fixed at app root level as centered pill */}
       <div
+        className="kaiBarContainer"
         style={{
           position: 'fixed',
-          left: '16px',
-          right: '16px',
-          bottom: `calc(${BOTTOM_NAV_HEIGHT + KAI_BAR_GAP}px)`,
-          maxWidth: '1100px',
-          width: 'auto',
-          margin: '0 auto',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: 'calc(var(--nav-h) + var(--kai-gap))',
+          width: 'min(980px, calc(100% - 48px))',
+          maxWidth: '980px',
           zIndex: 1950,
           pointerEvents: 'auto',
           padding: 0,
