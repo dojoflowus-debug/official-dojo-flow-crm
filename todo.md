@@ -4064,3 +4064,9 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Change left arrow z-index from 50 to 9999 (already done in previous step)
 - [x] Verify left arrow is fully visible without position changes
 - [x] Save checkpoint
+
+## Change Overflow on kaiLightCommandCenter to Fix Arrow Clipping (Jan 21, 2026)
+- [x] Find .kaiLightCommandCenter CSS rule
+- [x] Change overflow: hidden to overflow: visible (removed from container div in Light mode)
+- [x] Verify left arrow is fully visible
+- [x] Save checkpoint

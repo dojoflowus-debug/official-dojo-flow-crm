@@ -2323,7 +2323,7 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page flex h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page flex h-screen max-h-screen ${!isDark && !isCinematic && !isFocusMode ? '' : 'overflow-hidden'} ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
