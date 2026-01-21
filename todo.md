@@ -4099,3 +4099,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Call setOnSendMessage with handleSendMessage in useEffect
 - [x] Connected KaiBar send handler to pass input/attachments to handleSendMessage
 - [x] Save checkpoint
+
+## Add Loading State to Send Button (Jan 21, 2026)
+- [x] Add isSending state to KaiBarContext (already exists as isLoading)
+- [x] Update send button to show Loader2 spinner when isLoading is true
+- [x] Disable send button when isLoading is true (already implemented)
+- [x] Set isLoading to true when send starts, false when complete
+- [x] Test loading feedback
+- [x] Save checkpoint

@@ -121,7 +121,7 @@ interface Attachment {
 
 export default function KaiCommand() {
   const [, navigate] = useLocation();
-  const { setOnSendMessage: setKaiBarSendHandler } = useKaiBar();
+  const { setOnSendMessage: setKaiBarSendHandler, setIsLoading: setKaiBarLoading } = useKaiBar();
   
   const [activeTab, setActiveTab] = useState('active');
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
@@ -192,16 +192,22 @@ export default function KaiCommand() {
   useEffect(() => {
     setKaiBarSendHandler(async (input: string, kaiBarAttachments: any[]) => {
       console.log('[KaiBar] Send button clicked, input:', input, 'attachments:', kaiBarAttachments);
-      // Update local state with KaiBar's input and attachments
-      setMessageInput(input);
-      setAttachments(kaiBarAttachments);
-      // Wait a tick for state to update, then trigger send
-      setTimeout(async () => {
+      try {
+        setKaiBarLoading(true);
+        // Update local state with KaiBar's input and attachments
+        setMessageInput(input);
+        setAttachments(kaiBarAttachments);
+        // Wait a tick for state to update, then trigger send
+        await new Promise(resolve => setTimeout(resolve, 0));
         await handleSendMessage('click');
-      }, 0);
+      } catch (error) {
+        console.error('[KaiBar] Send error:', error);
+      } finally {
+        setKaiBarLoading(false);
+      }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setKaiBarSendHandler]);
+  }, [setKaiBarSendHandler, setKaiBarLoading]);
   
   // Voice state management
   const [voiceEnabled, setVoiceEnabled] = useState(false);

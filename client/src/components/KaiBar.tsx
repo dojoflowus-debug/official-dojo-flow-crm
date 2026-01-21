@@ -318,7 +318,11 @@ export function KaiBar() {
               onClick={handleSendMessage}
               disabled={(!messageInput.trim() && attachments.length === 0) || isLoading || attachments.some(att => att.uploading)}
             >
-              <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#FFFFFF' }} />
+              ) : (
+                <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
+              )}
             </Button>
           </div>
         </div>
