@@ -3752,4 +3752,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Remove 144px custom offset from Kai Command header container
 - [x] Center relative to full app viewport (margin: 0 auto)
 - [x] Verify alignment between Operations and Kiosk bottom nav icons
+- [x] Save checkpoint
+
+
+## Pixel-Perfect Center Kai Command Header (Jan 20, 2026)
+- [x] Add data-nav-anchor="operations" to Operations bottom nav item
+- [x] Add data-nav-anchor="kiosk" to Kiosk bottom nav item
+- [x] Implement midpoint calculation logic in KaiCommand
+- [x] Position header using calculated midpoint
+- [x] Add ResizeObserver for responsive updates
+- [ ] Test alignment between Operations and Kiosk
 - [ ] Save checkpoint
