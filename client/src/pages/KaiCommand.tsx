@@ -3298,8 +3298,8 @@ export default function KaiCommand() {
               style={{ 
                 zIndex: 1899,
                 bottom: '72px',
-                left: `${centerPanelPosition.left}px`,
-                width: `${centerPanelPosition.width}px`,
+                left: `${centerPanelPosition.left + 48}px`,
+                width: `${centerPanelPosition.width - 96}px`,
                 transition: 'left 0.1s ease-out, width 0.1s ease-out',
                 padding: '0 16px',
                 boxSizing: 'border-box',

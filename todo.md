@@ -4263,3 +4263,5 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Ensure centered layout with proper padding
 - [x] Fix form width to be constrained to center panel
 - [x] Verify divider drag resizes chat bar fluidly
+
+- [x] Reduce chat bar width by 2 inches (48px per side = 96px total reduction)
