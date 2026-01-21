@@ -3824,4 +3824,17 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify first card left edge aligns with container left
 - [x] Verify last card right edge aligns with container right
 - [x] Ensure logo/title/subtitle remain unchanged
+- [x] Save checkpoint
+
+
+## Update Kai Command Carousel to Show Exactly 3 Cards with Always-Visible Arrows (Jan 21, 2026)
+- [x] Read current KaiCommand.tsx to understand carousel structure
+- [x] Calculate card width so exactly 3 cards fit: (containerWidth - gap*2) / 3
+- [x] Update carousel container with overflow: hidden and scroll-snap-type: x mandatory
+- [x] Set each card to scroll-snap-align: start with calculated width
+- [x] Make left/right arrow buttons always visible (not hover-only)
+- [x] Update arrow disable logic: grey out left at start, right at end
+- [x] Implement scrollBy with smooth behavior for 1-card advance per click
+- [x] Test in Light, Dark, and Cinematic modes
+- [x] Verify no changes to title/logo/subtitle/layout/spacing
 - [ ] Save checkpoint

@@ -1142,6 +1142,7 @@ export default function KaiCommand() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [cardWidth, setCardWidth] = useState(0);
 
   // Update scroll buttons visibility
   const updateScrollButtons = () => {
@@ -1152,10 +1153,29 @@ export default function KaiCommand() {
     }
   };
 
-  // Scroll carousel
+  // Calculate card width for exactly 3 cards visible
+  useEffect(() => {
+    const calculateCardWidth = () => {
+      if (carouselRef.current) {
+        const containerWidth = carouselRef.current.clientWidth;
+        const gap = 12; // 3 in Tailwind = 12px
+        // For 3 cards: containerWidth = 3*cardWidth + 2*gap
+        const calculatedWidth = (containerWidth - gap * 2) / 3;
+        setCardWidth(calculatedWidth);
+        updateScrollButtons();
+      }
+    };
+
+    calculateCardWidth();
+    window.addEventListener('resize', calculateCardWidth);
+    return () => window.removeEventListener('resize', calculateCardWidth);
+  }, []);
+
+  // Scroll carousel by exactly 1 card
   const scrollCarousel = (direction: 'left' | 'right') => {
-    if (carouselRef.current) {
-      const scrollAmount = 300; // Scroll by ~1.5 cards
+    if (carouselRef.current && cardWidth > 0) {
+      const gap = 12;
+      const scrollAmount = cardWidth + gap; // 1 card + gap
       carouselRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -2961,32 +2981,30 @@ export default function KaiCommand() {
                       isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}
                     )}
                   >
-                    {/* Left Arrow */}
-                    {canScrollLeft && (
-                      <button
-                        onClick={() => scrollCarousel('left')}
-                        className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
-                      >
-                        <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
-                      </button>
-                    )}
+                    {/* Left Arrow - Always Visible */}
+                    <button
+                      onClick={() => scrollCarousel('left')}
+                      disabled={!canScrollLeft}
+                      className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${!canScrollLeft ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                    >
+                      <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
+                    </button>
                     
-                    {/* Right Arrow */}
-                    {canScrollRight && (
-                      <button
-                        onClick={() => scrollCarousel('right')}
-                        className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
-                      >
-                        <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
-                      </button>
-                    )}
+                    {/* Right Arrow - Always Visible */}
+                    <button
+                      onClick={() => scrollCarousel('right')}
+                      disabled={!canScrollRight}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${!canScrollRight ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                    >
+                      <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
+                    </button>
                     
                     {/* Mission Tiles - Tactical Grid */}
                     <div
                       ref={carouselRef}
                       onScroll={updateScrollButtons}
                       className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
-                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', width: '100%', justifyContent: 'space-between' }}
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', width: '100%', overflow: 'hidden' }}
                     >
                       {sortedQuickCommands.map((command, index) => {
                         // Severity-based styling for tactical look
@@ -3031,7 +3049,7 @@ export default function KaiCommand() {
                                 : `bg-white rounded-sm border ${severity === 'info' ? 'border-slate-200 hover:border-slate-300' : styles.border + ' ' + styles.hoverBorder} hover:bg-slate-50 shadow-sm`
                             }`}
                           style={Object.assign(
-                            { flex: '1 1 0', minWidth: '200px', maxWidth: '280px' },
+                            { width: cardWidth > 0 ? `${cardWidth}px` : '200px', flexShrink: 0 },
                             (isCinematic || isFocusMode) ? { 
                               animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
                               background: 'rgba(10, 10, 11, 0.95)'
