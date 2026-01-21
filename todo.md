@@ -4277,3 +4277,63 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Align content area width with chat bar width (664px container, 632px form)
 - [x] Messages should extend to edges of chat bar without exceeding
 - [x] Center content area to match chat bar positioning
+
+
+## ChatGPT-Like Chat Behavior Implementation
+
+### Phase 1: Chat Containment & Layout
+- [x] Verify composer is child of center panel (not viewport)
+- [x] Remove position: fixed from composer if present
+- [x] Ensure composer width is 100% of center panel
+- [x] Test divider drag resizes composer width
+
+### Phase 2: Center Panel Containment
+- [x] Move composer from fixed to flex layout
+- [x] Composer is now child of center panel
+- [x] Composer width: 100% with maxWidth: 632px
+- [x] Composer resizes with divider drag
+
+### Phase 3: Input Rules (ChatGPT Style)
+- [ ] Implement Enter to send message
+- [ ] Implement Shift+Enter to insert newline
+- [ ] Disable send button when input is empty
+- [ ] Clear input immediately after send
+- [ ] Prevent double-send on rapid clicks/keypresses
+
+### Phase 3: Sending/Responding State
+- [ ] Create state machine (idle, sending, streaming, error, stopped)
+- [ ] Show sending indicator while Kai responds
+- [ ] Add stop button to halt streaming
+- [ ] Disable input during sending (or implement double-send prevention)
+- [ ] Show error inline with retry button on failure
+
+### Phase 4: Streaming Responses
+- [ ] Implement token/word streaming from Kai
+- [ ] Show typing/streaming indicator
+- [ ] Allow "Stop generating" button
+- [ ] Keep partial text when stopped
+
+### Phase 5: Conversation Persistence
+- [ ] Fix "New conversation" to clear panel and create new thread
+- [ ] Save messages to active thread immediately
+- [ ] Load full message history when clicking conversation
+- [ ] Prevent message mixing between threads
+- [ ] Store: threadId, role, content, createdAt for each message
+
+### Phase 6: Message Rendering
+- [ ] Support markdown rendering
+- [ ] Support code blocks with copy button
+- [ ] Support links
+- [ ] Append messages in order (never replace)
+
+### Phase 7: Auto-Scroll Behavior
+- [ ] Auto-scroll to newest message only if near bottom
+- [ ] Show "Jump to latest" button when scrolled up
+- [ ] Don't yank user back down when scrolled up
+
+### Phase 8: Bug Fixes
+- [ ] Fix send arrow glowing but message not sending
+- [ ] Ensure onSubmit fires on Enter and click
+- [ ] Ensure input value bound to state
+- [ ] Fix z-index layering blocking send handler
+- [ ] Fix composer stuck to screen issue
