@@ -2697,7 +2697,7 @@ export default function KaiCommand() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem 
                     onClick={handleSummarize}
-                    disabled={isSummarizing || !selectedConversationId}
+                    disabled={isSummarizing || !selectedConversationId || messages.length === 0}
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     {isSummarizing ? 'Summarizing...' : 'Summarize Conversation'}

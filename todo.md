@@ -3797,4 +3797,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Locate where summarize function is called in KaiCommand or related components
 - [x] Add guard condition to check if messages array has content before calling summarize
 - [x] Test that error no longer appears on empty conversation
+- [x] Save checkpoint
+
+
+## Disable Summarize Button When No Messages (Jan 21, 2026)
+- [x] Update Summarize button disabled condition to include messages.length === 0
+- [x] Test that button is disabled on empty conversation
+- [x] Test that button enables after sending first message
 - [ ] Save checkpoint
