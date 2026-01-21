@@ -3926,5 +3926,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 ## Fix Left Carousel Arrow Cut-off in Light Mode (Jan 21, 2026)
 - [x] Add px-12 padding to carousel container to create space for arrows
 - [x] Increase left arrow z-index from z-10 to z-50 for better layering
-- [ ] Test arrow visibility in Light mode after hard refresh
-- [ ] Save checkpoint if fix is confirmed working
+- [x] Test arrow visibility in Light mode after hard refresh
+- [x] Save checkpoint if fix is confirmed working
+
+## Remove translateX Transform Causing Left Arrow Cut-off (Jan 21, 2026)
+- [x] Remove transform: translateX(-296px) from data-kai-command-wrapper
+- [x] Replace with margin: 0 auto for proper centering
+- [x] Ensure arrows sit in container with overflow: visible
+- [x] Verify left arrow is fully visible at first render
+- [x] Save checkpoint

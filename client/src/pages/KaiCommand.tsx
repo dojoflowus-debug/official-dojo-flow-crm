@@ -2856,68 +2856,8 @@ export default function KaiCommand() {
                   {/* Shared centered container for header + prompt rail */}
                   <div 
                     data-kai-command-wrapper
-                    ref={(el) => {
-                      if (!el) return;
-                      
-                      let resizeTimeout: NodeJS.Timeout;
-                      
-                      const clamp = (n: number, min: number, max: number) => {
-                        return Math.max(min, Math.min(max, n));
-                      };
-                      
-                      const updatePosition = () => {
-                        const ops = document.querySelector('[data-nav="operations"]') as HTMLElement | null;
-                        const kiosk = document.querySelector('[data-nav="kiosk"]') as HTMLElement | null;
-                        
-                        if (!ops || !kiosk) {
-                          // Fallback: center normally
-                          el.style.transform = 'translateX(0px)';
-                          return;
-                        }
-                        
-                        const opsRect = ops.getBoundingClientRect();
-                        const kioskRect = kiosk.getBoundingClientRect();
-                        const midX = (opsRect.left + opsRect.width / 2 + kioskRect.left + kioskRect.width / 2) / 2;
-                        
-                        // Reset transform to measure stable position
-                        el.style.transform = 'translateX(0px)';
-                        
-                        const kaiRect = el.getBoundingClientRect();
-                        const padding = 24;
-                        
-                        const targetLeft = midX - kaiRect.width / 2;
-                        const minLeft = padding;
-                        const maxLeft = window.innerWidth - kaiRect.width - padding;
-                        
-                        const clampedLeft = clamp(targetLeft, minLeft, maxLeft);
-                        
-                        // Calculate delta from current position
-                        const delta = clampedLeft - kaiRect.left;
-                        
-                        // Apply translateX
-                        el.style.transform = `translateX(${delta}px)`;
-                      };
-                      
-                      // Initial position after layout paints
-                      const raf1 = requestAnimationFrame(() => requestAnimationFrame(updatePosition));
-                      
-                      // Debounced resize listener
-                      const handleResize = () => {
-                        clearTimeout(resizeTimeout);
-                        resizeTimeout = setTimeout(updatePosition, 80);
-                      };
-                      
-                      window.addEventListener('resize', handleResize);
-                      
-                      // Cleanup
-                      return () => {
-                        cancelAnimationFrame(raf1);
-                        window.removeEventListener('resize', handleResize);
-                        clearTimeout(resizeTimeout);
-                      };
-                    }}
-                    className="w-full"
-                    style={{ maxWidth: 'calc(100vw - 48px)', margin: '0 auto' }}
+                    className="w-full max-w-6xl"
+                    style={{ margin: '0 auto' }}
                   >
                   {/* Frosted Glass Panel for Focus Mode only - removed from Cinematic */}
                   <div className={`flex flex-col items-center ${isFocusMode && !isCinematic ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
