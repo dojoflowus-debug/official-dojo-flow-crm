@@ -3975,3 +3975,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Update transform from translateX(-48px) to translateX(-96px)
 - [x] Verify positioning
 - [x] Save checkpoint
+
+## Shrink Prompt Cards by 50% (Jan 21, 2026)
+- [x] Reduce card width from current size to 50%
+- [x] Reduce card height from current size to 50%
+- [x] Adjust padding proportionally
+- [x] Reduce font sizes proportionally
+- [x] Verify card layout and readability
+- [x] Save checkpoint
