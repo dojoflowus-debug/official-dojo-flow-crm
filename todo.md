@@ -3761,5 +3761,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Implement midpoint calculation logic in KaiCommand
 - [x] Position header using calculated midpoint
 - [x] Add ResizeObserver for responsive updates
-- [ ] Test alignment between Operations and Kiosk
+- [x] Test alignment between Operations and Kiosk
+- [x] Save checkpoint
+
+
+## Fix Kai Command Centering to Application Viewport (Jan 20, 2026)
+- [x] Remove custom getBoundingClientRect positioning logic
+- [x] Use simple flex centering (margin: 0 auto)
+- [x] Verify center aligns with Operations/Kiosk midpoint
 - [ ] Save checkpoint
