@@ -3722,4 +3722,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add left/right navigation arrows for prompt overflow
 - [x] Arrows appear conditionally based on scroll position
 - [x] Test in light, dark, and cinematic modes
+- [x] Save checkpoint
+
+
+## Center Kai Header with Bottom Nav (Jan 20, 2026)
+- [x] Calculate horizontal offset to align with midpoint between Operations and Kiosk
+- [x] Apply offset to Kai Command header container (48px right offset)
+- [x] Test alignment with vertical line test
 - [ ] Save checkpoint
