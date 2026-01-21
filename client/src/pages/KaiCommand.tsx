@@ -2821,8 +2821,9 @@ export default function KaiCommand() {
                       background: 'rgba(0, 0, 0, 0.70)',
                       backdropFilter: 'blur(10px)',
                       WebkitBackdropFilter: 'blur(10px)',
-                      animation: 'cinematicGlassFadeIn 0.6s ease-out forwards'
-                    } : {}}
+                      animation: 'cinematicGlassFadeIn 0.6s ease-out forwards',
+                      overflow: 'visible'
+                    } : { overflow: 'visible' }}
                   >
                   {/* Shared Command Stage Wrapper - centers logo, title, subtitle, and carousel together */}
                   <div 

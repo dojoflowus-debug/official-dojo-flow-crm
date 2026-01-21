@@ -4019,3 +4019,10 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add transform: translateX(-48px) to command stage wrapper
 - [x] Verify icon, title, and prompt cards move together
 - [x] Save checkpoint
+
+## Make Left Arrow Visible Without Moving Positions (Jan 21, 2026)
+- [x] Check if Frosted Glass Panel has overflow: hidden clipping the arrow
+- [x] Add overflow: visible to parent containers if needed
+- [x] Verify left arrow is fully visible
+- [x] Ensure no positions or layout changes
+- [x] Save checkpoint
