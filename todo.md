@@ -4141,4 +4141,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 ## Bug Fix - AppShellMissingError for Release Notes Route (Jan 21, 2026)
 - [x] Wrap /kai/release-notes/v0-9-0-beta route with AppShell component
 - [x] Test release notes page navigation and verify no errors
+- [x] Save checkpoint
+
+## Replace Ask Kai Button with Centered Version Chip (Jan 21, 2026)
+- [x] Create KaiVersionChip component with premium command center styling
+- [x] Add version constant/config (v0.9.0-beta) for easy updates
+- [x] Update header layout to center Kai chip between title and right controls
+- [x] Ensure keyboard accessibility (focus states, Enter/Space triggers)
+- [x] Test responsive layout on desktop and mobile widths
+- [x] Verify no header overlap or layout breaks
 - [ ] Save checkpoint

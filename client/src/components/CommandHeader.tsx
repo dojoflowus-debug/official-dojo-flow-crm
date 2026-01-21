@@ -7,8 +7,10 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/_core/hooks/useAuth'
-import { Sparkles, Coins, Sun, Moon, Clapperboard, LogOut, Settings, User } from 'lucide-react'
+import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
+import { KaiVersionChip } from '@/components/KaiVersionChip'
+import { useLocation } from 'wouter'
 
 interface CommandStats {
   active: number
@@ -28,6 +30,7 @@ interface CommandHeaderProps {
 export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps) {
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
+  const [, navigate] = useLocation()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const isCinematic = theme === 'cinematic'
   
@@ -40,7 +43,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   return (
     <header 
       className={cn(
-        "h-14 border-b flex items-center justify-between px-4 flex-shrink-0",
+        "h-14 border-b flex items-center px-4 flex-shrink-0",
         isCinematic 
           ? "bg-black/70 backdrop-blur-md border-white/10 text-white" 
           : isDarkMode 
@@ -52,26 +55,30 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
         top: 0,
         zIndex: 10000,
         pointerEvents: 'auto',
+        display: 'grid',
+        gridTemplateColumns: '1fr auto 1fr',
+        gap: '1rem',
       }}
     >
-      <div className="flex items-center gap-4">
+      {/* Left section: Logo and breadcrumb */}
+      <div className="flex items-center gap-4 min-w-0">
         {/* Logo - Using official DojoFlow branding */}
         <Link 
           to="/kai" 
-          className="flex items-center gap-2 overflow-visible"
+          className="flex items-center gap-2 overflow-visible flex-shrink-0"
           style={{ display: 'flex', alignItems: 'center', height: '36px' }}
         >
           <BrandLogo size="md" />
         </Link>
         
-        <div className={cn("h-6 w-px", isDarkMode ? "bg-white/10" : "bg-gray-200")} />
+        <div className={cn("h-6 w-px flex-shrink-0", isDarkMode ? "bg-white/10" : "bg-gray-200")} />
         
         {/* Navigation with proper react-router-dom Link */}
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 min-w-0">
           <Link 
             to="/kai" 
             className={cn(
-              "px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer",
+              "px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer flex-shrink-0",
               isCinematic
                 ? "text-white hover:text-white hover:bg-white/10"
                 : isDarkMode 
@@ -81,30 +88,19 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           >
             Dashboard
           </Link>
-          <span className={cn("text-sm font-medium", isCinematic ? "text-white" : isDarkMode ? "text-white" : "text-gray-900")}>
+          <span className={cn("text-sm font-medium truncate", isCinematic ? "text-white" : isDarkMode ? "text-white" : "text-gray-900")}>
             / {title}
           </span>
         </nav>
       </div>
       
-      <div className="flex items-center gap-2">
-        <Link to="/kai">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={cn(
-              "gap-2", 
-              isCinematic
-                ? "bg-red-500/30 text-white hover:bg-red-500/40"
-                : isDarkMode 
-                ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 text-red-400 hover:from-red-500/30 hover:to-orange-500/30" 
-                : "bg-gradient-to-r from-red-50 to-orange-50 text-red-600 hover:from-red-100 hover:to-orange-100"
-            )}
-          >
-            <Sparkles className="h-4 w-4" />Ask Kai
-          </Button>
-        </Link>
-        
+      {/* Center section: Kai Version Chip */}
+      <div className="flex items-center justify-center">
+        <KaiVersionChip onClick={() => navigate('/kai')} />
+      </div>
+      
+      {/* Right section: Controls and user menu */}
+      <div className="flex items-center gap-2 justify-end">
         <Link to="/billing/credits">
           <Button 
             variant="ghost" 
