@@ -3912,4 +3912,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add conditional rendering to show images only in Light mode (via CSS nth-child selectors)
 - [x] Test images display correctly in Light mode cards
 - [x] Verify Dark and Cinematic modes remain unchanged
+- [x] Save checkpoint
+
+
+## Debug Missing Thumbnail Images on Light Mode Prompt Cards (Jan 21, 2026)
+- [x] Check if images are accessible at /images/kai-prompts/ paths
+- [x] Inspect DOM to find actual class names used for prompt cards
+- [x] Update CSS selectors to match actual DOM structure (button[class*="snap-start"])
+- [x] Verify nth-child selectors target correct elements (div[class*="snap-x"] > button)
+- [x] Test images display in Light mode
 - [ ] Save checkpoint

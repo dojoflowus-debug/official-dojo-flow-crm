@@ -52,7 +52,8 @@
 }
 
 /* Glassmorphism Prompt Cards - Light Mode Only */
-.kaiLightCommandCenter .kai-prompt-card {
+/* Target the actual button elements that render the prompt cards */
+.kaiLightCommandCenter button[class*="snap-start"] {
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.12) 0%, 
     rgba(255, 255, 255, 0.08) 100%
@@ -70,7 +71,7 @@
   overflow: hidden;
 }
 
-.kaiLightCommandCenter .kai-prompt-card::before {
+.kaiLightCommandCenter button[class*="snap-start"]::before {
   content: '';
   position: absolute;
   top: 0;
@@ -84,7 +85,7 @@
   );
 }
 
-.kaiLightCommandCenter .kai-prompt-card:hover {
+.kaiLightCommandCenter button[class*="snap-start"]:hover {
   transform: translateY(-4px);
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.4),
@@ -96,35 +97,37 @@
   );
 }
 
-.kaiLightCommandCenter .kai-prompt-card-image {
+/* Remove unused image class */
+/* .kaiLightCommandCenter .kai-prompt-card-image {
   width: 100%;
   height: 120px;
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 1rem;
   opacity: 0.85;
-}
+} */
 
 /* Individual card background images - Light Mode Only */
-.kaiLightCommandCenter .kai-prompt-card:nth-child(1) {
+/* Target buttons within the carousel container */
+.kaiLightCommandCenter div[class*="snap-x"] > button:nth-child(1) {
   background-image: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('/images/kai-prompts/alert-inactive.jpg');
   background-size: cover;
   background-position: center;
 }
 
-.kaiLightCommandCenter .kai-prompt-card:nth-child(2) {
+.kaiLightCommandCenter div[class*="snap-x"] > button:nth-child(2) {
   background-image: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('/images/kai-prompts/threat-churn.jpg');
   background-size: cover;
   background-position: center;
 }
 
-.kaiLightCommandCenter .kai-prompt-card:nth-child(3) {
+.kaiLightCommandCenter div[class*="snap-x"] > button:nth-child(3) {
   background-image: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('/images/kai-prompts/alert-revenue.jpg');
   background-size: cover;
   background-position: center;
 }
 
-.kaiLightCommandCenter .kai-prompt-card:nth-child(4) {
+.kaiLightCommandCenter div[class*="snap-x"] > button:nth-child(4) {
   background-image: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url('/images/kai-prompts/directive-lead.jpg');
   background-size: cover;
   background-position: center;
