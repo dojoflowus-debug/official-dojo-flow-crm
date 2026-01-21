@@ -4048,3 +4048,8 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Change transform from translateX(48px) to translateX(-48px)
 - [x] Verify command stage moves left by 96px total (from +48px to -48px)
 - [x] Save checkpoint
+
+## Move Command Stage Another 0.5 Inches LEFT (Jan 21, 2026)
+- [x] Change transform from translateX(-48px) to translateX(-96px)
+- [x] Verify command stage moves left by additional 48px
+- [x] Save checkpoint
