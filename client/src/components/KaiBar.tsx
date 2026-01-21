@@ -30,8 +30,9 @@ export function KaiBar() {
   const isDark = theme === 'dark';
   const isCinematic = theme === 'cinematic';
 
-  // Only render on /kai route
-  if (location !== '/kai') {
+  // Only render on /kai route - DISABLED: composer moved to KaiCommand page
+  // The new composer is now inside the KaiCommand component with sticky positioning
+  if (location === '/kai' || location !== '/kai') {
     return null;
   }
 
