@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 export type Theme = "light" | "dark" | "cinematic";
 
@@ -33,10 +32,10 @@ export function ThemeProvider({
   defaultTheme = "dark",
   switchable = true,
 }: ThemeProviderProps) {
-  const location = useLocation();
-  const isMarketing = isMarketingRoute(location.pathname);
-  
   const [theme, setThemeState] = useState<Theme>(() => {
+    // Check if on marketing page using window.location
+    const isMarketing = isMarketingRoute(window.location.pathname);
+    
     // Marketing pages always use dark theme
     if (isMarketing) {
       return "dark";
@@ -61,20 +60,48 @@ export function ThemeProvider({
     return defaultTheme;
   });
 
-  // Update theme when route changes
+  // Listen to route changes via popstate and update theme
   useEffect(() => {
-    if (isMarketing) {
-      setThemeState("dark");
-    } else if (switchable) {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "light" || stored === "dark" || stored === "cinematic") {
-        setThemeState(stored);
+    const handleRouteChange = () => {
+      const isMarketing = isMarketingRoute(window.location.pathname);
+      
+      if (isMarketing) {
+        setThemeState("dark");
+      } else if (switchable) {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === "light" || stored === "dark" || stored === "cinematic") {
+          setThemeState(stored);
+        }
       }
-    }
-  }, [location.pathname, isMarketing, switchable]);
+    };
+
+    // Listen for browser navigation (back/forward)
+    window.addEventListener("popstate", handleRouteChange);
+    
+    // Listen for React Router navigation
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    window.history.pushState = function(...args) {
+      originalPushState.apply(this, args);
+      handleRouteChange();
+    };
+    
+    window.history.replaceState = function(...args) {
+      originalReplaceState.apply(this, args);
+      handleRouteChange();
+    };
+    
+    return () => {
+      window.removeEventListener("popstate", handleRouteChange);
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, [switchable]);
 
   useEffect(() => {
     const root = document.documentElement;
+    const isMarketing = isMarketingRoute(window.location.pathname);
     
     // Remove all theme classes
     root.classList.remove("light", "dark", "cinematic");
@@ -91,9 +118,11 @@ export function ThemeProvider({
     if (!isMarketing && switchable) {
       localStorage.setItem(STORAGE_KEY, theme);
     }
-  }, [theme, switchable, isMarketing]);
+  }, [theme, switchable]);
 
   const setTheme = (newTheme: Theme) => {
+    const isMarketing = isMarketingRoute(window.location.pathname);
+    
     // Prevent theme changes on marketing pages
     if (isMarketing) {
       console.warn("Theme changes are disabled on marketing pages");
@@ -103,6 +132,8 @@ export function ThemeProvider({
   };
 
   const cycleTheme = () => {
+    const isMarketing = isMarketingRoute(window.location.pathname);
+    
     // Prevent theme changes on marketing pages
     if (isMarketing) {
       console.warn("Theme changes are disabled on marketing pages");
