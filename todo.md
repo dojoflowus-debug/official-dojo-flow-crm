@@ -4185,4 +4185,26 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify no conversationId blocking and create one if needed
 - [x] Test Enter key sends message (triggers SEND_SUBMIT)
 - [x] Test send button click sends message (form submission working)
+- [x] Save checkpoint
+
+## Bug Fix - Send Button Glows But Message Never Sends (Jan 21, 2026)
+- [ ] Add console logs to send button onClick
+- [ ] Add console logs to form onSubmit
+- [ ] Add HANDLE_SEND_START log with full state
+- [ ] Add HANDLE_SEND_BLOCKED_REASON logs before early returns
+- [ ] Add SEND_REQUEST_PAYLOAD and error logging
+- [ ] Test and analyze logs to find blocking point
+- [ ] Fix identified issue
+- [ ] Remove diagnostic logs after fix confirmed
 - [ ] Save checkpoint
+
+## Bug Fix - Send Button Glows But Message Never Sends (Jan 21, 2026)
+- [x] Add comprehensive console logging (SEND_CLICK, SEND_SUBMIT, HANDLE_SEND_START, SEND_REQUEST_PAYLOAD, SEND_FAILED)
+- [x] Test and analyze logs to identify where send is blocked
+- [x] Fix identified issue (state synchronization between KaiBar and KaiCommand)
+- [x] Modify handleSendMessage to accept optional input and attachments parameters
+- [x] Update KaiBar send handler to pass input directly instead of relying on state
+- [x] Document fix implementation and testing requirements
+- [ ] Test with real user typing to verify fix works (AWAITING USER MANUAL TEST)
+- [ ] Remove diagnostic logs after confirmation
+- [x] Save checkpoint

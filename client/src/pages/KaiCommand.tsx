@@ -206,12 +206,11 @@ export default function KaiCommand() {
       console.log('[KaiBar] Send button clicked, input:', input, 'attachments:', kaiBarAttachments);
       try {
         setKaiBarLoading(true);
-        // Update local state with KaiBar's input and attachments
-        setMessageInput(input);
-        setAttachments(kaiBarAttachments);
-        // Wait a tick for state to update, then trigger send
-        await new Promise(resolve => setTimeout(resolve, 0));
-        await handleSendMessage('click');
+        // Pass input and attachments directly to handleSendMessage instead of relying on state
+        await handleSendMessage('click', input, kaiBarAttachments);
+        // Clear state after successful send
+        setMessageInput('');
+        setAttachments([]);
       } catch (error) {
         console.error('[KaiBar] Send error:', error);
       } finally {
@@ -1821,16 +1820,40 @@ export default function KaiCommand() {
     return mentions;
   };
 
-  const handleSendMessage = async (source: 'submit' | 'click' | 'keydown' = 'click') => {
+  const handleSendMessage = async (
+    source: 'submit' | 'click' | 'keydown' = 'click',
+    overrideInput?: string,
+    overrideAttachments?: typeof attachments
+  ) => {
+    // Use override values if provided, otherwise fall back to state
+    const inputText = overrideInput !== undefined ? overrideInput : messageInput;
+    const inputAttachments = overrideAttachments !== undefined ? overrideAttachments : attachments;
+    
+    console.log('HANDLE_SEND_START', { 
+      text: inputText, 
+      len: inputText?.length, 
+      convoId: selectedConversationId, 
+      isSending: sendingRef.current, 
+      isLoading,
+      attachmentsCount: inputAttachments.length,
+      source,
+      usingOverride: overrideInput !== undefined
+    });
+    
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
+      console.log('HANDLE_SEND_BLOCKED_REASON', 'Send already in progress');
       console.warn('[KaiSend] Send already in progress, ignoring duplicate call', { source });
       return;
     }
-    if (!messageInput.trim() && attachments.length === 0) return;
+    if (!inputText.trim() && inputAttachments.length === 0) {
+      console.log('HANDLE_SEND_BLOCKED_REASON', 'Empty message and no attachments');
+      return;
+    }
     
     // Check if any attachments are still uploading
-    if (attachments.some(att => att.uploading)) {
+    if (inputAttachments.some(att => att.uploading)) {
+      console.log('HANDLE_SEND_BLOCKED_REASON', 'Attachments still uploading');
       toast.error('Please wait for attachments to finish uploading');
       return;
     }
@@ -1846,7 +1869,7 @@ export default function KaiCommand() {
     }
 
     // Build message content - attachments are stored separately, not as markdown links
-    let messageContent = messageInput;
+    let messageContent = inputText;
     // Don't append attachment URLs to message content - they'll be rendered as attachment cards
     
     // Parse mentions from the message
@@ -1863,7 +1886,7 @@ export default function KaiCommand() {
             recipientId: staffMention.id,
             content: messageContent,
             kaiMentioned,
-            attachments: attachments.map(att => ({
+            attachments: inputAttachments.map(att => ({
               url: att.url || '',
               name: att.fileName,
               type: att.fileType,
@@ -1882,7 +1905,7 @@ export default function KaiCommand() {
       role: 'user',
       content: messageContent,
       timestamp: new Date(),
-      attachments: [...attachments]
+      attachments: [...inputAttachments]
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -1972,7 +1995,7 @@ export default function KaiCommand() {
     if (shouldKaiRespond) {
       try {
         const stats = statsQuery.data;
-        const response = await kaiChatMutation.mutateAsync({
+        const payload = {
           message: currentInput,
           organizationId: 1, // TODO: Get from user context when multi-org is implemented
           context: stats ? {
@@ -1981,7 +2004,9 @@ export default function KaiCommand() {
             totalLeads: stats.totalLeads,
             totalClasses: stats.totalClasses
           } : undefined
-        });
+        };
+        console.log('SEND_REQUEST_PAYLOAD', payload);
+        const response = await kaiChatMutation.mutateAsync(payload);
 
         // Generate TTS audio if voice is enabled
         let audioUrl: string | undefined;
@@ -2050,6 +2075,7 @@ export default function KaiCommand() {
           console.warn('[handleSendMessage] No conversation ID available to save AI message');
         }
       } catch (error) {
+        console.error('SEND_FAILED', error);
         // Classify error type
         let errorType: 'timeout' | 'network' | 'validation' | 'server' | 'unknown' = 'unknown';
         let errorMessage = 'Failed to get AI response';
