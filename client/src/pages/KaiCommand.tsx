@@ -24,6 +24,7 @@ import { useKaiResponseParser } from '@/hooks/useKaiResponseParser';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
+import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import '@/styles/kai-light-command-center.css';
 import { 
   Search, 
@@ -171,6 +172,9 @@ export default function KaiCommand() {
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
+  
+  // Beta Notice modal state
+  const [showBetaNotice, setShowBetaNotice] = useState(false);
     // Results Panel state
   const [resultsPanelData, setResultsPanelData] = useState<ResultsPanelData>(null);
   
@@ -187,6 +191,14 @@ export default function KaiCommand() {
       setInfoPanelOpen(false);
     }
   }, [infoPanelData]);
+
+  // Check if beta notice should be shown on mount
+  useEffect(() => {
+    const hasSeenNotice = localStorage.getItem('kai_beta_notice_v0.9.0');
+    if (!hasSeenNotice) {
+      setShowBetaNotice(true);
+    }
+  }, []);
 
   // Connect KaiBar send handler to handleSendMessage
   useEffect(() => {
@@ -2330,6 +2342,19 @@ export default function KaiCommand() {
     return 'hover:bg-slate-50';
   };
 
+  // Handle beta notice actions
+  const handleReadNotes = () => {
+    localStorage.setItem('kai_beta_notice_v0.9.0', 'true');
+    setShowBetaNotice(false);
+    navigate('/kai/release-notes/v0-9-0-beta');
+  };
+
+  const handleSkipNotice = () => {
+    localStorage.setItem('kai_beta_notice_v0.9.0', 'true');
+    setShowBetaNotice(false);
+    // Note: Notification creation would go here if we had a notifications table
+  };
+
   return (
     <ManagementLayout>
       {/* Error Alert for API failures */}
@@ -3377,6 +3402,14 @@ export default function KaiCommand() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Beta Notice Modal */}
+      {showBetaNotice && (
+        <BetaNoticeModal
+          onReadNotes={handleReadNotes}
+          onSkip={handleSkipNotice}
+        />
+      )}
     </ManagementLayout>
   );
 }

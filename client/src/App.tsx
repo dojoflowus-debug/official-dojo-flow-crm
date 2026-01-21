@@ -39,6 +39,7 @@ import StudentResetPassword from "./pages/StudentResetPassword";
 import StudentRegister from "./pages/StudentRegister";
 import KaiDashboard from "./pages/KaiDashboard";
 import KaiCommand from "./pages/KaiCommand";
+import ReleaseNotes from "./pages/ReleaseNotes";
 import KaiCommandDashboard from "./pages/KaiCommandDashboard";
 import CRMDashboard from "./pages/CRMDashboard";
 import KaiDebugHarnessMock from "./pages/KaiDebugHarnessMock";
@@ -174,6 +175,7 @@ function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/kai/release-notes/v0-9-0-beta" element={<ReleaseNotes />} />
       <Route path="/kai" element={<AppShell><KaiCommand /></AppShell>} />
       <Route path="/kai-command" element={<Navigate to="/kai" replace />} />
       <Route path="/command" element={<Navigate to="/kai" replace />} />

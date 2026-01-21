@@ -4107,3 +4107,25 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Set isLoading to true when send starts, false when complete
 - [x] Test loading feedback
 - [x] Save checkpoint
+
+## Implement Beta Notice Modal System (Jan 21, 2026)
+- [ ] Create BetaNoticeModal component with title, subtitle, body, and buttons
+- [ ] Create release notes page component for v0.9.0-beta
+- [ ] Add localStorage persistence for kai_beta_notice_v0.9.0 flag
+- [ ] Implement notification creation on Skip/Close
+- [ ] Wire modal to show on first load in KaiCommand
+- [ ] Add routing for /kai/release-notes/v0-9-0-beta
+- [ ] Test modal display, persistence, and notification creation
+- [ ] Save checkpoint
+
+
+## Beta Notice Modal System Implementation (Jan 21, 2026)
+- [x] Create BetaNoticeModal component with title, subtitle, body, and buttons
+- [x] Create release notes page component for v0.9.0-beta
+- [x] Add localStorage persistence for kai_beta_notice_v0.9.0 flag
+- [x] Implement notification creation on Skip/Close (note: notifications table not yet implemented)
+- [x] Wire modal to show on first load in KaiCommand
+- [x] Add routing for /kai/release-notes/v0-9-0-beta
+- [x] Test modal display, persistence, and navigation
+- [x] Verify modal doesn't show again after dismissal
+- [ ] Save checkpoint
