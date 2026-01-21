@@ -3782,12 +3782,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 
 
 ## Fix Kai Command Alignment with Clamping (Jan 20, 2026)
-- [ ] Create checkpoint: fix/kai-nav-centered-alignment-start
-- [ ] Update nav selectors to data-nav="operations" and data-nav="kiosk"
-- [ ] Add data-kai-command-wrapper to Kai Command wrapper
-- [ ] Implement clamped centering logic with clamp(targetLeft, minLeft, maxLeft)
-- [ ] Use translateX for positioning (not left + transform together)
-- [ ] Add max-width: calc(100vw - 48px) to wrapper
+- [x] Create checkpoint: fix/kai-nav-centered-alignment-start
+- [x] Update nav selectors to data-nav="operations" and data-nav="kiosk"
+- [x] Add data-kai-command-wrapper to Kai Command wrapper
+- [x] Implement clamped centering logic with clamp(targetLeft, minLeft, maxLeft)
+- [x] Use translateX for positioning (not left + transform together)
+- [x] Add max-width: calc(100vw - 48px) to wrapper
 - [ ] Test in Light/Dark/Cinematic modes
 - [ ] Verify no clipping at any viewport width
 - [ ] Save final checkpoint

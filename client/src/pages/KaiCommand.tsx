@@ -2828,63 +2828,69 @@ export default function KaiCommand() {
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
                   {/* Shared centered container for header + prompt rail */}
                   <div 
+                    data-kai-command-wrapper
                     ref={(el) => {
                       if (!el) return;
                       
                       let resizeTimeout: NodeJS.Timeout;
                       
+                      const clamp = (n: number, min: number, max: number) => {
+                        return Math.max(min, Math.min(max, n));
+                      };
+                      
                       const updatePosition = () => {
-                        const ops = document.querySelector('[data-nav-anchor="operations"]');
-                        const kiosk = document.querySelector('[data-nav-anchor="kiosk"]');
+                        const ops = document.querySelector('[data-nav="operations"]') as HTMLElement | null;
+                        const kiosk = document.querySelector('[data-nav="kiosk"]') as HTMLElement | null;
                         
                         if (!ops || !kiosk) {
                           // Fallback: center normally
-                          el.style.position = 'relative';
-                          el.style.left = '';
-                          el.style.transform = '';
-                          el.style.maxWidth = '980px';
-                          el.style.margin = '0 auto';
+                          el.style.transform = 'translateX(0px)';
                           return;
                         }
                         
                         const opsRect = ops.getBoundingClientRect();
                         const kioskRect = kiosk.getBoundingClientRect();
+                        const midX = (opsRect.left + opsRect.width / 2 + kioskRect.left + kioskRect.width / 2) / 2;
                         
-                        const opsCenterX = opsRect.left + opsRect.width / 2;
-                        const kioskCenterX = kioskRect.left + kioskRect.width / 2;
-                        const midX = (opsCenterX + kioskCenterX) / 2;
+                        // Reset transform to measure stable position
+                        el.style.transform = 'translateX(0px)';
                         
-                        // Get Kai wrapper width
-                        const kaiWidth = el.offsetWidth;
-                        const kaiLeft = midX - (kaiWidth / 2);
+                        const kaiRect = el.getBoundingClientRect();
+                        const padding = 24;
                         
-                        // Position wrapper so its center aligns to midX
-                        el.style.position = 'relative';
-                        el.style.left = `${kaiLeft}px`;
-                        el.style.transform = '';
-                        el.style.maxWidth = '980px';
-                        el.style.width = 'fit-content';
-                        el.style.margin = '0';
+                        const targetLeft = midX - kaiRect.width / 2;
+                        const minLeft = padding;
+                        const maxLeft = window.innerWidth - kaiRect.width - padding;
+                        
+                        const clampedLeft = clamp(targetLeft, minLeft, maxLeft);
+                        
+                        // Calculate delta from current position
+                        const delta = clampedLeft - kaiRect.left;
+                        
+                        // Apply translateX
+                        el.style.transform = `translateX(${delta}px)`;
                       };
                       
-                      // Initial position
-                      setTimeout(updatePosition, 0);
+                      // Initial position after layout paints
+                      const raf1 = requestAnimationFrame(() => requestAnimationFrame(updatePosition));
                       
                       // Debounced resize listener
                       const handleResize = () => {
                         clearTimeout(resizeTimeout);
-                        resizeTimeout = setTimeout(updatePosition, 100);
+                        resizeTimeout = setTimeout(updatePosition, 80);
                       };
                       
                       window.addEventListener('resize', handleResize);
                       
                       // Cleanup
                       return () => {
+                        cancelAnimationFrame(raf1);
                         window.removeEventListener('resize', handleResize);
                         clearTimeout(resizeTimeout);
                       };
                     }}
                     className="w-full"
+                    style={{ maxWidth: 'calc(100vw - 48px)', margin: '0 auto' }}
                   >
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
                   <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
