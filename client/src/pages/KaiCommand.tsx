@@ -2917,8 +2917,15 @@ export default function KaiCommand() {
             className={`content-layer flex-1 relative min-h-0 w-full ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'} pb-24`}
             style={{ zIndex: 10 }}
           >
-            {/* Shared content column wrapper - full width to match AppShell constraint */}
-            <div className="w-full">
+            {/* Shared content column wrapper - constrained to chat bar width */}
+            <div className="w-full" style={{
+              maxWidth: '664px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              paddingLeft: '16px',
+              paddingRight: '16px',
+              boxSizing: 'border-box'
+            }}>
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
