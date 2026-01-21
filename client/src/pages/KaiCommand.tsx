@@ -2826,6 +2826,8 @@ export default function KaiCommand() {
               {messages.length === 0 ? (
                 /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
+                  {/* Shared centered container for header + prompt rail */}
+                  <div className="w-full" style={{ maxWidth: '980px', margin: '0 auto' }}>
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
                   <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
                     style={(isCinematic || isFocusMode) ? {
@@ -2883,14 +2885,14 @@ export default function KaiCommand() {
                   
 
                   {/* Mission Directives Carousel */}
-                  <div className={`relative ${isCinematic ? 'max-w-3xl mt-4' : ''} transition-all duration-500`}
-                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both', maxWidth: '980px', marginLeft: 'calc(50% + 96px)', transform: 'translateX(-50%)' } : { maxWidth: '980px', marginLeft: 'calc(50% + 96px)', transform: 'translateX(-50%)' }}
+                  <div className={`relative w-full ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
+                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
                   >
                     {/* Left Arrow */}
                     {canScrollLeft && (
                       <button
                         onClick={() => scrollCarousel('left')}
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                        className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
                       >
                         <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>
@@ -2900,7 +2902,7 @@ export default function KaiCommand() {
                     {canScrollRight && (
                       <button
                         onClick={() => scrollCarousel('right')}
-                        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                        className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
                       >
                         <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>
@@ -3004,6 +3006,7 @@ export default function KaiCommand() {
                     </div>
                   </div>
                   </div>{/* End Frosted Glass Panel */}
+                  </div>{/* End shared centered container */}
                 </div>
               ) : (
                 /* Messages - z-index: 30 to ensure above environment */

@@ -3712,4 +3712,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 ## Align Kai Command Prompts with KaiBar (Jan 20, 2026)
 - [x] Apply KaiBar positioning (980px max-width, centered + 96px right) to Mission Directives carousel
 - [x] Test alignment in all theme modes
+- [x] Save checkpoint
+
+
+## Fix Kai Command Layout (Jan 20, 2026)
+- [x] Create shared container (980px max-width, centered) for header + prompt rail
+- [x] Center icon, title, subtitle within container
+- [x] Make prompt rail full-width of container
+- [x] Add left/right navigation arrows for prompt overflow
+- [x] Arrows appear conditionally based on scroll position
+- [x] Test in light, dark, and cinematic modes
 - [ ] Save checkpoint
