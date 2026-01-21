@@ -4053,3 +4053,8 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Change transform from translateX(-48px) to translateX(-96px)
 - [x] Verify command stage moves left by additional 48px
 - [x] Save checkpoint
+
+## Update Left Arrow Calculation for -96px Transform (Jan 21, 2026)
+- [x] Change left arrow from calc(12px + 48px) to calc(12px + 96px)
+- [x] Verify left arrow is fully visible
+- [x] Save checkpoint
