@@ -4158,4 +4158,21 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Update KaiVersionChip to accept health status prop
 - [x] Implement color-coded pulse animation based on health status
 - [x] Test health indicator with simulated slow API responses
+- [x] Save checkpoint
+
+## Bug Fix - Kai Chat Bar Not Working (Jan 21, 2026)
+- [ ] Diagnose input field issues (disabled/readOnly/pointer-events)
+- [ ] Check send button onClick binding and type attribute
+- [ ] Verify Enter key handler is working
+- [ ] Ensure conversationId exists or create on first send
+- [ ] Test message sending with optimistic UI
+- [ ] Add error logging and toast notifications for API failures
+- [ ] Save checkpoint
+
+## Bug Fix - Kai Chat Bar Not Working (Jan 21, 2026)
+- [x] Diagnose why chat bar input and send button are not working
+- [x] Fix onSendMessage handler connection in KaiBarContext
+- [x] Ensure send button enables when text is entered
+- [x] Test Enter key and send button click functionality
+- [x] Verify handler is properly triggered (confirmed via console logs)
 - [ ] Save checkpoint

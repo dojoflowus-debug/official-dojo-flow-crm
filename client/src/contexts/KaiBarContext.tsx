@@ -32,7 +32,7 @@ export function KaiBarProvider({ children }: { children: React.ReactNode }) {
   const [attachments, setAttachments] = useState<KaiBarAttachment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedInput, setExpandedInput] = useState(false);
-  const [onSendMessage, setOnSendMessage] = useState<((input: string, attachments: KaiBarAttachment[]) => Promise<void>) | undefined>();
+  const [onSendMessage, setOnSendMessage] = useState<((input: string, attachments: KaiBarAttachment[]) => Promise<void>) | undefined>(() => undefined);
 
   const addAttachment = useCallback((attachment: KaiBarAttachment) => {
     setAttachments(prev => [...prev, attachment]);
@@ -44,6 +44,11 @@ export function KaiBarProvider({ children }: { children: React.ReactNode }) {
 
   const clearAttachments = useCallback(() => {
     setAttachments([]);
+  }, []);
+
+  // Wrapper to properly set function state
+  const setOnSendMessageWrapper = useCallback((handler: (input: string, attachments: KaiBarAttachment[]) => Promise<void>) => {
+    setOnSendMessage(() => handler);
   }, []);
 
   const value: KaiBarContextType = {
@@ -58,7 +63,7 @@ export function KaiBarProvider({ children }: { children: React.ReactNode }) {
     expandedInput,
     setExpandedInput,
     onSendMessage,
-    setOnSendMessage,
+    setOnSendMessage: setOnSendMessageWrapper,
   };
 
   return (
