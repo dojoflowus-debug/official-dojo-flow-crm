@@ -3297,7 +3297,7 @@ export default function KaiCommand() {
               className="fixed flex justify-center" 
               style={{ 
                 zIndex: 1899,
-                bottom: '72px',
+                bottom: '168px',
                 left: `${centerPanelPosition.left + 84}px`,
                 width: `${centerPanelPosition.width - 168}px`,
                 transition: 'left 0.1s ease-out, width 0.1s ease-out',
