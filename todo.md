@@ -3778,4 +3778,16 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Position Kai wrapper so its center aligns to midX
 - [x] Add debounced resize listener
 - [x] Test in Light/Dark/Cinematic modes
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+
+## Fix Kai Command Alignment with Clamping (Jan 20, 2026)
+- [ ] Create checkpoint: fix/kai-nav-centered-alignment-start
+- [ ] Update nav selectors to data-nav="operations" and data-nav="kiosk"
+- [ ] Add data-kai-command-wrapper to Kai Command wrapper
+- [ ] Implement clamped centering logic with clamp(targetLeft, minLeft, maxLeft)
+- [ ] Use translateX for positioning (not left + transform together)
+- [ ] Add max-width: calc(100vw - 48px) to wrapper
+- [ ] Test in Light/Dark/Cinematic modes
+- [ ] Verify no clipping at any viewport width
+- [ ] Save final checkpoint
