@@ -2883,8 +2883,8 @@ export default function KaiCommand() {
                   
 
                   {/* Mission Directives Carousel */}
-                  <div className={`relative mx-auto ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
-                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
+                  <div className={`relative ${isCinematic ? 'max-w-3xl mt-4' : ''} transition-all duration-500`}
+                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both', maxWidth: '980px', marginLeft: 'calc(50% + 96px)', transform: 'translateX(-50%)' } : { maxWidth: '980px', marginLeft: 'calc(50% + 96px)', transform: 'translateX(-50%)' }}
                   >
                     {/* Left Arrow */}
                     {canScrollLeft && (

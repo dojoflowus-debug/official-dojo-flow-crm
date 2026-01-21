@@ -3706,4 +3706,10 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Center command prompt cards/rows
 - [x] Test Kai Command page layout
 - [x] Verify no other pages affected
+- [x] Save checkpoint
+
+
+## Align Kai Command Prompts with KaiBar (Jan 20, 2026)
+- [x] Apply KaiBar positioning (980px max-width, centered + 96px right) to Mission Directives carousel
+- [x] Test alignment in all theme modes
 - [ ] Save checkpoint
