@@ -3298,12 +3298,19 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* COMPOSER DOCK - Flex child of center panel, not fixed to viewport */}
+          {/* COMPOSER DOCK - Fixed to viewport but positioned with center panel - Rounded pill design */}
           {!isFocusMode && (
             <div 
-              className="flex justify-center flex-shrink-0 w-full px-4 py-3" 
+              className="fixed flex justify-center" 
               style={{ 
-                zIndex: 10
+                zIndex: 1899,
+                bottom: '120px',
+                left: `${centerPanelPosition.left + 132}px`,
+                width: `${centerPanelPosition.width - 264}px`,
+                transition: 'left 0.1s ease-out, width 0.1s ease-out',
+                padding: '0 16px',
+                boxSizing: 'border-box',
+                overflow: 'hidden'
               }}
             >
               <form
@@ -3317,8 +3324,7 @@ export default function KaiCommand() {
                   background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  width: '100%',
-                  maxWidth: '632px',
+                  width: `${centerPanelPosition.width - 32}px`,
                   minHeight: '56px',
                   borderRadius: '999px',
                   padding: '12px 16px',
