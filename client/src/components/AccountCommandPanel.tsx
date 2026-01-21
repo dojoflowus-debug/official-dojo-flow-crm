@@ -345,11 +345,11 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
       document.body.style.overflow = 'hidden'
     } else {
       // Restore scrolling when modal closes
-      document.body.style.overflow = 'auto'
+      document.body.style.overflow = ''
     }
     
     return () => {
-      document.body.style.overflow = 'auto'
+      document.body.style.overflow = ''
     }
   }, [isOpen])
   

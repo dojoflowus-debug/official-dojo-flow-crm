@@ -3837,4 +3837,17 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Implement scrollBy with smooth behavior for 1-card advance per click
 - [x] Test in Light, Dark, and Cinematic modes
 - [x] Verify no changes to title/logo/subtitle/layout/spacing
+- [x] Save checkpoint
+
+
+## Fix Light Mode Layout Distortion Bug (Jan 21, 2026)
+- [x] Investigate ThemeContext and theme switching logic
+- [x] Search for transform/filter/backdrop-filter in Light mode conditions
+- [x] Search for overflow: hidden or height: 100vh on root wrappers in Light mode
+- [x] Search for position: fixed on main layout wrapper in Light mode
+- [x] Compare computed styles between Light and Dark modes
+- [x] Remove layout-affecting CSS from Light mode (keep only color tokens)
+- [x] Fixed document.body.style.overflow manipulation in MainLayout.tsx, PublicLanding.tsx, and AccountCommandPanel.tsx
+- [x] Test Light mode renders identically to Dark mode (layout only)
+- [x] Verify only colors differ between Light and Dark modes
 - [ ] Save checkpoint
