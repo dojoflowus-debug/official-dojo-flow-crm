@@ -2955,8 +2955,11 @@ export default function KaiCommand() {
                   
 
                   {/* Mission Directives Carousel */}
-                  <div className={`relative w-full ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
-                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
+                  <div className={`relative ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
+                    style={Object.assign(
+                      { width: '100%', maxWidth: '100%', boxSizing: 'border-box' },
+                      isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}
+                    )}
                   >
                     {/* Left Arrow */}
                     {canScrollLeft && (
@@ -2982,8 +2985,8 @@ export default function KaiCommand() {
                     <div
                       ref={carouselRef}
                       onScroll={updateScrollButtons}
-                      className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-1"
-                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                      className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', width: '100%', justifyContent: 'space-between' }}
                     >
                       {sortedQuickCommands.map((command, index) => {
                         // Severity-based styling for tactical look
@@ -3020,17 +3023,20 @@ export default function KaiCommand() {
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative flex-shrink-0 w-[220px] text-left transition-all duration-200 group snap-start overflow-hidden
+                          className={`relative text-left transition-all duration-200 group snap-start overflow-hidden
                             ${(isCinematic || isFocusMode)
                               ? `rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-white/5`
                               : isDark 
                                 ? `bg-[#0A0A0B] rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-[#111113]`
                                 : `bg-white rounded-sm border ${severity === 'info' ? 'border-slate-200 hover:border-slate-300' : styles.border + ' ' + styles.hoverBorder} hover:bg-slate-50 shadow-sm`
                             }`}
-                          style={(isCinematic || isFocusMode) ? { 
-                            animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
-                            background: 'rgba(10, 10, 11, 0.95)'
-                          } : {}}
+                          style={Object.assign(
+                            { flex: '1 1 0', minWidth: '200px', maxWidth: '280px' },
+                            (isCinematic || isFocusMode) ? { 
+                              animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
+                              background: 'rgba(10, 10, 11, 0.95)'
+                            } : {}
+                          )}
                         >
                           {/* Severity Indicator Bar - Left Edge */}
                           <div className={`absolute left-0 top-0 bottom-0 w-1 ${styles.bar}`} />

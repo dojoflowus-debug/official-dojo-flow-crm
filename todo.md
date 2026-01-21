@@ -3813,4 +3813,15 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Disable background, border, shadow, blur in Cinematic
 - [x] Test in Cinematic mode (panel removed)
 - [x] Test in Light/Dark modes (unchanged)
+- [x] Save checkpoint
+
+
+## Stretch Prompt Cards Row to Full Container Width (Jan 21, 2026)
+- [x] Identify prompt row wrapper element (line 2958)
+- [x] Set width: 100%, max-width: 100%, box-sizing: border-box
+- [x] Use display: flex with justify-content: space-between
+- [x] Set each card to flex: 1 1 0 with min/max width constraints
+- [x] Verify first card left edge aligns with container left
+- [x] Verify last card right edge aligns with container right
+- [x] Ensure logo/title/subtitle remain unchanged
 - [ ] Save checkpoint
