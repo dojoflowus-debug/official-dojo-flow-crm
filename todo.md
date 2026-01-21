@@ -3888,3 +3888,18 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test: Dashboard Dark mode should not affect marketing website
 - [ ] Test: Dashboard Cinematic mode should not affect marketing website
 - [ ] Save checkpoint
+
+
+## Implement Light Mode Command Center Styling for /kai (Jan 21, 2026)
+- [x] Add kaiLightCommandCenter CSS class with command center background
+- [x] Add glassmorphism styling for prompt cards in Light mode
+- [x] Center KAI COMMAND header with DojoFlow icon and subtitle
+- [x] Style command input bar as centered pill in Light mode
+- [x] Add conditional wrapper class to /kai page component
+- [x] Copy command center background image to public/backgrounds/
+- [x] Import CSS file in KaiCommand.tsx
+- [x] Test Light mode matches reference image
+- [x] Test Dark mode remains unchanged
+- [x] Test Cinematic mode remains unchanged
+- [x] Verify no layout distortion or extra whitespace
+- [ ] Save checkpoint

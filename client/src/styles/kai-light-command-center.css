@@ -1,0 +1,221 @@
+/* Light Mode Command Center Styling - ONLY applies when Light mode is active */
+/* This file is scoped to /kai page and does NOT affect Dark or Cinematic modes */
+
+/* Command Center Background - Light Mode Only */
+.kaiLightCommandCenter {
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(30, 41, 59, 0.92) 50%, 
+    rgba(51, 65, 85, 0.90) 100%
+  ),
+  url('/backgrounds/command-center-light.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: scroll;
+}
+
+/* Centered Header Block - Light Mode Only */
+.kaiLightCommandCenter .kai-header-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 0 2rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.kaiLightCommandCenter .kai-logo-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.4));
+}
+
+.kaiLightCommandCenter .kai-title {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  margin-bottom: 0.75rem;
+}
+
+.kaiLightCommandCenter .kai-subtitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+
+/* Glassmorphism Prompt Cards - Light Mode Only */
+.kaiLightCommandCenter .kai-prompt-card {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.kaiLightCommandCenter .kai-prompt-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 100%
+  );
+}
+
+.kaiLightCommandCenter .kai-prompt-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.15) 0%, 
+    rgba(255, 255, 255, 0.10) 100%
+  );
+}
+
+.kaiLightCommandCenter .kai-prompt-card-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  opacity: 0.85;
+}
+
+.kaiLightCommandCenter .kai-prompt-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.kaiLightCommandCenter .kai-prompt-card-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Prompt Cards Row - Light Mode Only */
+.kaiLightCommandCenter .kai-prompts-row {
+  display: flex;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto 3rem auto;
+  padding: 0 2rem;
+  justify-content: center;
+}
+
+/* Command Input Bar - ChatGPT Style Pill - Light Mode Only */
+.kaiLightCommandCenter .kai-command-bar {
+  max-width: 700px;
+  margin: 0 auto 3rem auto;
+  padding: 0 2rem;
+}
+
+.kaiLightCommandCenter .kai-command-input-wrapper {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kaiLightCommandCenter .kai-command-input-wrapper:focus-within {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.kaiLightCommandCenter .kai-command-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+
+.kaiLightCommandCenter .kai-command-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.kaiLightCommandCenter .kai-command-icon {
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.kaiLightCommandCenter .kai-command-icon:hover {
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .kaiLightCommandCenter .kai-prompts-row {
+    flex-wrap: wrap;
+  }
+  
+  .kaiLightCommandCenter .kai-prompt-card {
+    flex: 1 1 calc(50% - 0.75rem);
+    min-width: 280px;
+  }
+}
+
+@media (max-width: 640px) {
+  .kaiLightCommandCenter .kai-title {
+    font-size: 2rem;
+  }
+  
+  .kaiLightCommandCenter .kai-prompts-row {
+    flex-direction: column;
+  }
+  
+  .kaiLightCommandCenter .kai-prompt-card {
+    flex: 1 1 100%;
+  }
+  
+  .kaiLightCommandCenter .kai-command-bar {
+    padding: 0 1rem;
+  }
+}
