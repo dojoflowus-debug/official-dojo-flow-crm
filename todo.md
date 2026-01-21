@@ -4078,3 +4078,8 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add w-full to grid wrapper (grid grid-cols-3 gap-3 flex-1)
 - [x] Verify left arrow is fully visible without overlapping first card
 - [x] Save checkpoint
+
+## Reduce Command Stage Width (Jan 21, 2026)
+- [x] Change max-width from 1100px to 900px in data-kai-command-wrapper
+- [x] Verify width reduction without moving elements
+- [x] Save checkpoint
