@@ -4216,4 +4216,26 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Wrap composer in sticky bottom div with proper styling
 - [x] Add bottom padding to message list to prevent overlap
 - [x] Test chat bar stays within center panel bounds
+- [x] Save checkpoint
+
+## Bug Fix - Chat Bar Does Not Resize with Center Panel Divider (Jan 21, 2026)
+- [x] Identify the exact center panel container that resizes when divider is dragged
+- [x] Remove max-width constraints from chat region wrapper (removed maxWidth: 980px and max-w-[980px])
+- [x] Ensure chat region wrapper uses w-full (no max-width constraints)
+- [x] Verify composer is inside the resizable center panel container
+- [x] Remove viewport-based widths from composer (using w-full instead)
+- [x] Test dragging divider left/right to verify composer width changes live (FAILED - chat bar does not move)
+- [x] Find the actual resizable container (flex-1 div at line 2617)
+- [x] Verify composer is inside resizable container (confirmed via browser console)
+- [x] Test programmatic width change (SUCCESS - composer resizes from 928px to 983px)
+- [x] Add diagnostic logging to drag handlers
+- [x] User test with logging - NO LOGS appear (drag handler not triggered)
+- [x] Verify divider exists and is visible (8px wide, 1100px tall, pointer-events: auto)
+- [x] Test direct event listeners on divider - NO EVENTS fire
+- [x] Investigate z-index stacking or event blocking issue (sidebar z-index: 20 was blocking divider)
+- [x] Add z-index: 25 and position: relative to divider
+- [x] Test programmatic drag (SUCCESS - works perfectly, composer resizes 928px → 990px)
+- [x] Test real mouse clicks (FAILED - still no events reach divider)
+- [x] Increase z-index to 100 to ensure divider is above all overlays
+- [ ] Test with user after z-index: 100 fix
 - [ ] Save checkpoint

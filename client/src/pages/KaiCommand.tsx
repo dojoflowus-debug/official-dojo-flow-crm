@@ -1232,6 +1232,7 @@ export default function KaiCommand() {
   // Resize handlers for swivel bar
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    console.log('[DRAG] Mouse down, starting resize');
     setIsResizing(true);
   };
 
@@ -1245,10 +1246,12 @@ export default function KaiCommand() {
       // Constrain width between 200px min and 75% of available width max
       const maxWidth = containerRect.width * 0.75;
       const constrainedWidth = Math.min(Math.max(newWidth, 200), maxWidth);
+      console.log('[DRAG] Setting commandCenterWidth to:', constrainedWidth);
       setCommandCenterWidth(constrainedWidth);
     };
 
     const handleMouseUp = () => {
+      console.log('[DRAG] Mouse up, ending resize');
       setIsResizing(false);
     };
 
@@ -2595,7 +2598,9 @@ export default function KaiCommand() {
           style={{
             opacity: isFocusMode ? 0 : 1,
             width: isFocusMode ? '0px' : '8px',
-            pointerEvents: isFocusMode ? 'none' : 'auto'
+            pointerEvents: isFocusMode ? 'none' : 'auto',
+            zIndex: 100,
+            position: 'relative'
           }}
           className={`cursor-col-resize flex items-center justify-center group transition-all duration-300 ease-in-out select-none ${
             isResizing ? 'bg-[#ED393D]' : 'bg-slate-200 hover:bg-[#ED393D]'
@@ -2880,8 +2885,8 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'} pb-24`}
-            style={{ zIndex: 10, maxWidth: '980px', marginLeft: 'auto', marginRight: 'auto' }}
+            className={`content-layer flex-1 relative min-h-0 w-full ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'} pb-24`}
+            style={{ zIndex: 10 }}
           >
             {/* Shared content column wrapper - full width to match AppShell constraint */}
             <div className="w-full">
@@ -3267,7 +3272,7 @@ export default function KaiCommand() {
                     console.log('SEND_SUBMIT');
                     handleSendMessage('submit');
                   }}
-                  className="flex items-center gap-2 p-4 max-w-[980px] mx-auto"
+                  className="flex items-center gap-2 p-4 w-full"
                 >
                   {/* Attachment Button */}
                   <Button
