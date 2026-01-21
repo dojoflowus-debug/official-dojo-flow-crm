@@ -2827,8 +2827,8 @@ export default function KaiCommand() {
                   {/* Shared Command Stage Wrapper - centers logo, title, subtitle, and carousel together */}
                   <div 
                     data-kai-command-wrapper
-                    className="w-full max-w-6xl mx-auto px-12"
-                    style={{ transform: 'translateX(-96px)' }}
+                    className="w-full mx-auto"
+                    style={{ maxWidth: 'min(100%, 1100px)', margin: '0 auto' }}
                   >
                   {/* Header Block - Logo, Title, Subtitle */}
                   <div data-kai-header className="w-full flex flex-col items-center text-center">
@@ -2880,21 +2880,24 @@ export default function KaiCommand() {
                   </div>{/* End Header Block */}
 
                   {/* Mission Directives Carousel */}
-                  <div className={`w-full max-w-5xl mx-auto px-6 ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
-                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
+                  <div className={`w-full ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
+                    style={Object.assign(
+                      { position: 'relative', paddingLeft: '48px', paddingRight: '48px', overflow: 'visible' },
+                      isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}
+                    )}
                   >
-                    <div className="flex items-center gap-3">
                       {/* Left Arrow - Always Visible */}
                       <button
                         onClick={() => setPage(p => Math.max(0, p - 1))}
                         disabled={page === 0}
-                        className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors flex-shrink-0 ${page === 0 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                        className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${page === 0 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                        style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }}
                       >
                         <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>
                       
                       {/* Mission Tiles - 3 Column Grid */}
-                      <div className="grid grid-cols-3 gap-3 flex-1">
+                      <div className="grid grid-cols-3 gap-3">
                         {pageItems.map((command, index) => {
                         // Severity-based styling for tactical look
                         const getSeverityStyles = (severity: string) => {
@@ -2989,11 +2992,11 @@ export default function KaiCommand() {
                       <button
                         onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                         disabled={page >= totalPages - 1}
-                        className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors flex-shrink-0 ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                        className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }}
                       >
                         <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>
-                    </div>
                   </div>
                   </div>{/* End Command Stage Wrapper */}
                   </div>{/* End Frosted Glass Panel */}

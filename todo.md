@@ -4003,3 +4003,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Double command text from text-[6px] to text-xs
 - [x] Verify card layout and readability
 - [x] Save checkpoint
+
+## Fix Left Arrow Clipping with Proper Carousel Shell (Jan 21, 2026)
+- [x] Remove transform: translateX(-96px) from command stage wrapper
+- [x] Replace with margin: 0 auto and proper max-width
+- [x] Create carousel shell with position: relative, padding-left/right: 48px, overflow: visible
+- [x] Position left arrow at left: 12px with absolute positioning
+- [x] Position right arrow at right: 12px with absolute positioning
+- [x] Ensure both arrows have z-index: 50 and translateY(-50%)
+- [x] Verify no parent has overflow: hidden that clips arrows
+- [x] Verify 3 cards remain visible
+- [x] Save checkpoint
