@@ -2740,6 +2740,7 @@ export const appRouter = router({
         const { kaiConversations, kaiMessages } = await import("../drizzle/schema");
         const { eq, and } = await import("drizzle-orm");
         const { TRPCError } = await import("@trpc/server");
+        const { enforceFeatureAccess, deductCredits } = await import("./creditMiddleware");
         
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -2747,6 +2748,10 @@ export const appRouter = router({
         console.log('[kai.addMessage] Adding message to conversation:', input.conversationId, 'userId:', ctx.user.id, 'orgId:', ctx.currentOrganizationId);
         
         try {
+          // Check subscription and credits for chat feature
+          if (input.role === 'user') {
+            await enforceFeatureAccess(ctx.currentOrganizationId, 'CHAT_MESSAGE');
+          }
           // Verify user owns this conversation - use select() with proper column selection
           const conversations = await db.select({
             id: kaiConversations.id,
@@ -2784,6 +2789,19 @@ export const appRouter = router({
           });
           
           console.log('[kai.addMessage] Message saved with ID:', result.insertId);
+          
+          // Deduct credits for user messages
+          if (input.role === 'user') {
+            const deductResult = await deductCredits(
+              conversation.organizationId,
+              ctx.user.id,
+              'CHAT_MESSAGE',
+              { conversationId: input.conversationId, messageId: result.insertId }
+            );
+            if (!deductResult.success) {
+              console.warn('[kai.addMessage] Credit deduction warning:', deductResult.error);
+            }
+          }
           
           // Update conversation with preview and timestamp
           const preview = input.content.substring(0, 200);

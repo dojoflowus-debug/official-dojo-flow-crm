@@ -4323,3 +4323,15 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add "Manage Billing" button linking to customer portal
 - [ ] Test paywall modal appearance and interactions
 - [ ] Verify modal styling matches existing design system
+
+
+## Credit Enforcement Middleware (Jan 21, 2026)
+- [x] Create credit checking middleware and helper functions
+- [x] Implement credit deduction logic for AI features
+- [x] Add credit validation to chat endpoint (addMessage)
+- [ ] Add credit validation to SMS endpoints
+- [ ] Add credit validation to call endpoints
+- [ ] Add credit validation to email endpoints
+- [x] Create client-side credit check before feature access (PaywallModal)
+- [x] Add error handling and user feedback for insufficient credits
+- [ ] Test credit enforcement across all features
