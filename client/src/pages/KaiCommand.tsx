@@ -724,6 +724,12 @@ export default function KaiCommand() {
       return;
     }
     
+    // Check if there are messages to summarize
+    if (!messages || messages.length === 0) {
+      toast.error('No messages to summarize. Start a conversation first.');
+      return;
+    }
+    
     setIsSummarizing(true);
     try {
       const result = await summarizeConversationMutation.mutateAsync({

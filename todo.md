@@ -3788,6 +3788,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Implement clamped centering logic with clamp(targetLeft, minLeft, maxLeft)
 - [x] Use translateX for positioning (not left + transform together)
 - [x] Add max-width: calc(100vw - 48px) to wrapper
-- [ ] Test in Light/Dark/Cinematic modes
-- [ ] Verify no clipping at any viewport width
-- [ ] Save final checkpoint
+- [x] Test in Light/Dark/Cinematic modes
+- [x] Verify no clipping at any viewport width
+- [x] Save final checkpoint
+
+
+## Fix "No messages to summarize" Error on /kai Page (Jan 21, 2026)
+- [x] Locate where summarize function is called in KaiCommand or related components
+- [x] Add guard condition to check if messages array has content before calling summarize
+- [x] Test that error no longer appears on empty conversation
+- [ ] Save checkpoint
