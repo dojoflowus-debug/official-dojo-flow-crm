@@ -2883,7 +2883,7 @@ export default function KaiCommand() {
                   {/* Mission Directives Carousel */}
                   <div className={`w-full ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
                     style={Object.assign(
-                      { position: 'relative', paddingLeft: '48px', paddingRight: '48px', overflow: 'visible' },
+                      { position: 'relative', paddingLeft: '48px', paddingRight: '48px', overflow: 'visible', isolation: 'isolate', zIndex: 10 },
                       isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}
                     )}
                   >

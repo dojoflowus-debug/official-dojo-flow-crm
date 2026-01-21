@@ -4058,3 +4058,9 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Change left arrow from calc(12px + 48px) to calc(12px + 96px)
 - [x] Verify left arrow is fully visible
 - [x] Save checkpoint
+
+## Fix Left Arrow Clipping with Isolation and Z-Index (Jan 21, 2026)
+- [x] Add isolation: isolate and z-index: 10 to carousel container inline style
+- [x] Change left arrow z-index from 50 to 9999 (already done in previous step)
+- [x] Verify left arrow is fully visible without position changes
+- [x] Save checkpoint
