@@ -4083,3 +4083,19 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Change max-width from 1100px to 900px in data-kai-command-wrapper
 - [x] Verify width reduction without moving elements
 - [x] Save checkpoint
+
+## Fix Chat Input and Prompt Card Functionality (Jan 21, 2026)
+- [ ] Investigate why chat input send button (red arrow) is not working
+- [ ] Investigate why prompt cards are not clickable
+- [ ] Check console for JavaScript errors
+- [ ] Fix broken click handlers
+- [ ] Test chat input and prompt card clicks
+- [ ] Save checkpoint
+
+## Fix Send Button Not Working (Jan 21, 2026)
+- [x] Investigate why send button (red arrow) doesn't work
+- [x] Found: KaiCommand not connecting onSendMessage handler to KaiBar context
+- [x] Import useKaiBar hook in KaiCommand.tsx
+- [x] Call setOnSendMessage with handleSendMessage in useEffect
+- [x] Connected KaiBar send handler to pass input/attachments to handleSendMessage
+- [x] Save checkpoint

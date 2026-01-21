@@ -5,6 +5,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { useEnvironment } from '@/contexts/EnvironmentContext';
+import { useKaiBar } from '@/contexts/KaiBarContext';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,6 +121,7 @@ interface Attachment {
 
 export default function KaiCommand() {
   const [, navigate] = useLocation();
+  const { setOnSendMessage: setKaiBarSendHandler } = useKaiBar();
   
   const [activeTab, setActiveTab] = useState('active');
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
@@ -185,6 +187,21 @@ export default function KaiCommand() {
       setInfoPanelOpen(false);
     }
   }, [infoPanelData]);
+
+  // Connect KaiBar send handler to handleSendMessage
+  useEffect(() => {
+    setKaiBarSendHandler(async (input: string, kaiBarAttachments: any[]) => {
+      console.log('[KaiBar] Send button clicked, input:', input, 'attachments:', kaiBarAttachments);
+      // Update local state with KaiBar's input and attachments
+      setMessageInput(input);
+      setAttachments(kaiBarAttachments);
+      // Wait a tick for state to update, then trigger send
+      setTimeout(async () => {
+        await handleSendMessage('click');
+      }, 0);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setKaiBarSendHandler]);
   
   // Voice state management
   const [voiceEnabled, setVoiceEnabled] = useState(false);
