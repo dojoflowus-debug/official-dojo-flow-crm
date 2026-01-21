@@ -2854,11 +2854,6 @@ export default function KaiCommand() {
                 /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
                   {/* Shared centered container for header + prompt rail */}
-                  <div 
-                    data-kai-command-wrapper
-                    className="w-full max-w-6xl"
-                    style={{ margin: '0 auto' }}
-                  >
                   {/* Frosted Glass Panel for Focus Mode only - removed from Cinematic */}
                   <div className={`flex flex-col items-center ${isFocusMode && !isCinematic ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
                     style={isFocusMode && !isCinematic ? {
@@ -2867,6 +2862,11 @@ export default function KaiCommand() {
                       WebkitBackdropFilter: 'blur(10px)',
                       animation: 'cinematicGlassFadeIn 0.6s ease-out forwards'
                     } : {}}
+                  >
+                  {/* Shared Command Stage Wrapper - centers logo, title, subtitle, and carousel together */}
+                  <div 
+                    data-kai-command-wrapper
+                    className="w-full max-w-6xl mx-auto px-12"
                   >
                   {/* Kai Logo with spotlight and animation in cinematic mode */}
                   <div className={`relative mb-6 ${isCinematic ? 'mb-8' : 'mb-4'}`}>
@@ -2916,7 +2916,7 @@ export default function KaiCommand() {
                   
 
                   {/* Mission Directives Carousel */}
-                  <div className={`relative ${isCinematic ? 'mt-4' : ''} transition-all duration-500 px-12`}
+                  <div className={`relative ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
                     style={Object.assign(
                       { width: '100%', maxWidth: '100%', boxSizing: 'border-box' },
                       isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}
@@ -3040,8 +3040,8 @@ export default function KaiCommand() {
                       })}
                     </div>
                   </div>
+                  </div>{/* End Command Stage Wrapper */}
                   </div>{/* End Frosted Glass Panel */}
-                  </div>{/* End shared centered container */}
                 </div>
               ) : (
                 /* Messages - z-index: 30 to ensure above environment */

@@ -3935,3 +3935,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Ensure arrows sit in container with overflow: visible
 - [x] Verify left arrow is fully visible at first render
 - [x] Save checkpoint
+
+## Re-center Kai Logo and Title with Carousel (Jan 21, 2026)
+- [x] Create single shared "command stage" wrapper (w-full max-w-6xl mx-auto px-12)
+- [x] Move Kai logo inside the wrapper
+- [x] Move "KAI COMMAND" title inside the wrapper
+- [x] Move subtitle inside the wrapper
+- [x] Keep carousel (with arrows) inside the wrapper
+- [x] Remove any independent centering on logo/title
+- [x] Verify logo, title, and middle card are vertically aligned
+- [x] Save checkpoint
