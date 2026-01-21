@@ -3729,4 +3729,10 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Calculate horizontal offset to align with midpoint between Operations and Kiosk
 - [x] Apply offset to Kai Command header container (48px right offset)
 - [x] Test alignment with vertical line test
+- [x] Save checkpoint
+
+
+## Move Kai Header 1 Inch Right (Jan 20, 2026)
+- [x] Update header container offset from 48px to 144px (48px + 96px)
+- [x] Test new positioning
 - [ ] Save checkpoint
