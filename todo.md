@@ -3850,4 +3850,20 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Fixed document.body.style.overflow manipulation in MainLayout.tsx, PublicLanding.tsx, and AccountCommandPanel.tsx
 - [x] Test Light mode renders identically to Dark mode (layout only)
 - [x] Verify only colors differ between Light and Dark modes
+- [x] Save checkpoint
+
+
+## Fix Light Mode Layout Distortion Bug - Deep Investigation (Jan 21, 2026)
+- [x] Open marketing website (/) in browser
+- [x] Switch to Dark mode and inspect computed styles on html, body, #root, main
+- [x] Switch to Light mode and inspect computed styles on html, body, #root, main
+- [x] Compare transform, filter, backdrop-filter, position, overflow, height, width, display
+- [x] Identify exact CSS rule(s) causing layout distortion in Light mode
+- [x] Remove/override the specific Light mode rules that affect layout
+- [x] Removed background-attachment: fixed from Light mode (lines 329-335 in index.css)
+- [x] Removed background-attachment: fixed from Dark mode for consistency (lines 337-344 in index.css)
+- [x] Ensure cinematic/focus overlays are separate from theme switching
+- [x] Test Light and Dark modes to verify identical layouts
+- [x] Take screenshots of Light and Dark modes to verify identical layouts
+- [x] Document exact files and rules changed
 - [ ] Save checkpoint
