@@ -4150,4 +4150,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Ensure keyboard accessibility (focus states, Enter/Space triggers)
 - [x] Test responsive layout on desktop and mobile widths
 - [x] Verify no header overlap or layout breaks
+- [x] Save checkpoint
+
+## Add System Health Indicator to Kai Chip (Jan 21, 2026)
+- [x] Create useSystemHealth hook to monitor API response times
+- [x] Define health status thresholds (green: <200ms, yellow: 200-500ms, red: >500ms)
+- [x] Update KaiVersionChip to accept health status prop
+- [x] Implement color-coded pulse animation based on health status
+- [x] Test health indicator with simulated slow API responses
 - [ ] Save checkpoint
