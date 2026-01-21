@@ -3945,3 +3945,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Remove any independent centering on logo/title
 - [x] Verify logo, title, and middle card are vertically aligned
 - [x] Save checkpoint
+
+## Fix Logo and Title Clipping on Left Side (Jan 21, 2026)
+- [x] Remove all transforms and translateX from stage wrapper and ancestors
+- [x] Remove any negative margins or calc widths
+- [x] Ensure stage wrapper has overflow-visible
+- [x] Limit overflow-hidden to carousel scroller only
+- [x] Verify Kai logo is fully visible (not cut)
+- [x] Verify "KAI COMMAND" shows full text (not "AI COMMAND")
+- [x] Save checkpoint
