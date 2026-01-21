@@ -24,7 +24,8 @@ export function BetaNoticeModal({ onReadNotes, onSkip }: BetaNoticeModalProps) {
         className="relative w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
         style={{
           backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-          border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
+          border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+          pointerEvents: 'auto'
         }}
       >
         {/* Close button */}
@@ -94,6 +95,7 @@ export function BetaNoticeModal({ onReadNotes, onSkip }: BetaNoticeModalProps) {
           {/* Buttons */}
           <div className="flex flex-col gap-3">
             <Button
+              type="button"
               onClick={onReadNotes}
               className="w-full h-11 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white font-medium rounded-lg"
             >

@@ -4128,4 +4128,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add routing for /kai/release-notes/v0-9-0-beta
 - [x] Test modal display, persistence, and navigation
 - [x] Verify modal doesn't show again after dismissal
+- [x] Save checkpoint
+
+## Bug Fix - Beta Notice Modal "Read what's new" Button (Jan 21, 2026)
+- [x] Diagnose why "Read what's new" button does nothing when clicked
+- [x] Verify button has type="button" and is not disabled
+- [x] Ensure click handler is properly wired to navigate to /kai/release-notes/v0-9-0-beta
+- [x] Check for click interception (z-index, pointer-events, overlay blocking)
+- [x] Test button click and verify navigation to release notes page
 - [ ] Save checkpoint
