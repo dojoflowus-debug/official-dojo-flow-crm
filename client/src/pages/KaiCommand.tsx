@@ -2827,7 +2827,65 @@ export default function KaiCommand() {
                 /* Empty State - Kai Greeting - Added top padding to ensure content doesn't touch the top */
                 <div className={`flex flex-col items-center ${isFocusMode ? 'justify-center' : 'justify-center'} ${isCinematic ? 'pt-4' : 'py-8'} transition-all duration-500`}>
                   {/* Shared centered container for header + prompt rail */}
-                  <div className="w-full" style={{ maxWidth: '980px', margin: '0 auto' }}>
+                  <div 
+                    ref={(el) => {
+                      if (!el) return;
+                      
+                      let resizeTimeout: NodeJS.Timeout;
+                      
+                      const updatePosition = () => {
+                        const ops = document.querySelector('[data-nav-anchor="operations"]');
+                        const kiosk = document.querySelector('[data-nav-anchor="kiosk"]');
+                        
+                        if (!ops || !kiosk) {
+                          // Fallback: center normally
+                          el.style.position = 'relative';
+                          el.style.left = '';
+                          el.style.transform = '';
+                          el.style.maxWidth = '980px';
+                          el.style.margin = '0 auto';
+                          return;
+                        }
+                        
+                        const opsRect = ops.getBoundingClientRect();
+                        const kioskRect = kiosk.getBoundingClientRect();
+                        
+                        const opsCenterX = opsRect.left + opsRect.width / 2;
+                        const kioskCenterX = kioskRect.left + kioskRect.width / 2;
+                        const midX = (opsCenterX + kioskCenterX) / 2;
+                        
+                        // Get Kai wrapper width
+                        const kaiWidth = el.offsetWidth;
+                        const kaiLeft = midX - (kaiWidth / 2);
+                        
+                        // Position wrapper so its center aligns to midX
+                        el.style.position = 'relative';
+                        el.style.left = `${kaiLeft}px`;
+                        el.style.transform = '';
+                        el.style.maxWidth = '980px';
+                        el.style.width = 'fit-content';
+                        el.style.margin = '0';
+                      };
+                      
+                      // Initial position
+                      setTimeout(updatePosition, 0);
+                      
+                      // Debounced resize listener
+                      const handleResize = () => {
+                        clearTimeout(resizeTimeout);
+                        resizeTimeout = setTimeout(updatePosition, 100);
+                      };
+                      
+                      window.addEventListener('resize', handleResize);
+                      
+                      // Cleanup
+                      return () => {
+                        window.removeEventListener('resize', handleResize);
+                        clearTimeout(resizeTimeout);
+                      };
+                    }}
+                    className="w-full"
+                  >
                   {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
                   <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
                     style={(isCinematic || isFocusMode) ? {

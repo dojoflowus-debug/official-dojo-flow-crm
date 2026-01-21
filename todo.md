@@ -3769,4 +3769,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Remove custom getBoundingClientRect positioning logic
 - [x] Use simple flex centering (margin: 0 auto)
 - [x] Verify center aligns with Operations/Kiosk midpoint
+- [x] Save checkpoint
+
+
+## Precise Kai Command Centering Between Nav Icons (Jan 20, 2026)
+- [x] Verify data-nav-anchor attributes exist on Operations and Kiosk nav items
+- [x] Implement midpoint calculation: midX = (opsCenterX + kioskCenterX) / 2
+- [x] Position Kai wrapper so its center aligns to midX
+- [x] Add debounced resize listener
+- [x] Test in Light/Dark/Cinematic modes
 - [ ] Save checkpoint
