@@ -4136,4 +4136,9 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Ensure click handler is properly wired to navigate to /kai/release-notes/v0-9-0-beta
 - [x] Check for click interception (z-index, pointer-events, overlay blocking)
 - [x] Test button click and verify navigation to release notes page
+- [x] Save checkpoint
+
+## Bug Fix - AppShellMissingError for Release Notes Route (Jan 21, 2026)
+- [x] Wrap /kai/release-notes/v0-9-0-beta route with AppShell component
+- [x] Test release notes page navigation and verify no errors
 - [ ] Save checkpoint

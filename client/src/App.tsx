@@ -175,7 +175,7 @@ function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/kai/release-notes/v0-9-0-beta" element={<ReleaseNotes />} />
+      <Route path="/kai/release-notes/v0-9-0-beta" element={<AppShell><ReleaseNotes /></AppShell>} />
       <Route path="/kai" element={<AppShell><KaiCommand /></AppShell>} />
       <Route path="/kai-command" element={<Navigate to="/kai" replace />} />
       <Route path="/command" element={<Navigate to="/kai" replace />} />
