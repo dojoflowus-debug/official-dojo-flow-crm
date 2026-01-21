@@ -168,7 +168,11 @@ export default function KaiCommand() {
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const centerPanelRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
+  
+  // Track center panel position and size for fixed chat bar
+  const [centerPanelPosition, setCenterPanelPosition] = useState({ left: 0, width: 0 });
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
@@ -1266,6 +1270,33 @@ export default function KaiCommand() {
       document.body.style.userSelect = '';
     };
   }, [isResizing]);
+
+  // Update center panel position and size for fixed chat bar
+  useEffect(() => {
+    const updateCenterPanelPosition = () => {
+      if (centerPanelRef.current) {
+        const rect = centerPanelRef.current.getBoundingClientRect();
+        setCenterPanelPosition({
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
+    updateCenterPanelPosition();
+    
+    // Update on resize and when commandCenterWidth changes
+    window.addEventListener('resize', updateCenterPanelPosition);
+    const resizeObserver = new ResizeObserver(updateCenterPanelPosition);
+    if (centerPanelRef.current) {
+      resizeObserver.observe(centerPanelRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateCenterPanelPosition);
+      resizeObserver.disconnect();
+    };
+  }, [commandCenterWidth]);
 
   // Upload mutation
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();
@@ -2616,6 +2647,7 @@ export default function KaiCommand() {
         {/* Row 2: Scrollable content (flex-1) */}
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
+          ref={centerPanelRef}
           className={`flex-1 flex flex-col relative min-w-0 min-h-0 h-full overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
           style={{ zIndex: 10, position: 'relative' }}
           onDragEnter={handleDragEnter}
@@ -3259,9 +3291,18 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* COMPOSER DOCK - Sticky at bottom of center panel */}
+          {/* COMPOSER DOCK - Fixed to viewport but positioned with center panel */}
           {!isFocusMode && (
-            <div className="sticky bottom-0 w-full max-w-full" style={{ zIndex: 20 }}>
+            <div 
+              className="fixed" 
+              style={{ 
+                zIndex: 1899,
+                bottom: '72px',
+                left: `${centerPanelPosition.left}px`,
+                width: `${centerPanelPosition.width}px`,
+                transition: 'left 0.1s ease-out, width 0.1s ease-out'
+              }}
+            >
               <div className={`${isDark || isCinematic ? 'bg-[#0A0A0B]/80 border-white/10' : 'bg-white/80 border-slate-200'} backdrop-blur-md border-t`}>
                 <form
                   onSubmit={(e) => {

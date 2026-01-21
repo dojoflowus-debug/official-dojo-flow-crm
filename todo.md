@@ -4248,3 +4248,10 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Apply sticky bottom-0 w-full to composer wrapper
 - [ ] Test divider drag to verify composer resizes with center panel
 - [ ] Save checkpoint
+
+
+## Chat Bar Positioning Fix
+- [x] Make Kai chat bar fixed to viewport but fluid with center panel width
+- [x] Chat bar width matches center panel width dynamically
+- [x] Chat bar position updates when divider is dragged
+- [x] Match Manus chat bar behavior exactly
