@@ -109,7 +109,7 @@ import TestSimple from "./pages/TestSimple";
 import PublicChat from "./pages/PublicChat";
 import { KioskDesigner } from "./pages/KioskDesigner";
 import PublicHome from "./pages/PublicHome";
-import PublicLanding from "./pages/PublicLanding";
+import PublicLanding from "./pages/PublicLandingWrapper";
 import WelcomeDashboard from "./pages/WelcomeDashboard";
 import OwnerAuth from "./pages/OwnerAuth";
 import OwnerOnboarding from "./pages/OwnerOnboarding";

@@ -3867,3 +3867,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Take screenshots of Light and Dark modes to verify identical layouts
 - [x] Document exact files and rules changed
 - [ ] Save checkpoint
+
+
+## Fix Theme Isolation Between Dashboard and Marketing Website (Jan 21, 2026)
+- [ ] Analyze ThemeContext to understand how theme is stored and applied globally
+- [ ] Identify why dashboard theme selection affects marketing website
+- [ ] Implement separate theme contexts or scoping for dashboard vs marketing pages
+- [ ] Ensure marketing website always uses its own theme (independent of dashboard)
+- [ ] Test: Change dashboard theme to Light, verify marketing website stays correct
+- [ ] Test: Change dashboard theme to Dark, verify marketing website stays correct
+- [ ] Test: Change dashboard theme to Cinematic, verify marketing website stays correct
+- [ ] Save checkpoint
