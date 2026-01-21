@@ -4239,3 +4239,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Increase z-index to 100 to ensure divider is above all overlays
 - [ ] Test with user after z-index: 100 fix
 - [x] Save checkpoint
+
+
+## Bug Fix - Unstick Chat Composer from Viewport (Jan 21, 2026)
+- [ ] Find chat composer wrapper and identify viewport-relative positioning
+- [ ] Remove fixed/inset-x-0/left-0 right-0/w-screen/100vw positioning
+- [ ] Move composer inside center panel container
+- [ ] Apply sticky bottom-0 w-full to composer wrapper
+- [ ] Test divider drag to verify composer resizes with center panel
+- [ ] Save checkpoint

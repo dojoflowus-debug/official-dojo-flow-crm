@@ -1232,7 +1232,6 @@ export default function KaiCommand() {
   // Resize handlers for swivel bar
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    console.log('[DRAG] Mouse down, starting resize');
     setIsResizing(true);
   };
 
@@ -1246,12 +1245,10 @@ export default function KaiCommand() {
       // Constrain width between 200px min and 75% of available width max
       const maxWidth = containerRect.width * 0.75;
       const constrainedWidth = Math.min(Math.max(newWidth, 200), maxWidth);
-      console.log('[DRAG] Setting commandCenterWidth to:', constrainedWidth);
       setCommandCenterWidth(constrainedWidth);
     };
 
     const handleMouseUp = () => {
-      console.log('[DRAG] Mouse up, ending resize');
       setIsResizing(false);
     };
 
