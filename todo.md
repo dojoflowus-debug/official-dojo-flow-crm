@@ -4208,3 +4208,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test with real user typing to verify fix works (AWAITING USER MANUAL TEST)
 - [ ] Remove diagnostic logs after confirmation
 - [x] Save checkpoint
+
+## Bug Fix - Chat Bar Spans Across 3 Panels (Jan 21, 2026)
+- [x] Identify center panel container in KaiCommand.tsx
+- [x] Add relative positioning to center panel container
+- [x] Move chat composer inside center panel container
+- [x] Wrap composer in sticky bottom div with proper styling
+- [x] Add bottom padding to message list to prevent overlap
+- [x] Test chat bar stays within center panel bounds
+- [ ] Save checkpoint

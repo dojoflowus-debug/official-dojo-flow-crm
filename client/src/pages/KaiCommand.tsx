@@ -2615,7 +2615,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           className={`flex-1 flex flex-col relative min-w-0 min-h-0 h-full overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
-          style={{ zIndex: 10 }}
+          style={{ zIndex: 10, position: 'relative' }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
@@ -2880,8 +2880,8 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
-            style={{ zIndex: 10, paddingBottom: 'calc(168px + 96px + 24px)', maxWidth: '980px', marginLeft: 'auto', marginRight: 'auto' }}
+            className={`content-layer flex-1 relative min-h-0 ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'} pb-24`}
+            style={{ zIndex: 10, maxWidth: '980px', marginLeft: 'auto', marginRight: 'auto' }}
           >
             {/* Shared content column wrapper - full width to match AppShell constraint */}
             <div className="w-full">
@@ -3257,8 +3257,65 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* COMPOSER DOCK - Now rendered at app root level via KaiBar component */}
-          {/* This space is intentionally left empty - the KaiBar is now managed by AppShell */}
+          {/* COMPOSER DOCK - Sticky at bottom of center panel */}
+          {!isFocusMode && (
+            <div className="sticky bottom-0 w-full max-w-full" style={{ zIndex: 20 }}>
+              <div className={`${isDark || isCinematic ? 'bg-[#0A0A0B]/80 border-white/10' : 'bg-white/80 border-slate-200'} backdrop-blur-md border-t`}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    console.log('SEND_SUBMIT');
+                    handleSendMessage('submit');
+                  }}
+                  className="flex items-center gap-2 p-4 max-w-[980px] mx-auto"
+                >
+                  {/* Attachment Button */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className={`h-9 w-9 rounded-full flex-shrink-0 ${
+                      isCinematic
+                        ? 'text-white hover:text-white hover:bg-white/20'
+                        : isDark
+                        ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]'
+                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                    }`}
+                    title="Attach file"
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </Button>
+
+                  {/* Message Input */}
+                  <MentionInput
+                    value={messageInput}
+                    onChange={setMessageInput}
+                    onSubmit={(value, mentions) => {
+                      handleSendMessage('submit');
+                    }}
+                    placeholder="Issue directive... Type @ to assign"
+                    theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
+                    variant="apple"
+                  />
+
+                  {/* Send Button */}
+                  <Button
+                    type="submit"
+                    size="icon"
+                    className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm flex-shrink-0"
+                    disabled={(!messageInput.trim() && attachments.length === 0) || isLoading}
+                    onClick={() => console.log('SEND_CLICK')}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#FFFFFF' }} />
+                    ) : (
+                      <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
+                    )}
+                  </Button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
