@@ -2829,7 +2829,7 @@ export default function KaiCommand() {
                   <div 
                     data-kai-command-wrapper
                     className="w-full mx-auto"
-                    style={{ maxWidth: 'min(100%, 1100px)', margin: '0 auto', transform: 'translateX(-96px)' }}
+                    style={{ maxWidth: 'min(100%, 1100px)', margin: '0 auto', transform: 'translateX(0px)' }}
                   >
                   {/* Header Block - Logo, Title, Subtitle */}
                   <div data-kai-header className="w-full flex flex-col items-center text-center">
@@ -2892,13 +2892,13 @@ export default function KaiCommand() {
                         onClick={() => setPage(p => Math.max(0, p - 1))}
                         disabled={page === 0}
                         className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${page === 0 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
-                        style={{ position: 'absolute', left: 'calc(12px + 96px)', top: '50%', transform: 'translateY(-50%)', zIndex: 9999 }}
+                        style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', zIndex: 9999 }}
                       >
                         <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>
                       
                       {/* Mission Tiles - 3 Column Grid */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-3 w-full">
                         {pageItems.map((command, index) => {
                         // Severity-based styling for tactical look
                         const getSeverityStyles = (severity: string) => {
@@ -2994,7 +2994,7 @@ export default function KaiCommand() {
                         onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                         disabled={page >= totalPages - 1}
                         className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
-                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }}
+                        style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }}
                       >
                         <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>

@@ -4070,3 +4070,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Change overflow: hidden to overflow: visible (removed from container div in Light mode)
 - [x] Verify left arrow is fully visible
 - [x] Save checkpoint
+
+## Fix Left Arrow Clipping - Remove Transform and Adjust Arrow Positions (Jan 21, 2026)
+- [x] Remove transform: translateX(-96px) from data-kai-command-wrapper (set to translateX(0px))
+- [x] Change left arrow from left: calc(12px + 96px) to left: 8px
+- [x] Change right arrow from right: 12px to right: 8px
+- [x] Add w-full to grid wrapper (grid grid-cols-3 gap-3 flex-1)
+- [x] Verify left arrow is fully visible without overlapping first card
+- [x] Save checkpoint
