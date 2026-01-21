@@ -26,6 +26,8 @@ import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
+import { PaywallModal } from '@/components/PaywallModal';
+import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import '@/styles/kai-light-command-center.css';
 import { 
   Search, 
@@ -165,6 +167,9 @@ export default function KaiCommand() {
   const { isFocusMode, isFullscreen, toggleFocusMode, toggleFullscreen, enterFullscreen } = useFocusMode();
   // Use global Environment context
   const { currentEnvironment, isTransitioning, isPresentationMode, presentationProgress, togglePresentationMode } = useEnvironment();
+  
+  // Get subscription status
+  const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining } = useSubscriptionStatus(user?.organizationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -180,7 +185,12 @@ export default function KaiCommand() {
   
   // Beta Notice modal state
   const [showBetaNotice, setShowBetaNotice] = useState(false);
-    // Results Panel state
+  
+  // Paywall modal state
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeatureName, setPaywallFeatureName] = useState('this feature');
+  
+  // Results Panel state
   const [resultsPanelData, setResultsPanelData] = useState<ResultsPanelData>(null);
   
   // Info Panel state
@@ -1871,6 +1881,13 @@ export default function KaiCommand() {
       source,
       usingOverride: overrideInput !== undefined
     });
+    
+    // Check subscription status before sending message
+    if (shouldShowPaywall()) {
+      setPaywallFeatureName('chat messages');
+      setShowPaywall(true);
+      return;
+    }
     
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
@@ -3577,6 +3594,24 @@ export default function KaiCommand() {
           onSkip={handleSkipNotice}
         />
       )}
+      
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onStartTrial={async () => {
+          // TODO: Navigate to checkout page
+          setShowPaywall(false);
+          toast.success('Redirecting to checkout...');
+        }}
+        onManageBilling={async () => {
+          // TODO: Open customer portal
+          setShowPaywall(false);
+          toast.success('Opening billing portal...');
+        }}
+        subscriptionStatus="no_subscription"
+        featureName={paywallFeatureName}
+      />
     </ManagementLayout>
   );
 }
