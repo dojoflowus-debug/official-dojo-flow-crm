@@ -25,6 +25,7 @@ import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
+import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
 import '@/styles/kai-light-command-center.css';
 import { 
   Search, 
@@ -3274,7 +3275,6 @@ export default function KaiCommand() {
                     </div>
                   )}
                   
-                  {/* Schedule Preview Card */}
                   {schedulePreview && (
                     <div className="mt-4" style={{ zIndex: 30 }}>
                       <SchedulePreviewCard
