@@ -75,8 +75,9 @@ export function KaiBar() {
             transform: 'translateX(-50%)',
             bottom: `calc(var(--nav-h) + var(--kai-gap) + 60px)`,
             zIndex: 1949,
-            width: 'min(980px, calc(100% - 48px))',
-            maxWidth: '980px',
+            width: '100%',
+            maxWidth: '768px',
+            padding: '0 16px',
             pointerEvents: 'auto',
           }}
         >
@@ -196,11 +197,11 @@ export function KaiBar() {
           left: '50%',
           transform: 'translateX(-50%)',
           bottom: 'calc(var(--nav-h) + var(--kai-gap))',
-          width: 'min(980px, calc(100% - 48px))',
-          maxWidth: '980px',
+          width: '100%',
+          maxWidth: '768px',
           zIndex: 1950,
           pointerEvents: 'auto',
-          padding: 0,
+          padding: '0 16px',
           background: 'transparent',
         }}
       >
@@ -233,13 +234,16 @@ export function KaiBar() {
 
           {/* Input container - Clean floating pill with no outer container background */}
           <div
-            className="kaiBar flex items-center gap-2 transition-all duration-300 rounded-full p-3 relative z-10 border border-white/30 focus-within:kai-command-bar-focus"
+            className="kaiBar flex items-center gap-2 transition-all duration-300 relative z-10 border border-white/30 focus-within:kai-command-bar-focus"
             style={{
               background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               width: '100%',
               maxWidth: '100%',
+              minHeight: '56px',
+              borderRadius: '999px',
+              padding: '12px 16px',
               transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
               borderColor: isDark || isCinematic ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.1)',
             }}
