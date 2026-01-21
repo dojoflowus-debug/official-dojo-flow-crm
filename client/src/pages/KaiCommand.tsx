@@ -2976,7 +2976,7 @@ export default function KaiCommand() {
                   
 
                   {/* Mission Directives Carousel */}
-                  <div className={`relative ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
+                  <div className={`relative ${isCinematic ? 'mt-4' : ''} transition-all duration-500 px-12`}
                     style={Object.assign(
                       { width: '100%', maxWidth: '100%', boxSizing: 'border-box' },
                       isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}
@@ -2986,7 +2986,7 @@ export default function KaiCommand() {
                     <button
                       onClick={() => scrollCarousel('left')}
                       disabled={!canScrollLeft}
-                      className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${!canScrollLeft ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                      className={`absolute left-2 top-1/2 -translate-y-1/2 z-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${!canScrollLeft ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
                     >
                       <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                     </button>

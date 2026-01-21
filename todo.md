@@ -3922,3 +3922,9 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify nth-child selectors target correct elements (div[class*="snap-x"] > button)
 - [x] Test images display in Light mode
 - [ ] Save checkpoint
+
+## Fix Left Carousel Arrow Cut-off in Light Mode (Jan 21, 2026)
+- [x] Add px-12 padding to carousel container to create space for arrows
+- [x] Increase left arrow z-index from z-10 to z-50 for better layering
+- [ ] Test arrow visibility in Light mode after hard refresh
+- [ ] Save checkpoint if fix is confirmed working
