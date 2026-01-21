@@ -4271,3 +4271,5 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Move chat bar up by 1 inch (96px reduction from bottom: 72px)
 
 - [x] Move chat bar down by 0.5 inch (48px increase to bottom position: from 168px to 120px)
+
+- [x] Reduce chat bar width by additional 1 inch (48px per side = 96px total reduction)
