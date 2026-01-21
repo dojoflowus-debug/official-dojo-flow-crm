@@ -205,10 +205,17 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!showSuggestions) {
-      if (e.key === 'Enter' && !e.shiftKey && onSubmit) {
-        e.preventDefault();
-        onSubmit(value, mentions);
-        setMentions([]);
+      // ChatGPT-style input: Enter sends, Shift+Enter creates newline
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          // Allow Shift+Enter to create a newline (default behavior)
+          return;
+        } else if (onSubmit && value.trim()) {
+          // Send message on plain Enter (only if not empty)
+          e.preventDefault();
+          onSubmit(value, mentions);
+          setMentions([]);
+        }
       }
       return;
     }

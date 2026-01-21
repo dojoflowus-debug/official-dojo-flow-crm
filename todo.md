@@ -4277,3 +4277,19 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Align content area width with chat bar width (664px container, 632px form)
 - [x] Messages should extend to edges of chat bar without exceeding
 - [x] Center content area to match chat bar positioning
+
+
+## ChatGPT Input Rules Implementation (Jan 21, 2026)
+- [x] Update MentionInput to handle Shift+Enter for newlines
+- [x] Update MentionInput to send on plain Enter only
+- [ ] Test Enter key sends message (needs React event system testing)
+- [ ] Test Shift+Enter creates newline
+- [ ] Test Ctrl+Enter (alternative send shortcut)
+- [ ] Verify send button disabled when input empty
+- [ ] Verify input clears after successful send
+
+
+## Chat Messages Bottom Padding (Jan 21, 2026)
+- [x] Add 2-inch (192px) bottom padding to messages container
+- [x] Verify messages don't get hidden behind chat bar
+- [x] Test scrolling with the new padding
