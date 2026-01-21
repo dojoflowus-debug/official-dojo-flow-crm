@@ -3970,3 +3970,8 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add transform: translateX(-48px) to command stage wrapper
 - [x] Verify icon, title, and prompts all move together
 - [x] Save checkpoint
+
+## Move Command Stage Another 0.5 Inches Left (Jan 21, 2026)
+- [x] Update transform from translateX(-48px) to translateX(-96px)
+- [x] Verify positioning
+- [x] Save checkpoint
