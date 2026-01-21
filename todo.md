@@ -4175,4 +4175,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Ensure send button enables when text is entered
 - [x] Test Enter key and send button click functionality
 - [x] Verify handler is properly triggered (confirmed via console logs)
+- [x] Save checkpoint
+
+## Bug Fix - Kai Chat Bar Cannot Send Messages (Jan 21, 2026)
+- [x] Diagnose current send implementation in KaiBar component
+- [x] Wrap input + button in form with onSubmit handler
+- [x] Ensure send button is type="submit"
+- [x] Add console logs for debugging (SEND_CLICK, SEND_SUBMIT, payload)
+- [x] Verify no conversationId blocking and create one if needed
+- [x] Test Enter key sends message (triggers SEND_SUBMIT)
+- [x] Test send button click sends message (form submission working)
 - [ ] Save checkpoint

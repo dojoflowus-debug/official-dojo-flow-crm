@@ -41,8 +41,27 @@ export function KaiBar() {
   }
 
   const handleSendMessage = async () => {
+    console.log('SEND_CLICK');
+    console.log('payload', { text: messageInput, attachments });
     if (onSendMessage) {
-      await onSendMessage(messageInput, attachments);
+      try {
+        await onSendMessage(messageInput, attachments);
+      } catch (error) {
+        console.error('Send error:', error);
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('SEND_SUBMIT');
+    console.log('payload', { text: messageInput, attachments });
+    if (onSendMessage) {
+      try {
+        await onSendMessage(messageInput, attachments);
+      } catch (error) {
+        console.error('Send error:', error);
+      }
     }
   };
 
@@ -233,7 +252,8 @@ export function KaiBar() {
           />
 
           {/* Input container - Clean floating pill with no outer container background */}
-          <div
+          <form
+            onSubmit={handleSubmit}
             className="kaiBar flex items-center gap-2 transition-all duration-300 relative z-10 border border-white/30 focus-within:kai-command-bar-focus"
             style={{
               background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
@@ -289,7 +309,9 @@ export function KaiBar() {
               value={messageInput}
               onChange={setMessageInput}
               onSubmit={(value, mentions) => {
-                handleSendMessage();
+                // Create a fake form event to trigger handleSubmit
+                const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                handleSubmit(fakeEvent);
               }}
               placeholder="Issue directive... Type @ to assign"
               theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
@@ -313,9 +335,9 @@ export function KaiBar() {
 
             {/* Send Button */}
             <Button
+              type="submit"
               size="icon"
               className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm"
-              onClick={handleSendMessage}
               disabled={(!messageInput.trim() && attachments.length === 0) || isLoading || attachments.some(att => att.uploading)}
             >
               {isLoading ? (
@@ -324,7 +346,7 @@ export function KaiBar() {
                 <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
               )}
             </Button>
-          </div>
+          </form>
         </div>
       </div>
     </>
