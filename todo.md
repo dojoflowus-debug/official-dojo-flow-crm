@@ -4265,3 +4265,5 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify divider drag resizes chat bar fluidly
 
 - [x] Reduce chat bar width by 2 inches (48px per side = 96px total reduction)
+
+- [x] Reduce chat bar width by additional 1.5 inches (36px per side = 72px total reduction)
