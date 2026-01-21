@@ -21,7 +21,7 @@ const STORAGE_KEY = "dojoFlowTheme";
 const MIGRATION_KEY = "dojoFlowThemeMigration_v2";
 
 // Marketing/public routes that should always use dark theme
-const MARKETING_ROUTES = ["/", "/public", "/schools", "/fitness", "/studios", "/pricing"];
+const MARKETING_ROUTES = ["/", "/public", "/schools", "/fitness", "/studios", "/pricing", "/owner"];
 
 function isMarketingRoute(pathname: string): boolean {
   return MARKETING_ROUTES.includes(pathname);
