@@ -3745,4 +3745,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Update border-radius to 999px (pill shape)
 - [x] Add side padding (16px)
 - [x] Test responsive behavior
+- [x] Save checkpoint
+
+
+## Re-Center Kai Command to Full Viewport (Jan 20, 2026)
+- [x] Remove 144px custom offset from Kai Command header container
+- [x] Center relative to full app viewport (margin: 0 auto)
+- [x] Verify alignment between Operations and Kiosk bottom nav icons
 - [ ] Save checkpoint
