@@ -2946,11 +2946,11 @@ export default function KaiCommand() {
                           <div className={`absolute left-0 top-0 bottom-0 w-1 ${styles.bar}`} />
                           
                           {/* Content */}
-                          <div className="pl-2 pr-1.5 py-1.5">
+                          <div className="pl-4 pr-3 py-3">
                             {/* Header with severity icon */}
                             <div className="flex items-start justify-between mb-2">
                               <div 
-                                className={`text-[5px] font-bold uppercase tracking-wider ${styles.header}`}
+                                className={`text-[10px] font-bold uppercase tracking-wider ${styles.header}`}
                                 style={(isCinematic || isFocusMode) ? { textShadow: '0 1px 2px rgba(0,0,0,0.9)' } : {}}
                               >
                                 {command.header}
@@ -2961,7 +2961,7 @@ export default function KaiCommand() {
                                 className="p-0.5 rounded transition-colors cursor-pointer hover:bg-white/10"
                               >
                                 <Star
-                                  className={`w-1.5 h-1.5 transition-colors ${
+                                  className={`w-3 h-3 transition-colors ${
                                     favorites.has(command.id)
                                       ? 'fill-red-500 text-red-500'
                                       : 'text-white/20 hover:text-white/40'
@@ -2972,7 +2972,7 @@ export default function KaiCommand() {
                             
                             {/* Command text */}
                             <p 
-                              className={`text-[6px] leading-relaxed ${isDark || isCinematic ? 'text-white/70 group-hover:text-white/90' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}
+                              className={`text-xs leading-relaxed ${isDark || isCinematic ? 'text-white/70 group-hover:text-white/90' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}
                               style={(isCinematic || isFocusMode) ? { 
                                 textShadow: '0 1px 2px rgba(0,0,0,0.9)'
                               } : {}}

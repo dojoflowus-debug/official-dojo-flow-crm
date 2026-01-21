@@ -3995,3 +3995,11 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify exactly 3 cards show at once
 - [x] Verify no horizontal scrolling
 - [x] Save checkpoint
+
+## Increase Prompt Card Size by 100% (Jan 21, 2026)
+- [x] Double padding from pl-2 pr-1.5 py-1.5 to pl-4 pr-3 py-3
+- [x] Double header font from text-[5px] to text-[10px]
+- [x] Double star icon from w-1.5 h-1.5 to w-3 h-3
+- [x] Double command text from text-[6px] to text-xs
+- [x] Verify card layout and readability
+- [x] Save checkpoint
