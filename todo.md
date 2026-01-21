@@ -3804,4 +3804,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Update Summarize button disabled condition to include messages.length === 0
 - [x] Test that button is disabled on empty conversation
 - [x] Test that button enables after sending first message
+- [x] Save checkpoint
+
+
+## Remove Distorted Container Panel in Cinematic Mode (Jan 21, 2026)
+- [x] Identify Kai Command container wrapper element (line 2902)
+- [x] Remove panel styling from Cinematic mode (keep for Focus mode only)
+- [x] Disable background, border, shadow, blur in Cinematic
+- [x] Test in Cinematic mode (panel removed)
+- [x] Test in Light/Dark modes (unchanged)
 - [ ] Save checkpoint

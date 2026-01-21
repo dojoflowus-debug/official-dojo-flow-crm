@@ -2898,9 +2898,9 @@ export default function KaiCommand() {
                     className="w-full"
                     style={{ maxWidth: 'calc(100vw - 48px)', margin: '0 auto' }}
                   >
-                  {/* Frosted Glass Panel for Cinematic/Focus Mode - 70% opacity for maximum readability */}
-                  <div className={`flex flex-col items-center ${(isCinematic || isFocusMode) ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
-                    style={(isCinematic || isFocusMode) ? {
+                  {/* Frosted Glass Panel for Focus Mode only - removed from Cinematic */}
+                  <div className={`flex flex-col items-center ${isFocusMode && !isCinematic ? 'relative rounded-[32px] px-16 py-12 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-white/30' : ''}`}
+                    style={isFocusMode && !isCinematic ? {
                       background: 'rgba(0, 0, 0, 0.70)',
                       backdropFilter: 'blur(10px)',
                       WebkitBackdropFilter: 'blur(10px)',
