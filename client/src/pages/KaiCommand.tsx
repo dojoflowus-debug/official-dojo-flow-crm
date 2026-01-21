@@ -2881,56 +2881,9 @@ export default function KaiCommand() {
                     </p>
                   )}
                   
-                  {/* Priority Actions Stack - HIDDEN IN CINEMATIC MODE */}
-                  {messages.length === 0 && !isCinematic && (
-                    <div className="w-full mb-8" style={{ maxWidth: '980px', marginLeft: 'calc(50% + 96px)', transform: 'translateX(-50%)' }}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-red-500">PRIORITY ACTIONS</span>
-                      </div>
-                      <div className="space-y-2">
-                        {/* Priority Action 1 */}
-                        <button 
-                          onClick={() => handlePromptClick('"Flag students with 14+ days absence. Execute recovery protocol."')}
-                          className={`w-full flex items-center gap-3 p-3 rounded-sm ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} border border-red-500/30 hover:border-red-500/60 transition-all group shadow-sm`}
-                        >
-                          <div className="w-1 h-8 bg-red-500 rounded-full" />
-                          <div className="flex-1 text-left">
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">ALERT: INACTIVE MEMBERS</div>
-                            <div className={`text-xs ${isDark ? 'text-white/60 group-hover:text-white/80' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}>14+ days absence detected</div>
-                          </div>
-                          <ChevronRight className={`w-4 h-4 ${isDark ? 'text-white/30 group-hover:text-white/50' : 'text-slate-300 group-hover:text-slate-500'} transition-colors`} />
-                        </button>
-                        {/* Priority Action 2 */}
-                        <button 
-                          onClick={() => handlePromptClick('"Identify high-risk students. Recommend intervention."')}
-                          className={`w-full flex items-center gap-3 p-3 rounded-sm ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} border border-red-500/30 hover:border-red-500/60 transition-all group shadow-sm`}
-                        >
-                          <div className="w-1 h-8 bg-red-500 rounded-full" />
-                          <div className="flex-1 text-left">
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">THREAT: CHURN RISK</div>
-                            <div className={`text-xs ${isDark ? 'text-white/60 group-hover:text-white/80' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}>High-risk students identified</div>
-                          </div>
-                          <ChevronRight className={`w-4 h-4 ${isDark ? 'text-white/30 group-hover:text-white/50' : 'text-slate-300 group-hover:text-slate-500'} transition-colors`} />
-                        </button>
-                        {/* Priority Action 3 */}
-                        <button 
-                          onClick={() => handlePromptClick('"Surface overdue accounts. Generate collection sequence."')}
-                          className={`w-full flex items-center gap-3 p-3 rounded-sm ${isDark ? 'bg-[#0A0A0B]' : 'bg-white'} border border-amber-500/30 hover:border-amber-500/60 transition-all group shadow-sm`}
-                        >
-                          <div className="w-1 h-8 bg-amber-500 rounded-full" />
-                          <div className="flex-1 text-left">
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500">ALERT: REVENUE LEAK</div>
-                            <div className={`text-xs ${isDark ? 'text-white/60 group-hover:text-white/80' : 'text-slate-500 group-hover:text-slate-700'} transition-colors`}>Overdue accounts require action</div>
-                          </div>
-                          <ChevronRight className={`w-4 h-4 ${isDark ? 'text-white/30 group-hover:text-white/50' : 'text-slate-300 group-hover:text-slate-500'} transition-colors`} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
+
                   {/* Mission Directives Carousel */}
-                  <div className={`relative w-full ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
+                  <div className={`relative mx-auto ${isCinematic ? 'max-w-3xl mt-4' : 'max-w-4xl'} transition-all duration-500`}
                     style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
                   >
                     {/* Left Arrow */}

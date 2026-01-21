@@ -3697,4 +3697,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Find Kai command prompts component (suggestion chips above command bar)
 - [x] Update positioning to match KaiBar alignment (980px max-width, centered + 96px right)
 - [x] Test prompt positioning in all theme modes
+- [x] Save checkpoint
+
+
+## Remove Priority Alerts and Center Kai Command (Jan 20, 2026)
+- [x] Remove Priority Actions/Alerts section from KaiCommand.tsx
+- [x] Center Kai logo, title, and subtitle
+- [x] Center command prompt cards/rows
+- [x] Test Kai Command page layout
+- [x] Verify no other pages affected
 - [ ] Save checkpoint
