@@ -1139,51 +1139,11 @@ export default function KaiCommand() {
     return aFav - bFav;
   });
 
-  // Carousel scroll state
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-  const [cardWidth, setCardWidth] = useState(0);
-
-  // Update scroll buttons visibility
-  const updateScrollButtons = () => {
-    if (carouselRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  // Calculate card width for exactly 3 cards visible
-  useEffect(() => {
-    const calculateCardWidth = () => {
-      if (carouselRef.current) {
-        const containerWidth = carouselRef.current.clientWidth;
-        const gap = 12; // 3 in Tailwind = 12px
-        // For 3 cards: containerWidth = 3*cardWidth + 2*gap
-        const calculatedWidth = (containerWidth - gap * 2) / 3;
-        // Reduce card width by 50%
-        setCardWidth(calculatedWidth * 0.5);
-        updateScrollButtons();
-      }
-    };
-
-    calculateCardWidth();
-    window.addEventListener('resize', calculateCardWidth);
-    return () => window.removeEventListener('resize', calculateCardWidth);
-  }, []);
-
-  // Scroll carousel by exactly 1 card
-  const scrollCarousel = (direction: 'left' | 'right') => {
-    if (carouselRef.current && cardWidth > 0) {
-      const gap = 12;
-      const scrollAmount = cardWidth + gap; // 1 card + gap
-      carouselRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
+  // Carousel paging state
+  const PAGE_SIZE = 3;
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(sortedQuickCommands.length / PAGE_SIZE);
+  const pageItems = sortedQuickCommands.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -2920,38 +2880,22 @@ export default function KaiCommand() {
                   </div>{/* End Header Block */}
 
                   {/* Mission Directives Carousel */}
-                  <div className={`relative ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
-                    style={Object.assign(
-                      { width: '100%', maxWidth: '100%', boxSizing: 'border-box' },
-                      isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}
-                    )}
+                  <div className={`w-full max-w-5xl mx-auto px-6 ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
+                    style={isCinematic ? { animation: 'cinematicTextSlideUp 0.6s ease-out 0.5s both' } : {}}
                   >
-                    {/* Left Arrow - Always Visible */}
-                    <button
-                      onClick={() => scrollCarousel('left')}
-                      disabled={!canScrollLeft}
-                      className={`absolute left-2 top-1/2 -translate-y-1/2 z-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${!canScrollLeft ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
-                    >
-                      <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
-                    </button>
-                    
-                    {/* Right Arrow - Always Visible */}
-                    <button
-                      onClick={() => scrollCarousel('right')}
-                      disabled={!canScrollRight}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${!canScrollRight ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
-                    >
-                      <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
-                    </button>
-                    
-                    {/* Mission Tiles - Tactical Grid */}
-                    <div
-                      ref={carouselRef}
-                      onScroll={updateScrollButtons}
-                      className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
-                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', width: '100%', overflow: 'hidden' }}
-                    >
-                      {sortedQuickCommands.map((command, index) => {
+                    <div className="flex items-center gap-3">
+                      {/* Left Arrow - Always Visible */}
+                      <button
+                        onClick={() => setPage(p => Math.max(0, p - 1))}
+                        disabled={page === 0}
+                        className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors flex-shrink-0 ${page === 0 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                      >
+                        <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
+                      </button>
+                      
+                      {/* Mission Tiles - 3 Column Grid */}
+                      <div className="grid grid-cols-3 gap-3 flex-1">
+                        {pageItems.map((command, index) => {
                         // Severity-based styling for tactical look
                         const getSeverityStyles = (severity: string) => {
                           switch (severity) {
@@ -2986,20 +2930,17 @@ export default function KaiCommand() {
                         <button
                           key={command.id}
                           onClick={() => handlePromptClick(command.text)}
-                          className={`relative text-left transition-all duration-200 group snap-start overflow-hidden
+                          className={`w-full relative text-left transition-all duration-200 group overflow-hidden
                             ${(isCinematic || isFocusMode)
                               ? `rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-white/5`
                               : isDark 
                                 ? `bg-[#0A0A0B] rounded-sm border ${styles.border} ${styles.hoverBorder} hover:bg-[#111113]`
                                 : `bg-white rounded-sm border ${severity === 'info' ? 'border-slate-200 hover:border-slate-300' : styles.border + ' ' + styles.hoverBorder} hover:bg-slate-50 shadow-sm`
                             }`}
-                          style={Object.assign(
-                            { width: cardWidth > 0 ? `${cardWidth}px` : '200px', flexShrink: 0 },
-                            (isCinematic || isFocusMode) ? { 
-                              animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
-                              background: 'rgba(10, 10, 11, 0.95)'
-                            } : {}
-                          )}
+                          style={(isCinematic || isFocusMode) ? { 
+                            animation: isCinematic ? `cinematicCardSlide 0.6s ease-out ${0.4 + index * 0.08}s both` : 'none',
+                            background: 'rgba(10, 10, 11, 0.95)'
+                          } : {}}
                         >
                           {/* Severity Indicator Bar - Left Edge */}
                           <div className={`absolute left-0 top-0 bottom-0 w-1 ${styles.bar}`} />
@@ -3042,6 +2983,16 @@ export default function KaiCommand() {
                         </button>
                         );
                       })}
+                      </div>
+                      
+                      {/* Right Arrow - Always Visible */}
+                      <button
+                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={page >= totalPages - 1}
+                        className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors flex-shrink-0 ${page >= totalPages - 1 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
+                      >
+                        <ChevronRight className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
+                      </button>
                     </div>
                   </div>
                   </div>{/* End Command Stage Wrapper */}

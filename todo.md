@@ -3983,3 +3983,15 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Reduce font sizes proportionally
 - [x] Verify card layout and readability
 - [x] Save checkpoint
+
+## Replace Scrolling Carousel with Paging System (Jan 21, 2026)
+- [x] Add PAGE_SIZE constant and page state
+- [x] Calculate totalPages and pageItems
+- [x] Replace overflow-x-auto with grid grid-cols-3
+- [x] Remove inline width styles from cards
+- [x] Make cards w-full in grid
+- [x] Update arrow click handlers to use setPage
+- [x] Make arrows always visible with opacity-30 when disabled
+- [x] Verify exactly 3 cards show at once
+- [x] Verify no horizontal scrolling
+- [x] Save checkpoint
