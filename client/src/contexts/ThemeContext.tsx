@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 export type Theme = "light" | "dark" | "cinematic";
 
@@ -20,12 +21,27 @@ interface ThemeProviderProps {
 const STORAGE_KEY = "dojoFlowTheme";
 const MIGRATION_KEY = "dojoFlowThemeMigration_v2";
 
+// Marketing/public routes that should always use dark theme
+const MARKETING_ROUTES = ["/", "/public", "/schools", "/fitness", "/studios", "/pricing"];
+
+function isMarketingRoute(pathname: string): boolean {
+  return MARKETING_ROUTES.includes(pathname);
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
   switchable = true,
 }: ThemeProviderProps) {
+  const location = useLocation();
+  const isMarketing = isMarketingRoute(location.pathname);
+  
   const [theme, setThemeState] = useState<Theme>(() => {
+    // Marketing pages always use dark theme
+    if (isMarketing) {
+      return "dark";
+    }
+    
     // Migration: Force dark theme once
     const migrated = localStorage.getItem(MIGRATION_KEY);
     if (!migrated) {
@@ -34,15 +50,28 @@ export function ThemeProvider({
       localStorage.setItem(STORAGE_KEY, "dark");
       return "dark";
     }
-
+    
     if (switchable) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === "light" || stored === "dark" || stored === "cinematic") {
         return stored;
       }
     }
+    
     return defaultTheme;
   });
+
+  // Update theme when route changes
+  useEffect(() => {
+    if (isMarketing) {
+      setThemeState("dark");
+    } else if (switchable) {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "light" || stored === "dark" || stored === "cinematic") {
+        setThemeState(stored);
+      }
+    }
+  }, [location.pathname, isMarketing, switchable]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -57,17 +86,28 @@ export function ThemeProvider({
     
     // Also set data attribute for CSS selectors
     root.setAttribute("data-theme", theme);
-
-    if (switchable) {
+    
+    // Only save to localStorage if NOT on marketing pages and switchable
+    if (!isMarketing && switchable) {
       localStorage.setItem(STORAGE_KEY, theme);
     }
-  }, [theme, switchable]);
+  }, [theme, switchable, isMarketing]);
 
   const setTheme = (newTheme: Theme) => {
+    // Prevent theme changes on marketing pages
+    if (isMarketing) {
+      console.warn("Theme changes are disabled on marketing pages");
+      return;
+    }
     setThemeState(newTheme);
   };
 
   const cycleTheme = () => {
+    // Prevent theme changes on marketing pages
+    if (isMarketing) {
+      console.warn("Theme changes are disabled on marketing pages");
+      return;
+    }
     setThemeState(prev => {
       if (prev === "light") return "dark";
       if (prev === "dark") return "cinematic";

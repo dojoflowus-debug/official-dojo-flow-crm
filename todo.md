@@ -3878,3 +3878,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test: Change dashboard theme to Dark, verify marketing website stays correct
 - [ ] Test: Change dashboard theme to Cinematic, verify marketing website stays correct
 - [ ] Save checkpoint
+
+## Fix Theme Isolation - New Approach (Jan 21, 2026)
+- [ ] Debug why PublicLandingWrapper approach failed
+- [ ] Modify ThemeContext to check current route
+- [ ] Skip theme localStorage read/write for marketing routes (/, /public, /schools, /fitness, /studios, /pricing)
+- [ ] Force dark theme in ThemeContext for marketing routes
+- [ ] Test: Dashboard Light mode should not affect marketing website
+- [ ] Test: Dashboard Dark mode should not affect marketing website
+- [ ] Test: Dashboard Cinematic mode should not affect marketing website
+- [ ] Save checkpoint
