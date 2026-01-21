@@ -2892,7 +2892,7 @@ export default function KaiCommand() {
                         onClick={() => setPage(p => Math.max(0, p - 1))}
                         disabled={page === 0}
                         className={`w-8 h-8 rounded-sm flex items-center justify-center transition-colors ${page === 0 ? 'opacity-30 cursor-not-allowed' : ''} ${isDark || isCinematic ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm'}`}
-                        style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }}
+                        style={{ position: 'absolute', left: 'calc(12px + 48px)', top: '50%', transform: 'translateY(-50%)', zIndex: 9999 }}
                       >
                         <ChevronLeft className={`w-4 h-4 ${isDark || isCinematic ? 'text-white/70' : 'text-slate-500'}`} />
                       </button>

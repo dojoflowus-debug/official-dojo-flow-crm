@@ -4026,3 +4026,10 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify left arrow is fully visible
 - [x] Ensure no positions or layout changes
 - [x] Save checkpoint
+
+## Fix Left Arrow Visibility with Inline Style Adjustment (Jan 21, 2026)
+- [x] Change left arrow inline style from left: 12px to left: calc(12px + 48px)
+- [x] Change z-index from 50 to 9999
+- [x] Verify left arrow is fully visible
+- [x] Ensure no other elements move
+- [x] Save checkpoint
