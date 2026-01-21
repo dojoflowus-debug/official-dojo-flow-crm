@@ -3965,3 +3965,8 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify "KAI COMMAND" shows fully
 - [x] Verify header is centered above carousel
 - [x] Save checkpoint
+
+## Move Command Stage 0.5 Inches Left (Jan 21, 2026)
+- [x] Add transform: translateX(-48px) to command stage wrapper
+- [x] Verify icon, title, and prompts all move together
+- [x] Save checkpoint

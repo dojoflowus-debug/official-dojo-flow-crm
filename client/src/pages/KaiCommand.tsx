@@ -2867,6 +2867,7 @@ export default function KaiCommand() {
                   <div 
                     data-kai-command-wrapper
                     className="w-full max-w-6xl mx-auto px-12"
+                    style={{ transform: 'translateX(-48px)' }}
                   >
                   {/* Header Block - Logo, Title, Subtitle */}
                   <div data-kai-header className="w-full flex flex-col items-center text-center">
