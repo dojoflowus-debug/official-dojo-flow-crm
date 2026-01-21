@@ -4078,8 +4078,3 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add w-full to grid wrapper (grid grid-cols-3 gap-3 flex-1)
 - [x] Verify left arrow is fully visible without overlapping first card
 - [x] Save checkpoint
-
-## Move Command Stage 0.5 Inches Right (Jan 21, 2026)
-- [x] Change transform from translateX(0px) to translateX(48px)
-- [x] Verify command stage moves right by 48px
-- [x] Save checkpoint
