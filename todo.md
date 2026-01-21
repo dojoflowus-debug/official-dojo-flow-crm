@@ -3902,4 +3902,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Test Dark mode remains unchanged
 - [x] Test Cinematic mode remains unchanged
 - [x] Verify no layout distortion or extra whitespace
+- [x] Save checkpoint
+
+
+## Add Thumbnail Images to Light Mode Prompt Cards (Jan 21, 2026)
+- [x] Search for command center-themed images (dojo training, cityscape, analytics, martial arts)
+- [x] Download and save images to public/images/kai-prompts/
+- [x] Update CSS with background images for each prompt card
+- [x] Add conditional rendering to show images only in Light mode (via CSS nth-child selectors)
+- [x] Test images display correctly in Light mode cards
+- [x] Verify Dark and Cinematic modes remain unchanged
 - [ ] Save checkpoint
