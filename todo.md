@@ -3954,3 +3954,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify Kai logo is fully visible (not cut)
 - [x] Verify "KAI COMMAND" shows full text (not "AI COMMAND")
 - [x] Save checkpoint
+
+## Fix Header Block Centering Without Changing Carousel (Jan 21, 2026)
+- [x] Create dedicated data-kai-header wrapper for logo, title, subtitle only
+- [x] Use w-full flex flex-col items-center text-center for header wrapper
+- [x] Remove any transforms or left offsets from header elements
+- [x] Ensure header wrapper has no overflow-hidden
+- [x] Keep carousel positioning unchanged
+- [x] Verify logo is fully visible
+- [x] Verify "KAI COMMAND" shows fully
+- [x] Verify header is centered above carousel
+- [x] Save checkpoint

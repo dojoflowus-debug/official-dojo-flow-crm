@@ -2868,6 +2868,8 @@ export default function KaiCommand() {
                     data-kai-command-wrapper
                     className="w-full max-w-6xl mx-auto px-12"
                   >
+                  {/* Header Block - Logo, Title, Subtitle */}
+                  <div data-kai-header className="w-full flex flex-col items-center text-center">
                   {/* Kai Logo with spotlight and animation in cinematic mode */}
                   <div className={`relative mb-6 ${isCinematic ? 'mb-8' : 'mb-4'}`}>
                     {/* Spotlight glow behind Kai in cinematic mode */}
@@ -2913,7 +2915,7 @@ export default function KaiCommand() {
                       Select a directive below or issue a custom command.
                     </p>
                   )}
-                  
+                  </div>{/* End Header Block */}
 
                   {/* Mission Directives Carousel */}
                   <div className={`relative ${isCinematic ? 'mt-4' : ''} transition-all duration-500`}
