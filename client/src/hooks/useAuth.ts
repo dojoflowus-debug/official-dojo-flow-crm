@@ -71,6 +71,10 @@ export function useAuth() {
         setupCompleted: dojoSettings?.setupCompleted === 1,
         photoUrl: currentUser.photoUrl,
         photoUrlSmall: currentUser.photoUrlSmall,
+        activeOrgId: currentUser.activeOrgId,
+        globalRole: currentUser.globalRole,
+        phone: currentUser.phone,
+        bio: currentUser.bio,
       });
     } else {
       setUser(null);

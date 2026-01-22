@@ -524,7 +524,6 @@ export async function createTrialCheckout(params: {
           },
           recurring: {
             interval: 'month',
-            trial_period_days: 7,
           },
           unit_amount: 2999, // $29.99/month after trial
         },
@@ -533,6 +532,9 @@ export async function createTrialCheckout(params: {
     ],
     success_url: successUrl,
     cancel_url: cancelUrl,
+    subscription_data: {
+      trial_period_days: 7,
+    },
     metadata: {
       organizationId: organizationId.toString(),
       trialType: 'trial_7day',

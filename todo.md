@@ -4408,3 +4408,15 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - Fixed by ensuring useSubscriptionStatus hook always receives a number (0 as fallback)
   - Changed from: useSubscriptionStatus(user?.activeOrgId)
   - Changed to: useSubscriptionStatus(user?.activeOrgId || 0)
+
+
+## CRITICAL - Button Issues (User Reported)
+
+- [x] "Start 7-day trial" button NOT working - FIXED
+  - Root cause: useAuth hook was not returning activeOrgId field
+  - Root cause: trial_period_days was in wrong location (recurring instead of subscription_data)
+  - Fixed useAuth.ts to include activeOrgId, globalRole, phone, bio fields
+  - Fixed stripeSubscription.ts to move trial_period_days to subscription_data object
+  - Button now successfully opens Stripe checkout in sandbox
+  - Needs deployment to live version
+- [ ] "Manage billing" button - needs investigation on live version
