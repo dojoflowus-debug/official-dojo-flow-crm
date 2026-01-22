@@ -3328,113 +3328,115 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* COMPOSER DOCK - Fixed to viewport but positioned with center panel - Rounded pill design */}
-          {!isFocusMode && (
-            <div 
-              className={isCinematic ? "fixed left-1/2 -translate-x-1/2 flex justify-center" : "fixed flex justify-center"}
-              style={{ 
-                zIndex: 9999,
-                bottom: isCinematic ? 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 20px)' : '120px',
-                ...(isCinematic ? {
-                  width: 'min(720px, calc(100vw - 32px))',
-                } : {
-                  left: `${centerPanelPosition.left + 132}px`,
-                  width: `${centerPanelPosition.width - 264}px`,
-                  transition: 'left 0.1s ease-out, width 0.1s ease-out',
-                }),
-                padding: '0 16px',
-                boxSizing: 'border-box'
-              }}
-            >
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  console.log('SEND_SUBMIT');
-                  handleSendMessage('submit');
-                }}
-                className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-10 border focus-within:kai-command-bar-focus`}
-                style={{
-                  background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  ...(isCinematic ? {} : { width: `${centerPanelPosition.width - 32}px` }),
-                  minHeight: '56px',
-                  borderRadius: '999px',
-                  padding: '12px 16px',
-                  transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  borderColor: isDark || isCinematic ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.1)',
-                  borderWidth: '1px',
-                  boxSizing: 'border-box',
-                  position: 'relative'
-                }}
-              >
-                {/* Attachment Button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className={`h-9 w-9 rounded-full flex-shrink-0 ${
-                    isCinematic
-                      ? 'text-white hover:text-white hover:bg-white/20'
-                      : isDark
-                      ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]'
-                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-                  }`}
-                  title="Attach file"
-                >
-                  <Paperclip className="w-5 h-5" />
-                </Button>
 
-                {/* @ Mention Button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className={`h-9 w-9 rounded-full flex-shrink-0 ${
-                    isCinematic
-                      ? 'text-white hover:text-white hover:bg-white/20'
-                      : isDark
-                      ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]'
-                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-                  }`}
-                  title="Mention someone"
-                  onClick={() => {
-                    setMessageInput(prev => prev + '@');
-                  }}
-                >
-                  <AtSign className="w-5 h-5" />
-                </Button>
-                {/* Message Input */}
-                <MentionInput
-                  value={messageInput}
-                  onChange={setMessageInput}
-                  onSubmit={(value, mentions) => {
-                    handleSendMessage('submit');
-                  }}
-                  placeholder="Issue directive... Type @ to assign"
-                  theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
-                  variant="apple"
-                />
-
-                {/* Send Button */}
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm flex-shrink-0"
-                  disabled={(!messageInput.trim() && attachments.length === 0) || isLoading}
-                  onClick={() => console.log('SEND_CLICK')}
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#FFFFFF' }} />
-                  ) : (
-                    <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
-                  )}
-                </Button>
-              </form>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* COMPOSER DOCK - Fixed to viewport - Rounded pill design */}
+      {!isFocusMode && (
+        <div 
+          className={isCinematic ? "fixed left-1/2 -translate-x-1/2 flex justify-center" : "fixed flex justify-center"}
+          style={{ 
+            zIndex: 9999,
+                bottom: isCinematic ? 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 116px)' : '120px',
+            ...(isCinematic ? {
+              width: 'min(720px, calc(100vw - 32px))',
+            } : {
+              left: `${centerPanelPosition.left + 132}px`,
+              width: `${centerPanelPosition.width - 264}px`,
+              transition: 'left 0.1s ease-out, width 0.1s ease-out',
+            }),
+            padding: '0 16px',
+            boxSizing: 'border-box'
+          }}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              console.log('SEND_SUBMIT');
+              handleSendMessage('submit');
+            }}
+            className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-10 border focus-within:kai-command-bar-focus`}
+            style={{
+              background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              ...(isCinematic ? {} : { width: `${centerPanelPosition.width - 32}px` }),
+              minHeight: '56px',
+              borderRadius: '999px',
+              padding: '12px 16px',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              borderColor: isDark || isCinematic ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.1)',
+              borderWidth: '1px',
+              boxSizing: 'border-box',
+              position: 'relative'
+            }}
+          >
+            {/* Attachment Button */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-full flex-shrink-0 ${
+                isCinematic
+                  ? 'text-white hover:text-white hover:bg-white/20'
+                  : isDark
+                  ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+              }`}
+              title="Attach file"
+            >
+              <Paperclip className="w-5 h-5" />
+            </Button>
+
+            {/* @ Mention Button */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-full flex-shrink-0 ${
+                isCinematic
+                  ? 'text-white hover:text-white hover:bg-white/20'
+                  : isDark
+                  ? 'text-[rgba(255,255,255,0.45)] hover:text-white hover:bg-[rgba(255,255,255,0.08)]'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+              }`}
+              title="Mention someone"
+              onClick={() => {
+                setMessageInput(prev => prev + '@');
+              }}
+            >
+              <AtSign className="w-5 h-5" />
+            </Button>
+            {/* Message Input */}
+            <MentionInput
+              value={messageInput}
+              onChange={setMessageInput}
+              onSubmit={(value, mentions) => {
+                handleSendMessage('submit');
+              }}
+              placeholder="Issue directive... Type @ to assign"
+              theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
+              variant="apple"
+            />
+
+            {/* Send Button */}
+            <Button
+              type="submit"
+              size="icon"
+              className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm flex-shrink-0"
+              disabled={(!messageInput.trim() && attachments.length === 0) || isLoading}
+              onClick={() => console.log('SEND_CLICK')}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#FFFFFF' }} />
+              ) : (
+                <Send className="w-4 h-4" style={{ color: '#FFFFFF' }} />
+              )}
+            </Button>
+          </form>
+        </div>
+      )}
 
       {/* INFO PANEL - Third Column */}
       <InfoPanel 
