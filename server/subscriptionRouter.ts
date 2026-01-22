@@ -250,7 +250,7 @@ export const subscriptionRouter = router({
       
       const result = await createTrialCheckout({
         organizationId: input.organizationId,
-        successUrl: baseUrl + '/billing/success?session_id={CHECKOUT_SESSION_ID}',
+        successUrl: baseUrl + '/billing/success?session_id={CHECKOUT_SESSION_ID}&trial=true',
         cancelUrl: baseUrl + '/pricing',
         customerEmail: input.customerEmail
       });

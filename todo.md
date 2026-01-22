@@ -4392,3 +4392,10 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test with Stripe test card 4242 4242 4242 4242
 - [ ] Verify webhook allocates 100 trial credits
 - [ ] Test on mobile and tablet screens
+
+## Post-Trial Checkout Flow
+
+- [x] Create success page/handler for post-checkout redirect
+- [x] Implement welcome message/toast notification
+- [x] Update subscription router to pass trial parameter in success URL
+- [x] Test end-to-end checkout flow with redirect and welcome message
