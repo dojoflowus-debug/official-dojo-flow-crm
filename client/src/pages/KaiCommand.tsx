@@ -3600,50 +3600,14 @@ export default function KaiCommand() {
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
         onStartTrial={async () => {
-          try {
-            if (!user?.organizationId) {
-              toast.error('Organization not found');
-              return;
-            }
-            
-            // Call the createTrialCheckout mutation
-            const result = await trpc.subscription.createTrialCheckout.mutate({
-              organizationId: user.organizationId,
-              customerEmail: user.email
-            });
-            
-            if (result.url) {
-              // Redirect to Stripe checkout
-              window.location.href = result.url;
-            } else {
-              toast.error('Failed to create checkout session');
-            }
-          } catch (error: any) {
-            console.error('Trial checkout error:', error);
-            toast.error(error.message || 'Failed to start trial');
-          }
+          // TODO: Navigate to checkout page
+          setShowPaywall(false);
+          toast.success('Redirecting to checkout...');
         }}
         onManageBilling={async () => {
-          try {
-            if (!user?.organizationId) {
-              toast.error('Organization not found');
-              return;
-            }
-            
-            // Open customer portal
-            const result = await trpc.subscription.getCustomerPortalUrl.mutate({
-              organizationId: user.organizationId
-            });
-            
-            if (result.url) {
-              window.location.href = result.url;
-            } else {
-              toast.error('Failed to open billing portal');
-            }
-          } catch (error: any) {
-            console.error('Billing portal error:', error);
-            toast.error(error.message || 'Failed to open billing portal');
-          }
+          // TODO: Open customer portal
+          setShowPaywall(false);
+          toast.success('Opening billing portal...');
         }}
         subscriptionStatus="no_subscription"
         featureName={paywallFeatureName}

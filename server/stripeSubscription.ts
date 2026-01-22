@@ -14,73 +14,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 });
 
 /**
- * Create Stripe checkout session for 7-day trial
- */
-export async function createTrialCheckout(params: {
-  organizationId: number;
-  successUrl: string;
-  cancelUrl: string;
-  customerEmail?: string;
-}) {
-  const { organizationId, successUrl, cancelUrl, customerEmail } = params;
-
-  // Check if organization already has a Stripe customer ID
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  
-  const existingSub = await db.select().from(organizationSubscriptions)
-    .where(eq(organizationSubscriptions.organizationId, organizationId))
-    .limit(1);
-  
-  const existingSubRecord = existingSub[0];
-
-  const sessionParams: Stripe.Checkout.SessionCreateParams = {
-    mode: 'subscription',
-    payment_method_types: ['card'],
-    line_items: [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: 'DojoFlow 7-Day Trial',
-            description: 'Start your 7-day free trial with 100 AI credits',
-          },
-          recurring: {
-            interval: 'month',
-            trial_period_days: 7,
-          },
-          unit_amount: 2999, // $29.99/month after trial
-        },
-        quantity: 1,
-      },
-    ],
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    metadata: {
-      organizationId: organizationId.toString(),
-      trialType: 'trial_7day',
-    },
-  };
-
-  // Add customer email if provided
-  if (customerEmail) {
-    sessionParams.customer_email = customerEmail;
-  }
-
-  // Use existing customer if available
-  if (existingSubRecord?.stripeCustomerId) {
-    sessionParams.customer = existingSubRecord.stripeCustomerId;
-  }
-
-  const session = await stripe.checkout.sessions.create(sessionParams);
-
-  return {
-    sessionId: session.id,
-    url: session.url,
-  };
-}
-
-/**
  * Create Stripe checkout session for subscription
  */
 export async function createSubscriptionCheckout(params: {
@@ -162,15 +95,14 @@ export async function createSubscriptionCheckout(params: {
  * Handle successful subscription checkout
  */
 export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
-  const metadata = session.metadata as { organizationId?: string; planId?: string; trialType?: string };
-  const { organizationId, planId, trialType } = metadata;
+  const { organizationId, planId } = session.metadata as { organizationId: string; planId: string };
 
-  if (!organizationId) {
-    throw new Error('Missing organizationId in checkout session metadata');
+  if (!organizationId || !planId) {
+    throw new Error('Missing metadata in checkout session');
   }
 
   const orgId = parseInt(organizationId);
-  const pId = planId ? parseInt(planId) : null;
+  const pId = parseInt(planId);
   const subscriptionId = session.subscription as string;
   const customerId = session.customer as string;
 
@@ -178,26 +110,14 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
-  let creditsToAllocate = 0;
-  let planId_value = pId;
+  const planResults = await db.select().from(subscriptionPlans)
+    .where(eq(subscriptionPlans.id, pId))
+    .limit(1);
   
-  if (trialType === 'trial_7day') {
-    // For trial, allocate 100 trial credits
-    creditsToAllocate = 100;
-    // Use a default plan ID for trial
-    planId_value = 1;
-  } else if (pId) {
-    const planResults = await db.select().from(subscriptionPlans)
-      .where(eq(subscriptionPlans.id, pId))
-      .limit(1);
-    
-    const plan = planResults[0];
-    if (!plan) {
-      throw new Error('Plan not found');
-    }
-    creditsToAllocate = plan.monthlyCredits;
-  } else {
-    throw new Error('Either planId or trialType must be provided');
+  const plan = planResults[0];
+
+  if (!plan) {
+    throw new Error('Plan not found');
   }
 
   // Check if subscription already exists
@@ -211,32 +131,32 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     // Update existing subscription
     await db.update(organizationSubscriptions)
       .set({
-        planId: planId_value,
-        status: 'trialing',
+        planId: pId,
+        status: 'active',
         stripeSubscriptionId: subscriptionId,
         stripeCustomerId: customerId,
-        currentPeriodStart: new Date().toISOString(),
-        currentPeriodEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
+        currentPeriodStart:new Date().toISOString(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        updatedAt:new Date().toISOString(),
       })
       .where(eq(organizationSubscriptions.organizationId, orgId));
   } else {
     // Create new subscription
     await db.insert(organizationSubscriptions).values({
       organizationId: orgId,
-      planId: planId_value,
-      status: 'trialing',
+      planId: pId,
+      status: 'active',
       stripeSubscriptionId: subscriptionId,
       stripeCustomerId: customerId,
-      currentPeriodStart: new Date().toISOString(),
-      currentPeriodEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      currentPeriodStart:new Date().toISOString(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
     });
   }
 
-  // Allocate credits
-  await allocateMonthlyCredits(orgId, creditsToAllocate);
+  // Allocate monthly credits
+  await allocateMonthlyCredits(orgId, plan.monthlyCredits);
 
   return { success: true };
 }
@@ -545,41 +465,6 @@ export async function handleCreditTopUpComplete(session: Stripe.Checkout.Session
   });
 
   return { success: true, creditsAdded: creditAmount, newBalance };
-}
-
-
-/**
- * Get Stripe customer portal URL
- */
-export async function getCustomerPortalUrl(params: {
-  organizationId: number;
-  returnUrl: string;
-}) {
-  const { organizationId, returnUrl } = params;
-
-  const db = await getDb();
-  if (!db) throw new Error('Database not available');
-  
-  // Get organization subscription
-  const subResults = await db.select().from(organizationSubscriptions)
-    .where(eq(organizationSubscriptions.organizationId, organizationId))
-    .limit(1);
-  
-  const subscription = subResults[0];
-
-  if (!subscription || !subscription.stripeCustomerId) {
-    throw new Error('No active subscription found');
-  }
-
-  // Create customer portal session
-  const session = await stripe.billingPortal.sessions.create({
-    customer: subscription.stripeCustomerId,
-    return_url: returnUrl,
-  });
-
-  return {
-    url: session.url,
-  };
 }
 
 export { stripe };
