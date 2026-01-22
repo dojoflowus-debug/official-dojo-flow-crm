@@ -278,7 +278,7 @@ function Router() {
       <Route path="/marketing" element={<AppShell><Marketing /></AppShell>} />
       <Route path="/marketing-test" element={<MarketingTest />} />
       <Route path="/subscription" element={<SubscriptionDashboard />} />
-      <Route path="/billing/credits" element={<CreditTransactions />} />
+      <Route path="/billing/credits" element={<AppShell><ProtectedRoute><CreditTransactions /></ProtectedRoute></AppShell>} />
       <Route path="/themes" element={<Themes />} />
       <Route path="/preferences" element={<Themes />} />
       <Route path="/themes-test" element={<ThemesTest />} />
