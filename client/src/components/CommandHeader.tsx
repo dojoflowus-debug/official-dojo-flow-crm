@@ -51,11 +51,8 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
             : "bg-white border-gray-200"
       )}
       style={{
-        position: isCinematic ? 'fixed' : 'sticky',
-        top: isCinematic ? 0 : 0,
-        left: isCinematic ? '50%' : 'auto',
-        transform: isCinematic ? 'translateX(-50%)' : 'none',
-        width: isCinematic ? '720px' : 'auto',
+        position: 'sticky',
+        top: 0,
         zIndex: 10000,
         pointerEvents: 'auto',
         display: 'grid',
