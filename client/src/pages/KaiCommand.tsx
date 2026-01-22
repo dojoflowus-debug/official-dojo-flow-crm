@@ -172,7 +172,7 @@ export default function KaiCommand() {
   const { user } = useAuth();
   
   // Get subscription status
-  const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining } = useSubscriptionStatus(user?.organizationId);
+  const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining } = useSubscriptionStatus(user?.activeOrgId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -959,7 +959,7 @@ export default function KaiCommand() {
   const handleNewChat = async () => {
     console.log('[NewChat] clicked');
     console.log('[NewChat] userId:', user?.id);
-    console.log('[NewChat] organizationId:', user?.organizationId);
+    console.log('[NewChat] activeOrgId:', user?.activeOrgId);
     console.log('[NewChat] mutation pending:', createConversationMutation.isPending);
     try {
       console.log('[NewChat] Creating new conversation...');
@@ -3612,13 +3612,13 @@ export default function KaiCommand() {
         onClose={() => setShowPaywall(false)}
         onStartTrial={async () => {
           try {
-            if (!user || !user.organizationId) {
+            if (!user || !user.activeOrgId) {
               toast.error('Organization not found');
               return;
             }
             
             const result = await createTrialCheckoutMutation.mutateAsync({
-              organizationId: user.organizationId,
+              organizationId: user.activeOrgId,
               customerEmail: user.email || ''
             });
             

@@ -45,7 +45,9 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as bcrypt from "bcryptjs";
-import { getActiveStaffPins, updateStaffPinLastUsed, createStaffPin, getAllStaffPins, updateStaffPin, toggleStaffPinActive, deleteStaffPin } from "./db";
+import { getActiveStaffPins, updateStaffPinLastUsed, createStaffPin, getAllStaffPins, updateStaffPin, toggleStaffPinActive, deleteStaffPin, getDb } from "./db";
+import { organizationUsers } from "../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 // Helper functions for CRM queries
 async function executeCRMFunction(name: string, args: any) {
@@ -561,8 +563,47 @@ export const appRouter = router({
         });
       }
       
-      // Return the full user object with all fields including photoUrl
-      return fullUser;
+      // Get user's primary organization
+      const db = await getDb();
+      let activeOrgId: number | null = null;
+      
+      if (db) {
+        const [primaryOrg] = await db
+          .select({
+            organizationId: organizationUsers.organizationId,
+          })
+          .from(organizationUsers)
+          .where(
+            and(
+              eq(organizationUsers.userId, fullUser.id),
+              eq(organizationUsers.isPrimary, 1)
+            )
+          )
+          .limit(1);
+        
+        if (primaryOrg) {
+          activeOrgId = primaryOrg.organizationId;
+        } else {
+          // If no primary org, get the first organization
+          const [firstOrg] = await db
+            .select({
+              organizationId: organizationUsers.organizationId,
+            })
+            .from(organizationUsers)
+            .where(eq(organizationUsers.userId, fullUser.id))
+            .limit(1);
+          
+          if (firstOrg) {
+            activeOrgId = firstOrg.organizationId;
+          }
+        }
+      }
+      
+      // Return the full user object with activeOrgId
+      return {
+        ...fullUser,
+        activeOrgId,
+      };
     }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);

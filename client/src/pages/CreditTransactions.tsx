@@ -146,9 +146,9 @@ const CreditTransactions = () => {
 
   // Fetch subscription data
   const { data: subscription, isLoading: subLoading } = trpc.subscription.getCurrentSubscription.useQuery(
-    { organizationId: 1 }, // TODO: Get from organization context
+    { organizationId: user?.activeOrgId || 1 }, // Get from user context
     { 
-      enabled: !!user,
+      enabled: !!user && !!user.activeOrgId,
       staleTime: 60000, // Cache for 1 minute
     }
   );
@@ -166,12 +166,12 @@ const CreditTransactions = () => {
 
   // Fetch transactions with filters - reduced initial limit for faster load
   const { data: transactions, isLoading: txLoading } = trpc.subscription.getCreditTransactions.useQuery({
-    organizationId: 1, // TODO: Get from organization context
+    organizationId: user?.activeOrgId || 1, // Get from user context
     taskType,
     startDate,
     limit: 100, // Reduced from 500 for faster initial load
   }, {
-    enabled: !!user,
+    enabled: !!user && !!user.activeOrgId,
     staleTime: 30000, // Cache for 30 seconds to prevent unnecessary refetches
   });
 
@@ -994,7 +994,7 @@ const CreditTransactions = () => {
                 disabled={createTopUpCheckout.isPending}
                 onClick={() => {
                   createTopUpCheckout.mutate({
-                    organizationId: 1, // TODO: Get from context
+                    organizationId: user?.activeOrgId || 1, // Get from context
                     credits: selectedCredits,
                   });
                 }}

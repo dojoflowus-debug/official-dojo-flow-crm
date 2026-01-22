@@ -15,7 +15,7 @@ import { storagePut } from "./storage";
 export const authRouter = router({
   /**
    * Get current authenticated user
-   * Returns user profile with role information
+   * Returns user profile with role information and active organization
    */
   getCurrentUser: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.user) return null;
@@ -23,6 +23,42 @@ export const authRouter = router({
     
     if (!user) {
       throw new Error("User not found");
+    }
+
+    // Get user's primary organization
+    const db = await getDb();
+    let activeOrgId: number | null = null;
+    
+    if (db) {
+      const [primaryOrg] = await db
+        .select({
+          organizationId: organizationUsers.organizationId,
+        })
+        .from(organizationUsers)
+        .where(
+          and(
+            eq(organizationUsers.userId, user.id),
+            eq(organizationUsers.isPrimary, 1)
+          )
+        )
+        .limit(1);
+      
+      if (primaryOrg) {
+        activeOrgId = primaryOrg.organizationId;
+      } else {
+        // If no primary org, get the first organization
+        const [firstOrg] = await db
+          .select({
+            organizationId: organizationUsers.organizationId,
+          })
+          .from(organizationUsers)
+          .where(eq(organizationUsers.userId, user.id))
+          .limit(1);
+        
+        if (firstOrg) {
+          activeOrgId = firstOrg.organizationId;
+        }
+      }
     }
 
     return {
@@ -35,6 +71,7 @@ export const authRouter = router({
       photoUrlSmall: user.photoUrlSmall,
       createdAt: user.createdAt,
       lastSignedIn: user.lastSignedIn,
+      activeOrgId,
     };
   }),
 
