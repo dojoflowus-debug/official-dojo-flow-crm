@@ -52,7 +52,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
       )}
       style={{
         position: 'sticky',
-        top: 0,
+        top: isCinematic ? '-192px' : 0,
         zIndex: 10000,
         pointerEvents: 'auto',
         display: 'grid',
