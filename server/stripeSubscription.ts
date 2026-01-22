@@ -468,3 +468,70 @@ export async function handleCreditTopUpComplete(session: Stripe.Checkout.Session
 }
 
 export { stripe };
+
+/**
+ * Create Stripe checkout session for 7-day trial
+ */
+export async function createTrialCheckout(params: {
+  organizationId: number;
+  successUrl: string;
+  cancelUrl: string;
+  customerEmail?: string;
+}) {
+  const { organizationId, successUrl, cancelUrl, customerEmail } = params;
+
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  // Check if organization already has a Stripe customer ID
+  const existingSub = await db.select().from(organizationSubscriptions)
+    .where(eq(organizationSubscriptions.organizationId, organizationId))
+    .limit(1);
+  
+  const existingSubRecord = existingSub[0];
+
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    mode: 'subscription',
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'DojoFlow 7-Day Trial',
+            description: 'Start your 7-day free trial with 100 AI credits',
+          },
+          recurring: {
+            interval: 'month',
+            trial_period_days: 7,
+          },
+          unit_amount: 2999, // $29.99/month after trial
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: {
+      organizationId: organizationId.toString(),
+      trialType: 'trial_7day',
+    },
+  };
+
+  // Add customer email if provided
+  if (customerEmail) {
+    sessionParams.customer_email = customerEmail;
+  }
+
+  // Use existing customer if available
+  if (existingSubRecord?.stripeCustomerId) {
+    sessionParams.customer = existingSubRecord.stripeCustomerId;
+  }
+
+  const session = await stripe.checkout.sessions.create(sessionParams);
+
+  return {
+    sessionId: session.id,
+    url: session.url,
+  };
+}

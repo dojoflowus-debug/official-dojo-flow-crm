@@ -3600,9 +3600,26 @@ export default function KaiCommand() {
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
         onStartTrial={async () => {
-          // TODO: Navigate to checkout page
-          setShowPaywall(false);
-          toast.success('Redirecting to checkout...');
+          try {
+            if (!user?.organizationId) {
+              toast.error('Organization not found');
+              return;
+            }
+            
+            const result = await trpc.subscription.createTrialCheckout.mutate({
+              organizationId: user.organizationId,
+              customerEmail: user.email
+            });
+            
+            if (result.url) {
+              window.location.href = result.url;
+            } else {
+              toast.error('Failed to create checkout session');
+            }
+          } catch (error: any) {
+            console.error('Trial checkout error:', error);
+            toast.error(error.message || 'Failed to start trial');
+          }
         }}
         onManageBilling={async () => {
           // TODO: Open customer portal

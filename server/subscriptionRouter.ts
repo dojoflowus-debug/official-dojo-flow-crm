@@ -17,7 +17,7 @@ import {
   resetMonthlyCredits
 } from "./subscriptionDb";
 import { deductCredits } from "./creditConsumption";
-import { createSubscriptionCheckout } from "./stripeSubscription";
+import { createSubscriptionCheckout, createTrialCheckout } from "./stripeSubscription";
 
 export const subscriptionRouter = router({
   /**
@@ -235,6 +235,27 @@ export const subscriptionRouter = router({
       });
 
       return summary;
+    }),
+
+  /**
+   * Create Stripe checkout session for 7-day trial
+   */
+  createTrialCheckout: protectedProcedure
+    .input(z.object({
+      organizationId: z.number(),
+      customerEmail: z.string().email().optional()
+    }))
+    .mutation(async ({ input }) => {
+      const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:3000';
+      
+      const result = await createTrialCheckout({
+        organizationId: input.organizationId,
+        successUrl: baseUrl + '/billing/success?session_id={CHECKOUT_SESSION_ID}',
+        cancelUrl: baseUrl + '/pricing',
+        customerEmail: input.customerEmail
+      });
+
+      return result;
     }),
 
   /**

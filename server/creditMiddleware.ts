@@ -1,6 +1,6 @@
-import { getDb } from './db';
-import { aiCreditBalance, aiCreditTransactions, platformSubscriptions, organizations } from '@/drizzle/schema';
+import { aiCreditBalance, aiCreditTransactions, platformSubscriptions, organizations } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { getDb } from './db';
 
 /**
  * Credit costs for different AI features
