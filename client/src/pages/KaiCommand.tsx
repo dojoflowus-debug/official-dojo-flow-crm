@@ -3331,11 +3331,17 @@ export default function KaiCommand() {
           {/* COMPOSER DOCK - Fixed to viewport but positioned with center panel - Rounded pill design */}
           {!isFocusMode && (
             <div 
-              className="fixed left-1/2 -translate-x-1/2 flex justify-center" 
+              className={isCinematic ? "fixed left-1/2 -translate-x-1/2 flex justify-center" : "fixed flex justify-center"}
               style={{ 
                 zIndex: 9999,
-                bottom: isCinematic ? 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 16px)' : 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 16px)',
-                width: 'min(720px, calc(100vw - 32px))',
+                bottom: isCinematic ? 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 16px)' : '120px',
+                ...(isCinematic ? {
+                  width: 'min(720px, calc(100vw - 32px))',
+                } : {
+                  left: `${centerPanelPosition.left + 132}px`,
+                  width: `${centerPanelPosition.width - 264}px`,
+                  transition: 'left 0.1s ease-out, width 0.1s ease-out',
+                }),
                 padding: '0 16px',
                 boxSizing: 'border-box'
               }}
@@ -3346,11 +3352,12 @@ export default function KaiCommand() {
                   console.log('SEND_SUBMIT');
                   handleSendMessage('submit');
                 }}
-                className="kaiBar w-full flex items-center gap-2 transition-all duration-300 relative z-10 border focus-within:kai-command-bar-focus"
+                className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-10 border focus-within:kai-command-bar-focus`}
                 style={{
                   background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
+                  ...(isCinematic ? {} : { width: `${centerPanelPosition.width - 32}px` }),
                   minHeight: '56px',
                   borderRadius: '999px',
                   padding: '12px 16px',
