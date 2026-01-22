@@ -103,7 +103,21 @@ const CreditTransactions = () => {
     onError: (error) => {
       toast.error(error.message || 'Failed to create checkout session');
     },
+  })
+
+  // Trial checkout mutation
+  const createTrialCheckoutMutation = trpc.subscription.createTrialCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        window.open(data.url, '_blank');
+        toast.success('Redirecting to Stripe checkout...');
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to start trial checkout');
+    },
   });
+;
 
   // Credit pricing tiers
   const { data: pricingData } = trpc.subscription.getCreditTopUpPricing.useQuery();
@@ -458,6 +472,68 @@ const CreditTransactions = () => {
                   </div>
                 </CardContent>
               </Card>
+
+
+              {/* Trial CTA Section - Show if no active subscription */}
+              {(!subscription || subscription.status !== 'active') && (
+                <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-red-600 to-red-700 p-8 border border-red-500/30">
+                  {/* Background pattern */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:40px_40px]" />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="relative z-10 flex items-center justify-between">
+                    <div className="flex-1">
+                      <h2 className="text-3xl font-bold text-white mb-2">Start Your Free Trial</h2>
+                      <p className="text-red-100 text-lg mb-4">
+                        Get 7 days of unlimited access to all premium features. No credit card required to start.
+                      </p>
+                      <ul className="space-y-2 text-red-50 text-sm mb-6">
+                        <li className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-red-200 flex-shrink-0" />
+                          <span>Unlimited AI chat messages</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-red-200 flex-shrink-0" />
+                          <span>SMS and email automation</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-red-200 flex-shrink-0" />
+                          <span>AI phone calls</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-red-200 flex-shrink-0" />
+                          <span>Full feature access</span>
+                        </li>
+                      </ul>
+                      <p className="text-xs text-red-100">After your trial, you'll be charged monthly. Cancel anytime.</p>
+                    </div>
+                    
+                    {/* CTA Button */}
+                    <div className="flex-shrink-0 ml-8">
+                      <Button
+                        onClick={() => {
+                          if (!user?.id) {
+                            toast.error('Please log in to start a trial');
+                            return;
+                          }
+                          createTrialCheckoutMutation.mutateAsync({
+                            organizationId: user.id,
+                            email: user.email,
+                          }).catch(() => {
+                            // Error already handled by mutation
+                          });
+                        }}
+                        disabled={createTrialCheckoutMutation.isPending}
+                        className="bg-white hover:bg-red-50 text-red-600 font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
+                      >
+                        {createTrialCheckoutMutation.isPending ? 'Starting Trial...' : 'Start 7-Day Free Trial →'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Usage Breakdown Section */}
               <div className="space-y-4">

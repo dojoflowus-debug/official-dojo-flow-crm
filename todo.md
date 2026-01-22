@@ -4380,3 +4380,15 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Verify Escape key closes modal
 - [ ] Verify X button closes modal
 - [ ] Test "Manage Billing" button functionality
+
+## Trial CTA on /billing/credits Page (Jan 22, 2026)
+- [x] Add prominent "Start Your Free Trial" banner to /billing/credits
+- [x] Create red gradient CTA section with feature list
+- [x] Implement white button with red text ("Start 7-Day Free Trial →")
+- [x] Wire up button to createTrialCheckout mutation
+- [x] Show CTA only when user has no active subscription
+- [x] Verify button appears on /billing/credits page
+- [ ] Test trial button redirects to Stripe checkout
+- [ ] Test with Stripe test card 4242 4242 4242 4242
+- [ ] Verify webhook allocates 100 trial credits
+- [ ] Test on mobile and tablet screens
