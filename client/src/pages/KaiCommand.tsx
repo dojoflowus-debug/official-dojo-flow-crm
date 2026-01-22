@@ -168,6 +168,9 @@ export default function KaiCommand() {
   // Use global Environment context
   const { currentEnvironment, isTransitioning, isPresentationMode, presentationProgress, togglePresentationMode } = useEnvironment();
   
+  // Get auth first (before using user in other hooks)
+  const { user } = useAuth();
+  
   // Get subscription status
   const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining } = useSubscriptionStatus(user?.organizationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -257,7 +260,6 @@ export default function KaiCommand() {
   
   // Theme detection (needed early for parallax)
   const { theme } = useTheme();
-  const { user } = useAuth();
   const isDark = theme === 'dark' || theme === 'cinematic';
   const isCinematic = theme === 'cinematic';
 
