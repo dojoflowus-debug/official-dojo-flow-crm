@@ -3601,24 +3601,24 @@ export default function KaiCommand() {
         onClose={() => setShowPaywall(false)}
         onStartTrial={async () => {
           try {
-            if (!user?.organizationId) {
+            if (!user || !user.organizationId) {
               toast.error('Organization not found');
               return;
             }
             
             const result = await trpc.subscription.createTrialCheckout.mutate({
               organizationId: user.organizationId,
-              customerEmail: user.email
+              customerEmail: user.email || ''
             });
             
-            if (result.url) {
+            if (result?.url) {
               window.location.href = result.url;
             } else {
               toast.error('Failed to create checkout session');
             }
           } catch (error: any) {
             console.error('Trial checkout error:', error);
-            toast.error(error.message || 'Failed to start trial');
+            toast.error(error?.message || 'Failed to start trial');
           }
         }}
         onManageBilling={async () => {
