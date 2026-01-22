@@ -4335,3 +4335,14 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Create client-side credit check before feature access (PaywallModal)
 - [x] Add error handling and user feedback for insufficient credits
 - [ ] Test credit enforcement across all features
+
+
+## Extend Credit Enforcement to SMS, Calls, Emails (Jan 21, 2026)
+- [ ] Identify SMS endpoints in server code
+- [ ] Add credit validation to SMS endpoints
+- [ ] Identify call endpoints in server code
+- [ ] Add credit validation to call endpoints
+- [ ] Identify email endpoints in server code
+- [ ] Add credit validation to email endpoints
+- [ ] Test credit enforcement across all features
+- [ ] Verify paywall modal appears for each feature type
