@@ -4346,3 +4346,18 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Add credit validation to email endpoints
 - [ ] Test credit enforcement across all features
 - [ ] Verify paywall modal appears for each feature type
+
+
+## Stripe Checkout Integration (Jan 21, 2026)
+- [x] Review existing Stripe setup and checkout implementation
+- [x] Create Stripe product and price with 7-day trial
+- [x] Implement checkout session creation endpoint (createTrialCheckout)
+- [x] Implement webhook handler for trial activation and credit granting (handleCheckoutComplete)
+- [x] Wire up 'Start Trial' button to checkout endpoint
+- [x] Test trial activation and credit granting flow
+- [x] Verify 100 trial credits are granted on trial start
+- [x] Create getCustomerPortalUrl endpoint for billing management
+- [x] Wire up 'Manage Billing' button to customer portal
+- [x] Write comprehensive integration tests (25 tests, all passing)
+- [ ] Extend credit enforcement to SMS, calls, and email features
+- [ ] Test end-to-end trial flow with real Stripe account

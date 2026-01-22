@@ -238,6 +238,28 @@ export const subscriptionRouter = router({
     }),
 
   /**
+   * Create Stripe checkout session for 7-day trial
+   */
+  createTrialCheckout: protectedProcedure
+    .input(z.object({
+      organizationId: z.number(),
+      customerEmail: z.string().email().optional()
+    }))
+    .mutation(async ({ input }) => {
+      const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:3000';
+      const { createTrialCheckout } = await import('./stripeSubscription');
+      
+      const result = await createTrialCheckout({
+        organizationId: input.organizationId,
+        successUrl: `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${baseUrl}/pricing`,
+        customerEmail: input.customerEmail
+      });
+
+      return result;
+    }),
+
+  /**
    * Create Stripe checkout session for subscription
    */
   createCheckoutSession: protectedProcedure
@@ -285,6 +307,25 @@ export const subscriptionRouter = router({
         cancelUrl: `${baseUrl}/billing/credits?topup=cancelled`,
         customerEmail: input.customerEmail,
         userId: ctx.user?.id
+      });
+
+      return result;
+    }),
+
+  /**
+   * Get Stripe customer portal URL
+   */
+  getCustomerPortalUrl: protectedProcedure
+    .input(z.object({
+      organizationId: z.number()
+    }))
+    .mutation(async ({ input }) => {
+      const { getCustomerPortalUrl } = await import('./stripeSubscription');
+      const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:3000';
+      
+      const result = await getCustomerPortalUrl({
+        organizationId: input.organizationId,
+        returnUrl: baseUrl + '/settings/billing'
       });
 
       return result;
