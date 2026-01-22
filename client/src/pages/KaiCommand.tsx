@@ -598,6 +598,15 @@ export default function KaiCommand() {
       toast.error('Failed to delete messages');
     }
   });
+  
+  // Trial checkout mutation
+  const createTrialCheckoutMutation = trpc.subscription.createTrialCheckout.useMutation({
+    onError: (error: any) => {
+      console.error('[createTrialCheckout] Mutation error:', error);
+      toast.error(error?.message || 'Failed to start trial');
+    }
+  });
+  
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
@@ -3608,7 +3617,7 @@ export default function KaiCommand() {
               return;
             }
             
-            const result = await trpc.subscription.createTrialCheckout.mutate({
+            const result = await createTrialCheckoutMutation.mutateAsync({
               organizationId: user.organizationId,
               customerEmail: user.email || ''
             });
