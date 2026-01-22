@@ -1,0 +1,19 @@
+{
+  "query": "SHOW TABLES LIKE '%credit%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SHOW TABLES LIKE '%credit%';",
+  "rows": [
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx (%credit%)": "ai_credit_balance"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx (%credit%)": "ai_credit_transactions"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx (%credit%)": "credit_top_ups"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_2Awpr243D2Jitpj6Cn66Rx (%credit%)\nai_credit_balance\nai_credit_transactions\ncredit_top_ups\n",
+  "stderr": "",
+  "execution_time_ms": 99
+}

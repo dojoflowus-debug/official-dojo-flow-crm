@@ -513,17 +513,38 @@ const CreditTransactions = () => {
                     {/* CTA Button */}
                     <div className="flex-shrink-0 ml-8">
                       <Button
-                        onClick={() => {
+                        onClick={async () => {
                           if (!user?.id) {
                             toast.error('Please log in to start a trial');
                             return;
                           }
-                          createTrialCheckoutMutation.mutateAsync({
-                            organizationId: user.id,
-                            email: user.email,
-                          }).catch(() => {
-                            // Error already handled by mutation
-                          });
+                          // Get organizationId from user context
+                          const organizationId = user?.activeOrgId;
+                          if (!organizationId) {
+                            toast.error('Organization not found. Please contact support.');
+                            return;
+                          }
+                          try {
+                            console.log('[Trial Checkout] Starting trial checkout for org:', organizationId);
+                            const result = await createTrialCheckoutMutation.mutateAsync({
+                              organizationId,
+                              customerEmail: user.email,
+                            });
+                            console.log('[Trial Checkout] Result:', result);
+                            if (result?.url) {
+                              console.log('[Trial Checkout] Redirecting to Stripe:', result.url);
+                              window.open(result.url, '_blank');
+                              toast.success('Redirecting to Stripe checkout...');
+                            } else {
+                              console.error('[Trial Checkout] No URL in response:', result);
+                              toast.error('Failed to create checkout session - no URL returned');
+                            }
+                          } catch (error) {
+                            console.error('[Trial Checkout] Error:', error);
+                            const errorMsg = error?.message || error?.data?.message || 'Failed to start trial checkout';
+                            console.error('[Trial Checkout] Error message:', errorMsg);
+                            toast.error(errorMsg);
+                          }
                         }}
                         disabled={createTrialCheckoutMutation.isPending}
                         className="bg-white hover:bg-red-50 text-red-600 font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  org.id as org_id,\n  org.name,\n  COALESCE(acb.credits_remaining, 0) as credits_remaining,\n  COALESCE(acb.credits_used, 0) as credits_used,\n  COALESCE(sub.status, 'none') as subscription_status,\n  COALESCE(sub.plan_id, 'none') as plan_id,\n  COALESCE(sub.trial_ends_at, 'none') as trial_ends_at,\n  COALESCE(sub.stripe_subscription_id, 'none') as stripe_subscription_id\nFROM organizations org\nLEFT JOIN ai_credit_balance acb ON org.id = acb.organization_id\nLEFT JOIN organization_subscriptions sub ON org.id = sub.organization_id\nWHERE org.id = 120001\nLIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT \n  org.id as org_id,\n  org.name,\n  COALESCE(acb.credits_remaining, 0) as credits_remaining,\n  COALESCE(acb.credits_used, 0) as credits_used,\n  COALESCE(sub.status, 'none') as subscription_status,\n  COALESCE(sub.plan_id, 'none') as plan_id,\n  COALESCE(sub.trial_ends_at, 'none') as trial_ends_at,\n  COALESCE(sub.stripe_subscription_id, 'none') as stripe_subscription_id\nFROM organizations org\nLEFT JOIN ai_credit_balance acb ON org.id = acb.organization_id\nLEFT JOIN organization_subscriptions sub ON org.id = sub.organization_id\nWHERE org.id = 120001\nLIMIT 1;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'acb.organization_id' in 'on clause'"
+  ]
+}
