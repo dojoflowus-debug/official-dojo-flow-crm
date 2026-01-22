@@ -4408,3 +4408,52 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - Fixed by ensuring useSubscriptionStatus hook always receives a number (0 as fallback)
   - Changed from: useSubscriptionStatus(user?.activeOrgId)
   - Changed to: useSubscriptionStatus(user?.activeOrgId || 0)
+
+
+## Current Issues
+
+- [x] Stripe checkout page stalls and doesn't load after trial button click
+  - INVESTIGATION COMPLETE: Page loads successfully in sandbox
+  - All form fields render properly (email, card, billing details)
+  - "Start trial" button is functional
+  - Possible causes of perceived stalling: initial load time (3-5s), network latency, browser caching
+  - Recommendation: Ensure user has stable internet connection and clears browser cache
+
+
+## Stripe Live Mode Setup
+
+- [ ] User requests to move from test mode to live mode
+  - Currently in Stripe Test Mode (test API keys)
+  - Need to claim Stripe sandbox and complete verification
+  - Need to obtain live API keys
+  - Need to update environment variables with live keys
+  - Then test with real credit card
+
+
+## UI Issues
+
+- [ ] Chat bar disappears in Cinematic mode on /kai page
+  - User reported chat input field is not visible in Cinematic theme
+  - Works fine in Light and Dark modes
+  - Need to check CSS and layout for Cinematic mode styling
+
+
+## CRITICAL - Chat Bar Missing in Cinematic Mode (Jan 22, 2026)
+
+- [ ] Audit rendering logic for cinematic-based conditionals
+- [ ] Remove any `{!cinematic && <ChatBar />}` or similar conditions
+- [ ] Ensure chat bar renders if `kaiActive === true` (not based on cinematic)
+- [ ] Fix layout containment - move chat bar outside cinematic wrapper
+- [ ] Apply z-index: 9999 to chat bar for layering
+- [ ] Test chat bar visibility across all viewports in cinematic mode
+- [ ] Verify chat bar stays anchored to bottom and doesn't clip
+
+
+## Bug Fix - Missing TRPC Procedure Error (Jan 22, 2026)
+
+- [x] Fixed TRPCClientError on /kai page
+  - Error: "No procedure found on path credit.getBalance"
+  - Root cause: Endpoint registered as `credits` but called as `credit` (typo in useSubscriptionStatus.ts)
+  - Fix: Changed `trpc.credit.getBalance.useQuery()` to `trpc.credits.getBalance.useQuery()`
+  - File: /home/ubuntu/dojoflow/client/src/hooks/useSubscriptionStatus.ts line 30
+  - Result: /kai page now loads successfully without TRPC errors

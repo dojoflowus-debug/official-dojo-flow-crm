@@ -3333,14 +3333,13 @@ export default function KaiCommand() {
             <div 
               className="fixed flex justify-center" 
               style={{ 
-                zIndex: 1899,
-                bottom: '120px',
+                zIndex: 9999,
+                bottom: isCinematic ? '32px' : '120px',
                 left: `${centerPanelPosition.left + 132}px`,
                 width: `${centerPanelPosition.width - 264}px`,
                 transition: 'left 0.1s ease-out, width 0.1s ease-out',
                 padding: '0 16px',
-                boxSizing: 'border-box',
-                overflow: 'hidden'
+                boxSizing: 'border-box'
               }}
             >
               <form

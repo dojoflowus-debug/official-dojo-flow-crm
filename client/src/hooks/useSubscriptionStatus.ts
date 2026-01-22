@@ -27,7 +27,7 @@ export const useSubscriptionStatus = (organizationId?: number) => {
   );
 
   // Fetch credit balance
-  const { data: creditData } = trpc.credit.getBalance.useQuery(
+  const { data: creditData } = trpc.credits.getBalance.useQuery(
     { organizationId: organizationId || 0 },
     { enabled: !!organizationId }
   );
