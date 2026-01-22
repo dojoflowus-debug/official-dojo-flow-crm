@@ -95,29 +95,41 @@ export async function createSubscriptionCheckout(params: {
  * Handle successful subscription checkout
  */
 export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
-  const { organizationId, planId } = session.metadata as { organizationId: string; planId: string };
+  const { organizationId, planId, trialType } = session.metadata as { organizationId: string; planId?: string; trialType?: string };
 
-  if (!organizationId || !planId) {
-    throw new Error('Missing metadata in checkout session');
+  if (!organizationId) {
+    throw new Error('Missing organizationId in checkout session metadata');
   }
 
   const orgId = parseInt(organizationId);
-  const pId = parseInt(planId);
   const subscriptionId = session.subscription as string;
   const customerId = session.customer as string;
 
-  // Get plan details for credit allocation
+  // Get database connection
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  
-  const planResults = await db.select().from(subscriptionPlans)
-    .where(eq(subscriptionPlans.id, pId))
-    .limit(1);
-  
-  const plan = planResults[0];
 
-  if (!plan) {
-    throw new Error('Plan not found');
+  // Determine if this is a trial checkout
+  const isTrial = trialType === 'trial_7day';
+  
+  let planIdToUse = planId ? parseInt(planId) : 1; // Default to plan 1 if not provided
+  let creditsToAllocate = 100; // Default trial credits
+
+  // If not a trial, get plan details for credit allocation
+  if (!isTrial && planId) {
+    const pId = parseInt(planId);
+    const planResults = await db.select().from(subscriptionPlans)
+      .where(eq(subscriptionPlans.id, pId))
+      .limit(1);
+    
+    const plan = planResults[0];
+
+    if (!plan) {
+      throw new Error('Plan not found');
+    }
+
+    planIdToUse = pId;
+    creditsToAllocate = plan.monthlyCredits;
   }
 
   // Check if subscription already exists
@@ -127,36 +139,45 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   
   const existing = existingResults[0];
 
+  // Calculate trial end date (7 days from now)
+  const trialEndDate = isTrial 
+    ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
   if (existing) {
     // Update existing subscription
     await db.update(organizationSubscriptions)
       .set({
-        planId: pId,
-        status: 'active',
+        planId: planIdToUse,
+        status: isTrial ? 'trialing' : 'active',
         stripeSubscriptionId: subscriptionId,
         stripeCustomerId: customerId,
-        currentPeriodStart:new Date().toISOString(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        updatedAt:new Date().toISOString(),
+        currentPeriodStart: new Date().toISOString(),
+        currentPeriodEnd: trialEndDate,
+        trialEndsAt: isTrial ? trialEndDate : null,
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(organizationSubscriptions.organizationId, orgId));
   } else {
     // Create new subscription
     await db.insert(organizationSubscriptions).values({
       organizationId: orgId,
-      planId: pId,
-      status: 'active',
+      planId: planIdToUse,
+      status: isTrial ? 'trialing' : 'active',
       stripeSubscriptionId: subscriptionId,
       stripeCustomerId: customerId,
-      currentPeriodStart:new Date().toISOString(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt:new Date().toISOString(),
-      updatedAt:new Date().toISOString(),
+      currentPeriodStart: new Date().toISOString(),
+      currentPeriodEnd: trialEndDate,
+      trialEndsAt: isTrial ? trialEndDate : null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
   }
 
-  // Allocate monthly credits
-  await allocateMonthlyCredits(orgId, plan.monthlyCredits);
+  // Allocate credits (100 for trial, plan credits for regular)
+  await allocateMonthlyCredits(orgId, creditsToAllocate);
+
+  console.log(`[Stripe Webhook] Checkout completed for org ${orgId}. Trial: ${isTrial}, Credits: ${creditsToAllocate}`);
 
   return { success: true };
 }
