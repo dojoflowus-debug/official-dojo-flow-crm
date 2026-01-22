@@ -1,0 +1,14 @@
+{
+  "query": "\n-- Get organization with ID 120001 (from debug overlay)\nSELECT id, name FROM organizations WHERE id = 120001 LIMIT 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \n-- Get organization with ID 120001 (from debug overlay)\nSELECT id, name FROM organizations WHERE id = 120001 LIMIT 1;\n",
+  "rows": [
+    {
+      "id": "120001",
+      "name": "MyDojo"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n120001\tMyDojo\n",
+  "stderr": "",
+  "execution_time_ms": 95
+}

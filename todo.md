@@ -4346,3 +4346,37 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Add credit validation to email endpoints
 - [ ] Test credit enforcement across all features
 - [ ] Verify paywall modal appears for each feature type
+
+
+## Trial Checkout Testing & UI Implementation (Jan 22, 2026)
+- [ ] Create test organization with NO subscription and 0 credits
+- [ ] Force PaywallModal to appear by attempting credit-based feature
+- [ ] Verify "Start 7 Day Free Trial" button appears in PaywallModal
+- [ ] Complete trial checkout with Stripe test card (4242 4242 4242 4242)
+- [ ] Verify webhook processes checkout.session.completed event
+- [ ] Confirm DB writes: trialing status, trialEndsAt, 100 credits allocated
+- [ ] Verify /billing/credits UI updates with new credit balance (live without refresh)
+- [ ] Audit codebase for trial button placement
+- [ ] Implement trial button on /billing/credits page (primary CTA when no plan)
+- [ ] Ensure trial button visible in PaywallModal (emergency exit)
+- [ ] Test: New org (no plan) sees "Start Free Trial"
+- [ ] Test: Active plan org sees "Upgrade / Buy Credits" instead
+- [ ] Verify single source of truth for credits (derived from DB, displayed everywhere)
+- [ ] Document trial flow and monetization strategy
+
+
+## PaywallModal Redesign - Luxury Black & White Theme (Jan 22, 2026)
+- [x] Examine current PaywallModal implementation
+- [x] Redesign with black header, white body, light gray cards
+- [x] Implement prominent red CTA button (bg-red-600 with shadow glow)
+- [x] Add secondary "Manage Billing" button (white with border)
+- [x] Add subtle close button and escape key support
+- [x] Implement backdrop blur and dim effect
+- [x] Ensure responsive design and proper spacing
+- [x] Verify PaywallModal compiles without errors
+- [ ] Test modal appearance with PaywallModal trigger
+- [ ] Verify red CTA button triggers Stripe trial checkout
+- [ ] Test modal on mobile, tablet, and desktop screens
+- [ ] Verify Escape key closes modal
+- [ ] Verify X button closes modal
+- [ ] Test "Manage Billing" button functionality

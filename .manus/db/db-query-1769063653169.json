@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Check current credit balance for org 120001 with correct table name\nSELECT id, organizationId, balance FROM ai_credit_balance WHERE organizationId = 120001 LIMIT 1;\n\n-- Check current subscription status with correct table name\nSELECT id, organizationId, status, stripeSubscriptionId, trialEndsAt FROM organization_subscriptions WHERE organizationId = 120001 LIMIT 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \n-- Check current credit balance for org 120001 with correct table name\nSELECT id, organizationId, balance FROM ai_credit_balance WHERE organizationId = 120001 LIMIT 1;\n\n-- Check current subscription status with correct table name\nSELECT id, organizationId, status, stripeSubscriptionId, trialEndsAt FROM organization_subscriptions WHERE organizationId = 120001 LIMIT 1;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 71
+}

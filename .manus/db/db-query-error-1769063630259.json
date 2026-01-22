@@ -1,0 +1,8 @@
+{
+  "query": "\n-- Check current credit balance for org 120001\nSELECT id, organizationId, balance FROM aiCreditBalances WHERE organizationId = 120001 LIMIT 1;\n\n-- Check current subscription status\nSELECT id, organizationId, status, stripeSubscriptionId, trialEndsAt FROM subscriptions WHERE organizationId = 120001 LIMIT 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \n-- Check current credit balance for org 120001\nSELECT id, organizationId, balance FROM aiCreditBalances WHERE organizationId = 120001 LIMIT 1;\n\n-- Check current subscription status\nSELECT id, organizationId, status, stripeSubscriptionId, trialEndsAt FROM subscriptions WHERE organizationId = 120001 LIMIT 1;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 3: Table '2awpr243d2jitpj6cn66rx.aiCreditBalances' doesn't exist"
+  ]
+}

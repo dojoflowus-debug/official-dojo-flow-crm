@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, CreditCard, ArrowRight } from 'lucide-react';
+import { AlertCircle, CreditCard, ArrowRight, X } from 'lucide-react';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
       case 'canceled':
         return 'Update Billing';
       default:
-        return 'Start 7-Day Free Trial';
+        return 'Start 7-Day Free Trial →';
     }
   };
 
@@ -62,68 +62,85 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
     }
   };
 
+  // Handle escape key
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - Subtle blur and dim */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 bg-black/40 backdrop-blur-md z-40 transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Modal */}
+      {/* Modal - Luxury black & white design */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-          {/* Header */}
-          <div className="relative bg-gradient-to-r from-red-500 to-orange-500 rounded-t-2xl p-6 text-white">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
+          {/* Header - Matte black with white text */}
+          <div className="relative bg-black p-8 text-white">
+            {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
-              aria-label="Close"
+              className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors duration-200 p-1"
+              aria-label="Close modal"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-6 h-6" />
             </button>
 
-            <div className="flex items-center gap-3 mb-2">
-              {subscriptionStatus === 'no_subscription' ? (
-                <CreditCard className="w-6 h-6" />
-              ) : (
-                <AlertCircle className="w-6 h-6" />
-              )}
-              <h2 className="text-xl font-bold">{getTitle()}</h2>
+            {/* Icon and Title */}
+            <div className="flex items-start gap-4 pr-8">
+              <div className="flex-shrink-0 mt-1">
+                {subscriptionStatus === 'no_subscription' ? (
+                  <CreditCard className="w-8 h-8 text-white" />
+                ) : (
+                  <AlertCircle className="w-8 h-8 text-white" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">{getTitle()}</h2>
+                <div className="h-1 w-12 bg-red-600 mt-3 rounded-full" />
+              </div>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          {/* Content - Pure white background */}
+          <div className="p-8 space-y-6 bg-white">
+            {/* Description */}
+            <p className="text-gray-700 text-base leading-relaxed font-light">
               {getDescription()}
             </p>
 
-            {/* Benefits (only show for no_subscription) */}
+            {/* Benefits - Light gray card (only for no_subscription) */}
             {subscriptionStatus === 'no_subscription' && (
-              <div className="space-y-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+              <div className="space-y-4 bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Included in your trial:
                 </p>
-                <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    Unlimited AI chat messages
+                <ul className="space-y-3 text-sm text-gray-700">
+                  <li className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                    <span>Unlimited AI chat messages</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    SMS and email automation
+                  <li className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                    <span>SMS and email automation</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    AI phone calls
+                  <li className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                    <span>AI phone calls</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    Full feature access
+                  <li className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                    <span>Full feature access</span>
                   </li>
                 </ul>
               </div>
@@ -131,34 +148,39 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
             {/* Trial Info */}
             {subscriptionStatus === 'no_subscription' && (
-              <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
+              <div className="text-xs text-gray-500 text-center font-light">
                 After your trial, you'll be charged monthly. Cancel anytime.
               </div>
             )}
           </div>
 
-          {/* Actions */}
-          <div className="px-6 pb-6 space-y-3 border-t border-slate-200 dark:border-slate-700">
+          {/* Actions - Buttons */}
+          <div className="px-8 pb-8 space-y-3 bg-white border-t border-gray-100">
+            {/* Primary CTA - Red button with prominence */}
             <button
               onClick={getPrimaryButtonAction()}
-              className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
+              className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-red-600/30 text-base tracking-wide"
+              style={{
+                boxShadow: '0 10px 25px -5px rgba(220, 38, 38, 0.2)',
+              }}
             >
               {getPrimaryButtonText()}
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
 
+            {/* Secondary Button - Manage Billing (only for no_subscription) */}
             {subscriptionStatus === 'no_subscription' && (
               <button
                 onClick={onManageBilling}
-                className="w-full text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium py-2 px-4 rounded-lg border border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors"
+                className="w-full text-gray-900 hover:text-gray-700 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-200"
               >
                 Manage Billing
               </button>
             )}
 
+            {/* Close Button - Subtle text button */}
             <button
               onClick={onClose}
-              className="w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium py-2 px-4 transition-colors"
+              className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 px-4 transition-colors duration-200 text-sm"
             >
               Close
             </button>

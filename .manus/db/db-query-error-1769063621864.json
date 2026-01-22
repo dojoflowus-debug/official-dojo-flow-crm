@@ -1,0 +1,8 @@
+{
+  "query": "\n-- Get organization ID for Vincent Holmes (user ID 2580004)\nSELECT id, name FROM organizations WHERE ownerId = 2580004 LIMIT 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \n-- Get organization ID for Vincent Holmes (user ID 2580004)\nSELECT id, name FROM organizations WHERE ownerId = 2580004 LIMIT 1;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 3: Unknown column 'ownerid' in 'where clause'"
+  ]
+}
