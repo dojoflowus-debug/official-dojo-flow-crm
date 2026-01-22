@@ -171,8 +171,10 @@ export default function KaiCommand() {
   // Get auth first (before using user in other hooks)
   const { user } = useAuth();
   
-  // Get subscription status
-  const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining } = useSubscriptionStatus(user?.activeOrgId);
+  // Get subscription status - use 0 as fallback to ensure hook is always called with a number
+  const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining } = useSubscriptionStatus(user?.activeOrgId || 0);
+  // Memoize the organizationId to prevent unnecessary re-renders
+  const memoizedOrgId = user?.activeOrgId || 0;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);

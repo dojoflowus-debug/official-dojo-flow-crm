@@ -4399,3 +4399,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Implement welcome message/toast notification
 - [x] Update subscription router to pass trial parameter in success URL
 - [x] Test end-to-end checkout flow with redirect and welcome message
+
+
+## Bug Fixes - Current
+
+- [x] Fix React error on /kai page: "Expected static flag was missing"
+  - Error occurs in KaiCommand component
+  - Fixed by ensuring useSubscriptionStatus hook always receives a number (0 as fallback)
+  - Changed from: useSubscriptionStatus(user?.activeOrgId)
+  - Changed to: useSubscriptionStatus(user?.activeOrgId || 0)
