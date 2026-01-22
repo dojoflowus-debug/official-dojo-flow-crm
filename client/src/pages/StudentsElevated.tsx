@@ -23,6 +23,24 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 // Components
 import StudentCardElevated from '@/components/StudentCardElevated'
@@ -46,6 +64,7 @@ import {
   AlertTriangle,
   CreditCard,
   Flame,
+  Trash2,
 } from 'lucide-react'
 
 interface Student {
@@ -84,6 +103,17 @@ function StudentsElevatedContent() {
   const [showAddStudentModal, setShowAddStudentModal] = useState(false)
   const [selectedStudentForNotes, setSelectedStudentForNotes] = useState<Student | null>(null)
   const [showNotesDrawer, setShowNotesDrawer] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [newStudentForm, setNewStudentForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    beltRank: 'White Belt',
+    status: 'Active',
+  })
 
   useEffect(() => {
     const filterParam = searchParams.get('filter')
@@ -105,6 +135,35 @@ function StudentsElevatedContent() {
     search: searchQuery || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter || undefined,
     program: programFilter || undefined,
+  })
+
+  // Mutations
+  const deleteStudentMutation = trpc.students.delete.useMutation({
+    onSuccess: () => {
+      setShowDeleteConfirm(false)
+      setStudentToDelete(null)
+    },
+    onError: (error: any) => {
+      console.error('Failed to delete student:', error)
+    },
+  })
+
+  const createStudentMutation = trpc.students.create.useMutation({
+    onSuccess: () => {
+      setShowAddStudentModal(false)
+      setNewStudentForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        dateOfBirth: '',
+        beltRank: 'White Belt',
+        status: 'Active',
+      })
+    },
+    onError: (error: any) => {
+      console.error('Failed to create student:', error)
+    },
   })
 
   // Fetch analytics
@@ -298,6 +357,10 @@ function StudentsElevatedContent() {
                     onAssignProgram={() => console.log('Assign Program', student.id)}
                     onPromoteBelt={() => console.log('Promote Belt', student.id)}
                     onProfileClick={() => navigate(`/students/${student.id}`)}
+                    onDelete={(id) => {
+                      setStudentToDelete(student)
+                      setShowDeleteConfirm(true)
+                    }}
                   />
                 ))}
               </div>
@@ -364,6 +427,58 @@ function StudentsElevatedContent() {
           }}
         />
       )}
+
+      {/* Add Student Modal */}
+      <Dialog open={showAddStudentModal} onOpenChange={setShowAddStudentModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New Student</DialogTitle>
+            <DialogDescription>Fill in the student information below.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">First Name</label>
+                <Input value={newStudentForm.firstName} onChange={(e) => setNewStudentForm({...newStudentForm, firstName: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Last Name</label>
+                <Input value={newStudentForm.lastName} onChange={(e) => setNewStudentForm({...newStudentForm, lastName: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input type="email" value={newStudentForm.email} onChange={(e) => setNewStudentForm({...newStudentForm, email: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Phone</label>
+              <Input value={newStudentForm.phone} onChange={(e) => setNewStudentForm({...newStudentForm, phone: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date of Birth</label>
+              <Input type="date" value={newStudentForm.dateOfBirth} onChange={(e) => setNewStudentForm({...newStudentForm, dateOfBirth: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddStudentModal(false)}>Cancel</Button>
+            <Button onClick={() => createStudentMutation.mutate(newStudentForm as any)}>Add Student</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Student</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure? This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => studentToDelete && deleteStudentMutation.mutate({ id: studentToDelete.id })} className="bg-red-600">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 

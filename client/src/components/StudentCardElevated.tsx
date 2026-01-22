@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Phone, MessageSquare, Mail, FileText, Award, Zap, ChevronRight, MoreVertical, Flame, Clock, AlertTriangle, TrendingDown } from 'lucide-react'
+import { Phone, MessageSquare, Mail, FileText, Award, Zap, ChevronRight, MoreVertical, Flame, Clock, AlertTriangle, TrendingDown, Trash2 } from 'lucide-react'
 
 interface StudentCardElevatedProps {
   id: number
@@ -30,6 +30,7 @@ interface StudentCardElevatedProps {
   onAssignProgram?: (studentId: number) => void
   onPromoteBelt?: (studentId: number) => void
   onProfileClick?: (studentId: number) => void
+  onDelete?: (studentId: number) => void
 }
 
 const BELT_COLORS: Record<string, { ring: string; halo: string; bg: string; text: string; accent: string }> = {
@@ -70,7 +71,8 @@ export default function StudentCardElevated({
   onNotes,
   onAssignProgram,
   onPromoteBelt,
-  onProfileClick
+  onProfileClick,
+  onDelete
 }: StudentCardElevatedProps) {
   const [showActions, setShowActions] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
@@ -278,6 +280,19 @@ export default function StudentCardElevated({
             >
               <FileText className="w-4 h-4 inline mr-1" />
               <span className="hidden sm:inline">Notes</span>
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(id)
+              }}
+              className="flex-1 p-2 rounded-lg hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all duration-200 text-sm font-medium hover:shadow-lg hover:shadow-red-500/20"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4 inline mr-1" />
+              <span className="hidden sm:inline">Delete</span>
             </button>
           )}
         </div>
