@@ -3334,7 +3334,7 @@ export default function KaiCommand() {
               className={isCinematic ? "fixed left-1/2 -translate-x-1/2 flex justify-center" : "fixed flex justify-center"}
               style={{ 
                 zIndex: 9999,
-                bottom: isCinematic ? 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 16px)' : '120px',
+                bottom: isCinematic ? 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 16px - 96px)' : '120px',
                 ...(isCinematic ? {
                   width: 'min(720px, calc(100vw - 32px))',
                 } : {
