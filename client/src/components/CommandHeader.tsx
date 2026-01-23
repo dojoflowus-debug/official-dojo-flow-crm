@@ -191,8 +191,19 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
               <DialogTitle className="text-white">Choose Cinematic Backdrop</DialogTitle>
             </DialogHeader>
             <CinematicEnvironmentSelector
-              onEnvironmentSelect={(envId) => {
-                setEnvironment(envId as any);
+              onEnvironmentSelect={(envId, imageUrl) => {
+                // Map KIOSK_ENVIRONMENTS IDs to EnvironmentContext IDs
+                const environmentIdMap: Record<string, any> = {
+                  'martial-arts-dojo': 'samurai-red-dojo',
+                  'karate-training': 'samurai-red-dojo',
+                  'zen-studio': 'zen-bamboo-garden',
+                  'luxury-gym': 'luxury-dojo-lounge',
+                  'kickboxing-floor': 'samurai-red-dojo',
+                  'kids-dojo': 'samurai-red-dojo',
+                  'modern-studio': 'ultra-modern-white',
+                };
+                const mappedId = environmentIdMap[envId] || 'samurai-red-dojo';
+                setEnvironment(mappedId);
                 setIsEnvironmentSelectorOpen(false);
               }}
             />
