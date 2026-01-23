@@ -4520,3 +4520,44 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Test on Floor Plans modal and verify fog effect
   - Background cards are clearly blurred and darkened
   - Modal remains crisp and sharp with white border
+
+## Feature - Floor Planner Cinematic Redesign (Jan 23, 2026)
+
+### Canvas & Surface
+- [ ] Replace flat blue grid with realistic floor surface (mat, wood, turf textures)
+- [ ] Add subtle lighting gradients and depth shadows
+- [ ] Create dimensional room feel with soft borders
+- [ ] Design stage-like "Front of Class" strip with instructor position
+
+### Spots & Markers
+- [ ] Replace red squares with 3D-style soft pads/stations
+- [ ] Add glow effect for available spots
+- [ ] Add animation on spot selection
+- [ ] Support initials, belt color rings, and avatars for occupied spots
+
+### Zones
+- [ ] Support karate belt lineup zones
+- [ ] Support kickboxing bag stations
+- [ ] Support yoga mat grids
+- [ ] Support dance formations
+- [ ] Support gymnastics equipment areas
+- [ ] Add subtle zone boundaries with floating labels
+
+### Mode Switcher
+- [ ] Implement Design Mode (staff editing layout)
+- [ ] Implement Kiosk Preview Mode (student view)
+- [ ] Implement Live Class Mode (active occupancy)
+- [ ] Implement Wall Display Mode (TV screens)
+
+### Kiosk Integration
+- [ ] Add "Stand here" indicators
+- [ ] Add bag selection UI
+- [ ] Support auto placement by belt rank
+- [ ] Create calm yoga mode
+- [ ] Support formation layouts for dance/gymnastics
+
+### UI & Styling
+- [ ] Dark cinematic DojoFlow style
+- [ ] Floating glass panels
+- [ ] Soft motion, glow, and transitions
+- [ ] Clear hierarchy between room, zones, and controls

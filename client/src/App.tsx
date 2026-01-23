@@ -99,6 +99,7 @@ import AutomationBuilder from "./pages/AutomationBuilder";
 import Conversations from "./pages/Conversations";
 import FloorPlanBuilder from "./pages/FloorPlanBuilder";
 import FloorPlans from "./pages/FloorPlans";
+import FloorPlansCinematic from "./pages/FloorPlansCinematic";
 import Operations from "./pages/Operations";
 import PrintFulfillmentSheet from "./pages/PrintFulfillmentSheet";
 import ConfirmReceipt from "./pages/ConfirmReceipt";
@@ -252,7 +253,8 @@ function Router() {
       <Route path="/leads" element={<AppShell><Leads /></AppShell>} />
       <Route path="/test-data" element={<TestData />} />
       <Route path="/classes" element={<AppShell><Classes /></AppShell>} />
-      <Route path="/floor-plans" element={<AppShell><FloorPlans /></AppShell>} />
+      <Route path="/floor-plans" element={<AppShell><FloorPlansCinematic /></AppShell>} />
+      <Route path="/floor-plans-old" element={<AppShell><FloorPlans /></AppShell>} />
       <Route path="/programs" element={<Programs />} />
       <Route path="/staff" element={<AppShell><Staff /></AppShell>} />
       <Route path="/billing" element={<AppShell><Billing /></AppShell>} />
