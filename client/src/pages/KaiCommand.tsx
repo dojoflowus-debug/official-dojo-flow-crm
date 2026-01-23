@@ -3336,25 +3336,15 @@ export default function KaiCommand() {
       {!isFocusMode && (
         <div 
           className={isCinematic ? "absolute flex justify-center" : "fixed flex justify-center"}
-          style={{ 
+          style={{
             zIndex: 9999,
-            ...(isCinematic ? {
-              position: 'absolute',
-              bottom: 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 16px)',
-              width: 'min(720px, calc(100% - 32px))',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              padding: '0 16px',
-              boxSizing: 'border-box'
-            } : {
-              position: 'fixed',
-              bottom: '120px',
-              left: `${centerPanelPosition.left + 132}px`,
-              width: `${centerPanelPosition.width - 264}px`,
-              transition: 'left 0.1s ease-out, width 0.1s ease-out',
-              padding: '0 16px',
-              boxSizing: 'border-box'
-            })
+            position: 'fixed',
+            bottom: '120px',
+            left: `${centerPanelPosition.left + 132}px`,
+            width: `${centerPanelPosition.width - 264}px`,
+            transition: 'left 0.1s ease-out, width 0.1s ease-out',
+            padding: '0 16px',
+            boxSizing: 'border-box'
           }}
         >
           <form
