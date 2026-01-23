@@ -4597,12 +4597,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - Bags remain contained on viewport resize
 
 
-## Bug Fix - Floor Plan Editor Rebuild (Jan 23, 2026)
+## Bug Fix - Floor Plan Editor Rebuild (Jan 23, 2026) - COMPLETE
 ### Core Issues
 - [x] Fix bags auto-arranging in straight line instead of using stored coordinates
 - [x] Fix one bag rendering outside floor plan boundaries
-- [ ] Add missing design mode controls for layout configuration
-- [ ] Implement drag-and-drop editing with DB persistence
+- [x] Fix floor plan stuck on "Loading floor plan..." (query name mismatch)
+- [x] Add missing design mode controls for layout configuration
+- [x] Implement drag-and-drop editing with DB persistence
 
 ### Phase 1: Coordinate Storage & Boundary Clamping - COMPLETE
 - [x] Verify positionX/Y are stored as percentages (0-100) in DB

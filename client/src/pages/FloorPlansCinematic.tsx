@@ -209,7 +209,7 @@ function FloorPlansCinematicContent() {
 
   const utils = trpc.useUtils();
   const { data: floorPlans, isLoading } = trpc.floorPlans.getAll.useQuery();
-  const { data: floorPlanWithSpots } = trpc.floorPlans.get.useQuery(
+  const { data: floorPlanWithSpots } = trpc.floorPlans.getById.useQuery(
     { id: selectedPlan?.id || 0 },
     { enabled: !!selectedPlan }
   );
