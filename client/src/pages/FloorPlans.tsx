@@ -273,29 +273,29 @@ function FloorPlansContent() {
               borderRadius: '20px',
               backdropFilter: 'blur(10px)',
               background: 'rgba(0,0,0,0.92)',
-              padding: '24px'
+              padding: '20px'
             }}>
-              <DialogHeader className="pb-4 border-b border-white/6">
+              <DialogHeader className="pb-3 border-b border-white/6">
                 <DialogTitle className="text-2xl font-bold tracking-tight">Create Floor Plan</DialogTitle>
                 <DialogDescription className="text-white/60 mt-2">
                   Define a new room layout with spot assignments
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-5 py-6">
+              <div className="space-y-4 py-4">
                 {/* Room Name Section */}
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   <Label htmlFor="roomName" className="text-white/90 font-medium text-sm">Room Name *</Label>
                   <Input
                     id="roomName"
                     placeholder="e.g., Main Dojo, Studio A"
                     value={roomName}
                     onChange={(e) => setRoomName(e.target.value)}
-                    className="h-11 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
+                    className="h-10 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
                   />
                 </div>
 
                 {/* Dimensions Section */}
-                <div className="space-y-2.5 pb-4 border-b border-white/6">
+                <div className="space-y-2 pb-3 border-b border-white/6">
                   <Label className="text-white/90 font-medium text-sm">Dimensions</Label>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -306,7 +306,7 @@ function FloorPlansContent() {
                         placeholder="40"
                         value={lengthFeet}
                         onChange={(e) => setLengthFeet(e.target.value)}
-                        className="h-11 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
+                        className="h-10 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
                       />
                     </div>
                     <div className="space-y-2">
@@ -317,14 +317,14 @@ function FloorPlansContent() {
                         placeholder="30"
                         value={widthFeet}
                         onChange={(e) => setWidthFeet(e.target.value)}
-                        className="h-11 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
+                        className="h-10 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Safety Spacing Section */}
-                <div className="space-y-2.5 pb-4 border-b border-white/6">
+                <div className="space-y-2 pb-3 border-b border-white/6">
                   <Label htmlFor="spacing" className="text-white/90 font-medium text-sm">Safety Spacing (feet)</Label>
                   <Input
                     id="spacing"
@@ -332,7 +332,7 @@ function FloorPlansContent() {
                     placeholder="3"
                     value={safetySpacingFeet}
                     onChange={(e) => setSafetySpacingFeet(e.target.value)}
-                    className="h-11 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
+                    className="h-10 bg-white/4 border-white/12 text-white placeholder:text-white/45 focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg"
                   />
                   <p className="text-xs text-white/50 leading-relaxed">
                     Minimum distance between spots for safety
@@ -340,10 +340,10 @@ function FloorPlansContent() {
                 </div>
 
                 {/* Layout Template Section */}
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   <Label htmlFor="template" className="text-white/90 font-medium text-sm">Layout Template *</Label>
                   <Select value={templateType} onValueChange={(v) => setTemplateType(v as TemplateType)}>
-                    <SelectTrigger className="h-11 bg-white/4 border-white/12 text-white focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg">
+                    <SelectTrigger className="h-10 bg-white/4 border-white/12 text-white focus:border-white/28 focus:ring-1 focus:ring-red-500/18 transition-all duration-120 rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-black/90 border-white/12">
@@ -362,7 +362,7 @@ function FloorPlansContent() {
                 </div>
 
                 {/* Notes Section */}
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   <Label htmlFor="notes" className="text-white/90 font-medium text-sm">Notes</Label>
                   <Textarea
                     id="notes"

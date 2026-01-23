@@ -4473,6 +4473,16 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Buttons: outline cancel, red-600 create with hover lift
 - [x] Animations: fade-in zoom-in-95 200ms ease-out transitions
 
+## Bug Fix - Modal Height Cutoff (Jan 23, 2026)
+- [x] Fix modal being cut off at bottom - buttons and border not visible
+- [x] Add max-height constraint with scrollable content area (85vh)
+- [x] Reduce spacing/padding to fit within 768px viewport height
+  - Reduced padding from 24px to 20px
+  - Reduced input height from h-11 to h-10
+  - Reduced section spacing from space-y-5 to space-y-4
+  - Reduced py-6 to py-4 for form container
+- [x] Ensure white border is fully visible on all sides
+
 ## Feature - Form Validation Toast Notifications (Jan 23, 2026)
 - [x] Add validation logic for floor plan form fields
   - Room name: required, minimum 2 characters

@@ -134,7 +134,7 @@ function DialogContent({
           // Mobile: full-screen, Desktop: centered modal
           "inset-0 sm:inset-auto sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]",
           "w-full h-full sm:w-auto sm:h-auto sm:max-w-[calc(100%-2rem)] sm:max-w-lg",
-          "rounded-none p-0 sm:p-6 bg-transparent",
+          "rounded-none p-0 sm:p-6 bg-transparent sm:max-h-[85vh] sm:overflow-y-auto",
           className
         )}
         style={{
