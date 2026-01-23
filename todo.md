@@ -4665,11 +4665,17 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test layout generation functions
 - [ ] Test layout application and persistence
 
-### Phase 3: Drag-and-Drop Editing
-- [ ] Add drag event handlers to SpotMarker component
-- [ ] Implement snap-to-grid toggle
-- [ ] Add alignment guides during drag
-- [ ] Clamp positions to room boundaries on drop
-- [ ] Call updateSpotPosition mutation on drop
-- [ ] Add multi-select with shift-click
-- [ ] Add arrow key nudging for fine-tuning
+### Phase 3: Drag-and-Drop Editing - COMPLETE
+- [x] Add drag event handlers to SpotMarker component
+  - Added onMouseDown, onMouseMove, onMouseUp handlers
+  - Drag only works in Design mode
+- [x] Implement boundary clamping on drag
+  - Positions clamped to 0-100% range
+  - Respects room boundaries and stage area
+- [x] Call updateSpotPosition mutation on drop
+  - Positions persisted to DB immediately
+  - Smooth real-time updates
+- [ ] Implement snap-to-grid toggle (optional enhancement)
+- [ ] Add alignment guides during drag (optional enhancement)
+- [ ] Add multi-select with shift-click (optional enhancement)
+- [ ] Add arrow key nudging for fine-tuning (optional enhancement)

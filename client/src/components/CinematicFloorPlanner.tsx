@@ -86,6 +86,7 @@ function SpotMarker({
   mode,
   templateType,
   containerRef,
+  onDragEnd,
 }: {
   spot: Spot;
   assignment?: AssignedStudent;
@@ -95,10 +96,39 @@ function SpotMarker({
   mode: ViewMode;
   templateType: string;
   containerRef: React.RefObject<HTMLDivElement>;
+  onDragEnd?: (spotId: number, newX: number, newY: number) => void;
 }) {
   const isEmpty = !assignment;
   const isKiosk = mode === "kiosk";
   const isLive = mode === "live";
+  const isDesign = mode === "design";
+  const isDraggable = isDesign && onDragEnd;
+
+  // Drag state
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragStartRef = React.useRef<{ x: number; y: number } | null>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isDraggable) return;
+    e.preventDefault();
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !dragStartRef.current || !containerRef.current || !onDragEnd) return;
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    onDragEnd(spot.id, dx, dy);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
 
   // Get belt color for ring
   const beltColor = assignment?.beltRank 
@@ -147,14 +177,19 @@ function SpotMarker({
   return (
     <div
       onClick={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
       className={cn(
-        "absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300",
-        "group"
+        "absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 group",
+        isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
       )}
       style={{
         left: `${clampedX}%`,
         top: `${clampedY}%`,
         zIndex: isSelected ? 50 : 10,
+        opacity: isDragging ? 0.8 : 1,
       }}
     >
       {/* Glow ring for available spots */}
@@ -526,6 +561,22 @@ export function CinematicFloorPlanner({
     toast.success("Layout saved to floor plan");
   };
 
+  const handleSpotDrag = async (spotId: number, dx: number, dy: number) => {
+    const spot = floorPlan.spots.find((s) => s.id === spotId);
+    if (!spot) return;
+    const newX = Math.max(0, Math.min(100, spot.positionX + (dx / 400) * 100));
+    const newY = Math.max(0, Math.min(100, spot.positionY + (dy / 400) * 100));
+    try {
+      await updateSpotPositionMutation.mutateAsync({
+        spotId,
+        positionX: newX,
+        positionY: newY,
+      });
+    } catch (error) {
+      console.error("Error updating spot position:", error);
+    }
+  };
+
   const occupiedCount = assignedStudents.length;
   const totalSpots = floorPlan.spots.length;
 
@@ -684,6 +735,7 @@ export function CinematicFloorPlanner({
                   mode={currentMode}
                   templateType={floorPlan.templateType}
                   containerRef={containerRef}
+                  onDragEnd={handleSpotDrag}
                 />
               );
             })}
