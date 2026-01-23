@@ -3637,9 +3637,8 @@ export default function KaiCommand() {
           }
         }}
         onManageBilling={async () => {
-          // TODO: Open customer portal
           setShowPaywall(false);
-          toast.success('Opening billing portal...');
+          navigate('/billing');
         }}
         subscriptionStatus="no_subscription"
         featureName={paywallFeatureName}

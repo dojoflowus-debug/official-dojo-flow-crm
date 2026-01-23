@@ -357,11 +357,11 @@
   - Animation should play once and not repeat on subsequent visits
 
 ## Bug Fix - Manage Billing Button (Jan 23, 2026)
-- [x] Fix "Manage Billing" button not working
-  - Added "Manage Billing" button to user dropdown menu in CommandHeader
-  - Button navigates to /billing page when clicked
-  - Uses CreditCard icon from lucide-react
-  - Positioned between Settings and Sign Out options
+- [x] Fix "Manage Billing" button not working - button added to menu
+- [x] Fix "Manage Billing" button - shows "Opening billing portal..." but nothing happens
+  - Found the issue in PaywallModal onManageBilling handler in KaiCommand.tsx
+  - Replaced unimplemented TODO with actual navigation to /billing page
+  - Now navigates to internal billing page instead of showing empty toast
 
 
 ## Bug Fix - Students Page Filter Default & Map Mode (Jan 9, 2026)
