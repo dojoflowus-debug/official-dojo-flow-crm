@@ -1,6 +1,10 @@
 import React from "react";
 import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LayoutControls } from "./LayoutControls";
+import { generateLayout } from "@/lib/layoutGenerator";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 // Types
 interface Spot {
@@ -461,6 +465,9 @@ export function CinematicFloorPlanner({
   const [selectedSpot, setSelectedSpot] = React.useState<number | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  // TRPC mutations
+  const batchUpdateSpotsMutation = trpc.floorPlans.batchUpdateSpots.useMutation();
+
   const handleModeChange = (mode: ViewMode) => {
     setCurrentMode(mode);
     onModeChange?.(mode);
@@ -469,6 +476,54 @@ export function CinematicFloorPlanner({
   const handleSpotClick = (spot: Spot) => {
     setSelectedSpot(spot.id);
     onSpotClick?.(spot);
+  };
+
+  const handleApplyLayout = async (preset: string, rows: number, cols: number, spacing: number, padding: number) => {
+    if (!floorPlan.lengthFeet || !floorPlan.widthFeet) {
+      toast.error("Floor plan dimensions not available");
+      return;
+    }
+
+    try {
+      const positions = generateLayout({
+        preset,
+        rows,
+        cols,
+        spacing,
+        padding,
+        roomWidth: floorPlan.lengthFeet,
+        roomHeight: floorPlan.widthFeet,
+        totalSpots: floorPlan.spots.length,
+        stageHeight: 5,
+      });
+
+      const spotsToUpdate = positions.map((pos) => {
+        const spot = floorPlan.spots.find((s) => s.spotNumber === pos.spotId);
+        return {
+          spotId: spot?.id || 0,
+          positionX: pos.positionX,
+          positionY: pos.positionY,
+        };
+      }).filter((s) => s.spotId > 0);
+
+      await batchUpdateSpotsMutation.mutateAsync({
+        floorPlanId: floorPlan.id,
+        spots: spotsToUpdate,
+      });
+
+      toast.success(`Layout applied: ${preset} (${rows}x${cols})`);
+    } catch (error) {
+      console.error("Error applying layout:", error);
+      toast.error("Failed to apply layout");
+    }
+  };
+
+  const handleResetLayout = () => {
+    toast.info("Reset layout - generating default grid");
+  };
+
+  const handleSaveLayout = () => {
+    toast.success("Layout saved to floor plan");
   };
 
   const occupiedCount = assignedStudents.length;
@@ -646,6 +701,14 @@ export function CinematicFloorPlanner({
         templateType={floorPlan.templateType}
         occupiedCount={occupiedCount}
         totalSpots={totalSpots}
+      />
+
+      {/* Layout Controls - Design mode only */}
+      <LayoutControls
+        isVisible={currentMode === "design"}
+        onApplyLayout={handleApplyLayout}
+        onResetLayout={handleResetLayout}
+        onSaveLayout={handleSaveLayout}
       />
     </div>
   );

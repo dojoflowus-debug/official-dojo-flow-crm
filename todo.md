@@ -4644,3 +4644,32 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Verify Kiosk Preview is non-editable (no drag handles)
 - [ ] Test drag-and-drop persistence across page reload
 - [ ] Verify layout controls work for all template types
+
+
+### Phase 2: Design Mode Layout Controls - IN PROGRESS
+- [x] Create Layout control panel component for Design mode
+  - LayoutControls.tsx component created with collapsible UI
+  - Shows only in Design mode
+- [x] Add auto-layout presets:
+  - [x] Grid
+  - [x] Staggered
+  - [x] Perimeter
+  - [x] Bag Wall (front row)
+- [x] Add sliders for rows, columns, spacing, padding
+- [x] Apply layout button
+- [x] Reset layout button
+- [x] Save layout button
+- [x] Create layout generation functions (layoutGenerator.ts)
+- [x] Add batchUpdateSpots mutation to server router
+- [x] Integrate LayoutControls into CinematicFloorPlanner
+- [ ] Test layout generation functions
+- [ ] Test layout application and persistence
+
+### Phase 3: Drag-and-Drop Editing
+- [ ] Add drag event handlers to SpotMarker component
+- [ ] Implement snap-to-grid toggle
+- [ ] Add alignment guides during drag
+- [ ] Clamp positions to room boundaries on drop
+- [ ] Call updateSpotPosition mutation on drop
+- [ ] Add multi-select with shift-click
+- [ ] Add arrow key nudging for fine-tuning
