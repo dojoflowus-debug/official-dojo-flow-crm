@@ -267,7 +267,7 @@ function FloorPlansContent() {
                 Create Floor Plan
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl border border-white/18 rounded-5xl shadow-2xl backdrop-blur-xl bg-black/80 animate-in fade-in zoom-in-95 duration-200 ease-out" style={{
+            <DialogContent className="max-w-2xl animate-in fade-in zoom-in-95 duration-200 ease-out" style={{
               boxShadow: '0 24px 80px rgba(0,0,0,0.55)',
               border: '1px solid rgba(255,255,255,0.18)',
               borderRadius: '20px',
