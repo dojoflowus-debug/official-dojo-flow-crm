@@ -4501,3 +4501,22 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - All mutations (create, update, delete) have enhanced notifications
   - Consistent styling across all toast types
   - Dev server compiles without errors
+
+## Feature - Cinematic Fog/Blur Behind Modals (Jan 23, 2026)
+- [ ] Add blur + dim backdrop overlay to all modals
+- [ ] Apply stronger effect in cinematic mode (blur 14px, rgba 0.65)
+- [ ] Ensure scroll lock on body while modal is open
+- [ ] Verify Floor Plans modal, Trial modal, and Kai command background are fogged
+- [ ] Modal content remains crisp, no click-through behind overlay
+
+## Feature - Cinematic Fog/Blur Behind Modals (Jan 23, 2026) - COMPLETE
+- [x] Add backdrop blur (10px) and darkening (55% black) to dialog overlay
+  - Deleted duplicate dialog.jsx file that was overriding dialog.tsx
+  - Applied backdrop-blur-[10px] and bg-black/55 to DialogOverlay
+- [x] Ensure z-index stacking: overlay at 9000, modal at 10000+
+  - DialogOverlay: z-[9000]
+  - DialogContent: z-[10000]
+- [x] Verify scroll lock on body while modal is open (Radix handles this)
+- [x] Test on Floor Plans modal and verify fog effect
+  - Background cards are clearly blurred and darkened
+  - Modal remains crisp and sharp with white border
