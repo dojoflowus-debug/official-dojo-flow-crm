@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
-import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette } from 'lucide-react'
+import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette, CreditCard } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector'
 import { BrandLogo } from '@/components/BrandLogo'
@@ -38,6 +38,10 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isEnvironmentSelectorOpen, setIsEnvironmentSelectorOpen] = useState(false)
   const isCinematic = theme === 'cinematic'
+  
+  const handleNavigateToBilling = () => {
+    navigate('/billing')
+  }
   
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -171,6 +175,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleNavigateToBilling}><CreditCard className="h-4 w-4 mr-2" />Manage Billing</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()} className="text-red-500">
               <LogOut className="h-4 w-4 mr-2" />Sign Out

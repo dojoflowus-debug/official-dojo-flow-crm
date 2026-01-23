@@ -356,6 +356,13 @@
   - Apply animation class on first render
   - Animation should play once and not repeat on subsequent visits
 
+## Bug Fix - Manage Billing Button (Jan 23, 2026)
+- [x] Fix "Manage Billing" button not working
+  - Added "Manage Billing" button to user dropdown menu in CommandHeader
+  - Button navigates to /billing page when clicked
+  - Uses CreditCard icon from lucide-react
+  - Positioned between Settings and Sign Out options
+
 
 ## Bug Fix - Students Page Filter Default & Map Mode (Jan 9, 2026)
 
