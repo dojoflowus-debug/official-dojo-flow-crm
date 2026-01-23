@@ -99,6 +99,7 @@ function DialogContent({
   children,
   showCloseButton = true,
   onEscapeKeyDown,
+  style,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
@@ -137,7 +138,13 @@ function DialogContent({
           className
         )}
         style={{
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 40px rgba(0, 0, 0, 0.3)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)',
+          border: '3px solid #ffffff',
+          borderRadius: '20px',
+          backdropFilter: 'blur(10px)',
+          background: 'rgba(0,0,0,0.92)',
+          padding: '24px',
+          ...style,
         }}
         onEscapeKeyDown={handleEscapeKeyDown}
         {...props}
