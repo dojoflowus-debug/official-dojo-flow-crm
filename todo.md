@@ -4561,3 +4561,15 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Floating glass panels
 - [ ] Soft motion, glow, and transitions
 - [ ] Clear hierarchy between room, zones, and controls
+
+## Feature - Sample Floor Plans (Jan 23, 2026)
+- [x] Create Kickboxing Room floor plan (12 bag stations, 30ft x 40ft)
+  - Successfully created with 12 kickboxing bag spots
+- [x] Create Yoga Studio floor plan (15 mat spots, 40ft x 30ft)
+  - Successfully created with 15 yoga mat spots
+- [x] Create Dance Studio floor plan (16 formation spots, 50ft x 35ft)
+  - Successfully created with 16 formation spots
+- [x] Verify all floor plans display in cinematic viewer
+  - All three floor plans visible in sidebar
+  - Cinematic 3D bags rendering correctly
+  - Mode switcher functional (Design, Kiosk Preview, Live Class, Wall Display)

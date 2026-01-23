@@ -1,0 +1,16 @@
+{
+  "query": "SHOW TABLES LIKE '%spot%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SHOW TABLES LIKE '%spot%';",
+  "rows": [
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx (%spot%)": "floor_plan_spots"
+    },
+    {
+      "Tables_in_2Awpr243D2Jitpj6Cn66Rx (%spot%)": "session_spot_assignments"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_2Awpr243D2Jitpj6Cn66Rx (%spot%)\nfloor_plan_spots\nsession_spot_assignments\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
