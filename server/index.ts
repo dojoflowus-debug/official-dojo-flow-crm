@@ -6,6 +6,7 @@ import session from "express-session";
 import passport from "./auth/passport";
 import socialAuthRouter from "./auth/socialAuthRouter";
 import uploadRouter from "./uploadRouter.js";
+import customBackgroundsRouter from "./api.cinematic-backgrounds";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "./routers";
 import { createContext } from "./_core/context";
@@ -41,6 +42,9 @@ async function startServer() {
 
   // Mount social auth routes
   app.use("/api/auth", socialAuthRouter);
+  
+  // Mount custom backgrounds routes
+  app.use("/api/custom-backgrounds", customBackgroundsRouter);
   
   // Mount upload routes
   app.use("/api", uploadRouter);

@@ -1470,3 +1470,26 @@ export const kioskDesignTemplates = mysqlTable("kiosk_design_templates", {
 	index("idx_templates_user").on(table.createdByUserId),
 	index("idx_templates_public").on(table.isPublic),
 ]);
+
+
+export const customCinematicBackgrounds = mysqlTable("custom_cinematic_backgrounds", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	userId: int().notNull(),
+	name: varchar({ length: 255 }).notNull(),
+	description: text(),
+	imageUrl: varchar({ length: 500 }).notNull(),
+	thumbnailUrl: varchar({ length: 500 }),
+	s3Key: varchar({ length: 500 }).notNull(),
+	fileSize: int().notNull(),
+	mimeType: varchar({ length: 50 }).notNull(),
+	isActive: int().default(1).notNull(),
+	sortOrder: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_custom_bg_org").on(table.organizationId),
+	index("idx_custom_bg_user").on(table.userId),
+	index("idx_custom_bg_active").on(table.isActive),
+]);
