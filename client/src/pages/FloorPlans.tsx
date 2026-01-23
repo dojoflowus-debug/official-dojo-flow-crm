@@ -269,10 +269,10 @@ function FloorPlansContent() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl animate-in fade-in zoom-in-95 duration-200 ease-out" style={{
               boxShadow: '0 24px 80px rgba(0,0,0,0.55)',
-              border: '1px solid rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.25)',
               borderRadius: '20px',
               backdropFilter: 'blur(10px)',
-              background: 'rgba(0,0,0,0.8)'
+              background: 'rgba(0,0,0,0.85)'
             }}>
               <DialogHeader className="pb-4 border-b border-white/6">
                 <DialogTitle className="text-2xl font-bold tracking-tight">Create Floor Plan</DialogTitle>
