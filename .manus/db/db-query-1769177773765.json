@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `custom_cinematic_backgrounds` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `organizationId` int NOT NULL,\n  `userId` int NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `description` text,\n  `imageUrl` text NOT NULL,\n  `thumbnailUrl` text,\n  `s3Key` varchar(500) NOT NULL,\n  `fileSize` int,\n  `mimeType` varchar(100),\n  `isActive` int NOT NULL DEFAULT 1,\n  `sortOrder` int DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  KEY `organizationId_userId` (`organizationId`, `userId`),\n  KEY `isActive` (`isActive`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS `custom_cinematic_backgrounds` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `organizationId` int NOT NULL,\n  `userId` int NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `description` text,\n  `imageUrl` text NOT NULL,\n  `thumbnailUrl` text,\n  `s3Key` varchar(500) NOT NULL,\n  `fileSize` int,\n  `mimeType` varchar(100),\n  `isActive` int NOT NULL DEFAULT 1,\n  `sortOrder` int DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  KEY `organizationId_userId` (`organizationId`, `userId`),\n  KEY `isActive` (`isActive`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 178
+}

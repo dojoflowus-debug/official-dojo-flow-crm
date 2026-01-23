@@ -26,35 +26,43 @@ export function CinematicEnvironmentSelector({
   onEnvironmentSelect,
   onCustomUpload,
 }: CinematicEnvironmentSelectorProps) {
-  const { user, organization } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [customBackgrounds, setCustomBackgrounds] = useState<CustomBackground[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showCustomTab, setShowCustomTab] = useState(false);
+  const [organizationId, setOrganizationId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (user && organization) {
+    if (user && user.activeOrgId) {
+      setOrganizationId(user.activeOrgId);
       loadCustomBackgrounds();
     }
-  }, [user, organization]);
+  }, [user]);
 
   const loadCustomBackgrounds = async () => {
+    if (!user || !user.activeOrgId) return;
+    
     try {
       const response = await fetch(
-        `/api/custom-backgrounds/list/${organization?.id}/${user?.id}`
+        `/api/custom-backgrounds/list/${user.activeOrgId}/${user.id}`
       );
       if (response.ok) {
         const backgrounds = await response.json();
         setCustomBackgrounds(backgrounds);
+      } else {
+        console.error('[CinematicEnvironmentSelector] Failed to load custom backgrounds:', response.statusText);
       }
     } catch (error) {
       console.error('[CinematicEnvironmentSelector] Failed to load custom backgrounds:', error);
     }
   };
 
+
+
   const handleFileUpload = async (file: File) => {
-    if (!user || !organization) return;
+    if (!user || !organizationId) return;
 
     setIsUploading(true);
     try {
@@ -65,7 +73,7 @@ export function CinematicEnvironmentSelector({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            organizationId: organization.id,
+            organizationId: organizationId,
             userId: user.id,
             name: file.name.replace(/\.[^/.]+$/, ''),
             file: base64,
@@ -90,7 +98,7 @@ export function CinematicEnvironmentSelector({
   const handleDeleteBackground = async (backgroundId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (!user || !organization) return;
+    if (!user || !organizationId) return;
     
     if (!confirm('Are you sure you want to delete this background?')) {
       return;

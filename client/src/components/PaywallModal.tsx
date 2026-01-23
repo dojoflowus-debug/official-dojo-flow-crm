@@ -77,69 +77,78 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
     <>
       {/* Backdrop - Subtle blur and dim */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-md z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/40 backdrop-blur-md z-9990 transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Modal - Luxury black & white design */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
-          {/* Header - Matte black with white text */}
-          <div className="relative bg-black p-8 text-white">
+      {/* Modal - Luxury black & white design with premium styling */}
+      <div className="fixed inset-0 z-10000 flex items-center justify-center p-4 pointer-events-none">
+        <div 
+          className="bg-white rounded-xl shadow-2xl pointer-events-auto animate-in fade-in zoom-in-95 duration-300 overflow-hidden flex flex-col"
+          style={{
+            maxWidth: '440px',
+            maxHeight: '72vh',
+            width: 'calc(100vw - 32px)',
+            border: '1px solid rgba(255, 255, 255, 0.55)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.55)',
+          }}
+        >
+          {/* Header - Matte black with white text (reduced padding) */}
+          <div className="relative bg-black px-6 py-5 text-white flex-shrink-0">
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors duration-200 p-1"
+              className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors duration-200 p-1"
               aria-label="Close modal"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
 
             {/* Icon and Title */}
-            <div className="flex items-start gap-4 pr-8">
-              <div className="flex-shrink-0 mt-1">
+            <div className="flex items-start gap-3 pr-8">
+              <div className="flex-shrink-0 mt-0.5">
                 {subscriptionStatus === 'no_subscription' ? (
-                  <CreditCard className="w-8 h-8 text-white" />
+                  <CreditCard className="w-6 h-6 text-white" />
                 ) : (
-                  <AlertCircle className="w-8 h-8 text-white" />
+                  <AlertCircle className="w-6 h-6 text-white" />
                 )}
               </div>
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">{getTitle()}</h2>
-                <div className="h-1 w-12 bg-red-600 mt-3 rounded-full" />
+                <h2 className="text-lg font-bold tracking-tight">{getTitle()}</h2>
+                <div className="h-0.5 w-10 bg-red-600 mt-2 rounded-full" />
               </div>
             </div>
           </div>
 
-          {/* Content - Pure white background */}
-          <div className="p-8 space-y-6 bg-white">
+          {/* Content - Pure white background (scrollable) */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 bg-white">
             {/* Description */}
-            <p className="text-gray-700 text-base leading-relaxed font-light">
+            <p className="text-gray-700 text-sm leading-relaxed font-light">
               {getDescription()}
             </p>
 
             {/* Benefits - Light gray card (only for no_subscription) */}
             {subscriptionStatus === 'no_subscription' && (
-              <div className="space-y-4 bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="space-y-3 bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Included in your trial:
                 </p>
-                <ul className="space-y-3 text-sm text-gray-700">
-                  <li className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                <ul className="space-y-2 text-xs text-gray-700">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />
                     <span>Unlimited AI chat messages</span>
                   </li>
-                  <li className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />
                     <span>SMS and email automation</span>
                   </li>
-                  <li className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />
                     <span>AI phone calls</span>
                   </li>
-                  <li className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />
                     <span>Full feature access</span>
                   </li>
                 </ul>
@@ -148,18 +157,18 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
             {/* Trial Info */}
             {subscriptionStatus === 'no_subscription' && (
-              <div className="text-xs text-gray-500 text-center font-light">
+              <div className="text-xs text-gray-500 text-center font-light leading-snug">
                 After your trial, you'll be charged monthly. Cancel anytime.
               </div>
             )}
           </div>
 
-          {/* Actions - Buttons */}
-          <div className="px-8 pb-8 space-y-3 bg-white border-t border-gray-100">
+          {/* Actions - Buttons (sticky footer) */}
+          <div className="px-6 py-4 space-y-2.5 bg-white border-t border-gray-100 flex-shrink-0">
             {/* Primary CTA - Red button with prominence */}
             <button
               onClick={getPrimaryButtonAction()}
-              className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-red-600/30 text-base tracking-wide"
+              className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 px-5 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-red-600/30 text-sm tracking-wide"
               style={{
                 boxShadow: '0 10px 25px -5px rgba(220, 38, 38, 0.2)',
               }}
@@ -171,7 +180,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             {subscriptionStatus === 'no_subscription' && (
               <button
                 onClick={onManageBilling}
-                className="w-full text-gray-900 hover:text-gray-700 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-200"
+                className="w-full text-gray-900 hover:text-gray-700 hover:bg-gray-50 font-semibold py-2.5 px-5 rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-200 text-sm"
               >
                 Manage Billing
               </button>
@@ -180,7 +189,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             {/* Close Button - Subtle text button */}
             <button
               onClick={onClose}
-              className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 px-4 transition-colors duration-200 text-sm"
+              className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 px-4 transition-colors duration-200 text-xs"
             >
               Close
             </button>
