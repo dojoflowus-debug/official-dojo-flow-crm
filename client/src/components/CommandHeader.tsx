@@ -7,7 +7,10 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/_core/hooks/useAuth'
-import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User } from 'lucide-react'
+import { useEnvironment } from '@/contexts/EnvironmentContext'
+import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector'
 import { BrandLogo } from '@/components/BrandLogo'
 import { KaiVersionChip } from '@/components/KaiVersionChip'
 import { useLocation } from 'wouter'
@@ -30,8 +33,10 @@ interface CommandHeaderProps {
 export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps) {
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
+  const { setEnvironment } = useEnvironment()
   const [, navigate] = useLocation()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isEnvironmentSelectorOpen, setIsEnvironmentSelectorOpen] = useState(false)
   const isCinematic = theme === 'cinematic'
   
   const getInitials = (name: string) => {
@@ -139,6 +144,19 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           </Button>
         </div>
         
+        {/* Cinematic Environment Selector Button */}
+        {isCinematic && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-white hover:text-white hover:bg-white/10"
+            onClick={() => setIsEnvironmentSelectorOpen(true)}
+            title="Change cinematic background"
+          >
+            <Palette className="h-4 w-4" />Backdrop
+          </Button>
+        )}
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
@@ -165,6 +183,21 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           onClose={() => setIsSettingsOpen(false)}
           isDarkMode={isDarkMode}
         />
+        
+        {/* Cinematic Environment Selector Dialog */}
+        <Dialog open={isEnvironmentSelectorOpen} onOpenChange={setIsEnvironmentSelectorOpen}>
+          <DialogContent className="max-w-md bg-black/90 border-white/20">
+            <DialogHeader>
+              <DialogTitle className="text-white">Choose Cinematic Backdrop</DialogTitle>
+            </DialogHeader>
+            <CinematicEnvironmentSelector
+              onEnvironmentSelect={(envId) => {
+                setEnvironment(envId as any);
+                setIsEnvironmentSelectorOpen(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </header>
   )
