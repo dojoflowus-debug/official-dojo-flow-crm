@@ -2679,7 +2679,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 h-full overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 h-full ${isCinematic ? 'overflow-visible' : 'overflow-hidden'} ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
           style={{ zIndex: 10, position: 'relative' }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -3332,22 +3332,29 @@ export default function KaiCommand() {
         </div>
       </div>
 
-      {/* COMPOSER DOCK - Fixed to viewport - Rounded pill design */}
+      {/* COMPOSER DOCK - Anchored to center panel in Cinematic mode */}
       {!isFocusMode && (
         <div 
-          className={isCinematic ? "fixed left-1/2 -translate-x-1/2 flex justify-center" : "fixed flex justify-center"}
+          className={isCinematic ? "absolute flex justify-center" : "fixed flex justify-center"}
           style={{ 
             zIndex: 9999,
-                bottom: isCinematic ? 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 116px)' : '120px',
             ...(isCinematic ? {
-              width: 'min(720px, calc(100vw - 32px))',
+              position: 'absolute',
+              bottom: 'calc(var(--bottom-nav-h, 84px) + env(safe-area-inset-bottom, 0px) + 16px)',
+              width: 'min(720px, calc(100% - 32px))',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '0 16px',
+              boxSizing: 'border-box'
             } : {
+              position: 'fixed',
+              bottom: '120px',
               left: `${centerPanelPosition.left + 132}px`,
               width: `${centerPanelPosition.width - 264}px`,
               transition: 'left 0.1s ease-out, width 0.1s ease-out',
-            }),
-            padding: '0 16px',
-            boxSizing: 'border-box'
+              padding: '0 16px',
+              boxSizing: 'border-box'
+            })
           }}
         >
           <form
