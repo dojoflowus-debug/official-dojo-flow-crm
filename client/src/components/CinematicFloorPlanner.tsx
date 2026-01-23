@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React from "react";
 import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -81,6 +81,7 @@ function SpotMarker({
   onClick,
   mode,
   templateType,
+  containerRef,
 }: {
   spot: Spot;
   assignment?: AssignedStudent;
@@ -89,11 +90,12 @@ function SpotMarker({
   onClick: () => void;
   mode: ViewMode;
   templateType: string;
+  containerRef: React.RefObject<HTMLDivElement>;
 }) {
   const isEmpty = !assignment;
   const isKiosk = mode === "kiosk";
   const isLive = mode === "live";
-  
+
   // Get belt color for ring
   const beltColor = assignment?.beltRank 
     ? BELT_COLORS[assignment.beltRank.toLowerCase().replace(" belt", "")] || "#3b82f6"
@@ -102,7 +104,6 @@ function SpotMarker({
   // Determine spot styling based on template type
   const isBag = spot.spotType === "bag" || templateType === "kickboxing_bags";
   const isMat = spot.spotType === "mat" || templateType === "yoga_grid";
-  const isRank = spot.spotType === "rank_position" || templateType === "karate_lines";
 
   // Get initials
   const initials = assignment?.initials || assignment?.studentName
@@ -110,6 +111,34 @@ function SpotMarker({
     .map((n: string) => n[0])
     .join("")
     .toUpperCase() || "";
+
+  // Calculate spot dimensions
+  const spotWidth = isBag ? 40 : isMat ? 64 : 48;
+  const spotHeight = isBag ? 64 : isMat ? 32 : 48;
+
+  // Clamp position using getBoundingClientRect for accurate bounds
+  let clampedX = spot.positionX;
+  let clampedY = spot.positionY;
+
+  if (containerRef.current) {
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+    const padding = 16; // inset-4 = 16px
+
+    // Convert percentage to pixels
+    const pixelX = (spot.positionX / 100) * (containerWidth - padding * 2) + padding;
+    const pixelY = (spot.positionY / 100) * (containerHeight - padding * 2) + padding;
+
+    // Clamp to boundaries considering spot size
+    const clampedPixelX = Math.max(padding, Math.min(pixelX, containerWidth - spotWidth - padding));
+    const clampedPixelY = Math.max(padding + 80, Math.min(pixelY, containerHeight - spotHeight - padding)); // +80 for stage
+
+    // Convert back to percentage
+    clampedX = ((clampedPixelX - padding) / (containerWidth - padding * 2)) * 100;
+    clampedY = ((clampedPixelY - padding - 80) / (containerHeight - padding * 2 - 80)) * 100;
+  }
 
   return (
     <div
@@ -119,8 +148,9 @@ function SpotMarker({
         "group"
       )}
       style={{
-        left: `${spot.positionX}%`,
-        top: `${spot.positionY}%`,
+        left: `${clampedX}%`,
+        top: `${clampedY}%`,
+        zIndex: isSelected ? 50 : 10,
       }}
     >
       {/* Glow ring for available spots */}
@@ -152,7 +182,7 @@ function SpotMarker({
         // Kickboxing Bag - 3D style
         <div
           className={cn(
-            "relative flex flex-col items-center justify-center transition-all duration-300",
+            "flex flex-col items-center justify-center transition-all duration-300",
             "group-hover:scale-110 group-hover:-translate-y-1",
             isSelected && "scale-110 -translate-y-1",
           )}
@@ -160,9 +190,15 @@ function SpotMarker({
           {/* Bag number badge */}
           <div 
             className={cn(
-              "absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold z-20",
+              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold z-20",
               isEmpty ? "bg-gray-600 text-gray-300" : "bg-red-600 text-white"
             )}
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
           >
             {spot.spotNumber}
           </div>
@@ -170,21 +206,28 @@ function SpotMarker({
           {/* Bag body */}
           <div 
             className={cn(
-              "w-10 h-16 rounded-lg relative overflow-hidden",
+              "w-10 h-16 rounded-lg overflow-hidden",
               "shadow-lg shadow-black/50",
               isEmpty ? "bg-gray-700" : "bg-gradient-to-b from-red-500 via-red-600 to-red-800",
             )}
             style={{
+              position: "relative",
               boxShadow: isEmpty 
                 ? "0 8px 16px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.1)"
                 : "0 8px 16px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.2)",
             }}
           >
             {/* Bag highlight */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <div 
+              className="bg-gradient-to-r from-transparent via-white/10 to-transparent"
+              style={{ position: "absolute", inset: 0 }}
+            />
             
             {/* Initials or number */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div 
+              className="flex items-center justify-center"
+              style={{ position: "absolute", inset: 0 }}
+            >
               <span className={cn(
                 "font-bold text-sm",
                 isEmpty ? "text-gray-400" : "text-white"
@@ -204,11 +247,12 @@ function SpotMarker({
 
           {/* Glowing ring on floor */}
           <div 
-            className={cn(
-              "absolute -bottom-4 w-14 h-4 rounded-full opacity-60",
-              isEmpty ? "bg-gray-600/30" : ""
-            )}
+            className="rounded-full opacity-60"
             style={{
+              position: "absolute",
+              bottom: "-16px",
+              width: "56px",
+              height: "16px",
               background: isEmpty 
                 ? "radial-gradient(ellipse, rgba(100,100,100,0.3) 0%, transparent 70%)"
                 : `radial-gradient(ellipse, ${beltColor}60 0%, transparent 70%)`,
@@ -220,22 +264,26 @@ function SpotMarker({
         // Yoga Mat
         <div
           className={cn(
-            "relative flex items-center justify-center transition-all duration-300",
+            "flex items-center justify-center transition-all duration-300",
             "group-hover:scale-105",
             isSelected && "scale-105",
           )}
         >
           <div 
             className={cn(
-              "w-16 h-8 rounded-md relative overflow-hidden",
+              "w-16 h-8 rounded-md overflow-hidden",
               "shadow-lg shadow-black/40",
               isEmpty ? "bg-gray-600" : "bg-gradient-to-b from-purple-400 via-purple-500 to-purple-700",
             )}
             style={{
+              position: "relative",
               boxShadow: "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1)",
             }}
           >
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div 
+              className="flex items-center justify-center"
+              style={{ position: "absolute", inset: 0 }}
+            >
               <span className={cn(
                 "font-bold text-xs",
                 isEmpty ? "text-gray-400" : "text-white"
@@ -249,55 +297,29 @@ function SpotMarker({
         // Rank Position (circle)
         <div
           className={cn(
-            "relative flex items-center justify-center transition-all duration-300",
+            "flex items-center justify-center transition-all duration-300",
             "group-hover:scale-110",
             isSelected && "scale-110",
           )}
         >
           <div 
             className={cn(
-              "w-10 h-10 rounded-full relative overflow-hidden flex items-center justify-center",
+              "w-12 h-12 rounded-full flex items-center justify-center",
               "shadow-lg shadow-black/40",
-              isEmpty ? "bg-gray-600 border-2 border-gray-500" : "border-3",
+              isEmpty ? "bg-gray-600" : "bg-gradient-to-br from-yellow-400 to-yellow-600",
             )}
             style={{
-              background: isEmpty ? "#4b5563" : beltColor,
-              borderColor: isEmpty ? "#6b7280" : beltColor,
-              boxShadow: isEmpty 
-                ? "0 4px 12px rgba(0,0,0,0.4)"
-                : `0 4px 12px rgba(0,0,0,0.4), 0 0 20px ${beltColor}40`,
+              position: "relative",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1)",
             }}
           >
             <span className={cn(
-              "font-bold text-xs",
+              "font-bold text-sm",
               isEmpty ? "text-gray-400" : "text-white"
             )}>
               {assignment ? initials : spot.spotLabel}
             </span>
           </div>
-        </div>
-      )}
-
-      {/* "Stand here" indicator for kiosk mode */}
-      {isEmpty && isKiosk && (
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
-          <span className="text-xs text-green-400 font-medium animate-pulse">
-            Stand here
-          </span>
-        </div>
-      )}
-
-      {/* Instructor badge */}
-      {assignment?.studentName?.toLowerCase().includes("instructor") && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-500 text-black text-xs font-bold rounded">
-          INSTRUCTOR
-        </div>
-      )}
-
-      {/* Reserved badge */}
-      {spot.spotLabel?.toLowerCase().includes("reserved") && (
-        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-blue-500 text-white text-xs font-medium rounded">
-          RESERVED
         </div>
       )}
     </div>
@@ -416,12 +438,6 @@ function FloorLegend({
         <span className="text-white/70 text-sm">Occupied Spot</span>
       </div>
       <div className="h-4 w-px bg-white/20" />
-      <div className="flex items-center gap-2">
-        <span className="text-white/50 text-sm">T.K</span>
-        <div className="w-6 h-6 rounded-full bg-gradient-to-b from-gray-600 to-gray-800 flex items-center justify-center">
-          <span className="text-white text-xs font-bold">TK</span>
-        </div>
-      </div>
       <div className="ml-auto flex items-center gap-2">
         <span className="text-white/50 text-sm">
           {occupiedCount} / {totalSpots} spots
@@ -441,9 +457,9 @@ export function CinematicFloorPlanner({
   zones = [],
   showModeSwitch = true,
 }: CinematicFloorPlannerProps) {
-  const [currentMode, setCurrentMode] = useState<ViewMode>(initialMode);
-  const [selectedSpot, setSelectedSpot] = useState<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [currentMode, setCurrentMode] = React.useState<ViewMode>(initialMode);
+  const [selectedSpot, setSelectedSpot] = React.useState<number | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const handleModeChange = (mode: ViewMode) => {
     setCurrentMode(mode);
@@ -457,9 +473,6 @@ export function CinematicFloorPlanner({
 
   const occupiedCount = assignedStudents.length;
   const totalSpots = floorPlan.spots.length;
-
-  // Calculate aspect ratio
-  const aspectRatio = (floorPlan.widthFeet || 40) / (floorPlan.lengthFeet || 40);
 
   return (
     <div className="w-full space-y-4">
@@ -508,117 +521,123 @@ export function CinematicFloorPlanner({
       </div>
 
       {/* Floor Canvas */}
-      <div 
-        ref={containerRef}
-        className="relative w-full rounded-2xl overflow-hidden"
-        style={{
-          aspectRatio: `${floorPlan.lengthFeet || 40} / ${floorPlan.widthFeet || 40}`,
-          minHeight: "500px",
-          maxHeight: "700px",
-          position: 'relative',
-        }}
-      >
-        {/* Realistic floor surface */}
+      <div>
         <div 
-          className="absolute inset-0"
+          ref={containerRef}
+          className="relative w-full rounded-2xl overflow-hidden"
           style={{
-            background: `
-              linear-gradient(180deg, 
-                rgba(20, 30, 40, 0.95) 0%, 
-                rgba(25, 35, 50, 0.9) 20%,
-                rgba(30, 40, 55, 0.85) 50%,
-                rgba(25, 35, 45, 0.9) 80%,
-                rgba(15, 25, 35, 0.95) 100%
-              )
-            `,
+            aspectRatio: `${floorPlan.lengthFeet || 40} / ${floorPlan.widthFeet || 40}`,
+            minHeight: "500px",
+            maxHeight: "700px",
+            position: 'relative',
           }}
-        />
-
-        {/* Mat texture overlay */}
-        <div 
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 40px,
-                rgba(255,255,255,0.02) 40px,
-                rgba(255,255,255,0.02) 41px
-              ),
-              repeating-linear-gradient(
-                90deg,
-                transparent,
-                transparent 40px,
-                rgba(255,255,255,0.02) 40px,
-                rgba(255,255,255,0.02) 41px
-              )
-            `,
-          }}
-        />
-
-        {/* Ambient lighting from top */}
-        <div 
-          className="absolute inset-x-0 top-0 h-32 pointer-events-none"
-          style={{
-            background: "linear-gradient(180deg, rgba(255,140,0,0.08) 0%, transparent 100%)",
-          }}
-        />
-
-        {/* Room border with soft glow */}
-        <div 
-          className="absolute inset-4 rounded-xl pointer-events-none"
-          style={{
-            border: "1px solid rgba(255,255,255,0.15)",
-            boxShadow: "inset 0 0 60px rgba(0,0,0,0.5)",
-          }}
-        />
-
-        {/* Front of Class Stage */}
-        <FrontOfClassStage width={100} />
-
-        {/* Zones (if any) */}
-        {zones.map((zone) => (
-          <div
-            key={zone.id}
-            className="absolute rounded-lg pointer-events-none"
+        >
+          {/* Realistic floor surface */}
+          <div 
+            className="absolute inset-0"
             style={{
-              left: `${zone.bounds.x}%`,
-              top: `${zone.bounds.y}%`,
-              width: `${zone.bounds.width}%`,
-              height: `${zone.bounds.height}%`,
-              border: "1px dashed rgba(255,255,255,0.2)",
-              background: "rgba(255,255,255,0.02)",
+              background: `
+                linear-gradient(180deg, 
+                  rgba(20, 30, 40, 0.95) 0%, 
+                  rgba(25, 35, 50, 0.9) 20%,
+                  rgba(30, 40, 55, 0.85) 50%,
+                  rgba(25, 35, 45, 0.9) 80%,
+                  rgba(15, 25, 35, 0.95) 100%
+                )
+              `,
             }}
+          />
+
+          {/* Mat texture overlay */}
+          <div 
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage: `
+                repeating-linear-gradient(
+                  0deg,
+                  transparent,
+                  transparent 40px,
+                  rgba(255,255,255,0.02) 40px,
+                  rgba(255,255,255,0.02) 41px
+                ),
+                repeating-linear-gradient(
+                  90deg,
+                  transparent,
+                  transparent 40px,
+                  rgba(255,255,255,0.02) 40px,
+                  rgba(255,255,255,0.02) 41px
+                )
+              `,
+            }}
+          />
+
+          {/* Ambient lighting from top */}
+          <div 
+            className="absolute inset-x-0 top-0 h-32 pointer-events-none"
+            style={{
+              background: "linear-gradient(180deg, rgba(255,140,0,0.08) 0%, transparent 100%)",
+            }}
+          />
+
+          {/* Room border with soft glow */}
+          <div 
+            className="absolute inset-4 rounded-xl pointer-events-none"
+            style={{
+              border: "1px solid rgba(255,255,255,0.15)",
+              boxShadow: "inset 0 0 60px rgba(0,0,0,0.5)",
+            }}
+          />
+
+          {/* Front of Class Stage */}
+          <FrontOfClassStage width={100} />
+
+          {/* Zones (if any) */}
+          {zones.map((zone) => (
+            <div
+              key={zone.id}
+              className="absolute rounded-lg pointer-events-none"
+              style={{
+                left: `${zone.bounds.x}%`,
+                top: `${zone.bounds.y}%`,
+                width: `${zone.bounds.width}%`,
+                height: `${zone.bounds.height}%`,
+                border: "1px dashed rgba(255,255,255,0.2)",
+                background: "rgba(255,255,255,0.02)",
+              }}
+            >
+              <span className="absolute top-2 left-2 text-xs text-white/40 font-medium">
+                {zone.name}
+              </span>
+            </div>
+          ))}
+
+          {/* Spots Container - Position relative for absolute positioning context */}
+          <div 
+            className="absolute inset-4 top-20"
+            style={{ position: 'relative', overflow: 'hidden' }}
           >
-            <span className="absolute top-2 left-2 text-xs text-white/40 font-medium">
-              {zone.name}
-            </span>
+            {floorPlan.spots.map((spot) => {
+              const assignment = assignedStudents.find((a) => a.spotId === spot.id);
+              return (
+                <SpotMarker
+                  key={spot.id}
+                  spot={spot}
+                  assignment={assignment}
+                  isHighlighted={false}
+                  isSelected={selectedSpot === spot.id}
+                  onClick={() => handleSpotClick(spot)}
+                  mode={currentMode}
+                  templateType={floorPlan.templateType}
+                  containerRef={containerRef}
+                />
+              );
+            })}
           </div>
-        ))}
 
-        {/* Spots */}
-        <div className="absolute inset-4 top-20" style={{ position: 'relative' }}>
-          {floorPlan.spots.map((spot) => {
-            const assignment = assignedStudents.find((a) => a.spotId === spot.id);
-            return (
-              <SpotMarker
-                key={spot.id}
-                spot={spot}
-                assignment={assignment}
-                isHighlighted={false}
-                isSelected={selectedSpot === spot.id}
-                onClick={() => handleSpotClick(spot)}
-                mode={currentMode}
-                templateType={floorPlan.templateType}
-              />
-            );
-          })}
-        </div>
-
-        {/* Room dimensions label */}
-        <div className="absolute bottom-4 right-4 text-white/40 text-sm">
-          {floorPlan.lengthFeet} ft × {floorPlan.widthFeet} ft
+          {/* Room dimensions label */}
+          <div className="absolute bottom-4 right-4 text-white/40 text-sm">
+            {floorPlan.lengthFeet} ft × {floorPlan.widthFeet} ft
+          </div>
         </div>
       </div>
 

@@ -399,6 +399,31 @@ export const floorPlansRouter = router({
     }),
 
   /**
+   * Update spot position (for drag-and-drop)
+   */
+  updateSpotPosition: protectedProcedure
+    .input(z.object({
+      spotId: z.number(),
+      positionX: z.number(),
+      positionY: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      // Clamp values to 0-100
+      const positionX = Math.max(0, Math.min(100, input.positionX));
+      const positionY = Math.max(0, Math.min(100, input.positionY));
+      
+      await db
+        .update(floorPlanSpots)
+        .set({ positionX, positionY })
+        .where(eq(floorPlanSpots.id, input.spotId));
+      
+      return { success: true };
+    }),
+
+  /**
    * Delete a floor plan
    */
   delete: protectedProcedure

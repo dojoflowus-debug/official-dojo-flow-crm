@@ -4595,3 +4595,52 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - All 21 bags properly positioned inside floor canvas
   - Mode switcher works correctly (Design, Kiosk, Live, Wall)
   - Bags remain contained on viewport resize
+
+
+## Bug Fix - Floor Plan Editor Rebuild (Jan 23, 2026)
+### Core Issues
+- [x] Fix bags auto-arranging in straight line instead of using stored coordinates
+- [x] Fix one bag rendering outside floor plan boundaries
+- [ ] Add missing design mode controls for layout configuration
+- [ ] Implement drag-and-drop editing with DB persistence
+
+### Phase 1: Coordinate Storage & Boundary Clamping - COMPLETE
+- [x] Verify positionX/Y are stored as percentages (0-100) in DB
+- [x] Implement getBoundingClientRect() for accurate boundary detection
+- [x] Add hard boundary clamping during render (clamp x/y to room bounds)
+- [x] Add overflow: hidden to floor container for clipping
+- [x] Ensure spot width/height is considered in boundary math
+- [x] Test that zero spots render outside room boundaries
+
+### Phase 2: Design Mode Layout Controls
+- [ ] Create Layout control panel component for Design mode
+- [ ] Add auto-layout presets:
+  - [ ] Grid layout (rows/columns slider)
+  - [ ] Staggered grid layout
+  - [ ] Perimeter/walls layout
+  - [ ] Bag wall (single row near front)
+  - [ ] Karate lineup (rows by rank)
+- [ ] Add configuration sliders:
+  - [ ] Rows slider
+  - [ ] Columns slider
+  - [ ] Spacing slider
+  - [ ] Padding from walls slider
+- [ ] Add Reset layout button
+- [ ] Add Save layout button
+
+### Phase 3: Drag-and-Drop Editing
+- [ ] Make bags draggable in Design mode only
+- [ ] Implement snap-to-grid guides (toggle)
+- [ ] Show alignment lines during drag
+- [ ] Clamp position on drop using getBoundingClientRect()
+- [ ] Persist updated normalized coordinates to DB immediately
+- [ ] Add multi-select support (shift-click)
+- [ ] Add nudge with arrow keys (optional)
+
+### Phase 4: Testing & Validation
+- [ ] Verify positions preserved when switching modes (Design/Kiosk/Live/Wall)
+- [ ] Test window resize preserves layout proportionally
+- [ ] Verify zero spots outside room boundaries
+- [ ] Verify Kiosk Preview is non-editable (no drag handles)
+- [ ] Test drag-and-drop persistence across page reload
+- [ ] Verify layout controls work for all template types
