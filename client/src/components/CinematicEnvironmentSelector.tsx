@@ -87,9 +87,32 @@ export function CinematicEnvironmentSelector({
     }
   };
 
+  const handleDeleteBackground = async (backgroundId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user || !organization) return;
+    
+    if (!confirm('Are you sure you want to delete this background?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/custom-backgrounds/${backgroundId}/${organization.id}/${user.id}`,
+        { method: 'DELETE' }
+      );
+
+      if (response.ok) {
+        setCustomBackgrounds(customBackgrounds.filter(bg => bg.id !== backgroundId));
+        console.log('[CinematicEnvironmentSelector] Background deleted successfully');
+      }
+    } catch (error) {
+      console.error('[CinematicEnvironmentSelector] Delete failed:', error);
+    }
+  };
+
   const handleEnvironmentClick = (envId: string) => {
     if (envId === 'custom-upload') {
-      // Trigger file upload
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -101,7 +124,6 @@ export function CinematicEnvironmentSelector({
       };
       input.click();
     } else {
-      // Find the environment and get its background image URL
       const env = KIOSK_ENVIRONMENTS.find(e => e.id === envId);
       if (env) {
         console.log(`[CinematicEnvironmentSelector] Selected environment: ${envId}, background: ${env.backgroundImageUrl}`);
@@ -121,7 +143,6 @@ export function CinematicEnvironmentSelector({
   const handleImageLoad = (envId: string) => {
     console.log(`[CinematicEnvironmentSelector] Successfully loaded thumbnail for environment: ${envId}`);
     setLoadedImages(prev => new Set(prev).add(envId));
-    // Remove from error set if it was previously errored
     setImageErrors(prev => {
       const newSet = new Set(prev);
       newSet.delete(envId);
@@ -266,30 +287,45 @@ export function CinematicEnvironmentSelector({
         {customBackgrounds.length > 0 ? (
           <div className="grid grid-cols-2 gap-3">
             {customBackgrounds.map(bg => (
-              <button
+              <div
                 key={bg.id}
-                onClick={() => onEnvironmentSelect(`custom-${bg.id}`, bg.imageUrl)}
-                className={`env-thumbnail relative h-32 rounded-lg overflow-hidden transition-all ${
-                  selectedEnvironmentId === `custom-${bg.id}`
-                    ? 'ring-2 ring-red-500 shadow-lg shadow-red-500/50'
-                    : 'ring-1 ring-white/10 hover:ring-white/20'
-                }`}
-                title={bg.name}
+                className="relative group"
               >
-                <img
-                  src={bg.thumbnailUrl}
-                  alt={bg.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent px-3 py-2">
-                  <p className="text-xs font-semibold text-white truncate">{bg.name}</p>
-                </div>
-                {selectedEnvironmentId === `custom-${bg.id}` && (
-                  <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    Selected
+                <button
+                  onClick={() => onEnvironmentSelect(`custom-${bg.id}`, bg.imageUrl)}
+                  className={`env-thumbnail relative w-full h-32 rounded-lg overflow-hidden transition-all ${
+                    selectedEnvironmentId === `custom-${bg.id}`
+                      ? 'ring-2 ring-red-500 shadow-lg shadow-red-500/50'
+                      : 'ring-1 ring-white/10 hover:ring-white/20'
+                  }`}
+                  title={bg.name}
+                >
+                  <img
+                    src={bg.thumbnailUrl}
+                    alt={bg.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent px-3 py-2">
+                    <p className="text-xs font-semibold text-white truncate">{bg.name}</p>
                   </div>
-                )}
-              </button>
+                  {selectedEnvironmentId === `custom-${bg.id}` && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      Selected
+                    </div>
+                  )}
+                </button>
+                
+                {/* Delete Button - Visible on Hover */}
+                <button
+                  onClick={(e) => handleDeleteBackground(bg.id, e)}
+                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 z-10"
+                  title="Delete this background"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         ) : (
