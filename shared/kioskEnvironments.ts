@@ -154,8 +154,8 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'kids-dojo',
     name: 'Kids Dojo',
     category: 'kids',
-    thumbnailPath: '/Lightdojoflow.png',
-    backgroundImageUrl: '/Lightdojoflow.png',
+    thumbnailPath: '/environments/kids-karate-dojo.jpg',
+    backgroundImageUrl: '/environments/kids-karate-dojo.jpg',
     atmosphere: {
       blur: 0,
       dim: 15,
