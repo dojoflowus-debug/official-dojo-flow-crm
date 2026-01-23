@@ -3339,7 +3339,7 @@ export default function KaiCommand() {
           style={{
             zIndex: 9999,
             position: 'fixed',
-            bottom: isCinematic ? '72px' : '120px',
+            bottom: isCinematic ? '168px' : '120px',
             left: `${centerPanelPosition.left + 132}px`,
             width: `${centerPanelPosition.width - 264}px`,
             transition: 'left 0.1s ease-out, width 0.1s ease-out',
