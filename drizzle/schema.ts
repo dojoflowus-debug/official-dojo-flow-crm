@@ -535,6 +535,8 @@ export const floorPlans = mysqlTable("floor_plans", {
 	maxCapacity: int().notNull(),
 	isActive: int().default(1).notNull(),
 	notes: text(),
+	bagsInstalled: int().default(0).notNull(),
+	defaultLayout: varchar({ length: 50 }).default('grid').notNull(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 });
@@ -824,6 +826,7 @@ export const organizations = mysqlTable("organizations", {
 	settings: text(),
 	onboardingStatus: mysqlEnum(['not_started','in_progress','completed','skipped']).default('not_started').notNull(),
 	onboardingStep: int().default(1).notNull(),
+	bagsOnHand: int().default(0).notNull(),
 });
 
 export const ownerProfiles = mysqlTable("owner_profiles", {

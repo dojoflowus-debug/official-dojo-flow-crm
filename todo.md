@@ -4680,3 +4680,30 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Add alignment guides during drag (optional enhancement)
 - [ ] Add multi-select with shift-click (optional enhancement)
 - [ ] Add arrow key nudging for fine-tuning (optional enhancement)
+
+
+## Feature: Equipment Inventory for Punching Bags (Jan 23, 2026) - COMPLETE
+- [x] Add equipment inventory fields to database schema
+  - [x] Add bagsOnHand to organizations table (dojo-level inventory)
+  - [x] Add bagsInstalled to floor_plans table (room-level)
+  - [x] Add defaultLayout to floor_plans table
+- [x] Create EquipmentSetup.tsx component
+  - [x] Bags on hand numeric input (read-only display)
+  - [x] Bags installed in this room numeric input
+  - [x] Validation: installedCount ≤ onHandCount
+  - [x] Default layout selector (Grid / Wall / Staggered / Perimeter)
+  - [x] Generate Stations button
+- [x] Implement generateStations mutation in server router
+  - [x] Create exactly installedCount stations
+  - [x] Use selected layout algorithm (grid, staggered, perimeter, wall)
+  - [x] Delete old stations for this floor plan
+  - [x] Persist new stations with normalized coordinates (0-100%)
+- [x] Integrate Equipment Setup into floor plan creation/edit
+  - [x] Show panel only when templateType = kickboxing_bags
+  - [x] Component appears in Create Floor Plan dialog
+  - [x] Layout selector functional
+- [ ] Test equipment setup workflow (manual testing needed)
+  - [ ] Create floor plan with equipment setup
+  - [ ] Verify stations are created with correct count
+  - [ ] Verify stations render in canvas
+  - [ ] Test validation (installedCount > onHandCount)

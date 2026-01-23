@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import ManagementLayout from '@/components/ManagementLayout';
 import { Link } from "react-router-dom";
 import { CinematicFloorPlanner } from "@/components/CinematicFloorPlanner";
+import { EquipmentSetup } from "@/components/EquipmentSetup";
 import { cn } from "@/lib/utils";
 
 type TemplateType = "kickboxing_bags" | "yoga_grid" | "karate_lines";
@@ -206,6 +207,8 @@ function FloorPlansCinematicContent() {
   const [templateType, setTemplateType] = useState<TemplateType>("kickboxing_bags");
   const [matRotation, setMatRotation] = useState<"horizontal" | "vertical">("horizontal");
   const [notes, setNotes] = useState("");
+  const [bagsOnHand, setBagsOnHand] = useState(0);
+  const [bagsInstalled, setBagsInstalled] = useState(0);
 
   const utils = trpc.useUtils();
   const { data: floorPlans, isLoading } = trpc.floorPlans.getAll.useQuery();
@@ -510,6 +513,16 @@ function FloorPlansCinematicContent() {
                     className="bg-white/5 border-white/10 text-white"
                   />
                 </div>
+                {templateType === "kickboxing_bags" && (
+                  <EquipmentSetup
+                    bagsOnHand={bagsOnHand}
+                    bagsInstalled={bagsInstalled}
+                    defaultLayout="grid"
+                    onGenerateStations={(count, layout) => {
+                      setBagsInstalled(count);
+                    }}
+                  />
+                )}
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="border-white/20 text-white hover:bg-white/10">

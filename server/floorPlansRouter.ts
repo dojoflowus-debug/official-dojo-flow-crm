@@ -434,4 +434,173 @@ export const floorPlansRouter = router({
       
       return { success: true };
     }),
+
+  // Generate stations based on equipment setup
+  generateStations: protectedProcedure
+    .input(
+      z.object({
+        floorPlanId: z.number(),
+        bagsInstalled: z.number().min(1),
+        layout: z.enum(["grid", "staggered", "perimeter", "wall"]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get the floor plan to access dimensions
+      const [plan] = await db
+        .select()
+        .from(floorPlans)
+        .where(eq(floorPlans.id, input.floorPlanId));
+
+      if (!plan) throw new Error("Floor plan not found");
+
+      // Delete existing spots for this floor plan
+      await db.delete(floorPlanSpots).where(eq(floorPlanSpots.floorPlanId, input.floorPlanId));
+
+      // Generate new spots based on layout
+      const spots = generateStationsForLayout(
+        input.floorPlanId,
+        input.bagsInstalled,
+        input.layout,
+        plan.lengthFeet || 50,
+        plan.widthFeet || 30
+      );
+
+      // Insert new spots
+      if (spots.length > 0) {
+        await db.insert(floorPlanSpots).values(spots);
+      }
+
+      // Update floor plan with bagsInstalled and defaultLayout
+      await db
+        .update(floorPlans)
+        .set({
+          bagsInstalled: input.bagsInstalled,
+          defaultLayout: input.layout,
+        })
+        .where(eq(floorPlans.id, input.floorPlanId));
+
+      return { success: true, generatedCount: spots.length };
+    }),
 });
+
+// Helper function to generate stations based on layout
+function generateStationsForLayout(
+  floorPlanId: number,
+  count: number,
+  layout: "grid" | "staggered" | "perimeter" | "wall",
+  lengthFeet: number,
+  widthFeet: number
+): Array<{
+  floorPlanId: number;
+  spotNumber: number;
+  spotLabel: string;
+  positionX: number;
+  positionY: number;
+  spotType: "bag" | "mat" | "rank_position";
+  isAvailable: number;
+}> {
+  const spots = [];
+  const padding = 10; // 10% padding from walls
+  const usableWidth = 100 - 2 * padding;
+  const usableLength = 100 - 2 * padding - 10; // Extra space for stage
+
+  if (layout === "grid") {
+    // Grid layout: arrange in rows and columns
+    const cols = Math.ceil(Math.sqrt(count));
+    const rows = Math.ceil(count / cols);
+    const cellWidth = usableWidth / cols;
+    const cellHeight = usableLength / rows;
+
+    for (let i = 0; i < count; i++) {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      spots.push({
+        floorPlanId,
+        spotNumber: i + 1,
+        spotLabel: `Bag ${i + 1}`,
+        positionX: Math.round(padding + col * cellWidth + cellWidth / 2),
+        positionY: Math.round(padding + 10 + row * cellHeight + cellHeight / 2),
+        spotType: "bag",
+        isAvailable: 1,
+      });
+    }
+  } else if (layout === "staggered") {
+    // Staggered: offset every other row
+    const cols = Math.ceil(Math.sqrt(count));
+    const rows = Math.ceil(count / cols);
+    const cellWidth = usableWidth / cols;
+    const cellHeight = usableLength / rows;
+
+    for (let i = 0; i < count; i++) {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      const offsetX = row % 2 === 1 ? cellWidth / 2 : 0;
+      spots.push({
+        floorPlanId,
+        spotNumber: i + 1,
+        spotLabel: `Bag ${i + 1}`,
+        positionX: Math.round(padding + offsetX + col * cellWidth + cellWidth / 2),
+        positionY: Math.round(padding + 10 + row * cellHeight + cellHeight / 2),
+        spotType: "bag",
+        isAvailable: 1,
+      });
+    }
+  } else if (layout === "perimeter") {
+    // Perimeter: arrange around the walls
+    const perimeter = 2 * (usableWidth + usableLength);
+    const spacing = perimeter / count;
+    let distance = 0;
+
+    for (let i = 0; i < count; i++) {
+      let x, y;
+      const pos = (i * spacing) % perimeter;
+
+      if (pos < usableWidth) {
+        // Top wall
+        x = padding + pos;
+        y = padding + 10;
+      } else if (pos < usableWidth + usableLength) {
+        // Right wall
+        x = padding + usableWidth;
+        y = padding + 10 + (pos - usableWidth);
+      } else if (pos < 2 * usableWidth + usableLength) {
+        // Bottom wall
+        x = padding + usableWidth - (pos - usableWidth - usableLength);
+        y = padding + 10 + usableLength;
+      } else {
+        // Left wall
+        x = padding;
+        y = padding + 10 + usableLength - (pos - 2 * usableWidth - usableLength);
+      }
+
+      spots.push({
+        floorPlanId,
+        spotNumber: i + 1,
+        spotLabel: `Bag ${i + 1}`,
+        positionX: Math.round(x),
+        positionY: Math.round(y),
+        spotType: "bag",
+        isAvailable: 1,
+      });
+    }
+  } else if (layout === "wall") {
+    // Bag Wall: single row at front
+    const spacing = usableWidth / count;
+    for (let i = 0; i < count; i++) {
+      spots.push({
+        floorPlanId,
+        spotNumber: i + 1,
+        spotLabel: `Bag ${i + 1}`,
+        positionX: Math.round(padding + (i + 0.5) * spacing),
+        positionY: Math.round(padding + 15),
+        spotType: "bag",
+        isAvailable: 1,
+      });
+    }
+  }
+
+  return spots;
+}
