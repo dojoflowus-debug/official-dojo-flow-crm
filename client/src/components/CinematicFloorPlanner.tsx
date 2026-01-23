@@ -515,6 +515,7 @@ export function CinematicFloorPlanner({
           aspectRatio: `${floorPlan.lengthFeet || 40} / ${floorPlan.widthFeet || 40}`,
           minHeight: "500px",
           maxHeight: "700px",
+          position: 'relative',
         }}
       >
         {/* Realistic floor surface */}
@@ -597,7 +598,7 @@ export function CinematicFloorPlanner({
         ))}
 
         {/* Spots */}
-        <div className="absolute inset-4 top-20">
+        <div className="absolute inset-4 top-20" style={{ position: 'relative' }}>
           {floorPlan.spots.map((spot) => {
             const assignment = assignedStudents.find((a) => a.spotId === spot.id);
             return (

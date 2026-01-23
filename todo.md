@@ -4573,3 +4573,25 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - All three floor plans visible in sidebar
   - Cinematic 3D bags rendering correctly
   - Mode switcher functional (Design, Kiosk Preview, Live Class, Wall Display)
+
+## Bug Fix - Floor Plan Positioning (Jan 23, 2026) - COMPLETE
+- [x] Fix bags rendering outside floor container
+  - Restored original CinematicFloorPlanner.tsx from git
+  - Added position: relative to floor canvas container
+  - Made spots container position: relative to establish positioning context
+- [x] Set floor canvas as position:relative boundary
+  - Floor canvas now properly contains all spots
+  - Spots container acts as positioning context for child elements
+- [x] Convert spot coordinates to percentage-based positioning
+  - Spots use left: ${spot.positionX}% and top: ${spot.positionY}%
+  - Coordinates are relative to spots container (position: relative)
+- [x] Add overflow clipping to floor container
+  - Floor canvas has overflow: hidden from rounded-2xl class
+  - Bags are properly clipped at container boundaries
+- [x] Add padding/inset to keep bags inside room boundaries
+  - Spots container uses absolute inset-4 top-20 for padding
+  - Bags render inside the room with proper spacing
+- [x] Test across window resize and mode switches
+  - All 21 bags properly positioned inside floor canvas
+  - Mode switcher works correctly (Design, Kiosk, Live, Wall)
+  - Bags remain contained on viewport resize
