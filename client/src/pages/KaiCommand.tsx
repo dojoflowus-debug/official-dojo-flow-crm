@@ -3333,7 +3333,7 @@ export default function KaiCommand() {
       </div>
 
       {/* COMPOSER DOCK - Anchored to center panel in Cinematic mode */}
-      {!isFocusMode && (
+      {
         <div 
           className={isCinematic ? "absolute flex justify-center" : "fixed flex justify-center"}
           style={{
@@ -3433,7 +3433,7 @@ export default function KaiCommand() {
             </Button>
           </form>
         </div>
-      )}
+      }
 
       {/* INFO PANEL - Third Column */}
       <InfoPanel 
