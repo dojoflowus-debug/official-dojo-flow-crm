@@ -75,7 +75,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     name: 'Martial Arts Dojo',
     category: 'martial-arts',
     thumbnailPath: '/dojo-background.jpg',
-    backgroundImageUrl: '/dojo-background.jpg',
+    backgroundImageUrl: '/environments/samurai-red-dojo.jpg',
     atmosphere: {
       blur: 0,
       dim: 20,
