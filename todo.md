@@ -4472,3 +4472,22 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add section dividers and refined button styling
 - [x] Implement micro-animations for smooth open/close transitions
 - [x] Test on 1366x768 and verify accessibility
+
+## Feature - Form Validation Toast Notifications (Jan 23, 2026)
+- [x] Add validation logic for floor plan form fields
+  - Room name: required, minimum 2 characters
+  - Length: positive number if provided
+  - Width: positive number if provided
+  - Safety spacing: non-negative, max 50 feet
+- [x] Implement success toast notification on creation
+  - Shows room name and template type
+  - 4-second duration
+  - Closes modal and resets form
+- [x] Implement error toast notifications for validation failures
+  - Specific error messages for each field
+  - 5-second duration for better readability
+  - Shows both title and description
+- [x] Test toast notifications and verify UX
+  - All mutations (create, update, delete) have enhanced notifications
+  - Consistent styling across all toast types
+  - Dev server compiles without errors

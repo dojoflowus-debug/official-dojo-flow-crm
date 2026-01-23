@@ -73,35 +73,56 @@ function FloorPlansContent() {
     { enabled: !!viewingPlan }
   );
   const createMutation = trpc.floorPlans.create.useMutation({
-    onSuccess: () => {
-      toast.success("Floor plan created successfully");
+    onSuccess: (data) => {
+      toast.success(`Floor plan "${data.roomName}" created successfully`, {
+        description: `${data.templateType.replace(/_/g, ' ')} layout ready`,
+        duration: 4000,
+      });
       utils.floorPlans.getAll.invalidate();
       resetForm();
       setIsCreateDialogOpen(false);
     },
     onError: (error) => {
-      toast.error(`Failed to create floor plan: ${error.message}`);
+      const errorMsg = error.message || 'Unknown error occurred';
+      toast.error('Failed to create floor plan', {
+        description: errorMsg,
+        duration: 5000,
+      });
     },
   });
 
   const updateMutation = trpc.floorPlans.update.useMutation({
-    onSuccess: () => {
-      toast.success("Floor plan updated successfully");
+    onSuccess: (data) => {
+      toast.success(`Floor plan "${data.roomName}" updated`, {
+        description: 'Changes saved successfully',
+        duration: 4000,
+      });
       utils.floorPlans.getAll.invalidate();
       setIsEditDialogOpen(false);
     },
     onError: (error) => {
-      toast.error(`Failed to update floor plan: ${error.message}`);
+      const errorMsg = error.message || 'Unknown error occurred';
+      toast.error('Failed to update floor plan', {
+        description: errorMsg,
+        duration: 5000,
+      });
     },
   });
 
   const deleteMutation = trpc.floorPlans.delete.useMutation({
     onSuccess: () => {
-      toast.success("Floor plan deleted successfully");
+      toast.success('Floor plan deleted', {
+        description: 'The floor plan has been removed',
+        duration: 4000,
+      });
       utils.floorPlans.getAll.invalidate();
     },
     onError: (error) => {
-      toast.error(`Failed to delete floor plan: ${error.message}`);
+      const errorMsg = error.message || 'Unknown error occurred';
+      toast.error('Failed to delete floor plan', {
+        description: errorMsg,
+        duration: 5000,
+      });
     },
   });
 
@@ -116,9 +137,49 @@ function FloorPlansContent() {
     setSelectedPlanId(null);
   };
 
-  const handleCreate = () => {
+  const validateFloorPlan = () => {
+    // Room name validation
     if (!roomName.trim()) {
       toast.error("Room name is required");
+      return false;
+    }
+
+    if (roomName.trim().length < 2) {
+      toast.error("Room name must be at least 2 characters");
+      return false;
+    }
+
+    // Dimensions validation
+    const length = lengthFeet ? parseFloat(lengthFeet) : null;
+    const width = widthFeet ? parseFloat(widthFeet) : null;
+
+    if (length !== null && (isNaN(length) || length <= 0)) {
+      toast.error("Length must be a positive number");
+      return false;
+    }
+
+    if (width !== null && (isNaN(width) || width <= 0)) {
+      toast.error("Width must be a positive number");
+      return false;
+    }
+
+    // Safety spacing validation
+    const spacing = parseFloat(safetySpacingFeet);
+    if (isNaN(spacing) || spacing < 0) {
+      toast.error("Safety spacing must be a non-negative number");
+      return false;
+    }
+
+    if (spacing > 50) {
+      toast.error("Safety spacing seems too large (max 50 feet)");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleCreate = () => {
+    if (!validateFloorPlan()) {
       return;
     }
 
