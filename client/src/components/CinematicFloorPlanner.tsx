@@ -701,7 +701,7 @@ export function CinematicFloorPlanner({
           {/* Spots Container - Position relative for absolute positioning context */}
           <div 
             className="absolute inset-4 top-20"
-            style={{ position: 'relative', overflow: 'hidden' }}
+            style={{ position: 'relative' }}
           >
             {floorPlan.spots.map((spot) => {
               const assignment = assignedStudents.find((a) => a.spotId === spot.id);
