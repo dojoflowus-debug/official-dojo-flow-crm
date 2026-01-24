@@ -150,29 +150,10 @@ function SpotMarker({
   const spotWidth = isBag ? 40 : isMat ? 64 : 48;
   const spotHeight = isBag ? 64 : isMat ? 32 : 48;
 
-  // Clamp position using getBoundingClientRect for accurate bounds
-  let clampedX = spot.positionX;
-  let clampedY = spot.positionY;
-
-  if (containerRef.current) {
-    const container = containerRef.current;
-    const containerRect = container.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
-    const padding = 16; // inset-4 = 16px
-
-    // Convert percentage to pixels
-    const pixelX = (spot.positionX / 100) * (containerWidth - padding * 2) + padding;
-    const pixelY = (spot.positionY / 100) * (containerHeight - padding * 2) + padding;
-
-    // Clamp to boundaries considering spot size
-    const clampedPixelX = Math.max(padding, Math.min(pixelX, containerWidth - spotWidth - padding));
-    const clampedPixelY = Math.max(padding + 80, Math.min(pixelY, containerHeight - spotHeight - padding)); // +80 for stage
-
-    // Convert back to percentage
-    clampedX = ((clampedPixelX - padding) / (containerWidth - padding * 2)) * 100;
-    clampedY = ((clampedPixelY - padding - 80) / (containerHeight - padding * 2 - 80)) * 100;
-  }
+  // Use position values directly - they are already in 0-100% format
+  // relative to the full room canvas. Clamping is done by the layout generator.
+  const clampedX = Math.max(0, Math.min(100, spot.positionX));
+  const clampedY = Math.max(0, Math.min(100, spot.positionY));
 
   return (
     <div
