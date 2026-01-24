@@ -483,6 +483,7 @@ export function CinematicFloorPlanner({
 
   // TRPC mutations
   const batchUpdateSpotsMutation = trpc.floorPlans.batchUpdateSpots.useMutation();
+  const updateSpotPositionMutation = trpc.floorPlans.updateSpotPosition.useMutation();
 
   const handleModeChange = (mode: ViewMode) => {
     setCurrentMode(mode);
