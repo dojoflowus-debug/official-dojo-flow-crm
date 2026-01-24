@@ -210,6 +210,7 @@ function FloorPlansCinematicContent() {
   const [notes, setNotes] = useState("");
   const [bagsOnHand, setBagsOnHand] = useState(0);
   const [bagsInstalled, setBagsInstalled] = useState(0);
+  const [defaultLayout, setDefaultLayout] = useState<string>("grid");
 
   const utils = trpc.useUtils();
   const { data: floorPlans, isLoading } = trpc.floorPlans.getAll.useQuery();
@@ -260,6 +261,9 @@ function FloorPlansCinematicContent() {
     setTemplateType("kickboxing_bags");
     setMatRotation("horizontal");
     setNotes("");
+    setBagsOnHand(0);
+    setBagsInstalled(0);
+    setDefaultLayout("grid");
   };
 
   const handleCreate = () => {
@@ -539,10 +543,35 @@ function FloorPlansCinematicContent() {
                         className="bg-white/5 border-white/10 text-white"
                         min="0"
                       />
-                      {bagsInstalled > bagsOnHand && (
+                      {bagsInstalled > bagsOnHand && bagsOnHand > 0 && (
                         <p className="text-red-400 text-sm">Cannot install more bags than available</p>
                       )}
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/90">Default Layout</Label>
+                      <Select value={defaultLayout} onValueChange={setDefaultLayout}>
+                        <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 border-white/10">
+                          <SelectItem value="grid" className="text-white">Grid</SelectItem>
+                          <SelectItem value="staggered" className="text-white">Staggered</SelectItem>
+                          <SelectItem value="bag_wall" className="text-white">Wall</SelectItem>
+                          <SelectItem value="perimeter" className="text-white">Perimeter</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        if (bagsInstalled > 0 && bagsInstalled <= bagsOnHand) {
+                          toast.success(`Generated ${bagsInstalled} stations using ${defaultLayout} layout`);
+                        }
+                      }}
+                      disabled={bagsInstalled === 0 || bagsInstalled > bagsOnHand}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+                    >
+                      Generate Stations
+                    </Button>
                   </div>
                 )}
               </div>
