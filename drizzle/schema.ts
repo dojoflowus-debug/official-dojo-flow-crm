@@ -532,7 +532,7 @@ export const floorPlans = mysqlTable("floor_plans", {
 	safetySpacingFeet: int().default(3).notNull(),
 	templateType: mysqlEnum(['kickboxing_bags','yoga_grid','karate_lines']).notNull(),
 	matRotation: mysqlEnum(['horizontal','vertical']).default('horizontal'),
-	maxCapacity: int().notNull(),
+	maxCapacity: int().default(0).notNull(),
 	isActive: int().default(1).notNull(),
 	notes: text(),
 	bagsInstalled: int().default(0).notNull(),

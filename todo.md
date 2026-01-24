@@ -4707,3 +4707,67 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - [ ] Verify stations are created with correct count
   - [ ] Verify stations render in canvas
   - [ ] Test validation (installedCount > onHandCount)
+
+
+## Feature: Restore Cinematic Floor Planner Design (Jan 23, 2026)
+- [ ] Create CinematicRoomCanvas component with visual styling
+  - [ ] Floor texture (mat/turf look with subtle pattern)
+  - [ ] Soft vignette and light bloom effects
+  - [ ] Visible inset room boundary with padding
+  - [ ] Stage strip at top labeled "FRONT OF CLASS"
+  - [ ] Lightweight CSS implementation (no heavy 3D)
+- [ ] Add EquipmentSetupPanel on right side (Design mode only)
+  - [ ] Bag Type label (read-only if template chosen)
+  - [ ] Bags On Hand numeric input
+  - [ ] Bags Installed In This Room numeric input
+  - [ ] Validation: installed ≤ onHand
+  - [ ] Default Layout segmented control (Grid, Staggered, Wall, Perimeter)
+  - [ ] Generate Stations button
+  - [ ] Reset button
+  - [ ] Save button
+  - [ ] Regenerate prompt when installed count changes
+  - [ ] Error display when installed > onHand
+- [ ] Update bag station rendering with visual markers
+  - [ ] Render as mini bag icons/shapes (not dots)
+  - [ ] Station number badges (1..N)
+  - [ ] Glow ring for available vs occupied status
+  - [ ] Optional initials placeholder for future
+  - [ ] Add legend: Available / Occupied
+- [ ] Add kiosk preview mode
+  - [ ] Hide editing controls in Kiosk Preview
+  - [ ] Show canvas + stations only
+  - [ ] Add "Tap to select your bag" hint text
+- [ ] Test across all modes (Design, Kiosk, Live, Wall)
+
+
+## Bug Fix: Equipment Setup Form Inputs Locked (Jan 24, 2026)
+- [ ] Fix Layout Template dropdown to be editable
+  - [ ] Remove hard-coded Kickboxing Bags selection
+  - [ ] Add all template options (Kickboxing Bags, Karate Lineup, Yoga Grid, Dance/Gymnastics)
+  - [ ] Ensure onChange updates form state
+  - [ ] Verify selected value persists and drives Equipment Setup visibility
+- [ ] Fix Bags on Hand input to be editable
+  - [ ] Replace display-only card with true number input
+  - [ ] Bind to form state (react-hook-form or local state)
+  - [ ] Remove disabled/readOnly attributes
+  - [ ] Ensure value is not overwritten each render
+- [ ] Fix Bags to Install input to be editable
+  - [ ] Replace display-only card with true number input
+  - [ ] Bind to form state
+  - [ ] Remove disabled/readOnly attributes
+- [ ] Fix Default Layout selector to be editable
+  - [ ] Make it a true select/segmented control
+  - [ ] Allow user to change between Grid, Staggered, Wall, Perimeter
+  - [ ] Persist selection in form state
+- [ ] Add validation without locking fields
+  - [ ] Show inline error if installed > onHand
+  - [ ] Allow typing always
+  - [ ] Disable Generate Stations only when invalid
+- [ ] Equipment Setup visibility logic
+  - [ ] Show only when template = Kickboxing Bags
+  - [ ] Hide when template changes to other types
+  - [ ] Do not break form when hiding
+- [ ] Generate Stations button behavior
+  - [ ] Enable when installedCount > 0 and installed <= onHand
+  - [ ] Disable when invalid
+  - [ ] Call mutation with selected layout on click

@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE floor_plans ADD COLUMN bagsInstalled INT DEFAULT 0 AFTER notes;\nALTER TABLE floor_plans ADD COLUMN defaultLayout VARCHAR(50) DEFAULT 'grid' AFTER bagsInstalled;\nALTER TABLE organizations ADD COLUMN bagsOnHand INT DEFAULT 0 AFTER notes;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE floor_plans ADD COLUMN bagsInstalled INT DEFAULT 0 AFTER notes;\nALTER TABLE floor_plans ADD COLUMN defaultLayout VARCHAR(50) DEFAULT 'grid' AFTER bagsInstalled;\nALTER TABLE organizations ADD COLUMN bagsOnHand INT DEFAULT 0 AFTER notes;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 3: Unknown column 'notes' in 'organizations'"
+  ]
+}

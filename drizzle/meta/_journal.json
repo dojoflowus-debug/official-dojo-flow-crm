@@ -477,6 +477,13 @@
       "when": 1769211120568,
       "tag": "0067_majestic_hobgoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "5",
+      "when": 1769259871974,
+      "tag": "0068_nosy_xavin",
+      "breakpoints": true
     }
   ]
 }

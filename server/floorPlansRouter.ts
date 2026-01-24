@@ -189,13 +189,14 @@ export const floorPlansRouter = router({
         widthFeet: z.number(),
         templateType: templateTypeSchema,
         safetySpacing: z.number().default(3),
+        locationId: z.number(),
       })
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const [plan] = await db
+      await db
         .insert(floorPlans)
         .values({
           roomName: input.roomName,
@@ -203,8 +204,20 @@ export const floorPlansRouter = router({
           widthFeet: input.widthFeet,
           squareFeet: input.lengthFeet * input.widthFeet,
           templateType: input.templateType,
-        })
-        .$returningId();
+          locationId: input.locationId,
+          bagsInstalled: 0,
+          defaultLayout: 'grid',
+        });
+      
+      // Get the created plan
+      const [plan] = await db
+        .select()
+        .from(floorPlans)
+        .where(eq(floorPlans.roomName, input.roomName))
+        .orderBy(desc(floorPlans.createdAt))
+        .limit(1);
+      
+      if (!plan) throw new Error("Failed to create floor plan");
       
       // Generate spots based on template
       let spots: Array<{

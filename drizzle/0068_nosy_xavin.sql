@@ -1,0 +1,1 @@
+ALTER TABLE `floor_plans` MODIFY COLUMN `maxCapacity` int NOT NULL DEFAULT 0;

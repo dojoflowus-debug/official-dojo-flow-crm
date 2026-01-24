@@ -12,6 +12,7 @@ import ManagementLayout from '@/components/ManagementLayout';
 import { Link } from "react-router-dom";
 import { CinematicFloorPlanner } from "@/components/CinematicFloorPlanner";
 import { EquipmentSetup } from "@/components/EquipmentSetup";
+import { EquipmentSetupPanelV2 } from "@/components/EquipmentSetupPanelV2";
 import { cn } from "@/lib/utils";
 
 type TemplateType = "kickboxing_bags" | "yoga_grid" | "karate_lines";
@@ -275,6 +276,7 @@ function FloorPlansCinematicContent() {
       templateType,
       matRotation,
       notes: notes.trim() || undefined,
+      locationId: 1,
     });
   };
 
@@ -410,7 +412,7 @@ function FloorPlansCinematicContent() {
       </div>
 
       {/* Main Content - Floor Planner Canvas */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 flex flex-col">
         {/* Header with Create Button */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -514,14 +516,34 @@ function FloorPlansCinematicContent() {
                   />
                 </div>
                 {templateType === "kickboxing_bags" && (
-                  <EquipmentSetup
-                    bagsOnHand={bagsOnHand}
-                    bagsInstalled={bagsInstalled}
-                    defaultLayout="grid"
-                    onGenerateStations={(count, layout) => {
-                      setBagsInstalled(count);
-                    }}
-                  />
+                  <div className="space-y-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                    <h3 className="text-white font-semibold">Equipment Setup</h3>
+                    <div className="space-y-2">
+                      <Label className="text-white/90">Bags On Hand (Inventory)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={bagsOnHand}
+                        onChange={(e) => setBagsOnHand(parseInt(e.target.value) || 0)}
+                        className="bg-white/5 border-white/10 text-white"
+                        min="0"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/90">Bags to Install in This Room</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={bagsInstalled}
+                        onChange={(e) => setBagsInstalled(parseInt(e.target.value) || 0)}
+                        className="bg-white/5 border-white/10 text-white"
+                        min="0"
+                      />
+                      {bagsInstalled > bagsOnHand && (
+                        <p className="text-red-400 text-sm">Cannot install more bags than available</p>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
@@ -549,9 +571,28 @@ function FloorPlansCinematicContent() {
               console.log("Spot clicked:", spot);
             }}
           />
-        ) : selectedPlan ? (
-          <div className="flex items-center justify-center h-96 text-white/50">
-            Loading floor plan...
+        ) : selectedPlan && floorPlanWithSpots ? (
+          <div className="flex-1 flex gap-6 min-h-0">
+            <div className="flex-1 min-w-0">
+              <CinematicFloorPlanner
+                floorPlan={floorPlanWithSpots}
+                showModeSwitch={true}
+                onSpotClick={(spot) => {
+                  console.log("Spot clicked:", spot);
+                }}
+              />
+            </div>
+            <div className="flex-shrink-0">
+              <EquipmentSetupPanelV2
+                templateType={selectedPlan.templateType}
+                onGenerateStations={(count, layout) => {
+                  toast.success(`Generated ${count} stations with ${layout} layout`);
+                }}
+                onSave={(bagsOnHand, bagsInstalled, layout) => {
+                  toast.success(`Saved: ${bagsInstalled} bags installed`);
+                }}
+              />
+            </div>
           </div>
         ) : (
           <div 

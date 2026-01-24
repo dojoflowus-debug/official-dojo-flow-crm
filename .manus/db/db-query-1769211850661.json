@@ -1,0 +1,33 @@
+{
+  "query": "SHOW CREATE TABLE floor_plans;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SHOW CREATE TABLE floor_plans;",
+  "rows": [
+    {
+      "Table": "floor_plans",
+      "Create Table": "CREATE TABLE `floor_plans` ("
+    }
+  ],
+  "messages": [
+    "  `id` int(11) NOT NULL AUTO_INCREMENT,",
+    "  `roomName` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `locationId` int(11) DEFAULT NULL,",
+    "  `lengthFeet` int(11) DEFAULT NULL,",
+    "  `widthFeet` int(11) DEFAULT NULL,",
+    "  `squareFeet` int(11) DEFAULT NULL,",
+    "  `safetySpacingFeet` int(11) NOT NULL DEFAULT '3',",
+    "  `templateType` enum('kickboxing_bags','yoga_grid','karate_lines') COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `matRotation` enum('horizontal','vertical') COLLATE utf8mb4_unicode_ci DEFAULT 'horizontal',",
+    "  `maxCapacity` int(11) NOT NULL DEFAULT '0',",
+    "  `isActive` int(11) NOT NULL DEFAULT '1',",
+    "  `notes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `bagsInstalled` int(11) DEFAULT '0',",
+    "  `defaultLayout` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'grid',",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=720001"
+  ],
+  "stdout": "Table\tCreate Table\nfloor_plans\tCREATE TABLE `floor_plans` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `roomName` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `locationId` int(11) DEFAULT NULL,\n  `lengthFeet` int(11) DEFAULT NULL,\n  `widthFeet` int(11) DEFAULT NULL,\n  `squareFeet` int(11) DEFAULT NULL,\n  `safetySpacingFeet` int(11) NOT NULL DEFAULT '3',\n  `templateType` enum('kickboxing_bags','yoga_grid','karate_lines') COLLATE utf8mb4_unicode_ci NOT NULL,\n  `matRotation` enum('horizontal','vertical') COLLATE utf8mb4_unicode_ci DEFAULT 'horizontal',\n  `maxCapacity` int(11) NOT NULL DEFAULT '0',\n  `isActive` int(11) NOT NULL DEFAULT '1',\n  `notes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `bagsInstalled` int(11) DEFAULT '0',\n  `defaultLayout` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'grid',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=720001\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
