@@ -4741,33 +4741,46 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 
 
 ## Bug Fix: Equipment Setup Form Inputs Locked (Jan 24, 2026)
-- [ ] Fix Layout Template dropdown to be editable
-  - [ ] Remove hard-coded Kickboxing Bags selection
-  - [ ] Add all template options (Kickboxing Bags, Karate Lineup, Yoga Grid, Dance/Gymnastics)
-  - [ ] Ensure onChange updates form state
-  - [ ] Verify selected value persists and drives Equipment Setup visibility
-- [ ] Fix Bags on Hand input to be editable
-  - [ ] Replace display-only card with true number input
-  - [ ] Bind to form state (react-hook-form or local state)
-  - [ ] Remove disabled/readOnly attributes
-  - [ ] Ensure value is not overwritten each render
-- [ ] Fix Bags to Install input to be editable
-  - [ ] Replace display-only card with true number input
-  - [ ] Bind to form state
-  - [ ] Remove disabled/readOnly attributes
-- [ ] Fix Default Layout selector to be editable
-  - [ ] Make it a true select/segmented control
-  - [ ] Allow user to change between Grid, Staggered, Wall, Perimeter
-  - [ ] Persist selection in form state
-- [ ] Add validation without locking fields
-  - [ ] Show inline error if installed > onHand
-  - [ ] Allow typing always
-  - [ ] Disable Generate Stations only when invalid
-- [ ] Equipment Setup visibility logic
-  - [ ] Show only when template = Kickboxing Bags
-  - [ ] Hide when template changes to other types
-  - [ ] Do not break form when hiding
-- [ ] Generate Stations button behavior
-  - [ ] Enable when installedCount > 0 and installed <= onHand
-  - [ ] Disable when invalid
-  - [ ] Call mutation with selected layout on click
+- [x] Fix Layout Template dropdown to be editable
+  - [x] Remove hard-coded Kickboxing Bags selection
+  - [x] Add all template options (Kickboxing Bags, Karate Lineup, Yoga Grid, Dance/Gymnastics)
+  - [x] Ensure onChange updates form state
+  - [x] Verify selected value persists and drives Equipment Setup visibility
+- [x] Fix Bags on Hand input to be editable
+  - [x] Replace display-only card with true number input
+  - [x] Bind to form state (react-hook-form or local state)
+  - [x] Remove disabled/readOnly attributes
+  - [x] Ensure value is not overwritten each render
+- [x] Fix Bags to Install input to be editable
+  - [x] Replace display-only card with true number input
+  - [x] Bind to form state
+  - [x] Remove disabled/readOnly attributes
+- [x] Fix Default Layout selector to be editable
+  - [x] Make it a true select/segmented control
+  - [x] Allow user to change between Grid, Staggered, Wall, Perimeter
+  - [x] Persist selection in form state
+- [x] Add validation without locking fields
+  - [x] Show inline error if installed > onHand
+  - [x] Allow typing always
+  - [x] Disable Generate Stations only when invalid
+- [x] Equipment Setup visibility logic
+  - [x] Show only when template = Kickboxing Bags
+  - [x] Hide when template changes to other types
+  - [x] Do not break form when hiding
+- [x] Generate Stations button behavior
+  - [x] Enable when installedCount > 0 and installed <= onHand
+  - [x] Disable when invalid
+  - [x] Call mutation with selected layout on click
+
+## Feature: Wire Generate Stations Button (Jan 24, 2026)
+- [x] Add generateStationsMutation to FloorPlansCinematic component
+- [x] Update createMutation.onSuccess to call generateStations after floor plan creation
+- [x] Pass bagsInstalled count and defaultLayout to generateStations API
+- [x] Invalidate floor plan queries after generation
+- [x] Test end-to-end flow
+  - [x] Create floor plan with Bags On Hand = 30
+  - [x] Set Bags to Install = 15
+  - [x] Select Grid layout
+  - [x] Verify 15 stations generated in database
+  - [x] Verify all 15 bags render on canvas in grid pattern
+  - [x] Confirmed: Test Bags Generation room shows 15 spots with all bags visible and properly positioned

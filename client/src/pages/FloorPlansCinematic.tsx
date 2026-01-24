@@ -223,6 +223,16 @@ function FloorPlansCinematicContent() {
     onSuccess: (data) => {
       toast.success(`Floor plan "${data.roomName}" created successfully`);
       utils.floorPlans.getAll.invalidate();
+      
+      // If bags are to be installed, generate stations
+      if (bagsInstalled > 0 && bagsInstalled <= bagsOnHand) {
+        generateStationsMutation.mutate({
+          floorPlanId: data.id,
+          bagsInstalled,
+          layout: defaultLayout as "grid" | "staggered" | "perimeter" | "wall",
+        });
+      }
+      
       resetForm();
       setIsCreateDialogOpen(false);
     },
@@ -250,6 +260,19 @@ function FloorPlansCinematicContent() {
     },
     onError: (error) => {
       toast.error('Failed to delete floor plan', { description: error.message });
+    },
+  });
+
+  const generateStationsMutation = trpc.floorPlans.generateStations.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Generated ${data.generatedCount} stations`);
+      utils.floorPlans.getAll.invalidate();
+      if (selectedPlan) {
+        utils.floorPlans.getById.invalidate({ id: selectedPlan.id });
+      }
+    },
+    onError: (error) => {
+      toast.error('Failed to generate stations', { description: error.message });
     },
   });
 
@@ -564,13 +587,13 @@ function FloorPlansCinematicContent() {
                     <Button 
                       onClick={() => {
                         if (bagsInstalled > 0 && bagsInstalled <= bagsOnHand) {
-                          toast.success(`Generated ${bagsInstalled} stations using ${defaultLayout} layout`);
+                          toast.info(`Stations will be generated with ${defaultLayout} layout after creating the floor plan`);
                         }
                       }}
-                      disabled={bagsInstalled === 0 || bagsInstalled > bagsOnHand}
+                      disabled={bagsInstalled === 0 || bagsInstalled > bagsOnHand || createMutation.isPending}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
                     >
-                      Generate Stations
+                      {createMutation.isPending ? "Generating..." : "Generate Stations"}
                     </Button>
                   </div>
                 )}
