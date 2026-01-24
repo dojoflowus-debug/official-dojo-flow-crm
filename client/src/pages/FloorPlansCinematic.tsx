@@ -29,6 +29,9 @@ interface FloorPlan {
   maxCapacity: number;
   isActive: number;
   notes: string | null;
+  bagsInstalled?: number;
+  bagsOnHand?: number;
+  defaultLayout?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -245,6 +248,9 @@ function FloorPlansCinematicContent() {
     onSuccess: (data) => {
       toast.success(`Floor plan "${data.roomName}" updated`);
       utils.floorPlans.getAll.invalidate();
+      if (selectedPlan) {
+        utils.floorPlans.getById.invalidate({ id: selectedPlan.id });
+      }
       setIsEditDialogOpen(false);
     },
     onError: (error) => {
@@ -315,6 +321,9 @@ function FloorPlansCinematicContent() {
     setTemplateType(plan.templateType);
     setMatRotation(plan.matRotation || "horizontal");
     setNotes(plan.notes || "");
+    setBagsOnHand(plan.bagsOnHand || 0);
+    setBagsInstalled(plan.bagsInstalled || 0);
+    setDefaultLayout(plan.defaultLayout || "grid");
     setSelectedPlan(plan);
     setIsEditDialogOpen(true);
   };
@@ -334,6 +343,9 @@ function FloorPlansCinematicContent() {
       safetySpacingFeet: parseFloat(safetySpacingFeet),
       matRotation,
       notes: notes.trim() || null,
+      bagsOnHand: templateType === 'kickboxing_bags' ? bagsOnHand : undefined,
+      bagsInstalled: templateType === 'kickboxing_bags' ? bagsInstalled : undefined,
+      defaultLayout: templateType === 'kickboxing_bags' ? defaultLayout : undefined,
     });
   };
 
@@ -723,6 +735,49 @@ function FloorPlansCinematicContent() {
                 className="bg-white/5 border-white/10 text-white"
               />
             </div>
+            {templateType === 'kickboxing_bags' && (
+              <>
+                <div className="border-t border-white/10 pt-4 mt-4">
+                  <h3 className="text-white/90 font-semibold mb-4">Equipment Setup</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-sm">Bags On Hand (inventory)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={bagsOnHand}
+                        onChange={(e) => setBagsOnHand(parseInt(e.target.value) || 0)}
+                        className="bg-white/5 border-white/10 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-sm">Bags to Install in This Room</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={bagsInstalled}
+                        onChange={(e) => setBagsInstalled(parseInt(e.target.value) || 0)}
+                        className="bg-white/5 border-white/10 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Label className="text-white/70 text-sm">Default Layout</Label>
+                    <Select value={defaultLayout} onValueChange={setDefaultLayout}>
+                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black/95 border-white/10">
+                        <SelectItem value="grid" className="text-white">Grid</SelectItem>
+                        <SelectItem value="staggered" className="text-white">Staggered</SelectItem>
+                        <SelectItem value="perimeter" className="text-white">Perimeter</SelectItem>
+                        <SelectItem value="wall" className="text-white">Wall</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <Label className="text-white/90">Notes</Label>
               <Textarea
@@ -737,6 +792,19 @@ function FloorPlansCinematicContent() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="border-white/20 text-white hover:bg-white/10">
               Cancel
             </Button>
+            {templateType === 'kickboxing_bags' && selectedPlan && (selectedPlan.bagsInstalled || 0) !== bagsInstalled && (
+              <Button 
+                onClick={() => {
+                  if (confirm('Regenerate stations to match new installed count? This will overwrite current placement.')) {
+                    handleUpdate();
+                  }
+                }}
+                disabled={updateMutation.isPending} 
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {updateMutation.isPending ? "Regenerating..." : "Regenerate Stations"}
+              </Button>
+            )}
             <Button onClick={handleUpdate} disabled={updateMutation.isPending} className="bg-red-600 hover:bg-red-700">
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

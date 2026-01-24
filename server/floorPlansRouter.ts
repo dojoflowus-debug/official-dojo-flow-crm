@@ -253,6 +253,9 @@ export const floorPlansRouter = router({
         lengthFeet: z.number().optional(),
         widthFeet: z.number().optional(),
         templateType: templateTypeSchema.optional(),
+        bagsOnHand: z.number().optional(),
+        bagsInstalled: z.number().optional(),
+        defaultLayout: z.enum(['grid', 'staggered', 'perimeter', 'wall']).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -270,8 +273,32 @@ export const floorPlansRouter = router({
         updateData.squareFeet = (input.lengthFeet || 30) * input.widthFeet;
       }
       if (input.templateType) updateData.templateType = input.templateType;
+      if (input.bagsOnHand !== undefined) updateData.bagsOnHand = input.bagsOnHand;
+      if (input.bagsInstalled !== undefined) updateData.bagsInstalled = input.bagsInstalled;
+      if (input.defaultLayout !== undefined) updateData.defaultLayout = input.defaultLayout;
       
       await db.update(floorPlans).set(updateData).where(eq(floorPlans.id, input.id));
+      
+      // If bags were updated, regenerate stations
+      if (input.bagsInstalled !== undefined && input.bagsInstalled > 0) {
+        const [plan] = await db.select().from(floorPlans).where(eq(floorPlans.id, input.id));
+        
+        // Delete existing spots
+        await db.delete(floorPlanSpots).where(eq(floorPlanSpots.floorPlanId, input.id));
+        
+        // Generate new spots
+        const spots = generateStationsForLayout(
+          input.id,
+          input.bagsInstalled,
+          input.defaultLayout || 'grid',
+          plan.lengthFeet || 40,
+          plan.widthFeet || 30
+        );
+        
+        if (spots.length > 0) {
+          await db.insert(floorPlanSpots).values(spots);
+        }
+      }
       
       const [updated] = await db.select().from(floorPlans).where(eq(floorPlans.id, input.id));
       return updated;
