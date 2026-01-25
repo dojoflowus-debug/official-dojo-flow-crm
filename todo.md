@@ -5002,3 +5002,36 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Reset all bags to default grid positions based on current settings
 - [x] Cancel and Reset All buttons in modal
 - [x] Modal closes after reset or cancel
+
+
+## Phase 27: Left Room Selector Redesign - Cinematic Control Rail (Jan 25, 2026) - COMPLETED
+
+### Structure Changes
+- [x] Remove bulky card backgrounds (now slim rows)
+- [x] Eliminate heavy borders and shadows
+- [x] Convert to slim stacked rows (py-2 px-2)
+- [x] Add soft glass panel styling (linear gradient bg)
+- [x] Use subtle separators (border-white/[0.03])
+
+### Typography Hierarchy
+- [x] Room name: 11px font-medium tracking-wide truncate
+- [x] Template type: 9px text-white/30 tracking-wider
+- [x] Meta info: 8px font-mono text-white/20 HUD-style
+
+### Visual Tone
+- [x] Glassy background (rgba(0,0,0,0.25) to 0.35 gradient)
+- [x] Very soft border (rgba(255,255,255,0.04))
+- [x] Almost invisible dividers (border-white/[0.03])
+- [x] Selected room: cyan glow rail indicator with shadow
+- [x] Hover: bg-white/[0.03] gentle bloom
+
+### Spacing & Density
+- [x] Reduced vertical padding (py-2)
+- [x] More rooms visible (narrower 192px width)
+- [x] Clear rhythm with space-y-0.5
+
+### Usability Polish
+- [x] Slim vertical cyan accent for active room (2px w-[2px])
+- [x] Smaller icons (w-3 h-3, w-2.5 h-2.5)
+- [x] Softened panel container (no hard borders)
+- [x] Panel visually recedes (low contrast bg)

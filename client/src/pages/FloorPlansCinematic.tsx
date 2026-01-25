@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight, Eye, ChevronDown, Package, Settings, Sparkles } from "lucide-react";
+import { Plus, Edit, Trash2, Grid3x3, Square, Users, ChevronRight, ChevronDown, Package } from "lucide-react";
 import { toast } from "sonner";
 import ManagementLayout from '@/components/ManagementLayout';
 import { Link } from "react-router-dom";
 import { CinematicFloorPlanner } from "@/components/CinematicFloorPlanner";
-import { EquipmentSetup } from "@/components/EquipmentSetup";
 import { EquipmentSetupPanelV2 } from "@/components/EquipmentSetupPanelV2";
 import { cn } from "@/lib/utils";
 
@@ -48,14 +47,8 @@ const templateLabels = {
   karate_lines: "Karate Lines",
 };
 
-const templateDescriptions = {
-  kickboxing_bags: "Heavy bags arranged in rows for kickboxing classes",
-  yoga_grid: "Mat grid layout (A1, A2, B1, B2...) for yoga and stretching",
-  karate_lines: "Traditional lineup formation sorted by belt rank",
-};
-
-// Sidebar Room Card Component - Cinematic Control Rail Style
-function RoomCard({ 
+// Cinematic Control Rail - Room Item
+function RoomItem({ 
   plan, 
   isSelected, 
   onClick,
@@ -69,95 +62,129 @@ function RoomCard({
   onDelete: () => void;
 }) {
   const Icon = templateIcons[plan.templateType] || Square;
+  const spotCount = plan.maxCapacity || 0;
   
   return (
     <div
       onClick={onClick}
-      title={plan.roomName} // Tooltip for full name on hover
+      title={plan.roomName}
       className={cn(
-        "group relative py-2.5 px-3 rounded-lg cursor-pointer transition-all duration-200",
-        "border backdrop-blur-sm",
+        "group relative flex items-center gap-2 py-2 px-2 cursor-pointer transition-all duration-150",
+        "rounded-md",
         isSelected 
-          ? "bg-white/8 border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.05)]" 
-          : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/10"
+          ? "bg-white/[0.06]" 
+          : "hover:bg-white/[0.03]"
       )}
     >
-      <div className="flex items-center gap-2.5">
-        {/* Compact icon */}
+      {/* Active indicator - slim vertical accent */}
+      <div 
+        className={cn(
+          "absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-full transition-all duration-200",
+          isSelected 
+            ? "bg-cyan-400/80 shadow-[0_0_8px_rgba(34,211,238,0.4)]" 
+            : "bg-transparent"
+        )}
+      />
+      
+      {/* Icon - small and refined */}
+      <div 
+        className={cn(
+          "w-6 h-6 rounded flex items-center justify-center flex-shrink-0 transition-colors",
+          isSelected ? "bg-white/[0.08]" : "bg-white/[0.04]"
+        )}
+      >
+        <Icon className={cn(
+          "w-3 h-3",
+          plan.templateType === "kickboxing_bags" && "text-red-400/70",
+          plan.templateType === "yoga_grid" && "text-purple-400/70",
+          plan.templateType === "karate_lines" && "text-blue-400/70",
+        )} />
+      </div>
+      
+      {/* Content */}
+      <div className="flex-1 min-w-0 pl-0.5">
+        {/* Room name - smaller, medium weight, letter-spacing */}
         <div 
           className={cn(
-            "p-1.5 rounded-md flex-shrink-0",
-            plan.templateType === "kickboxing_bags" && "bg-red-500/15",
-            plan.templateType === "yoga_grid" && "bg-purple-500/15",
-            plan.templateType === "karate_lines" && "bg-blue-500/15",
+            "text-[11px] font-medium tracking-wide truncate transition-colors leading-tight",
+            isSelected ? "text-white/90" : "text-white/55 group-hover:text-white/70"
           )}
         >
-          <Icon className={cn(
-            "w-3.5 h-3.5",
-            plan.templateType === "kickboxing_bags" && "text-red-400/80",
-            plan.templateType === "yoga_grid" && "text-purple-400/80",
-            plan.templateType === "karate_lines" && "text-blue-400/80",
-          )} />
+          {plan.roomName}
         </div>
         
-        {/* Title and template */}
-        <div className="flex-1 min-w-0">
-          <h3 
-            className={cn(
-              "text-[13px] font-medium tracking-wide truncate transition-colors",
-              isSelected ? "text-white/95" : "text-white/70 group-hover:text-white/85"
-            )}
+        {/* Template type - small, muted */}
+        <div className="text-[9px] text-white/30 tracking-wider mt-0.5">
+          {templateLabels[plan.templateType]}
+        </div>
+        
+        {/* Meta - HUD style, very subtle */}
+        <div className="flex items-center gap-2 mt-1 text-[8px] text-white/20 tracking-wider font-mono">
+          <span>{plan.lengthFeet || "?"}×{plan.widthFeet || "?"} ft</span>
+          <span className="text-white/10">•</span>
+          <span>{spotCount} spots</span>
+        </div>
+      </div>
+      
+      {/* Action buttons - only on selected, very subtle */}
+      {isSelected && (
+        <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-white/60 transition-colors"
           >
-            {plan.roomName}
-          </h3>
-          <p className="text-[10px] text-white/35 tracking-wide mt-0.5">
-            {templateLabels[plan.templateType]}
-          </p>
+            <Edit className="w-2.5 h-2.5" />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="p-1 rounded hover:bg-red-500/20 text-white/30 hover:text-red-400/70 transition-colors"
+          >
+            <Trash2 className="w-2.5 h-2.5" />
+          </button>
         </div>
-        
-        {/* Action buttons - only on selected */}
-        {isSelected && (
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            <button 
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white/80 transition-colors"
-            >
-              <Edit className="w-3 h-3" />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="p-1 rounded hover:bg-red-500/20 text-white/40 hover:text-red-400/80 transition-colors"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-      </div>
-      
-      {/* Compact meta line with subtle divider */}
-      <div className="mt-1.5 pt-1.5 border-t border-white/[0.04] flex items-center gap-3 text-[10px] text-white/30 tracking-wide">
-        <span className="flex items-center gap-1">
-          <span className="opacity-60">📐</span>
-          {plan.lengthFeet || "?"} ft × {plan.widthFeet || "?"} ft
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="opacity-60">👥</span>
-          {plan.maxCapacity} spots
-        </span>
-      </div>
-      
-      {/* Safety spacing - even more subtle */}
-      <div className="mt-1 text-[9px] text-white/20 tracking-wider">
-        Safety Spacing: {plan.safetySpacingFeet} ft
-      </div>
+      )}
     </div>
   );
 }
 
-// Room Type Section Component - Cinematic Control Rail Style
-function RoomTypeSection({ 
+// Cinematic Control Rail - Section Header
+function SectionHeader({ 
   title, 
   icon: Icon, 
+  count,
+  isExpanded,
+  onToggle,
+}: { 
+  title: string;
+  icon: React.ElementType;
+  count: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  if (count === 0) return null;
+  
+  return (
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between px-2 py-1.5 text-white/35 hover:text-white/50 transition-colors"
+    >
+      <div className="flex items-center gap-1.5">
+        <Icon className="w-2.5 h-2.5" />
+        <span className="text-[9px] font-semibold tracking-[0.15em] uppercase">{title}</span>
+        <span className="text-[8px] text-white/20 font-mono">({count})</span>
+      </div>
+      <ChevronDown className={cn(
+        "w-2.5 h-2.5 transition-transform duration-200",
+        isExpanded && "rotate-180"
+      )} />
+    </button>
+  );
+}
+
+// Room Type Section
+function RoomTypeSection({ 
+  title, 
+  icon, 
   plans, 
   selectedId, 
   onSelect,
@@ -179,26 +206,19 @@ function RoomTypeSection({
   if (plans.length === 0) return null;
   
   return (
-    <div className="space-y-1">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-2 py-1 text-white/40 hover:text-white/60 transition-colors"
-      >
-        <div className="flex items-center gap-1.5">
-          <Icon className="w-3 h-3" />
-          <span className="text-[11px] font-medium tracking-wider uppercase">{title}</span>
-          <span className="text-[10px] text-white/25">({plans.length})</span>
-        </div>
-        <ChevronDown className={cn(
-          "w-3 h-3 transition-transform duration-200",
-          isExpanded && "rotate-180"
-        )} />
-      </button>
+    <div className="space-y-0.5">
+      <SectionHeader
+        title={title}
+        icon={icon}
+        count={plans.length}
+        isExpanded={isExpanded}
+        onToggle={onToggle}
+      />
       
       {isExpanded && (
-        <div className="space-y-1.5 pl-1">
+        <div className="space-y-0.5 ml-1">
           {plans.map((plan) => (
-            <RoomCard
+            <RoomItem
               key={plan.id}
               plan={plan}
               isSelected={selectedId === plan.id}
@@ -248,7 +268,6 @@ function FloorPlansCinematicContent() {
       toast.success(`Floor plan "${data.roomName}" created successfully`);
       utils.floorPlans.getAll.invalidate();
       
-      // If bags are to be installed, generate stations
       if (bagsInstalled > 0 && bagsInstalled <= bagsOnHand) {
         generateStationsMutation.mutate({
           floorPlanId: data.id,
@@ -392,38 +411,25 @@ function FloorPlansCinematicContent() {
 
   return (
     <div className="flex h-[calc(100vh-120px)] bg-gradient-to-b from-gray-900 via-gray-900 to-black">
-      {/* Left Sidebar - Room Selection */}
+      {/* Left Control Rail - Cinematic Room Selector */}
       <div 
-        className="w-64 flex-shrink-0 border-r border-white/10 overflow-y-auto"
+        className="w-48 flex-shrink-0 overflow-y-auto"
         style={{
-          background: "rgba(0,0,0,0.4)",
-          backdropFilter: "blur(12px)",
+          background: "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 100%)",
+          borderRight: "1px solid rgba(255,255,255,0.04)",
         }}
       >
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Home className="w-5 h-5 text-white/60" />
-              <span className="font-semibold text-white">Dashboard</span>
-            </div>
-            <ChevronDown className="w-4 h-4 text-white/40" />
+        {/* Rail Header - minimal */}
+        <div className="px-3 py-3 border-b border-white/[0.03]">
+          <div className="text-[10px] font-semibold tracking-[0.2em] uppercase text-white/25">
+            Studios
           </div>
         </div>
 
-        {/* Elevations Section */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center gap-2 text-white/60">
-            <Eye className="w-4 h-4" />
-            <span className="text-sm">Elevations</span>
-            <ChevronDown className="w-4 h-4 ml-auto" />
-          </div>
-        </div>
-
-        {/* Room List */}
-        <div className="p-4 space-y-4">
+        {/* Room List - compact */}
+        <div className="p-2 space-y-3">
           <RoomTypeSection
-            title="Kickboxing Room"
+            title="Kickboxing"
             icon={Package}
             plans={kickboxingPlans}
             selectedId={selectedPlan?.id || null}
@@ -435,7 +441,7 @@ function FloorPlansCinematicContent() {
           />
 
           <RoomTypeSection
-            title="Karate Lineup"
+            title="Karate"
             icon={Users}
             plans={karatePlans}
             selectedId={selectedPlan?.id || null}
@@ -447,7 +453,7 @@ function FloorPlansCinematicContent() {
           />
 
           <RoomTypeSection
-            title="Yoga Grid"
+            title="Yoga"
             icon={Grid3x3}
             plans={yogaPlans}
             selectedId={selectedPlan?.id || null}
@@ -458,14 +464,14 @@ function FloorPlansCinematicContent() {
             onToggle={() => toggleSection("yoga")}
           />
 
-          {/* Dance / Gymnastics placeholder */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 px-2 py-1.5 text-white/40">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-sm font-medium">Dance / Gymnastics</span>
+          {/* Dance placeholder - very subtle */}
+          <div className="pt-2 border-t border-white/[0.03]">
+            <div className="flex items-center gap-1.5 px-2 py-1 text-white/20">
+              <Grid3x3 className="w-2.5 h-2.5" />
+              <span className="text-[9px] font-semibold tracking-[0.15em] uppercase">Dance</span>
             </div>
-            <div className="px-2 py-3 text-xs text-white/30 text-center">
-              0 / Active
+            <div className="px-2 py-1.5 text-[8px] text-white/15 font-mono">
+              0 active
             </div>
           </div>
         </div>
@@ -756,49 +762,6 @@ function FloorPlansCinematicContent() {
                 className="bg-white/5 border-white/10 text-white"
               />
             </div>
-            {templateType === 'kickboxing_bags' && (
-              <>
-                <div className="border-t border-white/10 pt-4 mt-4">
-                  <h3 className="text-white/90 font-semibold mb-4">Equipment Setup</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-white/70 text-sm">Bags On Hand (inventory)</Label>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={bagsOnHand}
-                        onChange={(e) => setBagsOnHand(parseInt(e.target.value) || 0)}
-                        className="bg-white/5 border-white/10 text-white"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-white/70 text-sm">Bags to Install in This Room</Label>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={bagsInstalled}
-                        onChange={(e) => setBagsInstalled(parseInt(e.target.value) || 0)}
-                        className="bg-white/5 border-white/10 text-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2 mt-4">
-                    <Label className="text-white/70 text-sm">Default Layout</Label>
-                    <Select value={defaultLayout} onValueChange={setDefaultLayout}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-black/95 border-white/10">
-                        <SelectItem value="grid" className="text-white">Grid</SelectItem>
-                        <SelectItem value="staggered" className="text-white">Staggered</SelectItem>
-                        <SelectItem value="perimeter" className="text-white">Perimeter</SelectItem>
-                        <SelectItem value="wall" className="text-white">Wall</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </>
-            )}
             <div className="space-y-2">
               <Label className="text-white/90">Notes</Label>
               <Textarea
@@ -813,19 +776,6 @@ function FloorPlansCinematicContent() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="border-white/20 text-white hover:bg-white/10">
               Cancel
             </Button>
-            {templateType === 'kickboxing_bags' && selectedPlan && (selectedPlan.bagsInstalled || 0) !== bagsInstalled && (
-              <Button 
-                onClick={() => {
-                  if (confirm('Regenerate stations to match new installed count? This will overwrite current placement.')) {
-                    handleUpdate();
-                  }
-                }}
-                disabled={updateMutation.isPending} 
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                {updateMutation.isPending ? "Regenerating..." : "Regenerate Stations"}
-              </Button>
-            )}
             <Button onClick={handleUpdate} disabled={updateMutation.isPending} className="bg-red-600 hover:bg-red-700">
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
