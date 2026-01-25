@@ -913,9 +913,40 @@ export function CinematicFloorPlanner({
     toast.success(`Applied ${layoutType} layout`);
   };
 
-  const handleResetLayout = () => {
+  const handleResetLayout = async () => {
+    // Generate default grid layout
+    const defaultPositions = generateLayout(
+      floorPlan.spots.length,
+      'grid',
+      floorPlan.widthFeet || 40,
+      floorPlan.lengthFeet || 30
+    );
+    
+    // Update all spots to default positions
+    let successCount = 0;
+    for (let i = 0; i < floorPlan.spots.length; i++) {
+      const spot = floorPlan.spots[i];
+      const newPos = defaultPositions[i];
+      if (newPos) {
+        try {
+          await updateSpotMutation.mutateAsync({
+            spotId: spot.id,
+            positionX: newPos.x,
+            positionY: newPos.y,
+          });
+          successCount++;
+        } catch (error) {
+          console.error('Failed to reset spot position:', error);
+        }
+      }
+    }
+    
+    // Clear local position state
+    setSpotPositions({});
+    
+    // Refresh data
     utils.floorPlans.getById.invalidate({ id: floorPlan.id });
-    toast.info('Layout reset');
+    toast.success(`Reset ${successCount} bags to default grid positions`);
   };
 
   const handleSaveLayout = async () => {

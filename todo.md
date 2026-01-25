@@ -4987,3 +4987,18 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Show drag cursor and instructions in Design mode ("Drag to move" tooltip)
 - [x] Design Mode instruction banner with grip icon
 - [x] Legend shows "Drag bags to reposition" hint
+
+
+## Phase 26: Reset All Button (Jan 25, 2026)
+- [ ] Add "Reset All" button to restore bags to original grid positions
+- [ ] Confirmation dialog before reset
+- [ ] Apply default grid layout using generateLayout function
+- [ ] Save all positions to database after reset
+
+
+## Phase 26: Reset All Button (Jan 25, 2026) - COMPLETED
+- [x] Add "Reset All Bags to Grid" button to Layout Controls
+- [x] Custom confirmation modal with warning icon and description
+- [x] Reset all bags to default grid positions based on current settings
+- [x] Cancel and Reset All buttons in modal
+- [x] Modal closes after reset or cancel
