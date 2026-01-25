@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, ZoomIn, ZoomOut, Maximize2, Move, GripVertical } from "lucide-react";
+import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, ZoomIn, ZoomOut, Maximize2, Move, GripVertical, Upload, Image, X, Sliders } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LayoutControls } from "./LayoutControls";
 import { generateLayout } from "@/lib/layoutGenerator";
@@ -26,6 +26,8 @@ interface FloorPlan {
   squareFeet: number | null;
   templateType: string;
   matRotation?: "horizontal" | "vertical" | null;
+  backgroundImageUrl?: string | null;
+  backgroundOpacity?: number | null;
   spots: Spot[];
 }
 
@@ -755,7 +757,15 @@ export function CinematicFloorPlanner({
   const canvasRef = React.useRef<HTMLDivElement>(null);
   
   const updateSpotMutation = trpc.floorPlans.updateSpotPosition.useMutation();
+  const updateBackgroundMutation = trpc.floorPlans.updateBackgroundImage.useMutation();
+  const updateOpacityMutation = trpc.floorPlans.updateBackgroundOpacity.useMutation();
   const utils = trpc.useUtils();
+  
+  // Background image state
+  const [showBackgroundControls, setShowBackgroundControls] = React.useState(false);
+  const [backgroundOpacity, setBackgroundOpacity] = React.useState(floorPlan.backgroundOpacity ?? 30);
+  const [showBackground, setShowBackground] = React.useState(!!floorPlan.backgroundImageUrl);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Calculate canvas height based on number of spots
   const spotCount = floorPlan.spots.length;
@@ -895,6 +905,87 @@ export function CinematicFloorPlanner({
     toast.success('Layout saved');
   };
 
+  // Background image handlers
+  const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image must be less than 10MB');
+      return;
+    }
+    
+    try {
+      toast.loading('Uploading background image...');
+      
+      // Upload to S3 via API
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      
+      const { url } = await response.json();
+      
+      // Update floor plan with background image URL
+      await updateBackgroundMutation.mutateAsync({
+        floorPlanId: floorPlan.id,
+        backgroundImageUrl: url,
+        backgroundOpacity: backgroundOpacity,
+      });
+      
+      setShowBackground(true);
+      utils.floorPlans.getById.invalidate({ id: floorPlan.id });
+      toast.dismiss();
+      toast.success('Background image uploaded');
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to upload background image');
+      console.error('Upload error:', error);
+    }
+  };
+
+  const handleRemoveBackground = async () => {
+    try {
+      await updateBackgroundMutation.mutateAsync({
+        floorPlanId: floorPlan.id,
+        backgroundImageUrl: null,
+      });
+      setShowBackground(false);
+      utils.floorPlans.getById.invalidate({ id: floorPlan.id });
+      toast.success('Background image removed');
+    } catch (error) {
+      toast.error('Failed to remove background image');
+    }
+  };
+
+  const handleOpacityChange = (value: number) => {
+    setBackgroundOpacity(value);
+  };
+
+  const handleOpacitySave = async () => {
+    try {
+      await updateOpacityMutation.mutateAsync({
+        floorPlanId: floorPlan.id,
+        backgroundOpacity: backgroundOpacity,
+      });
+      toast.success('Opacity saved');
+    } catch (error) {
+      toast.error('Failed to save opacity');
+    }
+  };
+
   const occupiedCount = assignedStudents.length;
   const totalSpots = floorPlan.spots.length;
 
@@ -929,6 +1020,28 @@ export function CinematicFloorPlanner({
         {showModeSwitch && (
           <div className="flex items-center gap-2">
             <ModeSwitcher currentMode={currentMode} onModeChange={handleModeChange} />
+            
+            {/* Background Image Button - Design mode only */}
+            {isDesignMode && (
+              <button 
+                onClick={() => setShowBackgroundControls(!showBackgroundControls)}
+                className={cn(
+                  "p-1.5 rounded-md transition-colors flex items-center gap-1.5",
+                  showBackgroundControls || floorPlan.backgroundImageUrl
+                    ? "text-amber-200 bg-amber-500/20" 
+                    : "text-white/40 hover:text-amber-200 hover:bg-white/5"
+                )}
+                style={{
+                  background: showBackgroundControls ? "rgba(255,160,80,0.2)" : "rgba(30,28,26,0.6)",
+                  border: "1px solid rgba(255,200,150,0.08)",
+                }}
+                title="Background Image"
+              >
+                <Image className="w-3.5 h-3.5" />
+                <span className="text-xs">Background</span>
+              </button>
+            )}
+            
             <button 
               className="p-1.5 rounded-md text-white/40 hover:text-amber-200 hover:bg-white/5 transition-colors"
               style={{
@@ -955,6 +1068,105 @@ export function CinematicFloorPlanner({
           <span className="text-amber-400 text-sm">
             <strong>Design Mode:</strong> Drag bags to position them exactly where your hanging bags are located.
           </span>
+        </div>
+      )}
+
+      {/* Background Image Controls Panel */}
+      {showBackgroundControls && isDesignMode && (
+        <div 
+          className="flex items-center gap-4 px-4 py-3 rounded-lg"
+          style={{
+            background: "rgba(30,28,26,0.85)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255,200,150,0.12)",
+          }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleBackgroundUpload}
+            className="hidden"
+          />
+          
+          {!floorPlan.backgroundImageUrl ? (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                background: "linear-gradient(180deg, rgba(255,160,80,0.25) 0%, rgba(255,120,50,0.2) 100%)",
+                border: "1px solid rgba(255,160,80,0.3)",
+                color: "rgba(255,200,150,0.9)",
+              }}
+            >
+              <Upload className="w-4 h-4" />
+              Upload Room Photo
+            </button>
+          ) : (
+            <>
+              {/* Show/Hide Toggle */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showBackground}
+                  onChange={(e) => setShowBackground(e.target.checked)}
+                  className="sr-only"
+                />
+                <div 
+                  className={cn(
+                    "w-10 h-5 rounded-full transition-colors relative",
+                    showBackground ? "bg-amber-500/50" : "bg-white/10"
+                  )}
+                >
+                  <div 
+                    className={cn(
+                      "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                      showBackground ? "translate-x-5" : "translate-x-0.5"
+                    )}
+                  />
+                </div>
+                <span className="text-white/60 text-xs">Show</span>
+              </label>
+              
+              {/* Opacity Slider */}
+              <div className="flex items-center gap-2 flex-1">
+                <Sliders className="w-3.5 h-3.5 text-white/40" />
+                <span className="text-white/40 text-xs">Opacity</span>
+                <input
+                  type="range"
+                  min="5"
+                  max="80"
+                  value={backgroundOpacity}
+                  onChange={(e) => handleOpacityChange(Number(e.target.value))}
+                  onMouseUp={handleOpacitySave}
+                  onTouchEnd={handleOpacitySave}
+                  className="flex-1 h-1 bg-white/10 rounded-full appearance-none cursor-pointer"
+                  style={{
+                    accentColor: "rgba(255,160,80,0.8)",
+                  }}
+                />
+                <span className="text-white/50 text-xs w-8">{backgroundOpacity}%</span>
+              </div>
+              
+              {/* Replace Button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 rounded-md text-white/50 hover:text-amber-200 hover:bg-white/5 transition-colors"
+                title="Replace Image"
+              >
+                <Upload className="w-4 h-4" />
+              </button>
+              
+              {/* Remove Button */}
+              <button
+                onClick={handleRemoveBackground}
+                className="p-2 rounded-md text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                title="Remove Background"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -994,6 +1206,20 @@ export function CinematicFloorPlanner({
             transition: isDraggingCanvas || draggingSpotId ? "none" : "transform 0.1s ease-out",
           }}
         >
+          {/* BACKGROUND IMAGE LAYER - for tracing room layout */}
+          {floorPlan.backgroundImageUrl && showBackground && (
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `url(${floorPlan.backgroundImageUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                opacity: backgroundOpacity / 100,
+                zIndex: 1,
+              }}
+            />
+          )}
+
           {/* REBALANCED Base floor - BRIGHTER warm rubber mat */}
           <div 
             className="absolute inset-0"
@@ -1008,6 +1234,7 @@ export function CinematicFloorPlanner({
                   #1c1a18 100%
                 )
               `,
+              opacity: floorPlan.backgroundImageUrl && showBackground ? 0.7 : 1,
             }}
           />
 

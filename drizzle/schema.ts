@@ -537,6 +537,8 @@ export const floorPlans = mysqlTable("floor_plans", {
 	notes: text(),
 	bagsInstalled: int().default(0).notNull(),
 	defaultLayout: varchar({ length: 50 }).default('grid').notNull(),
+	backgroundImageUrl: varchar({ length: 500 }),
+	backgroundOpacity: int().default(30),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 });

@@ -5216,3 +5216,27 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 ### Depth
 - [x] Keep wall glow, back falloff, vignette edges
 - [x] Restore mid-tone information (depth gradient reduced to 35%)
+
+
+## Phase 31: Floor Plan Background Image Upload (Jan 25, 2026)
+- [ ] Add "Upload Background" button in Design mode
+- [ ] Implement image upload to S3 storage
+- [ ] Display uploaded image as semi-transparent background layer
+- [ ] Add opacity slider control (0-100%)
+- [ ] Add toggle to show/hide background image
+- [ ] Save background image URL to floor plan database record
+- [ ] Load background image when floor plan is selected
+- [ ] Allow removing/replacing background image
+
+
+## Phase 31: Floor Plan Background Image Upload (Jan 25, 2026) - COMPLETED
+- [x] Add backgroundImageUrl and backgroundOpacity columns to floor_plans table
+- [x] Create updateBackgroundImage and updateBackgroundOpacity mutations in floorPlansRouter
+- [x] Add "Background" button to floor planner header (Design mode only)
+- [x] Create background controls panel with:
+  - [x] Upload Room Photo button
+  - [x] Show/Hide toggle
+  - [x] Opacity slider (5-80%)
+  - [x] Replace and Remove buttons
+- [x] Display background image layer under floor surface
+- [x] Save opacity preference to database

@@ -524,6 +524,60 @@ export const floorPlansRouter = router({
 
       return { success: true, generatedCount: spots.length };
     }),
+
+  // Update background image for floor plan
+  updateBackgroundImage: protectedProcedure
+    .input(
+      z.object({
+        floorPlanId: z.number(),
+        backgroundImageUrl: z.string().nullable(),
+        backgroundOpacity: z.number().min(0).max(100).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const updateData: any = {
+        backgroundImageUrl: input.backgroundImageUrl,
+      };
+      
+      if (input.backgroundOpacity !== undefined) {
+        updateData.backgroundOpacity = input.backgroundOpacity;
+      }
+
+      await db
+        .update(floorPlans)
+        .set(updateData)
+        .where(eq(floorPlans.id, input.floorPlanId));
+
+      const [updated] = await db
+        .select()
+        .from(floorPlans)
+        .where(eq(floorPlans.id, input.floorPlanId));
+
+      return updated;
+    }),
+
+  // Update background opacity only
+  updateBackgroundOpacity: protectedProcedure
+    .input(
+      z.object({
+        floorPlanId: z.number(),
+        backgroundOpacity: z.number().min(0).max(100),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(floorPlans)
+        .set({ backgroundOpacity: input.backgroundOpacity })
+        .where(eq(floorPlans.id, input.floorPlanId));
+
+      return { success: true };
+    }),
 });
 
 // Helper function to generate stations based on layout
