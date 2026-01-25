@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, ZoomIn, ZoomOut, Maximize2, Move, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LayoutControls } from "./LayoutControls";
@@ -76,7 +76,7 @@ const MODE_CONFIG = {
   wall: { icon: Tv, label: "Wall Display", description: "TV screens" },
 };
 
-// Draggable Spot Marker with cinematic 3D bag styling
+// PHOTOREALISTIC Bag Marker - Heavy, cylindrical, grounded
 function DraggableSpotMarker({
   spot,
   assignment,
@@ -118,10 +118,10 @@ function DraggableSpotMarker({
     .join("")
     .toUpperCase() || "";
 
-  // WARM COLOR PALETTE - teal/mint for available, warm amber/orange for occupied
+  // WARM COLOR PALETTE - muted teal for available, warm amber for occupied
   const ringColor = isEmpty 
-    ? "rgba(45, 180, 160, 0.6)" // muted teal for available
-    : "rgba(255, 120, 50, 0.75)"; // warm amber/orange for occupied
+    ? "rgba(45, 160, 140, 0.5)" // muted teal
+    : "rgba(255, 100, 40, 0.7)"; // warm amber/orange
 
   // Check for special roles
   const isInstructor = assignment?.beltRank?.toLowerCase().includes("instructor");
@@ -135,8 +135,9 @@ function DraggableSpotMarker({
   const bagScale = Math.max(0.6, Math.min(1.2, scale));
 
   // Calculate depth-based adjustments (bags further back appear smaller/darker)
-  const depthFactor = 1 - (spot.positionY / 100) * 0.15;
+  const depthFactor = 1 - (spot.positionY / 100) * 0.2;
   const depthScale = bagScale * depthFactor;
+  const depthOpacity = 0.7 + (1 - spot.positionY / 100) * 0.3;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDraggable && isDesign) {
@@ -148,236 +149,227 @@ function DraggableSpotMarker({
 
   return (
     <div
-      onClick={(e) => {
-        if (!isDragging) {
-          onClick();
-        }
-      }}
-      onMouseDown={handleMouseDown}
       className={cn(
-        "absolute transform -translate-x-1/2 -translate-y-1/2 transition-all group",
-        isSelected && "z-50",
-        isDragging ? "z-[100] cursor-grabbing duration-0" : "duration-200",
-        isDraggable && isDesign && !isDragging && "cursor-grab hover:scale-105",
-        !isDraggable && "cursor-pointer"
+        "absolute transform -translate-x-1/2 -translate-y-1/2 group",
+        isDraggable && isDesign && "cursor-grab",
+        isDragging && "cursor-grabbing z-50"
       )}
       style={{
         left: `${spot.positionX}%`,
         top: `${spot.positionY}%`,
-        opacity: isDragging ? 0.9 : depthFactor,
-        filter: `brightness(${0.85 + depthFactor * 0.15})`,
+        opacity: depthOpacity,
+        filter: spot.positionY < 30 ? "blur(0.3px)" : "none", // Slight blur for distant bags
       }}
+      onClick={onClick}
+      onMouseDown={handleMouseDown}
     >
-      {/* Drag indicator for Design mode */}
-      {isDraggable && isDesign && !isDragging && (
+      {/* PHOTOREALISTIC Floor glow ring - soft specular reflection */}
+      <div
+        className={cn(
+          "absolute left-1/2 -translate-x-1/2 rounded-full",
+          !isDragging && (isKiosk || isLive) && isEmpty && "animate-pulse"
+        )}
+        style={{
+          width: `${130 * depthScale}px`,
+          height: `${45 * depthScale}px`,
+          bottom: `${-8 * depthScale}px`,
+          background: `radial-gradient(ellipse at center, ${ringColor} 0%, ${ringColor.replace(/[\d.]+\)$/, '0.2)')} 50%, transparent 75%)`,
+          boxShadow: `0 0 ${25 * depthScale}px ${ringColor.replace(/[\d.]+\)$/, '0.3)')}`,
+          border: `1px solid ${ringColor.replace(/[\d.]+\)$/, '0.15)')}`,
+          transform: isDragging ? "scale(1.15)" : "scale(1)",
+          transition: "transform 0.15s ease-out",
+        }}
+      />
+
+      {/* Drag indicator for design mode */}
+      {isDraggable && isDesign && (
         <div 
-          className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap"
           style={{
-            background: "rgba(255, 160, 80, 0.9)",
-            padding: "2px 6px",
+            background: "rgba(20,18,16,0.9)",
+            padding: "2px 8px",
             borderRadius: "4px",
             fontSize: "9px",
-            color: "white",
-            fontWeight: 600,
-            whiteSpace: "nowrap",
+            color: "rgba(255,200,150,0.7)",
+            border: "1px solid rgba(255,180,120,0.15)",
           }}
         >
-          <GripVertical className="w-3 h-3 inline-block mr-1" />
+          <GripVertical className="w-2.5 h-2.5 inline mr-1" />
           Drag to move
         </div>
       )}
 
-      {/* Ground contact shadow - soft diffused shadow beneath bag */}
-      <div 
-        className="absolute"
-        style={{
-          width: `${90 * depthScale}px`,
-          height: `${24 * depthScale}px`,
-          bottom: `${-8 * depthScale}px`,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: `radial-gradient(ellipse 100% 100% at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)`,
-          filter: "blur(8px)",
-        }}
-      />
-
-      {/* Floor glow ring - warm tones */}
-      <div 
-        className={cn(
-          "absolute rounded-full transition-all duration-500",
-          isEmpty && (isKiosk || isLive) && "animate-pulse",
-          isDragging && "ring-2 ring-amber-400 ring-offset-2 ring-offset-transparent"
-        )}
-        style={{
-          width: `${110 * depthScale}px`,
-          height: `${36 * depthScale}px`,
-          bottom: `${-4 * depthScale}px`,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: isDragging 
-            ? `radial-gradient(ellipse 100% 100% at center, rgba(255,160,80,0.8) 0%, rgba(255,120,50,0.4) 40%, rgba(255,100,40,0.15) 70%, transparent 100%)`
-            : `radial-gradient(ellipse 100% 100% at center, ${ringColor} 0%, ${ringColor}40 40%, ${ringColor}15 70%, transparent 100%)`,
-          filter: "blur(10px)",
-          opacity: isDragging ? 1 : 0.75,
-        }}
-      />
-
-      {/* Ring outline - subtle warm border */}
-      <div 
-        className="absolute rounded-full"
-        style={{
-          width: `${90 * depthScale}px`,
-          height: `${28 * depthScale}px`,
-          bottom: `${2 * depthScale}px`,
-          left: "50%",
-          transform: "translateX(-50%)",
-          border: isDragging 
-            ? "2px solid rgba(255,160,80,0.7)"
-            : `1.5px solid ${isEmpty ? "rgba(45,180,160,0.4)" : "rgba(255,120,50,0.5)"}`,
-          borderRadius: "50%",
-          opacity: 0.7,
-        }}
-      />
-
-      {/* Main spot container */}
       {isBag ? (
-        // 3D Kickboxing Bag - Cinematic with warm highlights
-        <div
-          className={cn(
-            "flex flex-col items-center justify-center transition-all",
-            !isDragging && "group-hover:scale-105 group-hover:-translate-y-1",
-            isSelected && !isDragging && "scale-105 -translate-y-1",
-            isDragging && "scale-110"
-          )}
-        >
-          {/* Bag number badge - red/amber on TOP of bag */}
-          <div 
-            className={cn(
-              "rounded-md flex items-center justify-center z-20",
-              isEmpty ? "bg-zinc-600" : "bg-red-600"
-            )}
+        // PHOTOREALISTIC 3D Kickboxing Bag
+        <div className="relative flex flex-col items-center">
+          {/* Red number badge on TOP */}
+          <div
+            className="relative z-20 flex items-center justify-center rounded-md mb-0.5"
             style={{
-              position: "absolute",
-              top: `${-14 * depthScale}px`,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: `${24 * depthScale}px`,
+              width: `${28 * depthScale}px`,
               height: `${20 * depthScale}px`,
-              fontSize: `${12 * depthScale}px`,
-              fontWeight: 700,
-              color: "white",
-              borderRadius: "4px",
-              boxShadow: isEmpty 
-                ? "0 2px 8px rgba(0,0,0,0.6)"
-                : "0 2px 12px rgba(220,38,38,0.6), 0 0 16px rgba(255,80,40,0.4)",
+              background: "linear-gradient(180deg, #dc2626 0%, #991b1b 100%)",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
+              border: "1px solid rgba(0,0,0,0.3)",
             }}
           >
-            {spot.spotNumber}
+            <span 
+              className="font-bold text-white"
+              style={{ 
+                fontSize: `${11 * depthScale}px`,
+                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+              }}
+            >
+              {spot.spotNumber}
+            </span>
           </div>
 
-          {/* Bag body - trapezoidal with warm lighting */}
-          <div 
-            className="relative overflow-hidden"
+          {/* PHOTOREALISTIC Bag body - heavy, cylindrical, leather/rubber texture */}
+          <div
+            className={cn(
+              "relative transition-all",
+              !isDragging && "group-hover:scale-[1.02]",
+              isSelected && "ring-2 ring-amber-400/50"
+            )}
             style={{
-              width: `${48 * depthScale}px`,
-              height: `${72 * depthScale}px`,
-              clipPath: "polygon(5% 0%, 95% 0%, 85% 100%, 15% 100%)",
-              background: `linear-gradient(180deg, 
-                #3d3530 0%, 
-                #2d2825 15%, 
-                #1f1c1a 40%, 
-                #151312 70%, 
-                #0d0c0b 100%
-              )`,
-              boxShadow: isDragging
-                ? "0 20px 50px rgba(0,0,0,0.9), 0 10px 25px rgba(255,120,50,0.2)"
-                : "0 15px 40px rgba(0,0,0,0.7), 0 8px 20px rgba(0,0,0,0.5)",
+              width: `${56 * depthScale}px`,
+              height: `${85 * depthScale}px`,
+              // Cylindrical gradient with leather/rubber feel
+              background: isEmpty 
+                ? `linear-gradient(90deg, 
+                    #1a1816 0%, 
+                    #2d2825 15%,
+                    #3a3530 35%,
+                    #3d3835 50%,
+                    #353230 65%,
+                    #252220 85%,
+                    #1a1816 100%
+                  )`
+                : `linear-gradient(90deg, 
+                    #2a2520 0%, 
+                    #4a4035 15%,
+                    #5a4d42 35%,
+                    #5d5045 50%,
+                    #4d4238 65%,
+                    #3a3228 85%,
+                    #2a2520 100%
+                  )`,
+              borderRadius: `${6 * depthScale}px`,
+              // Deep shadow for grounded feel
+              boxShadow: `
+                0 ${12 * depthScale}px ${25 * depthScale}px rgba(0,0,0,0.6),
+                0 ${4 * depthScale}px ${8 * depthScale}px rgba(0,0,0,0.4),
+                inset 0 ${2 * depthScale}px ${4 * depthScale}px rgba(255,200,150,0.08),
+                inset 0 ${-2 * depthScale}px ${6 * depthScale}px rgba(0,0,0,0.3)
+              `,
+              transform: isDragging ? "scale(1.08) translateY(-4px)" : "scale(1)",
+              transition: "transform 0.15s ease-out, box-shadow 0.15s ease-out",
             }}
           >
-            {/* Top highlight - warm light from above */}
+            {/* Leather/rubber texture overlay - micro grain */}
             <div 
-              className="absolute inset-x-0 top-0"
+              className="absolute inset-0 rounded-md opacity-40"
               style={{
-                height: "8px",
-                background: "linear-gradient(180deg, rgba(255,200,150,0.15) 0%, transparent 100%)",
+                backgroundImage: `
+                  repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0,0,0,0.08) 2px,
+                    rgba(0,0,0,0.08) 3px
+                  ),
+                  repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 8px,
+                    rgba(255,200,150,0.02) 8px,
+                    rgba(255,200,150,0.02) 9px
+                  )
+                `,
+                borderRadius: `${6 * depthScale}px`,
               }}
             />
-            
-            {/* Left edge rim light - warm */}
+
+            {/* Top highlight - specular response */}
             <div 
-              className="absolute left-0 top-0 bottom-0"
+              className="absolute inset-x-0 top-0 rounded-t-md"
               style={{
-                width: "4px",
-                background: "linear-gradient(180deg, rgba(255,180,120,0.18) 0%, rgba(255,150,100,0.08) 50%, rgba(255,120,80,0.02) 100%)",
+                height: `${20 * depthScale}px`,
+                background: "linear-gradient(180deg, rgba(255,220,180,0.12) 0%, transparent 100%)",
+                borderRadius: `${6 * depthScale}px ${6 * depthScale}px 0 0`,
               }}
             />
-            
-            {/* Center specular highlight */}
+
+            {/* Left edge rim light */}
             <div 
-              className="absolute inset-0"
+              className="absolute left-0 inset-y-0 rounded-l-md"
               style={{
-                background: "linear-gradient(90deg, transparent 35%, rgba(255,220,180,0.06) 50%, transparent 65%)",
+                width: `${4 * depthScale}px`,
+                background: "linear-gradient(90deg, rgba(255,180,120,0.15) 0%, transparent 100%)",
+                borderRadius: `${6 * depthScale}px 0 0 ${6 * depthScale}px`,
               }}
             />
-            
+
+            {/* Right edge shadow */}
+            <div 
+              className="absolute right-0 inset-y-0 rounded-r-md"
+              style={{
+                width: `${6 * depthScale}px`,
+                background: "linear-gradient(270deg, rgba(0,0,0,0.25) 0%, transparent 100%)",
+                borderRadius: `0 ${6 * depthScale}px ${6 * depthScale}px 0`,
+              }}
+            />
+
+            {/* Center vertical highlight - cylindrical shape */}
+            <div 
+              className="absolute inset-y-2 left-1/2 -translate-x-1/2"
+              style={{
+                width: `${12 * depthScale}px`,
+                background: "linear-gradient(180deg, rgba(255,200,150,0.06) 0%, rgba(255,180,120,0.03) 50%, transparent 100%)",
+                borderRadius: `${4 * depthScale}px`,
+              }}
+            />
+
             {/* Red accent panel for occupied bags */}
             {!isEmpty && (
               <div 
-                className="absolute top-2 left-2 right-2 rounded-sm"
+                className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
                 style={{
+                  top: `${12 * depthScale}px`,
+                  width: `${36 * depthScale}px`,
                   height: `${28 * depthScale}px`,
-                  background: "linear-gradient(180deg, #ef4444 0%, #dc2626 40%, #b91c1c 100%)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 6px rgba(0,0,0,0.4)",
+                  background: "linear-gradient(180deg, #b91c1c 0%, #7f1d1d 100%)",
+                  borderRadius: `${3 * depthScale}px`,
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.3)",
                 }}
               >
-                {/* Red panel warm shine */}
-                <div 
-                  className="absolute inset-0 rounded-sm"
-                  style={{
-                    background: "linear-gradient(90deg, transparent 20%, rgba(255,200,150,0.2) 50%, transparent 80%)",
+                <span 
+                  className="font-bold text-white"
+                  style={{ 
+                    fontSize: `${13 * depthScale}px`,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.5)",
                   }}
-                />
-                
-                {/* Initials on red panel */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span 
-                    className="text-white font-bold"
-                    style={{ fontSize: `${13 * depthScale}px`, letterSpacing: "0.05em", textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
-                  >
-                    {initials}
-                  </span>
-                </div>
+                >
+                  {initials}
+                </span>
               </div>
             )}
 
-            {/* Special labels - INSTRUCTOR / RESERVED */}
-            {isInstructor && (
-              <div className="absolute bottom-2 left-0 right-0 flex items-center justify-center">
-                <span 
-                  className="text-white/80 uppercase font-medium px-1 py-0.5 rounded"
-                  style={{ 
-                    fontSize: `${6 * depthScale}px`, 
-                    letterSpacing: "0.08em",
-                    background: "rgba(0,0,0,0.5)",
-                  }}
-                >
-                  Instructor
-                </span>
-              </div>
-            )}
-            
-            {isReserved && (
-              <div className="absolute bottom-2 left-0 right-0 flex items-center justify-center">
-                <span 
-                  className="text-white/80 uppercase font-medium px-1 py-0.5 rounded"
-                  style={{ 
-                    fontSize: `${6 * depthScale}px`, 
-                    letterSpacing: "0.08em",
-                    background: "rgba(0,0,0,0.5)",
-                  }}
-                >
-                  Reserved
-                </span>
+            {/* Special labels */}
+            {(isInstructor || isReserved) && (
+              <div 
+                className="absolute bottom-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded"
+                style={{
+                  background: isInstructor ? "rgba(220,38,38,0.9)" : "rgba(180,140,100,0.8)",
+                  fontSize: `${7 * depthScale}px`,
+                  fontWeight: 600,
+                  color: "white",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+                }}
+              >
+                {isInstructor ? "Instructor" : "Reserved"}
               </div>
             )}
           </div>
@@ -387,7 +379,7 @@ function DraggableSpotMarker({
             className="mt-1 text-center"
             style={{
               fontSize: `${10 * depthScale}px`,
-              color: "rgba(255,255,255,0.35)",
+              color: "rgba(255,200,150,0.25)",
               fontWeight: 500,
             }}
           >
@@ -395,7 +387,7 @@ function DraggableSpotMarker({
           </div>
         </div>
       ) : isMat ? (
-        // Yoga Mat
+        // Yoga mat spot
         <div
           className={cn(
             "rounded-lg transition-all",
@@ -445,64 +437,87 @@ function DraggableSpotMarker({
   );
 }
 
-// Front of Class Stage - Warm cinematic lighting
+// PHOTOREALISTIC Front of Class Stage - Real wall with studio lighting
 function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
   return (
     <div className="absolute inset-x-4 top-4 pointer-events-none">
       <div 
         className="relative rounded-t-lg overflow-hidden"
         style={{
-          height: `${80 * scale}px`,
+          height: `${85 * scale}px`,
+          // Real wall material - warm concrete/plaster
           background: `linear-gradient(180deg, 
-            #2a2420 0%, 
-            #1f1a18 40%, 
-            #181514 100%
+            #2a2622 0%, 
+            #252220 30%, 
+            #201d1a 60%, 
+            #1a1816 100%
           )`,
-          boxShadow: "inset 0 -2px 20px rgba(0,0,0,0.5), 0 4px 20px rgba(0,0,0,0.4)",
+          boxShadow: "inset 0 -3px 25px rgba(0,0,0,0.6), 0 4px 25px rgba(0,0,0,0.5)",
         }}
       >
-        {/* Warm brick/wall texture overlay */}
+        {/* Wall texture - subtle plaster/concrete grain */}
         <div 
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
+            `,
+            opacity: 0.03,
+            mixBlendMode: "overlay",
+          }}
+        />
+
+        {/* Brick/panel texture overlay */}
+        <div 
+          className="absolute inset-0 opacity-15"
           style={{
             backgroundImage: `
               repeating-linear-gradient(
                 90deg,
                 transparent,
-                transparent 30px,
-                rgba(255,200,150,0.03) 30px,
-                rgba(255,200,150,0.03) 31px
+                transparent 40px,
+                rgba(255,200,150,0.02) 40px,
+                rgba(255,200,150,0.02) 41px
               ),
               repeating-linear-gradient(
                 0deg,
                 transparent,
-                transparent 15px,
-                rgba(255,180,120,0.02) 15px,
-                rgba(255,180,120,0.02) 16px
+                transparent 20px,
+                rgba(255,180,120,0.015) 20px,
+                rgba(255,180,120,0.015) 21px
               )
             `,
           }}
         />
 
-        {/* Warm overhead light strip */}
+        {/* PRIMARY WARM LIGHT STRIP - main light source */}
         <div 
           className="absolute inset-x-0 top-0"
           style={{
-            height: `${8 * scale}px`,
-            background: "linear-gradient(90deg, transparent 5%, rgba(255,140,60,0.7) 25%, rgba(255,180,100,0.85) 50%, rgba(255,140,60,0.7) 75%, transparent 95%)",
-            boxShadow: "0 0 30px rgba(255,130,50,0.5), 0 0 60px rgba(255,100,40,0.3)",
+            height: `${10 * scale}px`,
+            background: "linear-gradient(90deg, transparent 3%, rgba(255,130,50,0.8) 20%, rgba(255,160,80,0.95) 50%, rgba(255,130,50,0.8) 80%, transparent 97%)",
+            boxShadow: `
+              0 0 40px rgba(255,120,40,0.6), 
+              0 0 80px rgba(255,100,30,0.4),
+              0 0 120px rgba(255,80,20,0.2)
+            `,
           }}
         />
         
-        {/* Downward light cones */}
-        <div className="absolute inset-x-0 top-0 flex justify-around px-16" style={{ height: `${40 * scale}px` }}>
+        {/* Light cones from strip - directional */}
+        <div className="absolute inset-x-0 top-0 flex justify-around px-12" style={{ height: `${50 * scale}px` }}>
           {[...Array(5)].map((_, i) => (
             <div 
               key={i}
               className="h-full"
               style={{
-                width: `${80 * scale}px`,
-                background: `radial-gradient(ellipse at center top, rgba(255,160,80,0.12) 0%, rgba(255,120,50,0.05) 50%, transparent 80%)`,
+                width: `${90 * scale}px`,
+                background: `radial-gradient(ellipse 100% 150% at center top, 
+                  rgba(255,150,70,0.15) 0%, 
+                  rgba(255,120,50,0.08) 30%,
+                  rgba(255,100,40,0.03) 60%, 
+                  transparent 90%
+                )`,
               }}
             />
           ))}
@@ -510,10 +525,16 @@ function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
 
         {/* Stage glow bleeding onto floor */}
         <div 
-          className="absolute inset-x-0 h-20"
+          className="absolute inset-x-0"
           style={{
-            bottom: `${-60 * scale}px`,
-            background: "linear-gradient(180deg, rgba(255,120,50,0.1) 0%, rgba(255,100,40,0.04) 40%, transparent 100%)",
+            bottom: `${-70 * scale}px`,
+            height: `${90 * scale}px`,
+            background: `linear-gradient(180deg, 
+              rgba(255,110,40,0.15) 0%, 
+              rgba(255,90,30,0.08) 30%, 
+              rgba(255,70,20,0.03) 60%, 
+              transparent 100%
+            )`,
           }}
         />
 
@@ -522,10 +543,10 @@ function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
           <span 
             className="font-semibold uppercase"
             style={{ 
-              fontSize: `${13 * scale}px`,
-              letterSpacing: "0.35em",
-              color: "rgba(255,240,220,0.5)",
-              textShadow: "0 0 20px rgba(255,150,80,0.3)",
+              fontSize: `${14 * scale}px`,
+              letterSpacing: "0.4em",
+              color: "rgba(255,230,200,0.45)",
+              textShadow: "0 0 25px rgba(255,140,70,0.4), 0 2px 4px rgba(0,0,0,0.5)",
             }}
           >
             Front of Class
@@ -533,14 +554,15 @@ function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
         </div>
 
         {/* Instructor podium/marker */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-1">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-1.5">
           <div 
             className="rounded-sm"
             style={{
-              width: `${24 * scale}px`,
-              height: `${12 * scale}px`,
-              background: "linear-gradient(180deg, #3a3530 0%, #1a1815 100%)",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.5), 0 0 10px rgba(255,120,50,0.1)",
+              width: `${28 * scale}px`,
+              height: `${14 * scale}px`,
+              background: "linear-gradient(180deg, #3d3835 0%, #1f1c1a 100%)",
+              boxShadow: "0 3px 8px rgba(0,0,0,0.6), 0 0 15px rgba(255,110,50,0.1)",
+              border: "1px solid rgba(255,180,120,0.05)",
             }}
           />
         </div>
@@ -684,8 +706,8 @@ function FloorLegend({
         <div 
           className="w-3 h-3 rounded-full"
           style={{
-            background: "rgba(45, 180, 160, 0.7)",
-            boxShadow: "0 0 8px rgba(45, 180, 160, 0.4)",
+            background: "rgba(45, 160, 140, 0.7)",
+            boxShadow: "0 0 8px rgba(45, 160, 140, 0.4)",
           }}
         />
         <span className="text-white/50" style={{ fontSize: "11px" }}>Available Spot</span>
@@ -696,8 +718,8 @@ function FloorLegend({
         <div 
           className="w-3 h-3 rounded-full"
           style={{
-            background: "rgba(255, 120, 50, 0.8)",
-            boxShadow: "0 0 8px rgba(255, 120, 50, 0.5)",
+            background: "rgba(255, 100, 40, 0.8)",
+            boxShadow: "0 0 8px rgba(255, 100, 40, 0.5)",
           }}
         />
         <span className="text-white/50" style={{ fontSize: "11px" }}>Occupied Spot</span>
@@ -755,9 +777,9 @@ export function CinematicFloorPlanner({
   // Calculate canvas height based on number of spots
   const spotCount = floorPlan.spots.length;
   const rows = Math.ceil(spotCount / 5);
-  const baseHeight = 500;
-  const heightPerRow = 140;
-  const calculatedHeight = Math.max(baseHeight, 200 + (rows * heightPerRow));
+  const baseHeight = 520;
+  const heightPerRow = 145;
+  const calculatedHeight = Math.max(baseHeight, 220 + (rows * heightPerRow));
 
   const isDesignMode = currentMode === "design";
 
@@ -953,16 +975,20 @@ export function CinematicFloorPlanner({
         </div>
       )}
 
-      {/* Floor Canvas - CINEMATIC WARM ENVIRONMENT */}
+      {/* PHOTOREALISTIC Floor Canvas */}
       <div 
         ref={containerRef}
         className="rounded-xl overflow-auto"
         style={{
-          // Warm glass frame with subtle glow
-          background: "linear-gradient(180deg, rgba(40,32,28,0.6) 0%, rgba(25,20,18,0.7) 100%)",
-          backdropFilter: "blur(8px)",
-          border: "1px solid rgba(255,180,120,0.08)",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,150,0.04), 0 0 60px rgba(255,100,40,0.03)",
+          // Warm glass frame
+          background: "linear-gradient(180deg, rgba(35,30,26,0.7) 0%, rgba(22,18,16,0.8) 100%)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,180,120,0.06)",
+          boxShadow: `
+            0 10px 50px rgba(0,0,0,0.6), 
+            inset 0 1px 0 rgba(255,200,150,0.03), 
+            0 0 80px rgba(255,90,30,0.02)
+          `,
           maxHeight: "70vh",
           cursor: isPanning ? (isDraggingCanvas ? "grabbing" : "grab") : "default",
         }}
@@ -985,120 +1011,179 @@ export function CinematicFloorPlanner({
             transition: isDraggingCanvas || draggingSpotId ? "none" : "transform 0.1s ease-out",
           }}
         >
-          {/* Base floor - WARM CHARCOAL/GRAPHITE (no blue!) */}
+          {/* PHOTOREALISTIC Base floor - warm rubber mat */}
           <div 
             className="absolute inset-0"
             style={{
               background: `
-                radial-gradient(ellipse 90% 70% at center 35%, 
-                  #2a2420 0%, 
-                  #221e1a 30%,
-                  #1a1614 55%,
-                  #121010 80%,
+                radial-gradient(ellipse 95% 75% at center 40%, 
+                  #2d2824 0%, 
+                  #262220 25%,
+                  #1e1c1a 45%,
+                  #161412 65%,
+                  #100e0c 85%,
                   #0a0908 100%
                 )
               `,
             }}
           />
 
-          {/* Rubber mat texture - warm tones */}
+          {/* RUBBER MAT TEXTURE - realistic micro-grain */}
           <div 
-            className="absolute inset-0 opacity-30"
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
+              `,
+              opacity: 0.04,
+              mixBlendMode: "overlay",
+            }}
+          />
+
+          {/* MAT TILE SEAMS - subtle segmentation */}
+          <div 
+            className="absolute inset-0 opacity-25"
             style={{
               backgroundImage: `
                 repeating-linear-gradient(
                   0deg,
                   transparent,
-                  transparent 48px,
-                  rgba(255,200,150,0.015) 48px,
-                  rgba(255,200,150,0.015) 50px
+                  transparent 95px,
+                  rgba(0,0,0,0.15) 95px,
+                  rgba(0,0,0,0.15) 96px,
+                  rgba(255,200,150,0.02) 96px,
+                  rgba(255,200,150,0.02) 97px,
+                  transparent 97px,
+                  transparent 100px
                 ),
                 repeating-linear-gradient(
                   90deg,
                   transparent,
-                  transparent 48px,
-                  rgba(255,180,120,0.015) 48px,
-                  rgba(255,180,120,0.015) 50px
+                  transparent 95px,
+                  rgba(0,0,0,0.12) 95px,
+                  rgba(0,0,0,0.12) 96px,
+                  rgba(255,180,120,0.015) 96px,
+                  rgba(255,180,120,0.015) 97px,
+                  transparent 97px,
+                  transparent 100px
                 )
               `,
             }}
           />
 
-          {/* 3D Perspective depth - darker at back, brighter at front */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `linear-gradient(180deg, 
-                rgba(0,0,0,0.5) 0%, 
-                rgba(0,0,0,0.35) 15%,
-                rgba(0,0,0,0.15) 35%, 
-                transparent 50%, 
-                rgba(255,200,150,0.02) 70%,
-                rgba(255,180,120,0.03) 85%,
-                rgba(255,160,100,0.04) 100%
-              )`,
-            }}
-          />
-
-          {/* Back wall haze - atmospheric depth */}
-          <div 
-            className="absolute inset-x-0 top-0 pointer-events-none"
-            style={{
-              height: "25%",
-              background: "linear-gradient(180deg, rgba(60,50,45,0.3) 0%, rgba(40,35,30,0.15) 50%, transparent 100%)",
-            }}
-          />
-
-          {/* Vignette - warm corners */}
+          {/* SPECULAR RESPONSE - floor light reflection */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `
-                radial-gradient(ellipse 85% 70% at center 45%, 
-                  transparent 25%, 
-                  rgba(15,12,10,0.35) 60%,
-                  rgba(10,8,6,0.6) 85%,
-                  rgba(5,4,3,0.75) 100%
+                radial-gradient(ellipse 60% 40% at 50% 25%, 
+                  rgba(255,180,120,0.04) 0%, 
+                  transparent 70%
+                ),
+                radial-gradient(ellipse 80% 50% at 50% 80%, 
+                  rgba(255,200,150,0.03) 0%, 
+                  transparent 60%
                 )
               `,
             }}
           />
 
-          {/* Warm ambient light from stage */}
+          {/* 3D DEPTH GRADIENT - darker back, brighter front */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, 
+                rgba(0,0,0,0.55) 0%, 
+                rgba(0,0,0,0.4) 15%,
+                rgba(0,0,0,0.2) 30%, 
+                rgba(0,0,0,0.05) 50%, 
+                transparent 60%,
+                rgba(255,200,150,0.015) 75%,
+                rgba(255,180,120,0.025) 90%,
+                rgba(255,160,100,0.03) 100%
+              )`,
+            }}
+          />
+
+          {/* ATMOSPHERIC HAZE - back wall depth */}
           <div 
             className="absolute inset-x-0 top-0 pointer-events-none"
             style={{
-              height: `${200 * zoom}px`,
+              height: "30%",
               background: `linear-gradient(180deg, 
-                rgba(255,120,50,0.12) 0%, 
-                rgba(255,100,40,0.06) 30%, 
-                rgba(255,80,30,0.02) 60%, 
+                rgba(50,45,40,0.35) 0%, 
+                rgba(40,35,30,0.2) 40%, 
+                rgba(30,25,22,0.08) 70%,
+                transparent 100%
+              )`,
+              filter: "blur(2px)",
+            }}
+          />
+
+          {/* VIGNETTE - darker corners for depth */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `
+                radial-gradient(ellipse 80% 65% at center 50%, 
+                  transparent 20%, 
+                  rgba(12,10,8,0.4) 55%,
+                  rgba(8,6,5,0.65) 80%,
+                  rgba(4,3,2,0.8) 100%
+                )
+              `,
+            }}
+          />
+
+          {/* PRIMARY WARM LIGHT from stage */}
+          <div 
+            className="absolute inset-x-0 top-0 pointer-events-none"
+            style={{
+              height: `${220 * zoom}px`,
+              background: `linear-gradient(180deg, 
+                rgba(255,110,40,0.18) 0%, 
+                rgba(255,90,30,0.1) 25%, 
+                rgba(255,70,20,0.04) 50%, 
                 transparent 100%
               )`,
             }}
           />
 
-          {/* Light shafts from ceiling - warm */}
-          <div className="absolute inset-x-0 top-0 flex justify-around px-20 pointer-events-none" style={{ height: "40%" }}>
-            {[...Array(4)].map((_, i) => (
+          {/* OVERHEAD SOFT FILL - secondary light */}
+          <div className="absolute inset-x-0 top-0 flex justify-around px-16 pointer-events-none" style={{ height: "45%" }}>
+            {[...Array(5)].map((_, i) => (
               <div 
                 key={i}
                 style={{
-                  width: `${60 * zoom}px`,
+                  width: `${70 * zoom}px`,
                   height: "100%",
                   background: `linear-gradient(180deg, 
-                    rgba(255,160,80,0.06) 0%, 
-                    rgba(255,140,60,0.03) 40%, 
+                    rgba(255,150,70,0.08) 0%, 
+                    rgba(255,130,50,0.04) 35%, 
+                    rgba(255,110,40,0.015) 65%,
                     transparent 100%
                   )`,
-                  transform: `rotate(${(i - 1.5) * 2}deg)`,
+                  transform: `rotate(${(i - 2) * 1.5}deg)`,
                   transformOrigin: "top center",
                 }}
               />
             ))}
           </div>
 
-          {/* Mat boundary - subtle warm border */}
+          {/* AMBIENT ROOM GLOW - low-level fill */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `
+                radial-gradient(ellipse 100% 80% at 50% 100%, 
+                  rgba(255,180,120,0.02) 0%, 
+                  transparent 50%
+                )
+              `,
+            }}
+          />
+
+          {/* Mat boundary */}
           <div 
             className="absolute rounded-lg pointer-events-none"
             style={{
@@ -1106,8 +1191,8 @@ export function CinematicFloorPlanner({
               right: "16px",
               top: "16px",
               bottom: "16px",
-              border: "1px dashed rgba(255,180,120,0.06)",
-              boxShadow: "inset 0 0 80px rgba(0,0,0,0.2)",
+              border: "1px dashed rgba(255,180,120,0.04)",
+              boxShadow: "inset 0 0 100px rgba(0,0,0,0.25)",
             }}
           />
 
@@ -1124,11 +1209,11 @@ export function CinematicFloorPlanner({
                 top: `${zone.bounds.y}%`,
                 width: `${zone.bounds.width}%`,
                 height: `${zone.bounds.height}%`,
-                border: "1px dashed rgba(255,180,120,0.06)",
+                border: "1px dashed rgba(255,180,120,0.05)",
                 background: "rgba(255,200,150,0.01)",
               }}
             >
-              <span className="absolute top-2 left-2 text-white/20 font-medium" style={{ fontSize: "10px" }}>
+              <span className="absolute top-2 left-2 text-white/15 font-medium" style={{ fontSize: "10px" }}>
                 {zone.name}
               </span>
             </div>
@@ -1162,8 +1247,8 @@ export function CinematicFloorPlanner({
             })}
           </div>
 
-          {/* Room dimensions - warm text */}
-          <div className="absolute bottom-3 right-4" style={{ fontSize: `${11 * zoom}px`, color: "rgba(255,220,180,0.3)" }}>
+          {/* Room dimensions */}
+          <div className="absolute bottom-3 right-4" style={{ fontSize: `${11 * zoom}px`, color: "rgba(255,210,170,0.25)" }}>
             {floorPlan.lengthFeet} ft × {floorPlan.widthFeet} ft
           </div>
         </div>

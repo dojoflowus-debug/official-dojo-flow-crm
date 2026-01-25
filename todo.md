@@ -5079,3 +5079,69 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Warm top glow (inset shadow with amber)
 - [x] Softer borders (blur backdrop)
 - [x] Light falloff at corners (vignette)
+
+
+## Phase 29: Floor Material + Photorealism Pass (Jan 25, 2026)
+
+### Floor Material (Top Priority)
+- [ ] Introduce subtle rubber/mat texture
+- [ ] Very faint tile seams or mat segmentation
+- [ ] Soft micro-grain texture
+- [ ] Slight specular response under light
+- [ ] Gentle reflection under bags
+- [ ] Reduce foggy void look - floor must read as material
+
+### Lighting Structure
+- [ ] One primary warm wall light (front)
+- [ ] Secondary overhead soft fill
+- [ ] Ambient low-level room glow
+- [ ] Enhanced light cones from above
+- [ ] Highlight edges on bags
+- [ ] Floor light falloff
+- [ ] Darker far corners
+
+### Bag Realism
+- [ ] Increase vertical shading depth
+- [ ] Add subtle leather/rubber surface breakup
+- [ ] Stronger rim highlight
+- [ ] More grounded shadow contact
+- [ ] Reduce flat silhouette - feel heavy and cylindrical
+
+### Depth Illusion
+- [ ] Slightly blur far floor
+- [ ] Slightly brighten front floor
+- [ ] Darken back corners
+- [ ] Subtle atmospheric haze near wall
+
+
+## Phase 29: Floor Material & Photorealism Pass (Jan 25, 2026) - COMPLETED
+
+### Floor Material (Top Priority)
+- [x] Introduce subtle rubber/mat texture (SVG noise overlay at 4% opacity)
+- [x] Very faint tile seams or mat segmentation (100px grid with shadow/highlight lines)
+- [x] Soft micro-grain (fractalNoise filter)
+- [x] Slight specular response under light (radial gradient reflections)
+- [x] Gentle reflection under bags (floor glow rings)
+- [x] Reduce foggy void look (warm charcoal base #2d2824)
+
+### Lighting Structure
+- [x] One primary warm wall light (amber stage glow rgba(255,130,50,0.8))
+- [x] Secondary overhead soft fill (5 light cones from ceiling)
+- [x] Ambient low-level room glow (floor-level radial gradient)
+- [x] Light cones from above (radial gradients with rotation)
+- [x] Highlight edges on bags (left rim light)
+- [x] Floor light falloff (linear gradient 180deg)
+- [x] Darker far corners (strong vignette)
+
+### Bag Realism
+- [x] Increase vertical shading depth (cylindrical gradient #3a3530 to #1a1816)
+- [x] Add subtle leather/rubber surface breakup (horizontal grain lines)
+- [x] Stronger rim highlight (rgba(255,180,120,0.15) left edge)
+- [x] More grounded shadow contact (12px blur ellipse shadow)
+- [x] Reduce flat silhouette (specular highlights, texture overlay)
+
+### Depth Illusion
+- [x] Slightly blur far floor (0.3px blur on distant bags)
+- [x] Slightly brighten front floor (warm tint at bottom)
+- [x] Darken back corners (vignette rgba(12,10,8,0.4) to rgba(4,3,2,0.8))
+- [x] Subtle atmospheric haze near wall (30% height gradient with 2px blur)
