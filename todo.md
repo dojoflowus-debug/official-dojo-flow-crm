@@ -5310,3 +5310,86 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Keep haze near wall and ceiling zones (top 15% only)
 - [x] Do not cover main floor surface (clear center)
 - [x] Allow materials to dominate (reduced vignette to 52% max)
+
+
+## Phase 33: WaveMaster Bag Model Redesign (Jan 25, 2026)
+
+### Bag Proportions (REQUIRED)
+- [ ] Tall, cylindrical, substantial human-scale objects
+- [ ] Match real-world height-to-width ratio (WaveMaster reference)
+- [ ] Increase bag height (currently ~72px, target ~140px)
+- [ ] Maintain cylindrical shape with proper perspective
+
+### Bag Material Realism (REQUIRED)
+- [ ] Black vinyl/leather look with soft surface
+- [ ] Vertical highlights showing fabric direction
+- [ ] Subtle surface gradients (not flat color)
+- [ ] Very light seam suggestion (not noisy, not cartoon)
+- [ ] Matte body with slight satin sheen
+- [ ] Realistic under studio lighting
+
+### Bag Lighting (CRITICAL)
+- [ ] Directional light from "Front of Class" wall
+- [ ] Soft rim light on bag edges
+- [ ] Gentle falloff down the cylinder
+- [ ] No flat shading - bags must feel lit, not filled
+- [ ] Specular highlights matching light direction
+
+### Base Detail (REQUIRED)
+- [ ] Wider weighted base (larger than bag body)
+- [ ] Darker than bag body (#1a1816 vs #3a3530)
+- [ ] Slight bevel and form definition
+- [ ] Floor contact shadow anchoring bag to surface
+- [ ] Base visually "plants" bag in space
+
+### Canvas Integration
+- [ ] Each bag casts soft shadow
+- [ ] Sits inside neon floor ring
+- [ ] Slightly overlaps the glow
+- [ ] Feels planted in the space
+- [ ] Proper z-ordering with floor elements
+
+### Quality Standard
+- [ ] WaveMaster becomes default kickboxing bag
+- [ ] Scale reference for all future equipment
+- [ ] Visual quality bar for entire room
+- [ ] Unified, believable object appearance
+
+
+## Phase 33: WaveMaster Bag Model Redesign (Jan 25, 2026) - COMPLETED
+
+### Proportions (REQUIRED)
+- [x] Make bags tall (140px), cylindrical, and substantial
+- [x] Match real-world height-to-width ratio (48px x 140px = 2.9:1)
+- [x] Feel like human-scale objects, not icons
+
+### Material Realism (REQUIRED)
+- [x] Black vinyl/leather look (gradient #1a1714 to #0f0d0a)
+- [x] Soft vertical highlights (20% height, 32% opacity)
+- [x] Subtle surface gradients (90-degree cylindrical shading)
+- [x] Very light seam suggestion (grain lines 25% opacity)
+- [x] Matte body, slight satin sheen (inset shadow + box shadow)
+
+### Lighting (CRITICAL)
+- [x] Directional light from Front of Class wall (key light 28%)
+- [x] Soft rim light on left edge (26% opacity gradient)
+- [x] Gentle falloff down cylinder (top highlight 20% height)
+- [x] No flat shading (multi-layer lighting structure)
+
+### Base Detail (REQUIRED)
+- [x] Wider weighted base (65px x 24px, darker #1a1612)
+- [x] Darker than bag body (gradient 180deg)
+- [x] Slight bevel and form (2px border, inset shadow)
+- [x] Floor contact shadow (70% center opacity, 6px blur)
+
+### Canvas Integration
+- [x] Cast soft shadow (ellipse radial gradient)
+- [x] Sit inside floor glow ring (teal 120x40px)
+- [x] Slightly overlap glow (positioned correctly)
+- [x] Feel planted in space (weighted base + shadow)
+
+### Unified System
+- [x] All 21 bags render consistently with proper depth scaling
+- [x] WaveMaster model becomes canonical bag reference
+- [x] Bags feel like real heavy bags under studio lighting
+- [x] Visual quality bar set for entire floor planner system

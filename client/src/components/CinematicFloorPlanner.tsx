@@ -235,34 +235,34 @@ function DraggableSpotMarker({
               isSelected && "ring-2 ring-amber-400/50"
             )}
             style={{
-              width: `${58 * depthScale}px`,
-              height: `${88 * depthScale}px`,
+              width: `${48 * depthScale}px`,
+              height: `${140 * depthScale}px`,
               // FINAL REALISM - Stronger vertical shading, clearer silhouette
               background: isEmpty 
                 ? `linear-gradient(90deg, 
-                    #252320 0%, 
-                    #3a3834 10%,
-                    #4d4a46 22%,
-                    #585550 38%,
-                    #5a5752 50%,
-                    #585550 62%,
-                    #4d4a46 78%,
-                    #3a3834 90%,
-                    #1a1816 100%
+                    #1a1714 0%, 
+                    #2a2620 8%,
+                    #3d3a35 18%,
+                    #4a4740 32%,
+                    #4f4c47 50%,
+                    #4a4740 68%,
+                    #3d3a35 82%,
+                    #2a2620 92%,
+                    #0f0d0a 100%
                   )`
                 : `linear-gradient(90deg, 
-                    #322e28 0%, 
-                    #5a5248 10%,
-                    #6e665c 22%,
-                    #787068 38%,
-                    #7c746a 50%,
-                    #787068 62%,
-                    #6e665c 78%,
-                    #5a5248 90%,
-                    #221e1a 100%
+                    #2a2520 0%, 
+                    #4a4238 8%,
+                    #5d5550 18%,
+                    #6a6258 32%,
+                    #6f6a62 50%,
+                    #6a6258 68%,
+                    #5d5550 82%,
+                    #4a4238 92%,
+                    #1a1612 100%
                   )`,
-              borderRadius: "4px 4px 8px 8px",
-              clipPath: "polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)",
+              borderRadius: "3px 3px 6px 6px",
+              clipPath: "polygon(5% 0%, 95% 0%, 100% 100%, 0% 100%)",
               boxShadow: `
                 inset 3px 0 10px rgba(255,220,180,0.1),
                 inset -5px 0 15px rgba(0,0,0,0.5),
@@ -275,8 +275,8 @@ function DraggableSpotMarker({
             <div 
               className="absolute inset-x-0 top-0 rounded-t"
               style={{
-                height: "25%",
-                background: "linear-gradient(180deg, rgba(255,230,200,0.28) 0%, rgba(255,210,170,0.1) 50%, transparent 100%)",
+                height: "20%",
+                background: "linear-gradient(180deg, rgba(255,240,220,0.32) 0%, rgba(255,220,190,0.12) 40%, transparent 100%)",
               }}
             />
 
@@ -284,8 +284,8 @@ function DraggableSpotMarker({
             <div 
               className="absolute left-0 top-0 bottom-0"
               style={{
-                width: "20%",
-                background: "linear-gradient(90deg, rgba(255,210,160,0.22) 0%, rgba(255,190,140,0.08) 50%, transparent 100%)",
+                width: "15%",
+                background: "linear-gradient(90deg, rgba(255,220,170,0.26) 0%, rgba(255,200,150,0.1) 50%, transparent 100%)",
               }}
             />
 
@@ -309,15 +309,15 @@ function DraggableSpotMarker({
 
             {/* Leather/rubber texture - subtle grain */}
             <div 
-              className="absolute inset-0 opacity-20"
+              className="absolute inset-0 opacity-25"
               style={{
                 backgroundImage: `
                   repeating-linear-gradient(
                     0deg,
                     transparent,
-                    transparent 4px,
-                    rgba(0,0,0,0.08) 4px,
-                    rgba(0,0,0,0.08) 5px
+                    transparent 3px,
+                    rgba(0,0,0,0.12) 3px,
+                    rgba(0,0,0,0.12) 4px
                   )
                 `,
               }}
@@ -375,24 +375,42 @@ function DraggableSpotMarker({
             )}
           </div>
 
+          {/* WEIGHTED BASE - darker, wider, anchors bag */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2"
+            style={{
+              width: `${65 * depthScale}px`,
+              height: `${24 * depthScale}px`,
+              bottom: `${-12 * depthScale}px`,
+              background: `linear-gradient(180deg, #1a1612 0%, #0f0d0a 50%, #050403 100%)`,
+              borderRadius: "2px 2px 6px 6px",
+              boxShadow: `
+                inset 0 2px 4px rgba(255,255,255,0.05),
+                0 8px 20px rgba(0,0,0,0.8)
+              `,
+              border: "1px solid rgba(0,0,0,0.4)",
+            }}
+          />
+
           {/* HEAVIER CONTACT SHADOW - bags feel grounded */}
           <div
             className="absolute left-1/2 -translate-x-1/2"
             style={{
-              width: `${55 * depthScale}px`,
-              height: `${16 * depthScale}px`,
-              bottom: `${-6 * depthScale}px`,
-              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.1) 70%, transparent 90%)",
-              filter: "blur(5px)",
+              width: `${70 * depthScale}px`,
+              height: `${20 * depthScale}px`,
+              bottom: `${-8 * depthScale}px`,
+              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.15) 65%, transparent 85%)",
+              filter: "blur(6px)",
             }}
           />
 
           {/* Floor spot number label */}
           <div 
-            className="mt-1 text-center font-medium"
+            className="mt-2 text-center font-medium"
             style={{ 
-              fontSize: `${10 * depthScale}px`,
-              color: "rgba(255,220,180,0.35)",
+              fontSize: `${9 * depthScale}px`,
+              color: "rgba(255,220,180,0.3)",
+              letterSpacing: "0.5px",
             }}
           >
             {spot.spotNumber}
