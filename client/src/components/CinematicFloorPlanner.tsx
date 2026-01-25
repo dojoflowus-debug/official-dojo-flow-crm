@@ -136,10 +136,11 @@ function DraggableSpotMarker({
   // Scale factor for bag size based on zoom
   const bagScale = Math.max(0.6, Math.min(1.2, scale));
 
-  // Calculate depth-based adjustments - REDUCED darkness for distant bags
-  const depthFactor = 1 - (spot.positionY / 100) * 0.12; // Reduced from 0.2
+  // Calculate depth-based adjustments - FINAL REALISM PASS
+  const depthFactor = 1 - (spot.positionY / 100) * 0.15; // Micro size falloff on distant rows
   const depthScale = bagScale * depthFactor;
-  const depthOpacity = 0.85 + (1 - spot.positionY / 100) * 0.15; // Brighter overall
+  const depthOpacity = 0.88 + (1 - spot.positionY / 100) * 0.12; // Front brighter, back slightly softer
+  const depthBlur = (spot.positionY / 100) * 0.4; // Slight blur on distant bags
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDraggable && isDesign) {
@@ -164,21 +165,22 @@ function DraggableSpotMarker({
       onClick={onClick}
       onMouseDown={handleMouseDown}
     >
-      {/* REBALANCED Floor glow ring - visible but not overpowering */}
+      {/* FINAL REALISM - Controlled floor reflection under bags */}
       <div
         className={cn(
           "absolute left-1/2 -translate-x-1/2 rounded-full",
           !isDragging && (isKiosk || isLive) && isEmpty && "animate-pulse"
         )}
         style={{
-          width: `${130 * depthScale}px`,
-          height: `${45 * depthScale}px`,
-          bottom: `${-8 * depthScale}px`,
-          background: `radial-gradient(ellipse at center, ${ringColor} 0%, ${ringColor.replace(/[\d.]+\)$/, '0.25)')} 50%, transparent 75%)`,
-          boxShadow: `0 0 ${30 * depthScale}px ${ringColor.replace(/[\d.]+\)$/, '0.35)')}`,
-          border: `1px solid ${ringColor.replace(/[\d.]+\)$/, '0.2)')}`,
+          width: `${135 * depthScale}px`,
+          height: `${48 * depthScale}px`,
+          bottom: `${-10 * depthScale}px`,
+          background: `radial-gradient(ellipse at center, ${ringColor} 0%, ${ringColor.replace(/[\d.]+\)$/, '0.3)')} 45%, transparent 70%)`,
+          boxShadow: `0 0 ${35 * depthScale}px ${ringColor.replace(/[\d.]+\)$/, '0.4)')}`,
+          border: `1px solid ${ringColor.replace(/[\d.]+\)$/, '0.25)')}`,
           transform: isDragging ? "scale(1.15)" : "scale(1)",
           transition: "transform 0.15s ease-out",
+          filter: `blur(${depthBlur}px)`,
         }}
       />
 
@@ -201,8 +203,8 @@ function DraggableSpotMarker({
       )}
 
       {isBag ? (
-        // REBALANCED 3D Kickboxing Bag - Brighter, clearer silhouette
-        <div className="relative flex flex-col items-center">
+        // FINAL REALISM - Physical bag with material texture
+        <div className="relative flex flex-col items-center" style={{ filter: `blur(${depthBlur * 0.5}px)` }}>
           {/* Red number badge on TOP */}
           <div
             className="relative z-20 flex items-center justify-center rounded-md mb-0.5"
@@ -225,7 +227,7 @@ function DraggableSpotMarker({
             </span>
           </div>
 
-          {/* REBALANCED Bag body - BRIGHTER, clearer cylindrical shading */}
+          {/* FINAL REALISM - Physical bag with stronger vertical shading */}
           <div
             className={cn(
               "relative transition-all",
@@ -233,54 +235,57 @@ function DraggableSpotMarker({
               isSelected && "ring-2 ring-amber-400/50"
             )}
             style={{
-              width: `${56 * depthScale}px`,
-              height: `${85 * depthScale}px`,
-              // BRIGHTER cylindrical gradient - visible bag faces
+              width: `${58 * depthScale}px`,
+              height: `${88 * depthScale}px`,
+              // FINAL REALISM - Stronger vertical shading, clearer silhouette
               background: isEmpty 
                 ? `linear-gradient(90deg, 
-                    #2a2826 0%, 
-                    #3d3a36 12%,
-                    #4a4642 28%,
-                    #524e4a 42%,
-                    #4a4642 58%,
-                    #3d3a36 72%,
-                    #2a2826 88%,
-                    #1f1d1b 100%
+                    #252320 0%, 
+                    #3a3834 10%,
+                    #4d4a46 22%,
+                    #585550 38%,
+                    #5a5752 50%,
+                    #585550 62%,
+                    #4d4a46 78%,
+                    #3a3834 90%,
+                    #1a1816 100%
                   )`
                 : `linear-gradient(90deg, 
-                    #3a3530 0%, 
-                    #5a524a 12%,
-                    #6a6258 28%,
-                    #726a60 42%,
-                    #6a6258 58%,
-                    #5a524a 72%,
-                    #3a3530 88%,
-                    #2a2520 100%
+                    #322e28 0%, 
+                    #5a5248 10%,
+                    #6e665c 22%,
+                    #787068 38%,
+                    #7c746a 50%,
+                    #787068 62%,
+                    #6e665c 78%,
+                    #5a5248 90%,
+                    #221e1a 100%
                   )`,
               borderRadius: "4px 4px 8px 8px",
               clipPath: "polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)",
               boxShadow: `
-                inset 2px 0 8px rgba(255,220,180,0.08),
-                inset -4px 0 12px rgba(0,0,0,0.4),
-                0 8px 20px rgba(0,0,0,0.5)
+                inset 3px 0 10px rgba(255,220,180,0.1),
+                inset -5px 0 15px rgba(0,0,0,0.5),
+                0 10px 25px rgba(0,0,0,0.6),
+                0 4px 12px rgba(0,0,0,0.4)
               `,
             }}
           >
-            {/* TOP HIGHLIGHT - stronger for visibility */}
+            {/* TOP HIGHLIGHT - BRIGHTER top edge */}
             <div 
               className="absolute inset-x-0 top-0 rounded-t"
               style={{
-                height: "20%",
-                background: "linear-gradient(180deg, rgba(255,220,180,0.2) 0%, transparent 100%)",
+                height: "25%",
+                background: "linear-gradient(180deg, rgba(255,230,200,0.28) 0%, rgba(255,210,170,0.1) 50%, transparent 100%)",
               }}
             />
 
-            {/* LEFT RIM LIGHT - key light reflection */}
+            {/* LEFT RIM LIGHT - thin rim highlight from key light */}
             <div 
               className="absolute left-0 top-0 bottom-0"
               style={{
-                width: "18%",
-                background: "linear-gradient(90deg, rgba(255,200,150,0.18) 0%, transparent 100%)",
+                width: "20%",
+                background: "linear-gradient(90deg, rgba(255,210,160,0.22) 0%, rgba(255,190,140,0.08) 50%, transparent 100%)",
               }}
             />
 
@@ -293,12 +298,12 @@ function DraggableSpotMarker({
               }}
             />
 
-            {/* REAR EDGE - darker for depth */}
+            {/* REAR EDGE - darker for clearer silhouette */}
             <div 
               className="absolute right-0 top-0 bottom-0"
               style={{
-                width: "15%",
-                background: "linear-gradient(270deg, rgba(0,0,0,0.35) 0%, transparent 100%)",
+                width: "18%",
+                background: "linear-gradient(270deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)",
               }}
             />
 
@@ -370,15 +375,15 @@ function DraggableSpotMarker({
             )}
           </div>
 
-          {/* VISIBLE CONTACT SHADOW - grounded */}
+          {/* HEAVIER CONTACT SHADOW - bags feel grounded */}
           <div
             className="absolute left-1/2 -translate-x-1/2"
             style={{
-              width: `${50 * depthScale}px`,
-              height: `${14 * depthScale}px`,
-              bottom: `${-5 * depthScale}px`,
-              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 80%)",
-              filter: "blur(4px)",
+              width: `${55 * depthScale}px`,
+              height: `${16 * depthScale}px`,
+              bottom: `${-6 * depthScale}px`,
+              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.1) 70%, transparent 90%)",
+              filter: "blur(5px)",
             }}
           />
 
@@ -1220,150 +1225,153 @@ export function CinematicFloorPlanner({
             />
           )}
 
-          {/* REBALANCED Base floor - BRIGHTER warm rubber mat */}
+          {/* FINAL REALISM - Touchable rubber mat surface */}
           <div 
             className="absolute inset-0"
             style={{
               background: `
                 radial-gradient(ellipse 100% 85% at center 45%, 
-                  #3a3632 0%, 
-                  #343230 20%,
-                  #2e2c2a 40%,
-                  #282624 60%,
-                  #222120 80%,
-                  #1c1a18 100%
+                  #424038 0%, 
+                  #3c3a36 15%,
+                  #363432 30%,
+                  #302e2c 50%,
+                  #2a2826 70%,
+                  #242220 85%,
+                  #1e1c1a 100%
                 )
               `,
               opacity: floorPlan.backgroundImageUrl && showBackground ? 0.7 : 1,
             }}
           />
 
-          {/* RUBBER MAT TEXTURE - visible grain */}
+          {/* FINAL REALISM - Subtle rubber/mat texture */}
           <div 
             className="absolute inset-0"
             style={{
               backgroundImage: `
-                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
               `,
-              opacity: 0.06,
+              opacity: 0.08,
               mixBlendMode: "overlay",
             }}
           />
 
-          {/* MAT TILE SEAMS - clear segmentation */}
+          {/* FINAL REALISM - Faint tile seams/panel breaks */}
           <div 
-            className="absolute inset-0 opacity-35"
+            className="absolute inset-0 opacity-45"
             style={{
               backgroundImage: `
                 repeating-linear-gradient(
                   0deg,
                   transparent,
-                  transparent 98px,
-                  rgba(0,0,0,0.12) 98px,
-                  rgba(0,0,0,0.12) 99px,
-                  rgba(255,200,150,0.03) 99px,
-                  rgba(255,200,150,0.03) 100px
+                  transparent 97px,
+                  rgba(0,0,0,0.15) 97px,
+                  rgba(0,0,0,0.15) 98px,
+                  rgba(255,200,150,0.04) 98px,
+                  rgba(255,200,150,0.04) 100px
                 ),
                 repeating-linear-gradient(
                   90deg,
                   transparent,
-                  transparent 98px,
-                  rgba(0,0,0,0.1) 98px,
-                  rgba(0,0,0,0.1) 99px,
-                  rgba(255,180,120,0.025) 99px,
-                  rgba(255,180,120,0.025) 100px
+                  transparent 97px,
+                  rgba(0,0,0,0.12) 97px,
+                  rgba(0,0,0,0.12) 98px,
+                  rgba(255,180,120,0.03) 98px,
+                  rgba(255,180,120,0.03) 100px
                 )
               `,
             }}
           />
 
-          {/* SPECULAR RESPONSE - floor light reflection from key light */}
+          {/* FINAL REALISM - Specular response under key light */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `
-                radial-gradient(ellipse 70% 50% at 50% 20%, 
-                  rgba(255,180,120,0.08) 0%, 
-                  transparent 60%
+                radial-gradient(ellipse 75% 55% at 50% 18%, 
+                  rgba(255,190,130,0.12) 0%, 
+                  rgba(255,170,110,0.05) 40%,
+                  transparent 65%
                 ),
-                radial-gradient(ellipse 90% 60% at 50% 85%, 
-                  rgba(255,200,150,0.05) 0%, 
-                  transparent 50%
+                radial-gradient(ellipse 85% 50% at 50% 88%, 
+                  rgba(255,210,160,0.06) 0%, 
+                  transparent 45%
                 )
               `,
             }}
           />
 
-          {/* 3D DEPTH GRADIENT - REDUCED darkness, visible floor */}
+          {/* FINAL REALISM - Depth gradient with brighter foreground */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `linear-gradient(180deg, 
-                rgba(0,0,0,0.35) 0%, 
-                rgba(0,0,0,0.2) 15%,
-                rgba(0,0,0,0.08) 30%, 
-                transparent 50%, 
-                rgba(255,200,150,0.02) 70%,
-                rgba(255,180,120,0.04) 90%,
-                rgba(255,160,100,0.05) 100%
+                rgba(0,0,0,0.32) 0%, 
+                rgba(0,0,0,0.18) 12%,
+                rgba(0,0,0,0.06) 25%, 
+                transparent 45%, 
+                rgba(255,210,160,0.03) 65%,
+                rgba(255,190,140,0.05) 80%,
+                rgba(255,170,120,0.07) 100%
               )`,
             }}
           />
 
-          {/* ATMOSPHERIC HAZE - EDGES ONLY, not covering floor */}
+          {/* FINAL REALISM - Atmospheric haze near wall only */}
           <div 
             className="absolute inset-x-0 top-0 pointer-events-none"
             style={{
-              height: "18%",
+              height: "15%",
               background: `linear-gradient(180deg, 
-                rgba(45,40,35,0.25) 0%, 
-                rgba(35,32,28,0.12) 50%, 
+                rgba(50,45,40,0.2) 0%, 
+                rgba(40,36,32,0.08) 50%, 
                 transparent 100%
               )`,
             }}
           />
 
-          {/* VIGNETTE - REDUCED, corners only */}
+          {/* FINAL REALISM - Controlled vignette, corners only */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `
-                radial-gradient(ellipse 85% 70% at center 50%, 
-                  transparent 30%, 
-                  rgba(18,16,14,0.25) 60%,
-                  rgba(12,10,8,0.45) 85%,
-                  rgba(8,6,5,0.6) 100%
+                radial-gradient(ellipse 88% 72% at center 50%, 
+                  transparent 35%, 
+                  rgba(20,18,16,0.2) 60%,
+                  rgba(14,12,10,0.38) 82%,
+                  rgba(10,8,6,0.52) 100%
                 )
               `,
             }}
           />
 
-          {/* PRIMARY KEY LIGHT from stage - visible falloff */}
+          {/* FINAL REALISM - Stronger key light from stage */}
           <div 
             className="absolute inset-x-0 top-0 pointer-events-none"
             style={{
-              height: `${200 * zoom}px`,
+              height: `${220 * zoom}px`,
               background: `linear-gradient(180deg, 
-                rgba(255,130,60,0.22) 0%, 
-                rgba(255,110,50,0.14) 25%, 
-                rgba(255,90,40,0.06) 50%, 
+                rgba(255,140,70,0.28) 0%, 
+                rgba(255,120,55,0.18) 20%, 
+                rgba(255,100,45,0.1) 40%, 
+                rgba(255,80,35,0.04) 60%,
                 transparent 100%
               )`,
             }}
           />
 
-          {/* OVERHEAD FILL LIGHT - ensures bags are readable */}
-          <div className="absolute inset-x-0 top-0 flex justify-around px-16 pointer-events-none" style={{ height: "50%" }}>
+          {/* FINAL REALISM - Overhead fill light for first two rows */}
+          <div className="absolute inset-x-0 top-0 flex justify-around px-16 pointer-events-none" style={{ height: "55%" }}>
             {[...Array(5)].map((_, i) => (
               <div 
                 key={i}
                 style={{
-                  width: `${80 * zoom}px`,
+                  width: `${85 * zoom}px`,
                   height: "100%",
                   background: `linear-gradient(180deg, 
-                    rgba(255,160,90,0.12) 0%, 
-                    rgba(255,140,70,0.06) 40%, 
-                    rgba(255,120,50,0.02) 70%,
+                    rgba(255,165,95,0.16) 0%, 
+                    rgba(255,145,75,0.1) 35%, 
+                    rgba(255,125,55,0.04) 60%,
                     transparent 100%
                   )`,
                   transform: `rotate(${(i - 2) * 1.5}deg)`,

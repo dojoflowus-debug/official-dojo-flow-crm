@@ -5240,3 +5240,73 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - [x] Replace and Remove buttons
 - [x] Display background image layer under floor surface
 - [x] Save opacity preference to database
+
+
+## Phase 32: Final Realism & Depth Pass (Jan 25, 2026)
+
+### Floor Material (Top Priority)
+- [ ] Introduce subtle rubber/mat texture
+- [ ] Add very faint tile seams or panel breaks
+- [ ] Increase midtone contrast slightly
+- [ ] Reduce fog overlay on the floor plane
+- [ ] Add soft, controlled light reflection under bags
+
+### Lighting Hierarchy
+- [ ] Stronger warm front wall light
+- [ ] More light on the first two rows
+- [ ] Slight falloff toward the back
+- [ ] Thin rim highlight on bags
+- [ ] Soft contact shadows
+
+### Bag Realism
+- [ ] Stronger vertical shading
+- [ ] Slight surface breakup (rubber/leather feel)
+- [ ] Brighter top edge highlight
+- [ ] Heavier, softer base shadow
+- [ ] Clearer silhouette
+
+### Depth Illusion
+- [ ] Slightly brighten and sharpen foreground
+- [ ] Slightly darken and soften background
+- [ ] Gentle atmospheric haze near the wall only
+- [ ] Micro size falloff on distant rows
+
+### Atmosphere Control
+- [ ] Keep haze near wall and ceiling zones
+- [ ] Do not cover the main floor surface
+- [ ] Allow materials to dominate
+
+
+## Phase 32: Final Realism & Depth Pass (Jan 25, 2026) - COMPLETED
+
+### Floor (Top Priority)
+- [x] Introduce subtle rubber/mat texture (8% opacity SVG noise)
+- [x] Add very faint tile seams or panel breaks (45% opacity, 100px grid)
+- [x] Increase midtone contrast (#424038 base, brighter than before)
+- [x] Reduce fog overlay on floor plane (haze only at 15% height)
+- [x] Add soft, controlled light reflection under bags (specular response)
+
+### Lighting Hierarchy
+- [x] Stronger warm front wall light (28% key light, up from 22%)
+- [x] More light on first two rows (16% fill light, up from 12%)
+- [x] Slight falloff toward the back (depth gradient 32% to transparent)
+- [x] Thin rim highlight on bags (22% left edge highlight)
+- [x] Soft contact shadows (65% opacity, 5px blur)
+
+### Bag Realism
+- [x] Stronger vertical shading (10-stop gradient from #252320 to #5a5752)
+- [x] Slight surface breakup (horizontal grain lines)
+- [x] Brighter top edge highlight (28% opacity, up from 20%)
+- [x] Heavier, softer base shadow (65% center opacity)
+- [x] Clearer silhouette (darker rear edge at 50%)
+
+### Depth Illusion
+- [x] Slightly brighten and sharpen foreground (7% warm tint at bottom)
+- [x] Slightly darken and soften background (0.4px blur on distant bags)
+- [x] Gentle atmospheric haze near wall only (15% height, 20% opacity)
+- [x] Micro size falloff on distant rows (15% size reduction)
+
+### Atmosphere Control
+- [x] Keep haze near wall and ceiling zones (top 15% only)
+- [x] Do not cover main floor surface (clear center)
+- [x] Allow materials to dominate (reduced vignette to 52% max)
