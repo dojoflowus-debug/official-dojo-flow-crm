@@ -4977,3 +4977,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Add pan/drag functionality when zoomed (Pan Mode toggle)
 - [x] Canvas scrollable with max-height: 70vh
 - [x] Add zoom level indicator (shows percentage)
+
+
+## Phase 25: Drag-and-Drop Bag Positioning (Jan 25, 2026) - COMPLETED
+- [x] Enable drag-and-drop for bag markers in Design mode
+- [x] Visual feedback during drag (teal highlight ring, scale effect, cursor change)
+- [x] Position saved to database on drop via updateSpotPosition mutation
+- [x] Prevent dragging in non-Design modes (Kiosk, Live, Wall)
+- [x] Show drag cursor and instructions in Design mode ("Drag to move" tooltip)
+- [x] Design Mode instruction banner with grip icon
+- [x] Legend shows "Drag bags to reposition" hint

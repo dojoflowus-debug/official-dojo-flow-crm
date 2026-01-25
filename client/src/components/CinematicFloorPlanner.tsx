@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, ZoomIn, ZoomOut, Maximize2, Move } from "lucide-react";
+import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, ZoomIn, ZoomOut, Maximize2, Move, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LayoutControls } from "./LayoutControls";
 import { generateLayout } from "@/lib/layoutGenerator";
@@ -76,8 +76,8 @@ const MODE_CONFIG = {
   wall: { icon: Tv, label: "Wall Display", description: "TV screens" },
 };
 
-// Premium 3D Kickboxing Bag Marker - Matching reference image EXACTLY
-function SpotMarker({
+// Draggable Spot Marker with drag-and-drop support
+function DraggableSpotMarker({
   spot,
   assignment,
   isHighlighted,
@@ -86,6 +86,11 @@ function SpotMarker({
   mode,
   templateType,
   scale = 1,
+  isDraggable,
+  onDragStart,
+  onDrag,
+  onDragEnd,
+  isDragging,
 }: {
   spot: Spot;
   assignment?: AssignedStudent;
@@ -95,10 +100,16 @@ function SpotMarker({
   mode: ViewMode;
   templateType: string;
   scale?: number;
+  isDraggable: boolean;
+  onDragStart: (spotId: number, e: React.MouseEvent) => void;
+  onDrag: (spotId: number, e: React.MouseEvent) => void;
+  onDragEnd: (spotId: number) => void;
+  isDragging: boolean;
 }) {
   const isEmpty = !assignment;
   const isKiosk = mode === "kiosk";
   const isLive = mode === "live";
+  const isDesign = mode === "design";
 
   // Get initials
   const initials = assignment?.initials || assignment?.studentName
@@ -123,23 +134,60 @@ function SpotMarker({
   // Scale factor for bag size based on zoom
   const bagScale = Math.max(0.6, Math.min(1.2, scale));
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isDraggable && isDesign) {
+      e.preventDefault();
+      e.stopPropagation();
+      onDragStart(spot.id, e);
+    }
+  };
+
   return (
     <div
-      onClick={onClick}
+      onClick={(e) => {
+        if (!isDragging) {
+          onClick();
+        }
+      }}
+      onMouseDown={handleMouseDown}
       className={cn(
-        "absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 group cursor-pointer",
-        isSelected && "z-50"
+        "absolute transform -translate-x-1/2 -translate-y-1/2 transition-all group",
+        isSelected && "z-50",
+        isDragging ? "z-[100] cursor-grabbing duration-0" : "duration-200",
+        isDraggable && isDesign && !isDragging && "cursor-grab hover:scale-105",
+        !isDraggable && "cursor-pointer"
       )}
       style={{
         left: `${spot.positionX}%`,
         top: `${spot.positionY}%`,
+        opacity: isDragging ? 0.9 : 1,
       }}
     >
+      {/* Drag indicator for Design mode */}
+      {isDraggable && isDesign && !isDragging && (
+        <div 
+          className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{
+            background: "rgba(45, 212, 191, 0.9)",
+            padding: "2px 6px",
+            borderRadius: "4px",
+            fontSize: "9px",
+            color: "white",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <GripVertical className="w-3 h-3 inline-block mr-1" />
+          Drag to move
+        </div>
+      )}
+
       {/* Large elliptical floor glow ring - matching reference exactly */}
       <div 
         className={cn(
           "absolute rounded-full transition-all duration-500",
-          isEmpty && (isKiosk || isLive) && "animate-pulse"
+          isEmpty && (isKiosk || isLive) && "animate-pulse",
+          isDragging && "ring-2 ring-teal-400 ring-offset-2 ring-offset-transparent"
         )}
         style={{
           width: `${120 * bagScale}px`,
@@ -147,9 +195,11 @@ function SpotMarker({
           bottom: "0px",
           left: "50%",
           transform: "translateX(-50%)",
-          background: `radial-gradient(ellipse 100% 100% at center, ${ringColor} 0%, ${ringColor}50 40%, ${ringColor}20 70%, transparent 100%)`,
+          background: isDragging 
+            ? `radial-gradient(ellipse 100% 100% at center, rgba(45, 212, 191, 0.9) 0%, rgba(45, 212, 191, 0.5) 40%, rgba(45, 212, 191, 0.2) 70%, transparent 100%)`
+            : `radial-gradient(ellipse 100% 100% at center, ${ringColor} 0%, ${ringColor}50 40%, ${ringColor}20 70%, transparent 100%)`,
           filter: "blur(12px)",
-          opacity: 0.85,
+          opacity: isDragging ? 1 : 0.85,
         }}
       />
 
@@ -162,7 +212,9 @@ function SpotMarker({
           bottom: `${4 * bagScale}px`,
           left: "50%",
           transform: "translateX(-50%)",
-          border: `1.5px solid ${isEmpty ? "rgba(45,212,191,0.5)" : "rgba(255,140,60,0.6)"}`,
+          border: isDragging 
+            ? "2px solid rgba(45,212,191,0.8)"
+            : `1.5px solid ${isEmpty ? "rgba(45,212,191,0.5)" : "rgba(255,140,60,0.6)"}`,
           borderRadius: "50%",
           opacity: 0.8,
         }}
@@ -173,9 +225,10 @@ function SpotMarker({
         // 3D Kickboxing Bag - Matching reference: wider trapezoidal shape with tapered base
         <div
           className={cn(
-            "flex flex-col items-center justify-center transition-all duration-300",
-            "group-hover:scale-105 group-hover:-translate-y-1",
-            isSelected && "scale-105 -translate-y-1",
+            "flex flex-col items-center justify-center transition-all",
+            !isDragging && "group-hover:scale-105 group-hover:-translate-y-1",
+            isSelected && !isDragging && "scale-105 -translate-y-1",
+            isDragging && "scale-110"
           )}
         >
           {/* Bag number badge - red circle on TOP of bag (matching reference) */}
@@ -211,10 +264,9 @@ function SpotMarker({
               height: `${72 * bagScale}px`,
               clipPath: "polygon(5% 0%, 95% 0%, 85% 100%, 15% 100%)",
               background: "linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 20%, #1a1a1a 60%, #0d0d0d 100%)",
-              boxShadow: `
-                0 15px 40px rgba(0,0,0,0.8),
-                0 8px 20px rgba(0,0,0,0.6)
-              `,
+              boxShadow: isDragging
+                ? "0 20px 50px rgba(0,0,0,0.9), 0 10px 25px rgba(45,212,191,0.3)"
+                : "0 15px 40px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6)",
             }}
           >
             {/* Left edge highlight */}
@@ -617,11 +669,13 @@ function ZoomControls({
 function FloorLegend({ 
   templateType, 
   occupiedCount, 
-  totalSpots 
+  totalSpots,
+  isDesignMode,
 }: { 
   templateType: string;
   occupiedCount: number;
   totalSpots: number;
+  isDesignMode: boolean;
 }) {
   return (
     <div 
@@ -656,6 +710,14 @@ function FloorLegend({
         <span className="text-white/50" style={{ fontSize: "11px" }}>Occupied Spot</span>
       </div>
 
+      {/* Design mode hint */}
+      {isDesignMode && (
+        <div className="flex items-center gap-2">
+          <GripVertical className="w-3 h-3 text-teal-400" />
+          <span className="text-teal-400/70" style={{ fontSize: "11px" }}>Drag bags to reposition</span>
+        </div>
+      )}
+
       {/* Spot count */}
       <div className="ml-auto text-white/40" style={{ fontSize: "11px" }}>
         {occupiedCount} / {totalSpots} spots
@@ -679,8 +741,14 @@ export function CinematicFloorPlanner({
   const [zoom, setZoom] = React.useState(1);
   const [pan, setPan] = React.useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = React.useState(false);
-  const [isDragging, setIsDragging] = React.useState(false);
-  const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 });
+  const [isDraggingCanvas, setIsDraggingCanvas] = React.useState(false);
+  const [canvasDragStart, setCanvasDragStart] = React.useState({ x: 0, y: 0 });
+  
+  // Spot dragging state
+  const [draggingSpotId, setDraggingSpotId] = React.useState<number | null>(null);
+  const [spotPositions, setSpotPositions] = React.useState<Record<number, { x: number; y: number }>>({});
+  const [dragStartPos, setDragStartPos] = React.useState({ x: 0, y: 0 });
+  const [originalSpotPos, setOriginalSpotPos] = React.useState({ x: 0, y: 0 });
   
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLDivElement>(null);
@@ -695,13 +763,17 @@ export function CinematicFloorPlanner({
   const heightPerRow = 140;
   const calculatedHeight = Math.max(baseHeight, 200 + (rows * heightPerRow));
 
+  const isDesignMode = currentMode === "design";
+
   const handleModeChange = (mode: ViewMode) => {
     setCurrentMode(mode);
     onModeChange?.(mode);
+    // Clear dragging state when switching modes
+    setDraggingSpotId(null);
   };
 
   const handleSpotClick = (spot: Spot) => {
-    if (!isPanning) {
+    if (!isPanning && !draggingSpotId) {
       setSelectedSpot(spot.id);
       onSpotClick?.(spot);
     }
@@ -733,25 +805,84 @@ export function CinematicFloorPlanner({
     }
   };
 
-  // Pan handling
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isPanning || e.button === 1) { // Middle mouse button or pan mode
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  // Canvas pan handling
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    // Only pan if in pan mode or middle mouse button, and not dragging a spot
+    if ((isPanning || e.button === 1) && !draggingSpotId) {
+      setIsDraggingCanvas(true);
+      setCanvasDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingCanvas) {
       setPan({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
+        x: e.clientX - canvasDragStart.x,
+        y: e.clientY - canvasDragStart.y,
       });
     }
+    
+    // Handle spot dragging
+    if (draggingSpotId !== null && canvasRef.current) {
+      e.preventDefault();
+      const rect = canvasRef.current.getBoundingClientRect();
+      
+      // Calculate new position as percentage
+      const deltaX = (e.clientX - dragStartPos.x) / rect.width * 100;
+      const deltaY = (e.clientY - dragStartPos.y) / rect.height * 100;
+      
+      const newX = Math.max(5, Math.min(95, originalSpotPos.x + deltaX));
+      const newY = Math.max(15, Math.min(95, originalSpotPos.y + deltaY));
+      
+      setSpotPositions(prev => ({
+        ...prev,
+        [draggingSpotId]: { x: newX, y: newY }
+      }));
+    }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
+  const handleCanvasMouseUp = () => {
+    setIsDraggingCanvas(false);
+    
+    // Save spot position if dragging
+    if (draggingSpotId !== null) {
+      const newPos = spotPositions[draggingSpotId];
+      if (newPos) {
+        // Save to database
+        updateSpotMutation.mutate({
+          spotId: draggingSpotId,
+          positionX: newPos.x,
+          positionY: newPos.y,
+        }, {
+          onSuccess: () => {
+            toast.success('Bag position saved');
+            utils.floorPlans.getById.invalidate({ id: floorPlan.id });
+          },
+          onError: () => {
+            toast.error('Failed to save position');
+          }
+        });
+      }
+      setDraggingSpotId(null);
+    }
+  };
+
+  // Spot drag handlers
+  const handleSpotDragStart = (spotId: number, e: React.MouseEvent) => {
+    if (!isDesignMode) return;
+    
+    const spot = floorPlan.spots.find(s => s.id === spotId);
+    if (!spot) return;
+    
+    setDraggingSpotId(spotId);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+    setOriginalSpotPos({ x: spot.positionX, y: spot.positionY });
+    
+    // Initialize position in local state
+    setSpotPositions(prev => ({
+      ...prev,
+      [spotId]: { x: spot.positionX, y: spot.positionY }
+    }));
   };
 
   const handleApplyLayout = async (layoutType: string) => {
@@ -805,6 +936,14 @@ export function CinematicFloorPlanner({
   const occupiedCount = assignedStudents.length;
   const totalSpots = floorPlan.spots.length;
 
+  // Get current position for a spot (from local state if dragging, otherwise from floorPlan)
+  const getSpotPosition = (spot: Spot) => {
+    if (spotPositions[spot.id]) {
+      return spotPositions[spot.id];
+    }
+    return { x: spot.positionX, y: spot.positionY };
+  };
+
   return (
     <div className="flex flex-col gap-3">
       {/* Header with mode switcher and zoom controls */}
@@ -844,6 +983,22 @@ export function CinematicFloorPlanner({
         )}
       </div>
 
+      {/* Design mode instruction banner */}
+      {isDesignMode && (
+        <div 
+          className="flex items-center gap-2 px-4 py-2 rounded-lg"
+          style={{
+            background: "rgba(45, 212, 191, 0.1)",
+            border: "1px solid rgba(45, 212, 191, 0.2)",
+          }}
+        >
+          <GripVertical className="w-4 h-4 text-teal-400" />
+          <span className="text-teal-400 text-sm">
+            <strong>Design Mode:</strong> Drag bags to position them exactly where your hanging bags are located.
+          </span>
+        </div>
+      )}
+
       {/* Floor Canvas - scrollable and zoomable */}
       <div 
         ref={containerRef}
@@ -854,13 +1009,13 @@ export function CinematicFloorPlanner({
           border: "1px solid rgba(255,255,255,0.04)",
           boxShadow: "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02)",
           maxHeight: "70vh",
-          cursor: isPanning ? (isDragging ? "grabbing" : "grab") : "default",
+          cursor: isPanning ? (isDraggingCanvas ? "grabbing" : "grab") : "default",
         }}
         onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseDown={handleCanvasMouseDown}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseUp={handleCanvasMouseUp}
+        onMouseLeave={handleCanvasMouseUp}
       >
         <div 
           ref={canvasRef}
@@ -872,7 +1027,7 @@ export function CinematicFloorPlanner({
             minHeight: `${calculatedHeight}px`,
             transform: `translate(${pan.x}px, ${pan.y}px)`,
             transformOrigin: "top left",
-            transition: isDragging ? "none" : "transform 0.1s ease-out",
+            transition: isDraggingCanvas || draggingSpotId ? "none" : "transform 0.1s ease-out",
           }}
         >
           {/* Base floor - dark mat matching reference */}
@@ -984,10 +1139,13 @@ export function CinematicFloorPlanner({
           <div className="absolute inset-0">
             {floorPlan.spots.map((spot) => {
               const assignment = assignedStudents.find((a) => a.spotId === spot.id);
+              const position = getSpotPosition(spot);
+              const spotWithPosition = { ...spot, positionX: position.x, positionY: position.y };
+              
               return (
-                <SpotMarker
+                <DraggableSpotMarker
                   key={spot.id}
-                  spot={spot}
+                  spot={spotWithPosition}
                   assignment={assignment}
                   isHighlighted={false}
                   isSelected={selectedSpot === spot.id}
@@ -995,6 +1153,11 @@ export function CinematicFloorPlanner({
                   mode={currentMode}
                   templateType={floorPlan.templateType}
                   scale={zoom}
+                  isDraggable={isDesignMode}
+                  onDragStart={handleSpotDragStart}
+                  onDrag={() => {}}
+                  onDragEnd={() => {}}
+                  isDragging={draggingSpotId === spot.id}
                 />
               );
             })}
@@ -1012,6 +1175,7 @@ export function CinematicFloorPlanner({
         templateType={floorPlan.templateType}
         occupiedCount={occupiedCount}
         totalSpots={totalSpots}
+        isDesignMode={isDesignMode}
       />
 
       {/* Layout Controls */}
