@@ -4842,3 +4842,55 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Floor halo rings: Teal/green for available, belt color for occupied
 - [x] Mat texture: Subtle stitched pattern overlay
 - [x] Mode switcher: Refined styling with smaller buttons
+
+
+## Phase 19: Cinematic Polish Pass - Premium DojoFlow Aesthetic (Jan 24, 2026)
+
+### Room Canvas
+- [ ] Add subtle dojo mat texture with micro grain
+- [ ] Add light reflection under bags
+- [ ] Darker edges, lighter center gradient
+- [ ] Add faint light shafts from top front
+- [ ] Enhanced vignette shaping (not uniform)
+- [ ] Remove obvious grid dominance
+- [ ] Soft inner glow boundary with stitched outline
+
+### Bag Markers
+- [ ] Soft highlight edge on bags
+- [ ] Subtle vertical gradient for realism
+- [ ] Clearer silhouette separation from floor
+- [ ] Larger, softer, blurred floor glow rings
+- [ ] Faint floor shadow under each bag
+- [ ] Reduce number font size ~20%
+- [ ] Lighter weight, slight opacity numbers
+
+### Front of Class Stage
+- [ ] Warm amber/orange wall light
+- [ ] Subtle brick/wall texture
+- [ ] Low horizontal light strip
+- [ ] Floor light bleed forward
+- [ ] Smaller, spaced, premium typography
+
+### UI Glass Layering
+- [ ] Floor plan container: glass blur, thin border, internal glow
+- [ ] Header bar: more glass-like, reduced heaviness
+- [ ] Modals: dark glass card, soft highlight rim
+- [ ] Inputs: inner glow, soft depth, better spacing
+- [ ] Equipment Setup: premium control deck feel
+
+### Typography & Atmosphere
+- [ ] Reduce headline size slightly
+- [ ] Increase letter-spacing on labels
+- [ ] Softer contrast for secondary text
+- [ ] Subtle dust particles (if performance safe)
+- [ ] Micro noise overlay
+
+
+## Phase 19: Cinematic Polish Pass - Floor Planner (Jan 24, 2026) - COMPLETED
+- [x] Room canvas: Mat texture, micro grain, vignette shaping, center light
+- [x] Bags: Realistic 3D design, larger softer floor rings, smaller typography
+- [x] Front of Class: Warm wall light, brick texture, horizontal glow strip
+- [x] UI Glass: Header, mode switcher, legend with blur and soft borders
+- [x] Typography: Reduced sizes, increased letter-spacing, softer contrast
+- [x] Light shafts from ceiling, dimensional depth, floor reflections
+- [x] Premium cinematic aesthetic matching DojoFlow/Kai brand
