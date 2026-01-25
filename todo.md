@@ -4905,14 +4905,23 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Selected state: Slightly brighter, not larger
 
 
-## Phase 21: Match Reference Image (Jan 25, 2026)
-- [ ] Bags: 3D kickboxing bag shape with tapered base, red number badge on top
-- [ ] Bags: Show initials (T.K., R.W., etc.) on occupied bags
-- [ ] Bags: Add "INSTRUCTOR" and "RESERVED" labels for special spots
-- [ ] Floor rings: Larger, softer glow rings (teal for available, amber/red for occupied)
-- [ ] Canvas: Darker mat texture with subtle grid lines
-- [ ] Canvas: Perspective depth (top darker, bottom lighter)
-- [ ] Stage: Warm amber/orange lighting strip with horizontal glow
-- [ ] Stage: Subtle brick/wall texture
-- [ ] Sidebar: Room cards with icon, name, type, dimensions, availability count
-- [ ] Legend: Available/Occupied spot indicators with student info
+## Phase 21: Match Reference Image (Jan 25, 2026) - COMPLETED
+- [x] Bags: 3D kickboxing bag shape with tapered base, red number badge on top
+- [x] Bags: Show initials (T.K., R.W., etc.) on occupied bags
+- [x] Bags: Add "INSTRUCTOR" and "RESERVED" labels for special spots
+- [x] Floor rings: Larger, softer glow rings (teal for available, amber/red for occupied)
+- [x] Canvas: Darker mat texture with subtle grid lines
+- [x] Canvas: Perspective depth (top darker, bottom lighter)
+- [x] Stage: Warm amber/orange lighting strip with horizontal glow
+- [x] Stage: Subtle brick/wall texture
+- [x] Sidebar: Room cards with icon, name, type, dimensions, availability count
+- [x] Legend: Available/Occupied spot indicators with student info
+
+
+## Phase 22: Cinematic Depth & Lighting Pass (Jan 25, 2026) - COMPLETED
+- [x] Room depth: Back wall plane, floor-to-wall transition, perspective gradient
+- [x] Lighting: Front wall warm amber glow with floor bleed and bloom
+- [x] Lighting: Overhead light shafts/cones, top-down highlights on bags
+- [x] Bags: Vertical highlight gradient, rim light, base shadow softness
+- [x] Floor: Mat texture, seams, micro grain, light reflections under bags
+- [x] UI Glass: Blur on container frame, softer header, light edge glow
