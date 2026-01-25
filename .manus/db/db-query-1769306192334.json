@@ -1,0 +1,43 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'floor_plan_spots';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'floor_plan_spots';",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "floorPlanId"
+    },
+    {
+      "COLUMN_NAME": "spotNumber"
+    },
+    {
+      "COLUMN_NAME": "spotLabel"
+    },
+    {
+      "COLUMN_NAME": "positionX"
+    },
+    {
+      "COLUMN_NAME": "positionY"
+    },
+    {
+      "COLUMN_NAME": "rowIdentifier"
+    },
+    {
+      "COLUMN_NAME": "columnIdentifier"
+    },
+    {
+      "COLUMN_NAME": "isAvailable"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "spotType"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nfloorPlanId\nspotNumber\nspotLabel\npositionX\npositionY\nrowIdentifier\ncolumnIdentifier\nisAvailable\ncreatedAt\nspotType\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

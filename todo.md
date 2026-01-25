@@ -4784,3 +4784,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - [x] Verify 15 stations generated in database
   - [x] Verify all 15 bags render on canvas in grid pattern
   - [x] Confirmed: Test Bags Generation room shows 15 spots with all bags visible and properly positioned
+
+
+## Bug Fix - Floor Plan Bag Rendering (Jan 24, 2026)
+- [x] Fix bag rendering issue - only 4 bags showing out of 10+ spots
+  - Root cause: Spots container had conflicting CSS - `className="absolute inset-0"` with `style={{ position: 'relative' }}`
+  - The inline style overrode the className, causing container to have position:relative with height:0
+  - All spots were stacked at the same position because the container had no height
+  - Fix: Removed the conflicting inline style, kept `className="absolute inset-0"`
+  - Also fixed aspect ratio - swapped lengthFeet/widthFeet for proper CSS aspect-ratio
+  - All 10 bags now render correctly distributed across the canvas

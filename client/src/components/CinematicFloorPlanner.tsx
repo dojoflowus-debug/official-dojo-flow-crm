@@ -614,7 +614,7 @@ export function CinematicFloorPlanner({
           ref={containerRef}
           className="relative w-full rounded-2xl overflow-hidden"
           style={{
-            aspectRatio: `${floorPlan.lengthFeet || 40} / ${floorPlan.widthFeet || 40}`,
+            aspectRatio: `${floorPlan.widthFeet || 40} / ${floorPlan.lengthFeet || 40}`,
             minHeight: "500px",
             maxHeight: "none",
             position: 'relative',
@@ -702,7 +702,6 @@ export function CinematicFloorPlanner({
           {/* Spots Container - Position relative for absolute positioning context */}
           <div 
             className="absolute inset-0"
-            style={{ position: 'relative' }}
           >
             {floorPlan.spots.map((spot) => {
               const assignment = assignedStudents.find((a) => a.spotId === spot.id);
