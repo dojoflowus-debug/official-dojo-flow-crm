@@ -4894,3 +4894,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Typography: Reduced sizes, increased letter-spacing, softer contrast
 - [x] Light shafts from ceiling, dimensional depth, floor reflections
 - [x] Premium cinematic aesthetic matching DojoFlow/Kai brand
+
+
+## Phase 20: Left Floor Plan Cards Refinement (Jan 24, 2026) - COMPLETED
+- [x] Typography: Reduce name size 20-30%, medium weight, letter spacing
+- [x] Typography: Smaller muted template label, much smaller meta text
+- [x] Layout: Reduce card padding and height, add subtle dividers
+- [x] Visual: Soften backgrounds, reduce borders, add glass blur
+- [x] Readability: Fix truncation with ellipsis and hover tooltips
+- [x] Selected state: Slightly brighter, not larger
