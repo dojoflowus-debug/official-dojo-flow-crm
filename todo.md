@@ -5035,3 +5035,47 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Smaller icons (w-3 h-3, w-2.5 h-2.5)
 - [x] Softened panel container (no hard borders)
 - [x] Panel visually recedes (low contrast bg)
+
+
+## Phase 28: Cinematic Color + 3D Slant Pass (Jan 25, 2026) - COMPLETED
+
+### Color Direction (Kill the Blue)
+- [x] Replace cold blue floor tones with warm charcoal/graphite (#2a2420, #1a1614, #0a0908)
+- [x] Shift palette to: charcoal, warm graphite, deep brown, soft black
+- [x] Light sources: warm amber, copper, soft gold (rgba(255,140,60), rgba(255,120,50))
+- [x] Accents: muted teal for available, warm amber/orange for occupied
+- [x] Environment is now warm-dark, not cool-dark
+
+### Floor Material & Depth
+- [x] Add subtle mat/rubber texture (warm-tinted grid lines)
+- [x] Directional shading from front → back (gradient overlay)
+- [x] Darken distance, brighten foreground (depth-based opacity)
+- [x] Soft ground contact shadows under bags
+- [x] Reduced visible flat grid dominance
+
+### 3D Slant / Perspective Illusion
+- [x] Gentle perspective gradient (linear-gradient 180deg)
+- [x] Slightly compress distant rows visually (depthFactor scaling)
+- [x] Soft haze near back wall (25% height gradient)
+- [x] Emphasize front floor brightness (warm tint at bottom)
+- [x] Subtle vignetting around edges (radial-gradient)
+
+### Lighting Story
+- [x] Warm back wall glow (amber stage area)
+- [x] Soft horizontal light strip (rgba(255,140,60,0.7))
+- [x] Downward light cones (5 cones from ceiling)
+- [x] Bag rim highlights (warm left edge highlight)
+- [x] Diffused shadows beneath bags (blur(8px) shadow)
+
+### Bag Presentation
+- [x] Increase vertical shading (warm gradient #3d3530 to #0d0c0b)
+- [x] Stronger top highlight (rgba(255,200,150,0.15))
+- [x] Soft ground contact shadow (ellipse blur)
+- [x] Slight size taper illusion (depthScale factor)
+- [x] Reduced icon flatness (warm specular highlights)
+
+### Canvas Frame
+- [x] Subtle glass edge (rgba(255,180,120,0.08) border)
+- [x] Warm top glow (inset shadow with amber)
+- [x] Softer borders (blur backdrop)
+- [x] Light falloff at corners (vignette)
