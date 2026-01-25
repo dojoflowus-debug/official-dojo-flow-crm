@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3 } from "lucide-react";
+import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3, ZoomIn, ZoomOut, Maximize2, Move } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LayoutControls } from "./LayoutControls";
 import { generateLayout } from "@/lib/layoutGenerator";
@@ -85,8 +85,7 @@ function SpotMarker({
   onClick,
   mode,
   templateType,
-  containerRef,
-  onDragEnd,
+  scale = 1,
 }: {
   spot: Spot;
   assignment?: AssignedStudent;
@@ -95,47 +94,11 @@ function SpotMarker({
   onClick: () => void;
   mode: ViewMode;
   templateType: string;
-  containerRef: React.RefObject<HTMLDivElement>;
-  onDragEnd?: (spotId: number, newX: number, newY: number) => void;
+  scale?: number;
 }) {
   const isEmpty = !assignment;
   const isKiosk = mode === "kiosk";
   const isLive = mode === "live";
-  const isDesign = mode === "design";
-  const isDraggable = isDesign && onDragEnd;
-
-  // Drag state
-  const [isDragging, setIsDragging] = React.useState(false);
-  const dragStartRef = React.useRef<{ x: number; y: number } | null>(null);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isDraggable) return;
-    e.preventDefault();
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    setIsDragging(true);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !dragStartRef.current || !containerRef.current || !onDragEnd) return;
-    const dx = e.clientX - dragStartRef.current.x;
-    const dy = e.clientY - dragStartRef.current.y;
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    onDragEnd(spot.id, dx, dy);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    dragStartRef.current = null;
-  };
-
-  // Get belt color for ring
-  const beltColor = assignment?.beltRank 
-    ? BELT_COLORS[assignment.beltRank.toLowerCase().replace(" belt", "")] || "#3b82f6"
-    : "#4a5568";
-
-  // Determine spot styling based on template type
-  const isBag = spot.spotType === "bag" || templateType === "kickboxing_bags";
-  const isMat = spot.spotType === "mat" || templateType === "yoga_grid";
 
   // Get initials
   const initials = assignment?.initials || assignment?.studentName
@@ -143,10 +106,6 @@ function SpotMarker({
     .map((n: string) => n[0])
     .join("")
     .toUpperCase() || "";
-
-  // Clamp positions
-  const clampedX = Math.max(8, Math.min(92, spot.positionX));
-  const clampedY = Math.max(18, Math.min(88, spot.positionY));
 
   // Glow ring color - teal/cyan for available, amber/orange for occupied (matching reference)
   const ringColor = isEmpty 
@@ -157,22 +116,23 @@ function SpotMarker({
   const isInstructor = assignment?.beltRank?.toLowerCase().includes("instructor");
   const isReserved = assignment?.beltRank?.toLowerCase().includes("reserved");
 
+  // Determine spot styling based on template type
+  const isBag = spot.spotType === "bag" || templateType === "kickboxing_bags";
+  const isMat = spot.spotType === "mat" || templateType === "yoga_grid";
+
+  // Scale factor for bag size based on zoom
+  const bagScale = Math.max(0.6, Math.min(1.2, scale));
+
   return (
     <div
       onClick={onClick}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
       className={cn(
-        "absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 group",
-        isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+        "absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 group cursor-pointer",
+        isSelected && "z-50"
       )}
       style={{
-        left: `${clampedX}%`,
-        top: `${clampedY}%`,
-        zIndex: isSelected ? 50 : 10,
-        opacity: isDragging ? 0.8 : 1,
+        left: `${spot.positionX}%`,
+        top: `${spot.positionY}%`,
       }}
     >
       {/* Large elliptical floor glow ring - matching reference exactly */}
@@ -182,8 +142,8 @@ function SpotMarker({
           isEmpty && (isKiosk || isLive) && "animate-pulse"
         )}
         style={{
-          width: "120px",
-          height: "40px",
+          width: `${120 * bagScale}px`,
+          height: `${40 * bagScale}px`,
           bottom: "0px",
           left: "50%",
           transform: "translateX(-50%)",
@@ -197,9 +157,9 @@ function SpotMarker({
       <div 
         className="absolute rounded-full"
         style={{
-          width: "100px",
-          height: "32px",
-          bottom: "4px",
+          width: `${100 * bagScale}px`,
+          height: `${32 * bagScale}px`,
+          bottom: `${4 * bagScale}px`,
           left: "50%",
           transform: "translateX(-50%)",
           border: `1.5px solid ${isEmpty ? "rgba(45,212,191,0.5)" : "rgba(255,140,60,0.6)"}`,
@@ -226,12 +186,12 @@ function SpotMarker({
             )}
             style={{
               position: "absolute",
-              top: "-14px",
+              top: `${-14 * bagScale}px`,
               left: "50%",
               transform: "translateX(-50%)",
-              width: "24px",
-              height: "20px",
-              fontSize: "12px",
+              width: `${24 * bagScale}px`,
+              height: `${20 * bagScale}px`,
+              fontSize: `${12 * bagScale}px`,
               fontWeight: 700,
               color: "white",
               borderRadius: "4px",
@@ -247,8 +207,8 @@ function SpotMarker({
           <div 
             className="relative overflow-hidden"
             style={{
-              width: "48px",
-              height: "72px",
+              width: `${48 * bagScale}px`,
+              height: `${72 * bagScale}px`,
               clipPath: "polygon(5% 0%, 95% 0%, 85% 100%, 15% 100%)",
               background: "linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 20%, #1a1a1a 60%, #0d0d0d 100%)",
               boxShadow: `
@@ -279,7 +239,7 @@ function SpotMarker({
               <div 
                 className="absolute top-2 left-2 right-2 rounded-sm"
                 style={{
-                  height: "28px",
+                  height: `${28 * bagScale}px`,
                   background: "linear-gradient(180deg, #ef4444 0%, #dc2626 40%, #b91c1c 100%)",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 6px rgba(0,0,0,0.4)",
                 }}
@@ -296,7 +256,7 @@ function SpotMarker({
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span 
                     className="text-white font-bold"
-                    style={{ fontSize: "13px", letterSpacing: "0.05em", textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+                    style={{ fontSize: `${13 * bagScale}px`, letterSpacing: "0.05em", textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
                   >
                     {initials}
                   </span>
@@ -312,7 +272,7 @@ function SpotMarker({
                 <span 
                   className="text-white/80 uppercase font-medium px-1 py-0.5 rounded"
                   style={{ 
-                    fontSize: "6px", 
+                    fontSize: `${6 * bagScale}px`, 
                     letterSpacing: "0.08em",
                     background: "rgba(0,0,0,0.5)",
                   }}
@@ -329,7 +289,7 @@ function SpotMarker({
                 <span 
                   className="text-white/80 uppercase font-medium px-1 py-0.5 rounded"
                   style={{ 
-                    fontSize: "6px", 
+                    fontSize: `${6 * bagScale}px`, 
                     letterSpacing: "0.08em",
                     background: "rgba(0,0,0,0.5)",
                   }}
@@ -359,8 +319,8 @@ function SpotMarker({
           {/* Bag base/stand - wider tapered base matching reference */}
           <div 
             style={{
-              width: "32px",
-              height: "12px",
+              width: `${32 * bagScale}px`,
+              height: `${12 * bagScale}px`,
               marginTop: "-2px",
               background: "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)",
               clipPath: "polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%)",
@@ -372,9 +332,9 @@ function SpotMarker({
           <div 
             className="absolute"
             style={{
-              bottom: "2px",
-              width: "50px",
-              height: "16px",
+              bottom: `${2 * bagScale}px`,
+              width: `${50 * bagScale}px`,
+              height: `${16 * bagScale}px`,
               left: "50%",
               transform: "translateX(-50%)",
               background: "radial-gradient(ellipse, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 80%)",
@@ -386,10 +346,10 @@ function SpotMarker({
           <div 
             className="absolute text-white/35 font-medium"
             style={{
-              bottom: "-24px",
+              bottom: `${-24 * bagScale}px`,
               left: "50%",
               transform: "translateX(-50%)",
-              fontSize: "11px",
+              fontSize: `${11 * bagScale}px`,
             }}
           >
             {spot.spotNumber}
@@ -406,10 +366,12 @@ function SpotMarker({
         >
           <div 
             className={cn(
-              "w-14 h-7 rounded overflow-hidden relative",
+              "rounded overflow-hidden relative",
               isEmpty ? "bg-zinc-700" : "bg-gradient-to-b from-purple-500 via-purple-600 to-purple-800",
             )}
             style={{
+              width: `${56 * bagScale}px`,
+              height: `${28 * bagScale}px`,
               boxShadow: "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
             }}
           >
@@ -417,7 +379,7 @@ function SpotMarker({
               <span className={cn(
                 "font-medium",
                 isEmpty ? "text-zinc-500" : "text-white/80"
-              )} style={{ fontSize: "10px" }}>
+              )} style={{ fontSize: `${10 * bagScale}px` }}>
                 {assignment ? initials : spot.spotLabel}
               </span>
             </div>
@@ -434,17 +396,19 @@ function SpotMarker({
         >
           <div 
             className={cn(
-              "w-9 h-9 rounded-full flex items-center justify-center relative",
+              "rounded-full flex items-center justify-center relative",
               isEmpty ? "bg-zinc-700" : "bg-gradient-to-br from-amber-400 to-amber-600",
             )}
             style={{
+              width: `${36 * bagScale}px`,
+              height: `${36 * bagScale}px`,
               boxShadow: "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
           >
             <span className={cn(
               "font-medium",
               isEmpty ? "text-zinc-500" : "text-white"
-            )} style={{ fontSize: "10px" }}>
+            )} style={{ fontSize: `${10 * bagScale}px` }}>
               {assignment ? initials : spot.spotLabel}
             </span>
           </div>
@@ -455,13 +419,14 @@ function SpotMarker({
 }
 
 // Front of Class Stage - Matching reference exactly
-function FrontOfClassStage({ width }: { width: number }) {
+function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
   return (
-    <div className="absolute top-0 left-0 right-0 h-24 pointer-events-none">
+    <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: `${96 * scale}px` }}>
       {/* Dark wall background */}
       <div 
-        className="absolute inset-x-4 top-2 h-16 rounded-lg overflow-hidden"
+        className="absolute inset-x-4 top-2 rounded-lg overflow-hidden"
         style={{
+          height: `${64 * scale}px`,
           background: `
             linear-gradient(180deg, 
               rgba(20, 18, 15, 0.98) 0%, 
@@ -478,20 +443,22 @@ function FrontOfClassStage({ width }: { width: number }) {
       >
         {/* Warm overhead light strip - matching reference */}
         <div 
-          className="absolute inset-x-0 top-0 h-1.5"
+          className="absolute inset-x-0 top-0"
           style={{
+            height: `${6 * scale}px`,
             background: "linear-gradient(90deg, transparent 5%, rgba(255,120,40,0.8) 25%, rgba(255,160,80,0.9) 50%, rgba(255,120,40,0.8) 75%, transparent 95%)",
             boxShadow: "0 0 25px rgba(255,130,50,0.6), 0 0 50px rgba(255,100,40,0.4)",
           }}
         />
         
         {/* Light glow spots on wall */}
-        <div className="absolute inset-x-0 top-0 h-8 flex justify-around px-16">
+        <div className="absolute inset-x-0 top-0 flex justify-around px-16" style={{ height: `${32 * scale}px` }}>
           {[...Array(5)].map((_, i) => (
             <div 
               key={i}
-              className="w-20 h-full"
+              className="h-full"
               style={{
+                width: `${80 * scale}px`,
                 background: "radial-gradient(ellipse at center top, rgba(255,140,80,0.12) 0%, transparent 70%)",
               }}
             />
@@ -500,8 +467,9 @@ function FrontOfClassStage({ width }: { width: number }) {
 
         {/* Stage glow bleeding onto floor */}
         <div 
-          className="absolute inset-x-0 -bottom-12 h-16"
+          className="absolute inset-x-0 h-16"
           style={{
+            bottom: `${-48 * scale}px`,
             background: "linear-gradient(180deg, rgba(255,100,40,0.08) 0%, rgba(255,80,40,0.03) 50%, transparent 100%)",
           }}
         />
@@ -511,7 +479,7 @@ function FrontOfClassStage({ width }: { width: number }) {
           <span 
             className="text-white/50 font-semibold uppercase"
             style={{ 
-              fontSize: "13px",
+              fontSize: `${13 * scale}px`,
               letterSpacing: "0.35em",
             }}
           >
@@ -522,8 +490,10 @@ function FrontOfClassStage({ width }: { width: number }) {
         {/* Instructor podium/marker - small rectangle below text */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-1">
           <div 
-            className="w-6 h-3 rounded-sm"
+            className="rounded-sm"
             style={{
+              width: `${24 * scale}px`,
+              height: `${12 * scale}px`,
               background: "linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%)",
               boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
             }}
@@ -577,6 +547,72 @@ function ModeSwitcher({
   );
 }
 
+// Zoom Controls
+function ZoomControls({ 
+  zoom, 
+  onZoomIn, 
+  onZoomOut, 
+  onFitToView,
+  isPanning,
+  onTogglePan,
+}: { 
+  zoom: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onFitToView: () => void;
+  isPanning: boolean;
+  onTogglePan: () => void;
+}) {
+  return (
+    <div 
+      className="flex items-center gap-1 p-1 rounded-lg"
+      style={{
+        background: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(16px)",
+        border: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      <button
+        onClick={onZoomOut}
+        className="p-1.5 rounded-md text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+        title="Zoom Out"
+      >
+        <ZoomOut className="w-4 h-4" />
+      </button>
+      <span className="text-white/50 px-2 min-w-[50px] text-center" style={{ fontSize: "11px" }}>
+        {Math.round(zoom * 100)}%
+      </span>
+      <button
+        onClick={onZoomIn}
+        className="p-1.5 rounded-md text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+        title="Zoom In"
+      >
+        <ZoomIn className="w-4 h-4" />
+      </button>
+      <div className="w-px h-4 bg-white/10 mx-1" />
+      <button
+        onClick={onFitToView}
+        className="p-1.5 rounded-md text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+        title="Fit to View"
+      >
+        <Maximize2 className="w-4 h-4" />
+      </button>
+      <button
+        onClick={onTogglePan}
+        className={cn(
+          "p-1.5 rounded-md transition-colors",
+          isPanning 
+            ? "text-teal-400 bg-teal-400/20" 
+            : "text-white/50 hover:text-white hover:bg-white/10"
+        )}
+        title="Pan Mode"
+      >
+        <Move className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 // Legend - matching reference
 function FloorLegend({ 
   templateType, 
@@ -587,8 +623,6 @@ function FloorLegend({
   occupiedCount: number;
   totalSpots: number;
 }) {
-  const availableCount = totalSpots - occupiedCount;
-  
   return (
     <div 
       className="flex items-center gap-6 px-4 py-2.5 rounded-lg mt-3"
@@ -642,10 +676,24 @@ export function CinematicFloorPlanner({
 }: CinematicFloorPlannerProps) {
   const [currentMode, setCurrentMode] = React.useState<ViewMode>(initialMode);
   const [selectedSpot, setSelectedSpot] = React.useState<number | null>(null);
+  const [zoom, setZoom] = React.useState(1);
+  const [pan, setPan] = React.useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 });
+  
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLDivElement>(null);
   
   const updateSpotMutation = trpc.floorPlans.updateSpotPosition.useMutation();
   const utils = trpc.useUtils();
+
+  // Calculate canvas height based on number of spots to ensure all are visible
+  const spotCount = floorPlan.spots.length;
+  const rows = Math.ceil(spotCount / 5); // Assume 5 columns
+  const baseHeight = 500;
+  const heightPerRow = 140;
+  const calculatedHeight = Math.max(baseHeight, 200 + (rows * heightPerRow));
 
   const handleModeChange = (mode: ViewMode) => {
     setCurrentMode(mode);
@@ -653,27 +701,57 @@ export function CinematicFloorPlanner({
   };
 
   const handleSpotClick = (spot: Spot) => {
-    setSelectedSpot(spot.id);
-    onSpotClick?.(spot);
+    if (!isPanning) {
+      setSelectedSpot(spot.id);
+      onSpotClick?.(spot);
+    }
   };
 
-  const handleSpotDrag = async (spotId: number, deltaX: number, deltaY: number) => {
-    if (!containerRef.current) return;
-    
-    const container = containerRef.current;
-    const rect = container.getBoundingClientRect();
-    
-    const spot = floorPlan.spots.find(s => s.id === spotId);
-    if (!spot) return;
-    
-    const deltaXPercent = (deltaX / rect.width) * 100;
-    const deltaYPercent = (deltaY / rect.height) * 100;
-    
-    const newX = Math.max(5, Math.min(95, spot.positionX + deltaXPercent));
-    const newY = Math.max(15, Math.min(90, spot.positionY + deltaYPercent));
-    
-    spot.positionX = newX;
-    spot.positionY = newY;
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.25, 0.5));
+  };
+
+  const handleFitToView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  const handleTogglePan = () => {
+    setIsPanning(prev => !prev);
+  };
+
+  // Mouse wheel zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setZoom(prev => Math.max(0.5, Math.min(3, prev + delta)));
+    }
+  };
+
+  // Pan handling
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isPanning || e.button === 1) { // Middle mouse button or pan mode
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
 
   const handleApplyLayout = async (layoutType: string) => {
@@ -729,7 +807,7 @@ export function CinematicFloorPlanner({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header with mode switcher */}
+      {/* Header with mode switcher and zoom controls */}
       <div 
         className="flex items-center justify-between px-3 py-2 rounded-lg"
         style={{
@@ -738,7 +816,17 @@ export function CinematicFloorPlanner({
           border: "1px solid rgba(255,255,255,0.04)",
         }}
       >
-        <span className="text-white/50" style={{ fontSize: "11px" }}>View</span>
+        <div className="flex items-center gap-3">
+          <span className="text-white/50" style={{ fontSize: "11px" }}>View</span>
+          <ZoomControls 
+            zoom={zoom}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onFitToView={handleFitToView}
+            isPanning={isPanning}
+            onTogglePan={handleTogglePan}
+          />
+        </div>
         
         {showModeSwitch && (
           <div className="flex items-center gap-2">
@@ -756,24 +844,35 @@ export function CinematicFloorPlanner({
         )}
       </div>
 
-      {/* Floor Canvas - matching reference with darker mat and perspective lines */}
+      {/* Floor Canvas - scrollable and zoomable */}
       <div 
-        className="rounded-xl overflow-hidden"
+        ref={containerRef}
+        className="rounded-xl overflow-auto"
         style={{
           background: "rgba(0,0,0,0.4)",
           backdropFilter: "blur(8px)",
           border: "1px solid rgba(255,255,255,0.04)",
           boxShadow: "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02)",
+          maxHeight: "70vh",
+          cursor: isPanning ? (isDragging ? "grabbing" : "grab") : "default",
         }}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       >
         <div 
-          ref={containerRef}
-          className="relative w-full"
+          ref={canvasRef}
+          className="relative"
           style={{
-            aspectRatio: `${floorPlan.widthFeet || 40} / ${floorPlan.lengthFeet || 40}`,
-            minHeight: "480px",
-            maxHeight: "none",
-            position: 'relative',
+            width: `${100 * zoom}%`,
+            minWidth: "100%",
+            height: `${calculatedHeight * zoom}px`,
+            minHeight: `${calculatedHeight}px`,
+            transform: `translate(${pan.x}px, ${pan.y}px)`,
+            transformOrigin: "top left",
+            transition: isDragging ? "none" : "transform 0.1s ease-out",
           }}
         >
           {/* Base floor - dark mat matching reference */}
@@ -791,7 +890,7 @@ export function CinematicFloorPlanner({
             }}
           />
 
-          {/* Mat texture - perspective grid lines converging toward front (matching reference) */}
+          {/* Mat texture - perspective grid lines */}
           <div 
             className="absolute inset-0 opacity-25"
             style={{
@@ -814,7 +913,7 @@ export function CinematicFloorPlanner({
             }}
           />
 
-          {/* Darker vignette - matching reference (darker corners) */}
+          {/* Darker vignette */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -838,23 +937,28 @@ export function CinematicFloorPlanner({
 
           {/* Warm ambient light from stage */}
           <div 
-            className="absolute inset-x-0 top-0 h-48 pointer-events-none"
+            className="absolute inset-x-0 top-0 pointer-events-none"
             style={{
+              height: `${192 * zoom}px`,
               background: "linear-gradient(180deg, rgba(255,100,40,0.08) 0%, rgba(255,80,40,0.03) 50%, transparent 100%)",
             }}
           />
 
           {/* Mat boundary - subtle dashed border */}
           <div 
-            className="absolute inset-4 rounded-lg pointer-events-none"
+            className="absolute rounded-lg pointer-events-none"
             style={{
+              left: "16px",
+              right: "16px",
+              top: "16px",
+              bottom: "16px",
               border: "1px dashed rgba(255,255,255,0.08)",
               boxShadow: "inset 0 0 60px rgba(0,0,0,0.25)",
             }}
           />
 
           {/* Front of Class Stage */}
-          <FrontOfClassStage width={100} />
+          <FrontOfClassStage scale={zoom} />
 
           {/* Zones */}
           {zones.map((zone) => (
@@ -890,15 +994,14 @@ export function CinematicFloorPlanner({
                   onClick={() => handleSpotClick(spot)}
                   mode={currentMode}
                   templateType={floorPlan.templateType}
-                  containerRef={containerRef}
-                  onDragEnd={handleSpotDrag}
+                  scale={zoom}
                 />
               );
             })}
           </div>
 
           {/* Room dimensions - bottom right corner */}
-          <div className="absolute bottom-3 right-4 text-white/30" style={{ fontSize: "11px" }}>
+          <div className="absolute bottom-3 right-4 text-white/30" style={{ fontSize: `${11 * zoom}px` }}>
             {floorPlan.lengthFeet} ft × {floorPlan.widthFeet} ft
           </div>
         </div>

@@ -4968,3 +4968,12 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] "Occupied Spot" with amber indicator
 - [x] Spot count display
 - [x] Room dimensions in corner
+
+
+## Phase 24: Fix Floor Planner Visibility & Navigation (Jan 25, 2026) - COMPLETED
+- [x] Remove fixed aspect ratio that clips content
+- [x] Make canvas height auto-fit to show all bags (calculatedHeight based on rows)
+- [x] Add zoom controls (zoom in/out buttons, fit to view)
+- [x] Add pan/drag functionality when zoomed (Pan Mode toggle)
+- [x] Canvas scrollable with max-height: 70vh
+- [x] Add zoom level indicator (shows percentage)
