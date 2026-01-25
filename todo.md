@@ -4794,3 +4794,51 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
   - Fix: Removed the conflicting inline style, kept `className="absolute inset-0"`
   - Also fixed aspect ratio - swapped lengthFeet/widthFeet for proper CSS aspect-ratio
   - All 10 bags now render correctly distributed across the canvas
+
+
+## Phase 18: Floor Planner Cinematic UI Polish (Jan 24, 2026)
+
+### Room Canvas
+- [ ] Add subtle floor surface texture (mat/turf feel)
+- [ ] Add soft vignette around edges
+- [ ] Add inner glow / light falloff from front wall
+- [ ] Add slight perspective depth (top darker, bottom lighter)
+- [ ] Add faint dotted/stitched mat boundary
+- [ ] Add soft ambient grain (very subtle)
+
+### Bags / Stations
+- [ ] Reduce bag card font size by 30-40%
+- [ ] Reduce overall bag UI bulk
+- [ ] Move numbers into small badge on top of bag
+- [ ] Soften corners, remove blocky feel
+- [ ] Add subtle drop shadow under each bag
+- [ ] Add soft halo ring on floor (green=available, amber=occupied)
+- [ ] Add faint floor shadow below bag body
+- [ ] Add slight vertical highlight gradient on bags
+
+### Front of Class Stage
+- [ ] Convert strip into stage wall with warm light gradient
+- [ ] Add subtle wall texture
+- [ ] Add gentle horizontal glow
+
+### Lighting & Atmosphere
+- [ ] Add soft light bloom near front wall
+- [ ] Subtle top-down light cones
+- [ ] Light floor reflection under bags
+
+### UI Cleanup
+- [ ] Reduce grid harshness (lighter, softer lines)
+- [ ] Reduce heavy outlines
+- [ ] Make legend smaller and more subtle
+
+
+## Phase 18: Floor Planner Cinematic UI Polish (Jan 24, 2026) - COMPLETED
+- [x] Room canvas: Add floor texture, vignette, depth gradient
+- [x] Bags: Reduce size, add premium styling, floor glow rings
+- [x] Front of Class: Warm lighting, stage wall effect
+- [x] Lighting: Ambient glow, light cones, vignette
+- [x] UI cleanup: Smaller legend, softer grid, refined typography
+- [x] Bag number badges: Smaller, premium style on top of bags
+- [x] Floor halo rings: Teal/green for available, belt color for occupied
+- [x] Mat texture: Subtle stitched pattern overlay
+- [x] Mode switcher: Refined styling with smaller buttons
