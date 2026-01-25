@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Eye, Pencil, MonitorPlay, Tv, Settings, Users, Package, Grid3x3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LayoutControls } from "./LayoutControls";
@@ -55,7 +55,7 @@ interface CinematicFloorPlannerProps {
   showModeSwitch?: boolean;
 }
 
-// Belt rank colors - cinematic glow
+// Belt rank colors
 const BELT_COLORS: Record<string, string> = {
   white: "#e8e8e8",
   yellow: "#f5c542",
@@ -76,7 +76,7 @@ const MODE_CONFIG = {
   wall: { icon: Tv, label: "Wall Display", description: "TV screens" },
 };
 
-// Premium Spot Marker - Cinematic 3D kickboxing bag
+// Premium 3D Kickboxing Bag Marker - Matching reference image
 function SpotMarker({
   spot,
   assignment,
@@ -144,16 +144,18 @@ function SpotMarker({
     .join("")
     .toUpperCase() || "";
 
-  // Use position values directly - they are already in 0-100% format
-  const clampedX = Math.max(0, Math.min(100, spot.positionX));
-  const clampedY = Math.max(0, Math.min(100, spot.positionY));
+  // Clamp positions
+  const clampedX = Math.max(5, Math.min(95, spot.positionX));
+  const clampedY = Math.max(15, Math.min(90, spot.positionY));
 
-  // Glow colors based on state - more cinematic
-  const glowColor = isEmpty 
-    ? "rgba(45, 212, 191, 0.5)" // teal for available
-    : assignment?.beltRank?.toLowerCase().includes("instructor") 
-      ? "rgba(239, 68, 68, 0.6)" // red for instructor
-      : `${beltColor}88`; // belt color for occupied
+  // Glow ring color - teal for available, amber/red for occupied
+  const ringColor = isEmpty 
+    ? "rgba(45, 212, 191, 0.6)" // teal/cyan for available
+    : "rgba(239, 100, 60, 0.7)"; // amber/red for occupied
+
+  // Check for special roles
+  const isInstructor = assignment?.beltRank?.toLowerCase().includes("instructor");
+  const isReserved = assignment?.beltRank?.toLowerCase().includes("reserved");
 
   return (
     <div
@@ -173,42 +175,56 @@ function SpotMarker({
         opacity: isDragging ? 0.8 : 1,
       }}
     >
-      {/* Floor halo ring - larger, softer, more cinematic */}
+      {/* Large elliptical floor glow ring - cinematic style */}
       <div 
         className={cn(
-          "absolute rounded-full transition-all duration-700",
+          "absolute rounded-full transition-all duration-500",
           isEmpty && (isKiosk || isLive) && "animate-pulse"
         )}
         style={{
-          width: "72px",
-          height: "20px",
-          bottom: "-12px",
+          width: "90px",
+          height: "28px",
+          bottom: "-8px",
           left: "50%",
           transform: "translateX(-50%)",
-          background: `radial-gradient(ellipse, ${glowColor} 0%, ${glowColor}40 40%, transparent 70%)`,
-          filter: "blur(6px)",
-          opacity: isEmpty ? 0.7 : 0.85,
+          background: `radial-gradient(ellipse, ${ringColor} 0%, ${ringColor}60 30%, ${ringColor}20 60%, transparent 80%)`,
+          filter: "blur(8px)",
+          opacity: 0.9,
         }}
       />
 
-      {/* Secondary glow ring - ambient */}
+      {/* Secondary inner ring - brighter core */}
       <div 
         className="absolute rounded-full"
         style={{
-          width: "56px",
-          height: "16px",
-          bottom: "-10px",
+          width: "60px",
+          height: "18px",
+          bottom: "-4px",
           left: "50%",
           transform: "translateX(-50%)",
-          background: `radial-gradient(ellipse, ${glowColor}60 0%, transparent 60%)`,
-          filter: "blur(3px)",
-          opacity: 0.5,
+          background: `radial-gradient(ellipse, ${ringColor}80 0%, ${ringColor}40 50%, transparent 80%)`,
+          filter: "blur(4px)",
+          opacity: 0.7,
+        }}
+      />
+
+      {/* Ring outline - subtle border */}
+      <div 
+        className="absolute rounded-full"
+        style={{
+          width: "70px",
+          height: "22px",
+          bottom: "-6px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          border: `1px solid ${isEmpty ? "rgba(45,212,191,0.3)" : "rgba(239,100,60,0.4)"}`,
+          opacity: 0.6,
         }}
       />
 
       {/* Main spot container */}
       {isBag ? (
-        // Kickboxing Bag - Premium 3D realistic style
+        // 3D Kickboxing Bag - Tall cylindrical with tapered base
         <div
           className={cn(
             "flex flex-col items-center justify-center transition-all duration-300",
@@ -216,51 +232,50 @@ function SpotMarker({
             isSelected && "scale-105 -translate-y-1",
           )}
         >
-          {/* Bag number badge - smaller, premium, top cap */}
+          {/* Bag number badge - red circle on top */}
           <div 
             className={cn(
-              "w-4 h-4 rounded-full flex items-center justify-center z-20",
-              isEmpty ? "bg-zinc-700/80" : "bg-red-600/90"
+              "w-5 h-5 rounded-full flex items-center justify-center z-20",
+              isEmpty ? "bg-zinc-600" : "bg-red-600"
             )}
             style={{
               position: "absolute",
-              top: "-6px",
+              top: "-8px",
               left: "50%",
               transform: "translateX(-50%)",
-              fontSize: "8px",
-              fontWeight: 500,
-              letterSpacing: "-0.02em",
-              color: isEmpty ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)",
+              fontSize: "10px",
+              fontWeight: 600,
+              color: "white",
               boxShadow: isEmpty 
-                ? "0 2px 6px rgba(0,0,0,0.4)"
-                : "0 2px 8px rgba(220,38,38,0.5), 0 0 12px rgba(220,38,38,0.3)",
+                ? "0 2px 6px rgba(0,0,0,0.5)"
+                : "0 2px 10px rgba(220,38,38,0.6), 0 0 15px rgba(220,38,38,0.4)",
             }}
           >
             {spot.spotNumber}
           </div>
 
-          {/* Bag body - sleek, realistic with highlights */}
+          {/* Bag body - tall cylindrical shape */}
           <div 
-            className={cn(
-              "w-7 h-12 rounded-lg overflow-hidden relative",
-            )}
+            className="relative overflow-hidden"
             style={{
-              background: isEmpty 
-                ? "linear-gradient(180deg, #3f3f46 0%, #27272a 50%, #18181b 100%)"
-                : "linear-gradient(180deg, #3f3f46 0%, #27272a 40%, #18181b 100%)",
+              width: "32px",
+              height: "56px",
+              borderRadius: "6px 6px 4px 4px",
+              background: "linear-gradient(180deg, #4a4a4a 0%, #2d2d2d 30%, #1a1a1a 70%, #0f0f0f 100%)",
               boxShadow: `
-                0 8px 24px rgba(0,0,0,0.6),
-                0 4px 12px rgba(0,0,0,0.4),
-                inset 0 1px 0 rgba(255,255,255,0.08),
-                inset -1px 0 0 rgba(255,255,255,0.03)
+                0 12px 30px rgba(0,0,0,0.7),
+                0 6px 15px rgba(0,0,0,0.5),
+                inset 0 2px 0 rgba(255,255,255,0.1),
+                inset -2px 0 0 rgba(255,255,255,0.05),
+                inset 2px 0 0 rgba(0,0,0,0.2)
               `,
             }}
           >
-            {/* Left edge highlight - vertical gradient */}
+            {/* Left edge highlight */}
             <div 
-              className="absolute left-0 top-0 bottom-0 w-0.5"
+              className="absolute left-0 top-0 bottom-0 w-1"
               style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.02) 100%)",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)",
               }}
             />
             
@@ -268,74 +283,110 @@ function SpotMarker({
             <div 
               className="absolute inset-0"
               style={{
-                background: "linear-gradient(90deg, transparent 35%, rgba(255,255,255,0.04) 50%, transparent 65%)",
+                background: "linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%)",
               }}
             />
             
             {/* Red accent panel for occupied bags */}
             {!isEmpty && (
               <div 
-                className="absolute top-0.5 left-0.5 right-0.5 h-5 rounded-sm"
+                className="absolute top-1 left-1 right-1 rounded-sm"
                 style={{
-                  background: "linear-gradient(180deg, #dc2626 0%, #b91c1c 100%)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 3px rgba(0,0,0,0.3)",
+                  height: "22px",
+                  background: "linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.3)",
                 }}
               >
                 {/* Red panel highlight */}
                 <div 
                   className="absolute inset-0 rounded-sm"
                   style={{
-                    background: "linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
+                    background: "linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.15) 50%, transparent 75%)",
                   }}
                 />
+                
+                {/* Initials on red panel */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span 
+                    className="text-white font-semibold"
+                    style={{ fontSize: "11px", letterSpacing: "0.05em" }}
+                  >
+                    {initials}
+                  </span>
+                </div>
               </div>
             )}
 
-            {/* Initials display - refined */}
-            <div 
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ paddingTop: isEmpty ? 0 : "6px" }}
-            >
-              <span 
-                className={cn(
-                  "font-medium",
-                  isEmpty ? "text-zinc-600" : "text-white/80"
-                )}
-                style={{
-                  fontSize: "9px",
-                  letterSpacing: "0.03em",
-                }}
+            {/* Special labels */}
+            {isInstructor && (
+              <div 
+                className="absolute bottom-1 left-0 right-0 flex items-center justify-center"
               >
-                {assignment ? initials : ""}
-              </span>
-            </div>
+                <span 
+                  className="text-white/70 uppercase"
+                  style={{ fontSize: "5px", letterSpacing: "0.1em" }}
+                >
+                  Instructor
+                </span>
+              </div>
+            )}
+            
+            {isReserved && (
+              <div 
+                className="absolute bottom-1 left-0 right-0 flex items-center justify-center"
+              >
+                <span 
+                  className="text-white/70 uppercase"
+                  style={{ fontSize: "5px", letterSpacing: "0.1em" }}
+                >
+                  Reserved
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Bag base/stand - subtle */}
+          {/* Bag base/stand - tapered */}
           <div 
-            className="w-5 h-1 rounded-b mt-0.5"
             style={{
-              background: "linear-gradient(180deg, #27272a 0%, #0a0a0a 100%)",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
+              width: "24px",
+              height: "8px",
+              marginTop: "-2px",
+              background: "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)",
+              borderRadius: "0 0 4px 4px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.4)",
             }}
           />
 
-          {/* Floor shadow - soft ellipse directly under bag */}
+          {/* Floor shadow directly under bag */}
           <div 
             className="absolute"
             style={{
-              bottom: "-6px",
-              width: "28px",
-              height: "10px",
+              bottom: "-4px",
+              width: "36px",
+              height: "12px",
               left: "50%",
               transform: "translateX(-50%)",
-              background: "radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 70%)",
-              filter: "blur(3px)",
+              background: "radial-gradient(ellipse, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, transparent 80%)",
+              filter: "blur(4px)",
             }}
           />
+
+          {/* Spot number label below bag */}
+          <div 
+            className="absolute text-white/30"
+            style={{
+              bottom: "-20px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              fontSize: "9px",
+              fontWeight: 500,
+            }}
+          >
+            {spot.spotNumber}
+          </div>
         </div>
       ) : isMat ? (
-        // Yoga Mat - Premium style
+        // Yoga Mat
         <div
           className={cn(
             "flex items-center justify-center transition-all duration-300",
@@ -345,7 +396,7 @@ function SpotMarker({
         >
           <div 
             className={cn(
-              "w-12 h-6 rounded overflow-hidden relative",
+              "w-14 h-7 rounded overflow-hidden relative",
               isEmpty ? "bg-zinc-700" : "bg-gradient-to-b from-purple-500 via-purple-600 to-purple-800",
             )}
             style={{
@@ -356,14 +407,14 @@ function SpotMarker({
               <span className={cn(
                 "font-medium",
                 isEmpty ? "text-zinc-500" : "text-white/80"
-              )} style={{ fontSize: "9px" }}>
+              )} style={{ fontSize: "10px" }}>
                 {assignment ? initials : spot.spotLabel}
               </span>
             </div>
           </div>
         </div>
       ) : (
-        // Rank Position (circle) - Premium
+        // Rank Position (circle)
         <div
           className={cn(
             "flex items-center justify-center transition-all duration-300",
@@ -373,7 +424,7 @@ function SpotMarker({
         >
           <div 
             className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center relative",
+              "w-9 h-9 rounded-full flex items-center justify-center relative",
               isEmpty ? "bg-zinc-700" : "bg-gradient-to-br from-amber-400 to-amber-600",
             )}
             style={{
@@ -383,7 +434,7 @@ function SpotMarker({
             <span className={cn(
               "font-medium",
               isEmpty ? "text-zinc-500" : "text-white"
-            )} style={{ fontSize: "9px" }}>
+            )} style={{ fontSize: "10px" }}>
               {assignment ? initials : spot.spotLabel}
             </span>
           </div>
@@ -393,90 +444,90 @@ function SpotMarker({
   );
 }
 
-// Front of Class Stage - Cinematic wall with warm lighting (emotional anchor)
+// Front of Class Stage - Warm cinematic wall
 function FrontOfClassStage({ width }: { width: number }) {
   return (
-    <div className="absolute top-0 left-0 right-0 h-24 pointer-events-none">
-      {/* Wall texture background with brick feel */}
+    <div className="absolute top-0 left-0 right-0 h-28 pointer-events-none">
+      {/* Wall background with warm texture */}
       <div 
-        className="absolute inset-x-3 top-1.5 h-16 rounded-lg overflow-hidden"
+        className="absolute inset-x-4 top-2 h-20 rounded-lg overflow-hidden"
         style={{
           background: `
             linear-gradient(180deg, 
-              rgba(25, 18, 12, 0.98) 0%, 
-              rgba(35, 28, 20, 0.95) 30%,
-              rgba(30, 23, 16, 0.97) 70%,
-              rgba(22, 16, 10, 0.98) 100%
+              rgba(30, 22, 15, 0.98) 0%, 
+              rgba(40, 30, 20, 0.95) 40%,
+              rgba(35, 26, 18, 0.97) 70%,
+              rgba(25, 18, 12, 0.98) 100%
             )
           `,
           boxShadow: `
-            0 6px 40px rgba(0,0,0,0.7), 
-            inset 0 1px 0 rgba(255,180,120,0.08),
-            inset 0 -3px 30px rgba(0,0,0,0.4)
+            0 8px 50px rgba(0,0,0,0.8), 
+            inset 0 2px 0 rgba(255,180,120,0.1),
+            inset 0 -4px 40px rgba(0,0,0,0.5)
           `,
-          border: "1px solid rgba(255,180,120,0.06)",
+          border: "1px solid rgba(255,180,120,0.08)",
         }}
       >
-        {/* Subtle brick texture overlay */}
+        {/* Brick texture overlay */}
         <div 
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-25"
           style={{
             backgroundImage: `
               repeating-linear-gradient(
                 90deg,
                 transparent,
-                transparent 30px,
-                rgba(0,0,0,0.15) 30px,
-                rgba(0,0,0,0.15) 31px
+                transparent 35px,
+                rgba(0,0,0,0.2) 35px,
+                rgba(0,0,0,0.2) 36px
               ),
               repeating-linear-gradient(
                 0deg,
                 transparent,
-                transparent 15px,
-                rgba(0,0,0,0.1) 15px,
-                rgba(0,0,0,0.1) 16px
+                transparent 18px,
+                rgba(0,0,0,0.15) 18px,
+                rgba(0,0,0,0.15) 19px
               )
             `,
           }}
         />
 
-        {/* Warm overhead light strip - horizontal glow */}
+        {/* Warm overhead light strip */}
         <div 
-          className="absolute inset-x-0 top-0 h-1.5"
+          className="absolute inset-x-0 top-0 h-2"
           style={{
-            background: "linear-gradient(90deg, transparent 5%, rgba(255,120,40,0.6) 25%, rgba(255,160,80,0.7) 50%, rgba(255,120,40,0.6) 75%, transparent 95%)",
-            boxShadow: "0 0 20px rgba(255,140,60,0.4), 0 0 40px rgba(255,120,40,0.2)",
+            background: "linear-gradient(90deg, transparent 3%, rgba(255,100,30,0.7) 20%, rgba(255,140,60,0.8) 50%, rgba(255,100,30,0.7) 80%, transparent 97%)",
+            boxShadow: "0 0 30px rgba(255,120,50,0.5), 0 0 60px rgba(255,100,40,0.3)",
           }}
         />
         
-        {/* Light reflection spots on wall */}
-        <div className="absolute inset-x-0 top-0 h-6 flex justify-around px-16">
-          {[...Array(5)].map((_, i) => (
+        {/* Light spots on wall */}
+        <div className="absolute inset-x-0 top-0 h-10 flex justify-around px-20">
+          {[...Array(6)].map((_, i) => (
             <div 
               key={i}
-              className="w-20 h-full"
+              className="w-24 h-full"
               style={{
-                background: "radial-gradient(ellipse at center top, rgba(255,160,100,0.12) 0%, transparent 70%)",
+                background: "radial-gradient(ellipse at center top, rgba(255,140,80,0.15) 0%, transparent 70%)",
               }}
             />
           ))}
         </div>
 
-        {/* Stage glow bleeding onto floor - warm light */}
+        {/* Stage glow bleeding onto floor */}
         <div 
-          className="absolute inset-x-0 -bottom-12 h-16"
+          className="absolute inset-x-0 -bottom-16 h-20"
           style={{
-            background: "linear-gradient(180deg, rgba(255,120,40,0.1) 0%, rgba(255,100,50,0.04) 40%, transparent 100%)",
+            background: "linear-gradient(180deg, rgba(255,100,40,0.12) 0%, rgba(255,80,40,0.05) 50%, transparent 100%)",
           }}
         />
 
-        {/* FRONT OF CLASS label - premium, spaced */}
+        {/* FRONT OF CLASS label */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span 
-            className="text-white/50 font-medium uppercase"
+            className="text-white/40 font-medium uppercase"
             style={{ 
-              fontSize: "10px",
-              letterSpacing: "0.35em",
+              fontSize: "11px",
+              letterSpacing: "0.4em",
             }}
           >
             Front of Class
@@ -484,15 +535,15 @@ function FrontOfClassStage({ width }: { width: number }) {
         </div>
 
         {/* Instructor position marker */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-1">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-2">
           <div 
-            className="w-4 h-4 rounded-full flex items-center justify-center"
+            className="w-5 h-5 rounded-full flex items-center justify-center"
             style={{
               background: "linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)",
-              boxShadow: "0 2px 8px rgba(239,68,68,0.5), 0 0 20px rgba(239,68,68,0.3)",
+              boxShadow: "0 3px 12px rgba(239,68,68,0.6), 0 0 25px rgba(239,68,68,0.4)",
             }}
           >
-            <Users className="w-2 h-2 text-white" />
+            <Users className="w-2.5 h-2.5 text-white" />
           </div>
         </div>
       </div>
@@ -500,7 +551,7 @@ function FrontOfClassStage({ width }: { width: number }) {
   );
 }
 
-// Mode Switcher - Glass panel style
+// Mode Switcher
 function ModeSwitcher({ 
   currentMode, 
   onModeChange 
@@ -543,7 +594,7 @@ function ModeSwitcher({
   );
 }
 
-// Legend - Smaller, more subtle glass panel
+// Legend
 function FloorLegend({ 
   templateType, 
   occupiedCount, 
@@ -555,7 +606,7 @@ function FloorLegend({
 }) {
   return (
     <div 
-      className="flex items-center gap-3 px-3 py-1.5 rounded-lg"
+      className="flex items-center gap-4 px-4 py-2 rounded-lg"
       style={{
         background: "rgba(0,0,0,0.5)",
         backdropFilter: "blur(12px)",
@@ -563,29 +614,29 @@ function FloorLegend({
         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
       }}
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         <div 
-          className="w-1.5 h-1.5 rounded-full"
+          className="w-2 h-2 rounded-full"
           style={{
             background: "#2dd4bf",
-            boxShadow: "0 0 8px rgba(45,212,191,0.6)",
+            boxShadow: "0 0 10px rgba(45,212,191,0.7)",
           }}
         />
-        <span className="text-white/40" style={{ fontSize: "10px" }}>Available Spot</span>
+        <span className="text-white/50" style={{ fontSize: "11px" }}>Available Spot</span>
       </div>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         <div 
-          className="w-1.5 h-1.5 rounded-full"
+          className="w-2 h-2 rounded-full"
           style={{
             background: "#ef4444",
-            boxShadow: "0 0 8px rgba(239,68,68,0.6)",
+            boxShadow: "0 0 10px rgba(239,68,68,0.7)",
           }}
         />
-        <span className="text-white/40" style={{ fontSize: "10px" }}>Occupied Spot</span>
+        <span className="text-white/50" style={{ fontSize: "11px" }}>Occupied Spot</span>
       </div>
-      <div className="h-2.5 w-px bg-white/10" />
+      <div className="h-3 w-px bg-white/10" />
       <div className="ml-auto">
-        <span className="text-white/30" style={{ fontSize: "10px" }}>
+        <span className="text-white/40" style={{ fontSize: "11px" }}>
           {occupiedCount} / {totalSpots} spots
         </span>
       </div>
@@ -690,9 +741,9 @@ export function CinematicFloorPlanner({
 
   return (
     <div className="w-full space-y-3">
-      {/* Header with room info and mode switcher - glass panel */}
+      {/* Header */}
       <div 
-        className="flex items-center justify-between px-3 py-2 rounded-xl"
+        className="flex items-center justify-between px-4 py-2.5 rounded-xl"
         style={{
           background: "rgba(0,0,0,0.4)",
           backdropFilter: "blur(16px)",
@@ -700,9 +751,9 @@ export function CinematicFloorPlanner({
           boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03)",
         }}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <div 
-            className="p-2 rounded-lg"
+            className="p-2.5 rounded-lg"
             style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.06)",
@@ -713,8 +764,8 @@ export function CinematicFloorPlanner({
             {floorPlan.templateType === "karate_lines" && <Users className="w-4 h-4 text-blue-400" />}
           </div>
           <div>
-            <h2 className="text-base font-medium text-white" style={{ letterSpacing: "-0.01em" }}>{floorPlan.roomName}</h2>
-            <div className="flex items-center gap-1.5 text-white/40" style={{ fontSize: "10px" }}>
+            <h2 className="text-lg font-medium text-white" style={{ letterSpacing: "-0.01em" }}>{floorPlan.roomName}</h2>
+            <div className="flex items-center gap-2 text-white/40" style={{ fontSize: "11px" }}>
               <span>{totalSpots} Spots</span>
               <span>•</span>
               <span className="capitalize">{floorPlan.templateType.replace("_", " ")}</span>
@@ -741,7 +792,7 @@ export function CinematicFloorPlanner({
         )}
       </div>
 
-      {/* Floor Canvas - Cinematic Dojo Room */}
+      {/* Floor Canvas */}
       <div 
         className="rounded-xl overflow-hidden"
         style={{
@@ -756,132 +807,111 @@ export function CinematicFloorPlanner({
           className="relative w-full"
           style={{
             aspectRatio: `${floorPlan.widthFeet || 40} / ${floorPlan.lengthFeet || 40}`,
-            minHeight: "420px",
+            minHeight: "450px",
             maxHeight: "none",
             position: 'relative',
           }}
         >
-          {/* Base floor - dark dojo mat with center light */}
+          {/* Base floor - dark dojo mat */}
           <div 
             className="absolute inset-0"
             style={{
               background: `
-                radial-gradient(ellipse 80% 60% at center 40%, 
-                  rgba(35, 40, 50, 1) 0%, 
-                  rgba(25, 30, 40, 1) 40%,
-                  rgba(18, 22, 30, 1) 70%,
-                  rgba(12, 15, 20, 1) 100%
+                radial-gradient(ellipse 85% 65% at center 45%, 
+                  rgba(30, 35, 45, 1) 0%, 
+                  rgba(22, 27, 38, 1) 40%,
+                  rgba(15, 20, 28, 1) 70%,
+                  rgba(10, 14, 20, 1) 100%
                 )
               `,
             }}
           />
 
-          {/* Mat texture - very subtle stitched pattern */}
+          {/* Mat texture - subtle grid */}
           <div 
-            className="absolute inset-0 opacity-40"
+            className="absolute inset-0 opacity-30"
             style={{
               backgroundImage: `
                 repeating-linear-gradient(
                   0deg,
                   transparent,
-                  transparent 50px,
-                  rgba(255,255,255,0.008) 50px,
-                  rgba(255,255,255,0.008) 51px
+                  transparent 60px,
+                  rgba(255,255,255,0.01) 60px,
+                  rgba(255,255,255,0.01) 61px
                 ),
                 repeating-linear-gradient(
                   90deg,
                   transparent,
-                  transparent 50px,
-                  rgba(255,255,255,0.008) 50px,
-                  rgba(255,255,255,0.008) 51px
+                  transparent 60px,
+                  rgba(255,255,255,0.01) 60px,
+                  rgba(255,255,255,0.01) 61px
                 )
               `,
             }}
           />
 
-          {/* Micro grain texture */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-              opacity: 0.015,
-            }}
-          />
-
-          {/* Vignette - shaped, not uniform */}
+          {/* Vignette */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `
-                radial-gradient(ellipse 90% 70% at center 45%, 
-                  transparent 40%, 
-                  rgba(0,0,0,0.25) 70%,
-                  rgba(0,0,0,0.5) 100%
+                radial-gradient(ellipse 90% 75% at center 50%, 
+                  transparent 35%, 
+                  rgba(0,0,0,0.3) 70%,
+                  rgba(0,0,0,0.6) 100%
                 )
               `,
             }}
           />
 
-          {/* Top-down perspective (darker at top, lighter toward bottom center) */}
+          {/* Perspective depth */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 20%, transparent 40%, transparent 70%, rgba(0,0,0,0.15) 100%)",
+              background: "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 25%, transparent 45%, transparent 75%, rgba(0,0,0,0.2) 100%)",
             }}
           />
 
-          {/* Warm ambient light from stage - soft glow */}
+          {/* Warm ambient light from stage */}
           <div 
-            className="absolute inset-x-0 top-0 h-48 pointer-events-none"
+            className="absolute inset-x-0 top-0 h-56 pointer-events-none"
             style={{
-              background: "linear-gradient(180deg, rgba(255,120,40,0.08) 0%, rgba(255,100,50,0.03) 40%, transparent 100%)",
+              background: "linear-gradient(180deg, rgba(255,100,40,0.1) 0%, rgba(255,80,40,0.04) 50%, transparent 100%)",
             }}
           />
 
-          {/* Faint light shafts from ceiling */}
+          {/* Light shafts */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {[18, 35, 50, 65, 82].map((pos, i) => (
+            {[15, 30, 50, 70, 85].map((pos, i) => (
               <div 
                 key={i}
                 className="absolute top-0"
                 style={{
                   left: `${pos}%`,
-                  width: "60px",
-                  height: "180px",
+                  width: "80px",
+                  height: "220px",
                   transform: "translateX(-50%)",
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.015) 0%, transparent 100%)",
-                  clipPath: "polygon(42% 0%, 58% 0%, 100% 100%, 0% 100%)",
-                  opacity: 0.7,
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)",
+                  clipPath: "polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%)",
+                  opacity: 0.6,
                 }}
               />
             ))}
           </div>
 
-          {/* Light reflection on floor under bags area */}
+          {/* Mat boundary */}
           <div 
-            className="absolute pointer-events-none"
+            className="absolute inset-6 rounded-lg pointer-events-none"
             style={{
-              left: "10%",
-              right: "10%",
-              top: "30%",
-              bottom: "10%",
-              background: "radial-gradient(ellipse at center, rgba(255,255,255,0.01) 0%, transparent 70%)",
-            }}
-          />
-
-          {/* Mat boundary - soft inner glow with stitched outline */}
-          <div 
-            className="absolute inset-5 rounded-lg pointer-events-none"
-            style={{
-              border: "1px dashed rgba(255,255,255,0.05)",
-              boxShadow: "inset 0 0 60px rgba(0,0,0,0.25), inset 0 0 2px rgba(255,255,255,0.02)",
+              border: "1px dashed rgba(255,255,255,0.06)",
+              boxShadow: "inset 0 0 80px rgba(0,0,0,0.3)",
             }}
           />
 
           {/* Front of Class Stage */}
           <FrontOfClassStage width={100} />
 
-          {/* Zones (if any) */}
+          {/* Zones */}
           {zones.map((zone) => (
             <div
               key={zone.id}
@@ -895,7 +925,7 @@ export function CinematicFloorPlanner({
                 background: "rgba(255,255,255,0.005)",
               }}
             >
-              <span className="absolute top-1.5 left-1.5 text-white/20 font-medium" style={{ fontSize: "9px" }}>
+              <span className="absolute top-2 left-2 text-white/20 font-medium" style={{ fontSize: "10px" }}>
                 {zone.name}
               </span>
             </div>
@@ -922,8 +952,8 @@ export function CinematicFloorPlanner({
             })}
           </div>
 
-          {/* Room dimensions label - very subtle */}
-          <div className="absolute bottom-2 right-3 text-white/20" style={{ fontSize: "9px" }}>
+          {/* Room dimensions */}
+          <div className="absolute bottom-3 right-4 text-white/25" style={{ fontSize: "10px" }}>
             {floorPlan.lengthFeet} ft × {floorPlan.widthFeet} ft
           </div>
         </div>
@@ -936,7 +966,7 @@ export function CinematicFloorPlanner({
         totalSpots={totalSpots}
       />
 
-      {/* Layout Controls - Design mode only */}
+      {/* Layout Controls */}
       <LayoutControls
         isVisible={currentMode === "design"}
         onApplyLayout={handleApplyLayout}

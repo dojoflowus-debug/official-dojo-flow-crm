@@ -4903,3 +4903,16 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Visual: Soften backgrounds, reduce borders, add glass blur
 - [x] Readability: Fix truncation with ellipsis and hover tooltips
 - [x] Selected state: Slightly brighter, not larger
+
+
+## Phase 21: Match Reference Image (Jan 25, 2026)
+- [ ] Bags: 3D kickboxing bag shape with tapered base, red number badge on top
+- [ ] Bags: Show initials (T.K., R.W., etc.) on occupied bags
+- [ ] Bags: Add "INSTRUCTOR" and "RESERVED" labels for special spots
+- [ ] Floor rings: Larger, softer glow rings (teal for available, amber/red for occupied)
+- [ ] Canvas: Darker mat texture with subtle grid lines
+- [ ] Canvas: Perspective depth (top darker, bottom lighter)
+- [ ] Stage: Warm amber/orange lighting strip with horizontal glow
+- [ ] Stage: Subtle brick/wall texture
+- [ ] Sidebar: Room cards with icon, name, type, dimensions, availability count
+- [ ] Legend: Available/Occupied spot indicators with student info
