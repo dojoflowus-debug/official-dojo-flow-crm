@@ -5145,3 +5145,74 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Slightly brighten front floor (warm tint at bottom)
 - [x] Darken back corners (vignette rgba(12,10,8,0.4) to rgba(4,3,2,0.8))
 - [x] Subtle atmospheric haze near wall (30% height gradient with 2px blur)
+
+
+## Phase 30: Cinematic Rebalance Pass - Undo the Dark (Jan 25, 2026)
+
+### Remove/Reduce
+- [ ] Heavy dark overlay on entire floor
+- [ ] Fog blanket covering the room
+- [ ] Flat low-contrast lighting
+
+### Floor (Top Priority)
+- [ ] Slightly brighten overall floor plane
+- [ ] Introduce subtle rubber/mat texture
+- [ ] Add faint seams or tile breakup
+- [ ] Soft specular response under lights
+- [ ] Subtle reflections under bags
+- [ ] Floor darker than UI but lighter than void
+
+### Lighting Structure
+- [ ] Key light: Warm from front wall with visible falloff
+- [ ] Fill light: Soft overhead ensuring bags are readable
+- [ ] Rim light: Thin highlight on bag edges
+- [ ] Corners dark, center floor readable
+
+### Bags
+- [ ] Increase brightness on bag faces
+- [ ] Stronger top highlight
+- [ ] Darker rear edge
+- [ ] Clear cylindrical shading
+- [ ] Visible contact shadow
+
+### Atmosphere
+- [ ] Move haze to wall and ceiling zones
+- [ ] Keep floor mostly clear
+- [ ] Depth without obscuring surfaces
+
+
+## Phase 30: Cinematic Rebalance Pass - Undo the Dark (Jan 25, 2026) - COMPLETED
+
+### Remove/Reduce
+- [x] Heavy dark overlay on entire floor (reduced vignette to 25-60%)
+- [x] Fog blanket covering the room (moved to top 18% only)
+- [x] Flat low-contrast lighting (added proper key/fill/rim structure)
+
+### Floor (Top Priority)
+- [x] Slightly brighten overall floor plane (#3a3632 base, was #2d2824)
+- [x] Introduce subtle rubber/mat texture (SVG noise at 5% opacity)
+- [x] Add faint seams or tile breakup (100px grid with shadow/highlight)
+- [x] Soft specular response under lights (radial gradients)
+- [x] Subtle reflections under bags (floor glow rings)
+
+### Lighting Structure
+- [x] Key light: Warm amber from front wall (rgba(255,130,50,0.8))
+- [x] Fill light: Soft overhead at 12% opacity (was 8%)
+- [x] Rim light: Thin highlight on bag left edges
+- [x] Corners dark, center floor readable
+
+### Bags
+- [x] Increase brightness on bag faces (#4a4642 to #524e4a gradient)
+- [x] Stronger top highlight (rgba(255,200,150,0.2))
+- [x] Darker rear edge (right side shadow)
+- [x] Clear cylindrical shading (radial gradient)
+- [x] Visible contact shadow (12px blur ellipse)
+
+### Atmosphere
+- [x] Move haze to wall and ceiling zones (top 18% only)
+- [x] Keep floor mostly clear (no fog on center)
+- [x] Allow depth without obscuring surfaces
+
+### Depth
+- [x] Keep wall glow, back falloff, vignette edges
+- [x] Restore mid-tone information (depth gradient reduced to 35%)

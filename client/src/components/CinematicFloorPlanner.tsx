@@ -76,7 +76,7 @@ const MODE_CONFIG = {
   wall: { icon: Tv, label: "Wall Display", description: "TV screens" },
 };
 
-// PHOTOREALISTIC Bag Marker - Heavy, cylindrical, grounded
+// REBALANCED Bag Marker - Clear, readable, physical
 function DraggableSpotMarker({
   spot,
   assignment,
@@ -120,8 +120,8 @@ function DraggableSpotMarker({
 
   // WARM COLOR PALETTE - muted teal for available, warm amber for occupied
   const ringColor = isEmpty 
-    ? "rgba(45, 160, 140, 0.5)" // muted teal
-    : "rgba(255, 100, 40, 0.7)"; // warm amber/orange
+    ? "rgba(60, 180, 160, 0.6)" // brighter teal
+    : "rgba(255, 120, 50, 0.75)"; // warm amber/orange
 
   // Check for special roles
   const isInstructor = assignment?.beltRank?.toLowerCase().includes("instructor");
@@ -134,10 +134,10 @@ function DraggableSpotMarker({
   // Scale factor for bag size based on zoom
   const bagScale = Math.max(0.6, Math.min(1.2, scale));
 
-  // Calculate depth-based adjustments (bags further back appear smaller/darker)
-  const depthFactor = 1 - (spot.positionY / 100) * 0.2;
+  // Calculate depth-based adjustments - REDUCED darkness for distant bags
+  const depthFactor = 1 - (spot.positionY / 100) * 0.12; // Reduced from 0.2
   const depthScale = bagScale * depthFactor;
-  const depthOpacity = 0.7 + (1 - spot.positionY / 100) * 0.3;
+  const depthOpacity = 0.85 + (1 - spot.positionY / 100) * 0.15; // Brighter overall
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDraggable && isDesign) {
@@ -158,12 +158,11 @@ function DraggableSpotMarker({
         left: `${spot.positionX}%`,
         top: `${spot.positionY}%`,
         opacity: depthOpacity,
-        filter: spot.positionY < 30 ? "blur(0.3px)" : "none", // Slight blur for distant bags
       }}
       onClick={onClick}
       onMouseDown={handleMouseDown}
     >
-      {/* PHOTOREALISTIC Floor glow ring - soft specular reflection */}
+      {/* REBALANCED Floor glow ring - visible but not overpowering */}
       <div
         className={cn(
           "absolute left-1/2 -translate-x-1/2 rounded-full",
@@ -173,9 +172,9 @@ function DraggableSpotMarker({
           width: `${130 * depthScale}px`,
           height: `${45 * depthScale}px`,
           bottom: `${-8 * depthScale}px`,
-          background: `radial-gradient(ellipse at center, ${ringColor} 0%, ${ringColor.replace(/[\d.]+\)$/, '0.2)')} 50%, transparent 75%)`,
-          boxShadow: `0 0 ${25 * depthScale}px ${ringColor.replace(/[\d.]+\)$/, '0.3)')}`,
-          border: `1px solid ${ringColor.replace(/[\d.]+\)$/, '0.15)')}`,
+          background: `radial-gradient(ellipse at center, ${ringColor} 0%, ${ringColor.replace(/[\d.]+\)$/, '0.25)')} 50%, transparent 75%)`,
+          boxShadow: `0 0 ${30 * depthScale}px ${ringColor.replace(/[\d.]+\)$/, '0.35)')}`,
+          border: `1px solid ${ringColor.replace(/[\d.]+\)$/, '0.2)')}`,
           transform: isDragging ? "scale(1.15)" : "scale(1)",
           transition: "transform 0.15s ease-out",
         }}
@@ -186,12 +185,12 @@ function DraggableSpotMarker({
         <div 
           className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap"
           style={{
-            background: "rgba(20,18,16,0.9)",
+            background: "rgba(30,28,26,0.95)",
             padding: "2px 8px",
             borderRadius: "4px",
             fontSize: "9px",
-            color: "rgba(255,200,150,0.7)",
-            border: "1px solid rgba(255,180,120,0.15)",
+            color: "rgba(255,210,170,0.8)",
+            border: "1px solid rgba(255,180,120,0.2)",
           }}
         >
           <GripVertical className="w-2.5 h-2.5 inline mr-1" />
@@ -200,7 +199,7 @@ function DraggableSpotMarker({
       )}
 
       {isBag ? (
-        // PHOTOREALISTIC 3D Kickboxing Bag
+        // REBALANCED 3D Kickboxing Bag - Brighter, clearer silhouette
         <div className="relative flex flex-col items-center">
           {/* Red number badge on TOP */}
           <div
@@ -208,23 +207,23 @@ function DraggableSpotMarker({
             style={{
               width: `${28 * depthScale}px`,
               height: `${20 * depthScale}px`,
-              background: "linear-gradient(180deg, #dc2626 0%, #991b1b 100%)",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
-              border: "1px solid rgba(0,0,0,0.3)",
+              background: "linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+              border: "1px solid rgba(0,0,0,0.25)",
             }}
           >
             <span 
               className="font-bold text-white"
               style={{ 
                 fontSize: `${11 * depthScale}px`,
-                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                textShadow: "0 1px 2px rgba(0,0,0,0.4)",
               }}
             >
               {spot.spotNumber}
             </span>
           </div>
 
-          {/* PHOTOREALISTIC Bag body - heavy, cylindrical, leather/rubber texture */}
+          {/* REBALANCED Bag body - BRIGHTER, clearer cylindrical shading */}
           <div
             className={cn(
               "relative transition-all",
@@ -234,120 +233,107 @@ function DraggableSpotMarker({
             style={{
               width: `${56 * depthScale}px`,
               height: `${85 * depthScale}px`,
-              // Cylindrical gradient with leather/rubber feel
+              // BRIGHTER cylindrical gradient - visible bag faces
               background: isEmpty 
                 ? `linear-gradient(90deg, 
-                    #1a1816 0%, 
-                    #2d2825 15%,
-                    #3a3530 35%,
-                    #3d3835 50%,
-                    #353230 65%,
-                    #252220 85%,
-                    #1a1816 100%
+                    #2a2826 0%, 
+                    #3d3a36 12%,
+                    #4a4642 28%,
+                    #524e4a 42%,
+                    #4a4642 58%,
+                    #3d3a36 72%,
+                    #2a2826 88%,
+                    #1f1d1b 100%
                   )`
                 : `linear-gradient(90deg, 
-                    #2a2520 0%, 
-                    #4a4035 15%,
-                    #5a4d42 35%,
-                    #5d5045 50%,
-                    #4d4238 65%,
-                    #3a3228 85%,
+                    #3a3530 0%, 
+                    #5a524a 12%,
+                    #6a6258 28%,
+                    #726a60 42%,
+                    #6a6258 58%,
+                    #5a524a 72%,
+                    #3a3530 88%,
                     #2a2520 100%
                   )`,
-              borderRadius: `${6 * depthScale}px`,
-              // Deep shadow for grounded feel
+              borderRadius: "4px 4px 8px 8px",
+              clipPath: "polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)",
               boxShadow: `
-                0 ${12 * depthScale}px ${25 * depthScale}px rgba(0,0,0,0.6),
-                0 ${4 * depthScale}px ${8 * depthScale}px rgba(0,0,0,0.4),
-                inset 0 ${2 * depthScale}px ${4 * depthScale}px rgba(255,200,150,0.08),
-                inset 0 ${-2 * depthScale}px ${6 * depthScale}px rgba(0,0,0,0.3)
+                inset 2px 0 8px rgba(255,220,180,0.08),
+                inset -4px 0 12px rgba(0,0,0,0.4),
+                0 8px 20px rgba(0,0,0,0.5)
               `,
-              transform: isDragging ? "scale(1.08) translateY(-4px)" : "scale(1)",
-              transition: "transform 0.15s ease-out, box-shadow 0.15s ease-out",
             }}
           >
-            {/* Leather/rubber texture overlay - micro grain */}
+            {/* TOP HIGHLIGHT - stronger for visibility */}
             <div 
-              className="absolute inset-0 rounded-md opacity-40"
+              className="absolute inset-x-0 top-0 rounded-t"
+              style={{
+                height: "20%",
+                background: "linear-gradient(180deg, rgba(255,220,180,0.2) 0%, transparent 100%)",
+              }}
+            />
+
+            {/* LEFT RIM LIGHT - key light reflection */}
+            <div 
+              className="absolute left-0 top-0 bottom-0"
+              style={{
+                width: "18%",
+                background: "linear-gradient(90deg, rgba(255,200,150,0.18) 0%, transparent 100%)",
+              }}
+            />
+
+            {/* CENTER SPECULAR - subtle highlight */}
+            <div 
+              className="absolute top-1/4 left-1/3 right-1/3"
+              style={{
+                height: "30%",
+                background: "radial-gradient(ellipse at center, rgba(255,240,220,0.08) 0%, transparent 70%)",
+              }}
+            />
+
+            {/* REAR EDGE - darker for depth */}
+            <div 
+              className="absolute right-0 top-0 bottom-0"
+              style={{
+                width: "15%",
+                background: "linear-gradient(270deg, rgba(0,0,0,0.35) 0%, transparent 100%)",
+              }}
+            />
+
+            {/* Leather/rubber texture - subtle grain */}
+            <div 
+              className="absolute inset-0 opacity-20"
               style={{
                 backgroundImage: `
                   repeating-linear-gradient(
                     0deg,
                     transparent,
-                    transparent 2px,
-                    rgba(0,0,0,0.08) 2px,
-                    rgba(0,0,0,0.08) 3px
-                  ),
-                  repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 8px,
-                    rgba(255,200,150,0.02) 8px,
-                    rgba(255,200,150,0.02) 9px
+                    transparent 4px,
+                    rgba(0,0,0,0.08) 4px,
+                    rgba(0,0,0,0.08) 5px
                   )
                 `,
-                borderRadius: `${6 * depthScale}px`,
               }}
             />
 
-            {/* Top highlight - specular response */}
-            <div 
-              className="absolute inset-x-0 top-0 rounded-t-md"
-              style={{
-                height: `${20 * depthScale}px`,
-                background: "linear-gradient(180deg, rgba(255,220,180,0.12) 0%, transparent 100%)",
-                borderRadius: `${6 * depthScale}px ${6 * depthScale}px 0 0`,
-              }}
-            />
-
-            {/* Left edge rim light */}
-            <div 
-              className="absolute left-0 inset-y-0 rounded-l-md"
-              style={{
-                width: `${4 * depthScale}px`,
-                background: "linear-gradient(90deg, rgba(255,180,120,0.15) 0%, transparent 100%)",
-                borderRadius: `${6 * depthScale}px 0 0 ${6 * depthScale}px`,
-              }}
-            />
-
-            {/* Right edge shadow */}
-            <div 
-              className="absolute right-0 inset-y-0 rounded-r-md"
-              style={{
-                width: `${6 * depthScale}px`,
-                background: "linear-gradient(270deg, rgba(0,0,0,0.25) 0%, transparent 100%)",
-                borderRadius: `0 ${6 * depthScale}px ${6 * depthScale}px 0`,
-              }}
-            />
-
-            {/* Center vertical highlight - cylindrical shape */}
-            <div 
-              className="absolute inset-y-2 left-1/2 -translate-x-1/2"
-              style={{
-                width: `${12 * depthScale}px`,
-                background: "linear-gradient(180deg, rgba(255,200,150,0.06) 0%, rgba(255,180,120,0.03) 50%, transparent 100%)",
-                borderRadius: `${4 * depthScale}px`,
-              }}
-            />
-
-            {/* Red accent panel for occupied bags */}
+            {/* Red panel for occupied bags */}
             {!isEmpty && (
               <div 
                 className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
                 style={{
-                  top: `${12 * depthScale}px`,
-                  width: `${36 * depthScale}px`,
-                  height: `${28 * depthScale}px`,
-                  background: "linear-gradient(180deg, #b91c1c 0%, #7f1d1d 100%)",
-                  borderRadius: `${3 * depthScale}px`,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.3)",
+                  top: "35%",
+                  width: "70%",
+                  height: "30%",
+                  background: "linear-gradient(180deg, rgba(220,38,38,0.85) 0%, rgba(153,27,27,0.85) 100%)",
+                  borderRadius: "3px",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.3)",
                 }}
               >
                 <span 
                   className="font-bold text-white"
                   style={{ 
-                    fontSize: `${13 * depthScale}px`,
-                    textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                    fontSize: `${12 * depthScale}px`,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.4)",
                   }}
                 >
                   {initials}
@@ -356,78 +342,81 @@ function DraggableSpotMarker({
             )}
 
             {/* Special labels */}
-            {(isInstructor || isReserved) && (
+            {isInstructor && (
               <div 
-                className="absolute bottom-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded"
-                style={{
-                  background: isInstructor ? "rgba(220,38,38,0.9)" : "rgba(180,140,100,0.8)",
+                className="absolute bottom-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-white font-bold uppercase"
+                style={{ 
                   fontSize: `${7 * depthScale}px`,
-                  fontWeight: 600,
-                  color: "white",
-                  textTransform: "uppercase",
+                  background: "rgba(220,38,38,0.9)",
                   letterSpacing: "0.05em",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
                 }}
               >
-                {isInstructor ? "Instructor" : "Reserved"}
+                Instructor
+              </div>
+            )}
+            {isReserved && (
+              <div 
+                className="absolute bottom-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-white font-bold uppercase"
+                style={{ 
+                  fontSize: `${7 * depthScale}px`,
+                  background: "rgba(180,83,9,0.9)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Reserved
               </div>
             )}
           </div>
 
+          {/* VISIBLE CONTACT SHADOW - grounded */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2"
+            style={{
+              width: `${50 * depthScale}px`,
+              height: `${14 * depthScale}px`,
+              bottom: `${-5 * depthScale}px`,
+              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 80%)",
+              filter: "blur(4px)",
+            }}
+          />
+
           {/* Floor spot number label */}
           <div 
-            className="mt-1 text-center"
-            style={{
+            className="mt-1 text-center font-medium"
+            style={{ 
               fontSize: `${10 * depthScale}px`,
-              color: "rgba(255,200,150,0.25)",
-              fontWeight: 500,
+              color: "rgba(255,220,180,0.35)",
             }}
           >
             {spot.spotNumber}
           </div>
         </div>
-      ) : isMat ? (
-        // Yoga mat spot
-        <div
-          className={cn(
-            "rounded-lg transition-all",
-            !isDragging && "group-hover:scale-105",
-            isSelected && "ring-2 ring-amber-400"
-          )}
-          style={{
-            width: `${56 * depthScale}px`,
-            height: `${80 * depthScale}px`,
-            background: isEmpty 
-              ? "linear-gradient(180deg, #3d3530 0%, #2d2825 100%)"
-              : "linear-gradient(180deg, #5b4a3d 0%, #4a3d32 100%)",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-white/60 font-semibold" style={{ fontSize: `${14 * depthScale}px` }}>
-              {spot.spotLabel || spot.spotNumber}
-            </span>
-          </div>
-        </div>
       ) : (
-        // Default rank position
-        <div
-          className={cn(
-            "rounded-full transition-all",
-            !isDragging && "group-hover:scale-110",
-            isSelected && "ring-2 ring-amber-400"
-          )}
-          style={{
-            width: `${40 * depthScale}px`,
-            height: `${40 * depthScale}px`,
-            background: isEmpty 
-              ? "rgba(60,50,45,0.8)"
-              : `linear-gradient(135deg, ${BELT_COLORS[assignment?.beltRank?.toLowerCase() || "white"]} 0%, rgba(0,0,0,0.3) 100%)`,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-white font-bold" style={{ fontSize: `${12 * depthScale}px` }}>
+        // Mat spot (yoga, dance, etc.)
+        <div className="relative flex flex-col items-center">
+          <div
+            className={cn(
+              "rounded-lg flex items-center justify-center transition-all",
+              !isDragging && "group-hover:scale-105",
+              isSelected && "ring-2 ring-amber-400/50"
+            )}
+            style={{
+              width: `${70 * depthScale}px`,
+              height: `${70 * depthScale}px`,
+              background: isEmpty 
+                ? "linear-gradient(180deg, rgba(60,55,50,0.6) 0%, rgba(45,40,35,0.6) 100%)"
+                : "linear-gradient(180deg, rgba(80,70,60,0.7) 0%, rgba(60,50,40,0.7) 100%)",
+              border: `2px solid ${isEmpty ? "rgba(60,180,160,0.4)" : "rgba(255,120,50,0.5)"}`,
+              boxShadow: `0 4px 15px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)`,
+            }}
+          >
+            <span 
+              className="font-bold"
+              style={{ 
+                fontSize: `${16 * depthScale}px`,
+                color: isEmpty ? "rgba(60,180,160,0.8)" : "rgba(255,200,150,0.9)",
+              }}
+            >
               {isEmpty ? spot.spotNumber : initials}
             </span>
           </div>
@@ -437,75 +426,76 @@ function DraggableSpotMarker({
   );
 }
 
-// PHOTOREALISTIC Front of Class Stage - Real wall with studio lighting
+// REBALANCED Front of Class Stage - Warm key light source
 function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
   return (
-    <div className="absolute inset-x-4 top-4 pointer-events-none">
+    <div className="absolute inset-x-0 top-0 pointer-events-none">
+      {/* Stage/wall area */}
       <div 
-        className="relative rounded-t-lg overflow-hidden"
+        className="relative mx-4 rounded-b-lg overflow-hidden"
         style={{
-          height: `${85 * scale}px`,
-          // Real wall material - warm concrete/plaster
+          height: `${75 * scale}px`,
+          // BRIGHTER warm wall
           background: `linear-gradient(180deg, 
-            #2a2622 0%, 
-            #252220 30%, 
-            #201d1a 60%, 
-            #1a1816 100%
+            #3a3530 0%, 
+            #302c28 30%, 
+            #262320 60%, 
+            #1e1c1a 100%
           )`,
-          boxShadow: "inset 0 -3px 25px rgba(0,0,0,0.6), 0 4px 25px rgba(0,0,0,0.5)",
+          boxShadow: "inset 0 -3px 20px rgba(0,0,0,0.5), 0 4px 20px rgba(0,0,0,0.4)",
         }}
       >
-        {/* Wall texture - subtle plaster/concrete grain */}
+        {/* Wall texture */}
         <div 
           className="absolute inset-0"
           style={{
             backgroundImage: `
               url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
             `,
-            opacity: 0.03,
+            opacity: 0.04,
             mixBlendMode: "overlay",
           }}
         />
 
-        {/* Brick/panel texture overlay */}
+        {/* Brick/panel texture */}
         <div 
-          className="absolute inset-0 opacity-15"
+          className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: `
               repeating-linear-gradient(
                 90deg,
                 transparent,
                 transparent 40px,
-                rgba(255,200,150,0.02) 40px,
-                rgba(255,200,150,0.02) 41px
+                rgba(255,200,150,0.03) 40px,
+                rgba(255,200,150,0.03) 41px
               ),
               repeating-linear-gradient(
                 0deg,
                 transparent,
                 transparent 20px,
-                rgba(255,180,120,0.015) 20px,
-                rgba(255,180,120,0.015) 21px
+                rgba(255,180,120,0.02) 20px,
+                rgba(255,180,120,0.02) 21px
               )
             `,
           }}
         />
 
-        {/* PRIMARY WARM LIGHT STRIP - main light source */}
+        {/* PRIMARY KEY LIGHT STRIP - main light source */}
         <div 
           className="absolute inset-x-0 top-0"
           style={{
-            height: `${10 * scale}px`,
-            background: "linear-gradient(90deg, transparent 3%, rgba(255,130,50,0.8) 20%, rgba(255,160,80,0.95) 50%, rgba(255,130,50,0.8) 80%, transparent 97%)",
+            height: `${12 * scale}px`,
+            background: "linear-gradient(90deg, transparent 5%, rgba(255,150,70,0.9) 20%, rgba(255,180,100,1) 50%, rgba(255,150,70,0.9) 80%, transparent 95%)",
             boxShadow: `
-              0 0 40px rgba(255,120,40,0.6), 
-              0 0 80px rgba(255,100,30,0.4),
-              0 0 120px rgba(255,80,20,0.2)
+              0 0 30px rgba(255,140,60,0.7), 
+              0 0 60px rgba(255,120,50,0.5),
+              0 0 100px rgba(255,100,40,0.3)
             `,
           }}
         />
         
-        {/* Light cones from strip - directional */}
-        <div className="absolute inset-x-0 top-0 flex justify-around px-12" style={{ height: `${50 * scale}px` }}>
+        {/* Light cones from strip - KEY LIGHT falloff */}
+        <div className="absolute inset-x-0 top-0 flex justify-around px-12" style={{ height: `${55 * scale}px` }}>
           {[...Array(5)].map((_, i) => (
             <div 
               key={i}
@@ -513,9 +503,9 @@ function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
               style={{
                 width: `${90 * scale}px`,
                 background: `radial-gradient(ellipse 100% 150% at center top, 
-                  rgba(255,150,70,0.15) 0%, 
-                  rgba(255,120,50,0.08) 30%,
-                  rgba(255,100,40,0.03) 60%, 
+                  rgba(255,160,80,0.2) 0%, 
+                  rgba(255,140,60,0.12) 30%,
+                  rgba(255,120,50,0.05) 60%, 
                   transparent 90%
                 )`,
               }}
@@ -523,16 +513,16 @@ function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
           ))}
         </div>
 
-        {/* Stage glow bleeding onto floor */}
+        {/* Stage glow bleeding onto floor - KEY LIGHT spill */}
         <div 
           className="absolute inset-x-0"
           style={{
-            bottom: `${-70 * scale}px`,
-            height: `${90 * scale}px`,
+            bottom: `${-80 * scale}px`,
+            height: `${100 * scale}px`,
             background: `linear-gradient(180deg, 
-              rgba(255,110,40,0.15) 0%, 
-              rgba(255,90,30,0.08) 30%, 
-              rgba(255,70,20,0.03) 60%, 
+              rgba(255,130,50,0.2) 0%, 
+              rgba(255,110,40,0.12) 30%, 
+              rgba(255,90,30,0.05) 60%, 
               transparent 100%
             )`,
           }}
@@ -545,8 +535,8 @@ function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
             style={{ 
               fontSize: `${14 * scale}px`,
               letterSpacing: "0.4em",
-              color: "rgba(255,230,200,0.45)",
-              textShadow: "0 0 25px rgba(255,140,70,0.4), 0 2px 4px rgba(0,0,0,0.5)",
+              color: "rgba(255,240,220,0.55)",
+              textShadow: "0 0 20px rgba(255,160,90,0.5), 0 2px 4px rgba(0,0,0,0.4)",
             }}
           >
             Front of Class
@@ -560,9 +550,9 @@ function FrontOfClassStage({ scale = 1 }: { scale?: number }) {
             style={{
               width: `${28 * scale}px`,
               height: `${14 * scale}px`,
-              background: "linear-gradient(180deg, #3d3835 0%, #1f1c1a 100%)",
-              boxShadow: "0 3px 8px rgba(0,0,0,0.6), 0 0 15px rgba(255,110,50,0.1)",
-              border: "1px solid rgba(255,180,120,0.05)",
+              background: "linear-gradient(180deg, #4a4540 0%, #2a2825 100%)",
+              boxShadow: "0 3px 8px rgba(0,0,0,0.5), 0 0 12px rgba(255,130,60,0.15)",
+              border: "1px solid rgba(255,180,120,0.08)",
             }}
           />
         </div>
@@ -583,10 +573,10 @@ function ModeSwitcher({
     <div 
       className="inline-flex items-center gap-0.5 p-0.5 rounded-lg"
       style={{
-        background: "rgba(20,18,16,0.8)",
+        background: "rgba(30,28,26,0.85)",
         backdropFilter: "blur(16px)",
-        border: "1px solid rgba(255,200,150,0.08)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,200,150,0.05)",
+        border: "1px solid rgba(255,200,150,0.1)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,200,150,0.06)",
       }}
     >
       {(Object.keys(MODE_CONFIG) as ViewMode[]).map((mode) => {
@@ -599,14 +589,18 @@ function ModeSwitcher({
             key={mode}
             onClick={() => onModeChange(mode)}
             className={cn(
-              "flex items-center gap-1 px-2.5 py-1 rounded-md transition-all duration-200",
+              "px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5",
               isActive 
-                ? "bg-white/10 text-amber-100" 
-                : "text-white/40 hover:text-white/60 hover:bg-white/5"
+                ? "text-amber-200" 
+                : "text-white/50 hover:text-white/70 hover:bg-white/5"
             )}
+            style={isActive ? {
+              background: "linear-gradient(180deg, rgba(255,160,80,0.2) 0%, rgba(255,120,50,0.15) 100%)",
+              boxShadow: "0 0 15px rgba(255,120,50,0.15), inset 0 1px 0 rgba(255,200,150,0.1)",
+            } : {}}
           >
-            <Icon className="w-3 h-3" />
-            <span style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "0.02em" }}>{config.label}</span>
+            <Icon className="w-3.5 h-3.5" />
+            {config.label}
           </button>
         );
       })}
@@ -623,122 +617,111 @@ function ZoomControls({
   isPanning,
   onTogglePan,
 }: { 
-  zoom: number;
-  onZoomIn: () => void;
-  onZoomOut: () => void;
+  zoom: number; 
+  onZoomIn: () => void; 
+  onZoomOut: () => void; 
   onFitToView: () => void;
   isPanning: boolean;
   onTogglePan: () => void;
 }) {
   return (
-    <div 
-      className="flex items-center gap-1 p-1 rounded-lg"
-      style={{
-        background: "rgba(20,18,16,0.8)",
-        backdropFilter: "blur(16px)",
-        border: "1px solid rgba(255,200,150,0.06)",
-      }}
-    >
-      <button
+    <div className="flex items-center gap-1">
+      <button 
         onClick={onZoomOut}
-        className="p-1.5 rounded-md text-white/50 hover:text-amber-200 hover:bg-white/10 transition-colors"
+        className="p-1.5 rounded-md text-white/50 hover:text-amber-200 hover:bg-white/5 transition-colors"
         title="Zoom Out"
       >
-        <ZoomOut className="w-4 h-4" />
+        <ZoomOut className="w-3.5 h-3.5" />
       </button>
-      <span className="text-white/50 px-2 min-w-[50px] text-center" style={{ fontSize: "11px" }}>
-        {Math.round(zoom * 100)}%
-      </span>
-      <button
+      <span className="text-white/50 text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
+      <button 
         onClick={onZoomIn}
-        className="p-1.5 rounded-md text-white/50 hover:text-amber-200 hover:bg-white/10 transition-colors"
+        className="p-1.5 rounded-md text-white/50 hover:text-amber-200 hover:bg-white/5 transition-colors"
         title="Zoom In"
       >
-        <ZoomIn className="w-4 h-4" />
+        <ZoomIn className="w-3.5 h-3.5" />
       </button>
       <div className="w-px h-4 bg-white/10 mx-1" />
-      <button
+      <button 
         onClick={onFitToView}
-        className="p-1.5 rounded-md text-white/50 hover:text-amber-200 hover:bg-white/10 transition-colors"
+        className="p-1.5 rounded-md text-white/50 hover:text-amber-200 hover:bg-white/5 transition-colors"
         title="Fit to View"
       >
-        <Maximize2 className="w-4 h-4" />
+        <Maximize2 className="w-3.5 h-3.5" />
       </button>
-      <button
+      <button 
         onClick={onTogglePan}
         className={cn(
           "p-1.5 rounded-md transition-colors",
           isPanning 
-            ? "text-amber-400 bg-amber-400/20" 
-            : "text-white/50 hover:text-amber-200 hover:bg-white/10"
+            ? "text-amber-200 bg-amber-500/20" 
+            : "text-white/50 hover:text-amber-200 hover:bg-white/5"
         )}
         title="Pan Mode"
       >
-        <Move className="w-4 h-4" />
+        <Move className="w-3.5 h-3.5" />
       </button>
     </div>
   );
 }
 
-// Legend - warm color scheme
+// Floor Legend
 function FloorLegend({ 
   templateType, 
   occupiedCount, 
   totalSpots,
   isDesignMode,
 }: { 
-  templateType: string;
-  occupiedCount: number;
+  templateType: string; 
+  occupiedCount: number; 
   totalSpots: number;
   isDesignMode: boolean;
 }) {
   return (
     <div 
-      className="flex items-center gap-6 px-4 py-2.5 rounded-lg mt-3"
+      className="flex items-center justify-between px-4 py-2 rounded-lg"
       style={{
-        background: "rgba(20,18,16,0.6)",
-        backdropFilter: "blur(12px)",
-        border: "1px solid rgba(255,200,150,0.05)",
+        background: "rgba(30,28,26,0.5)",
+        backdropFilter: "blur(10px)",
+        border: "1px solid rgba(255,200,150,0.06)",
       }}
     >
-      {/* Available Spot - muted teal */}
-      <div className="flex items-center gap-2">
-        <div 
-          className="w-3 h-3 rounded-full"
-          style={{
-            background: "rgba(45, 160, 140, 0.7)",
-            boxShadow: "0 0 8px rgba(45, 160, 140, 0.4)",
-          }}
-        />
-        <span className="text-white/50" style={{ fontSize: "11px" }}>Available Spot</span>
-      </div>
-      
-      {/* Occupied Spot - warm amber */}
-      <div className="flex items-center gap-2">
-        <div 
-          className="w-3 h-3 rounded-full"
-          style={{
-            background: "rgba(255, 100, 40, 0.8)",
-            boxShadow: "0 0 8px rgba(255, 100, 40, 0.5)",
-          }}
-        />
-        <span className="text-white/50" style={{ fontSize: "11px" }}>Occupied Spot</span>
-      </div>
-      
-      {/* Design mode hint */}
-      {isDesignMode && (
-        <>
-          <div className="w-px h-4 bg-white/10" />
-          <div className="flex items-center gap-1.5">
-            <GripVertical className="w-3 h-3 text-amber-400/60" />
-            <span className="text-amber-400/60" style={{ fontSize: "11px" }}>Drag bags to reposition</span>
+      <div className="flex items-center gap-6">
+        {/* Available indicator */}
+        <div className="flex items-center gap-2">
+          <div 
+            className="w-3 h-3 rounded-full"
+            style={{
+              background: "radial-gradient(circle, rgba(60,180,160,0.8) 0%, rgba(60,180,160,0.4) 70%, transparent 100%)",
+              boxShadow: "0 0 8px rgba(60,180,160,0.5)",
+            }}
+          />
+          <span className="text-white/50 text-xs">Available Spot</span>
+        </div>
+
+        {/* Occupied indicator */}
+        <div className="flex items-center gap-2">
+          <div 
+            className="w-3 h-3 rounded-full"
+            style={{
+              background: "radial-gradient(circle, rgba(255,120,50,0.9) 0%, rgba(255,120,50,0.5) 70%, transparent 100%)",
+              boxShadow: "0 0 8px rgba(255,120,50,0.5)",
+            }}
+          />
+          <span className="text-white/50 text-xs">Occupied Spot</span>
+        </div>
+
+        {/* Design mode hint */}
+        {isDesignMode && (
+          <div className="flex items-center gap-2 text-amber-400/60">
+            <GripVertical className="w-3 h-3" />
+            <span className="text-xs">Drag bags to reposition</span>
           </div>
-        </>
-      )}
-      
-      {/* Spot count */}
-      <div className="ml-auto text-white/40" style={{ fontSize: "11px" }}>
-        {occupiedCount} / {totalSpots} spots
+        )}
+      </div>
+
+      <div className="text-white/40 text-xs">
+        {occupiedCount} / {totalSpots} spots filled
       </div>
     </div>
   );
@@ -926,9 +909,9 @@ export function CinematicFloorPlanner({
       <div 
         className="flex items-center justify-between px-3 py-2 rounded-lg"
         style={{
-          background: "rgba(20,18,16,0.5)",
+          background: "rgba(30,28,26,0.6)",
           backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,200,150,0.05)",
+          border: "1px solid rgba(255,200,150,0.08)",
         }}
       >
         <div className="flex items-center gap-3">
@@ -949,8 +932,8 @@ export function CinematicFloorPlanner({
             <button 
               className="p-1.5 rounded-md text-white/40 hover:text-amber-200 hover:bg-white/5 transition-colors"
               style={{
-                background: "rgba(20,18,16,0.5)",
-                border: "1px solid rgba(255,200,150,0.05)",
+                background: "rgba(30,28,26,0.6)",
+                border: "1px solid rgba(255,200,150,0.08)",
               }}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -964,8 +947,8 @@ export function CinematicFloorPlanner({
         <div 
           className="flex items-center gap-2 px-4 py-2 rounded-lg"
           style={{
-            background: "rgba(255, 140, 60, 0.1)",
-            border: "1px solid rgba(255, 140, 60, 0.2)",
+            background: "rgba(255, 150, 70, 0.12)",
+            border: "1px solid rgba(255, 150, 70, 0.25)",
           }}
         >
           <GripVertical className="w-4 h-4 text-amber-400" />
@@ -975,19 +958,19 @@ export function CinematicFloorPlanner({
         </div>
       )}
 
-      {/* PHOTOREALISTIC Floor Canvas */}
+      {/* REBALANCED Floor Canvas - Visible surface, clear bags, controlled mood */}
       <div 
         ref={containerRef}
         className="rounded-xl overflow-auto"
         style={{
           // Warm glass frame
-          background: "linear-gradient(180deg, rgba(35,30,26,0.7) 0%, rgba(22,18,16,0.8) 100%)",
+          background: "linear-gradient(180deg, rgba(45,40,36,0.75) 0%, rgba(32,28,26,0.85) 100%)",
           backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,180,120,0.06)",
+          border: "1px solid rgba(255,180,120,0.1)",
           boxShadow: `
-            0 10px 50px rgba(0,0,0,0.6), 
-            inset 0 1px 0 rgba(255,200,150,0.03), 
-            0 0 80px rgba(255,90,30,0.02)
+            0 10px 50px rgba(0,0,0,0.5), 
+            inset 0 1px 0 rgba(255,200,150,0.05), 
+            0 0 60px rgba(255,100,40,0.03)
           `,
           maxHeight: "70vh",
           cursor: isPanning ? (isDraggingCanvas ? "grabbing" : "grab") : "default",
@@ -1011,156 +994,149 @@ export function CinematicFloorPlanner({
             transition: isDraggingCanvas || draggingSpotId ? "none" : "transform 0.1s ease-out",
           }}
         >
-          {/* PHOTOREALISTIC Base floor - warm rubber mat */}
+          {/* REBALANCED Base floor - BRIGHTER warm rubber mat */}
           <div 
             className="absolute inset-0"
             style={{
               background: `
-                radial-gradient(ellipse 95% 75% at center 40%, 
-                  #2d2824 0%, 
-                  #262220 25%,
-                  #1e1c1a 45%,
-                  #161412 65%,
-                  #100e0c 85%,
-                  #0a0908 100%
+                radial-gradient(ellipse 100% 85% at center 45%, 
+                  #3a3632 0%, 
+                  #343230 20%,
+                  #2e2c2a 40%,
+                  #282624 60%,
+                  #222120 80%,
+                  #1c1a18 100%
                 )
               `,
             }}
           />
 
-          {/* RUBBER MAT TEXTURE - realistic micro-grain */}
+          {/* RUBBER MAT TEXTURE - visible grain */}
           <div 
             className="absolute inset-0"
             style={{
               backgroundImage: `
                 url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
               `,
-              opacity: 0.04,
+              opacity: 0.06,
               mixBlendMode: "overlay",
             }}
           />
 
-          {/* MAT TILE SEAMS - subtle segmentation */}
+          {/* MAT TILE SEAMS - clear segmentation */}
           <div 
-            className="absolute inset-0 opacity-25"
+            className="absolute inset-0 opacity-35"
             style={{
               backgroundImage: `
                 repeating-linear-gradient(
                   0deg,
                   transparent,
-                  transparent 95px,
-                  rgba(0,0,0,0.15) 95px,
-                  rgba(0,0,0,0.15) 96px,
-                  rgba(255,200,150,0.02) 96px,
-                  rgba(255,200,150,0.02) 97px,
-                  transparent 97px,
-                  transparent 100px
+                  transparent 98px,
+                  rgba(0,0,0,0.12) 98px,
+                  rgba(0,0,0,0.12) 99px,
+                  rgba(255,200,150,0.03) 99px,
+                  rgba(255,200,150,0.03) 100px
                 ),
                 repeating-linear-gradient(
                   90deg,
                   transparent,
-                  transparent 95px,
-                  rgba(0,0,0,0.12) 95px,
-                  rgba(0,0,0,0.12) 96px,
-                  rgba(255,180,120,0.015) 96px,
-                  rgba(255,180,120,0.015) 97px,
-                  transparent 97px,
-                  transparent 100px
+                  transparent 98px,
+                  rgba(0,0,0,0.1) 98px,
+                  rgba(0,0,0,0.1) 99px,
+                  rgba(255,180,120,0.025) 99px,
+                  rgba(255,180,120,0.025) 100px
                 )
               `,
             }}
           />
 
-          {/* SPECULAR RESPONSE - floor light reflection */}
+          {/* SPECULAR RESPONSE - floor light reflection from key light */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `
-                radial-gradient(ellipse 60% 40% at 50% 25%, 
-                  rgba(255,180,120,0.04) 0%, 
-                  transparent 70%
-                ),
-                radial-gradient(ellipse 80% 50% at 50% 80%, 
-                  rgba(255,200,150,0.03) 0%, 
+                radial-gradient(ellipse 70% 50% at 50% 20%, 
+                  rgba(255,180,120,0.08) 0%, 
                   transparent 60%
+                ),
+                radial-gradient(ellipse 90% 60% at 50% 85%, 
+                  rgba(255,200,150,0.05) 0%, 
+                  transparent 50%
                 )
               `,
             }}
           />
 
-          {/* 3D DEPTH GRADIENT - darker back, brighter front */}
+          {/* 3D DEPTH GRADIENT - REDUCED darkness, visible floor */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `linear-gradient(180deg, 
-                rgba(0,0,0,0.55) 0%, 
-                rgba(0,0,0,0.4) 15%,
-                rgba(0,0,0,0.2) 30%, 
-                rgba(0,0,0,0.05) 50%, 
-                transparent 60%,
-                rgba(255,200,150,0.015) 75%,
-                rgba(255,180,120,0.025) 90%,
-                rgba(255,160,100,0.03) 100%
+                rgba(0,0,0,0.35) 0%, 
+                rgba(0,0,0,0.2) 15%,
+                rgba(0,0,0,0.08) 30%, 
+                transparent 50%, 
+                rgba(255,200,150,0.02) 70%,
+                rgba(255,180,120,0.04) 90%,
+                rgba(255,160,100,0.05) 100%
               )`,
             }}
           />
 
-          {/* ATMOSPHERIC HAZE - back wall depth */}
+          {/* ATMOSPHERIC HAZE - EDGES ONLY, not covering floor */}
           <div 
             className="absolute inset-x-0 top-0 pointer-events-none"
             style={{
-              height: "30%",
+              height: "18%",
               background: `linear-gradient(180deg, 
-                rgba(50,45,40,0.35) 0%, 
-                rgba(40,35,30,0.2) 40%, 
-                rgba(30,25,22,0.08) 70%,
+                rgba(45,40,35,0.25) 0%, 
+                rgba(35,32,28,0.12) 50%, 
                 transparent 100%
               )`,
-              filter: "blur(2px)",
             }}
           />
 
-          {/* VIGNETTE - darker corners for depth */}
+          {/* VIGNETTE - REDUCED, corners only */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `
-                radial-gradient(ellipse 80% 65% at center 50%, 
-                  transparent 20%, 
-                  rgba(12,10,8,0.4) 55%,
-                  rgba(8,6,5,0.65) 80%,
-                  rgba(4,3,2,0.8) 100%
+                radial-gradient(ellipse 85% 70% at center 50%, 
+                  transparent 30%, 
+                  rgba(18,16,14,0.25) 60%,
+                  rgba(12,10,8,0.45) 85%,
+                  rgba(8,6,5,0.6) 100%
                 )
               `,
             }}
           />
 
-          {/* PRIMARY WARM LIGHT from stage */}
+          {/* PRIMARY KEY LIGHT from stage - visible falloff */}
           <div 
             className="absolute inset-x-0 top-0 pointer-events-none"
             style={{
-              height: `${220 * zoom}px`,
+              height: `${200 * zoom}px`,
               background: `linear-gradient(180deg, 
-                rgba(255,110,40,0.18) 0%, 
-                rgba(255,90,30,0.1) 25%, 
-                rgba(255,70,20,0.04) 50%, 
+                rgba(255,130,60,0.22) 0%, 
+                rgba(255,110,50,0.14) 25%, 
+                rgba(255,90,40,0.06) 50%, 
                 transparent 100%
               )`,
             }}
           />
 
-          {/* OVERHEAD SOFT FILL - secondary light */}
-          <div className="absolute inset-x-0 top-0 flex justify-around px-16 pointer-events-none" style={{ height: "45%" }}>
+          {/* OVERHEAD FILL LIGHT - ensures bags are readable */}
+          <div className="absolute inset-x-0 top-0 flex justify-around px-16 pointer-events-none" style={{ height: "50%" }}>
             {[...Array(5)].map((_, i) => (
               <div 
                 key={i}
                 style={{
-                  width: `${70 * zoom}px`,
+                  width: `${80 * zoom}px`,
                   height: "100%",
                   background: `linear-gradient(180deg, 
-                    rgba(255,150,70,0.08) 0%, 
-                    rgba(255,130,50,0.04) 35%, 
-                    rgba(255,110,40,0.015) 65%,
+                    rgba(255,160,90,0.12) 0%, 
+                    rgba(255,140,70,0.06) 40%, 
+                    rgba(255,120,50,0.02) 70%,
                     transparent 100%
                   )`,
                   transform: `rotate(${(i - 2) * 1.5}deg)`,
@@ -1170,13 +1146,13 @@ export function CinematicFloorPlanner({
             ))}
           </div>
 
-          {/* AMBIENT ROOM GLOW - low-level fill */}
+          {/* AMBIENT FILL - low-level room glow */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
               background: `
                 radial-gradient(ellipse 100% 80% at 50% 100%, 
-                  rgba(255,180,120,0.02) 0%, 
+                  rgba(255,180,120,0.035) 0%, 
                   transparent 50%
                 )
               `,
@@ -1191,8 +1167,8 @@ export function CinematicFloorPlanner({
               right: "16px",
               top: "16px",
               bottom: "16px",
-              border: "1px dashed rgba(255,180,120,0.04)",
-              boxShadow: "inset 0 0 100px rgba(0,0,0,0.25)",
+              border: "1px dashed rgba(255,180,120,0.06)",
+              boxShadow: "inset 0 0 80px rgba(0,0,0,0.15)",
             }}
           />
 
@@ -1209,11 +1185,11 @@ export function CinematicFloorPlanner({
                 top: `${zone.bounds.y}%`,
                 width: `${zone.bounds.width}%`,
                 height: `${zone.bounds.height}%`,
-                border: "1px dashed rgba(255,180,120,0.05)",
-                background: "rgba(255,200,150,0.01)",
+                border: "1px dashed rgba(255,180,120,0.08)",
+                background: "rgba(255,200,150,0.015)",
               }}
             >
-              <span className="absolute top-2 left-2 text-white/15 font-medium" style={{ fontSize: "10px" }}>
+              <span className="absolute top-2 left-2 text-white/20 font-medium" style={{ fontSize: "10px" }}>
                 {zone.name}
               </span>
             </div>
@@ -1248,7 +1224,7 @@ export function CinematicFloorPlanner({
           </div>
 
           {/* Room dimensions */}
-          <div className="absolute bottom-3 right-4" style={{ fontSize: `${11 * zoom}px`, color: "rgba(255,210,170,0.25)" }}>
+          <div className="absolute bottom-3 right-4" style={{ fontSize: `${11 * zoom}px`, color: "rgba(255,210,170,0.35)" }}>
             {floorPlan.lengthFeet} ft × {floorPlan.widthFeet} ft
           </div>
         </div>
