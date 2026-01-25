@@ -4925,3 +4925,46 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Bags: Vertical highlight gradient, rim light, base shadow softness
 - [x] Floor: Mat texture, seams, micro grain, light reflections under bags
 - [x] UI Glass: Blur on container frame, softer header, light edge glow
+
+
+## Phase 23: Match Reference Image Exactly (Jan 25, 2026) - COMPLETED
+
+### Bag Markers (Critical)
+- [x] Larger bag size (wider base, taller body)
+- [x] Tapered/trapezoidal base shape (wider at top, tapered at bottom)
+- [x] Red number badge on TOP of bag (smaller, rounded)
+- [x] Initials displayed ON the red panel area (T.K., R.W., D.L., etc.)
+- [x] "INSTRUCTOR" and "RESERVED" labels on special bags
+- [x] Darker bag body with subtle gradient
+- [x] Floor number label BELOW each bag (gray text)
+
+### Floor Glow Rings
+- [x] Larger elliptical rings (wider spread - 120px x 40px)
+- [x] Teal/cyan color for available spots
+- [x] Amber/orange color for occupied spots
+- [x] Softer blur effect with gradient falloff
+- [x] Ring outline visible (thin border)
+
+### Room Canvas
+- [x] Darker mat texture with visible seams/lines
+- [x] Perspective grid lines (50px spacing)
+- [x] Darker corners/edges (stronger vignette)
+- [x] Subtle ambient lighting from stage
+
+### Front of Class Stage
+- [x] Warm amber/orange horizontal light strip
+- [x] "FRONT OF CLASS" text centered
+- [x] Instructor podium/marker below text
+- [x] Light bleeding onto floor
+- [x] Darker wall texture behind
+
+### Layout & Spacing
+- [x] Grid layout with proper spacing
+- [x] Proper spacing between bags
+- [x] Bags aligned in grid pattern
+
+### Legend & UI
+- [x] "Available Spot" with teal indicator
+- [x] "Occupied Spot" with amber indicator
+- [x] Spot count display
+- [x] Room dimensions in corner
