@@ -5393,3 +5393,32 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] WaveMaster model becomes canonical bag reference
 - [x] Bags feel like real heavy bags under studio lighting
 - [x] Visual quality bar set for entire floor planner system
+
+
+## Phase 34: Photorealistic SVG WaveMaster Bag Model (Jan 25, 2026)
+- [ ] Analyze WaveMaster reference photo proportions and materials
+- [ ] Create SVG component with cylindrical body, wrapping seams, base
+- [ ] Add realistic leather/vinyl material with proper gradients
+- [ ] Implement studio lighting with reflections and shadows
+- [ ] Replace all current CSS bags with new SVG model
+- [ ] Test rendering at all zoom levels
+- [ ] Verify drag-and-drop works with new model
+
+
+## Phase 28: WaveMasterBag SVG Integration (COMPLETED)
+- [x] Create WaveMasterBag SVG component with photorealistic rendering
+- [x] Implement proper proportions (140px tall, 48px wide)
+- [x] Add leather/vinyl material texture with horizontal seams
+- [x] Implement weighted base with floor contact shadow
+- [x] Add directional lighting from Front of Class wall
+- [x] Integrate WaveMasterBag into CinematicFloorPlanner component
+- [x] Replace all bag rendering with SVG component
+- [x] Maintain drag-and-drop functionality with new SVG bags
+- [x] Verify occupied state displays student initials
+- [x] Verify floor glow rings display correctly (teal for available, amber for occupied)
+- [x] Test zoom/pan works with new SVG bags
+- [x] Create comprehensive vitest tests for WaveMasterBag component
+- [x] All 11 WaveMasterBag tests passing
+- [x] Verify bag rendering in all view modes (Design, Kiosk, Live, Wall)
+- [x] Verify red number badges display correctly
+- [x] Verify depth effects and scaling work properly
