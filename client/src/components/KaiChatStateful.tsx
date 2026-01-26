@@ -51,11 +51,17 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
     locationId: locationId || null,
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-focus input on load
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   // Initialize with Kai's greeting
   useEffect(() => {
@@ -247,7 +253,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   };
 
   return (
-    <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden`}>
+    <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden relative`}>
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-4 text-white">
         <div className="flex items-center gap-3">
@@ -262,7 +268,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 pb-20">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
@@ -290,30 +296,36 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-200 p-4 bg-white">
-        <form onSubmit={handleSendMessage} className="flex gap-2">
+      {/* Input - Premium Glass Design */}
+      <div className="sticky bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900/20 to-transparent backdrop-blur-sm">
+        <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
+          {/* Input Field */}
           <input
+            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 px-4 py-3 bg-slate-800/40 backdrop-blur-md border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/30 focus:bg-slate-800/60 transition-all duration-200 shadow-lg focus:shadow-[0_0_20px_rgba(239,68,68,0.3)]"
           />
+          {/* Send Button - Glowing Red */}
           <button
             type="submit"
             disabled={isLoading || !inputValue.trim()}
-            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 flex items-center gap-2"
           >
-            Send
+            <span>Send</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7m0 0l-7 7m7-7H6" />
+            </svg>
           </button>
         </form>
       </div>
 
       {/* Completion indicator (dev only) */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="bg-gray-100 px-4 py-2 text-xs text-gray-600 border-t border-gray-200">
+        <div className="absolute bottom-20 left-0 right-0 bg-gray-100 px-4 py-2 text-xs text-gray-600 border-t border-gray-200">
           Completion: {calculateCompletion(state)}% | Intent: {state.intent || 'none'} | Student: {state.studentType || 'unknown'}
         </div>
       )}
