@@ -1,4 +1,4 @@
-/**
+/*
  * KaiChatStateful - Intelligent Kai chat with validation-based state machine
  * Implements proper validation, state transitions, and clarifying follow-ups
  */
@@ -99,12 +99,8 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
     const pricingIntent = extractPricingIntent(userMessage);
     const scheduleIntent = extractScheduleIntent(userMessage);
     const dayTimePreference = extractDayTimePreference(userMessage);
-    const contactMethod = extractContactMethod(userMessage);
     const contactInfo = extractContactInfo(userMessage);
-
-    // Determine current stage and validate input
-    const stageTransition = getNextStage(currentState, userMessage);
-    const { stage: nextStage, validationPassed } = stageTransition;
+    const contactMethod = extractContactMethod(userMessage);
 
     // Handle each conversation stage
     switch (currentState.currentStage) {
@@ -112,19 +108,15 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         if (bookingIntent) {
           newState.intent = 'book_intro';
           newState.currentStage = 'CAPTURE_STUDENT_TYPE';
-          newState.lastAskedField = 'student_type';
+          newState.lastAskedField = null;
           response = `Got it! Who is this for - a child, teen, or yourself?`;
           shouldAdvance = true;
         } else if (pricingIntent) {
-          newState.intent = 'pricing';
-          response = `Great question! At ${locationName}, our pricing varies by program. What age group are you interested in?`;
-          shouldAdvance = false;
-        } else if (scheduleIntent) {
-          newState.intent = 'schedule';
-          response = `At ${locationName}, we offer classes throughout the week. What age group are you interested in?`;
+          newState.intent = 'pricing_inquiry';
+          response = `Great question! Our programs range from $99-$199/month depending on the schedule. Which age group are you interested in?`;
           shouldAdvance = false;
         } else {
-          response = `I can help you book a free intro class, answer pricing questions, or tell you about our schedule. What would you like to know?`;
+          response = `At ${locationName}, we'd love to help. What can I tell you about our programs?`;
           shouldAdvance = false;
         }
         break;
@@ -132,25 +124,22 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
       case 'CAPTURE_STUDENT_TYPE':
         if (studentType) {
           newState.studentType = studentType;
-          newState.lastAskedField = null;
           
           if (studentType === 'child' || studentType === 'teen') {
             newState.currentStage = 'CAPTURE_STUDENT_AGE';
-            newState.lastAskedField = 'age';
-            response = `Awesome! How old ${studentType === 'child' ? 'is your child' : 'are they'}?`;
-            shouldAdvance = true;
+            newState.lastAskedField = null;
+            response = `Awesome! How old is your ${studentType}?`;
           } else {
             newState.currentStage = 'CAPTURE_NAME';
-            newState.lastAskedField = 'name';
-            response = `Perfect! To get you booked, what's your name?`;
-            shouldAdvance = true;
+            newState.lastAskedField = null;
+            response = `Perfect! What's your name?`;
           }
+          shouldAdvance = true;
         } else {
-          // Clarify if user gave non-value answer
           if (currentState.lastAskedField === 'student_type') {
-            response = `I can help with child, teen, or adult programs. Which one are you interested in?`;
+            response = `I can do child, teen, or adult. If it's for a child, just say "child" or "my 7 year old". If it's for you, say "myself" or "adult".`;
           } else {
-            response = `Got it! Who is this for - a child, teen, or yourself?`;
+            response = `Who is this for - a child, teen, or yourself?`;
           }
           newState.lastAskedField = 'student_type';
           shouldAdvance = false;
@@ -158,22 +147,26 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         break;
 
       case 'CAPTURE_STUDENT_AGE':
-        if (age !== null && isValidAge(age)) {
+        if (age && isValidAge(age)) {
           newState.age = age;
-          newState.programInterest = suggestProgram(age);
-          newState.currentStage = 'CAPTURE_NAME';
-          newState.lastAskedField = 'name';
           
-          const program = newState.programInterest;
-          const ageRange = getProgramAgeRange(program);
-          response = `Perfect! At ${locationName}, our ${program} program is ideal for ages ${ageRange}. To get you booked, what's your name?`;
+          // Auto-suggest program based on age
+          const suggestedProgram = suggestProgram(age);
+          if (suggestedProgram) {
+            newState.programInterest = suggestedProgram;
+          }
+          
+          newState.currentStage = 'CAPTURE_NAME';
+          newState.lastAskedField = null;
+          
+          const ageRange = getProgramAgeRange(suggestedProgram);
+          response = `Perfect! At ${locationName}, our ${suggestedProgram} program is ideal for ages ${ageRange}. To get you booked, what's your name?`;
           shouldAdvance = true;
         } else {
-          // Clarify if user gave non-value answer
           if (currentState.lastAskedField === 'age') {
-            response = `I need a number between 2 and 99. For example, if they're 7 years old, just reply with "7".`;
+            response = `I need a valid age (2-99). Just give me a number like 7 or 12.`;
           } else {
-            response = `How old are they? Just give me the number.`;
+            response = `How old is your ${currentState.studentType}?`;
           }
           newState.lastAskedField = 'age';
           shouldAdvance = false;
@@ -184,13 +177,12 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         if (contactInfo.name && isValidName(contactInfo.name)) {
           newState.name = contactInfo.name;
           newState.currentStage = 'CAPTURE_CONTACT_METHOD';
-          newState.lastAskedField = 'contact_method';
+          newState.lastAskedField = null;
           response = `Thanks, ${contactInfo.name}! What's the best way to reach you - phone or email?`;
           shouldAdvance = true;
         } else {
-          // Clarify if user gave non-value answer
           if (currentState.lastAskedField === 'name') {
-            response = `I need a name to complete your booking. What should I call you?`;
+            response = `I need a valid name. Just give me your first name or full name.`;
           } else {
             response = `What's your name?`;
           }
@@ -301,31 +293,21 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
     setInputValue('');
     setIsLoading(true);
 
-    try {
-      // Generate Kai's response with validation
-      const { response, newState, shouldAdvance } = generateResponse(inputValue, state);
-      
-      setState(newState);
+    // Generate Kai's response
+    const { response, newState, shouldAdvance } = generateResponse(inputValue, state);
+    setState(newState);
 
-      // Add Kai's message
+    // Add Kai's response
+    setTimeout(() => {
       const kaiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'kai',
         text: response,
         timestamp: new Date(),
       };
-
       setMessages((prev) => [...prev, kaiMessage]);
-
-      // Save lead to database if booking is complete
-      if (newState.currentStage === 'CONFIRM_BOOKING_INTENT' && newState.name && (newState.phone || newState.email)) {
-        await saveLead(newState);
-      }
-    } catch (error) {
-      console.error('Error generating response:', error);
-    } finally {
       setIsLoading(false);
-    }
+    }, 500);
   };
 
   /**
@@ -362,6 +344,22 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
 
   // Check if debug mode should be shown
   const showDebug = process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1');
+
+  // Check if lead capture is complete
+  const isLeadComplete = state.currentStage === 'CONFIRM_BOOKING_INTENT' || state.currentStage === 'SUCCESS';
+  const completion = calculateCompletion(state);
+
+  // Handle Reserve Your Spot button click
+  const handleReserveSpot = async () => {
+    // Save lead to database
+    await saveLead(state);
+    
+    // Redirect to scheduling/payment flow
+    // For now, we'll show a confirmation message
+    // In production, this would redirect to Stripe checkout or scheduling system
+    const checkoutUrl = `/checkout?program=${state.programInterest}&age=${state.age}&location=${state.locationSlug}&name=${encodeURIComponent(state.name || '')}&email=${state.email}&phone=${state.phone}`;
+    window.open(checkoutUrl, '_blank');
+  };
 
   return (
     <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden relative`}>
@@ -407,32 +405,61 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input - Premium Glass Design */}
-      <div className="sticky bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900/20 to-transparent backdrop-blur-sm">
-        <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
-          {/* Input Field */}
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            disabled={isLoading}
-            className="flex-1 px-4 py-3 bg-slate-800/40 backdrop-blur-md border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/30 focus:bg-slate-800/60 transition-all duration-200 shadow-lg focus:shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-          />
-          {/* Send Button - Glowing Red */}
-          <button
-            type="submit"
-            disabled={isLoading || !inputValue.trim()}
-            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 flex items-center gap-2"
-          >
-            <span>Send</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7m0 0l-7 7m7-7H6" />
-            </svg>
-          </button>
-        </form>
-      </div>
+      {/* Success State - Reserve Your Spot Button */}
+      {isLeadComplete && (
+        <div className="sticky bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-green-900/30 via-slate-900/20 to-transparent backdrop-blur-sm border-t border-green-500/20">
+          <div className="space-y-3">
+            {/* Confirmation Summary */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-sm text-white">
+              <div className="font-semibold text-green-400 mb-2">✓ Ready to book!</div>
+              <div className="space-y-1 text-gray-300 text-xs">
+                <div>📍 {state.programInterest} (Ages {state.age}+)</div>
+                <div>👤 {state.name}</div>
+                <div>📧 {state.email || state.phone}</div>
+              </div>
+            </div>
+            {/* Reserve Your Spot Button */}
+            <button
+              onClick={handleReserveSpot}
+              className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] active:scale-95 flex items-center justify-center gap-2 group"
+            >
+              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Reserve Your Spot</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Input - Premium Glass Design (hidden when lead is complete) */}
+      {!isLeadComplete && (
+        <div className="sticky bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900/20 to-transparent backdrop-blur-sm">
+          <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
+            {/* Input Field */}
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Type your message..."
+              disabled={isLoading}
+              className="flex-1 px-4 py-3 bg-slate-800/40 backdrop-blur-md border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/30 focus:bg-slate-800/60 transition-all duration-200 shadow-lg focus:shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+            />
+            {/* Send Button - Glowing Red */}
+            <button
+              type="submit"
+              disabled={isLoading || !inputValue.trim()}
+              className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 flex items-center gap-2"
+            >
+              <span>Send</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7m0 0l-7 7m7-7H6" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Completion indicator (dev only or with ?debug=1) */}
       {showDebug && (

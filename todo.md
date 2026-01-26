@@ -5779,3 +5779,62 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test location-aware responses
 - [x] Test program-aware responses
 - [x] Test invalid input handling
+
+
+## Phase 21: Reserve Your Spot Button - Lead Booking CTA
+
+### Completion State Detection
+- [ ] Detect when lead capture is 100% complete (all required fields captured)
+- [ ] Add success message with confirmation of captured data
+- [ ] Display program details (name, age range, location)
+- [ ] Show captured contact information summary
+
+### Reserve Your Spot Button Design
+- [ ] Create premium button styling (red glow, glass effect)
+- [ ] Add button animation (pulse, hover effects)
+- [ ] Display button only when completion is 100%
+- [ ] Include call-to-action text and icon
+- [ ] Ensure button is accessible and mobile-friendly
+
+### Scheduling/Payment Integration
+- [ ] Determine flow: direct to payment vs. scheduling vs. calendar booking
+- [ ] Create booking confirmation modal/page
+- [ ] Integrate with Stripe payment if applicable
+- [ ] Handle booking success/failure states
+- [ ] Send confirmation email to captured lead
+
+### Testing & Validation
+- [ ] Test button appears after 100% completion
+- [ ] Test button click initiates correct flow
+- [ ] Test on mobile and desktop
+- [ ] Verify all lead data is passed to next step
+- [ ] Test error handling and edge cases
+
+
+## Phase 21: Reserve Your Spot Button - Lead Capture Completion (COMPLETED)
+
+### Completion State Detection
+- [x] Detect when all required fields are captured (100% completion)
+- [x] Show success message from Kai
+- [x] Hide input bar when booking is complete
+- [x] Display confirmation summary
+
+### Button Design & Styling
+- [x] Create green glowing button with checkmark icon
+- [x] Add "Ready to book!" confirmation banner
+- [x] Display booking summary (program, name, contact info)
+- [x] Implement hover and active states
+- [x] Add smooth transitions and animations
+
+### Integration
+- [x] Connect button to scheduling/payment flow
+- [x] Save lead data before redirecting
+- [x] Pass captured data to next step (Stripe checkout or scheduling)
+- [x] Handle errors gracefully
+
+### Testing
+- [x] Test complete booking flow
+- [x] Verify button appears at 100% completion
+- [x] Test button click action
+- [x] Test on mobile and desktop
+- [x] Verified full conversation: booking intent → age → program suggestion → name → contact method → email → success state with button
