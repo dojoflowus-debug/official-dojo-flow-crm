@@ -10,6 +10,7 @@ import { kioskSettingsRouter } from "../kioskSettingsEndpoint";
 import customBackgroundsRouter from "../api.cinematic-backgrounds.js";
 import leadCaptureRouter from "../leadCaptureRouter";
 import locationConfigRouter from "../locationConfigRouter";
+import webhookManagementRouter from "../webhookManagementRouter";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -83,6 +84,9 @@ async function startServer() {
   
   // Mount location config routes
   app.use("/api/location", locationConfigRouter);
+  
+  // Mount webhook management routes
+  app.use("/api/webhook-management", webhookManagementRouter);
   
   // ElevenLabs Text-to-Speech endpoint
   app.post("/api/tts", async (req, res) => {

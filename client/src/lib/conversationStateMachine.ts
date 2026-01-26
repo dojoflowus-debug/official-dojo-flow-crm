@@ -386,6 +386,27 @@ export function isStageComplete(stage: ConversationStage, state: ConversationSta
 }
 
 /**
+ * Calculate completion percentage based on captured fields
+ */
+export function calculateCompletion(state: ConversationState): number {
+  let completedFields = 0;
+  const totalFields = 7; // intent, studentType, age, name, schedule, contactMethod, contact
+  
+  if (state.intent) completedFields++;
+  if (state.studentType) completedFields++;
+  if (state.age !== null) completedFields++;
+  if (state.name) completedFields++;
+  if (state.preferredDate && state.preferredTime) completedFields++;
+  if (state.preferredContactMethod) completedFields++;
+  if ((state.preferredContactMethod === 'email' && state.email) || 
+      ((state.preferredContactMethod === 'phone' || state.preferredContactMethod === 'text') && state.phone)) {
+    completedFields++;
+  }
+  
+  return Math.round((completedFields / totalFields) * 100);
+}
+
+/**
  * Get the next stage based on current state
  */
 export function getNextStage(currentStage: ConversationStage, state: ConversationState): ConversationStage {

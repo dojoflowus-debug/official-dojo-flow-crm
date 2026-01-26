@@ -1508,3 +1508,54 @@ export const customCinematicBackgrounds = mysqlTable("custom_cinematic_backgroun
 	index("idx_custom_bg_user").on(table.userId),
 	index("idx_custom_bg_active").on(table.isActive),
 ]);
+
+export const webhooks = mysqlTable("webhooks", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	url: varchar({ length: 500 }).notNull(),
+	events: varchar({ length: 255 }).default('lead.captured').notNull(), // Comma-separated event types
+	isActive: int().default(1).notNull(),
+	secret: varchar({ length: 255 }).notNull(), // HMAC secret for request signing
+	headers: text(), // JSON string of custom headers
+	retryAttempts: int().default(3).notNull(),
+	retryDelaySeconds: int().default(300).notNull(), // 5 minutes
+	maxTimeout: int().default(30).notNull(), // 30 seconds
+	lastDeliveryAt: timestamp({ mode: 'string' }),
+	lastDeliveryStatus: mysqlEnum(['success','failed','pending']).default('pending'),
+	successCount: int().default(0).notNull(),
+	failureCount: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_webhook_org").on(table.organizationId),
+	index("idx_webhook_active").on(table.isActive),
+	index("idx_webhook_org_active").on(table.organizationId, table.isActive),
+]);
+
+export const webhookLogs = mysqlTable("webhook_logs", {
+	id: int().autoincrement().notNull(),
+	webhookId: int().notNull(),
+	organizationId: int().notNull(),
+	eventType: varchar({ length: 100 }).notNull(), // e.g., "lead.captured"
+	leadId: int(), // Reference to the lead that triggered the webhook
+	payload: text().notNull(), // JSON payload sent to webhook
+	statusCode: int(), // HTTP response code
+	responseBody: text(), // Response from webhook endpoint
+	errorMessage: text(), // Error message if delivery failed
+	attemptNumber: int().default(1).notNull(),
+	nextRetryAt: timestamp({ mode: 'string' }),
+	deliveredAt: timestamp({ mode: 'string' }),
+	deliveryStatus: mysqlEnum(['success','failed','pending','retrying']).default('pending').notNull(),
+	duration: int(), // Response time in milliseconds
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_webhook_log_webhook").on(table.webhookId),
+	index("idx_webhook_log_org").on(table.organizationId),
+	index("idx_webhook_log_lead").on(table.leadId),
+	index("idx_webhook_log_status").on(table.deliveryStatus),
+	index("idx_webhook_log_created").on(table.createdAt),
+	index("idx_webhook_log_retry").on(table.nextRetryAt),
+]);

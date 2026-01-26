@@ -5987,3 +5987,132 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] "phone" then "2818189288" → stores phone, no "Thanks, Phone!"
 - [ ] "my child is 6" → Dragon Kids, not Little Ninjas
 - [ ] Conflicting ages: "my 3 year old… actually he's 6" → confirm which age
+
+
+## Phase 25: Webhook Integration for CRM Sync
+
+### A) Webhook Configuration System
+- [ ] Create `webhooks` table with fields: id, organizationId, url, events, isActive, createdAt, updatedAt
+- [ ] Create `webhook_logs` table to track delivery attempts: id, webhookId, payload, status, responseCode, errorMessage, timestamp
+- [ ] Add webhook management API endpoints: POST /api/webhooks, GET /api/webhooks, PUT /api/webhooks/:id, DELETE /api/webhooks/:id
+- [ ] Implement webhook validation (URL format, SSL certificate validation)
+- [ ] Add webhook secret/signing key for request authentication
+
+### B) Lead Capture Webhook Payload
+- [ ] Design webhook payload schema with: leadId, timestamp, studentType, age, program, name, email, phone, locationId, organizationId
+- [ ] Include HMAC-SHA256 signature header for webhook verification
+- [ ] Add webhook event type: "lead.captured"
+- [ ] Include retry metadata: attempt count, next retry time
+
+### C) Webhook Trigger on Lead Completion
+- [ ] Modify lead capture completion handler to trigger webhook
+- [ ] Send webhook when all required fields are captured (studentType, age, name, contact info)
+- [ ] Include full lead data in payload
+- [ ] Log webhook delivery attempt to webhook_logs table
+
+### D) Webhook Retry & Error Handling
+- [ ] Implement exponential backoff retry logic (3 attempts: immediate, 5min, 30min)
+- [ ] Store failed webhook attempts in webhook_logs
+- [ ] Add background job to retry failed webhooks
+- [ ] Log successful and failed deliveries with response codes
+- [ ] Add timeout handling (30 second timeout per request)
+
+### E) Webhook Management UI
+- [ ] Add Webhooks section to organization settings
+- [ ] Display list of configured webhooks with URL, status, last delivery time
+- [ ] Add "Add Webhook" button to create new webhook URL
+- [ ] Show webhook delivery history and success rate
+- [ ] Add test webhook button to send sample payload
+- [ ] Allow webhook deletion with confirmation
+
+### F) Security & Validation
+- [ ] Verify webhook URLs are HTTPS (enforce for production)
+- [ ] Implement request signing with HMAC-SHA256
+- [ ] Add webhook secret to request headers (X-Webhook-Signature)
+- [ ] Validate webhook responses (200-299 status codes = success)
+- [ ] Rate limit webhook delivery (max 10 per second per organization)
+
+### G) Testing & Documentation
+- [ ] Create webhook test endpoint for CRM testing
+- [ ] Write vitest tests for webhook payload builder
+- [ ] Write vitest tests for webhook retry logic
+- [ ] Create webhook integration documentation
+- [ ] Add example CRM webhook handlers (Zapier, Make, custom)
+- [ ] Test end-to-end lead capture → webhook delivery
+
+### H) Monitoring & Logging
+- [ ] Add webhook delivery metrics to dashboard
+- [ ] Show success/failure rate for webhooks
+- [ ] Add webhook logs viewer in admin panel
+- [ ] Alert on repeated webhook failures
+- [ ] Track webhook latency and response times
+
+
+## Phase 25: Webhook Integration for CRM Sync - IMPLEMENTATION IN PROGRESS
+
+### A) Webhook Configuration System - COMPLETED
+- [x] Created `webhooks` table with fields: id, organizationId, url, events, isActive, secret, headers, retryAttempts, retryDelaySeconds, maxTimeout, lastDeliveryAt, lastDeliveryStatus, successCount, failureCount
+- [x] Created `webhook_logs` table to track delivery attempts: id, webhookId, organizationId, eventType, leadId, payload, statusCode, responseBody, errorMessage, attemptNumber, nextRetryAt, deliveredAt, deliveryStatus, duration
+- [x] Added indexes for performance on webhook tables
+
+### B) Lead Capture Webhook Payload - COMPLETED
+- [x] Designed webhook payload schema with: eventType, timestamp, leadId, organizationId, lead (with all captured data)
+- [x] Implemented HMAC-SHA256 signature generation for request authentication
+- [x] Added webhook event type: "lead.captured"
+- [x] Include retry metadata: attempt count, next retry time
+
+### C) Webhook Trigger on Lead Completion - COMPLETED
+- [x] Modified leadCaptureRouter to trigger webhook when lead is saved
+- [x] Send webhook asynchronously (fire and forget with logging)
+- [x] Include full lead data in payload
+- [x] Log webhook delivery attempt to webhook_logs table
+
+### D) Webhook Service Implementation - COMPLETED
+- [x] Created webhookService.ts with:
+  - generateWebhookSignature() - HMAC-SHA256 signing
+  - buildLeadCapturePayload() - Format lead data for delivery
+  - sendWebhook() - Send webhook with proper headers and error handling
+  - triggerLeadCaptureWebhook() - Trigger webhooks for lead capture event
+  - sendWebhookWithRetry() - Exponential backoff retry logic
+  - retryFailedWebhooks() - Background job for retrying failed deliveries
+
+### E) Webhook Retry & Error Handling - COMPLETED
+- [x] Implemented exponential backoff retry logic (3 attempts: immediate, 5min, 30min)
+- [x] Store failed webhook attempts in webhook_logs
+- [x] Log successful and failed deliveries with response codes
+- [x] Add timeout handling (30 second timeout per request)
+- [x] Track retry metadata: nextRetryAt, attemptNumber, duration
+
+### F) Webhook Management API - COMPLETED
+- [x] Created webhookManagementRouter.ts with endpoints:
+  - GET /api/webhook-management/webhooks - List webhooks for organization
+  - POST /api/webhook-management/webhooks - Create new webhook
+  - PUT /api/webhook-management/webhooks/:id - Update webhook
+  - DELETE /api/webhook-management/webhooks/:id - Delete webhook
+  - GET /api/webhook-management/webhooks/:id/logs - Get delivery logs
+  - POST /api/webhook-management/webhooks/:id/test - Send test webhook
+  - POST /api/webhook-management/webhooks/:id/retry - Manually retry failed deliveries
+  - GET /api/webhook-management/webhooks/:id/stats - Get delivery statistics
+
+### G) Security & Validation - COMPLETED
+- [x] Verify webhook URLs are HTTPS (enforce for production)
+- [x] Implement request signing with HMAC-SHA256
+- [x] Add webhook secret to request headers (X-Webhook-Signature)
+- [x] Validate webhook responses (200-299 status codes = success)
+- [x] Generate secure random secrets for each webhook
+
+### H) Testing & Documentation - IN PROGRESS
+- [x] Create webhook service tests (webhookService.test.ts)
+- [ ] Create webhook router integration tests
+- [ ] Create webhook delivery end-to-end tests
+- [ ] Write webhook integration documentation
+- [ ] Add example CRM webhook handlers (Zapier, Make, custom)
+- [ ] Test end-to-end lead capture → webhook delivery
+
+### NEXT STEPS:
+1. Fix remaining TypeScript errors in webhook service
+2. Test webhook delivery with sample payloads
+3. Create webhook management UI in admin dashboard
+4. Add webhook delivery monitoring and analytics
+5. Document webhook payload format for CRM integrations
+6. Create example webhook handlers for popular CRM platforms

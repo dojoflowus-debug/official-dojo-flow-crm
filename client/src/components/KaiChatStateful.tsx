@@ -21,6 +21,7 @@ import {
   extractPhone,
   getProgramForAge,
   getNextStage,
+  calculateCompletion,
   isValidPhone,
   isValidEmail,
   isValidAge,

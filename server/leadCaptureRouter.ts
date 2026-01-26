@@ -232,6 +232,33 @@ router.post('/lead-capture', async (req: Request, res: Response) => {
           leadId = (result[0] as any).insertId || (result[0] as any).id;
         }
         capturedLead = updatedLeadData;
+
+        // Trigger webhooks for CRM integration
+        try {
+          const { triggerLeadCaptureWebhook } = await import('./services/webhookService');
+          const leadData = {
+            id: leadId,
+            firstName: updatedLeadData.firstName,
+            lastName: updatedLeadData.lastName || '',
+            email: updatedLeadData.email || null,
+            phone: updatedLeadData.phone || null,
+            interestedProgram: updatedLeadData.programInterest,
+            ageGroup: updatedLeadData.ageGroup,
+            locationId: locationId || null,
+            source: 'website_chat',
+            status: 'New Lead',
+            stage: 'new',
+            leadScore: 75,
+            message: `Lead captured via Kai chat at ${locationName || 'Unknown Location'}. Goal: ${updatedLeadData.goal || 'Not specified'}. Schedule: ${updatedLeadData.schedulePreference || 'Not specified'}.`,
+          };
+          // Fire webhook asynchronously (don't wait for it)
+          triggerLeadCaptureWebhook(leadData, organizationId).catch(error => {
+            console.error('[Webhook] Error triggering lead capture webhook:', error);
+          });
+        } catch (webhookError) {
+          console.error('[Webhook] Error importing webhook service:', webhookError);
+          // Don't fail the lead capture if webhook fails
+        }
       } catch (dbError) {
         console.error('Error saving lead to database:', dbError);
         // Continue anyway, don't fail the request
