@@ -1,11 +1,12 @@
 /**
- * KaiChatStateful - Intelligent Kai chat with conversation state machine
- * Replaces the simple hard-coded script with logic-driven responses
+ * KaiChatStateful - Intelligent Kai chat with validation-based state machine
+ * Implements proper validation, state transitions, and clarifying follow-ups
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ConversationState,
+  ConversationStage,
   initialState,
   extractStudentType,
   extractAge,
@@ -14,9 +15,16 @@ import {
   extractScheduleIntent,
   extractDayTimePreference,
   extractContactInfo,
+  extractContactMethod,
   suggestProgram,
+  getProgramAgeRange,
+  getNextStage,
   getNextQuestion,
   calculateCompletion,
+  isValidPhone,
+  isValidEmail,
+  isValidAge,
+  isValidName,
 } from '@/lib/conversationStateMachine';
 
 interface Message {
@@ -77,103 +85,201 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   }, [locationName]);
 
   /**
-   * Generate Kai's response based on conversation state
+   * Generate Kai's response based on conversation state and validation
    */
-  const generateResponse = (userMessage: string, updatedState: ConversationState): string => {
+  const generateResponse = (userMessage: string, currentState: ConversationState): { response: string; newState: ConversationState; shouldAdvance: boolean } => {
+    let newState = { ...currentState };
+    let response = '';
+    let shouldAdvance = false;
+
     // Extract information from user message
-    const studentType = extractStudentType(userMessage) || updatedState.studentType;
-    const age = extractAge(userMessage) || updatedState.age;
+    const studentType = extractStudentType(userMessage);
+    const age = extractAge(userMessage);
     const bookingIntent = extractBookingIntent(userMessage);
     const pricingIntent = extractPricingIntent(userMessage);
     const scheduleIntent = extractScheduleIntent(userMessage);
-    const dayTimePreference = extractDayTimePreference(userMessage) || updatedState.preferredDayTime;
+    const dayTimePreference = extractDayTimePreference(userMessage);
+    const contactMethod = extractContactMethod(userMessage);
     const contactInfo = extractContactInfo(userMessage);
 
-    // Update state
-    const newState: ConversationState = {
-      ...updatedState,
-      studentType: studentType || updatedState.studentType,
-      age: age !== null ? age : updatedState.age,
-      preferredDayTime: dayTimePreference || updatedState.preferredDayTime,
-      name: contactInfo.name || updatedState.name,
-      phone: contactInfo.phone || updatedState.phone,
-      email: contactInfo.email || updatedState.email,
-    };
+    // Determine current stage and validate input
+    const stageTransition = getNextStage(currentState, userMessage);
+    const { stage: nextStage, validationPassed } = stageTransition;
 
-    // Detect intent if not already set
-    if (!newState.intent) {
-      if (bookingIntent) {
-        newState.intent = 'book_intro';
-      } else if (pricingIntent) {
-        newState.intent = 'pricing';
-      } else if (scheduleIntent) {
-        newState.intent = 'schedule';
-      } else {
-        newState.intent = 'general_questions';
-      }
+    // Handle each conversation stage
+    switch (currentState.currentStage) {
+      case 'INTRO':
+        if (bookingIntent) {
+          newState.intent = 'book_intro';
+          newState.currentStage = 'CAPTURE_STUDENT_TYPE';
+          newState.lastAskedField = 'student_type';
+          response = `Got it! Who is this for - a child, teen, or yourself?`;
+          shouldAdvance = true;
+        } else if (pricingIntent) {
+          newState.intent = 'pricing';
+          response = `Great question! At ${locationName}, our pricing varies by program. What age group are you interested in?`;
+          shouldAdvance = false;
+        } else if (scheduleIntent) {
+          newState.intent = 'schedule';
+          response = `At ${locationName}, we offer classes throughout the week. What age group are you interested in?`;
+          shouldAdvance = false;
+        } else {
+          response = `I can help you book a free intro class, answer pricing questions, or tell you about our schedule. What would you like to know?`;
+          shouldAdvance = false;
+        }
+        break;
+
+      case 'CAPTURE_STUDENT_TYPE':
+        if (studentType) {
+          newState.studentType = studentType;
+          newState.lastAskedField = null;
+          
+          if (studentType === 'child' || studentType === 'teen') {
+            newState.currentStage = 'CAPTURE_STUDENT_AGE';
+            newState.lastAskedField = 'age';
+            response = `Awesome! How old ${studentType === 'child' ? 'is your child' : 'are they'}?`;
+            shouldAdvance = true;
+          } else {
+            newState.currentStage = 'CAPTURE_NAME';
+            newState.lastAskedField = 'name';
+            response = `Perfect! To get you booked, what's your name?`;
+            shouldAdvance = true;
+          }
+        } else {
+          // Clarify if user gave non-value answer
+          if (currentState.lastAskedField === 'student_type') {
+            response = `I can help with child, teen, or adult programs. Which one are you interested in?`;
+          } else {
+            response = `Got it! Who is this for - a child, teen, or yourself?`;
+          }
+          newState.lastAskedField = 'student_type';
+          shouldAdvance = false;
+        }
+        break;
+
+      case 'CAPTURE_STUDENT_AGE':
+        if (age !== null && isValidAge(age)) {
+          newState.age = age;
+          newState.programInterest = suggestProgram(age);
+          newState.currentStage = 'CAPTURE_NAME';
+          newState.lastAskedField = 'name';
+          
+          const program = newState.programInterest;
+          const ageRange = getProgramAgeRange(program);
+          response = `Perfect! At ${locationName}, our ${program} program is ideal for ages ${ageRange}. To get you booked, what's your name?`;
+          shouldAdvance = true;
+        } else {
+          // Clarify if user gave non-value answer
+          if (currentState.lastAskedField === 'age') {
+            response = `I need a number between 2 and 99. For example, if they're 7 years old, just reply with "7".`;
+          } else {
+            response = `How old are they? Just give me the number.`;
+          }
+          newState.lastAskedField = 'age';
+          shouldAdvance = false;
+        }
+        break;
+
+      case 'CAPTURE_NAME':
+        if (contactInfo.name && isValidName(contactInfo.name)) {
+          newState.name = contactInfo.name;
+          newState.currentStage = 'CAPTURE_CONTACT_METHOD';
+          newState.lastAskedField = 'contact_method';
+          response = `Thanks, ${contactInfo.name}! What's the best way to reach you - phone or email?`;
+          shouldAdvance = true;
+        } else {
+          // Clarify if user gave non-value answer
+          if (currentState.lastAskedField === 'name') {
+            response = `I need a name to complete your booking. What should I call you?`;
+          } else {
+            response = `What's your name?`;
+          }
+          newState.lastAskedField = 'name';
+          shouldAdvance = false;
+        }
+        break;
+
+      case 'CAPTURE_CONTACT_METHOD':
+        if (contactMethod) {
+          newState.preferredContactMethod = contactMethod;
+          newState.currentStage = 'CAPTURE_PHONE_OR_EMAIL';
+          newState.lastAskedField = contactMethod === 'email' ? 'email' : 'phone';
+          
+          if (contactMethod === 'email') {
+            response = `Perfect! What email should I use? (e.g., name@email.com)`;
+          } else {
+            response = `Perfect! What phone number should we text or call you at? (e.g., 281-555-0123)`;
+          }
+          shouldAdvance = true;
+        } else {
+          // Clarify if user gave non-value answer (e.g., just "Phone")
+          if (currentState.lastAskedField === 'contact_method') {
+            response = `I can do phone or email. If phone, reply with your number like 281-555-0123. If email, reply like name@email.com.`;
+          } else {
+            response = `What's the best way to reach you - phone or email?`;
+          }
+          newState.lastAskedField = 'contact_method';
+          shouldAdvance = false;
+        }
+        break;
+
+      case 'CAPTURE_PHONE_OR_EMAIL':
+        const method = currentState.preferredContactMethod;
+        
+        if (method === 'email') {
+          if (contactInfo.email && isValidEmail(contactInfo.email)) {
+            newState.email = contactInfo.email;
+            newState.currentStage = 'CONFIRM_BOOKING_INTENT';
+            newState.lastAskedField = null;
+            
+            const program = newState.programInterest || 'our program';
+            response = `Excellent! ${newState.name}, I've got everything. Let me get you booked for a free intro class at ${locationName}. Click below to reserve your spot! 📅`;
+            shouldAdvance = true;
+          } else {
+            if (currentState.lastAskedField === 'email') {
+              response = `I need a valid email address. It should look like: name@email.com`;
+            } else {
+              response = `What's your email address?`;
+            }
+            newState.lastAskedField = 'email';
+            shouldAdvance = false;
+          }
+        } else if (method === 'phone' || method === 'text') {
+          if (contactInfo.phone && isValidPhone(contactInfo.phone)) {
+            newState.phone = contactInfo.phone;
+            newState.currentStage = 'CONFIRM_BOOKING_INTENT';
+            newState.lastAskedField = null;
+            
+            const program = newState.programInterest || 'our program';
+            response = `Excellent! ${newState.name}, I've got everything. Let me get you booked for a free intro class at ${locationName}. Click below to reserve your spot! 📅`;
+            shouldAdvance = true;
+          } else {
+            if (currentState.lastAskedField === 'phone') {
+              response = `I need a valid phone number. It should look like: 281-555-0123 or 2815550123`;
+            } else {
+              response = `What's your phone number?`;
+            }
+            newState.lastAskedField = 'phone';
+            shouldAdvance = false;
+          }
+        }
+        break;
+
+      case 'CONFIRM_BOOKING_INTENT':
+      case 'SUCCESS':
+        response = `Thanks for choosing ${locationName}! Our team will be in touch soon to confirm your free intro class.`;
+        shouldAdvance = false;
+        break;
+
+      default:
+        response = `At ${locationName}, we'd love to help. What can I tell you about our programs?`;
+        shouldAdvance = false;
     }
 
-    // Suggest program based on age
-    if (age && !newState.programInterest) {
-      newState.programInterest = suggestProgram(age);
-    }
+    // Update completion percentage
+    newState.completionPercentage = calculateCompletion(newState);
 
-    setState(newState);
-
-    // Generate response based on next question needed
-    const nextQuestion = getNextQuestion(newState);
-
-    // Handle pricing questions
-    if (pricingIntent && newState.intent === 'pricing') {
-      return `Great question! At ${locationName}, our pricing varies by program and age group. Our team can give you exact details. What's your preferred contact method - phone or email?`;
-    }
-
-    // Handle schedule questions
-    if (scheduleIntent && newState.intent === 'schedule') {
-      return `At ${locationName}, we offer classes throughout the week. What age group are you interested in? That'll help me show you the best times.`;
-    }
-
-    // Handle student type question
-    if (!newState.studentType) {
-      return `Got it! Who is this for - a child, teen, or yourself?`;
-    }
-
-    // Handle age question
-    if ((newState.studentType === 'child' || newState.studentType === 'teen') && newState.age === null) {
-      return `Awesome! How old ${newState.studentType === 'child' ? 'is your child' : 'are they'}?`;
-    }
-
-    // Suggest program based on age
-    if (newState.age && !newState.programInterest) {
-      const program = suggestProgram(newState.age);
-      if (program) {
-        newState.programInterest = program;
-        return `Perfect! At ${locationName}, our ${program} program is ideal for age ${newState.age}. When would work best for you - weekdays after school or weekends?`;
-      }
-    }
-
-    // Handle schedule preference
-    if (newState.intent === 'book_intro' && !newState.preferredDayTime && newState.programInterest) {
-      return `Great! When would work best for a free intro class - ${dayTimePreference || 'weekdays or weekends'}?`;
-    }
-
-    // Handle name collection
-    if (!newState.name) {
-      return `Excellent! To complete your booking, what's your name?`;
-    }
-
-    // Handle contact collection
-    if (!newState.phone && !newState.email) {
-      return `Thanks, ${newState.name}! What's the best way to reach you - phone or email?`;
-    }
-
-    // Ready to book
-    if (newState.intent === 'book_intro' && newState.name && (newState.phone || newState.email)) {
-      return `Perfect! ${newState.name}, I've got everything. Let me get you booked for a free intro class at ${locationName}. Click below to reserve your spot! 📅`;
-    }
-
-    // Default response
-    return `Thanks for that info! At ${locationName}, we'd love to help. What else can I tell you about our programs?`;
+    return { response, newState, shouldAdvance };
   };
 
   /**
@@ -196,22 +302,24 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
     setIsLoading(true);
 
     try {
-      // Generate Kai's response
-      const kaiResponse = generateResponse(inputValue, state);
+      // Generate Kai's response with validation
+      const { response, newState, shouldAdvance } = generateResponse(inputValue, state);
+      
+      setState(newState);
 
       // Add Kai's message
       const kaiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'kai',
-        text: kaiResponse,
+        text: response,
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, kaiMessage]);
 
       // Save lead to database if booking is complete
-      if (state.intent === 'book_intro' && state.name && (state.phone || state.email)) {
-        await saveLead();
+      if (newState.currentStage === 'CONFIRM_BOOKING_INTENT' && newState.name && (newState.phone || newState.email)) {
+        await saveLead(newState);
       }
     } catch (error) {
       console.error('Error generating response:', error);
@@ -223,24 +331,24 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   /**
    * Save lead to database
    */
-  const saveLead = async () => {
+  const saveLead = async (leadState: ConversationState) => {
     try {
       const response = await fetch('/api/leads/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: state.name?.split(' ')[0] || state.name,
-          lastName: state.name?.split(' ').slice(1).join(' ') || '',
-          phone: state.phone,
-          email: state.email,
-          ageGroup: state.age ? (state.age < 13 ? 'child' : 'teen') : 'adult',
-          interestedProgram: state.programInterest,
-          locationId: state.locationId,
-          locationName: state.locationName,
-          locationSlug: state.locationSlug,
+          firstName: leadState.name?.split(' ')[0] || leadState.name,
+          lastName: leadState.name?.split(' ').slice(1).join(' ') || '',
+          phone: leadState.phone,
+          email: leadState.email,
+          ageGroup: leadState.age ? (leadState.age < 13 ? 'child' : 'teen') : 'adult',
+          interestedProgram: leadState.programInterest,
+          locationId: leadState.locationId,
+          locationName: leadState.locationName,
+          locationSlug: leadState.locationSlug,
           organizationId,
           source: 'website_chat',
-          message: `Lead captured via Kai chat at ${state.locationName}. Program: ${state.programInterest}. Schedule: ${state.preferredDayTime}.`,
+          message: `Lead captured via Kai chat at ${leadState.locationName}. Program: ${leadState.programInterest}. Schedule: ${leadState.preferredDayTime}.`,
         }),
       });
 
@@ -251,6 +359,9 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
       console.error('Error saving lead:', error);
     }
   };
+
+  // Check if debug mode should be shown
+  const showDebug = process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1');
 
   return (
     <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden relative`}>
@@ -323,10 +434,10 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         </form>
       </div>
 
-      {/* Completion indicator (dev only) */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* Completion indicator (dev only or with ?debug=1) */}
+      {showDebug && (
         <div className="absolute bottom-20 left-0 right-0 bg-gray-100 px-4 py-2 text-xs text-gray-600 border-t border-gray-200">
-          Completion: {calculateCompletion(state)}% | Intent: {state.intent || 'none'} | Student: {state.studentType || 'unknown'}
+          Stage: {state.currentStage} | Completion: {calculateCompletion(state)}% | Intent: {state.intent || 'none'} | Student: {state.studentType || 'unknown'}
         </div>
       )}
     </div>

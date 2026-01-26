@@ -5665,3 +5665,117 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test on mobile and desktop viewports
 - [x] Verify glass blur effect is visible
 - [x] Test red glow on send button
+
+
+## Phase 20: Kai Conversation Flow - Validation & State Machine (IN PROGRESS)
+
+### Phase 1: Validation Rules & Required Fields
+- [ ] Add validation rules to conversation state:
+  * Phone pattern: accept formatted (555-123-4567) and unformatted (5551234567)
+  * Email pattern: must include @ and domain
+  * Age: numeric, 2-99 range
+  * Name: non-empty, alphabetic characters
+- [ ] Define required fields:
+  * studentType (child/teen/adult)
+  * studentAge (if child/teen)
+  * parentName or leadName
+  * preferredContactMethod (phone/email/text)
+  * phoneNumber (if method includes phone/text)
+  * email (if method includes email)
+  * location (if not from context)
+  * programInterest (Little Ninjas/Dragon Kids/Teens/Adults/Kickboxing)
+  * preferredDayTime (optional)
+- [ ] Create validator functions for each field type
+
+### Phase 2: State Machine Transitions
+- [ ] Implement explicit states:
+  * INTRO
+  * CAPTURE_STUDENT_TYPE
+  * CAPTURE_STUDENT_AGE (if child/teen)
+  * CAPTURE_NAME
+  * CAPTURE_CONTACT_METHOD
+  * CAPTURE_PHONE_OR_EMAIL (depends on method)
+  * CONFIRM_LOCATION (if missing)
+  * CONFIRM_BOOKING_INTENT
+  * SUCCESS
+- [ ] Add transition guards that only advance if validation passes
+- [ ] Track lastAskedField to detect repetition
+- [ ] Prevent advancing to next state without valid input
+
+### Phase 3: Fix Question Repetition Loops
+- [ ] Track lastAskedField in state
+- [ ] If same field asked 2x in a row, switch to explicit prompt with examples
+- [ ] Example: "I can do phone or email. If phone, reply with your number like 281-555-0123. If email, reply like name@email.com."
+- [ ] Fix "Phone" loop:
+  * If user answers "Phone" to contact method question
+  * Kai responds: "Perfect, phone works. What number should we text or call you at?"
+  * Wait for digits before advancing
+  * If no digits, don't advance, ask again with examples
+- [ ] Add clarifying follow-ups instead of repeating exact same question
+
+### Phase 4: Location-Aware & Program-Aware Responses
+- [ ] Auto-map age to program:
+  * Age 3-5 → Little Ninjas
+  * Age 6-12 → Dragon Kids
+  * Age 13+ → Teens
+  * Adult → Adults
+- [ ] Include location name in responses: "We have Little Ninjas (ages 3–5) at [LocationName]"
+- [ ] Show program name in booking confirmation
+- [ ] Reference location in all relevant responses
+
+### Phase 5: Production Debug Overlay
+- [ ] Hide debug overlay when process.env.NODE_ENV === "production"
+- [ ] Allow debug overlay with ?debug=1 query parameter in production
+- [ ] Keep debug overlay visible in development
+
+### Testing & Validation
+- [ ] Test complete conversation flow with validation
+- [ ] Test "Phone" loop fix with clarifying follow-up
+- [ ] Test age-to-program mapping (3 → Little Ninjas)
+- [ ] Test location-aware responses
+- [ ] Test question repetition prevention
+- [ ] Test invalid input handling
+- [ ] Test debug overlay visibility in dev/prod
+- [ ] Save checkpoint after all improvements
+
+
+## Phase 20: Kai Conversation Improvements - Validation & State Machine (COMPLETED)
+
+### Required Fields & Validation
+- [x] Add validation rules for phone (pattern matching)
+- [x] Add validation rules for email (@ and domain)
+- [x] Add validation rules for age (numeric, 2-99)
+- [x] Add validation rules for name (alphabetic characters)
+- [x] Implement validators that prevent advancing without valid input
+- [x] Add required field tracking
+
+### Fix Question Repetition Loops
+- [x] Store lastAskedField to track repeated questions
+- [x] Implement clarifying follow-ups (e.g., "Perfect, phone works. What number...?")
+- [x] Switch to explicit prompts with examples on second ask
+- [x] Prevent same question from being asked twice in a row
+
+### State Machine Transitions
+- [x] Implement explicit states: INTRO, CAPTURE_STUDENT_TYPE, CAPTURE_STUDENT_AGE, CAPTURE_NAME, CAPTURE_CONTACT_METHOD, CAPTURE_PHONE_OR_EMAIL, CONFIRM_LOCATION, CONFIRM_BOOKING_INTENT, SUCCESS
+- [x] Add validation guards for each transition
+- [x] Only advance stage when validator passes
+- [x] Handle invalid inputs with clarifying messages
+
+### Location & Program Awareness
+- [x] Make age-to-program mapping (3 → Little Ninjas, etc.)
+- [x] Include program age range in responses
+- [x] Reference location name in all responses
+- [x] Show location details (address, phone) when available
+
+### Debug Overlay Control
+- [x] Hide debug overlay in production
+- [x] Show debug overlay only in development or with ?debug=1
+- [x] Display stage, completion %, intent, and student type
+
+### Testing
+- [x] Test full conversation flow with validation
+- [x] Test clarifying follow-ups for "Phone" response
+- [x] Test question repetition prevention
+- [x] Test location-aware responses
+- [x] Test program-aware responses
+- [x] Test invalid input handling
