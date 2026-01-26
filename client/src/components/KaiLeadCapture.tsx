@@ -101,6 +101,8 @@ export const KaiLeadCapture: React.FC<KaiLeadCaptureProps> = ({
     setIsLoading(true);
 
     try {
+      console.log('[KAI] Sending message:', { userMessage, conversationStage, leadData });
+      
       // Send to backend for AI processing and lead extraction
       const response = await fetch('/api/kai/lead-capture', {
         method: 'POST',
@@ -118,6 +120,14 @@ export const KaiLeadCapture: React.FC<KaiLeadCaptureProps> = ({
       if (!response.ok) throw new Error('Failed to process message');
 
       const data = await response.json();
+      
+      console.log('[KAI] API Response:', {
+        currentStage: conversationStage,
+        nextStage: data.nextStage,
+        extractedData: data.extractedData,
+        leadData: leadData,
+        kaiResponse: data.kaiResponse,
+      });
       
       // Update lead data with extracted information
       if (data.extractedData) {

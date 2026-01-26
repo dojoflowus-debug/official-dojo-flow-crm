@@ -5569,3 +5569,58 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Apply cinematic styling: warm dark tones, red/ember accents, glass morphism
 - [ ] Test on touch kiosk (1080p, 4K)
 - [ ] Ensure readable from 5-10 feet away
+
+
+## Phase 18: Kai Lead Capture - Intelligent Conversation System (COMPLETED)
+
+### Phase 1: Fix /lead-capture Routing & Layout
+- [x] Ensure /lead-capture page works as public visitor page (no authentication required)
+- [x] Fix BottomNavMissingError - page should not render bottom navigation
+- [x] Verify page loads without layout issues
+- [x] Test on mobile and desktop viewports
+
+### Phase 2: State Machine with Memory
+- [x] Implement conversation state tracking (intent, student type, age, program, schedule, name, contact)
+- [x] Prevent Kai from repeating answered questions
+- [x] Track completion percentage (0-100%)
+- [x] Maintain state across multiple messages
+- [x] Auto-suggest programs based on age (Little Ninjas: 3-5, Dragon Kids: 6-12, Teens: 13+)
+
+### Phase 3: Keyword/Regex Extraction
+- [x] Extract student type from natural language (child, teen, adult)
+  - Patterns: "my son/daughter", "child/kid", "teen/teenager", "myself/for me"
+- [x] Extract age from natural language
+  - Patterns: "He's 7", "age 7", "7 years old"
+- [x] Extract booking intent
+  - Patterns: "book", "schedule", "free intro", "sign up", "enroll"
+- [x] Extract schedule preferences
+  - Patterns: "weekdays", "weekends", "after school", "morning", "afternoon"
+- [x] Extract contact information (name, email, phone)
+  - Name: "John", "I'm John", "My name is John"
+  - Email: "john@example.com"
+  - Phone: "555-123-4567"
+- [x] Fix time preference extraction to not match standalone numbers (e.g., "He's 7" shouldn't extract "7" as time)
+
+### Phase 4: Location-Aware Responses
+- [x] Reference location name in all Kai responses
+  - Example: "At MyDojo, our Dragon Kids program is ideal for age 7"
+- [x] Include location information in booking confirmation
+- [x] Display location name in greeting message
+
+### Testing & Validation
+- [x] Test complete conversation flow: intent → age → program → schedule → name → email
+- [x] Verify state machine doesn't repeat questions
+- [x] Test with various input formats (casual, formal, incomplete)
+- [x] Verify age extraction works correctly
+- [x] Verify name extraction works with single words ("John") and full names ("John Smith")
+- [x] Verify email extraction works
+- [x] Verify location-aware responses
+- [x] Test completion percentage tracking
+- [x] Save checkpoint after Phase 1-4 completion
+
+### Known Issues & Next Steps
+- [ ] Add booking button/CTA after lead capture is complete
+- [ ] Implement lead saving to database
+- [ ] Add debug panel for conversation state inspection (Phase 5)
+- [ ] Add acceptance tests (Phase 6)
+- [ ] Add location awareness for school name and address/phone (Phase 4 enhancement)

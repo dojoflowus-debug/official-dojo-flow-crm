@@ -22,17 +22,27 @@ interface LeadCaptureRequest {
 /**
  * Extract lead information from user messages using AI
  */
-async function extractLeadInfo(userMessage: string, currentData: any): Promise<any> {
+async function extractLeadInfo(userMessage: string, currentData: any, stage?: string): Promise<any> {
   // This would typically call OpenAI or similar to extract structured data
   // For now, we'll implement basic pattern matching
   
   const extracted: any = {};
 
   // Extract name (look for patterns like "I'm John" or "My name is John Doe")
-  const nameMatch = userMessage.match(/(?:i'm|my name is|call me|i'm called)\s+([A-Za-z]+)(?:\s+([A-Za-z]+))?/i);
+  // Also accept single words if we're in the contact stage (expecting a name)
+  let nameMatch = userMessage.match(/(?:i'm|my name is|call me|i'm called)\s+([A-Za-z]+)(?:\s+([A-Za-z]+))?/i);
+  
   if (nameMatch) {
     extracted.firstName = nameMatch[1];
     if (nameMatch[2]) extracted.lastName = nameMatch[2];
+  } else if (stage === 'contact' && userMessage.length < 50) {
+    // In contact stage, accept a single word or two words as a name
+    // This handles cases like "John" or "John Smith"
+    const words = userMessage.trim().split(/\s+/).filter(w => /^[A-Za-z]+$/.test(w));
+    if (words.length > 0) {
+      extracted.firstName = words[0];
+      if (words.length > 1) extracted.lastName = words.slice(1).join(' ');
+    }
   }
 
   // Extract email
@@ -178,8 +188,13 @@ router.post('/lead-capture', async (req: Request, res: Response) => {
     }
 
     // Extract lead information from message
-    const extractedData = await extractLeadInfo(userMessage, currentLeadData);
+    const extractedData = await extractLeadInfo(userMessage, currentLeadData, conversationStage);
     const updatedLeadData = { ...currentLeadData, ...extractedData };
+    
+    // Debug logging
+    if (conversationStage === 'contact') {
+      console.log(`[KAI DEBUG] Contact stage - Message: "${userMessage}" | Extracted: ${JSON.stringify(extractedData)} | Updated: ${JSON.stringify(updatedLeadData)}`);
+    }
 
     // Determine next conversation stage
     const nextStage = determineNextStage(conversationStage, updatedLeadData);

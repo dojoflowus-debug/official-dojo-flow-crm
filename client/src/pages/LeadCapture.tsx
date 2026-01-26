@@ -6,7 +6,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { KaiLeadCapture } from '@/components/KaiLeadCapture';
+import { KaiChatStateful } from '@/components/KaiChatStateful';
 
 export const LeadCapture: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -51,9 +51,10 @@ export const LeadCapture: React.FC = () => {
       }}
     >
       <div className="w-full max-w-md">
-        <KaiLeadCapture
+        <KaiChatStateful
           organizationId={organizationId}
           locationId={locationId}
+          locationName="MyDojo"
           embedded={true}
         />
       </div>
