@@ -348,7 +348,7 @@ export default function KioskStudioExact() {
   return (
     <ManagementLayout>
       <div
-        className="flex flex-col h-full"
+        className="flex flex-col h-screen w-screen overflow-hidden"
         style={{ backgroundColor: "#0B0D10" }}
       >
       {/* TOP COMMAND BAR - Slim, minimal, professional */}
@@ -516,10 +516,10 @@ export default function KioskStudioExact() {
       )}
 
       {/* MAIN WORKSPACE - Canvas-first layout */}
-      <div className="flex-1 flex overflow-hidden gap-0">
+      <div className="flex-1 flex overflow-hidden gap-0 min-h-0">
         {/* LEFT PANEL: Studio Tools - Scrollable */}
         <div
-          className="w-80 border-r flex flex-col flex-shrink-0 p-6"
+          className="w-80 border-r flex flex-col flex-shrink-0 p-6 overflow-hidden"
           style={{
             backgroundColor: "rgba(11, 13, 16, 0.5)",
             borderColor: "rgba(255,255,255,0.06)",
