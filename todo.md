@@ -5933,3 +5933,57 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test time slot selection
 - [ ] Test confirmation with selected time
 - [ ] Test on mobile and desktop
+
+
+## Phase 24: Kai Logic Refinements - Reliable Booking Without Loops (STATE MACHINE COMPLETE)
+
+### A) Fix Booking Intent Router (Priority Detection)
+- [x] Implement BOOKING_INTENT detector with priority over other intents
+- [x] Trigger on: book, schedule, reserve, trial, free intro, sign up, enroll, try a class, class for my, lesson for my, intro class
+- [x] Trigger when user mentions child age ("3 year old", "my 6 year old", "age 8")
+- [x] Trigger when user says "my son/daughter/child" + "class/lesson"
+- [ ] If BOOKING_INTENT true, respond with "Got it. Who is this for: a child, teen, or adult?"
+- [ ] Skip generic "What can I tell you about our programs?" response
+
+### B) Age Extraction + Hard Program Mapping
+- [x] Extract age from: "3", "3 years old", "my 3yo", "three year old"
+- [x] Enforce hard mapping: 3-5→Little Ninjas, 6-12→Dragon Kids, 13-15→Teens, 16+→Adults
+- [x] Never output wrong program (e.g., Dragon Kids for age 3)
+- [ ] Detect conflicting ages and ask for confirmation
+
+### C) Refine "Who is this for" Stage
+- [x] Accept "my son/daughter/child/kid" → set studentType=child
+- [ ] Skip age question if age already captured
+- [ ] Advance immediately to next stage if both studentType and age present
+
+### D) Contact Capture - Accept Values Directly
+- [x] Match email regex → store email, set contactMethod=email
+- [x] Match 10+ digits or formatted phone → store phone, set contactMethod=phone
+- [ ] Only prompt for number if user says "phone/text" alone
+- [ ] Only prompt for email if user says "email" alone
+- [ ] Never echo "Thanks, Phone!" for the word "Phone"
+
+### E) Fix Summary Card Data
+- [ ] Derive summary ONLY from captured state (studentType, age, program, contactMethod, phone/email, location)
+- [ ] Remove fallback program labels
+- [ ] Show correct program based on age mapping
+- [ ] Display only captured contact info
+
+### F) Improve Conversation Tone
+- [ ] Skip "What can I tell you about our programs?" for booking intent
+- [ ] If booking intent + age present, skip "who is this for" and go to program + schedule
+- [ ] Shorten booking steps with smarter routing
+
+### G) Add Sanity Check Before Reserve Button
+- [x] Verify studentType exists (via isStageComplete)
+- [x] Verify age or ageRange exists (via isStageComplete)
+- [x] Verify program is assigned (via isStageComplete)
+- [x] Verify contactMethod + contact value exist (via isStageComplete)
+- [ ] Ask only for missing pieces
+
+### H) Test Cases (Must Pass)
+- [ ] "I want to try a class for my 3 year old" → child, age 3, Little Ninjas
+- [ ] "Can I sign my son up" → asks child/teen/adult, then age, then program
+- [ ] "phone" then "2818189288" → stores phone, no "Thanks, Phone!"
+- [ ] "my child is 6" → Dragon Kids, not Little Ninjas
+- [ ] Conflicting ages: "my 3 year old… actually he's 6" → confirm which age

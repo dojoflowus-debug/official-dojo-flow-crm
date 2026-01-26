@@ -47,7 +47,6 @@ export function KaiVersionChip({ onClick, className }: KaiVersionChipProps) {
   const chipContent = (
     <button
       onClick={onClick}
-      title={KAI_VERSION_FULL}
       className={cn(
         "group relative flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-200",
         "border focus:outline-none focus:ring-2 focus:ring-offset-2",

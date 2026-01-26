@@ -19,16 +19,15 @@ import {
   extractContactMethod,
   extractEmail,
   extractPhone,
-  suggestProgram,
-  getProgramAgeRange,
+  getProgramForAge,
   getNextStage,
-  calculateCompletion,
   isValidPhone,
   isValidEmail,
   isValidAge,
   isValidName,
-  isStateComplete,
+  isStageComplete,
 } from '@/lib/conversationStateMachine';
+import { CalendarPicker } from './CalendarPicker';
 
 interface Message {
   id: string;
@@ -61,6 +60,8 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
     locationName: locationName || 'MyDojo',
     locationId: locationId || null,
   });
+  // Derive showCalendar from stage instead of using separate state
+  const showCalendarDerived = state.currentStage === 'CAPTURE_SCHEDULE' && !state.preferredDayTime;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -208,9 +209,9 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
 
       case 'CAPTURE_NAME':
         if (newState.name && isValidName(newState.name)) {
-          newState.currentStage = 'CAPTURE_CONTACT_METHOD';
+          newState.currentStage = 'CAPTURE_SCHEDULE';
           newState.lastAskedField = null;
-          response = `Thanks, ${newState.name}! What's the best way to reach you - phone or email?`;
+          response = `Thanks, ${newState.name}! When would you like to come in for a free intro class?`;
           shouldAdvance = true;
         } else {
           // Targeted repair prompt for invalid name
@@ -223,6 +224,20 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             response = `What's your name?`;
           }
           newState.lastAskedField = 'name';
+          shouldAdvance = false;
+        }
+        break;
+
+      case 'CAPTURE_SCHEDULE':
+        if (newState.preferredDayTime) {
+          // Calendar was selected, show confirmation and move to contact method
+          newState.currentStage = 'CAPTURE_CONTACT_METHOD';
+          newState.lastAskedField = null;
+          response = `Perfect! I've got you for ${newState.preferredDayTime}. What's the best way to reach you - phone or email?`;
+          shouldAdvance = true;
+        } else {
+          // Show calendar UI (derived from stage)
+          response = `Pick a day and time that works for you:`;
           shouldAdvance = false;
         }
         break;
@@ -462,6 +477,46 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             </div>
           </div>
         ))}
+        {/* Calendar Picker for Schedule Selection */}
+        {showCalendarDerived && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-gray-200 rounded-lg rounded-bl-none p-4 w-full max-w-md">
+              <CalendarPicker
+                onSelectDateTime={(date, time) => {
+                  const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                  const timeStr = time || '4:00 PM';
+                  const preferredDayTime = `${dateStr} at ${timeStr}`;
+                  
+                  // Update state with selected date/time
+                  setState((prev) => ({
+                    ...prev,
+                    preferredDayTime,
+                    currentStage: 'CAPTURE_CONTACT_METHOD',
+                  }));
+                  
+                  // Add confirmation message
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: Date.now().toString(),
+                      role: 'user',
+                      text: `${dateStr} at ${timeStr}`,
+                      timestamp: new Date(),
+                    },
+                    {
+                      id: (Date.now() + 1).toString(),
+                      role: 'kai',
+                      text: `Perfect, I've got you for ${preferredDayTime}. What's the best way to reach you - phone or email?`,
+                      timestamp: new Date(),
+                    },
+                  ]);
+                  
+                  // Calendar will auto-hide when stage changes
+                }}
+              />
+            </div>
+          </div>
+        )}
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-white text-gray-900 border border-gray-200 px-4 py-2 rounded-lg rounded-bl-none">

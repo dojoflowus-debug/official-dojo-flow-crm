@@ -5,12 +5,13 @@
 
 export type Intent = 'book_intro' | 'pricing' | 'schedule' | 'general_questions' | null;
 export type StudentType = 'child' | 'teen' | 'adult' | null;
-export type Program = 'Little Ninjas' | 'Dragon Kids' | 'Teens' | 'Kickboxing' | null;
+export type Program = 'Little Ninjas' | 'Dragon Kids' | 'Teens' | 'Adults' | 'Kickboxing' | null;
 export type ConversationStage = 
   | 'INTRO'
   | 'CAPTURE_STUDENT_TYPE'
   | 'CAPTURE_STUDENT_AGE'
   | 'CAPTURE_NAME'
+  | 'CAPTURE_SCHEDULE'
   | 'CAPTURE_CONTACT_METHOD'
   | 'CAPTURE_PHONE_OR_EMAIL'
   | 'CONFIRM_LOCATION'
@@ -30,6 +31,8 @@ export interface ConversationState {
   
   // Schedule preference
   preferredDayTime: string | null;
+  preferredDate: string | null;
+  preferredTime: string | null;
   
   // Contact info
   name: string | null;
@@ -56,6 +59,8 @@ export const initialState: ConversationState = {
   age: null,
   programInterest: null,
   preferredDayTime: null,
+  preferredDate: null,
+  preferredTime: null,
   name: null,
   phone: null,
   email: null,
@@ -96,6 +101,20 @@ export function isValidName(name: string): boolean {
 }
 
 /**
+ * Hard program mapping rules based on age
+ */
+export function getProgramForAge(age: number | null): Program {
+  if (!age) return null;
+  
+  if (age >= 3 && age <= 5) return 'Little Ninjas';
+  if (age >= 6 && age <= 12) return 'Dragon Kids';
+  if (age >= 13 && age <= 15) return 'Teens';
+  if (age >= 16) return 'Adults';
+  
+  return null;
+}
+
+/**
  * Natural language extraction utilities
  */
 
@@ -121,20 +140,46 @@ export function extractStudentType(message: string): StudentType | null {
 }
 
 export function extractAge(message: string): number | null {
-  // Match patterns like "7 years old", "he's 7", "age 7", etc.
-  const ageMatch = message.match(/(?:age\s+)?(\d{1,2})(?:\s+years?\s+old)?/i);
-  if (ageMatch) {
-    const age = parseInt(ageMatch[1]);
+  // Match patterns like "7 years old", "he's 7", "age 7", "my 3yo", "three year old", etc.
+  
+  // First try numeric patterns: "7", "7 years old", "age 7", "my 3yo"
+  const numericMatch = message.match(/(?:age\s+)?(\d{1,2})(?:\s+years?\s+old|yo)?/i);
+  if (numericMatch) {
+    const age = parseInt(numericMatch[1]);
     if (isValidAge(age)) {
       return age;
     }
   }
+  
+  // Try word-based ages: "three year old", "five years old", etc.
+  const wordAges: Record<string, number> = {
+    'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+    'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20
+  };
+  
+  const ageWords = Object.keys(wordAges).join('|');
+  const wordMatch = message.match(new RegExp(`\\b(${ageWords})\\s+years?\\s+old\\b`, 'i'));
+  if (wordMatch) {
+    const age = wordAges[wordMatch[1].toLowerCase()];
+    if (isValidAge(age)) {
+      return age;
+    }
+  }
+  
   return null;
 }
 
 export function extractBookingIntent(message: string): boolean {
-  // Match booking-related keywords, including "sign up" with words in between
-  return /\b(book|schedule|free\s+(?:intro|class|trial)|enroll|start|register)\b|\bsign.{0,50}?up\b/i.test(message);
+  // Priority booking intent detector - triggers when user wants to book a class
+  // Matches: book, schedule, reserve, trial, free intro, sign up, enroll, try a class, lesson for my, intro class
+  const bookingKeywords = /\b(book|schedule|reserve|trial|free\s+(?:intro|class|trial)|enroll|start|register|try\s+(?:a\s+)?class)\b|\bsign.{0,50}?up\b|\blesson\s+for\s+my\b|\bintro\s+class\b|\bclass\s+for\s+my\b/i;
+  
+  // Also trigger if user mentions child age + class/lesson in same message
+  const childAgeWithClass = /(?:\d{1,2}\s+year\s+old|my\s+(?:son|daughter|child)).*(?:class|lesson|intro)/i.test(message);
+  
+  return bookingKeywords.test(message) || childAgeWithClass;
 }
 
 export function extractPricingIntent(message: string): boolean {
@@ -229,6 +274,8 @@ export interface ExtractedLeadSignals {
   studentType?: StudentType;
   programInterest?: Program;
   preferredDayTime?: string;
+  preferredDate?: string;
+  preferredTime?: string;
   preferredContactMethod?: 'phone' | 'email' | 'text';
 }
 
@@ -251,10 +298,14 @@ export function extractLeadSignals(message: string): ExtractedLeadSignals {
   
   // Extract age
   const age = extractAge(message);
-  if (age !== null) {
+  if (age) {
     signals.age = age;
-    // Auto-suggest program based on age
-    signals.programInterest = suggestProgram(age) || undefined;
+  }
+  
+  // Extract name
+  const contactInfo = extractContactInfo(message);
+  if (contactInfo.name) {
+    signals.name = contactInfo.name;
   }
   
   // Extract student type
@@ -263,11 +314,11 @@ export function extractLeadSignals(message: string): ExtractedLeadSignals {
     signals.studentType = studentType;
   }
   
-  // Extract name (only if not already extracted as email/phone)
-  if (!email && !phone) {
-    const contactInfo = extractContactInfo(message);
-    if (contactInfo.name && isValidName(contactInfo.name)) {
-      signals.name = contactInfo.name;
+  // Extract contact method keyword (if no email/phone found)
+  if (!signals.preferredContactMethod) {
+    const contactMethod = extractContactMethod(message);
+    if (contactMethod) {
+      signals.preferredContactMethod = contactMethod;
     }
   }
   
@@ -277,230 +328,96 @@ export function extractLeadSignals(message: string): ExtractedLeadSignals {
     signals.preferredDayTime = dayTime;
   }
   
-  // Extract contact method (if not already set by email/phone)
-  if (!signals.preferredContactMethod) {
-    const method = extractContactMethod(message);
-    if (method) {
-      signals.preferredContactMethod = method;
-    }
-  }
-  
   return signals;
 }
 
 /**
- * Program suggestion based on age
+ * State completion checking
  */
-export function suggestProgram(age: number | null): Program | null {
-  if (!age) return null;
-  
-  if (age >= 3 && age <= 5) return 'Little Ninjas';
-  if (age >= 6 && age <= 12) return 'Dragon Kids';
-  if (age >= 13 && age <= 15) return 'Teens';
-  if (age >= 16) return 'Teens';
-  
-  return null;
-}
-
-export function getProgramAgeRange(program: Program): string {
-  switch (program) {
-    case 'Little Ninjas': return '3–5';
-    case 'Dragon Kids': return '6–12';
-    case 'Teens': return '13+';
-    case 'Kickboxing': return 'All ages';
-    default: return '';
-  }
-}
-
-/**
- * STATE COMPLETION GATING
- * Each state defines required fields and completion check
- */
-export interface StateDefinition {
-  requiredFields: (keyof ConversationState)[];
-  isComplete: (state: ConversationState) => boolean;
-  nextStage: ConversationStage;
-}
-
-const stateDefinitions: Record<ConversationStage, StateDefinition> = {
-  'INTRO': {
-    requiredFields: ['intent'],
-    isComplete: (state) => state.intent !== null,
-    nextStage: 'CAPTURE_STUDENT_TYPE',
-  },
-  'CAPTURE_STUDENT_TYPE': {
-    requiredFields: ['studentType'],
-    isComplete: (state) => state.studentType !== null,
-    nextStage: 'CAPTURE_STUDENT_AGE',
-  },
-  'CAPTURE_STUDENT_AGE': {
-    requiredFields: ['age'],
-    isComplete: (state) => state.age !== null,
-    nextStage: 'CAPTURE_NAME',
-  },
-  'CAPTURE_NAME': {
-    requiredFields: ['name'],
-    isComplete: (state) => state.name !== null && isValidName(state.name),
-    nextStage: 'CAPTURE_CONTACT_METHOD',
-  },
-  'CAPTURE_CONTACT_METHOD': {
-    requiredFields: ['preferredContactMethod', 'email', 'phone'],
-    isComplete: (state) => {
-      // If both email and phone exist, must have a preference
-      if (state.email && state.phone) {
-        return state.preferredContactMethod !== null;
-      }
-      // If only email exists, contact method must be email
-      if (state.email) {
-        return state.preferredContactMethod === 'email';
-      }
-      // If only phone exists, contact method must be phone/text
-      if (state.phone) {
-        return state.preferredContactMethod === 'phone' || state.preferredContactMethod === 'text';
+export function isStageComplete(stage: ConversationStage, state: ConversationState): boolean {
+  switch (stage) {
+    case 'INTRO':
+      return state.intent === 'book_intro';
+    
+    case 'CAPTURE_STUDENT_TYPE':
+      return state.studentType !== null;
+    
+    case 'CAPTURE_STUDENT_AGE':
+      return state.age !== null;
+    
+    case 'CAPTURE_NAME':
+      return state.name !== null;
+    
+    case 'CAPTURE_SCHEDULE':
+      return state.preferredDate !== null && state.preferredTime !== null;
+    
+    case 'CAPTURE_CONTACT_METHOD':
+      return state.preferredContactMethod !== null;
+    
+    case 'CAPTURE_PHONE_OR_EMAIL':
+      if (state.preferredContactMethod === 'email') {
+        return state.email !== null;
+      } else if (state.preferredContactMethod === 'phone' || state.preferredContactMethod === 'text') {
+        return state.phone !== null;
       }
       return false;
-    },
-    nextStage: 'CONFIRM_LOCATION',
-  },
-  'CAPTURE_PHONE_OR_EMAIL': {
-    requiredFields: ['email', 'phone'],
-    isComplete: (state) => (state.email && isValidEmail(state.email)) || (state.phone && isValidPhone(state.phone)),
-    nextStage: 'CONFIRM_LOCATION',
-  },
-  'CONFIRM_LOCATION': {
-    requiredFields: ['locationId'],
-    isComplete: (state) => state.locationId !== null,
-    nextStage: 'CONFIRM_BOOKING_INTENT',
-  },
-  'CONFIRM_BOOKING_INTENT': {
-    requiredFields: [],
-    isComplete: (state) => true,
-    nextStage: 'SUCCESS',
-  },
-  'SUCCESS': {
-    requiredFields: [],
-    isComplete: (state) => true,
-    nextStage: 'SUCCESS',
-  },
-};
-
-export function isStateComplete(state: ConversationState): boolean {
-  const definition = stateDefinitions[state.currentStage];
-  if (!definition) return false;
-  return definition.isComplete(state);
-}
-
-export function getStateDefinition(stage: ConversationStage): StateDefinition {
-  return stateDefinitions[stage];
-}
-
-/**
- * State machine transitions with validation
- */
-
-export function getNextStage(state: ConversationState, userMessage: string): { stage: ConversationStage; validationPassed: boolean } {
-  const currentStage = state.currentStage;
-  
-  // Extract all signals from message
-  const signals = extractLeadSignals(userMessage);
-  
-  switch (currentStage) {
-    case 'INTRO':
-      if (extractBookingIntent(userMessage)) {
-        return { stage: 'CAPTURE_STUDENT_TYPE', validationPassed: true };
-      }
-      return { stage: 'INTRO', validationPassed: false };
-    
-    case 'CAPTURE_STUDENT_TYPE': {
-      const studentType = signals.studentType || extractStudentType(userMessage);
-      if (studentType) {
-        if (studentType === 'child' || studentType === 'teen') {
-          return { stage: 'CAPTURE_STUDENT_AGE', validationPassed: true };
-        }
-        return { stage: 'CAPTURE_NAME', validationPassed: true };
-      }
-      return { stage: 'CAPTURE_STUDENT_TYPE', validationPassed: false };
-    }
-    
-    case 'CAPTURE_STUDENT_AGE': {
-      const age = signals.age || extractAge(userMessage);
-      if (age !== null && isValidAge(age)) {
-        return { stage: 'CAPTURE_NAME', validationPassed: true };
-      }
-      return { stage: 'CAPTURE_STUDENT_AGE', validationPassed: false };
-    }
-    
-    case 'CAPTURE_NAME': {
-      const name = signals.name || extractContactInfo(userMessage).name;
-      if (name && isValidName(name)) {
-        return { stage: 'CAPTURE_CONTACT_METHOD', validationPassed: true };
-      }
-      return { stage: 'CAPTURE_NAME', validationPassed: false };
-    }
-    
-    case 'CAPTURE_CONTACT_METHOD': {
-      // SMART CONTACT METHOD: Accept email or phone directly
-      if (signals.email && isValidEmail(signals.email)) {
-        return { stage: 'CONFIRM_LOCATION', validationPassed: true };
-      }
-      if (signals.phone && isValidPhone(signals.phone)) {
-        return { stage: 'CONFIRM_LOCATION', validationPassed: true };
-      }
-      
-      // If both email and phone exist, ask for preference
-      if (state.email && state.phone && !state.preferredContactMethod) {
-        return { stage: 'CAPTURE_CONTACT_METHOD', validationPassed: false };
-      }
-      
-      // Accept contact method keyword
-      const method = signals.preferredContactMethod || extractContactMethod(userMessage);
-      if (method) {
-        return { stage: 'CAPTURE_PHONE_OR_EMAIL', validationPassed: true };
-      }
-      
-      return { stage: 'CAPTURE_CONTACT_METHOD', validationPassed: false };
-    }
-    
-    case 'CAPTURE_PHONE_OR_EMAIL': {
-      if (signals.email && isValidEmail(signals.email)) {
-        return { stage: 'CONFIRM_LOCATION', validationPassed: true };
-      }
-      if (signals.phone && isValidPhone(signals.phone)) {
-        return { stage: 'CONFIRM_LOCATION', validationPassed: true };
-      }
-      return { stage: 'CAPTURE_PHONE_OR_EMAIL', validationPassed: false };
-    }
     
     case 'CONFIRM_LOCATION':
-      // For now, skip location confirmation if not provided
-      return { stage: 'CONFIRM_BOOKING_INTENT', validationPassed: true };
+      return state.locationId !== null;
     
     case 'CONFIRM_BOOKING_INTENT':
-      return { stage: 'SUCCESS', validationPassed: true };
+      // All required fields must be present
+      return (
+        state.studentType !== null &&
+        state.age !== null &&
+        state.programInterest !== null &&
+        state.name !== null &&
+        state.preferredContactMethod !== null &&
+        ((state.preferredContactMethod === 'email' && state.email !== null) ||
+         ((state.preferredContactMethod === 'phone' || state.preferredContactMethod === 'text') && state.phone !== null))
+      );
     
     case 'SUCCESS':
-      return { stage: 'SUCCESS', validationPassed: true };
+      return true;
     
     default:
-      return { stage: 'INTRO', validationPassed: false };
+      return false;
   }
 }
 
 /**
- * Calculate completion percentage
+ * Get the next stage based on current state
  */
-export function calculateCompletion(state: ConversationState): number {
-  const weights: Record<ConversationStage, number> = {
-    'INTRO': 0,
-    'CAPTURE_STUDENT_TYPE': 14,
-    'CAPTURE_STUDENT_AGE': 28,
-    'CAPTURE_NAME': 42,
-    'CAPTURE_CONTACT_METHOD': 56,
-    'CAPTURE_PHONE_OR_EMAIL': 70,
-    'CONFIRM_LOCATION': 84,
-    'CONFIRM_BOOKING_INTENT': 88,
-    'SUCCESS': 100,
-  };
-  
-  return weights[state.currentStage] || 0;
+export function getNextStage(currentStage: ConversationStage, state: ConversationState): ConversationStage {
+  switch (currentStage) {
+    case 'INTRO':
+      return 'CAPTURE_STUDENT_TYPE';
+    
+    case 'CAPTURE_STUDENT_TYPE':
+      return 'CAPTURE_STUDENT_AGE';
+    
+    case 'CAPTURE_STUDENT_AGE':
+      return 'CAPTURE_NAME';
+    
+    case 'CAPTURE_NAME':
+      return 'CAPTURE_SCHEDULE';
+    
+    case 'CAPTURE_SCHEDULE':
+      return 'CAPTURE_CONTACT_METHOD';
+    
+    case 'CAPTURE_CONTACT_METHOD':
+      return 'CAPTURE_PHONE_OR_EMAIL';
+    
+    case 'CAPTURE_PHONE_OR_EMAIL':
+      return 'CONFIRM_BOOKING_INTENT';
+    
+    case 'CONFIRM_LOCATION':
+      return 'CONFIRM_BOOKING_INTENT';
+    
+    case 'CONFIRM_BOOKING_INTENT':
+      return 'SUCCESS';
+    
+    default:
+      return 'SUCCESS';
+  }
 }
