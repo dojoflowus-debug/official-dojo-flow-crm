@@ -5557,3 +5557,15 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Touch-first design for 5-10 feet viewing distance
 - [x] Responsive grid layout
 - [x] Route added: /kiosk-home and /kiosk redirect to /kiosk-home
+
+
+## MAJOR REDESIGN: Kiosk Display Template (Jan 26, 2026)
+Transform kiosk from admin dashboard to premium location experience
+- [ ] Understand kiosk-studio architecture (where is the display template?)
+- [ ] Design hero section: location name, live clock, temperature, next class countdown
+- [ ] Design action cards: Check In, Book Class, Schedule, Programs, About (large, touch-first)
+- [ ] Design schedule preview: today's classes with times, instructors, availability
+- [ ] Design persistent navigation dock: Home, Schedule, Check In, Programs, Help
+- [ ] Apply cinematic styling: warm dark tones, red/ember accents, glass morphism
+- [ ] Test on touch kiosk (1080p, 4K)
+- [ ] Ensure readable from 5-10 feet away
