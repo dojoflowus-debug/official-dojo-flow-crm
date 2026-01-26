@@ -361,7 +361,16 @@
 - [x] Fix "Manage Billing" button - shows "Opening billing portal..." but nothing happens
   - Found the issue in PaywallModal onManageBilling handler in KaiCommand.tsx
   - Replaced unimplemented TODO with actual navigation to /billing page
-  - Now navigates to internal billing page instead of showing empty toast
+
+## Bug Fix - Drag-and-Drop Broken After WaveMasterBag Integration (Jan 26, 2026)
+- [x] Switch to Pointer Events (onPointerDown/onPointerMove/onPointerUp) with pointer capture
+- [x] Prevent default on pointer down/move
+- [x] Test drag-and-drop with real mouse movements - PASSED
+- [x] Add snap-to-grid toggle button (green grid icon in toolbar)
+- [x] Implement snap-to-grid logic (round positions to nearest 10% grid cell)
+- [x] Add "Save positions" confirmation toast with bag coordinates
+- [x] Verify updateSpotPosition mutation runs on pointerup
+- [x] Verify floorPlan query refetch after save
 
 
 ## Bug Fix - Students Page Filter Default & Map Mode (Jan 9, 2026)
@@ -5422,3 +5431,10 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Verify bag rendering in all view modes (Design, Kiosk, Live, Wall)
 - [x] Verify red number badges display correctly
 - [x] Verify depth effects and scaling work properly
+
+
+## Bug Fixes - Phase 28
+
+- [ ] Fix drag-and-drop functionality broken after WaveMasterBag integration
+  - SVG bags not responding to drag events
+  - Need to verify event handlers are properly attached to SVG elements

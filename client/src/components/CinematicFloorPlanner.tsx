@@ -143,11 +143,11 @@ function DraggableSpotMarker({
   const depthOpacity = 0.88 + (1 - spot.positionY / 100) * 0.12; // Front brighter, back slightly softer
   const depthBlur = (spot.positionY / 100) * 0.4; // Slight blur on distant bags
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     if (isDraggable && isDesign) {
       e.preventDefault();
-      e.stopPropagation();
-      onDragStart(spot.id, e);
+      (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+      onDragStart(spot.id, e as any);
     }
   };
 
@@ -164,7 +164,7 @@ function DraggableSpotMarker({
         opacity: depthOpacity,
       }}
       onClick={onClick}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
     >
       {/* FINAL REALISM - Controlled floor reflection under bags */}
       <div
@@ -273,6 +273,7 @@ export function CinematicFloorPlanner({
   const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
   const [zoom, setZoom] = React.useState(100);
   const [panMode, setPanMode] = React.useState(false);
+  const [snapToGrid, setSnapToGrid] = React.useState(false);
   const [panOffset, setPanOffset] = React.useState({ x: 0, y: 0 });
   const [showBackgroundUpload, setShowBackgroundUpload] = React.useState(false);
   const [backgroundOpacity, setBackgroundOpacity] = React.useState(floorPlan.backgroundOpacity ?? 30);
@@ -320,13 +321,20 @@ export function CinematicFloorPlanner({
     const x = ((e.clientX - canvasRect.left - dragOffset.x) / canvasRect.width) * 100;
     const y = ((e.clientY - canvasRect.top - dragOffset.y) / canvasRect.height) * 100;
 
-    const clampedX = Math.max(0, Math.min(100, x));
-    const clampedY = Math.max(0, Math.min(100, y));
+    let finalX = Math.max(0, Math.min(100, x));
+    let finalY = Math.max(0, Math.min(100, y));
+
+    // Apply snap-to-grid if enabled
+    if (snapToGrid) {
+      const gridSize = 10; // Snap to 10% grid
+      finalX = Math.round(finalX / gridSize) * gridSize;
+      finalY = Math.round(finalY / gridSize) * gridSize;
+    }
 
     // Update local state for immediate feedback
     const updatedSpots = floorPlan.spots.map(spot =>
       spot.id === draggedSpot
-        ? { ...spot, positionX: clampedX, positionY: clampedY }
+        ? { ...spot, positionX: finalX, positionY: finalY }
         : spot
     );
   };
@@ -346,7 +354,9 @@ export function CinematicFloorPlanner({
         positionX: spot.positionX,
         positionY: spot.positionY,
       });
-      toast.success("Bag position saved");
+      toast.success("✓ Bag position saved", {
+        description: `Bag #${spotId} saved at (${Math.round(spot.positionX)}%, ${Math.round(spot.positionY)}%)`,
+      });
     } catch (error) {
       toast.error("Failed to save bag position");
     }
@@ -367,13 +377,20 @@ export function CinematicFloorPlanner({
     setPanOffset({ x: 0, y: 0 });
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!panMode) return;
-    setIsPanning(true);
-    setPanStart({ x: e.clientX, y: e.clientY });
+  const handleCanvasPointerDown = (e: React.PointerEvent) => {
+    if (draggedSpot === null && panMode) {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+    }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleCanvasPointerMove = (e: React.PointerEvent) => {
+    if (draggedSpot !== null) {
+      e.preventDefault();
+      handleDrag(e as any);
+      return;
+    }
+
     if (!isPanning || !panMode) return;
 
     const deltaX = e.clientX - panStart.x;
@@ -387,8 +404,11 @@ export function CinematicFloorPlanner({
     setPanStart({ x: e.clientX, y: e.clientY });
   };
 
-  const handleMouseUp = () => {
+  const handleCanvasPointerUp = () => {
     setIsPanning(false);
+    if (draggedSpot !== null) {
+      handleDragEnd(draggedSpot);
+    }
   };
 
   const handleBackgroundUpload = async (file: File) => {
@@ -523,6 +543,21 @@ export function CinematicFloorPlanner({
           >
             <Move className="w-4 h-4" />
           </button>
+
+          {isDesign && (
+            <button
+              onClick={() => setSnapToGrid(!snapToGrid)}
+              className={cn(
+                "p-2 rounded transition-all",
+                snapToGrid
+                  ? "bg-green-600/40 text-green-200"
+                  : "bg-slate-800/40 hover:bg-slate-700/40"
+              )}
+              title="Snap to grid (10% increments)"
+            >
+              <Grid3x3 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -611,10 +646,10 @@ export function CinematicFloorPlanner({
           panMode && "cursor-grab",
           isPanning && "cursor-grabbing"
         )}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onPointerDown={handleCanvasPointerDown}
+        onPointerMove={handleCanvasPointerMove}
+        onPointerUp={handleCanvasPointerUp}
+        onPointerLeave={handleCanvasPointerUp}
         onWheel={(e) => {
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
