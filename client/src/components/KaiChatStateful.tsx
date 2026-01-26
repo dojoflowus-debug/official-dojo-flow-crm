@@ -1,4 +1,4 @@
-/*
+/**
  * KaiChatStateful - Intelligent Kai chat with validation-based state machine
  * Implements proper validation, state transitions, and clarifying follow-ups
  */
@@ -8,6 +8,7 @@ import {
   ConversationState,
   ConversationStage,
   initialState,
+  extractLeadSignals,
   extractStudentType,
   extractAge,
   extractBookingIntent,
@@ -16,15 +17,17 @@ import {
   extractDayTimePreference,
   extractContactInfo,
   extractContactMethod,
+  extractEmail,
+  extractPhone,
   suggestProgram,
   getProgramAgeRange,
   getNextStage,
-  getNextQuestion,
   calculateCompletion,
   isValidPhone,
   isValidEmail,
   isValidAge,
   isValidName,
+  isStateComplete,
 } from '@/lib/conversationStateMachine';
 
 interface Message {
@@ -86,32 +89,56 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
 
   /**
    * Generate Kai's response based on conversation state and validation
+   * Uses unified signal extraction to prevent "I already told you" loops
    */
   const generateResponse = (userMessage: string, currentState: ConversationState): { response: string; newState: ConversationState; shouldAdvance: boolean } => {
     let newState = { ...currentState };
     let response = '';
     let shouldAdvance = false;
 
-    // Extract information from user message
-    const studentType = extractStudentType(userMessage);
-    const age = extractAge(userMessage);
-    const bookingIntent = extractBookingIntent(userMessage);
-    const pricingIntent = extractPricingIntent(userMessage);
-    const scheduleIntent = extractScheduleIntent(userMessage);
-    const dayTimePreference = extractDayTimePreference(userMessage);
-    const contactInfo = extractContactInfo(userMessage);
-    const contactMethod = extractContactMethod(userMessage);
+    // UNIFIED SIGNAL EXTRACTION - scan message for ALL possible signals
+    const signals = extractLeadSignals(userMessage);
+    
+    // Merge extracted signals into state
+    if (signals.email && isValidEmail(signals.email)) {
+      newState.email = signals.email;
+      newState.preferredContactMethod = 'email';
+    }
+    if (signals.phone && isValidPhone(signals.phone)) {
+      newState.phone = signals.phone;
+      newState.preferredContactMethod = 'phone';
+    }
+    if (signals.age !== undefined && isValidAge(signals.age)) {
+      newState.age = signals.age;
+      if (signals.programInterest) {
+        newState.programInterest = signals.programInterest;
+      }
+    }
+    if (signals.name && isValidName(signals.name)) {
+      newState.name = signals.name;
+    }
+    if (signals.studentType) {
+      newState.studentType = signals.studentType;
+    }
+    if (signals.preferredDayTime) {
+      newState.preferredDayTime = signals.preferredDayTime;
+    }
+
+    // Track asked count for loop breaker
+    if (!newState.askedCount) {
+      newState.askedCount = {};
+    }
 
     // Handle each conversation stage
     switch (currentState.currentStage) {
       case 'INTRO':
-        if (bookingIntent) {
+        if (extractBookingIntent(userMessage)) {
           newState.intent = 'book_intro';
           newState.currentStage = 'CAPTURE_STUDENT_TYPE';
           newState.lastAskedField = null;
           response = `Got it! Who is this for - a child, teen, or yourself?`;
           shouldAdvance = true;
-        } else if (pricingIntent) {
+        } else if (extractPricingIntent(userMessage)) {
           newState.intent = 'pricing_inquiry';
           response = `Great question! Our programs range from $99-$199/month depending on the schedule. Which age group are you interested in?`;
           shouldAdvance = false;
@@ -122,13 +149,11 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         break;
 
       case 'CAPTURE_STUDENT_TYPE':
-        if (studentType) {
-          newState.studentType = studentType;
-          
-          if (studentType === 'child' || studentType === 'teen') {
+        if (newState.studentType) {
+          if (newState.studentType === 'child' || newState.studentType === 'teen') {
             newState.currentStage = 'CAPTURE_STUDENT_AGE';
             newState.lastAskedField = null;
-            response = `Awesome! How old is your ${studentType}?`;
+            response = `Awesome! How old is your ${newState.studentType}?`;
           } else {
             newState.currentStage = 'CAPTURE_NAME';
             newState.lastAskedField = null;
@@ -136,7 +161,11 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
           }
           shouldAdvance = true;
         } else {
-          if (currentState.lastAskedField === 'student_type') {
+          // Loop breaker - if asked 2+ times, show buttons
+          const askedCount = (newState.askedCount['student_type'] || 0) + 1;
+          newState.askedCount['student_type'] = askedCount;
+          
+          if (askedCount >= 2) {
             response = `I can do child, teen, or adult. If it's for a child, just say "child" or "my 7 year old". If it's for you, say "myself" or "adult".`;
           } else {
             response = `Who is this for - a child, teen, or yourself?`;
@@ -147,23 +176,27 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         break;
 
       case 'CAPTURE_STUDENT_AGE':
-        if (age && isValidAge(age)) {
-          newState.age = age;
-          
+        if (newState.age && isValidAge(newState.age)) {
           // Auto-suggest program based on age
-          const suggestedProgram = suggestProgram(age);
-          if (suggestedProgram) {
-            newState.programInterest = suggestedProgram;
+          if (!newState.programInterest) {
+            const suggestedProgram = suggestProgram(newState.age);
+            if (suggestedProgram) {
+              newState.programInterest = suggestedProgram;
+            }
           }
           
           newState.currentStage = 'CAPTURE_NAME';
           newState.lastAskedField = null;
           
-          const ageRange = getProgramAgeRange(suggestedProgram);
-          response = `Perfect! At ${locationName}, our ${suggestedProgram} program is ideal for ages ${ageRange}. To get you booked, what's your name?`;
+          const ageRange = getProgramAgeRange(newState.programInterest);
+          response = `Perfect! At ${locationName}, our ${newState.programInterest} program is ideal for ages ${ageRange}. To get you booked, what's your name?`;
           shouldAdvance = true;
         } else {
-          if (currentState.lastAskedField === 'age') {
+          // Targeted repair prompt for invalid age
+          const askedCount = (newState.askedCount['age'] || 0) + 1;
+          newState.askedCount['age'] = askedCount;
+          
+          if (askedCount >= 2) {
             response = `I need a valid age (2-99). Just give me a number like 7 or 12.`;
           } else {
             response = `How old is your ${currentState.studentType}?`;
@@ -174,14 +207,17 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         break;
 
       case 'CAPTURE_NAME':
-        if (contactInfo.name && isValidName(contactInfo.name)) {
-          newState.name = contactInfo.name;
+        if (newState.name && isValidName(newState.name)) {
           newState.currentStage = 'CAPTURE_CONTACT_METHOD';
           newState.lastAskedField = null;
-          response = `Thanks, ${contactInfo.name}! What's the best way to reach you - phone or email?`;
+          response = `Thanks, ${newState.name}! What's the best way to reach you - phone or email?`;
           shouldAdvance = true;
         } else {
-          if (currentState.lastAskedField === 'name') {
+          // Targeted repair prompt for invalid name
+          const askedCount = (newState.askedCount['name'] || 0) + 1;
+          newState.askedCount['name'] = askedCount;
+          
+          if (askedCount >= 2) {
             response = `I need a valid name. Just give me your first name or full name.`;
           } else {
             response = `What's your name?`;
@@ -191,21 +227,52 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         }
         break;
 
-      case 'CAPTURE_CONTACT_METHOD':
-        if (contactMethod) {
-          newState.preferredContactMethod = contactMethod;
-          newState.currentStage = 'CAPTURE_PHONE_OR_EMAIL';
-          newState.lastAskedField = contactMethod === 'email' ? 'email' : 'phone';
+      case 'CAPTURE_CONTACT_METHOD': {
+        // SMART CONTACT METHOD: Accept email or phone directly
+        if (newState.email && isValidEmail(newState.email)) {
+          newState.preferredContactMethod = 'email';
+          newState.currentStage = 'CONFIRM_BOOKING_INTENT';
+          newState.lastAskedField = null;
+          response = `Excellent! ${newState.name}, I've got everything. Let me get you booked for a free intro class at ${locationName}. Click below to reserve your spot! 📅`;
+          shouldAdvance = true;
+        } else if (newState.phone && isValidPhone(newState.phone)) {
+          newState.preferredContactMethod = 'phone';
+          newState.currentStage = 'CONFIRM_BOOKING_INTENT';
+          newState.lastAskedField = null;
+          response = `Excellent! ${newState.name}, I've got everything. Let me get you booked for a free intro class at ${locationName}. Click below to reserve your spot! 📅`;
+          shouldAdvance = true;
+        } else if (newState.email && newState.phone && !newState.preferredContactMethod) {
+          // Both email and phone provided, ask for preference
+          const askedCount = (newState.askedCount['contact_preference'] || 0) + 1;
+          newState.askedCount['contact_preference'] = askedCount;
           
-          if (contactMethod === 'email') {
+          if (askedCount >= 2) {
+            response = `Do you prefer text/call at ${newState.phone} or email at ${newState.email}?`;
+          } else {
+            response = `Do you prefer text/call or email?`;
+          }
+          newState.lastAskedField = 'contact_preference';
+          shouldAdvance = false;
+        } else if (signals.preferredContactMethod) {
+          // User said "phone" or "email" keyword
+          newState.preferredContactMethod = signals.preferredContactMethod;
+          
+          if (signals.preferredContactMethod === 'email') {
+            newState.currentStage = 'CAPTURE_PHONE_OR_EMAIL';
+            newState.lastAskedField = 'email';
             response = `Perfect! What email should I use? (e.g., name@email.com)`;
           } else {
+            newState.currentStage = 'CAPTURE_PHONE_OR_EMAIL';
+            newState.lastAskedField = 'phone';
             response = `Perfect! What phone number should we text or call you at? (e.g., 281-555-0123)`;
           }
           shouldAdvance = true;
         } else {
-          // Clarify if user gave non-value answer (e.g., just "Phone")
-          if (currentState.lastAskedField === 'contact_method') {
+          // Targeted repair prompt
+          const askedCount = (newState.askedCount['contact_method'] || 0) + 1;
+          newState.askedCount['contact_method'] = askedCount;
+          
+          if (askedCount >= 2) {
             response = `I can do phone or email. If phone, reply with your number like 281-555-0123. If email, reply like name@email.com.`;
           } else {
             response = `What's the best way to reach you - phone or email?`;
@@ -214,22 +281,24 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
           shouldAdvance = false;
         }
         break;
+      }
 
-      case 'CAPTURE_PHONE_OR_EMAIL':
-        const method = currentState.preferredContactMethod;
+      case 'CAPTURE_PHONE_OR_EMAIL': {
+        const method = newState.preferredContactMethod;
         
         if (method === 'email') {
-          if (contactInfo.email && isValidEmail(contactInfo.email)) {
-            newState.email = contactInfo.email;
+          if (newState.email && isValidEmail(newState.email)) {
             newState.currentStage = 'CONFIRM_BOOKING_INTENT';
             newState.lastAskedField = null;
-            
-            const program = newState.programInterest || 'our program';
             response = `Excellent! ${newState.name}, I've got everything. Let me get you booked for a free intro class at ${locationName}. Click below to reserve your spot! 📅`;
             shouldAdvance = true;
           } else {
-            if (currentState.lastAskedField === 'email') {
-              response = `I need a valid email address. It should look like: name@email.com`;
+            // Targeted repair prompt for invalid email
+            const askedCount = (newState.askedCount['email'] || 0) + 1;
+            newState.askedCount['email'] = askedCount;
+            
+            if (askedCount >= 2) {
+              response = `That email looks a little off. Can you re-type it like name@email.com?`;
             } else {
               response = `What's your email address?`;
             }
@@ -237,17 +306,18 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             shouldAdvance = false;
           }
         } else if (method === 'phone' || method === 'text') {
-          if (contactInfo.phone && isValidPhone(contactInfo.phone)) {
-            newState.phone = contactInfo.phone;
+          if (newState.phone && isValidPhone(newState.phone)) {
             newState.currentStage = 'CONFIRM_BOOKING_INTENT';
             newState.lastAskedField = null;
-            
-            const program = newState.programInterest || 'our program';
             response = `Excellent! ${newState.name}, I've got everything. Let me get you booked for a free intro class at ${locationName}. Click below to reserve your spot! 📅`;
             shouldAdvance = true;
           } else {
-            if (currentState.lastAskedField === 'phone') {
-              response = `I need a valid phone number. It should look like: 281-555-0123 or 2815550123`;
+            // Targeted repair prompt for invalid phone
+            const askedCount = (newState.askedCount['phone'] || 0) + 1;
+            newState.askedCount['phone'] = askedCount;
+            
+            if (askedCount >= 2) {
+              response = `Can you send the full phone number (10 digits), like 281-555-0123?`;
             } else {
               response = `What's your phone number?`;
             }
@@ -256,6 +326,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
           }
         }
         break;
+      }
 
       case 'CONFIRM_BOOKING_INTENT':
       case 'SUCCESS':

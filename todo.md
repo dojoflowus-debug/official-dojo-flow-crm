@@ -5838,3 +5838,98 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test button click action
 - [x] Test on mobile and desktop
 - [x] Verified full conversation: booking intent → age → program suggestion → name → contact method → email → success state with button
+
+
+## Phase 22: Kai Conversation Flow Improvements - Smart Signal Extraction & Contact Method Handling
+
+### 1. Unified extractLeadSignals Parser
+- [ ] Create single extractLeadSignals(message) function used in EVERY state
+- [ ] Extract: email, phoneNumber, age, name, location, programInterest
+- [ ] Merge extracted signals into lead object regardless of current state
+- [ ] Prevent "I already told you" loops by scanning all messages for values
+- [ ] Return object with all extracted signals
+
+### 2. Smart Contact Method State
+- [ ] Accept email addresses directly (not just "email" keyword)
+- [ ] Accept phone numbers directly (not just "phone" keyword)
+- [ ] If valid email detected → set preferredContactMethod="email" + email + advance
+- [ ] If valid phone detected → set preferredContactMethod="phone" + phone + advance
+- [ ] Only ask "phone or email?" if neither is detected
+- [ ] Rule: If a value is provided, it overrides the need to ask for method
+
+### 3. Handle Both Email + Phone Collected
+- [ ] If email AND phoneNumber exist but preferredContactMethod is empty
+- [ ] Ask once: "Do you prefer text/call or email?"
+- [ ] Accept "phone/text/call" → set method → advance
+- [ ] Accept "email" → set method → advance
+- [ ] If user ignores preference, default to phone/text and advance
+
+### 4. State Completion Gating
+- [ ] Add requiredFields array to each state
+- [ ] Add isComplete(lead) function for each state
+- [ ] Add nextState property to each state
+- [ ] Example: CAPTURE_CONTACT requires preferredContactMethod + (email OR phone)
+- [ ] Never re-render same prompt if isComplete() returns true
+- [ ] Advance automatically when all required fields are met
+
+### 5. Targeted Repair Prompts
+- [ ] Replace generic "example" messages with targeted prompts
+- [ ] If user provided "email" word only: "Great, what email should we use?"
+- [ ] If user provided invalid email: "That email looks a little off. Can you re-type it like name@email.com?"
+- [ ] If user provided short phone number: "Can you send the full phone number (10 digits), like 281-555-0123?"
+- [ ] Match error message to specific validation failure
+
+### 6. Loop Breaker with Quick Buttons
+- [ ] Track askedCount[field] for each field
+- [ ] If same field asked 2+ times, switch phrasing
+- [ ] Show 2 quick action buttons: "Use Email" / "Use Phone"
+- [ ] Include one example in button row
+- [ ] Allow user to tap button instead of typing
+
+### Testing & Validation
+- [ ] Test contact method with direct email (no "email" keyword)
+- [ ] Test contact method with direct phone (no "phone" keyword)
+- [ ] Test providing both email and phone (should ask preference once)
+- [ ] Test loop breaker (ask same field 2 times, show buttons)
+- [ ] Test extractLeadSignals in all states
+- [ ] Test state completion gating (auto-advance when complete)
+- [ ] Test targeted repair prompts for invalid inputs
+
+
+## Phase 23: Calendar View Integration - Interactive Day/Time Selection
+
+### Calendar Component
+- [x] Create CalendarPicker component with React
+- [x] Display next 14 days in calendar grid
+- [x] Show available time slots (morning, afternoon, evening)
+- [x] Highlight available vs unavailable slots
+- [x] Allow single day/time selection
+- [x] Style with Tailwind CSS for premium look
+
+### Kai Integration
+- [ ] Add calendar display after age/program confirmation
+- [ ] Replace text-based "weekdays after school" with calendar UI
+- [ ] Capture selected day and time in conversation state
+- [ ] Show selected day/time in confirmation summary
+- [ ] Handle calendar interaction within chat flow
+
+### Time Slot Management
+- [ ] Define available time slots per location
+- [ ] Show time slots: 9am, 11am, 2pm, 4pm, 6pm
+- [ ] Mark slots as available/unavailable
+- [ ] Disable past dates and times
+- [ ] Show "Book Now" button after selection
+
+### Styling & UX
+- [ ] Premium glass effect for calendar container
+- [ ] Highlight selected day with green
+- [ ] Show time slot badges with availability
+- [ ] Smooth transitions and hover effects
+- [ ] Mobile-responsive calendar layout
+
+### Testing
+- [ ] Test calendar display in chat
+- [ ] Test day selection
+- [ ] Test time slot selection
+- [ ] Test confirmation with selected time
+- [ ] Test on mobile and desktop
