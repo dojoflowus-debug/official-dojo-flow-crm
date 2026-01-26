@@ -5493,3 +5493,67 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Show capacity warning in CinematicFloorPlanner header (red banner)
 - [x] Test: 5x5 ft room with 18 bags shows "Layout exceeds safe capacity!" warning
 - [x] Test: 40x60 ft room with 0 bags shows no warning (within capacity)
+
+
+## Bug Fix - Kiosk Studio JSON Error (Jan 26, 2026)
+- [ ] /kiosk-studio page shows "Unexpected token '<', is not valid JSON" error
+- [ ] Diagnose: tRPC endpoint returning HTML instead of JSON
+- [ ] Fix the route configuration or endpoint
+- [ ] Test the kiosk-studio page
+
+
+## MAJOR PIVOT: Kiosk Redesign - Premium Location Experience (Jan 26, 2026)
+
+### Phase 1: Design & Structure
+- [ ] Design kiosk home screen layout (hero + cards + schedule)
+- [ ] Create component structure for cinematic hero section
+- [ ] Plan responsive design for 5-10 feet viewing distance
+
+### Phase 2: Hero Section
+- [ ] Build hero section with location name, live clock, next class countdown
+- [ ] Add temperature display
+- [ ] Implement cinematic background with overlay
+- [ ] Add subtle motion/parallax effects
+
+### Phase 3: Action Cards
+- [ ] Create large touch-first action cards
+- [ ] Check In card (primary action)
+- [ ] Book a Free Class card
+- [ ] View Today's Schedule card
+- [ ] Programs card
+- [ ] About This Location card
+
+### Phase 4: Schedule Preview
+- [ ] Add today's class schedule section
+- [ ] Show instructor names and times
+- [ ] Make cards tappable to view full schedule
+
+### Phase 5: Navigation
+- [ ] Build persistent navigation dock (bottom or side)
+- [ ] Home, Schedule, Check-in, Programs, Help
+- [ ] Ensure always accessible
+
+### Phase 6: Visual Style
+- [ ] Warm dark tones (not blue SaaS)
+- [ ] Cinematic lighting and glass panels
+- [ ] Red/ember accents
+- [ ] Large typography for distance viewing
+- [ ] Photo-first layouts
+
+### Phase 7: Testing & Delivery
+- [ ] Test touch interactions
+- [ ] Verify readability from 5-10 feet
+- [ ] Test on various screen sizes
+- [ ] Performance optimization
+
+
+## COMPLETED: Kiosk Redesign - Premium Location Experience (Jan 26, 2026)
+- [x] KioskHome component created with full premium location experience
+- [x] Hero section: location name, live clock, temperature, next class countdown
+- [x] Action cards: Check In (red), Book Class (orange), Schedule, Programs, About
+- [x] Schedule preview: Today's classes with instructor and availability
+- [x] Navigation dock: persistent bottom nav (Home, Schedule, Check In, Programs, Help)
+- [x] Visual style: warm dark tones, cinematic lighting, red/ember accents
+- [x] Touch-first design for 5-10 feet viewing distance
+- [x] Responsive grid layout
+- [x] Route added: /kiosk-home and /kiosk redirect to /kiosk-home

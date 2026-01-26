@@ -90,6 +90,7 @@ import KioskStudio from "./pages/KioskStudio";
 import KioskStudioBuilder2 from "./pages/KioskStudioBuilder2";
 import KioskStudioSimplified from "./pages/KioskStudioSimplified";
 import KioskStudioExact from "./pages/KioskStudioExact";
+import KioskHome from "./pages/KioskHome";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -187,11 +188,13 @@ function Router() {
       <Route path="/test-brand" element={<TestBrand />} />
       
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
+      {/* Kiosk Public Experience - Premium Location Display */}
+      <Route path="/kiosk-home" element={<KioskHome />} />
       {/* Kiosk Studio Builder - New Location/Kiosk Management - CANONICAL ENTRY POINT */}
       <Route path="/kiosk-studio" element={<AppShell><ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute></AppShell>} />
       <Route path="/kiosk-studio/:locationId" element={<AppShell><ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute></AppShell>} />
       {/* Redirect old /kiosk to /kiosk-studio */}
-      <Route path="/kiosk" element={<Navigate to="/kiosk-studio" replace />} />
+      <Route path="/kiosk" element={<Navigate to="/kiosk-home" replace />} />
       <Route path="/kiosk-manager" element={<KioskManager />} />
       
       {/* Kiosk Runtime - Tablet Interface */}
