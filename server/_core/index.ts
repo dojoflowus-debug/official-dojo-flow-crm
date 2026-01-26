@@ -8,6 +8,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerLogoutEndpoint } from "../logoutEndpoint";
 import { kioskSettingsRouter } from "../kioskSettingsEndpoint";
 import customBackgroundsRouter from "../api.cinematic-backgrounds.js";
+import leadCaptureRouter from "../leadCaptureRouter";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -75,6 +76,9 @@ async function startServer() {
   
   // Mount custom backgrounds routes
   app.use("/api/custom-backgrounds", customBackgroundsRouter);
+  
+  // Mount lead capture routes
+  app.use("/api/kai", leadCaptureRouter);
   
   // ElevenLabs Text-to-Speech endpoint
   app.post("/api/tts", async (req, res) => {
