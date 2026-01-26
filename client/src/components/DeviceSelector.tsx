@@ -21,6 +21,8 @@ interface DeviceSelectorProps {
   onFrameToggle: () => void;
   onTouchToggle: () => void;
   onOpenPublic?: () => void;
+  onOpenLiveView?: () => void;
+  locationId?: number;
 }
 
 /**
@@ -39,6 +41,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   onFrameToggle,
   onTouchToggle,
   onOpenPublic,
+  onOpenLiveView,
+  locationId,
 }) => {
   const [showSanityChecks, setShowSanityChecks] = useState(false);
   const currentPreset = DEVICE_PRESETS[currentDeviceId];
@@ -184,11 +188,28 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
             Touch
           </button>
 
+          {/* Open Live View */}
+          {onOpenLiveView && locationId && (
+            <button
+              onClick={onOpenLiveView}
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ml-auto"
+              style={{
+                background: '#10B981',
+                color: 'white',
+                border: '1px solid #10B981',
+              }}
+              title="Open fullscreen live view for deployment"
+            >
+              <Maximize2 className="w-4 h-4" />
+              Live View
+            </button>
+          )}
+
           {/* Open Public Kiosk */}
           {onOpenPublic && (
             <button
               onClick={onOpenPublic}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ml-auto"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
               style={{
                 background: '#161B22',
                 color: 'rgba(255,255,255,0.92)',

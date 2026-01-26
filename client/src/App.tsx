@@ -91,6 +91,7 @@ import KioskStudioBuilder2 from "./pages/KioskStudioBuilder2";
 import KioskStudioSimplified from "./pages/KioskStudioSimplified";
 import KioskStudioExact from "./pages/KioskStudioExact";
 import KioskHome from "./pages/KioskHome";
+import { KioskLive } from "./pages/KioskLive";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -198,6 +199,7 @@ function Router() {
       <Route path="/kiosk-manager" element={<KioskManager />} />
       
       {/* Kiosk Runtime - Tablet Interface */}
+      <Route path="/kiosk/live/:locationId" element={<KioskLive />} />
       <Route path="/kiosk/:locationSlug" element={<Kiosk />} />
       <Route path="/kiosk/:locationSlug/staff-login" element={<KioskStaffAuth />} />
       <Route path="/kiosk/:locationSlug/member-login" element={<KioskMemberLogin />} />
