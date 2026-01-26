@@ -53,6 +53,7 @@ export function ThemeTabWithPresets({
   onSliderChange,
   onTypographyChange,
   onButtonStyleChange,
+  onEnvironmentEffectsChange,
 }: ThemeTabWithPresetsProps) {
   const [applyToAll, setApplyToAll] = useState(true);
   const [selectedCardType, setSelectedCardType] = useState<CardType>('next-class');
