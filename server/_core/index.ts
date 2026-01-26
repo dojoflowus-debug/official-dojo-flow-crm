@@ -7,6 +7,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 // import { registerOAuthRoutes } from "./oauth"; // DISABLED - using custom auth only
 import { registerLogoutEndpoint } from "../logoutEndpoint";
 import { kioskSettingsRouter } from "../kioskSettingsEndpoint";
+import customBackgroundsRouter from "../api.cinematic-backgrounds.js";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -71,6 +72,9 @@ async function startServer() {
   
   // Kiosk settings endpoint (bypasses tRPC)
   app.use(kioskSettingsRouter);
+  
+  // Mount custom backgrounds routes
+  app.use("/api/custom-backgrounds", customBackgroundsRouter);
   
   // ElevenLabs Text-to-Speech endpoint
   app.post("/api/tts", async (req, res) => {

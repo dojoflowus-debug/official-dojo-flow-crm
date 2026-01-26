@@ -49,13 +49,22 @@ export function CinematicEnvironmentSelector({
         `/api/custom-backgrounds/list/${user.activeOrgId}/${user.id}`
       );
       if (response.ok) {
-        const backgrounds = await response.json();
-        setCustomBackgrounds(backgrounds);
+        // Check if response is actually JSON before parsing
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const backgrounds = await response.json();
+          setCustomBackgrounds(backgrounds);
+        } else {
+          console.error('[CinematicEnvironmentSelector] Invalid content-type:', contentType);
+          setCustomBackgrounds([]);
+        }
       } else {
         console.error('[CinematicEnvironmentSelector] Failed to load custom backgrounds:', response.statusText);
+        setCustomBackgrounds([]);
       }
     } catch (error) {
       console.error('[CinematicEnvironmentSelector] Failed to load custom backgrounds:', error);
+      setCustomBackgrounds([]);
     }
   };
 
@@ -82,9 +91,15 @@ export function CinematicEnvironmentSelector({
         });
 
         if (response.ok) {
-          const newBackground = await response.json();
-          setCustomBackgrounds([...customBackgrounds, newBackground]);
-          onEnvironmentSelect(`custom-${newBackground.id}`, newBackground.imageUrl);
+          // Check if response is actually JSON before parsing
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const newBackground = await response.json();
+            setCustomBackgrounds([...customBackgrounds, newBackground]);
+            onEnvironmentSelect(`custom-${newBackground.id}`, newBackground.imageUrl);
+          } else {
+            console.error('[CinematicEnvironmentSelector] Invalid content-type on upload:', contentType);
+          }
         }
       };
       reader.readAsDataURL(file);
