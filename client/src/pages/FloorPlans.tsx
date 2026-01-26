@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight, Eye, Play } from "lucide-react";
+import { Plus, Edit, Trash2, Grid3x3, Square, Users, Home, ChevronRight, Eye, Play, AlertTriangle, Info } from "lucide-react";
 import { toast } from "sonner";
 import ManagementLayout from '@/components/ManagementLayout';
 import { Link } from "react-router-dom";
 import { FloorPlanViewer } from "@/components/FloorPlanViewer";
+import { getRoomCapacity } from "@/lib/layoutGenerator";
 
 type TemplateType = "kickboxing_bags" | "yoga_grid" | "karate_lines";
 
@@ -65,6 +66,29 @@ function FloorPlansContent() {
   const [templateType, setTemplateType] = useState<TemplateType>("kickboxing_bags");
   const [matRotation, setMatRotation] = useState<"horizontal" | "vertical">("horizontal");
   const [notes, setNotes] = useState("");
+
+  // Calculate room capacity based on dimensions
+  const roomCapacity = React.useMemo(() => {
+    const length = lengthFeet ? parseFloat(lengthFeet) : 0;
+    const width = widthFeet ? parseFloat(widthFeet) : 0;
+    
+    console.log('[Capacity] Calculating:', { length, width, templateType });
+    
+    if (length <= 0 || width <= 0) {
+      console.log('[Capacity] Invalid dimensions, returning null');
+      return null;
+    }
+    
+    // Only calculate for kickboxing bags template
+    if (templateType !== 'kickboxing_bags') {
+      console.log('[Capacity] Not kickboxing_bags template, returning null');
+      return null;
+    }
+    
+    const result = getRoomCapacity(width, length, 'wavemaster_xxl', 3, false);
+    console.log('[Capacity] Result:', result);
+    return result;
+  }, [lengthFeet, widthFeet, templateType]);
 
   const utils = trpc.useUtils();
   const { data: floorPlans, isLoading } = trpc.floorPlans.getAll.useQuery();
@@ -322,6 +346,49 @@ function FloorPlansContent() {
                     </div>
                   </div>
                 </div>
+
+                {/* Capacity Info Display - DEBUG */}
+                <div className="p-2 bg-blue-500/20 border border-blue-500/50 rounded text-xs text-white mb-2">
+                  DEBUG: length={lengthFeet}, width={widthFeet}, template={templateType}, capacity={roomCapacity ? JSON.stringify(roomCapacity) : 'null'}
+                </div>
+                {roomCapacity && templateType === 'kickboxing_bags' && (
+                  <div className={`p-3 rounded-lg border ${
+                    roomCapacity.maxCapacity === 0 
+                      ? 'bg-red-500/10 border-red-500/30' 
+                      : roomCapacity.maxCapacity <= 2
+                        ? 'bg-amber-500/10 border-amber-500/30'
+                        : 'bg-emerald-500/10 border-emerald-500/30'
+                  }`}>
+                    <div className="flex items-start gap-2">
+                      {roomCapacity.maxCapacity === 0 ? (
+                        <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <Info className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="space-y-1">
+                        <p className={`text-sm font-medium ${
+                          roomCapacity.maxCapacity === 0 ? 'text-red-300' : 'text-emerald-300'
+                        }`}>
+                          {roomCapacity.maxCapacity === 0 
+                            ? 'Room too small for WaveMaster bags'
+                            : `Max Safe Capacity: ${roomCapacity.maxCapacity} WaveMaster${roomCapacity.maxCapacity !== 1 ? 's' : ''}`
+                          }
+                        </p>
+                        <p className="text-xs text-white/60">
+                          {roomCapacity.maxCapacity > 0 
+                            ? `${roomCapacity.maxColumns} columns × ${roomCapacity.maxRows} rows with ${roomCapacity.equipmentProfile.recommendedClearance} ft clearance`
+                            : roomCapacity.warning
+                          }
+                        </p>
+                        {roomCapacity.maxCapacity > 0 && roomCapacity.maxCapacity <= 2 && (
+                          <p className="text-xs text-amber-300/80">
+                            ⚠️ Very tight fit. Consider a larger room for comfortable training.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Safety Spacing Section */}
                 <div className="space-y-2 pb-3 border-b border-white/6">

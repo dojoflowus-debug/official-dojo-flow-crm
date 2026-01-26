@@ -6,6 +6,12 @@ import { generateLayout } from "@/lib/layoutGenerator";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { WaveMasterBag } from "./WaveMasterBag";
+import { 
+  WAVEMASTER_XXL, 
+  isValidPosition, 
+  clampToValidBounds,
+  getSafetyZoneRadiusPercent 
+} from "@/lib/equipmentProfiles";
 
 // Types
 interface Spot {
@@ -94,6 +100,10 @@ function DraggableSpotMarker({
   onDrag,
   onDragEnd,
   isDragging,
+  showSafetyZone = false,
+  safetyZoneRadiusX = 0,
+  safetyZoneRadiusY = 0,
+  hasCollision = false,
 }: {
   spot: Spot;
   assignment?: AssignedStudent;
@@ -108,6 +118,10 @@ function DraggableSpotMarker({
   onDrag: (spotId: number, e: React.MouseEvent) => void;
   onDragEnd: (spotId: number) => void;
   isDragging: boolean;
+  showSafetyZone?: boolean;
+  safetyZoneRadiusX?: number;
+  safetyZoneRadiusY?: number;
+  hasCollision?: boolean;
 }) {
   const isEmpty = !assignment;
   const isKiosk = mode === "kiosk";
@@ -166,6 +180,26 @@ function DraggableSpotMarker({
       onClick={onClick}
       onPointerDown={handlePointerDown}
     >
+      {/* Safety Zone Indicator - shows clearance area in design mode */}
+      {showSafetyZone && isDesign && (
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+          style={{
+            width: `${safetyZoneRadiusX * 2}%`,
+            height: `${safetyZoneRadiusY * 2}%`,
+            minWidth: '150px',
+            minHeight: '150px',
+            border: hasCollision 
+              ? '2px dashed rgba(239, 68, 68, 0.6)' 
+              : '1px dashed rgba(100, 200, 180, 0.3)',
+            background: hasCollision
+              ? 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.1) 0%, transparent 70%)'
+              : 'radial-gradient(ellipse at center, rgba(100, 200, 180, 0.05) 0%, transparent 70%)',
+            transition: 'all 0.15s ease-out',
+          }}
+        />
+      )}
+
       {/* FINAL REALISM - Controlled floor reflection under bags */}
       <div
         className={cn(
@@ -270,10 +304,17 @@ export function CinematicFloorPlanner({
   const [mode, setMode] = React.useState<ViewMode>(initialMode);
   const [selectedSpot, setSelectedSpot] = React.useState<Spot | null>(null);
   const [draggedSpot, setDraggedSpot] = React.useState<number | null>(null);
+  const [spots, setSpots] = React.useState<Spot[]>(floorPlan.spots);
+
+  // Sync spots state when floorPlan changes (e.g., after refetch)
+  React.useEffect(() => {
+    setSpots(floorPlan.spots);
+  }, [floorPlan.spots]);
   const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
   const [zoom, setZoom] = React.useState(100);
   const [panMode, setPanMode] = React.useState(false);
   const [snapToGrid, setSnapToGrid] = React.useState(false);
+  const [collisionDetected, setCollisionDetected] = React.useState(false);
   const [panOffset, setPanOffset] = React.useState({ x: 0, y: 0 });
   const [showBackgroundUpload, setShowBackgroundUpload] = React.useState(false);
   const [backgroundOpacity, setBackgroundOpacity] = React.useState(floorPlan.backgroundOpacity ?? 30);
@@ -299,7 +340,8 @@ export function CinematicFloorPlanner({
   const handleDragStart = (spotId: number, e: React.MouseEvent) => {
     if (mode !== "design") return;
     
-    const spot = floorPlan.spots.find(s => s.id === spotId);
+    // Use spots state for current position
+    const spot = spots.find(s => s.id === spotId);
     if (!spot) return;
 
     const canvasRect = canvasRef.current?.getBoundingClientRect();
@@ -321,28 +363,61 @@ export function CinematicFloorPlanner({
     const x = ((e.clientX - canvasRect.left - dragOffset.x) / canvasRect.width) * 100;
     const y = ((e.clientY - canvasRect.top - dragOffset.y) / canvasRect.height) * 100;
 
-    let finalX = Math.max(0, Math.min(100, x));
-    let finalY = Math.max(0, Math.min(100, y));
+    // Get room dimensions
+    const roomWidthFt = floorPlan.widthFeet || 30;
+    const roomDepthFt = floorPlan.lengthFeet || 30;
+
+    // Apply physics-based clamping to keep within valid bounds
+    let clamped = clampToValidBounds(x, y, roomWidthFt, roomDepthFt, WAVEMASTER_XXL);
+    let finalX = clamped.x;
+    let finalY = clamped.y;
 
     // Apply snap-to-grid if enabled
     if (snapToGrid) {
       const gridSize = 10; // Snap to 10% grid
       finalX = Math.round(finalX / gridSize) * gridSize;
       finalY = Math.round(finalY / gridSize) * gridSize;
+      // Re-clamp after snapping
+      clamped = clampToValidBounds(finalX, finalY, roomWidthFt, roomDepthFt, WAVEMASTER_XXL);
+      finalX = clamped.x;
+      finalY = clamped.y;
     }
 
-    // Update local state for immediate feedback
-    const updatedSpots = floorPlan.spots.map(spot =>
-      spot.id === draggedSpot
-        ? { ...spot, positionX: finalX, positionY: finalY }
-        : spot
+    // Check collision with other spots
+    const otherPositions = spots
+      .filter(s => s.id !== draggedSpot)
+      .map(s => ({ x: s.positionX, y: s.positionY }));
+    
+    const draggedIndex = spots.findIndex(s => s.id === draggedSpot);
+    const validation = isValidPosition(
+      finalX, 
+      finalY, 
+      roomWidthFt, 
+      roomDepthFt, 
+      WAVEMASTER_XXL, 
+      otherPositions,
+      -1 // No exclusion needed since we already filtered
+    );
+
+    // If collision detected, show visual feedback but still allow movement
+    // (The bag will show collision state visually)
+    setCollisionDetected(!validation.valid && validation.collisionWith !== undefined);
+
+    // Update local state for immediate visual feedback
+    setSpots(prevSpots =>
+      prevSpots.map(spot =>
+        spot.id === draggedSpot
+          ? { ...spot, positionX: finalX, positionY: finalY }
+          : spot
+      )
     );
   };
 
   const handleDragEnd = async (spotId: number) => {
     if (mode !== "design") return;
 
-    const spot = floorPlan.spots.find(s => s.id === spotId);
+    // Use spots state (which has the updated position) instead of floorPlan.spots
+    const spot = spots.find(s => s.id === spotId);
     if (!spot) return;
 
     const canvasRect = canvasRef.current?.getBoundingClientRect();
@@ -458,7 +533,7 @@ export function CinematicFloorPlanner({
   const isWall = mode === "wall";
 
   // Calculate canvas dimensions
-  const rows = Math.ceil(floorPlan.spots.length / 7);
+  const rows = Math.ceil(spots.length / 7);
   const canvasHeight = rows * 140;
 
   return (
@@ -785,10 +860,17 @@ export function CinematicFloorPlanner({
               />
             </div>
 
-            {/* Spot Markers */}
-            {floorPlan.spots.map((spot) => {
+            {/* Spot Markers - using spots state for real-time drag feedback */}
+            {spots.map((spot) => {
               const assignment = assignmentMap.get(spot.id);
               const isHighlighted = selectedSpot?.id === spot.id;
+
+              // Calculate safety zone radius for this spot
+              const safetyZoneRadius = getSafetyZoneRadiusPercent(
+                floorPlan.widthFeet || 30,
+                floorPlan.lengthFeet || 30,
+                WAVEMASTER_XXL
+              );
 
               return (
                 <DraggableSpotMarker
@@ -806,6 +888,10 @@ export function CinematicFloorPlanner({
                   onDrag={handleDrag}
                   onDragEnd={handleDragEnd}
                   isDragging={draggedSpot === spot.id}
+                  showSafetyZone={isDesign && (draggedSpot === spot.id || snapToGrid)}
+                  safetyZoneRadiusX={safetyZoneRadius.radiusX}
+                  safetyZoneRadiusY={safetyZoneRadius.radiusY}
+                  hasCollision={draggedSpot === spot.id && collisionDetected}
                 />
               );
             })}
@@ -847,7 +933,7 @@ export function CinematicFloorPlanner({
             </div>
           </div>
           <div className="text-slate-500">
-            {floorPlan.spots.length} spots • {assignedStudents.length} assigned
+            {spots.length} spots • {assignedStudents.length} assigned
           </div>
         </div>
       </div>

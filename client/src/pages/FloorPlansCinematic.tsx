@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +13,8 @@ import { Link } from "react-router-dom";
 import { CinematicFloorPlanner } from "@/components/CinematicFloorPlanner";
 import { EquipmentSetupPanelV2 } from "@/components/EquipmentSetupPanelV2";
 import { cn } from "@/lib/utils";
+import { getRoomCapacity, WAVEMASTER_XXL } from "@/lib/layoutGenerator";
+import { AlertTriangle, Info } from "lucide-react";
 
 type TemplateType = "kickboxing_bags" | "yoga_grid" | "karate_lines";
 
@@ -255,6 +257,23 @@ function FloorPlansCinematicContent() {
   const [bagsOnHand, setBagsOnHand] = useState(0);
   const [bagsInstalled, setBagsInstalled] = useState(0);
   const [defaultLayout, setDefaultLayout] = useState<string>("grid");
+
+  // Calculate room capacity based on dimensions
+  const roomCapacity = useMemo(() => {
+    const length = lengthFeet ? parseFloat(lengthFeet) : 0;
+    const width = widthFeet ? parseFloat(widthFeet) : 0;
+    
+    if (length <= 0 || width <= 0 || isNaN(length) || isNaN(width)) {
+      return null;
+    }
+    
+    // Only calculate for kickboxing bags template
+    if (templateType !== 'kickboxing_bags') {
+      return null;
+    }
+    
+    return getRoomCapacity(width, length, 'wavemaster_xxl', 3, false);
+  }, [lengthFeet, widthFeet, templateType]);
 
   const utils = trpc.useUtils();
   const { data: floorPlans, isLoading } = trpc.floorPlans.getAll.useQuery();
@@ -547,6 +566,53 @@ function FloorPlansCinematicContent() {
                     />
                   </div>
                 </div>
+                
+                {/* Capacity Info Display */}
+                {roomCapacity && templateType === 'kickboxing_bags' && (
+                  <div className={`p-3 rounded-lg border ${
+                    roomCapacity.maxCapacity === 0 
+                      ? 'bg-red-500/10 border-red-500/30' 
+                      : roomCapacity.maxCapacity <= 2
+                        ? 'bg-amber-500/10 border-amber-500/30'
+                        : 'bg-emerald-500/10 border-emerald-500/30'
+                  }`}>
+                    <div className="flex items-start gap-2">
+                      {roomCapacity.maxCapacity === 0 ? (
+                        <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                      ) : roomCapacity.maxCapacity <= 2 ? (
+                        <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <Info className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="space-y-1">
+                        <p className={`text-sm font-medium ${
+                          roomCapacity.maxCapacity === 0 
+                            ? 'text-red-300' 
+                            : roomCapacity.maxCapacity <= 2
+                              ? 'text-amber-300'
+                              : 'text-emerald-300'
+                        }`}>
+                          {roomCapacity.maxCapacity === 0 
+                            ? 'Room too small for WaveMaster bags'
+                            : `Max Safe Capacity: ${roomCapacity.maxCapacity} WaveMaster${roomCapacity.maxCapacity !== 1 ? 's' : ''}`
+                          }
+                        </p>
+                        <p className="text-xs text-white/60">
+                          {roomCapacity.maxCapacity > 0 
+                            ? `${roomCapacity.maxColumns} columns × ${roomCapacity.maxRows} rows with ${roomCapacity.equipmentProfile.recommendedClearance} ft clearance`
+                            : roomCapacity.warning
+                          }
+                        </p>
+                        {roomCapacity.maxCapacity > 0 && roomCapacity.maxCapacity <= 2 && (
+                          <p className="text-xs text-amber-300/80">
+                            ⚠️ Very tight fit. Consider a larger room for comfortable training.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label className="text-white/90">Safety Spacing (feet)</Label>
                   <Input

@@ -5438,3 +5438,48 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Fix drag-and-drop functionality broken after WaveMasterBag integration
   - SVG bags not responding to drag events
   - Need to verify event handlers are properly attached to SVG elements
+
+## Bug Fix - Drag Visual Feedback Not Working (Jan 26, 2026)
+- [x] Bags show save toast but don't move visually during drag
+- [x] Diagnose why setSpots isn't triggering re-render - found updatedSpots not calling setSpots
+- [x] Fix visual feedback mechanism - added spots state and setSpots calls
+- [x] Test drag with real mouse movements - PASSED, bags move smoothly
+
+## CRITICAL: Real-World Capacity & Fit Engine (Jan 26, 2026)
+### 1. Equipment Physical Profiles
+- [x] Create equipment profiles system (equipmentProfiles.ts)
+- [x] WaveMaster XXL: baseDiameter=28in, bagDiameter=18in, recommendedClearance=3ft
+- [x] Calculate effectiveStationRadius = (baseDiameter/2) + clearance
+
+### 2. Room Capacity Calculation
+- [x] Compute max columns based on roomWidth and stationEffectiveDiameter
+- [x] Compute max rows based on roomDepth and stationEffectiveDiameter
+- [x] Calculate max total stations from geometry
+- [x] Block generation if installedCount exceeds capacity
+- [x] Show warning with max allowed and recommended layout
+
+### 3. Auto-Layout Physics
+- [x] Space stations based on effective station diameter
+- [x] Respect wall padding
+- [x] Never overlap safety zones
+- [x] Never exceed room bounds
+
+### 4. Create/Edit Form Validation
+- [x] Calculate and display "Max safe capacity: X" (green info box)
+- [x] Show "Room too small" warning for undersized rooms (red warning)
+- [ ] Auto-clamp installedCount to max (TODO)
+- [ ] Prevent saving impossible layouts (TODO)
+
+### 5. Drag Collision Detection
+- [x] Bags stay within usable room bounds (wall padding enforced)
+- [ ] Bags cannot overlap safety zones (TODO - visual collision)
+- [ ] Bags repel or block when colliding (TODO)
+
+### 6. Visual Safety Indicators
+- [x] Faint circular safety halos (teal rings)
+- [ ] Snap points (TODO)
+- [ ] Collision outlines when too close (TODO)
+
+### Acceptance Test
+- [x] 10x10 ft room shows "Room too small" warning - PASSED
+- [x] 40x30 ft room shows "Max Safe Capacity: 9 WaveMasters" - PASSED
