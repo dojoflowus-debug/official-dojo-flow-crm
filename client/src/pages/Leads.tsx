@@ -20,6 +20,7 @@ import {
   Sparkles
 } from 'lucide-react'
 import LeadSourceSettings from '@/components/LeadSourceSettings'
+import { KaiLeadCaptureSection } from '@/components/KaiLeadCaptureSection'
 
 // Stage mapping from old to new
 const stageMapping: Record<string, string> = {
@@ -133,6 +134,9 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
     
     return { newLeads, aging, pipelineValue: totalValue, alerts: Math.max(alerts, 0) };
   }, [leads]);
+
+  // Get organization ID from context or props
+  const orgId = searchParams.get('org') ? parseInt(searchParams.get('org')!) : 120001;
 
   // Calculate stage counts and values for hero pipeline
   const { stageCounts, stageValues } = useMemo(() => {
@@ -406,6 +410,15 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
             />
           )}
         </div>
+
+        {/* Kai Chat Lead Capture Section */}
+        {!isLoading && leads && (
+          <KaiLeadCaptureSection
+            leads={Object.values(leads).flat()}
+            organizationId={orgId}
+            isDarkMode={isDarkMode}
+          />
+        )}
 
         {/* Lead Drawer */}
         <LeadDrawer
