@@ -68,6 +68,13 @@ async function extractLeadInfo(userMessage: string, currentData: any): Promise<a
     if (!programInterestFound) extracted.programInterest = 'adults';
   }
 
+  // Extract location (any mention of location/city/area/place)
+  if (/\b(location|city|area|downtown|uptown|street|place|branch|studio|main|center|dojo)\b/i.test(userMessage)) {
+    // Try to extract a specific location name, or just mark as provided
+    const locationMatch = userMessage.match(/(?:at|in|location|city|area|downtown|uptown|street|place|branch|studio)\s+([a-zA-Z\s]+?)(?:\.|,|and|prefer|my|phone|$)/i);
+    extracted.location = locationMatch ? locationMatch[1].trim() : 'specified';
+  }
+
   // Extract schedule preference
   if (/\b(morning|early|before school)\b/i.test(userMessage)) extracted.schedulePreference = 'morning';
   if (/\b(afternoon|after school|evening|night)\b/i.test(userMessage)) extracted.schedulePreference = 'afternoon';
@@ -200,7 +207,7 @@ router.post('/lead-capture', async (req: Request, res: Response) => {
           status: 'New Lead',
           stage: 'new',
           leadScore: 75, // High score for chat-qualified leads
-          message: `Lead captured via Kai chat. Goal: ${updatedLeadData.goal || 'Not specified'}. Schedule: ${updatedLeadData.schedulePreference || 'Not specified'}.`,
+          message: `Lead captured via Kai chat at ${locationName || 'Unknown Location'}. Goal: ${updatedLeadData.goal || 'Not specified'}. Schedule: ${updatedLeadData.schedulePreference || 'Not specified'}.`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });

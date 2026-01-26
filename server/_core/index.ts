@@ -9,6 +9,7 @@ import { registerLogoutEndpoint } from "../logoutEndpoint";
 import { kioskSettingsRouter } from "../kioskSettingsEndpoint";
 import customBackgroundsRouter from "../api.cinematic-backgrounds.js";
 import leadCaptureRouter from "../leadCaptureRouter";
+import locationConfigRouter from "../locationConfigRouter";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -79,6 +80,9 @@ async function startServer() {
   
   // Mount lead capture routes
   app.use("/api/kai", leadCaptureRouter);
+  
+  // Mount location config routes
+  app.use("/api/location", locationConfigRouter);
   
   // ElevenLabs Text-to-Speech endpoint
   app.post("/api/tts", async (req, res) => {

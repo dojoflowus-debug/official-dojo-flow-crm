@@ -93,6 +93,7 @@ import KioskStudioExact from "./pages/KioskStudioExact";
 import KioskHome from "./pages/KioskHome";
 import { KioskLive } from "./pages/KioskLive";
 import { LeadCapture } from "./pages/LeadCapture";
+import LeadCaptureLocation from "./pages/LeadCaptureLocation";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -192,6 +193,10 @@ function Router() {
       {/* Kiosk Routes - Specific routes BEFORE dynamic routes to avoid collisions */}
       {/* Lead Capture - Website Embedding */}
       <Route path="/lead-capture" element={<LeadCapture />} />
+      <Route path="/lead-capture-location" element={<LeadCaptureLocation />} />
+      
+      {/* Location-Specific Routes */}
+      <Route path="/locations/:slug/chat" element={<LeadCaptureLocation />} />
       
       {/* Kiosk Public Experience - Premium Location Display */}
       <Route path="/kiosk-home" element={<KioskHome />} />

@@ -668,9 +668,19 @@ export const locations = mysqlTable("locations", {
 	kioskSlug: varchar({ length: 255 }),
 	kioskSettings: text(),
 	organizationId: int(),
+	slug: varchar({ length: 100 }),
+	bookingUrl: varchar({ length: 500 }),
+	timezone: varchar({ length: 50 }).default('America/Chicago'),
+	hours: text(),
+	enabledPrograms: text(),
+	leadRoutingEmail: varchar({ length: 255 }),
+	leadRoutingSms: varchar({ length: 255 }),
+	chatEnabled: int().default(1).notNull(),
+	chatGreeting: text(),
 },
 (table) => [
 	index("idx_locations_kiosk_slug").on(table.kioskSlug),
+	index("idx_locations_slug").on(table.slug),
 ]);
 
 export const membershipPlans = mysqlTable("membership_plans", {
