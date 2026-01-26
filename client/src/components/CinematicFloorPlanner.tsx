@@ -10,7 +10,8 @@ import {
   WAVEMASTER_XXL, 
   isValidPosition, 
   clampToValidBounds,
-  getSafetyZoneRadiusPercent 
+  getSafetyZoneRadiusPercent,
+  calculateMaxCapacity 
 } from "@/lib/equipmentProfiles";
 
 // Types
@@ -322,6 +323,19 @@ export function CinematicFloorPlanner({
   const [isPanning, setIsPanning] = React.useState(false);
   const [panStart, setPanStart] = React.useState({ x: 0, y: 0 });
 
+  // Calculate room capacity for validation warning
+  const roomCapacity = React.useMemo(() => {
+    const roomWidth = floorPlan.widthFeet || 30;
+    const roomDepth = floorPlan.lengthFeet || 30;
+    return calculateMaxCapacity(roomWidth, roomDepth, WAVEMASTER_XXL);
+  }, [floorPlan.widthFeet, floorPlan.lengthFeet]);
+
+  // Check if current layout exceeds capacity
+  const isOverCapacity = spots.length > roomCapacity.maxCapacity;
+  const capacityWarning = isOverCapacity 
+    ? `⚠️ Layout exceeds safe capacity! This room can fit ${roomCapacity.maxCapacity} bags, but ${spots.length} are placed.`
+    : null;
+
   // Mutations
   const updateSpotPosition = trpc.floorPlans.updateSpotPosition.useMutation();
   const uploadBackgroundImage = trpc.floorPlans.uploadBackgroundImage.useMutation();
@@ -538,6 +552,16 @@ export function CinematicFloorPlanner({
 
   return (
     <div className="w-full h-full flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 text-white">
+      {/* Capacity Warning Banner */}
+      {capacityWarning && (
+        <div className="bg-red-900/80 border-b border-red-700 px-4 py-3 flex items-center gap-3">
+          <span className="text-red-200 font-medium">{capacityWarning}</span>
+          <span className="text-red-300 text-sm">
+            Max capacity: {roomCapacity.maxColumns} × {roomCapacity.maxRows} = {roomCapacity.maxCapacity} bags
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/50 backdrop-blur">
         <div className="flex items-center gap-4">

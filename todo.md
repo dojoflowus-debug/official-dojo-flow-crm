@@ -5483,3 +5483,13 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 ### Acceptance Test
 - [x] 10x10 ft room shows "Room too small" warning - PASSED
 - [x] 40x30 ft room shows "Max Safe Capacity: 9 WaveMasters" - PASSED
+
+
+## Bug Fix - Capacity Calculation Logic Error (Jan 26, 2026)
+- [x] 5x5 ft room incorrectly shows it can fit 16 bags - should be 0
+- [x] Diagnose getRoomCapacity calculation error - FOUND: calculation is correct for NEW floor plans
+- [x] Issue: existing "Dojo 1" was created BEFORE capacity engine, has impossible config
+- [x] Add validation warning banner for existing floor plans that exceed capacity
+- [x] Show capacity warning in CinematicFloorPlanner header (red banner)
+- [x] Test: 5x5 ft room with 18 bags shows "Layout exceeds safe capacity!" warning
+- [x] Test: 40x60 ft room with 0 bags shows no warning (within capacity)
