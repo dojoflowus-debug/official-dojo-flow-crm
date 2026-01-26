@@ -690,12 +690,15 @@ export default function KioskStudioExact() {
 
         {/* CENTER: Kiosk Canvas - Fixed, never scrolls */}
         <div
-          className="flex-1 flex items-center justify-center overflow-hidden relative"
+          className="flex-1 flex justify-center overflow-hidden relative"
           style={{
             backgroundColor: "#0B0D10",
+            paddingTop: "60px",
+            paddingBottom: "40px",
+            alignItems: "flex-start",
           }}
         >
-          {/* Kiosk Device Frame Container */}
+          {/* Kiosk Device Frame Container - Positioned at upper-center */}
           <div
             style={{
               position: "relative",
