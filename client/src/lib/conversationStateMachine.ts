@@ -53,6 +53,31 @@ export interface ConversationState {
   completionPercentage: number;
 }
 
+/**
+ * STAGE CONTRACT - Single source of truth for required fields per stage
+ * Each stage defines which fields MUST be populated for it to be considered complete
+ */
+export const STAGE_REQUIREMENTS: Record<ConversationStage, string[]> = {
+  'INTRO': ['intent'],
+  'CAPTURE_STUDENT_TYPE': ['studentType'],
+  'CAPTURE_STUDENT_AGE': ['age'],
+  'CAPTURE_NAME': ['name'],
+  'CAPTURE_SCHEDULE': ['preferredDate', 'preferredTime'],
+  'CAPTURE_CONTACT_METHOD': ['preferredContactMethod'],
+  'CAPTURE_PHONE_OR_EMAIL': ['email_or_phone'], // Either email or phone
+  'CONFIRM_LOCATION': ['locationId'],
+  'CONFIRM_BOOKING_INTENT': [
+    'studentType',
+    'age',
+    'programInterest',
+    'name',
+    'preferredContactMethod',
+    'email_or_phone',
+    'locationId',
+  ],
+  'SUCCESS': [],
+};
+
 export const initialState: ConversationState = {
   intent: null,
   studentType: null,
@@ -332,57 +357,175 @@ export function extractLeadSignals(message: string): ExtractedLeadSignals {
 }
 
 /**
- * State completion checking
+ * APPLY SIGNALS - Single source of truth
+ * Merges extracted signals into state with normalization rules
+ * This MUST be called BEFORE routing to next stage
+ */
+export function applySignals(state: ConversationState, message: string): ConversationState {
+  const signals = extractLeadSignals(message);
+  const updatedState = { ...state };
+  
+  // Apply extracted signals
+  if (signals.email) updatedState.email = signals.email;
+  if (signals.phone) updatedState.phone = signals.phone;
+  if (signals.age !== undefined) updatedState.age = signals.age;
+  if (signals.name) updatedState.name = signals.name;
+  if (signals.studentType) updatedState.studentType = signals.studentType;
+  if (signals.preferredContactMethod) updatedState.preferredContactMethod = signals.preferredContactMethod;
+  if (signals.preferredDayTime) updatedState.preferredDayTime = signals.preferredDayTime;
+  
+  // Normalization: if age is set and studentType is missing, infer studentType
+  if (updatedState.age !== null && !updatedState.studentType) {
+    if (updatedState.age >= 3 && updatedState.age <= 12) {
+      updatedState.studentType = 'child';
+    } else if (updatedState.age >= 13 && updatedState.age <= 15) {
+      updatedState.studentType = 'teen';
+    } else if (updatedState.age >= 16) {
+      updatedState.studentType = 'adult';
+    }
+  }
+  
+  // Normalization: if age is set, automatically set program
+  if (updatedState.age !== null) {
+    updatedState.programInterest = getProgramForAge(updatedState.age);
+  }
+  
+  // Normalization: if studentType is 'child' but age is in teen range, correct it
+  if (updatedState.studentType === 'child' && updatedState.age !== null && updatedState.age >= 13) {
+    updatedState.studentType = updatedState.age >= 16 ? 'adult' : 'teen';
+    updatedState.programInterest = getProgramForAge(updatedState.age);
+  }
+  
+  return updatedState;
+}
+
+/**
+ * State completion checking - Uses STAGE_REQUIREMENTS as single source of truth
  */
 export function isStageComplete(stage: ConversationStage, state: ConversationState): boolean {
-  switch (stage) {
-    case 'INTRO':
-      return state.intent === 'book_intro';
-    
-    case 'CAPTURE_STUDENT_TYPE':
-      return state.studentType !== null;
-    
-    case 'CAPTURE_STUDENT_AGE':
-      return state.age !== null;
-    
-    case 'CAPTURE_NAME':
-      return state.name !== null;
-    
-    case 'CAPTURE_SCHEDULE':
-      return state.preferredDate !== null && state.preferredTime !== null;
-    
-    case 'CAPTURE_CONTACT_METHOD':
-      return state.preferredContactMethod !== null;
-    
-    case 'CAPTURE_PHONE_OR_EMAIL':
-      if (state.preferredContactMethod === 'email') {
-        return state.email !== null;
-      } else if (state.preferredContactMethod === 'phone' || state.preferredContactMethod === 'text') {
-        return state.phone !== null;
-      }
-      return false;
-    
-    case 'CONFIRM_LOCATION':
-      return state.locationId !== null;
-    
-    case 'CONFIRM_BOOKING_INTENT':
-      // All required fields must be present
-      return (
-        state.studentType !== null &&
-        state.age !== null &&
-        state.programInterest !== null &&
-        state.name !== null &&
-        state.preferredContactMethod !== null &&
-        ((state.preferredContactMethod === 'email' && state.email !== null) ||
-         ((state.preferredContactMethod === 'phone' || state.preferredContactMethod === 'text') && state.phone !== null))
-      );
-    
-    case 'SUCCESS':
-      return true;
-    
-    default:
-      return false;
+  const requirements = STAGE_REQUIREMENTS[stage];
+  
+  if (!requirements || requirements.length === 0) {
+    return true; // No requirements = stage complete
   }
+  
+  // Check each required field
+  for (const field of requirements) {
+    if (field === 'email_or_phone') {
+      // Special case: either email or phone required
+      if (!state.email && !state.phone) {
+        return false;
+      }
+    } else if (field === 'intent') {
+      if (state.intent !== 'book_intro') return false;
+    } else if (field === 'studentType') {
+      if (!state.studentType) return false;
+    } else if (field === 'age') {
+      if (state.age === null) return false;
+    } else if (field === 'name') {
+      if (!state.name) return false;
+    } else if (field === 'preferredDate') {
+      if (!state.preferredDate) return false;
+    } else if (field === 'preferredTime') {
+      if (!state.preferredTime) return false;
+    } else if (field === 'preferredContactMethod') {
+      if (!state.preferredContactMethod) return false;
+    } else if (field === 'email') {
+      if (!state.email) return false;
+    } else if (field === 'phone') {
+      if (!state.phone) return false;
+    } else if (field === 'locationId') {
+      if (!state.locationId) return false;
+    } else if (field === 'programInterest') {
+      if (!state.programInterest) return false;
+    }
+  }
+  
+  return true;
+}
+
+/**
+ * FIND NEXT INCOMPLETE STAGE
+ * Loops forward from current stage until finding an incomplete stage
+ * Skips stages that are already answered
+ */
+export function findNextIncompleteStage(currentStage: ConversationStage, state: ConversationState): ConversationStage {
+  const stages: ConversationStage[] = [
+    'INTRO',
+    'CAPTURE_STUDENT_TYPE',
+    'CAPTURE_STUDENT_AGE',
+    'CAPTURE_NAME',
+    'CAPTURE_SCHEDULE',
+    'CAPTURE_CONTACT_METHOD',
+    'CAPTURE_PHONE_OR_EMAIL',
+    'CONFIRM_BOOKING_INTENT',
+    'SUCCESS'
+  ];
+  
+  // Find current stage index
+  const currentIndex = stages.indexOf(currentStage);
+  
+  // Loop forward until we find an incomplete stage
+  for (let i = currentIndex; i < stages.length; i++) {
+    const stage = stages[i];
+    if (!isStageComplete(stage, state)) {
+      return stage;
+    }
+  }
+  
+  return 'SUCCESS';
+}
+
+/**
+ * REPEAT-QUESTION BREAKER
+ * Prevents asking the same field twice if user's last message contains that field
+ * Returns true if we should skip asking about this field
+ */
+export function shouldSkipQuestion(
+  field: string,
+  message: string,
+  state: ConversationState
+): boolean {
+  const lowerMsg = message.toLowerCase();
+  
+  // If we just asked about age and message contains age info, skip asking again
+  if (field === 'age') {
+    const hasAge = extractAge(message) !== null;
+    if (hasAge) return true;
+  }
+  
+  // If we just asked about student type and message contains student type, skip asking again
+  if (field === 'studentType') {
+    const hasStudentType = extractStudentType(message) !== null;
+    if (hasStudentType) return true;
+  }
+  
+  // If we just asked about name and message looks like a name, skip asking again
+  if (field === 'name') {
+    const contactInfo = extractContactInfo(message);
+    if (contactInfo.name) return true;
+  }
+  
+  // If we just asked about contact and message contains email/phone, skip asking again
+  if (field === 'contact') {
+    const hasEmail = extractEmail(message) !== null;
+    const hasPhone = extractPhone(message) !== null;
+    if (hasEmail || hasPhone) return true;
+  }
+  
+  // If we just asked about contact method and message specifies it, skip asking again
+  if (field === 'contactMethod') {
+    const hasContactMethod = extractContactMethod(message) !== null;
+    if (hasContactMethod) return true;
+  }
+  
+  // If we just asked about schedule and message contains schedule, skip asking again
+  if (field === 'schedule') {
+    const hasSchedule = extractDayTimePreference(message) !== null;
+    if (hasSchedule) return true;
+  }
+  
+  return false;
 }
 
 /**

@@ -27,6 +27,9 @@ import {
   isValidAge,
   isValidName,
   isStageComplete,
+  applySignals,
+  findNextIncompleteStage,
+  shouldSkipQuestion,
 } from '@/lib/conversationStateMachine';
 import { CalendarPicker } from './CalendarPicker';
 
@@ -44,6 +47,15 @@ interface KaiChatStatefulProps {
   locationId?: number;
   embedded?: boolean;
 }
+
+// Debug flag - set to false in production
+const DEBUG_KAI_STATE = process.env.NODE_ENV === 'development';
+
+const debugLog = (label: string, data: any) => {
+  if (DEBUG_KAI_STATE) {
+    console.log(`[KAI ${label}]`, data);
+  }
+};
 
 export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   organizationId,
