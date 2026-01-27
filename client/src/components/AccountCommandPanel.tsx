@@ -918,8 +918,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         className={`
           fixed z-50 
           top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-          w-[95vw] h-[95vh]
-          rounded-2xl overflow-hidden
+          rounded-3xl overflow-hidden
           transition-all duration-300 ease-out
           ${isOpen 
             ? 'opacity-100 scale-100' 
@@ -927,26 +926,32 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           }
         `}
         style={{
-          pointerEvents: isOpen ? 'auto' : 'none',
-          background: 'var(--modal-bg, #ffffff)',
-          border: '1px solid var(--modal-border, rgba(255, 255, 255, 0.1))',
-          boxShadow: `
-            0 25px 50px -12px rgba(0, 0, 0, 0.6),
-            0 0 0 1px rgba(255, 255, 255, 0.05),
-            0 0 40px rgba(0, 0, 0, 0.3)
-          `, // Strong shadow + subtle glow for focus effect
+          ...{
+            pointerEvents: isOpen ? 'auto' : 'none',
+            background: 'var(--modal-bg, #ffffff)',
+            border: '1px solid var(--modal-border, rgba(255, 255, 255, 0.1))',
+            boxShadow: `
+              0 25px 50px -12px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.05),
+              0 0 40px rgba(0, 0, 0, 0.3)
+            `,
+            width: 'min(1100px, 92vw)',
+            height: 'min(720px, 86vh)',
+          }
         }}
+
       >
         <div className="flex h-full bg-white dark:bg-zinc-900">
           {/* Left Sidebar */}
-          <div className="w-[220px] h-full flex flex-col border-r border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
+          <div className="w-[300px] h-full flex flex-col border-r border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 flex-shrink-0">
             {/* Logo/Brand - Using official DojoFlow branding */}
-            <div className="p-5 border-b border-zinc-200 dark:border-zinc-700">
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-700">
               <BrandLogo size="md" />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">Account Settings</p>
             </div>
             
             {/* Navigation */}
-            <nav className="flex-1 py-2 overflow-y-auto">
+            <nav className="flex-1 py-3 overflow-y-auto">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = activeSection === item.id
@@ -956,14 +961,14 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
                     className={`
-                      w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors
+                      w-full flex items-center gap-3 px-6 py-3 text-left transition-all h-12
                       ${isActive 
-                        ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100' 
+                        ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-r-2 border-red-600 dark:border-red-400' 
                         : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'
                       }
                     `}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium">{item.label}</span>
                   </button>
                 )
@@ -984,8 +989,10 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           </div>
           
           {/* Right Content Panel */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white dark:bg-zinc-900">
-            {renderContent()}
+          <div className="flex-1 overflow-y-auto bg-white dark:bg-zinc-900">
+            <div className="p-8 max-h-[calc(86vh-60px)]">
+              {renderContent()}
+            </div>
           </div>
         </div>
       </div>
