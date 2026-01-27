@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SettingsModal from '@/components/SettingsModal'
+import SettingsPortalModal from '@/components/modals/SettingsPortalModal'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
@@ -183,10 +183,9 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <SettingsModal 
+        <SettingsPortalModal 
           isOpen={isSettingsOpen} 
           onClose={() => setIsSettingsOpen(false)}
-          isDarkMode={isDarkMode}
         />
         
         {/* Cinematic Environment Selector Dialog */}

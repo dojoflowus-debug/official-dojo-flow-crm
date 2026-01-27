@@ -6116,3 +6116,14 @@ Transform kiosk from admin dashboard to premium location experience
 4. Add webhook delivery monitoring and analytics
 5. Document webhook payload format for CRM integrations
 6. Create example webhook handlers for popular CRM platforms
+
+
+## Phase 27: Settings Modal Rebuild
+
+- [ ] Delete old AccountCommandPanel.tsx and related modal code
+- [ ] Create new SettingsPortalModal.tsx with React Portal to document.body
+- [ ] Implement fixed full-screen overlay with proper sizing (min(1200px, 92vw) x min(760px, 90vh))
+- [ ] Build left sidebar (320px fixed) and right content layout
+- [ ] Add escape behaviors (Esc key, backdrop click) and body scroll prevention
+- [ ] Rewire settings trigger to use new modal
+- [ ] Verify modal expands correctly with "SETTINGS MODAL REBUILD v1" label
