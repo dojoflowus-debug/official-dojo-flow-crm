@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useModal, type SettingsTab } from '@/contexts/ModalContext'
@@ -7,6 +7,7 @@ import {
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
   Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink
 } from 'lucide-react'
+import { UserAvatar } from '@/components/UserAvatar'
 
 interface SettingsPortalModalProps {
   isOpen?: boolean
@@ -27,12 +28,16 @@ const navigationItems = [
 ]
 
 export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }: SettingsPortalModalProps) {
-  const { user, signOut } = useAuth()
+  const { user, signOut, refresh } = useAuth()
   const { settingsOpen, closeSettings, activeTab, setActiveTab } = useModal()
   const isOpen = propIsOpen !== undefined ? propIsOpen : settingsOpen
   const onClose = propOnClose || closeSettings
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<HTMLElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -148,8 +153,10 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
             borderRight: '1px solid rgba(255, 255, 255, 0.1)',
             overflowY: 'auto',
             flexShrink: 0,
+            display: 'flex',
+            flexDirection: 'column',
           }}>
-            <nav style={{ padding: '16px 0' }}>
+            <nav style={{ padding: '16px 0', flex: 1 }}>
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 const isActive = activeTab === item.id
@@ -179,6 +186,43 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                 )
               })}
             </nav>
+
+            {/* Footer - Sign Out */}
+            <div style={{
+              padding: '12px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            }}>
+              <button
+                onClick={async () => {
+                  await signOut()
+                  onClose()
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                  color: '#ef4444',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  transition: 'all 200ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }}
+              >
+                <LogOut size={18} />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
 
           {/* Right Content */}
@@ -191,61 +235,321 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
             {/* Account Tab */}
             {activeTab === 'account' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Profile Photo Editor */}
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Account Information</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Profile Photo</div>
                   <div style={{
-                    padding: '16px',
+                    padding: '24px',
                     borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                      <div style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '24px',
-                      }}>
-                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '24px' }}>
+                      {/* Avatar Preview */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{
+                            width: '96px',
+                            height: '96px',
+                            borderRadius: '50%',
+                            backgroundColor: previewUrl || user?.photoUrl ? 'transparent' : 'rgba(239, 68, 68, 0.2)',
+                            border: '2px solid rgba(239, 68, 68, 0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '32px',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            backgroundImage: previewUrl || user?.photoUrl ? `url('${previewUrl || user?.photoUrl}')` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            transition: 'all 200ms ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLButtonElement).style.opacity = '0.8';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLButtonElement).style.opacity = '1';
+                          }}
+                          title="Click to change photo"
+                        >
+                          {!previewUrl && !user?.photoUrl && (user?.name?.charAt(0).toUpperCase() || 'U')}
+                        </button>
+                        <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center' }}>
+                          Click to change
+                        </div>
                       </div>
+
+                      {/* Upload Controls */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          style={{ display: 'none' }}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+
+                            // Validate file size (5MB max)
+                            if (file.size > 5 * 1024 * 1024) {
+                              setUploadError('File size must be less than 5MB');
+                              return;
+                            }
+
+                            // Validate file type
+                            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                              setUploadError('Only JPG, PNG, and WebP files are supported');
+                              return;
+                            }
+
+                            setUploadError(null);
+                            setUploading(true);
+
+                            try {
+                              // Read file as base64
+                              const reader = new FileReader();
+                              reader.onload = async (event) => {
+                                const base64Data = (event.target?.result as string)?.split(',')[1];
+                                if (!base64Data) {
+                                  setUploadError('Failed to read file');
+                                  setUploading(false);
+                                  return;
+                                }
+
+                                try {
+                                  // Call upload endpoint
+                                  const response = await fetch('/api/auth/upload-profile-picture', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                      imageData: base64Data,
+                                      mimeType: file.type,
+                                    }),
+                                  });
+
+                                  if (!response.ok) {
+                                    const error = await response.json();
+                                    setUploadError(error.message || 'Failed to upload photo');
+                                    setUploading(false);
+                                    return;
+                                  }
+
+                                  const result = await response.json();
+                                  if (result.success) {
+                                    setPreviewUrl(result.photoUrl);
+                                    // Refresh user data
+                                    await refresh();
+                                  } else {
+                                    setUploadError(result.message || 'Failed to upload photo');
+                                  }
+                                } catch (error) {
+                                  setUploadError('Failed to upload photo');
+                                  console.error('Upload error:', error);
+                                } finally {
+                                  setUploading(false);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            } catch (error) {
+                              setUploadError('Failed to process file');
+                              setUploading(false);
+                            }
+                          }}
+                        />
+
+                        <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                          <div style={{ marginBottom: '8px' }}>Supported formats: JPG, PNG, WebP</div>
+                          <div style={{ marginBottom: '8px' }}>Max size: 5MB</div>
+                          <div>Recommended: 256×256 or larger</div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                            style={{
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              backgroundColor: uploading ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.2)',
+                              border: '1px solid rgba(239, 68, 68, 0.5)',
+                              color: '#ef4444',
+                              cursor: uploading ? 'not-allowed' : 'pointer',
+                              fontSize: '13px',
+                              opacity: uploading ? 0.6 : 1,
+                            }}
+                          >
+                            {uploading ? 'Uploading...' : 'Upload Photo'}
+                          </button>
+
+                          {(previewUrl || user?.photoUrl) && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch('/api/auth/delete-profile-picture', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                  });
+
+                                  if (!response.ok) {
+                                    const error = await response.json();
+                                    setUploadError(error.message || 'Failed to remove photo');
+                                    return;
+                                  }
+
+                                  setPreviewUrl(null);
+                                  await refresh();
+                                } catch (error) {
+                                  setUploadError('Failed to remove photo');
+                                  console.error('Delete error:', error);
+                                }
+                              }}
+                              disabled={uploading}
+                              style={{
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                cursor: uploading ? 'not-allowed' : 'pointer',
+                                fontSize: '13px',
+                                opacity: uploading ? 0.6 : 1,
+                              }}
+                            >
+                              Remove Photo
+                            </button>
+                          )}
+                        </div>
+
+                        {uploadError && (
+                          <div style={{
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            color: '#fca5a5',
+                            fontSize: '13px',
+                          }}>
+                            {uploadError}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Information */}
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Account Information</div>
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <UserAvatar
+                        photoUrl={user?.photoUrl}
+                        name={user?.name}
+                        size="lg"
+                      />
                       <div>
                         <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>{user?.name || 'User'}</div>
                         <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>{user?.email || 'No email'}</div>
                       </div>
                     </div>
-                    <button style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                      border: '1px solid rgba(239, 68, 68, 0.5)',
-                      color: '#ef4444',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                    }}>
-                      Edit Profile
-                    </button>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Settings Tab */}
-            {activeTab === 'settings' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Plan Card */}
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>General Settings</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Plan</div>
                   <div style={{
-                    padding: '16px',
+                    padding: '24px',
                     borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}>
-                    <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>
-                      General application settings and preferences
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div>
+                        <div style={{ fontSize: '18px', fontWeight: '600', color: 'white', marginBottom: '4px' }}>
+                          DojoFlow Pro
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
+                          Renewal date: Feb 12, 2026
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button style={{
+                          padding: '10px 20px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          backgroundColor: 'transparent',
+                          color: 'white',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          transition: 'all 200ms ease',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          Manage
+                        </button>
+                        <button style={{
+                          padding: '10px 20px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          backgroundColor: 'white',
+                          color: 'black',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 200ms ease',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                        >
+                          Add credit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Credits Card */}
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CreditCard size={18} color="white" />
+                    Credits
+                  </div>
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Free credits</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>87,893</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Monthly credits</span>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>87,700 / 110,000</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Daily refresh credits</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>0</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '8px' }}>
+                        Refresh to 200 at 23:00 every day
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -256,35 +560,44 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
             {activeTab === 'usage' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>API Usage</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BarChart3 size={18} color="white" />
+                    API Usage
+                  </div>
                   <div style={{
-                    padding: '20px',
+                    padding: '24px',
                     borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>API Calls This Month</div>
-                        <div style={{ fontSize: '24px', fontWeight: '600', color: 'white' }}>12,543</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Requests this month</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>12,450</span>
                       </div>
-                      <div>
-                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>Usage Limit</div>
-                        <div style={{ fontSize: '24px', fontWeight: '600', color: 'white' }}>100,000</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Requests limit</span>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>100,000</span>
                       </div>
-                    </div>
-                    <div style={{
-                      width: '100%',
-                      height: '8px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Usage percentage</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: '#22c55e' }}>12.45%</span>
+                      </div>
                       <div style={{
-                        height: '100%',
-                        width: '12.5%',
-                        backgroundColor: '#ef4444',
-                      }} />
+                        width: '100%',
+                        height: '8px',
+                        borderRadius: '4px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        overflow: 'hidden',
+                        marginTop: '8px',
+                      }}>
+                        <div style={{
+                          width: '12.45%',
+                          height: '100%',
+                          backgroundColor: '#22c55e',
+                          borderRadius: '4px',
+                        }} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -297,31 +610,24 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Billing Overview</div>
                   <div style={{
-                    padding: '20px',
+                    padding: '24px',
                     borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    marginBottom: '16px',
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>Current Plan</div>
-                        <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Professional</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Current plan</span>
+                        <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>DojoFlow Pro</span>
                       </div>
-                      <button style={{
-                        padding: '8px 16px',
-                        borderRadius: '6px',
-                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                        border: '1px solid rgba(239, 68, 68, 0.5)',
-                        color: '#ef4444',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                      }}>
-                        Upgrade
-                      </button>
-                    </div>
-                    <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                      Next billing date: Feb 1, 2026
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Billing cycle</span>
+                        <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Monthly</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Next billing date</span>
+                        <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Feb 12, 2026</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -333,38 +639,20 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Theme</div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    {['Automatic', 'Light', 'Dark'].map((theme) => (
-                      <button key={theme} style={{
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        backgroundColor: theme === 'Dark' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                      }}>
-                        {theme}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>View Mode</div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    {['Kai View', 'Classic View'].map((view) => (
-                      <button key={view} style={{
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        backgroundColor: view === 'Kai View' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                      }}>
-                        {view}
-                      </button>
-                    ))}
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {['Automatic', 'Light', 'Dark'].map((theme) => (
+                        <label key={theme} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                          <input type="radio" name="theme" value={theme} defaultChecked={theme === 'Automatic'} style={{ cursor: 'pointer' }} />
+                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>{theme}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -373,95 +661,41 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
             {/* Connectors Tab */}
             {activeTab === 'connectors' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{
-                  padding: '24px',
-                  borderRadius: '16px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                    <div>
-                      <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Available Connectors</div>
-                      <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>Connect with third-party services</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {['Zapier', 'Make', 'HubSpot', 'Slack'].map((connector) => (
-                      <div key={connector} style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}>
-                        <div style={{ fontSize: '14px', color: 'white' }}>{connector}</div>
-                        <button style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                          border: '1px solid rgba(239, 68, 68, 0.5)',
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                        }}>
-                          Connect
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Profile Tab (new) */}
-            {activeTab === 'profile' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Profile Settings</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Available Integrations</div>
                   <div style={{
-                    padding: '16px',
+                    padding: '24px',
                     borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                      <div style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '24px',
-                      }}>
-                        {user?.name?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>{user?.name || 'User'}</div>
-                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>{user?.email || 'No email'}</div>
-                      </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {['Zapier', 'Make', 'HubSpot', 'Slack'].map((connector) => (
+                        <button key={connector} style={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          backgroundColor: 'transparent',
+                          color: 'white',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 200ms ease',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          Connect {connector}
+                        </button>
+                      ))}
                     </div>
-                    <button style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                      border: '1px solid rgba(239, 68, 68, 0.5)',
-                      color: '#ef4444',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                    }}>
-                      Edit Profile
-                    </button>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Placeholder for other tabs */}
-            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'profile' && activeTab !== 'settings' && (
+            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && (
               <div style={{
                 padding: '48px',
                 textAlign: 'center',
