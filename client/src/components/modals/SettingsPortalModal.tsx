@@ -10,6 +10,9 @@ import {
 } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
 
+const uploadMutation = trpc.auth.uploadProfilePicture
+const deleteMutation = trpc.auth.deleteProfilePicture
+
 interface SettingsPortalModalProps {
   isOpen?: boolean
   onClose?: () => void
@@ -39,6 +42,10 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  
+  // Use tRPC mutations at component level
+  const uploadProfilePictureMutation = uploadMutation.useMutation()
+  const deleteProfilePictureMutation = deleteMutation.useMutation()
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -322,7 +329,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
 
                                 try {
                                   // Call tRPC upload endpoint
-                                  const result = await trpc.auth.uploadProfilePicture.mutate({
+                                  const result = await uploadProfilePictureMutation.mutateAsync({
                                     imageData: base64Data,
                                     mimeType: file.type,
                                   });
@@ -377,7 +384,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                             <button
                               onClick={async () => {
                                 try {
-                                  await trpc.auth.deleteProfilePicture.mutate();
+                                  await deleteProfilePictureMutation.mutateAsync();
                                   setPreviewUrl(null);
                                   await refresh();
                                 } catch (error) {
