@@ -171,7 +171,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
               <Avatar className="h-7 w-7">
-                <AvatarImage src={user?.avatarUrl} />
+                <AvatarImage src={user?.photoUrl} />
                 <AvatarFallback className={cn("text-xs", isDarkMode ? "bg-white/10 text-white" : "bg-gray-100 text-gray-600")}>
                   {user?.name ? getInitials(user.name) : 'U'}
                 </AvatarFallback>
