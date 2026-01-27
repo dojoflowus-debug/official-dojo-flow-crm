@@ -353,11 +353,16 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ 
+          position: 'fixed',
+          inset: '0',
+          zIndex: 999999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           background: 'rgba(0, 0, 0, 0.65)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           pointerEvents: isOpen ? 'auto' : 'none',
-
         }}
         onClick={onClose}
       />
@@ -383,6 +388,15 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
           }
         `}
         style={{
+          position: 'fixed',
+          width: '94vw',
+          height: '90vh',
+          maxWidth: 'none',
+          maxHeight: 'none',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 999998,
           pointerEvents: isOpen ? 'auto' : 'none',
           background: 'var(--modal-bg, #ffffff)',
           border: '1px solid var(--modal-border, rgba(255, 255, 255, 0.1))',
@@ -391,9 +405,7 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
             0 0 0 1px rgba(255, 255, 255, 0.05),
             0 0 40px rgba(0, 0, 0, 0.3)
           `,
-          width: 'min(1100px, 92vw)',
-          height: 'min(720px, 86vh)',
-
+          borderRadius: '24px',
         }}
       >
         <div className="flex h-full bg-white dark:bg-zinc-900">
