@@ -917,8 +917,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
         }}
         className={`
           fixed z-50 
-          top-6 left-1/2 -translate-x-1/2
-          w-[800px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-48px)]
+          inset-0 m-6
           rounded-2xl overflow-hidden
           transition-all duration-300 ease-out
           ${isOpen 
