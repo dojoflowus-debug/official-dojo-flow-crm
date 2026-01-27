@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useModal } from '@/contexts/ModalContext'
@@ -452,7 +452,189 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                 </div>
               )}
 
-              {activeTab !== 'account' && (
+              {activeTab === 'usage' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  {/* Usage Analytics Card */}
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                      <BarChart3 size={18} color="white" />
+                      <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>API Usage</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Requests this month</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>12,450</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Requests limit</span>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>100,000</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Usage percentage</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: '#22c55e' }}>12.45%</span>
+                      </div>
+                      {/* Progress Bar */}
+                      <div style={{
+                        width: '100%',
+                        height: '8px',
+                        borderRadius: '4px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        overflow: 'hidden',
+                        marginTop: '8px',
+                      }}>
+                        <div style={{
+                          width: '12.45%',
+                          height: '100%',
+                          backgroundColor: '#22c55e',
+                          borderRadius: '4px',
+                        }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Usage by Feature */}
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '20px' }}>Usage by Feature</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {[
+                        { feature: 'Lead Capture', usage: 45 },
+                        { feature: 'Student Management', usage: 30 },
+                        { feature: 'Scheduling', usage: 15 },
+                        { feature: 'Analytics', usage: 10 },
+                      ].map((item) => (
+                        <div key={item.feature} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>{item.feature}</span>
+                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>{item.usage}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'billing' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  {/* Billing Overview Card */}
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                      <CreditCard size={18} color="white" />
+                      <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Billing Overview</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Current Plan</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>DojoFlow Pro</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Billing Cycle</span>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>Monthly</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Next Billing Date</span>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>Feb 12, 2026</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Monthly Amount</span>
+                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>$99.00</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Method Card */}
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '20px' }}>Payment Method</div>
+                    <div style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: '500', color: 'white', marginBottom: '4px' }}>Visa ending in 4242</div>
+                        <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>Expires 12/2026</div>
+                      </div>
+                      <button style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        backgroundColor: 'transparent',
+                        color: 'white',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                      }}>
+                        Update
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Invoices Card */}
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '20px' }}>Recent Invoices</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {[
+                        { date: 'Jan 12, 2026', amount: '$99.00', status: 'Paid' },
+                        { date: 'Dec 12, 2025', amount: '$99.00', status: 'Paid' },
+                        { date: 'Nov 12, 2025', amount: '$99.00', status: 'Paid' },
+                      ].map((invoice, idx) => (
+                        <div key={idx} style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}>
+                          <div>
+                            <div style={{ fontSize: '14px', color: 'white' }}>{invoice.date}</div>
+                            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>{invoice.amount}</div>
+                          </div>
+                          <div style={{
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            color: '#22c55e',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                          }}>
+                            {invoice.status}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && (
                 <div style={{
                   padding: '48px',
                   textAlign: 'center',
