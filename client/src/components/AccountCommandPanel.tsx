@@ -72,7 +72,8 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const panelRef = useRef<HTMLDivElement>(null)
-  const [activeSection, setActiveSection] = useState<SectionId>('account')
+  const [selectedSection, setSelectedSection] = useState<SectionId>('account')
+  const { debugInfo, showDebug } = useModalDebug(panelRef)
   const [isAnimating, setIsAnimating] = useState(false)
   const { toast } = useToast()
 
@@ -408,6 +409,40 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
           borderRadius: '24px',
         }}
       >
+        {/* Debug List - Top Left */}
+        {showDebug && debugInfo.length > 0 && (
+          <div style={{
+            position: 'fixed',
+            top: '10px',
+            left: '10px',
+            background: 'rgba(0,0,0,0.9)',
+            color: '#0f0',
+            padding: '12px',
+            borderRadius: '6px',
+            fontSize: '10px',
+            fontFamily: 'monospace',
+            zIndex: 99999,
+            maxWidth: '400px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            border: '2px solid lime',
+          }}>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>MODAL DEBUG</div>
+            {debugInfo.map((info, idx) => (
+              <div key={idx} style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #333' }}>
+                <div>Lvl {info.level}: {info.tag}</div>
+                <div>ID: {info.id}</div>
+                <div>Class: {info.class}</div>
+                <div>Rect: {info.width} x {info.height}</div>
+                <div>MaxW: {info.maxWidth} MaxH: {info.maxHeight}</div>
+                <div>Overflow: {info.overflow}</div>
+                <div>Position: {info.position}</div>
+                <div>Transform: {info.transform}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        
         <div className="flex h-full bg-white dark:bg-zinc-900">
           {/* Left Sidebar */}
           <div className="w-[300px] h-full flex flex-col border-r border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 flex-shrink-0">
@@ -468,6 +503,57 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
     </>,
     document.body
   )
+}
+
+// Debug helper function
+function useModalDebug(panelRef: React.RefObject<HTMLDivElement>) {
+  const [debugInfo, setDebugInfo] = useState<any[]>([])
+  const [showDebug, setShowDebug] = useState(false)
+
+  useEffect(() => {
+    // Check for ?modalDebug=1 in URL
+    const params = new URLSearchParams(window.location.search)
+    const isDebugMode = params.get('modalDebug') === '1'
+    setShowDebug(isDebugMode)
+
+    if (isDebugMode && panelRef.current) {
+      const info: any[] = []
+      let element: Element | null = panelRef.current
+      let level = 0
+
+      while (element && level < 15) {
+        const rect = element.getBoundingClientRect()
+        const cs = getComputedStyle(element)
+        const parentInfo = {
+          level,
+          tag: element.tagName,
+          id: element.id || '(none)',
+          class: element.className || '(none)',
+          width: `${Math.round(rect.width)}px`,
+          maxWidth: cs.maxWidth,
+          height: `${Math.round(rect.height)}px`,
+          maxHeight: cs.maxHeight,
+          overflow: cs.overflow,
+          position: cs.position,
+          transform: cs.transform.substring(0, 40),
+        }
+        info.push(parentInfo)
+
+        // Apply red outline for debugging
+        if (element !== document.body) {
+          ;(element as HTMLElement).style.outline = `2px solid red`
+        }
+
+        element = element.parentElement
+        level++
+      }
+
+      setDebugInfo(info)
+      console.log('=== MODAL DEBUG INFO ===', info)
+    }
+  }, [panelRef])
+
+  return { debugInfo, showDebug }
 }
 
 export default AccountCommandPanel
