@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { useModal } from '@/contexts/ModalContext'
-import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette, CreditCard } from 'lucide-react'
+import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector'
 import { BrandLogo } from '@/components/BrandLogo'
@@ -36,12 +36,19 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   const { user, logout } = useAuth()
   const { setEnvironment } = useEnvironment()
   const { openSettings } = useModal()
-  const [, navigate] = useLocation()
   const [isEnvironmentSelectorOpen, setIsEnvironmentSelectorOpen] = useState(false)
   const isCinematic = theme === 'cinematic'
   
+  const handleOpenProfile = () => {
+    openSettings({ initialTab: 'profile' })
+  }
+
+  const handleOpenSettings = () => {
+    openSettings({ initialTab: 'account' })
+  }
+  
   const handleNavigateToBilling = () => {
-    navigate('/billing')
+    // Removed: billing navigation is now handled via Settings modal
   }
   
   const getInitials = (name: string) => {
@@ -104,7 +111,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
       
       {/* Center section: Kai Version Chip */}
       <div className="flex items-center justify-center">
-        <KaiVersionChip onClick={() => navigate('/kai')} />
+        <KaiVersionChip />
       </div>
       
       {/* Right section: Controls and user menu */}
@@ -172,9 +179,8 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
-            <DropdownMenuItem onClick={openSettings}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleNavigateToBilling}><CreditCard className="h-4 w-4 mr-2" />Manage Billing</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleOpenProfile}><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleOpenSettings}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()} className="text-red-500">
               <LogOut className="h-4 w-4 mr-2" />Sign Out

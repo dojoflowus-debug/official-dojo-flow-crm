@@ -6137,3 +6137,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test Settings click opens modal immediately without page navigation
 - [ ] Verify no duplicate modals on repeated clicks
 - [ ] Save checkpoint with immediate modal opening
+
+
+## Phase 26: Top-Right Menu Cleanup (COMPLETED)
+
+- [x] Update ModalContext to support initialTab parameter for deep-linking
+- [x] Update SettingsPortalModal to accept initialTab prop
+- [x] Update CommandHeader dropdown: Profile opens Settings with profile tab
+- [x] Update CommandHeader dropdown: Settings opens Settings with account tab
+- [x] Remove "Manage Billing" dropdown item
+- [x] Remove handleNavigateToBilling function from CommandHeader
+- [x] Test menu navigation and modal tab switching

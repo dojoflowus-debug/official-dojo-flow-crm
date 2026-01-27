@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/_core/hooks/useAuth'
-import { useModal } from '@/contexts/ModalContext'
+import { useModal, type SettingsTab } from '@/contexts/ModalContext'
 import { cn } from '@/lib/utils'
 import { 
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
@@ -12,8 +12,6 @@ interface SettingsPortalModalProps {
   isOpen?: boolean
   onClose?: () => void
 }
-
-type SettingsTab = 'account' | 'settings' | 'usage' | 'billing' | 'scheduled' | 'mail' | 'data' | 'cloud' | 'personalization' | 'connectors' | 'help'
 
 const navigationItems = [
   { id: 'account', label: 'Account', icon: User },
@@ -30,10 +28,9 @@ const navigationItems = [
 
 export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }: SettingsPortalModalProps) {
   const { user, signOut } = useAuth()
-  const { settingsOpen, closeSettings } = useModal()
+  const { settingsOpen, closeSettings, activeTab, setActiveTab } = useModal()
   const isOpen = propIsOpen !== undefined ? propIsOpen : settingsOpen
   const onClose = propOnClose || closeSettings
-  const [activeTab, setActiveTab] = useState<SettingsTab>('account')
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<HTMLElement | null>(null)
 
@@ -99,102 +96,60 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
         aria-modal="true"
         aria-labelledby="settings-modal-title"
         style={{
-          width: 'min(1200px, 92vw)',
-          height: 'min(760px, 90vh)',
-          maxWidth: 'none',
-          maxHeight: 'none',
-          borderRadius: '24px',
-          overflow: 'hidden',
+          position: 'relative',
+          width: `min(1200px, 92vw)`,
+          height: `min(760px, 90vh)`,
+          backgroundColor: 'rgba(15, 15, 15, 0.95)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '16px',
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#1a1a1b',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          outline: 'none',
         }}
       >
-        {/* Header with version label */}
+        {/* Header */}
         <div style={{
-          padding: '12px 20px',
+          padding: '24px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: '#0f0f10',
+          flexShrink: 0,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ 
-              fontSize: '10px', 
-              fontWeight: 'bold', 
-              color: '#22c55e',
-              backgroundColor: 'rgba(34, 197, 94, 0.1)',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              letterSpacing: '0.05em',
-            }}>
-              SETTINGS MODAL REBUILD v1
-            </span>
+          <div>
+            <h2 id="settings-modal-title" style={{ fontSize: '20px', fontWeight: '600', color: 'white', margin: 0 }}>
+              Settings
+            </h2>
           </div>
           <button
             onClick={onClose}
             style={{
-              padding: '8px',
-              borderRadius: '8px',
+              background: 'none',
               border: 'none',
-              backgroundColor: 'transparent',
-              cursor: 'pointer',
               color: 'rgba(255, 255, 255, 0.6)',
+              cursor: 'pointer',
+              padding: '4px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            aria-label="Close settings"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Main Content Area */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Left Sidebar - Fixed 320px */}
+        {/* Content */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {/* Left Sidebar */}
           <div style={{
             width: '320px',
-            flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#0f0f10',
             borderRight: '1px solid rgba(255, 255, 255, 0.1)',
             overflowY: 'auto',
+            flexShrink: 0,
           }}>
-            {/* Brand Header */}
-            <div style={{
-              padding: '20px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  color: 'white',
-                }}>
-                  D
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'white' }}>dojoflow</div>
-                  <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)' }}>Account Settings</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Menu */}
-            <nav style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
+            <nav style={{ padding: '16px 0' }}>
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 const isActive = activeTab === item.id
@@ -204,32 +159,18 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                     onClick={() => setActiveTab(item.id as SettingsTab)}
                     style={{
                       width: '100%',
+                      padding: '12px 16px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      padding: '12px 16px',
-                      marginBottom: '4px',
-                      borderRadius: '10px',
+                      background: isActive ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
                       border: 'none',
-                      backgroundColor: isActive ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
                       borderLeft: isActive ? '3px solid #ef4444' : '3px solid transparent',
-                      cursor: 'pointer',
                       color: isActive ? 'white' : 'rgba(255, 255, 255, 0.6)',
+                      cursor: 'pointer',
                       fontSize: '14px',
-                      textAlign: 'left',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
-                        e.currentTarget.style.color = 'white'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'
-                      }
+                      fontWeight: isActive ? '500' : '400',
+                      transition: 'all 200ms ease',
                     }}
                   >
                     <Icon size={18} />
@@ -238,507 +179,306 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                 )
               })}
             </nav>
-
-            {/* Footer */}
-            <div style={{
-              padding: '12px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            }}>
-              <button
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 16px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  cursor: 'pointer',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '14px',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
-                  e.currentTarget.style.color = 'white'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'
-                }}
-              >
-                <HelpCircle size={18} />
-                <span>Get help</span>
-                <ExternalLink size={14} style={{ marginLeft: 'auto' }} />
-              </button>
-            </div>
           </div>
 
-          {/* Right Content Area - Scrollable */}
+          {/* Right Content */}
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            backgroundColor: '#1a1a1b',
+            padding: '32px 40px',
+            color: 'white',
           }}>
-            {/* Content Header */}
-            <div style={{
-              padding: '24px 32px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              position: 'sticky',
-              top: 0,
-              backgroundColor: '#1a1a1b',
-              zIndex: 10,
-            }}>
-              <h2 id="settings-modal-title" style={{
-                fontSize: '24px',
-                fontWeight: '600',
-                color: 'white',
-                margin: 0,
-              }}>
-                {navigationItems.find(item => item.id === activeTab)?.label || 'Account'}
-              </h2>
-            </div>
-
-            {/* Content Body */}
-            <div style={{ padding: '24px 32px' }}>
-              {activeTab === 'account' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {/* Profile Card */}
+            {/* Account Tab */}
+            {activeTab === 'account' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Account Information</div>
                   <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
+                    padding: '16px',
+                    borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
                       <div style={{
-                        width: '72px',
-                        height: '72px',
+                        width: '64px',
+                        height: '64px',
                         borderRadius: '50%',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '24px',
-                        fontWeight: '600',
-                        color: 'white',
-                        position: 'relative',
                       }}>
-                        {user?.photoUrl ? (
-                          <img 
-                            src={user.photoUrl} 
-                            alt={user.name || 'User'} 
-                            style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'
-                        )}
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '2px',
-                          right: '2px',
-                          width: '16px',
-                          height: '16px',
-                          borderRadius: '50%',
-                          backgroundColor: '#22c55e',
-                          border: '3px solid #1a1a1b',
-                        }} />
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '18px', fontWeight: '600', color: 'white', marginBottom: '4px' }}>
-                          {user?.name || 'User'}
-                        </div>
-                        <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                          {user?.email || 'No email'}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => signOut?.()}
-                        style={{
-                          padding: '10px 16px',
-                          borderRadius: '10px',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          backgroundColor: 'transparent',
-                          color: '#ef4444',
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <LogOut size={16} />
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Plan Card */}
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
                       <div>
-                        <div style={{ fontSize: '18px', fontWeight: '600', color: 'white', marginBottom: '4px' }}>
-                          DojoFlow Pro
-                        </div>
-                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                          Renewal date: Feb 12, 2026
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <button style={{
-                          padding: '10px 20px',
-                          borderRadius: '10px',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          backgroundColor: 'transparent',
-                          color: 'white',
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                        }}>
-                          Manage
-                        </button>
-                        <button style={{
-                          padding: '10px 20px',
-                          borderRadius: '10px',
-                          border: 'none',
-                          backgroundColor: 'white',
-                          color: 'black',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                        }}>
-                          Add credit
-                        </button>
+                        <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>{user?.name || 'User'}</div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>{user?.email || 'No email'}</div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Credits Card */}
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                      <CreditCard size={18} color="white" />
-                      <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Credits</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Free credits</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>87,893</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Monthly credits</span>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>87,700 / 110,000</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Daily refresh credits</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>0</span>
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '8px' }}>
-                        Refresh to 200 at 23:00 every day
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'usage' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {/* Usage Analytics Card */}
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                      <BarChart3 size={18} color="white" />
-                      <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>API Usage</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Requests this month</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>12,450</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Requests limit</span>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>100,000</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Usage percentage</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: '#22c55e' }}>12.45%</span>
-                      </div>
-                      {/* Progress Bar */}
-                      <div style={{
-                        width: '100%',
-                        height: '8px',
-                        borderRadius: '4px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        overflow: 'hidden',
-                        marginTop: '8px',
-                      }}>
-                        <div style={{
-                          width: '12.45%',
-                          height: '100%',
-                          backgroundColor: '#22c55e',
-                          borderRadius: '4px',
-                        }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Usage by Feature */}
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '20px' }}>Usage by Feature</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {[
-                        { feature: 'Lead Capture', usage: 45 },
-                        { feature: 'Student Management', usage: 30 },
-                        { feature: 'Scheduling', usage: 15 },
-                        { feature: 'Analytics', usage: 10 },
-                      ].map((item) => (
-                        <div key={item.feature} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>{item.feature}</span>
-                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>{item.usage}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'billing' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {/* Billing Overview Card */}
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                      <CreditCard size={18} color="white" />
-                      <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Billing Overview</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Current Plan</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>DojoFlow Pro</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Billing Cycle</span>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>Monthly</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Next Billing Date</span>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>Feb 12, 2026</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Monthly Amount</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>$99.00</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Method Card */}
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '20px' }}>Payment Method</div>
-                    <div style={{
-                      padding: '16px',
-                      borderRadius: '12px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
+                    <button style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                      border: '1px solid rgba(239, 68, 68, 0.5)',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      fontSize: '13px',
                     }}>
+                      Edit Profile
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>General Settings</div>
+                  <div style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      General application settings and preferences
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Usage Tab */}
+            {activeTab === 'usage' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>API Usage</div>
+                  <div style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                       <div>
-                        <div style={{ fontSize: '14px', fontWeight: '500', color: 'white', marginBottom: '4px' }}>Visa ending in 4242</div>
-                        <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>Expires 12/2026</div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>API Calls This Month</div>
+                        <div style={{ fontSize: '24px', fontWeight: '600', color: 'white' }}>12,543</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>Usage Limit</div>
+                        <div style={{ fontSize: '24px', fontWeight: '600', color: 'white' }}>100,000</div>
+                      </div>
+                    </div>
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '4px',
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: '12.5%',
+                        backgroundColor: '#ef4444',
+                      }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Billing Tab */}
+            {activeTab === 'billing' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Billing Overview</div>
+                  <div style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '4px' }}>Current Plan</div>
+                        <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Professional</div>
                       </div>
                       <button style={{
                         padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        backgroundColor: 'transparent',
-                        color: 'white',
-                        fontSize: '13px',
+                        borderRadius: '6px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid rgba(239, 68, 68, 0.5)',
+                        color: '#ef4444',
                         cursor: 'pointer',
+                        fontSize: '13px',
                       }}>
-                        Update
+                        Upgrade
                       </button>
                     </div>
-                  </div>
-
-                  {/* Invoices Card */}
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '20px' }}>Recent Invoices</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {[
-                        { date: 'Jan 12, 2026', amount: '$99.00', status: 'Paid' },
-                        { date: 'Dec 12, 2025', amount: '$99.00', status: 'Paid' },
-                        { date: 'Nov 12, 2025', amount: '$99.00', status: 'Paid' },
-                      ].map((invoice, idx) => (
-                        <div key={idx} style={{
-                          padding: '12px',
-                          borderRadius: '8px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}>
-                          <div>
-                            <div style={{ fontSize: '14px', color: 'white' }}>{invoice.date}</div>
-                            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>{invoice.amount}</div>
-                          </div>
-                          <div style={{
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            color: '#22c55e',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                          }}>
-                            {invoice.status}
-                          </div>
-                        </div>
-                      ))}
+                    <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
+                      Next billing date: Feb 1, 2026
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab === 'personalization' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Theme</div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      {['Automatic', 'Light', 'Dark'].map((theme) => (
-                        <button key={theme} style={{
-                          padding: '10px 20px',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          backgroundColor: theme === 'Dark' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                          color: 'white',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                        }}>
-                          {theme}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>View Mode</div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      {['Kai View', 'Classic View'].map((view) => (
-                        <button key={view} style={{
-                          padding: '10px 20px',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          backgroundColor: view === 'Kai View' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                          color: 'white',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                        }}>
-                          {view}
-                        </button>
-                      ))}
-                    </div>
+            {/* Personalization Tab */}
+            {activeTab === 'personalization' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Theme</div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    {['Automatic', 'Light', 'Dark'].map((theme) => (
+                      <button key={theme} style={{
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        backgroundColor: theme === 'Dark' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                      }}>
+                        {theme}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>View Mode</div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    {['Kai View', 'Classic View'].map((view) => (
+                      <button key={view} style={{
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        backgroundColor: view === 'Kai View' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                      }}>
+                        {view}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
-              {activeTab === 'connectors' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Connectors Tab */}
+            {activeTab === 'connectors' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{
+                  padding: '24px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <div>
+                      <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Available Connectors</div>
+                      <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>Connect with third-party services</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {['Zapier', 'Make', 'HubSpot', 'Slack'].map((connector) => (
+                      <div key={connector} style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}>
+                        <div style={{ fontSize: '14px', color: 'white' }}>{connector}</div>
+                        <button style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                          border: '1px solid rgba(239, 68, 68, 0.5)',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                        }}>
+                          Connect
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Profile Tab (new) */}
+            {activeTab === 'profile' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Profile Settings</div>
                   <div style={{
-                    padding: '24px',
-                    borderRadius: '16px',
+                    padding: '16px',
+                    borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                      <div style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                      }}>
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                      </div>
                       <div>
-                        <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Available Connectors</div>
-                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>Connect with third-party services</div>
+                        <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>{user?.name || 'User'}</div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>{user?.email || 'No email'}</div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {['Zapier', 'Make', 'HubSpot', 'Slack'].map((connector) => (
-                        <div key={connector} style={{
-                          padding: '12px',
-                          borderRadius: '8px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}>
-                          <div style={{ fontSize: '14px', color: 'white' }}>{connector}</div>
-                          <button style={{
-                            padding: '8px 16px',
-                            borderRadius: '6px',
-                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                            border: '1px solid rgba(239, 68, 68, 0.5)',
-                            color: '#ef4444',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                          }}>
-                            Connect
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    <button style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                      border: '1px solid rgba(239, 68, 68, 0.5)',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                    }}>
+                      Edit Profile
+                    </button>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && (
-                <div style={{
-                  padding: '48px',
-                  textAlign: 'center',
-                  color: 'rgba(255, 255, 255, 0.4)',
-                }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚧</div>
-                  <div style={{ fontSize: '16px' }}>
-                    {navigationItems.find(item => item.id === activeTab)?.label} settings coming soon
-                  </div>
+            {/* Placeholder for other tabs */}
+            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'profile' && activeTab !== 'settings' && (
+              <div style={{
+                padding: '48px',
+                textAlign: 'center',
+                color: 'rgba(255, 255, 255, 0.4)',
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚧</div>
+                <div style={{ fontSize: '16px' }}>
+                  {navigationItems.find(item => item.id === activeTab)?.label} settings coming soon
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   )
 
-  // Render to document.body using React Portal
   return createPortal(modalContent, document.body)
 }
 
