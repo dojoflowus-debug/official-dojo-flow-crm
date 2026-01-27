@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useModal, type SettingsTab } from '@/contexts/ModalContext'
 import { cn } from '@/lib/utils'
+import { trpc } from '@/lib/trpc'
 import { 
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
   Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink
@@ -320,26 +321,12 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                                 }
 
                                 try {
-                                  // Call upload endpoint
-                                  const response = await fetch('/api/auth/upload-profile-picture', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                      imageData: base64Data,
-                                      mimeType: file.type,
-                                    }),
+                                  // Call tRPC upload endpoint
+                                  const result = await trpc.auth.uploadProfilePicture.mutate({
+                                    imageData: base64Data,
+                                    mimeType: file.type,
                                   });
 
-                                  if (!response.ok) {
-                                    const error = await response.json();
-                                    setUploadError(error.message || 'Failed to upload photo');
-                                    setUploading(false);
-                                    return;
-                                  }
-
-                                  const result = await response.json();
                                   if (result.success) {
                                     setPreviewUrl(result.photoUrl);
                                     // Refresh user data
@@ -390,19 +377,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                             <button
                               onClick={async () => {
                                 try {
-                                  const response = await fetch('/api/auth/delete-profile-picture', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                  });
-
-                                  if (!response.ok) {
-                                    const error = await response.json();
-                                    setUploadError(error.message || 'Failed to remove photo');
-                                    return;
-                                  }
-
+                                  await trpc.auth.deleteProfilePicture.mutate();
                                   setPreviewUrl(null);
                                   await refresh();
                                 } catch (error) {
