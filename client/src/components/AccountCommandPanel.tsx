@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useTheme, Theme } from '@/contexts/ThemeContext'
@@ -50,7 +50,7 @@ type SectionId = 'account' | 'settings' | 'usage' | 'billing' | 'scheduled' | 'm
 interface NavItem {
   id: SectionId
   label: string
-  icon: typeof User
+  icon: React.ComponentType<any>
 }
 
 const navItems: NavItem[] = [
@@ -59,255 +59,23 @@ const navItems: NavItem[] = [
   { id: 'usage', label: 'Usage', icon: BarChart3 },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'scheduled', label: 'Scheduled tasks', icon: Calendar },
-  { id: 'mail', label: 'Mail Dojo', icon: Mail },
+  { id: 'mail', label: 'Mail Manus', icon: Mail },
   { id: 'data', label: 'Data controls', icon: Database },
   { id: 'cloud', label: 'Cloud browser', icon: Cloud },
   { id: 'connectors', label: 'Connectors', icon: Puzzle },
-  { id: 'integrations', label: 'Integrations', icon: Puzzle },
+  { id: 'integrations', label: 'Integrations', icon: Zap },
 ]
 
-const themeOptions: { id: Theme; label: string; icon: typeof Sun }[] = [
-  { id: 'light', label: 'Light', icon: Sun },
-  { id: 'dark', label: 'Dark', icon: Moon },
-  { id: 'cinematic', label: 'Cinema', icon: Sparkles },
-]
-
-export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountCommandPanelProps) {
+const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanelProps) => {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const panelRef = useRef<HTMLDivElement>(null)
-  const [activeSection, setActiveSection] = useState<SectionId>('usage')
+  const [activeSection, setActiveSection] = useState<SectionId>('account')
   const [isAnimating, setIsAnimating] = useState(false)
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
   const { toast } = useToast()
-  
-  // Edit profile form state
-  const [profileForm, setProfileForm] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    bio: user?.bio || '',
-  })
-  
-  // Profile picture state
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(getUserAvatarUrl(user) || null)
-  const [avatarImageBroken, setAvatarImageBroken] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  
-  // Update form when user data changes
-  useEffect(() => {
-    if (user) {
-      setProfilePicturePreview(getUserAvatarUrl(user) || null)
-      setAvatarImageBroken(false)
-      setProfileForm({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        bio: user.bio || '',
-      })
-    }
-  }, [user])
-  
-  // Get tRPC utils for cache invalidation
-  const utils = trpc.useUtils()
-  
-  // Update profile mutation
-  const updateProfileMutation = trpc.auth.updateProfile.useMutation({
-    onSuccess: (data) => {
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been successfully updated.',
-      })
-      setIsEditingProfile(false)
-      // Refresh user data via cache invalidation
-      utils.auth.me.invalidate()
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update profile',
-        variant: 'destructive',
-      })
-    },
-  })
-  
-  const handleSaveProfile = () => {
-    updateProfileMutation.mutate(profileForm)
-  }
-  
-  // Upload profile picture mutation
-  const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation({
-    // @ts-ignore - onSuccess can be async
-    async onSuccess(data) {
-      console.log('[Upload] Photo uploaded successfully:', data.photoUrl);
-      
-      // Use cache busting to prevent CDN caching issues
-      const cachedBustedUrl = `${data.photoUrl}?t=${Date.now()}`
-      
-      // Update preview immediately
-      setProfilePicturePreview(cachedBustedUrl)
-      setAvatarImageBroken(false)
-      
-      // Update the cache with the new photoUrl
-      if (user) {
-        const updatedUser = {
-          ...user,
-          photoUrl: data.photoUrl,
-          photoUrlSmall: data.photoUrl,
-          updatedAt: new Date(),
-        };
-        utils.auth.me.setData(undefined, updatedUser);
-        console.log('[Upload] Cache updated with new photoUrl:', updatedUser);
-      }
-      
-      // Refetch to ensure we have the latest data from server
-      try {
-        await utils.auth.me.refetch();
-        console.log('[Upload] Cache refetched successfully');
-      } catch (error) {
-        console.error('[Upload] Error refetching cache:', error);
-      }
-      
-      // Show success toast
-      toast({
-        title: 'Profile picture updated',
-        description: 'Your profile picture has been successfully updated.',
-      })
-    },
-    onError: (error) => {
-      console.error('[Upload] Error uploading photo:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to upload profile picture',
-        variant: 'destructive',
-      })
-    },
-  })
-  
-  // Delete profile picture mutation
-  const deleteProfilePictureMutation = trpc.auth.deleteProfilePicture.useMutation({
-    onSuccess: () => {
-      toast({
-        title: 'Profile picture removed',
-        description: 'Your profile picture has been removed.',
-      })
-      setProfilePicturePreview(null)
-      // Refresh user data via cache invalidation
-      utils.auth.me.invalidate()
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to remove profile picture',
-        variant: 'destructive',
-      })
-    },
-  })
-  
-  // Handle profile picture file selection
-  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Invalid file type',
-        description: 'Please select an image file',
-        variant: 'destructive',
-      })
-      return
-    }
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: 'File too large',
-        description: 'Please select an image smaller than 5MB',
-        variant: 'destructive',
-      })
-      return
-    }
-    
-    // Read file and convert to base64
-    const reader = new FileReader()
-    reader.onerror = () => {
-      console.error('[Upload] FileReader error:', reader.error);
-      toast({
-        title: 'Error reading file',
-        description: 'Failed to read the selected file',
-        variant: 'destructive',
-      })
-    }
-    reader.onload = (e) => {
-      const base64Data = e.target?.result as string
-      if (!base64Data) {
-        console.error('[Upload] Failed to convert file to base64');
-        toast({
-          title: 'Error',
-          description: 'Failed to process the image',
-          variant: 'destructive',
-        })
-        return
-      }
-      
-      console.log('[Upload] File converted to base64, size:', base64Data.length);
-      setProfilePicturePreview(base64Data)
-      
-      // Upload to server
-      console.log('[Upload] Starting upload mutation...');
-      uploadProfilePictureMutation.mutate({
-        imageData: base64Data,
-        mimeType: file.type,
-      })
-    }
-    reader.readAsDataURL(file)
-  }
-  
-  // Handle delete profile picture
-  const handleDeleteProfilePicture = () => {
-    deleteProfilePictureMutation.mutate()
-  }
-  
-  // Fetch credit balance
-  const { data: creditBalance } = trpc.credits.getBalance.useQuery(undefined, {
-    enabled: isOpen,
-    refetchInterval: 60000,
-  })
-  
-  // Get user initials for avatar
-  const getUserInitialsLocal = () => {
-    return getInitials(user)
-  }
 
-  // Legacy function for backward compatibility
-  const getUserInitials = () => {
-    const displayName = user?.name || user?.email?.split('@')[0]
-    if (!displayName) return 'U'
-    const names = displayName.split(' ')
-    if (names.length >= 2) {
-      return `${names[0][0]}${names[1][0]}`.toUpperCase()
-    }
-    return displayName.substring(0, 2).toUpperCase()
-  }
-  
-  // Get display name
-  const getDisplayName = () => {
-    if (user?.name) return user.name
-    if (user?.email) return user.email.split('@')[0]
-    return 'User'
-  }
-  
-  // Get user role
-  const getUserRole = () => {
-    if (user?.globalRole === 'platform_admin') return 'Platform Admin'
-    if (user?.role === 'admin') return 'Admin'
-    if (user?.role === 'owner') return 'Owner'
-    return 'School Owner'
-  }
-  
-  // Handle escape key
+  // Handle keyboard escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -359,40 +127,22 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
     await logout()
     navigate('/owner')
   }
-  
-  // Navigation handlers
-  const handleNavigate = (path: string) => {
-    onClose()
-    navigate(path)
-  }
-  
-  // Focus trap
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Tab' && panelRef.current) {
-      const focusableElements = panelRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
-      const firstElement = focusableElements[0] as HTMLElement
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
-      
-      if (e.shiftKey && document.activeElement === firstElement) {
-        e.preventDefault()
-        lastElement?.focus()
-      } else if (!e.shiftKey && document.activeElement === lastElement) {
-        e.preventDefault()
-        firstElement?.focus()
-      }
-    }
-  }, [])
-  
-  if (!isOpen && !isAnimating) return null
 
-  // Sample usage data for the Usage section
-  const usageData = [
-    { details: 'DOJO FLOW', date: '2026-01-02 17:33', credits: -361002 },
-    { details: 'Upgrade plan', date: '2026-01-02 11:50', credits: 85000 },
-    { details: 'Understanding Uploaded Files and Their Contents', date: '2026-01-02 11:39', credits: -491 },
-    { details: 'This task has been deleted', date: '2025-12-31 21:11', credits: -763 },
+  const handleNavigate = (path: string) => {
+    navigate(path)
+    onClose()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose()
+    }
+  }
+
+  const themeOptions: Array<{ id: Theme; label: string; icon: React.ComponentType<any> }> = [
+    { id: 'light', label: 'Light', icon: Sun },
+    { id: 'dark', label: 'Dark', icon: Moon },
+    { id: 'cinematic', label: 'Cinematic', icon: Sparkles },
   ]
 
   const renderContent = () => {
@@ -410,109 +160,52 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                 <X className="w-5 h-5 text-zinc-500" />
               </button>
             </div>
-            
-            {/* Plan Info */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-1">
-                <div>
-                  <h3 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">DojoFlow Pro</h3>
-                  <p className="text-sm text-zinc-500">Renewal date: Feb 2, 2026</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors">
+
+            {/* Usage Content */}
+            <div className="space-y-6">
+              {/* Manus Pro Card */}
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-500/10 dark:to-blue-500/10 border border-purple-200 dark:border-purple-500/20">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1">Manus Pro</h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Renewal date: Feb 13, 2026</p>
+                  </div>
+                  <button className="px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
                     Manage
                   </button>
-                  <button className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors">
-                    Add credits
-                  </button>
                 </div>
               </div>
-            </div>
-            
-            {/* Credits Stats */}
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-zinc-500" />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-300">Credits</span>
-                  <span className="w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] text-zinc-500">?</span>
+
+              {/* Credits Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-5 h-5 text-amber-500" />
+                  <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Credits</h3>
                 </div>
-                <span className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 tabular-nums">
-                  {creditBalance?.creditsRemaining?.toLocaleString() ?? '72,913'}
-                </span>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Free credits</p>
+                    <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">43,356</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Monthly credits</p>
+                    <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">43,067 / 110,000</p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Daily refresh credits</p>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">0</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-2">Refresh to 200 at 23:00 every day</p>
+                </div>
               </div>
-              
-              <div className="pl-6 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Free credits</span>
-                  <span className="text-zinc-700 dark:text-zinc-300">74</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Monthly credits</span>
-                  <span className="text-zinc-700 dark:text-zinc-300">{creditBalance?.creditsRemaining?.toLocaleString() ?? '72,839'} / 85,000</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between py-3 border-b border-zinc-200 dark:border-zinc-700">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-zinc-500" />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-300">Daily refresh credits</span>
-                  <span className="w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] text-zinc-500">?</span>
-                </div>
-                <span className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 tabular-nums">115</span>
-              </div>
-              <p className="pl-6 text-xs text-zinc-500">Refresh to 300 at 23:00 every day</p>
-            </div>
-            
-            {/* Website Usage & Billing */}
-            <div className="flex-1">
-              <button 
-                onClick={() => handleNavigate('/billing/credits')}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="w-5 h-5 text-zinc-500" />
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Website usage & billing</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+
+              {/* Website Usage & Billing */}
+              <button className="w-full p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left flex items-center justify-between">
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">Website usage & billing</span>
+                <ChevronRight className="w-5 h-5 text-zinc-400" />
               </button>
-              
-              {/* Usage Table */}
-              <div className="mt-4 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Details</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Credits change</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-zinc-900">
-                    {usageData.map((item, index) => (
-                      <tr key={index} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                        <td className="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 max-w-[200px] truncate">{item.details}</td>
-                        <td className="px-4 py-3 text-sm text-zinc-500">{item.date}</td>
-                        <td className={`px-4 py-3 text-sm text-right tabular-nums ${item.credits > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-600 dark:text-zinc-400'}`}>
-                          {item.credits > 0 ? '+' : ''}{item.credits.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Pagination */}
-              <div className="flex items-center justify-center gap-2 mt-4 text-sm">
-                <button className="px-2 py-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">&lt; Previous</button>
-                <button className="px-2 py-1 text-zinc-800 dark:text-zinc-100 bg-zinc-200 dark:bg-zinc-700 rounded">1</button>
-                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">2</button>
-                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">3</button>
-                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">4</button>
-                <span className="text-zinc-400">...</span>
-                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">21</button>
-                <button className="px-2 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">22</button>
-                <button className="px-3 py-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Next &gt;</button>
-              </div>
             </div>
           </div>
         )
@@ -529,217 +222,32 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
             
             {/* Profile Section */}
             <div className="space-y-6">
-              {!isEditingProfile ? (
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
-                  <Avatar className="h-16 w-16 rounded-xl">
-                    {getUserAvatarUrl(user) && (
-                      <AvatarImage src={getUserAvatarUrl(user) || undefined} className="rounded-xl" />
-                    )}
-                    <AvatarFallback className="rounded-xl text-lg font-bold bg-gradient-to-br from-red-500 to-orange-600 text-white">
-                      {getUserInitialsLocal()}
-                    </AvatarFallback>
+              {/* User Profile Card */}
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/10 dark:to-cyan-500/10 border border-blue-200 dark:border-blue-500/20">
+                <div className="flex items-start gap-4 mb-6">
+                  <Avatar className="w-16 h-16 border-2 border-white dark:border-zinc-800 shadow-lg">
+                    <AvatarImage src={getUserAvatarUrl(user)} alt={user?.name} />
+                    <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">{getDisplayName()}</h3>
-                    <p className="text-sm text-zinc-500">{user?.email || 'owner@dojoflow.com'}</p>
-                    {user?.phone && <p className="text-sm text-zinc-500">{user.phone}</p>}
-                    {user?.bio && <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">{user.bio}</p>}
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <Shield className="w-3 h-3 text-amber-500" />
-                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{getUserRole()}</span>
+                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-lg">{user?.name}</h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{user?.email}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Active</span>
                     </div>
-                  </div>
-                  <button 
-                    onClick={() => setIsEditingProfile(true)}
-                    className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
-                  >
-                    Edit
-                  </button>
-                </div>
-              ) : (
-                <div className="p-6 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">Edit Profile</h3>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {/* Profile Picture */}
-                    <div className="space-y-2">
-                      <Label>Profile Picture</Label>
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-20 w-20">
-                          {!avatarImageBroken && profilePicturePreview && (
-                            <AvatarImage 
-                              src={profilePicturePreview}
-                              alt={user?.name || 'User'}
-                              onError={() => setAvatarImageBroken(true)}
-                            />
-                          )}
-                          <AvatarFallback className="text-lg">{getUserInitialsLocal()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadProfilePictureMutation.isPending}
-                          >
-                            {uploadProfilePictureMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Camera className="h-4 w-4 mr-2" />
-                            )}
-                            Upload
-                          </Button>
-                          {profilePicturePreview && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleDeleteProfilePicture}
-                              disabled={deleteProfilePictureMutation.isPending}
-                            >
-                              {deleteProfilePictureMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-4 w-4 mr-2" />
-                              )}
-                              Remove
-                            </Button>
-                          )}
-                        </div>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleProfilePictureChange}
-                          className="hidden"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Recommended: Square image, at least 200x200px, max 5MB
-                      </p>
-                    </div>
-                    {/* Name */}
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
-                      <Input
-                        id="name"
-                        value={profileForm.name}
-                        onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                        placeholder="Your name"
-                      />
-                    </div>
-                    
-                    {/* Email */}
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={profileForm.email}
-                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                    
-                    {/* Phone */}
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                        placeholder="(555) 123-4567"
-                      />
-                    </div>
-                    
-                    {/* Bio */}
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        value={profileForm.bio}
-                        onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                        placeholder="Tell us about yourself (max 160 characters)"
-                        maxLength={160}
-                        rows={3}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {profileForm.bio.length}/160 characters
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 mt-6">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsEditingProfile(false)
-                        // Reset form to current user data
-                        if (user) {
-                          setProfileForm({
-                            name: user.name || '',
-                            email: user.email || '',
-                            phone: user.phone || '',
-                            bio: user.bio || '',
-                          })
-                        }
-                      }}
-                      disabled={updateProfileMutation.isPending}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveProfile}
-                      disabled={updateProfileMutation.isPending}
-                    >
-                      {updateProfileMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Save Changes
-                    </Button>
                   </div>
                 </div>
-              )}
-              
-              {/* Quick Actions */}
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={() => handleNavigate('/settings/school')}
-                  className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left group"
-                >
-                  <Building2 className="w-5 h-5 text-amber-500 mb-2" />
-                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100">School Profile</h4>
-                  <p className="text-xs text-zinc-500">Manage dojo details</p>
-                </button>
-                <button 
-                  onClick={() => handleNavigate('/staff')}
-                  className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left group"
-                >
-                  <Users className="w-5 h-5 text-blue-500 mb-2" />
-                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100">Staff & Roles</h4>
-                  <p className="text-xs text-zinc-500">Team management</p>
+
+                {/* Edit Profile Button */}
+                <button className="w-full px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
+                  Edit Profile
                 </button>
               </div>
-              
-              {/* Theme Selector */}
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
-                    {theme === 'light' ? (
-                      <Sun className="w-4 h-4 text-amber-500" />
-                    ) : theme === 'dark' ? (
-                      <Moon className="w-4 h-4 text-indigo-400" />
-                    ) : (
-                      <Sparkles className="w-4 h-4 text-purple-400" />
-                    )}
-                  </div>
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Theme</span>
-                </div>
-                
+
+              {/* Theme Selection */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">Theme</label>
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-200 dark:bg-zinc-700">
                   {themeOptions.map((t) => {
                     const isActive = theme === t.id
@@ -758,21 +266,21 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
                           }
                         `}
                       >
-                        <Icon className="h-3.5 w-3.5" />
-                        <span>{t.label}</span>
+                        <Icon className="w-4 h-4" />
+                        {t.label}
                       </button>
                     )
                   })}
                 </div>
               </div>
-              
-              {/* Sign Out */}
+
+              {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20 transition-all duration-200"
+                className="w-full px-4 py-3 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors font-medium flex items-center justify-center gap-2"
               >
-                <LogOut className="w-4 h-4 text-red-500" />
-                <span className="text-sm font-medium text-red-500">Sign Out</span>
+                <LogOut className="w-4 h-4" />
+                Sign Out
               </button>
             </div>
           </div>
@@ -790,36 +298,11 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
             
             <div className="space-y-3">
               <button 
-                onClick={() => handleNavigate('/settings/notifications')}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
+                onClick={() => handleNavigate('/settings')}
+                className="w-full p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left flex items-center justify-between group"
               >
-                <div className="flex items-center gap-3">
-                  <Bell className="w-5 h-5 text-sky-500" />
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Notifications</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
-              </button>
-              
-              <button 
-                onClick={() => handleNavigate('/settings/integrations')}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <Puzzle className="w-5 h-5 text-purple-500" />
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Integrations</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
-              </button>
-              
-              <button 
-                onClick={() => handleNavigate('/security')}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-emerald-500" />
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Security & Privacy</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">Manage Settings</span>
+                <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
               </button>
             </div>
           </div>
@@ -837,40 +320,12 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
             
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-500/10 dark:to-green-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-zinc-500">Current Plan</span>
-                  <span className="px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 rounded-full">Active</span>
-                </div>
-                <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100 mb-1">DojoFlow Pro</h3>
-                <p className="text-sm text-zinc-500">Next billing: Feb 2, 2026</p>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-2">Billing Portal</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">Manage your subscription and payment methods</p>
+                <button className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors">
+                  Open Billing Portal
+                </button>
               </div>
-              
-              <button 
-                onClick={() => handleNavigate('/billing')}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <CreditCard className="w-5 h-5 text-zinc-500" />
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Manage subscription</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
-              </button>
-              
-              <button 
-                onClick={() => handleNavigate('/billing/credits')}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <Zap className="w-5 h-5 text-emerald-500" />
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">AI Credits</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {creditBalance?.creditsRemaining?.toLocaleString() ?? '72,913'}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
-                </div>
-              </button>
             </div>
           </div>
         )
@@ -901,6 +356,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           pointerEvents: isOpen ? 'auto' : 'none',
+
         }}
         onClick={onClose}
       />
@@ -926,20 +382,18 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           }
         `}
         style={{
-          ...{
-            pointerEvents: isOpen ? 'auto' : 'none',
-            background: 'var(--modal-bg, #ffffff)',
-            border: '1px solid var(--modal-border, rgba(255, 255, 255, 0.1))',
-            boxShadow: `
-              0 25px 50px -12px rgba(0, 0, 0, 0.6),
-              0 0 0 1px rgba(255, 255, 255, 0.05),
-              0 0 40px rgba(0, 0, 0, 0.3)
-            `,
-            width: 'min(1100px, 92vw)',
-            height: 'min(720px, 86vh)',
-          }
-        }}
+          pointerEvents: isOpen ? 'auto' : 'none',
+          background: 'var(--modal-bg, #ffffff)',
+          border: '1px solid var(--modal-border, rgba(255, 255, 255, 0.1))',
+          boxShadow: `
+            0 25px 50px -12px rgba(0, 0, 0, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 0 40px rgba(0, 0, 0, 0.3)
+          `,
+          width: 'min(1100px, 92vw)',
+          height: 'min(720px, 86vh)',
 
+        }}
       >
         <div className="flex h-full bg-white dark:bg-zinc-900">
           {/* Left Sidebar */}
@@ -990,7 +444,7 @@ export function AccountCommandPanel({ isOpen, onClose, anchorRef }: AccountComma
           
           {/* Right Content Panel */}
           <div className="flex-1 overflow-y-auto bg-white dark:bg-zinc-900">
-            <div className="p-8 max-h-[calc(86vh-60px)]">
+            <div className="p-8">
               {renderContent()}
             </div>
           </div>
