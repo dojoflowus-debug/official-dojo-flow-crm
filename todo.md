@@ -6127,3 +6127,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add escape behaviors (Esc key, backdrop click) and body scroll prevention
 - [ ] Rewire settings trigger to use new modal
 - [ ] Verify modal expands correctly with "SETTINGS MODAL REBUILD v1" label
+
+
+## Phase 28: Settings Modal Immediate Opening
+- [ ] Create global modal state/context for managing Settings modal
+- [ ] Update SettingsPortalModal to read from global state
+- [ ] Convert Settings dropdown item from Link to button action
+- [ ] Add openSettingsModal function to close dropdown and open modal
+- [ ] Test Settings click opens modal immediately without page navigation
+- [ ] Verify no duplicate modals on repeated clicks
+- [ ] Save checkpoint with immediate modal opening

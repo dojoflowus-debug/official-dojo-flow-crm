@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
+import { useModal } from '@/contexts/ModalContext'
 import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette, CreditCard } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector'
@@ -34,8 +35,8 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
   const { setEnvironment } = useEnvironment()
+  const { openSettings } = useModal()
   const [, navigate] = useLocation()
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isEnvironmentSelectorOpen, setIsEnvironmentSelectorOpen] = useState(false)
   const isCinematic = theme === 'cinematic'
   
@@ -97,9 +98,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           >
             Dashboard
           </Link>
-          <span className={cn("text-sm font-medium truncate", isCinematic ? "text-white" : isDarkMode ? "text-white" : "text-gray-900")}>
-            / {title}
-          </span>
+          <span className={cn("text-sm font-medium truncate", isCinematic ? "text-white" : isDarkMode ? "text-white" : "text-gray-900")}></span>
         </nav>
       </div>
       
@@ -174,7 +173,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={openSettings}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
             <DropdownMenuItem onClick={handleNavigateToBilling}><CreditCard className="h-4 w-4 mr-2" />Manage Billing</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()} className="text-red-500">
@@ -183,10 +182,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <SettingsPortalModal 
-          isOpen={isSettingsOpen} 
-          onClose={() => setIsSettingsOpen(false)}
-        />
+        <SettingsPortalModal />
         
         {/* Cinematic Environment Selector Dialog */}
         <Dialog open={isEnvironmentSelectorOpen} onOpenChange={setIsEnvironmentSelectorOpen}>

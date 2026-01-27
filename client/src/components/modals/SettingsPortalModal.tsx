@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/_core/hooks/useAuth'
+import { useModal } from '@/contexts/ModalContext'
 import { cn } from '@/lib/utils'
 import { 
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
@@ -8,8 +9,8 @@ import {
 } from 'lucide-react'
 
 interface SettingsPortalModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 type SettingsTab = 'account' | 'settings' | 'usage' | 'billing' | 'scheduled' | 'mail' | 'data' | 'cloud' | 'personalization' | 'connectors' | 'help'
@@ -27,8 +28,11 @@ const navigationItems = [
   { id: 'connectors', label: 'Connectors', icon: Zap },
 ]
 
-export function SettingsPortalModal({ isOpen, onClose }: SettingsPortalModalProps) {
+export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }: SettingsPortalModalProps) {
   const { user, signOut } = useAuth()
+  const { settingsOpen, closeSettings } = useModal()
+  const isOpen = propIsOpen !== undefined ? propIsOpen : settingsOpen
+  const onClose = propOnClose || closeSettings
   const [activeTab, setActiveTab] = useState<SettingsTab>('account')
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<HTMLElement | null>(null)
