@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useTheme, Theme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
@@ -343,7 +344,7 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
     }
   }
   
-  return (
+  return createPortal(
     <>
       {/* Fog/Blur Overlay Background */}
       <div 
@@ -452,7 +453,8 @@ const AccountCommandPanel = ({ isOpen, onClose, anchorRef }: AccountCommandPanel
       </div>
       
 
-    </>
+    </>,
+    document.body
   )
 }
 
