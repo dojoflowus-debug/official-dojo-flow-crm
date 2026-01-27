@@ -13,6 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -395,6 +397,9 @@ export default function AddStudentModal({
         className="w-full h-full sm:w-auto sm:h-auto sm:max-w-[800px] sm:max-h-[90vh] max-h-full p-0 gap-0 overflow-hidden !bg-[#1a1a1c] dark:!bg-[#1a1a1c] border-0 sm:border sm:border-border/50 rounded-none sm:rounded-2xl shadow-2xl backdrop-blur-none"
         showCloseButton={false}
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Add Student</DialogTitle>
+        </DialogHeader>
         {/* Header with Live Preview */}
         <div className="relative px-6 pt-6 pb-4 border-b border-border/50 bg-[#1f1f22]">
           {/* Close button */}
