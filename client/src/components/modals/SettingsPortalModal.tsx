@@ -634,7 +634,92 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                 </div>
               )}
 
-              {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && (
+              {activeTab === 'personalization' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div>
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Theme</div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      {['Automatic', 'Light', 'Dark'].map((theme) => (
+                        <button key={theme} style={{
+                          padding: '10px 20px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          backgroundColor: theme === 'Dark' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                        }}>
+                          {theme}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>View Mode</div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      {['Kai View', 'Classic View'].map((view) => (
+                        <button key={view} style={{
+                          padding: '10px 20px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          backgroundColor: view === 'Kai View' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                        }}>
+                          {view}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'connectors' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div>
+                        <div style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Available Connectors</div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>Connect with third-party services</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {['Zapier', 'Make', 'HubSpot', 'Slack'].map((connector) => (
+                        <div key={connector} style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}>
+                          <div style={{ fontSize: '14px', color: 'white' }}>{connector}</div>
+                          <button style={{
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            border: '1px solid rgba(239, 68, 68, 0.5)',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                          }}>
+                            Connect
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && (
                 <div style={{
                   padding: '48px',
                   textAlign: 'center',
