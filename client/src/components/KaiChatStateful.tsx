@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/_core/hooks/useAuth';
+import { UserAvatar } from './UserAvatar';
 import {
   ConversationState,
   ConversationStage,
@@ -477,8 +479,13 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 pb-20">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+        {messages.map((msg) => {
+          const { user } = useAuth();
+          return (
+          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end gap-2' : 'justify-start gap-2'} items-end`}>
+            {msg.role === 'user' && user && (
+              <UserAvatar user={user} size="sm" />
+            )}
             <div
               className={`max-w-xs px-4 py-2 rounded-lg ${
                 msg.role === 'user'
@@ -489,7 +496,8 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
               <p className="text-sm">{msg.text}</p>
             </div>
           </div>
-        ))}
+          );
+        })}
         {/* Calendar Picker for Schedule Selection */}
         {showCalendarDerived && (
           <div className="flex justify-start">

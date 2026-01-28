@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  cb.id,\n  cb.user_id,\n  cb.organization_id,\n  cb.balance,\n  cb.updated_at,\n  COUNT(ct.id) as transaction_count,\n  MAX(ct.created_at) as last_transaction_date\nFROM ai_credit_balance cb\nLEFT JOIN ai_credit_transactions ct ON cb.user_id = ct.user_id AND cb.organization_id = ct.organization_id\nWHERE cb.user_id = 2580004\nGROUP BY cb.id, cb.user_id, cb.organization_id, cb.balance, cb.updated_at\nORDER BY cb.updated_at DESC\nLIMIT 10;\n\nSELECT \n  id,\n  user_id,\n  organization_id,\n  amount,\n  transaction_type,\n  description,\n  created_at\nFROM ai_credit_transactions\nWHERE user_id = 2580004\nORDER BY created_at DESC\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT \n  cb.id,\n  cb.user_id,\n  cb.organization_id,\n  cb.balance,\n  cb.updated_at,\n  COUNT(ct.id) as transaction_count,\n  MAX(ct.created_at) as last_transaction_date\nFROM ai_credit_balance cb\nLEFT JOIN ai_credit_transactions ct ON cb.user_id = ct.user_id AND cb.organization_id = ct.organization_id\nWHERE cb.user_id = 2580004\nGROUP BY cb.id, cb.user_id, cb.organization_id, cb.balance, cb.updated_at\nORDER BY cb.updated_at DESC\nLIMIT 10;\n\nSELECT \n  id,\n  user_id,\n  organization_id,\n  amount,\n  transaction_type,\n  description,\n  created_at\nFROM ai_credit_transactions\nWHERE user_id = 2580004\nORDER BY created_at DESC\nLIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'cb.user_id' in 'on clause'"
+  ]
+}

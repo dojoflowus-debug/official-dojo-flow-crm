@@ -1,0 +1,9 @@
+{
+  "query": "SELECT \n  id,\n  organizationId,\n  balance,\n  periodAllowance,\n  periodUsed,\n  totalPurchased,\n  totalUsed,\n  updatedAt\nFROM ai_credit_balance\nWHERE organizationId = 120001\nORDER BY updatedAt DESC\nLIMIT 5;\n\nSELECT \n  id,\n  organizationId,\n  type,\n  amount,\n  balanceAfter,\n  taskType,\n  description,\n  userId,\n  createdAt\nFROM ai_credit_transactions\nWHERE organizationId = 120001\nORDER BY createdAt DESC\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT \n  id,\n  organizationId,\n  balance,\n  periodAllowance,\n  periodUsed,\n  totalPurchased,\n  totalUsed,\n  updatedAt\nFROM ai_credit_balance\nWHERE organizationId = 120001\nORDER BY updatedAt DESC\nLIMIT 5;\n\nSELECT \n  id,\n  organizationId,\n  type,\n  amount,\n  balanceAfter,\n  taskType,\n  description,\n  userId,\n  createdAt\nFROM ai_credit_transactions\nWHERE organizationId = 120001\nORDER BY createdAt DESC\nLIMIT 20;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 55
+}
