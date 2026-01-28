@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, organizationId, planId, status, stripeCustomerId, stripeSubscriptionId FROM organization_subscriptions WHERE organizationId = 120001 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, organizationId, planId, status, stripeCustomerId, stripeSubscriptionId FROM organization_subscriptions WHERE organizationId = 120001 LIMIT 1;",
+  "rows": [
+    {
+      "id": "570002",
+      "organizationId": "120001",
+      "planId": "1",
+      "status": "trial",
+      "stripeCustomerId": "cus_TsKPz8e2T6yvDt",
+      "stripeSubscriptionId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torganizationId\tplanId\tstatus\tstripeCustomerId\tstripeSubscriptionId\n570002\t120001\t1\ttrial\tcus_TsKPz8e2T6yvDt\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 373
+}

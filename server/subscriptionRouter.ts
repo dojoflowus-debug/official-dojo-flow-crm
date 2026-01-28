@@ -424,7 +424,9 @@ export const subscriptionRouter = router({
       }
 
       try {
+        console.log('[Billing Portal] Creating session for org:', input.organizationId);
         let subscription = await getOrganizationSubscription(input.organizationId);
+        console.log('[Billing Portal] Current subscription:', subscription);
         
         if (!subscription || !subscription.stripeCustomerId) {
           if (!subscription) {
@@ -450,11 +452,13 @@ export const subscriptionRouter = router({
           }
           
           if (!subscription?.stripeCustomerId) {
+            console.log('[Billing Portal] Creating Stripe customer');
             const customer = await stripe.customers.create({
               metadata: {
                 organizationId: input.organizationId.toString(),
               },
             });
+            console.log('[Billing Portal] Stripe customer created:', customer.id);
             
             await upsertOrganizationSubscription({
               ...subscription!,
@@ -471,16 +475,30 @@ export const subscriptionRouter = router({
 
         const baseUrl = input.returnUrl || process.env.VITE_FRONTEND_URL || 'http://localhost:3000';
         const returnUrl = baseUrl + '/kai?billing=return';
+        console.log('[Billing Portal] Creating portal session for customer:', subscription.stripeCustomerId, 'return URL:', returnUrl);
 
         const session = await stripe.billingPortal.sessions.create({
           customer: subscription.stripeCustomerId,
           return_url: returnUrl,
         });
+        console.log('[Billing Portal] Portal session created:', session.url);
 
         return { url: session.url };
       } catch (error) {
         console.error('[Billing Portal] Error:', error);
         if (error instanceof TRPCError) throw error;
+        
+        // Handle Stripe-specific errors
+        if (error instanceof Error) {
+          const errorMessage = error.message || 'Unknown error';
+          if (errorMessage.includes('resource_missing')) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Stripe customer not found. Please contact support." });
+          }
+          if (errorMessage.includes('invalid_request')) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid billing portal request. Please try again." });
+          }
+        }
+        
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create billing portal" });
       }
     })
