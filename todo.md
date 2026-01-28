@@ -6148,3 +6148,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove "Manage Billing" dropdown item
 - [x] Remove handleNavigateToBilling function from CommandHeader
 - [x] Test menu navigation and modal tab switching
+
+
+## Phase 28: Fix Profile Photo Refresh in Kai Chat (Current)
+
+- [ ] Investigate why Kai chat is not showing updated profile photo after upload in Settings
+- [ ] Implement user data refresh after photo upload in SettingsPortalModal
+- [ ] Ensure Kai chat component re-renders with updated user data
+- [ ] Test profile photo update propagates immediately to chat messages

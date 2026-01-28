@@ -15,6 +15,11 @@ export function UserAvatar({
   className,
   style 
 }: UserAvatarProps) {
+  // Debug logging
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[UserAvatar] photoUrl:', photoUrl, 'name:', name)
+  }
+
   const sizeMap = {
     sm: { width: '28px', height: '28px', fontSize: '12px' },
     md: { width: '40px', height: '40px', fontSize: '16px' },

@@ -341,14 +341,23 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
 
                                   if (result.success) {
                                     setPreviewUrl(result.photoUrl);
-                                    // Refresh user data
+                                    // Refresh user data and invalidate tRPC cache
                                     await refresh();
+                                    // Invalidate auth.me query to update all components using useAuth()
+                                    await trpc.auth.me.invalidate();
                                   } else {
                                     setUploadError(result.message || 'Failed to upload photo');
                                   }
                                 } catch (error) {
                                   setUploadError('Failed to upload photo');
                                   console.error('Upload error:', error);
+                                  // Still try to refresh in case of partial update
+                                  try {
+                                    await refresh();
+                                    await trpc.auth.me.invalidate();
+                                  } catch (e) {
+                                    // Silently fail
+                                  }
                                 } finally {
                                   setUploading(false);
                                 }

@@ -481,9 +481,18 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 pb-20">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end gap-2' : 'justify-start gap-2'} items-end`}>
+          <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
             {msg.role === 'user' && user && (
-              <UserAvatar photoUrl={user.photoUrl} name={user.name} size="sm" />
+              <div className="flex items-center gap-2 mb-2">
+                <UserAvatar photoUrl={user.photoUrl} name={user.name} size="sm" />
+                <span className="text-sm font-semibold text-gray-700">{user.name}</span>
+              </div>
+            )}
+            {msg.role === 'kai' && (
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center font-bold text-white text-sm">K</div>
+                <span className="text-sm font-semibold text-gray-700">Kai</span>
+              </div>
             )}
             <div
               className={`max-w-xs px-4 py-2 rounded-lg ${
