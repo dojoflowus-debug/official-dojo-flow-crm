@@ -504,10 +504,17 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                                 setPortalLoading(false)
                               }
                             } catch (error: any) {
-                              console.error('[Manage Button] Portal error:', error)
+                              console.error('[Manage Button] Full error object:', error)
                               const errorMessage = error?.message ?? error?.data?.zodError ?? "Couldn't open billing portal"
                               console.error('[Manage Button] Error message:', errorMessage)
-                              toast.error(errorMessage)
+                              
+                              // In development, append Stripe error message
+                              let toastMessage = "Couldn't open billing portal. Please try again."
+                              if (process.env.NODE_ENV === 'development' && errorMessage) {
+                                toastMessage = `${toastMessage} (${errorMessage})`
+                              }
+                              
+                              toast.error(toastMessage)
                               setPortalLoading(false)
                             }
                           }}
