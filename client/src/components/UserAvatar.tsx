@@ -31,27 +31,43 @@ export function UserAvatar({
         .slice(0, 2)
     : 'U'
 
+  const containerStyle = {
+    ...sizeStyle,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontWeight: '600',
+    overflow: 'hidden',
+    flexShrink: 0,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    position: 'relative' as const,
+    ...style,
+  }
+
   return (
     <div
-      style={{
-        ...sizeStyle,
-        borderRadius: '50%',
-        backgroundColor: photoUrl ? 'transparent' : 'rgba(239, 68, 68, 0.2)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-        fontWeight: '600',
-        overflow: 'hidden',
-        backgroundImage: photoUrl ? `url('${photoUrl}')` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        flexShrink: 0,
-        ...style,
-      }}
+      style={containerStyle}
       className={className}
     >
-      {!photoUrl && initials}
+      {photoUrl ? (
+        <img
+          src={photoUrl}
+          alt={name || 'User avatar'}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+          onError={(e) => {
+            // Fallback to initials if image fails to load
+            (e.target as HTMLImageElement).style.display = 'none'
+          }}
+        />
+      ) : null}
+      {!photoUrl && <span>{initials}</span>}
     </div>
   )
 }
