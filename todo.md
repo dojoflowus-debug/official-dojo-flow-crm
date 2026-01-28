@@ -6172,3 +6172,20 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add loading state and disable button while loading
 - [x] Add error handling with toast notification
 - [x] Test Manage button flow end-to-end
+
+
+## FluidPay Payment Provider Integration (Jan 28, 2026)
+- [x] Create database schema (payment_provider_connections, billing_settings, payment_webhook_events)
+- [x] Create paymentProviderDb.ts with CRUD operations
+- [x] Create paymentProviderRouter.ts with tRPC endpoints
+- [x] Implement POST /api/payments/fluidpay/test-connection (paymentProvider.testConnection)
+- [x] Implement POST /api/payments/fluidpay/connect (paymentProvider.connect)
+- [x] Implement POST /api/payments/fluidpay/disconnect (paymentProvider.disconnect)
+- [x] Implement GET /api/payments/status (paymentProvider.getStatus)
+- [x] Implement GET /api/payments/events?limit=10 (paymentProvider.getEvents)
+- [x] Implement POST /api/webhooks/fluidpay webhook receiver
+- [x] Add key encryption/decryption utilities (AES-256-CBC)
+- [x] Add Connection Health object in responses
+- [ ] Test with MyDojo sandbox
+- [ ] Create Payments settings UI (6 cards)
+- [ ] Add Payments nav item to Settings modal

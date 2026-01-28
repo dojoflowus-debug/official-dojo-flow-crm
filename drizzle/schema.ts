@@ -1559,3 +1559,66 @@ export const webhookLogs = mysqlTable("webhook_logs", {
 	index("idx_webhook_log_created").on(table.createdAt),
 	index("idx_webhook_log_retry").on(table.nextRetryAt),
 ]);
+
+export const paymentProviderConnections = mysqlTable("payment_provider_connections", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	provider: mysqlEnum(['FLUIDPAY', 'STRIPE']).notNull(),
+	environment: mysqlEnum(['SANDBOX', 'PRODUCTION']).default('SANDBOX').notNull(),
+	publicKeyLast4: varchar({ length: 4 }).notNull(),
+	secretKeyEncrypted: text().notNull(),
+	merchantId: varchar({ length: 255 }),
+	terminalId: varchar({ length: 255 }),
+	status: mysqlEnum(['connected', 'disconnected']).default('disconnected').notNull(),
+	lastVerifiedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_payment_provider_org").on(table.organizationId),
+	index("idx_payment_provider_status").on(table.status),
+]);
+
+export const billingSettings = mysqlTable("billing_settings", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	recurringEnabled: int().default(0).notNull(),
+	billingCadence: mysqlEnum(['monthly', 'weekly', 'custom']).default('monthly'),
+	customBillingDay: int(), // 1-31 for day of month
+	retryAttempts: int().default(3).notNull(),
+	retryIntervalDays: int().default(3).notNull(),
+	autoEmailReceipts: int().default(1).notNull(),
+	sendFailedPaymentNotices: int().default(1).notNull(),
+	posTrackingEnabled: int().default(0).notNull(),
+	posMode: mysqlEnum(['standalone_terminal', 'integrated_checkout']),
+	dailySettlementSyncTime: varchar({ length: 5 }), // HH:MM format
+	paymentMatchingMethod: mysqlEnum(['invoice_number', 'student_name', 'amount_date']).default('invoice_number'),
+	chargeApiEnabled: int().default(0).notNull(),
+	refundApiEnabled: int().default(0).notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_billing_settings_org").on(table.organizationId),
+]);
+
+export const paymentWebhookEvents = mysqlTable("payment_webhook_events", {
+	id: int().autoincrement().notNull(),
+	organizationId: int().notNull(),
+	eventType: varchar({ length: 100 }).notNull(), // e.g., payment.success, payment.failed
+	payloadHash: varchar({ length: 64 }).notNull(),
+	payload: text().notNull(), // JSON payload
+	linkedInvoiceId: int(),
+	linkedStudentId: int(),
+	status: mysqlEnum(['received', 'processed', 'failed']).default('received').notNull(),
+	processedAt: timestamp({ mode: 'string' }),
+	errorMessage: text(),
+	receivedAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_payment_webhook_org").on(table.organizationId),
+	index("idx_payment_webhook_event_type").on(table.eventType),
+	index("idx_payment_webhook_status").on(table.status),
+	index("idx_payment_webhook_received").on(table.receivedAt),
+]);

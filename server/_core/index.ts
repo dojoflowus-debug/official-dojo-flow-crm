@@ -1091,6 +1091,12 @@ async function startServer() {
     await handleStripeWebhook(req, res);
   });
   
+  // FluidPay webhook
+  app.post("/api/webhooks/fluidpay", express.raw({ type: 'application/json' }), async (req, res) => {
+    const { handleFluidPayWebhook } = await import("./fluidpayWebhook");
+    await handleFluidPayWebhook(req, res);
+  });
+  
   // tRPC API (must be BEFORE Vite/static setup so it's not caught by catch-all)
   app.use(
     "/api/trpc",
