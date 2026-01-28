@@ -4,6 +4,7 @@ import { useAuth } from '@/_core/hooks/useAuth'
 import { useModal, type SettingsTab } from '@/contexts/ModalContext'
 import { cn } from '@/lib/utils'
 import { trpc } from '@/lib/trpc'
+import { toast } from 'sonner'
 import { 
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
   Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink
@@ -33,7 +34,7 @@ const navigationItems = [
 ]
 
 export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }: SettingsPortalModalProps) {
-  const { user, signOut, refresh } = useAuth()
+  const { user, signOut, refresh, organizationId } = useAuth()
   const { settingsOpen, closeSettings, activeTab, setActiveTab } = useModal()
   const isOpen = propIsOpen !== undefined ? propIsOpen : settingsOpen
   const onClose = propOnClose || closeSettings
@@ -486,19 +487,24 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                           onClick={async () => {
                             setPortalLoading(true)
                             try {
-                              const { organizationId } = user || {}
                               if (!organizationId) {
-                                setToastMessage('Organization not found')
+                                toast.error('Organization not found')
+                                setPortalLoading(false)
                                 return
                               }
+                              console.log('[Manage Button] Opening billing portal for org:', organizationId)
                               const result = await billingPortalMutation.mutateAsync({ organizationId })
+                              console.log('[Manage Button] Portal session created:', result)
                               if (result?.url) {
+                                console.log('[Manage Button] Redirecting to:', result.url)
                                 window.location.href = result.url
+                              } else {
+                                toast.error('Failed to get billing portal URL')
+                                setPortalLoading(false)
                               }
                             } catch (error) {
-                              setToastMessage('Couldn\'t open billing portal. Please try again.')
-                              console.error('Portal error:', error)
-                            } finally {
+                              console.error('[Manage Button] Portal error:', error)
+                              toast.error('Couldn\'t open billing portal. Please try again.')
                               setPortalLoading(false)
                             }
                           }}
