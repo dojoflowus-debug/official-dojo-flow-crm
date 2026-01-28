@@ -6166,3 +6166,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Implement user data refresh after photo upload in SettingsPortalModal
 - [ ] Ensure Kai chat component re-renders with updated user data
 - [ ] Test profile photo update propagates immediately to chat messages
+
+## Fix Manage Button Behavior (Jan 28, 2026)
+- [x] Replace Manage button handler to open Stripe portal directly
+- [x] Add loading state and disable button while loading
+- [x] Add error handling with toast notification
+- [x] Test Manage button flow end-to-end

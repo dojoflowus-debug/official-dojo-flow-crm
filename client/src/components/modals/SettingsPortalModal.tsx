@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
 import AddCreditModal from '@/components/modals/AddCreditModal'
-import { PlanAndBillingModal } from '@/components/modals/PlanAndBillingModal'
 
 const uploadMutation = trpc.auth.uploadProfilePicture
 const deleteMutation = trpc.auth.deleteProfilePicture
@@ -47,7 +46,6 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
   const [portalLoading, setPortalLoading] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [addCreditOpen, setAddCreditOpen] = useState(false)
-  const [planBillingOpen, setPlanBillingOpen] = useState(false)
   
   // Use tRPC mutations at component level
   const uploadProfilePictureMutation = uploadMutation.useMutation()
@@ -485,8 +483,26 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                       </div>
                       <div style={{ display: 'flex', gap: '12px' }}>
                         <button
-                          onClick={() => setPlanBillingOpen(true)}
-                          disabled={false}
+                          onClick={async () => {
+                            setPortalLoading(true)
+                            try {
+                              const { organizationId } = user || {}
+                              if (!organizationId) {
+                                setToastMessage('Organization not found')
+                                return
+                              }
+                              const result = await billingPortalMutation.mutateAsync({ organizationId })
+                              if (result?.url) {
+                                window.location.href = result.url
+                              }
+                            } catch (error) {
+                              setToastMessage('Couldn\'t open billing portal. Please try again.')
+                              console.error('Portal error:', error)
+                            } finally {
+                              setPortalLoading(false)
+                            }
+                          }}
+                          disabled={portalLoading}
                           style={{
                             padding: '10px 20px',
                             borderRadius: '8px',
@@ -716,10 +732,6 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
       </div>
     </div>
   )
-
-  if (planBillingOpen) {
-    return <PlanAndBillingModal />
-  }
 
   return (
     <>
