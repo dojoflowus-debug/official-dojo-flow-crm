@@ -6189,3 +6189,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test with MyDojo sandbox
 - [ ] Create Payments settings UI (6 cards)
 - [ ] Add Payments nav item to Settings modal
+
+## FluidPay Testing & UI (Jan 28, 2026)
+- [ ] Test FluidPay backend APIs with MyDojo sandbox
+- [ ] Verify Connection Health object returns correctly
+- [ ] Verify lastVerifiedAt updates
+- [ ] Verify only masked key last4 is returned
+- [ ] Verify no secrets appear in logs
+- [ ] Test webhook endpoint receives and logs events
+- [ ] Build Payments Settings UI with 6-card interface
+- [ ] Add Payments nav item to Settings modal
+- [ ] Test end-to-end flow
