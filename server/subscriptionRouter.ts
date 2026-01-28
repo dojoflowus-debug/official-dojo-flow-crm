@@ -453,16 +453,22 @@ export const subscriptionRouter = router({
           
           if (!subscription?.stripeCustomerId) {
             console.log('[Billing Portal] Creating Stripe customer');
-            const customer = await stripe.customers.create({
-              metadata: {
-                organizationId: input.organizationId.toString(),
-              },
-            });
-            console.log('[Billing Portal] Stripe customer created:', customer.id);
+            let customer;
+            try {
+              customer = await stripe.customers.create({
+                metadata: {
+                  organizationId: input.organizationId.toString(),
+                },
+              });
+              console.log('[Billing Portal] Stripe customer created:', customer.id);
+            } catch (e: any) {
+              console.error('[Billing Portal] Stripe customer creation error:', e);
+              throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: e.message ?? "Failed to create Stripe customer" });
+            }
             
             await upsertOrganizationSubscription({
               ...subscription!,
-              stripeCustomerId: customer.id,
+              stripeCustomerId: customer!.id,
             });
             
             subscription = await getOrganizationSubscription(input.organizationId);
@@ -477,13 +483,17 @@ export const subscriptionRouter = router({
         const returnUrl = baseUrl + '/kai?billing=return';
         console.log('[Billing Portal] Creating portal session for customer:', subscription.stripeCustomerId, 'return URL:', returnUrl);
 
-        const session = await stripe.billingPortal.sessions.create({
-          customer: subscription.stripeCustomerId,
-          return_url: returnUrl,
-        });
-        console.log('[Billing Portal] Portal session created:', session.url);
-
-        return { url: session.url };
+        try {
+          const session = await stripe.billingPortal.sessions.create({
+            customer: subscription.stripeCustomerId,
+            return_url: returnUrl,
+          });
+          console.log('[Billing Portal] Portal session created:', session.url);
+          return { url: session.url };
+        } catch (e: any) {
+          console.error('[Billing Portal] Stripe portal session error:', e);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: e.message ?? "Stripe portal failed" });
+        }
       } catch (error) {
         console.error('[Billing Portal] Error:', error);
         if (error instanceof TRPCError) throw error;

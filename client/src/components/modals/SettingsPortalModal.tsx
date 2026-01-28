@@ -503,9 +503,11 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                                 toast.error('Failed to get billing portal URL')
                                 setPortalLoading(false)
                               }
-                            } catch (error) {
+                            } catch (error: any) {
                               console.error('[Manage Button] Portal error:', error)
-                              toast.error('Couldn\'t open billing portal. Please try again.')
+                              const errorMessage = error?.message ?? error?.data?.zodError ?? "Couldn't open billing portal"
+                              console.error('[Manage Button] Error message:', errorMessage)
+                              toast.error(errorMessage)
                               setPortalLoading(false)
                             }
                           }}
