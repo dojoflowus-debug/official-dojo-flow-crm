@@ -34,7 +34,7 @@ const navigationItems = [
 ]
 
 export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }: SettingsPortalModalProps) {
-  const { user, signOut, refresh, organizationId } = useAuth()
+  const { user, signOut, refresh } = useAuth()
   const { settingsOpen, closeSettings, activeTab, setActiveTab } = useModal()
   const isOpen = propIsOpen !== undefined ? propIsOpen : settingsOpen
   const onClose = propOnClose || closeSettings
@@ -487,13 +487,14 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                           onClick={async () => {
                             setPortalLoading(true)
                             try {
-                              if (!organizationId) {
+                              const orgId = user?.activeOrgId
+                              if (!orgId) {
                                 toast.error('Organization not found')
                                 setPortalLoading(false)
                                 return
                               }
-                              console.log('[Manage Button] Opening billing portal for org:', organizationId)
-                              const result = await billingPortalMutation.mutateAsync({ organizationId })
+                              console.log('[Manage Button] Opening billing portal for org:', orgId)
+                              const result = await billingPortalMutation.mutateAsync({ organizationId: orgId })
                               console.log('[Manage Button] Portal session created:', result)
                               if (result?.url) {
                                 console.log('[Manage Button] Redirecting to:', result.url)
