@@ -368,6 +368,9 @@
 - [x] Wire Manage button to open PlanAndBillingModal
 - [x] Implement billing return flow (?billing=return)
 - [x] Test end-to-end billing flow
+- [x] Redesign modal UX with cinematic glass styling
+- [x] Implement portal rendering and proper close functionality
+- [x] Add ESC key, X button, outside click, and footer Close button
 
 ## Bug Fix - Drag-and-Drop Broken After WaveMasterBag Integration (Jan 26, 2026)
 - [x] Switch to Pointer Events (onPointerDown/onPointerMove/onPoint...rUp) with pointer capture

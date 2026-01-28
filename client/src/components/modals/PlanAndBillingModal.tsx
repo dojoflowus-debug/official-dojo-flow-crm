@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
-import { useModal } from '@/contexts/ModalContext';
 import { toast } from 'sonner';
 import { X, CreditCard, TrendingUp, Calendar, Zap, AlertCircle, Loader } from 'lucide-react';
 import AddCreditModal from './AddCreditModal';
@@ -37,26 +37,74 @@ interface CreditTransaction {
   taskType?: string;
 }
 
-export function PlanAndBillingModal() {
+interface PlanAndBillingModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function PlanAndBillingModal({ isOpen: propIsOpen = true, onClose: propOnClose }: PlanAndBillingModalProps) {
   const { user, organizationId } = useAuth();
-  const { closeModal } = useModal();
+  const [isOpen, setIsOpen] = useState(propIsOpen);
   const [showAddCredit, setShowAddCredit] = useState(false);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    propOnClose?.();
+  }, [propOnClose]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => modalRef.current?.focus(), 0);
+    } else {
+      document.body.style.overflow = '';
+      previousActiveElement.current?.focus();
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  // Handle ESC key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+  }, [handleClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, handleKeyDown]);
+
+  // Handle backdrop click (overlay)
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
 
   // Queries
   const billingSnapshotQuery = trpc.subscription.getBillingSnapshot.useQuery(
     { organizationId: organizationId || 0 },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isOpen }
   );
 
   const paymentMethodQuery = trpc.subscription.getDefaultPaymentMethod.useQuery(
     { organizationId: organizationId || 0 },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isOpen }
   );
 
   const recentTransactionsQuery = trpc.credits.getRecentTransactions.useQuery(
     { limit: 10, offset: 0 },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isOpen }
   );
 
   // Mutations
@@ -101,15 +149,15 @@ export function PlanAndBillingModal() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'text-green-500 bg-green-500/10';
+        return 'text-emerald-400';
       case 'trial':
-        return 'text-blue-500 bg-blue-500/10';
+        return 'text-blue-400';
       case 'past_due':
-        return 'text-red-500 bg-red-500/10';
+        return 'text-red-400';
       case 'cancelled':
-        return 'text-gray-500 bg-gray-500/10';
+        return 'text-gray-400';
       default:
-        return 'text-gray-500 bg-gray-500/10';
+        return 'text-gray-400';
     }
   };
 
@@ -129,91 +177,238 @@ export function PlanAndBillingModal() {
   };
 
   if (showAddCredit) {
-    return <AddCreditModal isOpen={true} onClose={() => setShowAddCredit(false)} />
+    return <AddCreditModal isOpen={true} onClose={() => setShowAddCredit(false)} />;
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Plan & Billing</h2>
-          <button
-            onClick={closeModal}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+  if (!isOpen) return null;
+
+  const modalContent = (
+    <div
+      onMouseDown={handleBackdropClick}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(8px)',
+        pointerEvents: 'auto',
+      }}
+    >
+      {/* Modal Window */}
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="plan-billing-title"
+        style={{
+          position: 'relative',
+          width: 'min(960px, 92vw)',
+          maxHeight: '80vh',
+          backgroundColor: 'rgba(15, 15, 15, 0.75)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+          outline: 'none',
+          pointerEvents: 'auto',
+        }}
+      >
+        {/* Header - Fixed */}
+        <div
+          style={{
+            padding: '24px 32px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexShrink: 0,
+            position: 'relative',
+            zIndex: 10,
+          }}
+        >
+          <h2
+            id="plan-billing-title"
+            style={{
+              fontSize: '20px',
+              fontWeight: '600',
+              color: 'white',
+              margin: 0,
+            }}
           >
-            <X size={24} />
+            Plan & Billing
+          </h2>
+          <button
+            onClick={handleClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255, 255, 255, 0.6)',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'color 200ms ease',
+              pointerEvents: 'auto',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255, 255, 255, 1)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255, 255, 255, 0.6)';
+            }}
+            aria-label="Close plan and billing"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
+        {/* Content - Scrollable */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '32px',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '32px',
+          }}
+        >
           {/* Section A: Current Plan */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <CreditCard size={20} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3
+              style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: 'white',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <CreditCard size={18} />
               Current Plan
             </h3>
 
             {billingSnapshotQuery.isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader size={24} className="animate-spin text-blue-500" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+                <Loader size={24} style={{ animation: 'spin 1s linear infinite' }} />
               </div>
             ) : billing ? (
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-800 dark:to-slate-700 rounded-lg p-6 space-y-4">
-                <div className="flex items-start justify-between">
+              <div
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Plan Name</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">{billing.planName}</p>
+                    <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', margin: '0 0 4px 0' }}>
+                      Plan Name
+                    </p>
+                    <p style={{ fontSize: '18px', fontWeight: '600', color: 'white', margin: 0 }}>
+                      {billing.planName}
+                    </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusColor(billing.status)}`}>
+                  <span
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      color: getStatusColor(billing.status),
+                      textTransform: 'capitalize',
+                    }}
+                  >
                     {billing.status}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Renewal Date</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{formatDate(billing.renewalDate)}</p>
+                    <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', margin: '0 0 4px 0' }}>
+                      Renewal Date
+                    </p>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'white', margin: 0 }}>
+                      {formatDate(billing.renewalDate)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Billing Cycle</p>
-                    <p className="font-semibold text-gray-900 dark:text-white capitalize">{billing.billingCycle}</p>
+                    <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', margin: '0 0 4px 0' }}>
+                      Billing Cycle
+                    </p>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'white', margin: 0, textTransform: 'capitalize' }}>
+                      {billing.billingCycle}
+                    </p>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-blue-200 dark:border-slate-600">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Credits Included</p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', margin: '0 0 8px 0' }}>
+                    Monthly Credits Included
+                  </p>
+                  <p style={{ fontSize: '24px', fontWeight: '700', color: '#fbbf24', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Zap size={20} />
                     {billing.monthlyCreditsIncluded.toLocaleString()}
                   </p>
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
                   <button
                     onClick={handleOpenPortal}
                     disabled={isLoadingPortal || createPortalSession.isPending}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    style={{
+                      flex: 1,
+                      backgroundColor: isLoadingPortal ? 'rgba(255, 255, 255, 0.1)' : 'rgba(239, 68, 68, 0.2)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      color: '#fca5a5',
+                      fontWeight: '500',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      cursor: isLoadingPortal ? 'not-allowed' : 'pointer',
+                      transition: 'all 200ms ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '14px',
+                      pointerEvents: 'auto',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isLoadingPortal) {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(239, 68, 68, 0.3)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isLoadingPortal) {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+                      }
+                    }}
                   >
                     {isLoadingPortal ? (
                       <>
-                        <Loader size={16} className="animate-spin" />
+                        <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} />
                         Opening...
                       </>
                     ) : (
                       <>
-                        <CreditCard size={16} />
+                        <CreditCard size={14} />
                         Open Stripe Portal
                       </>
                     )}
-                  </button>
-                  <button
-                    onClick={() => setShowAddCredit(true)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <TrendingUp size={16} />
-                    Change Plan
                   </button>
                 </div>
               </div>
@@ -221,29 +416,66 @@ export function PlanAndBillingModal() {
           </div>
 
           {/* Section B: Billing */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <CreditCard size={20} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3
+              style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: 'white',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <CreditCard size={18} />
               Billing
             </h3>
 
             {paymentMethodQuery.isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader size={24} className="animate-spin text-blue-500" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+                <Loader size={24} style={{ animation: 'spin 1s linear infinite' }} />
               </div>
             ) : (
-              <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-6 space-y-4">
+              <div
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px',
+                }}
+              >
                 {paymentMethod ? (
                   <>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Default Payment Method</p>
-                      <div className="flex items-center gap-3 mt-2">
-                        <div className="w-12 h-8 bg-gradient-to-r from-gray-400 to-gray-600 rounded flex items-center justify-center text-white text-xs font-bold">
+                      <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', margin: '0 0 12px 0' }}>
+                        Default Payment Method
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div
+                          style={{
+                            width: '48px',
+                            height: '32px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                          }}
+                        >
                           {paymentMethod.brand.toUpperCase().substring(0, 2)}
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900 dark:text-white capitalize">{paymentMethod.brand}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'white', margin: '0 0 2px 0', textTransform: 'capitalize' }}>
+                            {paymentMethod.brand}
+                          </p>
+                          <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', margin: 0 }}>
                             •••• {paymentMethod.last4} · Expires {paymentMethod.expMonth}/{paymentMethod.expYear}
                           </p>
                         </div>
@@ -251,26 +483,57 @@ export function PlanAndBillingModal() {
                     </div>
 
                     {billing && (
-                      <div className="pt-4 border-t border-gray-200 dark:border-slate-700 space-y-2">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Billing Email</p>
-                        <p className="font-semibold text-gray-900 dark:text-white">{user?.email}</p>
+                      <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                        <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', margin: '0 0 4px 0' }}>
+                          Billing Email
+                        </p>
+                        <p style={{ fontSize: '14px', fontWeight: '500', color: 'white', margin: 0 }}>
+                          {user?.email}
+                        </p>
                       </div>
                     )}
 
                     <button
                       onClick={handleOpenPortal}
                       disabled={isLoadingPortal || createPortalSession.isPending}
-                      className="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                      style={{
+                        width: '100%',
+                        marginTop: '8px',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        color: '#93c5fd',
+                        fontWeight: '500',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        cursor: isLoadingPortal ? 'not-allowed' : 'pointer',
+                        transition: 'all 200ms ease',
+                        fontSize: '14px',
+                        pointerEvents: 'auto',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isLoadingPortal) {
+                          (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isLoadingPortal) {
+                          (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+                        }
+                      }}
                     >
                       View All Invoices
                     </button>
                   </>
                 ) : (
-                  <div className="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <AlertCircle size={20} className="text-yellow-600 dark:text-yellow-500 flex-shrink-0" />
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', backgroundColor: 'rgba(217, 119, 6, 0.1)', borderRadius: '12px', border: '1px solid rgba(217, 119, 6, 0.2)' }}>
+                    <AlertCircle size={18} style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px' }} />
                     <div>
-                      <p className="font-semibold text-yellow-900 dark:text-yellow-100">No payment method on file</p>
-                      <p className="text-sm text-yellow-800 dark:text-yellow-200">Open Stripe Portal to add a payment method</p>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: '#fcd34d', margin: '0 0 4px 0' }}>
+                        No payment method on file
+                      </p>
+                      <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', margin: 0 }}>
+                        Open Stripe Portal to add a payment method
+                      </p>
                     </div>
                   </div>
                 )}
@@ -279,35 +542,72 @@ export function PlanAndBillingModal() {
           </div>
 
           {/* Section C: Credits */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Zap size={20} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3
+              style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: 'white',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <Zap size={18} />
               Credits
             </h3>
 
             {billingSnapshotQuery.isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader size={24} className="animate-spin text-blue-500" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+                <Loader size={24} style={{ animation: 'spin 1s linear infinite' }} />
               </div>
             ) : billing ? (
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Credit Balance Cards */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                    <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase">Current Balance</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                    }}
+                  >
+                    <p style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.5)', fontWeight: '600', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                      Current Balance
+                    </p>
+                    <p style={{ fontSize: '20px', fontWeight: '700', color: '#fbbf24', margin: 0 }}>
                       {billing.currentCreditBalance.toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-                    <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase">Monthly</p>
-                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100 mt-1">
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                    }}
+                  >
+                    <p style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.5)', fontWeight: '600', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                      Monthly
+                    </p>
+                    <p style={{ fontSize: '20px', fontWeight: '700', color: '#a78bfa', margin: 0 }}>
                       {billing.monthlyCreditsIncluded.toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                    <p className="text-xs text-green-600 dark:text-green-400 font-semibold uppercase">Purchased</p>
-                    <p className="text-2xl font-bold text-green-900 dark:text-green-100 mt-1">
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                    }}
+                  >
+                    <p style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.5)', fontWeight: '600', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                      Purchased
+                    </p>
+                    <p style={{ fontSize: '20px', fontWeight: '700', color: '#86efac', margin: 0 }}>
                       {billing.totalPurchased.toLocaleString()}
                     </p>
                   </div>
@@ -316,39 +616,86 @@ export function PlanAndBillingModal() {
                 {/* Buy Credits Button */}
                 <button
                   onClick={() => setShowAddCredit(true)}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                    border: '1px solid rgba(34, 197, 94, 0.3)',
+                    color: '#86efac',
+                    fontWeight: '600',
+                    padding: '14px 16px',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 200ms ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    pointerEvents: 'auto',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(34, 197, 94, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+                  }}
                 >
-                  <TrendingUp size={18} />
+                  <TrendingUp size={16} />
                   Buy More Credits
                 </button>
 
                 {/* Recent Transactions */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Recent Transactions</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'white', margin: 0 }}>
+                    Recent Transactions
+                  </h4>
                   {recentTransactionsQuery.isLoading ? (
-                    <div className="flex items-center justify-center py-4">
-                      <Loader size={20} className="animate-spin text-blue-500" />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                      <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} />
                     </div>
                   ) : transactions.length > 0 ? (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto' }}>
                       {transactions.map((tx: CreditTransaction) => (
                         <div
                           key={tx.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '12px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            transition: 'all 200ms ease',
+                            cursor: 'default',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                          }}
                         >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <span className="text-xl">{getTransactionIcon(tx.type)}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                            <span style={{ fontSize: '16px' }}>{getTransactionIcon(tx.type)}</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: '13px', fontWeight: '500', color: 'white', margin: '0 0 2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {tx.description || tx.type}
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                              <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', margin: 0 }}>
                                 {formatDate(tx.createdAt)}
                               </p>
                             </div>
                           </div>
-                          <div className="text-right ml-2">
-                            <p className={`font-semibold text-sm ${tx.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          <div style={{ textAlign: 'right', marginLeft: '12px' }}>
+                            <p
+                              style={{
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                color: tx.amount >= 0 ? '#86efac' : '#fca5a5',
+                                margin: 0,
+                              }}
+                            >
                               {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()}
                             </p>
                           </div>
@@ -356,14 +703,55 @@ export function PlanAndBillingModal() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">No transactions yet</p>
+                    <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.4)', padding: '16px', textAlign: 'center', margin: 0 }}>
+                      No transactions yet
+                    </p>
                   )}
                 </div>
               </div>
             ) : null}
           </div>
         </div>
+
+        {/* Footer - Close Button Escape Hatch */}
+        <div
+          style={{
+            padding: '16px 32px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            flexShrink: 0,
+          }}
+        >
+          <button
+            onClick={handleClose}
+            style={{
+              backgroundColor: 'transparent',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontWeight: '500',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 200ms ease',
+              fontSize: '13px',
+              pointerEvents: 'auto',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+              (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255, 255, 255, 0.9)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+              (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255, 255, 255, 0.7)';
+            }}
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
