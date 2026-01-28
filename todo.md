@@ -6197,6 +6197,21 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Verify only masked key last4 is returned
 - [ ] Verify no secrets appear in logs
 - [ ] Test webhook endpoint receives and logs events
-- [ ] Build Payments Settings UI with 6-card interface
-- [ ] Add Payments nav item to Settings modal
-- [ ] Test end-to-end flow
+- [x] Build Payments Settings UI with 6-card interface
+- [x] Add Payments nav item to Settings modal
+- [ ] Test end-to-end flow with MyDojo sandbox credentials
+
+
+## Dual Pricing Feature (Jan 28, 2026)
+- [ ] Update billing_settings schema with dual pricing fields
+- [ ] Add backend endpoints for dual pricing config and price calculation
+- [ ] Add Dual Pricing card to Payments Settings UI
+- [ ] Add cash discount percentage config (default 3.99%)
+- [ ] Add POS dual pricing toggle
+- [ ] Add Subscriptions dual pricing toggle (separate)
+- [ ] Add Compliance Checklist expandable panel
+- [ ] Add receipt disclosure text config
+- [ ] Implement checkout price display (Cash Price vs Card Price)
+- [ ] Add payment type selection at checkout
+- [ ] Persist base_amount, discount_amount, final_amount, pricing_mode per transaction
+- [ ] Test end-to-end dual pricing flow

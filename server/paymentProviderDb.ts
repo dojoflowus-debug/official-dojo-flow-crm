@@ -154,6 +154,14 @@ export async function upsertBillingSettings(organizationId: number, data: Partia
   paymentMatchingMethod: 'invoice_number' | 'student_name' | 'amount_date'
   chargeApiEnabled: number
   refundApiEnabled: number
+  // Dual pricing fields
+  dualPricingEnabled: number
+  dualPricingPosEnabled: number
+  dualPricingSubscriptionsEnabled: number
+  cashDiscountPercent: string
+  receiptDisclosureText: string | null
+  complianceAcknowledged: number
+  complianceAcknowledgedAt: string | null
 }>) {
   const existing = await getBillingSettings(organizationId)
   

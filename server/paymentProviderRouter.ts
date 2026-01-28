@@ -506,4 +506,111 @@ export const paymentProviderRouter = router({
         }
       }
     }),
+
+  // Get dual pricing settings
+  getDualPricingSettings: orgScopedProcedure
+    .query(async ({ ctx }) => {
+      const orgId = ctx.currentOrganizationId
+      if (!orgId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Organization not found' })
+      }
+      
+      const settings = await getBillingSettings(orgId)
+      
+      return {
+        enabled: settings?.dualPricingEnabled === 1,
+        posEnabled: settings?.dualPricingPosEnabled === 1,
+        subscriptionsEnabled: settings?.dualPricingSubscriptionsEnabled === 1,
+        cashDiscountPercent: settings?.cashDiscountPercent ? parseFloat(settings.cashDiscountPercent) : 3.99,
+        receiptDisclosureText: settings?.receiptDisclosureText || 'A discount is applied for cash or check payments. The listed price is the card price.',
+        complianceAcknowledged: settings?.complianceAcknowledged === 1,
+        complianceAcknowledgedAt: settings?.complianceAcknowledgedAt || null,
+      }
+    }),
+
+  // Update dual pricing settings
+  updateDualPricingSettings: orgScopedProcedure
+    .input(z.object({
+      enabled: z.boolean().optional(),
+      posEnabled: z.boolean().optional(),
+      subscriptionsEnabled: z.boolean().optional(),
+      cashDiscountPercent: z.number().min(0).max(10).optional(),
+      receiptDisclosureText: z.string().max(500).optional(),
+      complianceAcknowledged: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId
+      if (!orgId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Organization not found' })
+      }
+      
+      const dbData: Record<string, any> = {}
+      if (input.enabled !== undefined) dbData.dualPricingEnabled = input.enabled ? 1 : 0
+      if (input.posEnabled !== undefined) dbData.dualPricingPosEnabled = input.posEnabled ? 1 : 0
+      if (input.subscriptionsEnabled !== undefined) dbData.dualPricingSubscriptionsEnabled = input.subscriptionsEnabled ? 1 : 0
+      if (input.cashDiscountPercent !== undefined) dbData.cashDiscountPercent = input.cashDiscountPercent.toFixed(2)
+      if (input.receiptDisclosureText !== undefined) dbData.receiptDisclosureText = input.receiptDisclosureText
+      if (input.complianceAcknowledged !== undefined) {
+        dbData.complianceAcknowledged = input.complianceAcknowledged ? 1 : 0
+        if (input.complianceAcknowledged) {
+          dbData.complianceAcknowledgedAt = new Date().toISOString().slice(0, 19).replace('T', ' ')
+        }
+      }
+      
+      await upsertBillingSettings(orgId, dbData)
+      
+      return {
+        success: true,
+        message: 'Dual pricing settings updated',
+      }
+    }),
+
+  // Calculate dual pricing for a given amount
+  calculateDualPrice: orgScopedProcedure
+    .input(z.object({
+      baseAmount: z.number().positive(), // Amount in cents
+      context: z.enum(['pos', 'subscription', 'invoice']).optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId
+      if (!orgId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Organization not found' })
+      }
+      
+      const settings = await getBillingSettings(orgId)
+      const dualPricingEnabled = settings?.dualPricingEnabled === 1
+      const posEnabled = settings?.dualPricingPosEnabled === 1
+      const subscriptionsEnabled = settings?.dualPricingSubscriptionsEnabled === 1
+      const cashDiscountPercent = settings?.cashDiscountPercent ? parseFloat(settings.cashDiscountPercent) : 3.99
+      
+      // Check if dual pricing applies to this context
+      let applyDualPricing = dualPricingEnabled
+      if (input.context === 'pos' && !posEnabled) applyDualPricing = false
+      if (input.context === 'subscription' && !subscriptionsEnabled) applyDualPricing = false
+      
+      if (!applyDualPricing) {
+        return {
+          dualPricingApplied: false,
+          cardPrice: input.baseAmount,
+          cashPrice: input.baseAmount,
+          discountAmount: 0,
+          discountPercent: 0,
+        }
+      }
+      
+      // Card price is the base amount (posted price)
+      const cardPrice = input.baseAmount
+      // Cash price = Card price * (1 - discount%)
+      const discountAmount = Math.round(cardPrice * (cashDiscountPercent / 100))
+      const cashPrice = cardPrice - discountAmount
+      
+      return {
+        dualPricingApplied: true,
+        cardPrice,
+        cashPrice,
+        discountAmount,
+        discountPercent: cashDiscountPercent,
+        receiptDisclosure: settings?.receiptDisclosureText || 'A discount is applied for cash or check payments.',
+      }
+    }),
 })

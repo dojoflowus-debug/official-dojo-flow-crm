@@ -1,4 +1,4 @@
-import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, timestamp, varchar, datetime, json, tinyint } from "drizzle-orm/mysql-core"
+import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, timestamp, varchar, datetime, json, tinyint, decimal } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
 export const accountFlags = mysqlTable("account_flags", {
@@ -1595,6 +1595,14 @@ export const billingSettings = mysqlTable("billing_settings", {
 	paymentMatchingMethod: mysqlEnum(['invoice_number', 'student_name', 'amount_date']).default('invoice_number'),
 	chargeApiEnabled: int().default(0).notNull(),
 	refundApiEnabled: int().default(0).notNull(),
+	// Dual Pricing / Cash Discount fields
+	dualPricingEnabled: int().default(0).notNull(),
+	dualPricingPosEnabled: int().default(0).notNull(),
+	dualPricingSubscriptionsEnabled: int().default(0).notNull(),
+	cashDiscountPercent: decimal({ precision: 5, scale: 2 }).default('3.99').notNull(), // Default 3.99%
+	receiptDisclosureText: text(), // Customizable receipt disclosure
+	complianceAcknowledged: int().default(0).notNull(), // User acknowledged compliance requirements
+	complianceAcknowledgedAt: timestamp({ mode: 'string' }),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 },

@@ -4,7 +4,8 @@ import { toast } from 'sonner'
 import { 
   CreditCard, Wifi, WifiOff, RefreshCw, Key, Trash2, 
   Copy, CheckCircle2, XCircle, AlertCircle, Zap, 
-  TestTube, DollarSign, Globe, Terminal, Clock, Bell
+  TestTube, DollarSign, Globe, Terminal, Clock, Bell,
+  Percent, ChevronDown, ChevronUp, FileText, Shield
 } from 'lucide-react'
 
 // Card component for consistent styling
@@ -226,6 +227,326 @@ const PrimaryButton = ({
     {children}
   </button>
 )
+
+// Dual Pricing Card Component
+const DualPricingCard = ({ isConnected }: { isConnected: boolean }) => {
+  const [expanded, setExpanded] = useState(false)
+  const [saving, setSaving] = useState(false)
+  
+  // Dual pricing state
+  const [enabled, setEnabled] = useState(false)
+  const [posEnabled, setPosEnabled] = useState(false)
+  const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(false)
+  const [cashDiscountPercent, setCashDiscountPercent] = useState('3.99')
+  const [receiptDisclosureText, setReceiptDisclosureText] = useState(
+    'A discount is applied for cash or check payments. The listed price is the card price.'
+  )
+  const [complianceAcknowledged, setComplianceAcknowledged] = useState(false)
+  
+  // Fetch dual pricing settings
+  const dualPricingQuery = trpc.paymentProvider.getDualPricingSettings.useQuery(undefined, {
+    enabled: isConnected,
+  })
+  
+  // Update mutation
+  const updateMutation = trpc.paymentProvider.updateDualPricingSettings.useMutation()
+  
+  // Sync state with query data
+  useEffect(() => {
+    if (dualPricingQuery.data) {
+      setEnabled(dualPricingQuery.data.enabled)
+      setPosEnabled(dualPricingQuery.data.posEnabled)
+      setSubscriptionsEnabled(dualPricingQuery.data.subscriptionsEnabled)
+      setCashDiscountPercent(dualPricingQuery.data.cashDiscountPercent.toString())
+      setReceiptDisclosureText(dualPricingQuery.data.receiptDisclosureText)
+      setComplianceAcknowledged(dualPricingQuery.data.complianceAcknowledged)
+    }
+  }, [dualPricingQuery.data])
+  
+  const handleSave = async () => {
+    if (!complianceAcknowledged && enabled) {
+      toast.error('Please acknowledge the compliance requirements before enabling dual pricing')
+      return
+    }
+    
+    setSaving(true)
+    try {
+      await updateMutation.mutateAsync({
+        enabled,
+        posEnabled,
+        subscriptionsEnabled,
+        cashDiscountPercent: parseFloat(cashDiscountPercent),
+        receiptDisclosureText,
+        complianceAcknowledged,
+      })
+      toast.success('Dual pricing settings saved')
+      dualPricingQuery.refetch()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+  
+  // Calculate example prices
+  const exampleCardPrice = 10000 // $100.00 in cents
+  const discountAmount = Math.round(exampleCardPrice * (parseFloat(cashDiscountPercent) / 100))
+  const exampleCashPrice = exampleCardPrice - discountAmount
+  
+  return (
+    <SettingsCard title="Dual Pricing / Cash Discount" icon={Percent}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Info Banner */}
+        <div style={{ 
+          padding: '12px', 
+          borderRadius: '8px', 
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          border: '1px solid rgba(59, 130, 246, 0.2)',
+        }}>
+          <div style={{ fontSize: '13px', color: '#60a5fa', marginBottom: '4px', fontWeight: '500' }}>
+            What is Dual Pricing?
+          </div>
+          <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>
+            Dual pricing displays both a card price and a discounted cash price. Customers who pay with cash or check receive a discount (typically 3.99%). This is compliant when properly disclosed.
+          </div>
+        </div>
+        
+        {/* Main Toggle */}
+        <Toggle
+          label="Enable dual pricing"
+          checked={enabled}
+          onChange={setEnabled}
+          disabled={!isConnected}
+        />
+        
+        {enabled && (
+          <>
+            {/* Context Toggles */}
+            <div style={{ 
+              padding: '16px', 
+              borderRadius: '8px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}>
+              <div style={{ fontSize: '14px', fontWeight: '500', color: 'white', marginBottom: '12px' }}>
+                Apply To
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Toggle
+                  label="POS Transactions"
+                  checked={posEnabled}
+                  onChange={setPosEnabled}
+                />
+                <Toggle
+                  label="Subscription Payments"
+                  checked={subscriptionsEnabled}
+                  onChange={setSubscriptionsEnabled}
+                />
+              </div>
+            </div>
+            
+            {/* Discount Percentage */}
+            <div>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                color: 'rgba(255, 255, 255, 0.7)', 
+                marginBottom: '8px' 
+              }}>
+                Cash Discount Percentage
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="number"
+                  value={cashDiscountPercent}
+                  onChange={(e) => setCashDiscountPercent(e.target.value)}
+                  min="0"
+                  max="10"
+                  step="0.01"
+                  style={{
+                    width: '100px',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: 'white',
+                    fontSize: '14px',
+                  }}
+                />
+                <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)' }}>%</span>
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '4px' }}>
+                PC Bank Cards default: 3.99%
+              </div>
+            </div>
+            
+            {/* Price Preview */}
+            <div style={{ 
+              padding: '16px', 
+              borderRadius: '8px', 
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
+            }}>
+              <div style={{ fontSize: '13px', color: '#22c55e', marginBottom: '8px', fontWeight: '500' }}>
+                Example Pricing Display
+              </div>
+              <div style={{ display: 'flex', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)' }}>Card Price</div>
+                  <div style={{ fontSize: '18px', color: 'white', fontWeight: '600' }}>
+                    ${(exampleCardPrice / 100).toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)' }}>Cash Price</div>
+                  <div style={{ fontSize: '18px', color: '#22c55e', fontWeight: '600' }}>
+                    ${(exampleCashPrice / 100).toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)' }}>Savings</div>
+                  <div style={{ fontSize: '18px', color: '#f59e0b', fontWeight: '600' }}>
+                    ${(discountAmount / 100).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Receipt Disclosure Text */}
+            <div>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                color: 'rgba(255, 255, 255, 0.7)', 
+                marginBottom: '8px' 
+              }}>
+                Receipt Disclosure Text
+              </label>
+              <textarea
+                value={receiptDisclosureText}
+                onChange={(e) => setReceiptDisclosureText(e.target.value)}
+                rows={3}
+                maxLength={500}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  color: 'white',
+                  fontSize: '14px',
+                  resize: 'vertical',
+                }}
+              />
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '4px' }}>
+                This text will appear on receipts and checkout screens
+              </div>
+            </div>
+            
+            {/* Compliance Checklist */}
+            <div style={{ 
+              borderRadius: '8px', 
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              overflow: 'hidden',
+            }}>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  border: 'none',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Shield size={16} color="#f59e0b" />
+                  Compliance Checklist
+                </div>
+                {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              
+              {expanded && (
+                <div style={{ padding: '16px', backgroundColor: 'rgba(245, 158, 11, 0.05)' }}>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '12px' }}>
+                    Dual pricing / cash discounting has specific compliance requirements. Please ensure you follow these guidelines:
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                    {[
+                      'Post clear signage at your location showing both cash and card prices',
+                      'Display both prices on all menus, price lists, and invoices',
+                      'Include disclosure text on all receipts',
+                      'Train staff to explain the pricing clearly to customers',
+                      'Follow your state/local regulations on cash discounting',
+                      'Comply with card network rules (Visa, Mastercard, etc.)',
+                    ].map((item, index) => (
+                      <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <CheckCircle2 size={14} color="#f59e0b" style={{ marginTop: '2px', flexShrink: 0 }} />
+                        <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div style={{ 
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    marginBottom: '12px',
+                  }}>
+                    <div style={{ fontSize: '12px', color: '#ef4444' }}>
+                      <strong>Important:</strong> Dual pricing is legal in most states when properly disclosed, but regulations vary. Consult with your payment processor and legal advisor to ensure compliance in your jurisdiction.
+                    </div>
+                  </div>
+                  
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    cursor: 'pointer',
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={complianceAcknowledged}
+                      onChange={(e) => setComplianceAcknowledged(e.target.checked)}
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      I acknowledge that I am responsible for ensuring compliance with all applicable laws and regulations regarding dual pricing.
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+            
+            {/* Save Button */}
+            <PrimaryButton
+              onClick={handleSave}
+              loading={saving}
+              disabled={!complianceAcknowledged}
+            >
+              <CheckCircle2 size={16} />
+              Save Dual Pricing Settings
+            </PrimaryButton>
+          </>
+        )}
+        
+        {!enabled && (
+          <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
+            Enable dual pricing to offer cash discounts to your customers.
+          </div>
+        )}
+      </div>
+    </SettingsCard>
+  )
+}
 
 export function PaymentsSettingsTab() {
   // Connection form state
@@ -971,7 +1292,10 @@ export function PaymentsSettingsTab() {
         </div>
       </SettingsCard>
       
-      {/* Card 6: Testing Mode */}
+      {/* Card 6: Dual Pricing / Cash Discount */}
+      <DualPricingCard isConnected={isConnected} />
+      
+      {/* Card 7: Testing Mode */}
       <SettingsCard title="Testing Mode" icon={TestTube}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ 
