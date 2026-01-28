@@ -360,10 +360,17 @@
 - [x] Fix "Manage Billing" button not working - button added to menu
 - [x] Fix "Manage Billing" button - shows "Opening billing portal..." but nothing happens
   - Found the issue in PaywallModal onManageBilling handler in KaiCommand.tsx
-  - Replaced unimplemented TODO with actual navigation to /billing page
+  - Replaced unimplemented TODO with actual navigation to /billing page## Plan & Billing Control Center Redesign (Jan 28, 2026)
+- [x] Create subscription.getBillingSnapshot() endpoint
+- [x] Create subscription.getDefaultPaymentMethod() endpoint  
+- [x] Create credits.getRecentTransactions() endpoint
+- [x] Create PlanAndBillingModal component with 3 sections
+- [x] Wire Manage button to open PlanAndBillingModal
+- [x] Implement billing return flow (?billing=return)
+- [x] Test end-to-end billing flow
 
 ## Bug Fix - Drag-and-Drop Broken After WaveMasterBag Integration (Jan 26, 2026)
-- [x] Switch to Pointer Events (onPointerDown/onPointerMove/onPointerUp) with pointer capture
+- [x] Switch to Pointer Events (onPointerDown/onPointerMove/onPoint...rUp) with pointer capture
 - [x] Prevent default on pointer down/move
 - [x] Test drag-and-drop with real mouse movements - PASSED
 - [x] Add snap-to-grid toggle button (green grid icon in toolbar)

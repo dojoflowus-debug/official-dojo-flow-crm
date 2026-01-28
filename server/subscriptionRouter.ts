@@ -332,6 +332,87 @@ export const subscriptionRouter = router({
     };
   }),
 
+  /**
+   * Get billing snapshot - returns all plan and billing data needed for the modal
+   */
+  getBillingSnapshot: protectedProcedure
+    .input(z.object({
+      organizationId: z.number()
+    }))
+    .query(async ({ input }) => {
+      try {
+        // Get subscription and plan
+        const subscription = await getOrganizationSubscription(input.organizationId);
+        const plan = subscription ? await getPlanById(subscription.planId) : null;
+        
+        // Get credit balance
+        const creditBalance = await getCreditBalance(input.organizationId);
+        
+        return {
+          planName: plan?.name || 'Free Plan',
+          status: subscription?.status || 'trial',
+          renewalDate: subscription?.currentPeriodEnd || null,
+          monthlyCreditsIncluded: plan?.monthlyCredits || 0,
+          currentCreditBalance: creditBalance?.balance || 0,
+          orgId: input.organizationId,
+          stripeCustomerId: subscription?.stripeCustomerId || null,
+          stripeSubscriptionId: subscription?.stripeSubscriptionId || null,
+          billingCycle: subscription?.billingCycle || 'monthly',
+          totalPurchased: creditBalance?.totalPurchased || 0,
+          totalUsed: creditBalance?.totalUsed || 0
+        };
+      } catch (error) {
+        console.error('[getBillingSnapshot] Error:', error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch billing snapshot" });
+      }
+    }),
+
+  /**
+   * Get default payment method from Stripe
+   */
+  getDefaultPaymentMethod: protectedProcedure
+    .input(z.object({
+      organizationId: z.number()
+    }))
+    .query(async ({ input }) => {
+      try {
+        if (!stripe) {
+          return null;
+        }
+
+        const subscription = await getOrganizationSubscription(input.organizationId);
+        if (!subscription?.stripeCustomerId) {
+          return null;
+        }
+
+        // Get customer from Stripe
+        const customer = await stripe.customers.retrieve(subscription.stripeCustomerId) as any;
+        
+        if (!customer.invoice_settings?.default_payment_method) {
+          return null;
+        }
+
+        // Get the payment method details
+        const paymentMethod = await stripe.paymentMethods.retrieve(
+          customer.invoice_settings.default_payment_method as string
+        ) as any;
+
+        if (paymentMethod.type === 'card' && paymentMethod.card) {
+          return {
+            brand: paymentMethod.card.brand,
+            last4: paymentMethod.card.last4,
+            expMonth: paymentMethod.card.exp_month,
+            expYear: paymentMethod.card.exp_year
+          };
+        }
+
+        return null;
+      } catch (error) {
+        console.error('[getDefaultPaymentMethod] Error:', error);
+        return null; // Gracefully return null on error
+      }
+    }),
+
   createBillingPortalSession: protectedProcedure
     .input(z.object({
       organizationId: z.number(),

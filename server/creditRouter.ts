@@ -14,6 +14,7 @@ import {
   CREDIT_COSTS,
   CREDIT_THRESHOLDS,
 } from "./creditConsumption";
+import { getCreditTransactions } from "./subscriptionDb";
 
 export const creditRouter = router({
   /**
@@ -130,4 +131,35 @@ export const creditRouter = router({
       thresholds: CREDIT_THRESHOLDS,
     };
   }),
+
+  /**
+   * Get recent credit transactions
+   */
+  getRecentTransactions: protectedProcedure
+    .input(z.object({
+      limit: z.number().min(1).max(100).default(10),
+      offset: z.number().min(0).default(0),
+    }))
+    .query(async ({ input, ctx }) => {
+      const organizationId = ctx.currentOrganizationId;
+      if (!organizationId) {
+        return [];
+      }
+
+      const transactions = await getCreditTransactions(organizationId, {
+        limit: input.limit,
+        offset: input.offset,
+      });
+
+      return transactions.map((tx: any) => ({
+        id: tx.id,
+        type: tx.type,
+        amount: tx.amount,
+        description: tx.description,
+        createdAt: tx.createdAt,
+        balanceAfter: tx.balanceAfter,
+        taskType: tx.taskType,
+        metadata: tx.metadata ? JSON.parse(tx.metadata) : null,
+      }));
+    }),
 });

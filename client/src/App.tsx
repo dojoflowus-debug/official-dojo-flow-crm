@@ -135,6 +135,7 @@ import { AppShellGuard } from "./components/AppShellGuard";
 import { DebugOverlay } from "./components/DebugOverlay";
 import { DevVerificationHooks } from "./components/DevVerificationHooks";
 import { CreditsRefreshOnReturn } from "./components/CreditsRefreshOnReturn";
+import { BillingReturnHandler } from "./components/BillingReturnHandler";
 import { ModalProvider } from "./contexts/ModalContext";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import OrganizationList from "./pages/OrganizationList";
@@ -359,6 +360,7 @@ function App() {
                   <BrowserRouter>
                     <DebugOverlay />
                     <CreditsRefreshOnReturn />
+                    <BillingReturnHandler />
                     <AppShellGuard>
                       <Router />
                     </AppShellGuard>
