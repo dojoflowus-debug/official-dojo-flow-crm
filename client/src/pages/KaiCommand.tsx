@@ -28,6 +28,7 @@ import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
+import { UserAvatar } from '@/components/UserAvatar';
 import '@/styles/kai-light-command-center.css';
 import { 
   Search, 
@@ -3155,9 +3156,7 @@ export default function KaiCommand() {
                     <div key={message.id} className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       {message.role === 'user' ? (
                         <>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${(isCinematic || isFocusMode) ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30' : isDark ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-blue-500 to-blue-600'}`}>
-                            {getUserInitials()}
-                          </div>
+                          <UserAvatar photoUrl={user?.photoUrl} name={user?.name} size="sm" />
                           <div className="flex-1">
                             <div 
                               className={`font-medium mb-1`}
