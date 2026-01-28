@@ -18,6 +18,7 @@ import {
 } from "./subscriptionDb";
 import { deductCredits } from "./creditConsumption";
 import { createSubscriptionCheckout, createTrialCheckout } from "./stripeSubscription";
+import { stripe } from "./stripe";
 
 export const subscriptionRouter = router({
   /**
@@ -302,8 +303,8 @@ export const subscriptionRouter = router({
         organizationId: input.organizationId,
         credits: input.credits,
         amountInCents,
-        successUrl: `${baseUrl}/billing/credits?topup=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${baseUrl}/billing/credits?topup=cancelled`,
+        successUrl: `${baseUrl}/kai?credits=success`,
+        cancelUrl: `${baseUrl}/kai?credits=cancel`,
         customerEmail: input.customerEmail,
         userId: ctx.user?.id
       });
@@ -315,9 +316,7 @@ export const subscriptionRouter = router({
    * Get credit top-up pricing tiers
    */
   getCreditTopUpPricing: publicProcedure.query(() => {
-    // Price per credit in cents
-    const basePrice = 10; // $0.10 per credit
-    
+    const basePrice = 10;
     return {
       tiers: [
         { credits: 100, price: 1000, pricePerCredit: basePrice, savings: 0, label: 'Starter Pack' },
@@ -331,5 +330,77 @@ export const subscriptionRouter = router({
         pricePerCredit: basePrice,
       }
     };
-  })
+  }),
+
+  createBillingPortalSession: protectedProcedure
+    .input(z.object({
+      organizationId: z.number(),
+      returnUrl: z.string().optional()
+    }))
+    .mutation(async ({ input }) => {
+      if (!stripe) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe not configured" });
+      }
+
+      try {
+        let subscription = await getOrganizationSubscription(input.organizationId);
+        
+        if (!subscription || !subscription.stripeCustomerId) {
+          if (!subscription) {
+            const defaultPlan = await getPlanById(1);
+            if (!defaultPlan) {
+              throw new TRPCError({ code: "NOT_FOUND", message: "Default plan not found" });
+            }
+            
+            const now = new Date();
+            const periodEnd = new Date(now);
+            periodEnd.setMonth(periodEnd.getMonth() + 1);
+            
+            await upsertOrganizationSubscription({
+              organizationId: input.organizationId,
+              planId: defaultPlan.id,
+              status: 'trial',
+              billingCycle: 'monthly',
+              currentPeriodStart: now.toISOString(),
+              currentPeriodEnd: periodEnd.toISOString(),
+            });
+            
+            subscription = await getOrganizationSubscription(input.organizationId);
+          }
+          
+          if (!subscription?.stripeCustomerId) {
+            const customer = await stripe.customers.create({
+              metadata: {
+                organizationId: input.organizationId.toString(),
+              },
+            });
+            
+            await upsertOrganizationSubscription({
+              ...subscription!,
+              stripeCustomerId: customer.id,
+            });
+            
+            subscription = await getOrganizationSubscription(input.organizationId);
+          }
+        }
+
+        if (!subscription?.stripeCustomerId) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create Stripe customer" });
+        }
+
+        const baseUrl = input.returnUrl || process.env.VITE_FRONTEND_URL || 'http://localhost:3000';
+        const returnUrl = baseUrl + '/kai?billing=return';
+
+        const session = await stripe.billingPortal.sessions.create({
+          customer: subscription.stripeCustomerId,
+          return_url: returnUrl,
+        });
+
+        return { url: session.url };
+      } catch (error) {
+        console.error('[Billing Portal] Error:', error);
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create billing portal" });
+      }
+    })
 });

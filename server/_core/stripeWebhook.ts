@@ -1,18 +1,22 @@
 /**
  * Stripe Webhook Handler
  * 
- * Handles incoming webhook events from Stripe for subscription lifecycle
+ * Handles incoming webhook events from Stripe for subscription lifecycle and credit top-ups
  */
 
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import {
   handleCheckoutComplete,
+  handleCreditTopUpComplete,
   handleSubscriptionRenewed,
   handleSubscriptionCanceled,
   handlePaymentFailed,
   stripe
 } from '../stripeSubscription';
+import { getDb } from '../db';
+import { creditTopUps } from '../../drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
@@ -48,9 +52,42 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object as Stripe.Checkout.Session;
+        
         if (session.mode === 'subscription') {
           await handleCheckoutComplete(session);
           console.log('[Stripe Webhook] Checkout completed for session:', session.id);
+        } else if (session.mode === 'payment') {
+          // Handle credit top-up payment
+          const metadata = session.metadata as any;
+          if (metadata?.type === 'credit_top_up') {
+            // Check idempotency: has this session already been processed?
+            const db = await getDb();
+            if (db) {
+              const existingTopUp = await db.select().from(creditTopUps)
+                .where(eq(creditTopUps.stripePaymentIntentId, session.id))
+                .limit(1);
+              
+              if (existingTopUp.length > 0 && existingTopUp[0].status === 'completed') {
+                // Already processed, return early
+                if (process.env.NODE_ENV !== 'production') {
+                  console.log('[Stripe Webhook] Credit top-up already processed (idempotent):', session.id);
+                }
+                res.json({ received: true });
+                return;
+              }
+            }
+            
+            // Process credit top-up
+            const result = await handleCreditTopUpComplete(session);
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[Stripe Webhook] Credit top-up completed:', {
+                sessionId: session.id,
+                organizationId: metadata.organizationId,
+                creditsAdded: result.creditsAdded,
+                newBalance: result.newBalance,
+              });
+            }
+          }
         }
         break;
 

@@ -133,6 +133,8 @@ import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AppShellGuard } from "./components/AppShellGuard";
 import { DebugOverlay } from "./components/DebugOverlay";
+import { DevVerificationHooks } from "./components/DevVerificationHooks";
+import { CreditsRefreshOnReturn } from "./components/CreditsRefreshOnReturn";
 import { ModalProvider } from "./contexts/ModalContext";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import OrganizationList from "./pages/OrganizationList";
@@ -356,6 +358,7 @@ function App() {
                   <Toaster />
                   <BrowserRouter>
                     <DebugOverlay />
+                    <CreditsRefreshOnReturn />
                     <AppShellGuard>
                       <Router />
                     </AppShellGuard>

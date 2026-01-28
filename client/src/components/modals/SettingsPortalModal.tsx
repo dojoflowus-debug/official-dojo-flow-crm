@@ -9,6 +9,7 @@ import {
   Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink
 } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
+import AddCreditModal from '@/components/modals/AddCreditModal'
 
 const uploadMutation = trpc.auth.uploadProfilePicture
 const deleteMutation = trpc.auth.deleteProfilePicture
@@ -42,10 +43,14 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [addCreditOpen, setAddCreditOpen] = useState(false)
   
   // Use tRPC mutations at component level
   const uploadProfilePictureMutation = uploadMutation.useMutation()
   const deleteProfilePictureMutation = deleteMutation.useMutation()
+  const billingPortalMutation = trpc.subscription.createBillingPortalSession.useMutation()
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -468,22 +473,44 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '12px' }}>
-                        <button style={{
-                          padding: '10px 20px',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          backgroundColor: 'transparent',
-                          color: 'white',
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                          transition: 'all 200ms ease',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        <button 
+                          onClick={async () => {
+                            if (!user?.activeOrgId || portalLoading) return
+                            setPortalLoading(true)
+                            try {
+                              const result = await billingPortalMutation.mutateAsync({
+                                organizationId: user.activeOrgId,
+                              })
+                              if (result.url) {
+                                window.location.href = result.url
+                              }
+                            } catch (error) {
+                              console.error('Failed to open billing portal:', error)
+                              setToastMessage("Couldn't open billing portal. Please try again.")
+                              setPortalLoading(false)
+                              setTimeout(() => setToastMessage(null), 3000)
+                            }
+                          }}
+                          disabled={portalLoading}
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            backgroundColor: 'transparent',
+                            color: 'white',
+                            fontSize: '14px',
+                            cursor: portalLoading ? 'not-allowed' : 'pointer',
+                            opacity: portalLoading ? 0.6 : 1,
+                            transition: 'all 200ms ease',
+                          }}
+                          onMouseEnter={(e) => !portalLoading && (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
+                          onMouseLeave={(e) => !portalLoading && (e.currentTarget.style.backgroundColor = 'transparent')}
                         >
-                          Manage
+                          {portalLoading ? 'Opening...' : 'Manage'}
                         </button>
-                        <button style={{
+                        <button 
+                          onClick={() => setAddCreditOpen(true)}
+                          style={{
                           padding: '10px 20px',
                           borderRadius: '8px',
                           border: 'none',
@@ -695,7 +722,12 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
     </div>
   )
 
-  return createPortal(modalContent, document.body)
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      <AddCreditModal isOpen={addCreditOpen} onClose={() => setAddCreditOpen(false)} />
+    </>
+  )
 }
 
 export default SettingsPortalModal
