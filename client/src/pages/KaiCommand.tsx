@@ -3368,6 +3368,15 @@ export default function KaiCommand() {
               position: 'relative'
             }}
           >
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/plain,.xlsx,.xls,.csv"
+              multiple
+              className="hidden"
+            />
             {/* Attachment Button */}
             <Button
               type="button"
@@ -3381,6 +3390,7 @@ export default function KaiCommand() {
                   : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
               }`}
               title="Attach file"
+              onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip className="w-5 h-5" />
             </Button>

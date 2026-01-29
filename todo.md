@@ -191,6 +191,7 @@
 
 ## Bug Fixes
 
+- [x] Fixed "Failed to get school profile" error - schema column names mismatch (camelCase vs snake_case)
 - [x] Fixed duplicate `classes` router causing TRPC JSON parsing error on /owner page
   - Removed duplicate `classes` router definition at line 823 (simple version)
   - Kept the comprehensive `classes` router at line 4253 with all functionality
@@ -6227,3 +6228,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Implement logo upload with light/dark variants
 - [ ] Add inline validation and error handling
 - [ ] Test end-to-end save/load functionality
+- [x] Fixed file upload error on /kai page - missing hidden file input element and onClick handler for attachment button
