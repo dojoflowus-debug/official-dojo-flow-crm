@@ -25,7 +25,10 @@ import {
   AlertCircle,
   Info,
   Search,
-  X
+  X,
+  Cog,
+  Zap,
+  Bot
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +40,7 @@ interface SettingCard {
   description: string
   icon: React.ElementType
   href: string
-  category: 'general' | 'appearance' | 'business' | 'security' | 'integrations'
+  category: 'general' | 'appearance' | 'business' | 'system' | 'security' | 'integrations'
   status?: 'complete' | 'incomplete' | 'warning'
   badge?: string
 }
@@ -118,6 +121,32 @@ const SETTINGS_CARDS: SettingCard[] = [
     category: 'business'
   },
   
+  // System
+  {
+    id: 'defaults',
+    title: 'System Defaults',
+    description: 'Configure app-wide default settings and behaviors',
+    icon: Cog,
+    href: '/settings/system/defaults',
+    category: 'system'
+  },
+  {
+    id: 'automation',
+    title: 'Automation Rules',
+    description: 'Set up automated workflows and triggers',
+    icon: Zap,
+    href: '/automation',
+    category: 'system'
+  },
+  {
+    id: 'kiosk-rules',
+    title: 'Kiosk Rules',
+    description: 'Global kiosk behavior and operational rules',
+    icon: Bot,
+    href: '/settings/system/kiosk-rules',
+    category: 'system'
+  },
+  
   // Security
   {
     id: 'security',
@@ -151,6 +180,7 @@ const CATEGORIES = [
   { id: 'general', name: 'General', icon: Settings },
   { id: 'appearance', name: 'Appearance', icon: Palette },
   { id: 'business', name: 'Business', icon: Building2 },
+  { id: 'system', name: 'System', icon: Wrench },
   { id: 'security', name: 'Security', icon: Shield },
   { id: 'integrations', name: 'Integrations', icon: Plug }
 ] as const
