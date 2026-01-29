@@ -67,6 +67,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
   const [portalLoading, setPortalLoading] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [addCreditOpen, setAddCreditOpen] = useState(false)
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({ payments: true, processors: true })
   
   // Use tRPC mutations at component level
   const uploadProfilePictureMutation = uploadMutation.useMutation()
@@ -195,14 +196,14 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                 const Icon = item.icon
                 const isActive = activeTab === item.id
                 const hasChildren = 'children' in item && item.children
-                const [expanded, setExpanded] = React.useState(true)
+                const expanded = expandedItems[item.id] !== undefined ? expandedItems[item.id] : true
                 
                 return (
                   <div key={item.id}>
                     <button
                       onClick={() => {
                         if (hasChildren) {
-                          setExpanded(!expanded)
+                          setExpandedItems(prev => ({ ...prev, [item.id]: !expanded }))
                         } else {
                           setActiveTab(item.id as SettingsTab)
                         }

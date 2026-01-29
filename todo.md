@@ -6287,3 +6287,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Show inline error messages below invalid fields
 - [x] Block Next button when current step has validation errors
 - [x] Show validation errors on blur or submit attempt
+- [x] Fix React Hooks error 'Rendered more hooks than during the previous render' in SettingsPortalModal - moved useState outside of map function
