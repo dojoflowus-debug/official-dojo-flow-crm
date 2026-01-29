@@ -35,7 +35,7 @@ export function maskKey(key: string): string {
 // ============ Payment Provider Connections ============
 
 export async function getPaymentProviderConnection(organizationId: number) {
-  const db = getDb()
+  const db = await getDb()
   const [connection] = await db
     .select()
     .from(paymentProviderConnections)
@@ -56,7 +56,7 @@ export async function createPaymentProviderConnection(data: {
   const encryptedSecretKey = encryptKey(data.secretKey)
   const publicKeyLast4 = maskKey(data.publicKey)
   
-  const db = getDb()
+  const db = await getDb()
   const result = await db.insert(paymentProviderConnections).values({
     organizationId: data.organizationId,
     provider: data.provider,
@@ -94,7 +94,7 @@ export async function updatePaymentProviderConnection(
   if (data.status) updateData.status = data.status
   if (data.lastVerifiedAt) updateData.lastVerifiedAt = data.lastVerifiedAt
   
-  const db = getDb()
+  const db = await getDb()
   await db
     .update(paymentProviderConnections)
     .set(updateData)
@@ -102,7 +102,7 @@ export async function updatePaymentProviderConnection(
 }
 
 export async function disconnectPaymentProvider(organizationId: number) {
-  const db = getDb()
+  const db = await getDb()
   await db
     .update(paymentProviderConnections)
     .set({ status: 'disconnected' })
@@ -110,7 +110,7 @@ export async function disconnectPaymentProvider(organizationId: number) {
 }
 
 export async function deletePaymentProviderConnection(organizationId: number) {
-  const db = getDb()
+  const db = await getDb()
   await db
     .delete(paymentProviderConnections)
     .where(eq(paymentProviderConnections.organizationId, organizationId))
@@ -131,7 +131,7 @@ export async function getDecryptedSecretKey(organizationId: number): Promise<str
 // ============ Billing Settings ============
 
 export async function getBillingSettings(organizationId: number) {
-  const db = getDb()
+  const db = await getDb()
   const [settings] = await db
     .select()
     .from(billingSettings)
@@ -165,7 +165,7 @@ export async function upsertBillingSettings(organizationId: number, data: Partia
 }>) {
   const existing = await getBillingSettings(organizationId)
   
-  const db = getDb()
+  const db = await getDb()
   if (existing) {
     await db
       .update(billingSettings)
@@ -190,7 +190,7 @@ export async function logWebhookEvent(data: {
 }) {
   const payloadHash = crypto.createHash('sha256').update(data.payload).digest('hex')
   
-  const db = getDb()
+  const db = await getDb()
   await db.insert(paymentWebhookEvents).values({
     organizationId: data.organizationId,
     eventType: data.eventType,
@@ -204,7 +204,7 @@ export async function logWebhookEvent(data: {
 }
 
 export async function getRecentWebhookEvents(organizationId: number, limit: number = 10) {
-  const db = getDb()
+  const db = await getDb()
   const events = await db
     .select({
       id: paymentWebhookEvents.id,
@@ -237,7 +237,7 @@ export async function updateWebhookEventStatus(
     updateData.errorMessage = errorMessage
   }
   
-  const db = getDb()
+  const db = await getDb()
   await db
     .update(paymentWebhookEvents)
     .set(updateData)

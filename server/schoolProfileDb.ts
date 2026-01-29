@@ -25,7 +25,7 @@ export interface SchoolProfileData {
  * Creates empty profile if none exists
  */
 export async function getSchoolProfile(organizationId: number) {
-  const db = getDb();
+  const db = await getDb();
   
   const [profile] = await db
     .select()
@@ -63,7 +63,7 @@ export async function upsertSchoolProfile(
   organizationId: number,
   data: SchoolProfileData
 ) {
-  const db = getDb();
+  const db = await getDb();
   
   // Check if profile exists
   const [existing] = await db
@@ -146,7 +146,7 @@ export async function updateSchoolLogo(
   type: "light" | "dark",
   url: string | null
 ) {
-  const db = getDb();
+  const db = await getDb();
   
   const updateData = type === "light" 
     ? { logoLightUrl: url }
