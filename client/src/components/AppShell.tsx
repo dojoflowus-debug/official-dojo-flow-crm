@@ -98,6 +98,15 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
 
   // Should show bottom nav (not in focus mode and not explicitly hidden)
   const showBottomNav = !hideBottomNav && !isFocusMode
+  
+  // Filter navigation items based on current route
+  const visibleNavigation = NAVIGATION.filter(item => {
+    // Hide Settings nav item when already on Settings page
+    if (item.id === 'settings' && location.pathname.startsWith('/settings')) {
+      return false
+    }
+    return true
+  })
 
   return (
     <KaiBarProvider>
@@ -148,7 +157,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
             isCinematic={isCinematic}
             className="px-4 h-full"
           >
-            {NAVIGATION.map((item, index) => {
+            {visibleNavigation.map((item, index) => {
               const active = isActive(item.href)
               const Icon = item.icon
               

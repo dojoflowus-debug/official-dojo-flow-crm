@@ -6231,4 +6231,5 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fixed file upload error on /kai page - missing hidden file input element and onClick handler for attachment button
 - [x] Fix logo upload error in School Profile branding section - wrong parameter names (filename/contentType/data vs fileName/fileData/fileType/fileSize)
 - [x] Fix React internal error 'Expected static flag was missing' on /kai page - cleared Vite cache and restarted server
-- [x] Remove redundant 'Settings' item from Settings sidebar and replace with 'System' category
+- [x] Added 'System' category to Settings page with System Defaults, Automation Rules, and Kiosk Rules
+- [x] Remove 'Settings' item from bottom navigation menu when inside Settings page
