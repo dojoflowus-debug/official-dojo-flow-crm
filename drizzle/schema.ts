@@ -1663,3 +1663,38 @@ export const schoolProfiles = mysqlTable("school_profiles", {
 (table) => [
 	index("idx_school_profile_org").on(table.organizationId),
 ]);
+
+// Payment Processor Application tables
+export const paymentProcessorApplication = mysqlTable("payment_processor_application", {
+	id: int().autoincrement().primaryKey(),
+	organizationId: int("organization_id").notNull(),
+	processor: mysqlEnum(['PC_BANK_CARD']).notNull(),
+	status: mysqlEnum(['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'NEEDS_CHANGES']).default('DRAFT').notNull(),
+	currentStep: int("current_step").default(1).notNull(),
+	dataJson: json("data_json"), // All non-file fields stored as JSON
+	fillFasterSubmissionId: varchar("fillfaster_submission_id", { length: 255 }),
+	reviewNotes: text("review_notes"),
+	createdAt: timestamp("created_at", { mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	submittedAt: timestamp("submitted_at", { mode: 'string' }),
+},
+(table) => [
+	index("idx_processor_app_org").on(table.organizationId),
+	index("idx_processor_app_status").on(table.status),
+	index("idx_processor_app_processor").on(table.processor),
+]);
+
+export const paymentProcessorApplicationFile = mysqlTable("payment_processor_application_file", {
+	id: int().autoincrement().primaryKey(),
+	applicationId: int("application_id").notNull(),
+	fileType: mysqlEnum("file_type", ['OWNER_ID', 'VOIDED_CHECK', 'STATEMENTS', 'BUSINESS_LICENSE', 'GOV_ID', 'ADDITIONAL']).notNull(),
+	fileName: varchar("file_name", { length: 500 }).notNull(),
+	fileUrl: varchar("file_url", { length: 1000 }).notNull(),
+	mimeType: varchar("mime_type", { length: 100 }),
+	size: int().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+},
+(table) => [
+	index("idx_processor_file_app").on(table.applicationId),
+	index("idx_processor_file_type").on(table.fileType),
+]);

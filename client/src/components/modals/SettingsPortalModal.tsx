@@ -13,6 +13,7 @@ import { UserAvatar } from '@/components/UserAvatar'
 import AddCreditModal from '@/components/modals/AddCreditModal'
 import PaymentsSettingsTab from '@/components/settings/PaymentsSettingsTab'
 import { SchoolProfileSettingsTab } from '@/components/settings/SchoolProfileSettingsTab'
+import PCBankCardOnboarding from '@/components/settings/PCBankCardOnboarding'
 
 const uploadMutation = trpc.auth.uploadProfilePicture
 const deleteMutation = trpc.auth.deleteProfilePicture
@@ -744,8 +745,13 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
               <SchoolProfileSettingsTab />
             )}
 
+            {/* PC Bank Card Tab */}
+            {activeTab === 'pc-bank-card' && (
+              <PCBankCardOnboarding />
+            )}
+
             {/* Placeholder for other tabs */}
-            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && activeTab !== 'school' && (
+            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && activeTab !== 'school' && activeTab !== 'pc-bank-card' && (
               <div style={{
                 padding: '48px',
                 textAlign: 'center',

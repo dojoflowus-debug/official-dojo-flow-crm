@@ -6238,3 +6238,29 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update all routing to remove /settings route
 - [x] Update Kai routing to open Settings modal instead of Settings page - removed Settings from quick actions
 - [x] Verify Settings modal is the only way to access settings - tested on Students page, Settings removed from bottom nav
+
+## PC Bank Card Onboarding Integration
+
+- [x] Create database schema for payment_processor_application and payment_processor_application_file tables
+- [ ] Build 7-step PC Bank Card onboarding wizard UI component
+- [ ] Implement tRPC API endpoints for PC Bank Card (getApplication, saveDraft, uploadFile, submit, getStatus, resubmit)
+- [ ] Integrate FillFaster API client and submission logic
+- [ ] Add PC Bank Card to Settings modal under Payments → Processors
+- [ ] Implement file upload with S3 storage and signed URLs
+- [ ] Add SSN/DOB encryption and masking
+- [ ] Test full onboarding flow from draft to submission
+
+## PC Bank Card Onboarding - Phase 1 Complete
+
+- [x] Created database schema for payment_processor_application and payment_processor_application_file tables
+- [x] Created tRPC router with getApplication, saveDraft, getStatus, uploadFile, getFiles endpoints
+- [x] Built 7-step wizard skeleton with stepper UI and navigation
+- [x] Implemented OWNER_ID file upload as proof of concept
+- [x] Added PC Bank Card tab to Settings modal (accessible via Settings → pc-bank-card)
+- [x] Draft persistence working - current step and form data saved to database
+
+## Next Steps (Phase 2)
+- [ ] Implement full form validation for all 7 steps
+- [ ] Add remaining file upload types (VOIDED_CHECK, STATEMENTS, BUSINESS_LICENSE, GOV_ID, ADDITIONAL)
+- [ ] Build Review & Submit step with complete application summary
+- [ ] Add autosave functionality (debounced)
