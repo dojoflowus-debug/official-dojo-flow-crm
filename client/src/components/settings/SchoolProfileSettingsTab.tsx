@@ -535,11 +535,13 @@ export function SchoolProfileSettingsTab() {
       const reader = new FileReader();
       reader.onload = async () => {
         try {
-          const base64 = (reader.result as string).split(',')[1];
+          const fileData = reader.result as string;
           const result = await uploadMutation.mutateAsync({
-            filename: file.name,
-            contentType: file.type,
-            data: base64,
+            fileName: file.name,
+            fileData: fileData,
+            fileType: file.type,
+            fileSize: file.size,
+            context: 'general' as const,
           });
           
           // Update logo URL
