@@ -76,7 +76,6 @@ import ProfileSettings from "./pages/ProfileSettings";
 import OwnerProfile from "./pages/OwnerProfile";
 import SetupWizard from "./pages/SetupWizard";
 import { KaiSetupMode } from "./pages/KaiSetupMode";
-import SettingsHub from "./pages/SettingsHub";
 import VirtualReceptionist from "./pages/VirtualReceptionist";
 import Themes from "./pages/Themes";
 import ThemesTest from "./pages/ThemesTest";
@@ -321,8 +320,6 @@ function Router() {
       <Route path="/conversations" element={<Conversations />} />
       <Route path="/setup-wizard" element={<ProtectedRoute requireSetup={false}><SetupWizard /></ProtectedRoute>} />
       <Route path="/kai-setup" element={<ProtectedRoute><KaiSetupMode /></ProtectedRoute>} />
-      <Route path="/setup" element={<SettingsHub />} />
-      <Route path="/settings" element={<AppShell><SettingsHub /></AppShell>} />
       <Route path="/ai-setup" element={<AISetup />} />
       {/* KioskSetup removed */}
       <Route path="/security" element={<Security />} />

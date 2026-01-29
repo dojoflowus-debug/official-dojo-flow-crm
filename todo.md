@@ -6233,3 +6233,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix React internal error 'Expected static flag was missing' on /kai page - cleared Vite cache and restarted server
 - [x] Added 'System' category to Settings page with System Defaults, Automation Rules, and Kiosk Rules
 - [x] Remove 'Settings' item from bottom navigation menu when inside Settings page
+- [x] Remove Settings icon from bottom navigation completely
+- [x] Decommission /settings dashboard page and remove SettingsHub component
+- [x] Update all routing to remove /settings route
+- [x] Update Kai routing to open Settings modal instead of Settings page - removed Settings from quick actions
+- [x] Verify Settings modal is the only way to access settings - tested on Students page, Settings removed from bottom nav

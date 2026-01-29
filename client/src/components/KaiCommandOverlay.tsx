@@ -36,7 +36,6 @@ const QUICK_ACTIONS = [
   { id: 'classes', label: 'View Classes', icon: Calendar, href: '/classes' },
   { id: 'billing', label: 'View Billing', icon: CreditCard, href: '/billing' },
   { id: 'reports', label: 'View Reports', icon: BarChart3, href: '/reports' },
-  { id: 'settings', label: 'Open Settings', icon: Settings, href: '/settings' },
 ]
 
 const KAI_SUGGESTIONS = [

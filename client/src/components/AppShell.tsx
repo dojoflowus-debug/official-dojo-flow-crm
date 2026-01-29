@@ -38,7 +38,6 @@ const NAVIGATION = [
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'billing', name: 'Billing', href: '/billing', icon: CreditCard },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
-  { id: 'settings', name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 interface AppShellProps {
@@ -98,15 +97,6 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
 
   // Should show bottom nav (not in focus mode and not explicitly hidden)
   const showBottomNav = !hideBottomNav && !isFocusMode
-  
-  // Filter navigation items based on current route
-  const visibleNavigation = NAVIGATION.filter(item => {
-    // Hide Settings nav item when already on Settings page
-    if (item.id === 'settings' && location.pathname.startsWith('/settings')) {
-      return false
-    }
-    return true
-  })
 
   return (
     <KaiBarProvider>
@@ -157,7 +147,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
             isCinematic={isCinematic}
             className="px-4 h-full"
           >
-            {visibleNavigation.map((item, index) => {
+            {NAVIGATION.map((item, index) => {
               const active = isActive(item.href)
               const Icon = item.icon
               
