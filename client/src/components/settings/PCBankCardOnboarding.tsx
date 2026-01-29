@@ -35,6 +35,8 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, any>>({})
   const [status, setStatus] = useState<ApplicationStatus>('DRAFT')
   const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   // Fetch application
   const applicationQuery = trpc.pcBankCard.getApplication.useQuery(undefined, {
@@ -69,11 +71,77 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
     }
   }
 
+  const validateCurrentStep = (): boolean => {
+    const newErrors: Record<string, string> = {}
+    
+    switch (currentStep) {
+      case 1: // Business Identity
+        if (!formData.legalBusinessName?.trim()) newErrors.legalBusinessName = 'Legal Business Name is required'
+        if (!formData.businessEmail?.trim()) newErrors.businessEmail = 'Business Email is required'
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.businessEmail)) newErrors.businessEmail = 'Invalid email format'
+        if (!formData.businessPhone?.trim()) newErrors.businessPhone = 'Business Phone is required'
+        break
+        
+      case 2: // Location Info
+        if (!formData.locationAddressStreet?.trim()) newErrors.locationAddressStreet = 'Street Address is required'
+        if (!formData.locationCity?.trim()) newErrors.locationCity = 'City is required'
+        if (!formData.locationState?.trim()) newErrors.locationState = 'State is required'
+        if (!formData.locationZip?.trim()) newErrors.locationZip = 'ZIP Code is required'
+        else if (!/^\d{5}(-\d{4})?$/.test(formData.locationZip)) newErrors.locationZip = 'Invalid ZIP code format'
+        if (!formData.locationPhone?.trim()) newErrors.locationPhone = 'Location Phone is required'
+        break
+        
+      case 3: // Corporate / Tax
+        if (!formData.corporateLegalName?.trim()) newErrors.corporateLegalName = 'Corporate Legal Name is required'
+        if (!formData.einOrTaxId?.trim()) newErrors.einOrTaxId = 'EIN / Tax ID is required'
+        else if (!/^\d{2}-?\d{7}$/.test(formData.einOrTaxId)) newErrors.einOrTaxId = 'Invalid EIN format (XX-XXXXXXX)'
+        break
+        
+      case 4: // Owner / Principal
+        if (!formData.ownerFullName?.trim()) newErrors.ownerFullName = 'Owner Full Name is required'
+        if (!formData.ownerTitle?.trim()) newErrors.ownerTitle = 'Owner Title is required'
+        if (!formData.ownershipPercent) newErrors.ownershipPercent = 'Ownership Percent is required'
+        else if (formData.ownershipPercent < 0 || formData.ownershipPercent > 100) newErrors.ownershipPercent = 'Must be between 0 and 100'
+        if (!formData.ownerEmail?.trim()) newErrors.ownerEmail = 'Owner Email is required'
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.ownerEmail)) newErrors.ownerEmail = 'Invalid email format'
+        if (!formData.ownerPhone?.trim()) newErrors.ownerPhone = 'Owner Phone is required'
+        if (!formData.ownerDob) newErrors.ownerDob = 'Owner Date of Birth is required'
+        if (!formData.ownerSsn?.trim()) newErrors.ownerSsn = 'Owner SSN (last 4 digits) is required'
+        else if (!/^\d{4}$/.test(formData.ownerSsn)) newErrors.ownerSsn = 'Must be exactly 4 digits'
+        if (!uploadedFiles.OWNER_ID) newErrors.ownerIdUpload = 'Owner ID document is required'
+        break
+        
+      case 5: // Banking & Processing
+        if (!formData.bankName?.trim()) newErrors.bankName = 'Bank Name is required'
+        if (!formData.routingNumber?.trim()) newErrors.routingNumber = 'Routing Number is required'
+        else if (!/^\d{9}$/.test(formData.routingNumber)) newErrors.routingNumber = 'Must be exactly 9 digits'
+        if (!formData.accountNumber?.trim()) newErrors.accountNumber = 'Account Number is required'
+        if (!formData.monthlyVolume) newErrors.monthlyVolume = 'Monthly Processing Volume is required'
+        if (!formData.averageTicket) newErrors.averageTicket = 'Average Transaction Size is required'
+        break
+        
+      case 6: // Uploads & Compliance
+        if (!formData.businessDescription?.trim()) newErrors.businessDescription = 'Business Description is required'
+        break
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+  
   const handleNext = async () => {
+    // Validate current step
+    if (!validateCurrentStep()) {
+      toast.error('Please fix validation errors before continuing')
+      return
+    }
+    
     // Save current step before moving forward
     await handleSaveDraft()
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1)
+      setErrors({}) // Clear errors when moving to next step
+      setTouched({}) // Clear touched fields
     }
   }
 
@@ -117,6 +185,9 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
               value={formData.legalBusinessName || ''}
               onChange={(value) => setFormData({ ...formData, legalBusinessName: value })}
               required
+              error={errors.legalBusinessName}
+              name="legalBusinessName"
+              onBlur={() => setTouched({ ...touched, legalBusinessName: true })}
             />
             <InputField
               label="DBA Name (if different)"
@@ -128,12 +199,18 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
               value={formData.businessEmail || ''}
               onChange={(value) => setFormData({ ...formData, businessEmail: value })}
               required
+              error={errors.businessEmail}
+              name="businessEmail"
+              onBlur={() => setTouched({ ...touched, businessEmail: true })}
             />
             <InputField
               label="Business Phone"
               value={formData.businessPhone || ''}
               onChange={(value) => setFormData({ ...formData, businessPhone: value })}
               required
+              error={errors.businessPhone}
+              name="businessPhone"
+              onBlur={() => setTouched({ ...touched, businessPhone: true })}
             />
             <InputField
               label="Website"
@@ -596,12 +673,18 @@ const InputField = ({
   onChange,
   type = 'text',
   required,
+  error,
+  name,
+  onBlur,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   type?: 'text' | 'password' | 'number' | 'date'
   required?: boolean
+  error?: string
+  name?: string
+  onBlur?: () => void
 }) => (
   <div>
     <label style={{ 
@@ -616,18 +699,27 @@ const InputField = ({
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
       style={{
         width: '100%',
         padding: '10px 14px',
         borderRadius: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
+        border: `1px solid ${error ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         color: 'white',
         fontSize: '14px',
         outline: 'none',
       }}
-      onFocus={(e) => e.currentTarget.style.borderColor = '#ef4444'}
-      onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'}
+      onFocus={(e) => e.currentTarget.style.borderColor = error ? '#ef4444' : '#ef4444'}
     />
+    {error && (
+      <div style={{
+        marginTop: '4px',
+        fontSize: '12px',
+        color: '#ef4444',
+      }}>
+        {error}
+      </div>
+    )}
   </div>
 )

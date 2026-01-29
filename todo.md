@@ -6273,3 +6273,17 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add status pills to PC Bank Card card (Not started / Draft / Submitted / Approved)
 - [x] Add dynamic CTA button (Apply / Continue / View status) based on application status
 - [x] Fix 'React is not defined' error in SettingsPortalModal - add React import and replace React.useState with useState
+
+## PC Bank Card Wizard Validation
+
+- [x] Add validation state management (errors object, touched fields)
+- [x] Implement Step 1 validation (Business Name, DBA, EIN, Address, Phone, Email)
+- [x] Implement Step 2 validation (Owner Name, Title, SSN, DOB, Address, Phone)
+- [x] Implement Step 3 validation (Bank Name, Routing Number, Account Number)
+- [x] Implement Step 4 validation (Owner ID file upload required)
+- [x] Implement Step 5 validation (Processing Volume, Average Transaction)
+- [x] Implement Step 6 validation (Website URL, Business Description)
+- [x] Add required field indicators (*) to all required fields
+- [x] Show inline error messages below invalid fields
+- [x] Block Next button when current step has validation errors
+- [x] Show validation errors on blur or submit attempt
