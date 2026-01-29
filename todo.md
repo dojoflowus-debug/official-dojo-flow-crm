@@ -6264,3 +6264,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add remaining file upload types (VOIDED_CHECK, STATEMENTS, BUSINESS_LICENSE, GOV_ID, ADDITIONAL)
 - [ ] Build Review & Submit step with complete application summary
 - [ ] Add autosave functionality (debounced)
+
+## PC Bank Card Navigation - Dual Entry Points
+
+- [x] Add "Payment Processors" section to Payments page with FluidPay and PC Bank Card cards
+- [x] Implement nested left sidebar navigation: Payments → Providers / Processors → PC Bank Card
+- [x] Wire up navigation state to keep sidebar and content panel in sync
+- [x] Add status pills to PC Bank Card card (Not started / Draft / Submitted / Approved)
+- [x] Add dynamic CTA button (Apply / Continue / View status) based on application status

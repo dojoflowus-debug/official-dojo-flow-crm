@@ -5,8 +5,9 @@ import {
   CreditCard, Wifi, WifiOff, RefreshCw, Key, Trash2, 
   Copy, CheckCircle2, XCircle, AlertCircle, Zap, 
   TestTube, DollarSign, Globe, Terminal, Clock, Bell,
-  Percent, ChevronDown, ChevronUp, FileText, Shield
+  Percent, ChevronDown, ChevronUp, FileText, Shield, Building2, ArrowRight
 } from 'lucide-react'
+import { useModal } from '@/contexts/ModalContext'
 
 // Card component for consistent styling
 const SettingsCard = ({ 
@@ -769,8 +770,221 @@ export function PaymentsSettingsTab() {
     }
   }
   
+  const { openSettings } = useModal()
+  const pcBankCardStatus = trpc.pcBankCard.getStatus.useQuery()
+  
+  const handleOpenPCBankCard = () => {
+    openSettings('pc-bank-card')
+  }
+  
+  const getProcessorCTA = () => {
+    const status = pcBankCardStatus.data?.status
+    if (!status || status === 'DRAFT') return pcBankCardStatus.data?.currentStep > 1 ? 'Continue Application' : 'Apply Now'
+    if (status === 'SUBMITTED' || status === 'UNDER_REVIEW') return 'View Status'
+    if (status === 'APPROVED') return 'Manage'
+    if (status === 'NEEDS_CHANGES') return 'Resubmit'
+    return 'Apply Now'
+  }
+  
+  const getProcessorStatus = () => {
+    const status = pcBankCardStatus.data?.status
+    if (!status) return { label: 'Not Started', color: 'rgba(255, 255, 255, 0.3)' }
+    if (status === 'DRAFT') return { label: 'Draft', color: '#f59e0b' }
+    if (status === 'SUBMITTED') return { label: 'Submitted', color: '#3b82f6' }
+    if (status === 'UNDER_REVIEW') return { label: 'Under Review', color: '#8b5cf6' }
+    if (status === 'APPROVED') return { label: 'Approved', color: '#22c55e' }
+    if (status === 'NEEDS_CHANGES') return { label: 'Needs Changes', color: '#ef4444' }
+    return { label: 'Not Started', color: 'rgba(255, 255, 255, 0.3)' }
+  }
+  
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Payment Processors Section */}
+      <div>
+        <h3 style={{ 
+          fontSize: '18px', 
+          fontWeight: '600', 
+          color: 'white', 
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <Building2 size={20} />
+          Payment Processors
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          {/* FluidPay Card */}
+          <div style={{
+            padding: '20px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <CreditCard size={20} color="#ef4444" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '4px' }}>
+                  FluidPay
+                </div>
+                <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
+                  Accept credit/debit card payments
+                </div>
+              </div>
+              <span style={{
+                padding: '4px 10px',
+                borderRadius: '9999px',
+                fontSize: '11px',
+                fontWeight: '500',
+                backgroundColor: isConnected ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: isConnected ? '#22c55e' : 'rgba(255, 255, 255, 0.6)',
+              }}>
+                {isConnected ? 'Connected' : 'Not Connected'}
+              </span>
+            </div>
+            <button style={{
+              width: '100%',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              backgroundColor: 'transparent',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}>
+              Manage
+              <ArrowRight size={14} />
+            </button>
+          </div>
+          
+          {/* PC Bank Card */}
+          <div style={{
+            padding: '20px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onClick={handleOpenPCBankCard}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'
+            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Building2 size={20} color="#ef4444" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '4px' }}>
+                  PC Bank Card
+                </div>
+                <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
+                  Premium processor onboarding
+                </div>
+              </div>
+              <span style={{
+                padding: '4px 10px',
+                borderRadius: '9999px',
+                fontSize: '11px',
+                fontWeight: '500',
+                backgroundColor: `${getProcessorStatus().color}33`,
+                color: getProcessorStatus().color,
+              }}>
+                {getProcessorStatus().label}
+              </span>
+            </div>
+            <button style={{
+              width: '100%',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444'
+            }}>
+              {getProcessorCTA()}
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* FluidPay Configuration Section */}
+      <div>
+        <h3 style={{ 
+          fontSize: '18px', 
+          fontWeight: '600', 
+          color: 'white', 
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <CreditCard size={20} />
+          FluidPay Configuration
+        </h3>
+      </div>
+      
       {/* Card 1: Payment Provider */}
       <SettingsCard title="Payment Provider" icon={CreditCard}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

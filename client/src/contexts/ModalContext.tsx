@@ -5,7 +5,7 @@ type SettingsTab = 'account' | 'school' | 'settings' | 'usage' | 'billing' | 'sc
 interface ModalContextType {
   settingsOpen: boolean;
   activeTab: SettingsTab;
-  openSettings: (options?: { initialTab?: SettingsTab }) => void;
+  openSettings: (tabOrOptions?: SettingsTab | { initialTab?: SettingsTab }) => void;
   closeSettings: () => void;
   setActiveTab: (tab: SettingsTab) => void;
 }
@@ -16,9 +16,11 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
 
-  const openSettings = (options?: { initialTab?: SettingsTab }) => {
-    if (options?.initialTab) {
-      setActiveTab(options.initialTab);
+  const openSettings = (tabOrOptions?: SettingsTab | { initialTab?: SettingsTab }) => {
+    if (typeof tabOrOptions === 'string') {
+      setActiveTab(tabOrOptions);
+    } else if (tabOrOptions?.initialTab) {
+      setActiveTab(tabOrOptions.initialTab);
     }
     setSettingsOpen(true);
   };

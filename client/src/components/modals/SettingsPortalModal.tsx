@@ -7,7 +7,7 @@ import { trpc } from '@/lib/trpc'
 import { toast } from 'sonner'
 import { 
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
-  Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink, Banknote, Building2
+  Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink, Banknote, Building2, ChevronDown
 } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
 import AddCreditModal from '@/components/modals/AddCreditModal'
@@ -29,7 +29,22 @@ const navigationItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'usage', label: 'Usage', icon: BarChart3 },
   { id: 'billing', label: 'Billing', icon: CreditCard },
-  { id: 'payments', label: 'Payments', icon: Banknote },
+  { 
+    id: 'payments', 
+    label: 'Payments', 
+    icon: Banknote,
+    children: [
+      { id: 'payments', label: 'Providers', icon: CreditCard },
+      { 
+        id: 'processors',
+        label: 'Processors',
+        icon: Building2,
+        children: [
+          { id: 'pc-bank-card', label: 'PC Bank Card', icon: Building2 },
+        ]
+      },
+    ]
+  },
   { id: 'scheduled', label: 'Scheduled tasks', icon: Clock },
   { id: 'mail', label: 'Mail Manus', icon: Mail },
   { id: 'data', label: 'Data controls', icon: Database },
@@ -179,29 +194,136 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 const isActive = activeTab === item.id
+                const hasChildren = 'children' in item && item.children
+                const [expanded, setExpanded] = React.useState(true)
+                
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id as SettingsTab)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      background: isActive ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
-                      border: 'none',
-                      borderLeft: isActive ? '3px solid #ef4444' : '3px solid transparent',
-                      color: isActive ? 'white' : 'rgba(255, 255, 255, 0.6)',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: isActive ? '500' : '400',
-                      transition: 'all 200ms ease',
-                    }}
-                  >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </button>
+                  <div key={item.id}>
+                    <button
+                      onClick={() => {
+                        if (hasChildren) {
+                          setExpanded(!expanded)
+                        } else {
+                          setActiveTab(item.id as SettingsTab)
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: isActive && !hasChildren ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+                        border: 'none',
+                        borderLeft: isActive && !hasChildren ? '3px solid #ef4444' : '3px solid transparent',
+                        color: isActive && !hasChildren ? 'white' : 'rgba(255, 255, 255, 0.6)',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: isActive && !hasChildren ? '500' : '400',
+                        transition: 'all 200ms ease',
+                      }}
+                    >
+                      <Icon size={18} />
+                      <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
+                      {hasChildren && (
+                        <ChevronDown 
+                          size={16} 
+                          style={{ 
+                            transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                            transition: 'transform 200ms ease'
+                          }} 
+                        />
+                      )}
+                    </button>
+                    
+                    {/* Nested children */}
+                    {hasChildren && expanded && (
+                      <div style={{ paddingLeft: '16px' }}>
+                        {item.children.map((child: any) => {
+                          const ChildIcon = child.icon
+                          const isChildActive = activeTab === child.id
+                          const hasGrandChildren = 'children' in child && child.children
+                          const [childExpanded, setChildExpanded] = React.useState(true)
+                          
+                          return (
+                            <div key={child.id}>
+                              <button
+                                onClick={() => {
+                                  if (hasGrandChildren) {
+                                    setChildExpanded(!childExpanded)
+                                  } else {
+                                    setActiveTab(child.id as SettingsTab)
+                                  }
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '10px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '10px',
+                                  background: isChildActive && !hasGrandChildren ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+                                  border: 'none',
+                                  borderLeft: isChildActive && !hasGrandChildren ? '3px solid #ef4444' : '3px solid transparent',
+                                  color: isChildActive && !hasGrandChildren ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                                  cursor: 'pointer',
+                                  fontSize: '13px',
+                                  fontWeight: isChildActive && !hasGrandChildren ? '500' : '400',
+                                  transition: 'all 200ms ease',
+                                }}
+                              >
+                                <ChildIcon size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>{child.label}</span>
+                                {hasGrandChildren && (
+                                  <ChevronDown 
+                                    size={14} 
+                                    style={{ 
+                                      transform: childExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                                      transition: 'transform 200ms ease'
+                                    }} 
+                                  />
+                                )}
+                              </button>
+                              
+                              {/* Grand children */}
+                              {hasGrandChildren && childExpanded && (
+                                <div style={{ paddingLeft: '16px' }}>
+                                  {child.children.map((grandChild: any) => {
+                                    const GrandChildIcon = grandChild.icon
+                                    const isGrandChildActive = activeTab === grandChild.id
+                                    
+                                    return (
+                                      <button
+                                        key={grandChild.id}
+                                        onClick={() => setActiveTab(grandChild.id as SettingsTab)}
+                                        style={{
+                                          width: '100%',
+                                          padding: '8px 16px',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '8px',
+                                          background: isGrandChildActive ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+                                          border: 'none',
+                                          borderLeft: isGrandChildActive ? '3px solid #ef4444' : '3px solid transparent',
+                                          color: isGrandChildActive ? 'white' : 'rgba(255, 255, 255, 0.4)',
+                                          cursor: 'pointer',
+                                          fontSize: '12px',
+                                          fontWeight: isGrandChildActive ? '500' : '400',
+                                          transition: 'all 200ms ease',
+                                        }}
+                                      >
+                                        <GrandChildIcon size={14} />
+                                        <span>{grandChild.label}</span>
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </nav>
