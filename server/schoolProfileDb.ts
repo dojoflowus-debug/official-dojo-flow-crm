@@ -27,6 +27,11 @@ export interface SchoolProfileData {
 export async function getSchoolProfile(organizationId: number) {
   const db = await getDb();
   
+  if (!db) {
+    console.error('[SchoolProfile] Database not available');
+    throw new Error('Database not available');
+  }
+  
   const [profile] = await db
     .select()
     .from(schoolProfiles)
@@ -64,6 +69,11 @@ export async function upsertSchoolProfile(
   data: SchoolProfileData
 ) {
   const db = await getDb();
+  
+  if (!db) {
+    console.error('[SchoolProfile] Database not available');
+    throw new Error('Database not available');
+  }
   
   // Check if profile exists
   const [existing] = await db
@@ -147,6 +157,11 @@ export async function updateSchoolLogo(
   url: string | null
 ) {
   const db = await getDb();
+  
+  if (!db) {
+    console.error('[SchoolProfile] Database not available');
+    throw new Error('Database not available');
+  }
   
   const updateData = type === "light" 
     ? { logoLightUrl: url }

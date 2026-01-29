@@ -1,0 +1,38 @@
+{
+  "query": "SHOW CREATE TABLE school_profiles;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SHOW CREATE TABLE school_profiles;",
+  "rows": [
+    {
+      "Table": "school_profiles",
+      "Create Table": "CREATE TABLE `school_profiles` ("
+    }
+  ],
+  "messages": [
+    "  `id` int(11) NOT NULL AUTO_INCREMENT,",
+    "  `organization_id` int(11) NOT NULL,",
+    "  `school_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `display_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `tagline` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `website` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `address_street` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `address_city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `address_state` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `address_postal` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `address_country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `logo_light_url` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `logo_dark_url` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `timezone` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `currency` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,",
+    "  KEY `idx_school_profile_org` (`organization_id`),",
+    "  UNIQUE KEY `organization_id` (`organization_id`)",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+  ],
+  "stdout": "Table\tCreate Table\nschool_profiles\tCREATE TABLE `school_profiles` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `organization_id` int(11) NOT NULL,\n  `school_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `display_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `tagline` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `website` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `address_street` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `address_city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `address_state` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `address_postal` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `address_country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `logo_light_url` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `logo_dark_url` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `timezone` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `currency` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,\n  KEY `idx_school_profile_org` (`organization_id`),\n  UNIQUE KEY `organization_id` (`organization_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}

@@ -1635,30 +1635,30 @@ export const paymentWebhookEvents = mysqlTable("payment_webhook_events", {
 // School/Organization Profile table
 export const schoolProfiles = mysqlTable("school_profiles", {
 	id: int().autoincrement().primaryKey(),
-	organizationId: int().notNull().unique(),
+	organizationId: int("organization_id").notNull().unique(),
 	// Identity
-	schoolName: varchar({ length: 255 }).notNull(),
-	displayName: varchar({ length: 255 }),
+	schoolName: varchar("school_name", { length: 255 }).notNull(),
+	displayName: varchar("display_name", { length: 255 }),
 	tagline: varchar({ length: 500 }),
 	// Contact
 	phone: varchar({ length: 50 }),
 	email: varchar({ length: 255 }),
 	website: varchar({ length: 500 }),
 	// Address
-	addressStreet: varchar({ length: 255 }),
-	addressCity: varchar({ length: 100 }),
-	addressState: varchar({ length: 100 }),
-	addressPostal: varchar({ length: 20 }),
-	addressCountry: varchar({ length: 100 }),
+	addressStreet: varchar("address_street", { length: 255 }),
+	addressCity: varchar("address_city", { length: 100 }),
+	addressState: varchar("address_state", { length: 100 }),
+	addressPostal: varchar("address_postal", { length: 20 }),
+	addressCountry: varchar("address_country", { length: 100 }),
 	// Branding
-	logoLightUrl: varchar({ length: 1000 }),
-	logoDarkUrl: varchar({ length: 1000 }),
+	logoLightUrl: varchar("logo_light_url", { length: 1000 }),
+	logoDarkUrl: varchar("logo_dark_url", { length: 1000 }),
 	// Preferences
 	timezone: varchar({ length: 100 }),
 	currency: varchar({ length: 10 }),
 	// Timestamps
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 },
 (table) => [
 	index("idx_school_profile_org").on(table.organizationId),

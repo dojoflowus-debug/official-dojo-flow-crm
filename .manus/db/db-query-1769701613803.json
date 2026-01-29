@@ -1,0 +1,67 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'school_profiles' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'school_profiles' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "organization_id"
+    },
+    {
+      "COLUMN_NAME": "school_name"
+    },
+    {
+      "COLUMN_NAME": "display_name"
+    },
+    {
+      "COLUMN_NAME": "tagline"
+    },
+    {
+      "COLUMN_NAME": "phone"
+    },
+    {
+      "COLUMN_NAME": "email"
+    },
+    {
+      "COLUMN_NAME": "website"
+    },
+    {
+      "COLUMN_NAME": "address_street"
+    },
+    {
+      "COLUMN_NAME": "address_city"
+    },
+    {
+      "COLUMN_NAME": "address_state"
+    },
+    {
+      "COLUMN_NAME": "address_postal"
+    },
+    {
+      "COLUMN_NAME": "address_country"
+    },
+    {
+      "COLUMN_NAME": "logo_light_url"
+    },
+    {
+      "COLUMN_NAME": "logo_dark_url"
+    },
+    {
+      "COLUMN_NAME": "timezone"
+    },
+    {
+      "COLUMN_NAME": "currency"
+    },
+    {
+      "COLUMN_NAME": "created_at"
+    },
+    {
+      "COLUMN_NAME": "updated_at"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\norganization_id\nschool_name\ndisplay_name\ntagline\nphone\nemail\nwebsite\naddress_street\naddress_city\naddress_state\naddress_postal\naddress_country\nlogo_light_url\nlogo_dark_url\ntimezone\ncurrency\ncreated_at\nupdated_at\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}
