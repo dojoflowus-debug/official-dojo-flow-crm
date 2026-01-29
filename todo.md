@@ -6215,3 +6215,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add payment type selection at checkout
 - [ ] Persist base_amount, discount_amount, final_amount, pricing_mode per transaction
 - [ ] Test end-to-end dual pricing flow
+
+
+## School Profile Feature (Jan 28, 2026)
+- [ ] Create database schema for school_profiles table
+- [ ] Build schoolProfile.get() tRPC endpoint
+- [ ] Build schoolProfile.upsert() tRPC endpoint
+- [ ] Build schoolProfile.uploadLogo() tRPC endpoint
+- [ ] Create SchoolProfileSettingsTab UI component
+- [ ] Add School Profile nav item to Settings sidebar
+- [ ] Implement logo upload with light/dark variants
+- [ ] Add inline validation and error handling
+- [ ] Test end-to-end save/load functionality

@@ -42,6 +42,7 @@ import { kioskStudioRouter } from './kioskStudioRouter';
 import { kioskDeviceRouter } from './kioskDeviceRouter';
 import { kioskManagerRouter } from './kioskManagerRouter';
 import { paymentProviderRouter } from './paymentProviderRouter';
+import { schoolProfileRouter } from './schoolProfileRouter';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -401,6 +402,7 @@ export const appRouter = router({
   ownerProfile: ownerProfileRouter,
   user: userRouter,
   paymentProvider: paymentProviderRouter,
+  schoolProfile: schoolProfileRouter,
   
   // File upload for attachments
   upload: router({

@@ -1630,3 +1630,36 @@ export const paymentWebhookEvents = mysqlTable("payment_webhook_events", {
 	index("idx_payment_webhook_status").on(table.status),
 	index("idx_payment_webhook_received").on(table.receivedAt),
 ]);
+
+
+// School/Organization Profile table
+export const schoolProfiles = mysqlTable("school_profiles", {
+	id: int().autoincrement().primaryKey(),
+	organizationId: int().notNull().unique(),
+	// Identity
+	schoolName: varchar({ length: 255 }).notNull(),
+	displayName: varchar({ length: 255 }),
+	tagline: varchar({ length: 500 }),
+	// Contact
+	phone: varchar({ length: 50 }),
+	email: varchar({ length: 255 }),
+	website: varchar({ length: 500 }),
+	// Address
+	addressStreet: varchar({ length: 255 }),
+	addressCity: varchar({ length: 100 }),
+	addressState: varchar({ length: 100 }),
+	addressPostal: varchar({ length: 20 }),
+	addressCountry: varchar({ length: 100 }),
+	// Branding
+	logoLightUrl: varchar({ length: 1000 }),
+	logoDarkUrl: varchar({ length: 1000 }),
+	// Preferences
+	timezone: varchar({ length: 100 }),
+	currency: varchar({ length: 10 }),
+	// Timestamps
+	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+	index("idx_school_profile_org").on(table.organizationId),
+]);

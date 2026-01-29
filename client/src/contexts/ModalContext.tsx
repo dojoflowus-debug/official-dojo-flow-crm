@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type SettingsTab = 'account' | 'settings' | 'usage' | 'billing' | 'scheduled' | 'mail' | 'data' | 'cloud' | 'personalization' | 'connectors' | 'help' | 'profile' | 'payments';
+type SettingsTab = 'account' | 'school' | 'settings' | 'usage' | 'billing' | 'scheduled' | 'mail' | 'data' | 'cloud' | 'personalization' | 'connectors' | 'help' | 'profile' | 'payments';
 
 interface ModalContextType {
   settingsOpen: boolean;

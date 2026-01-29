@@ -7,11 +7,12 @@ import { trpc } from '@/lib/trpc'
 import { toast } from 'sonner'
 import { 
   User, Settings, BarChart3, CreditCard, Clock, Mail, Database, 
-  Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink, Banknote
+  Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink, Banknote, Building2
 } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
 import AddCreditModal from '@/components/modals/AddCreditModal'
 import PaymentsSettingsTab from '@/components/settings/PaymentsSettingsTab'
+import { SchoolProfileSettingsTab } from '@/components/settings/SchoolProfileSettingsTab'
 
 const uploadMutation = trpc.auth.uploadProfilePicture
 const deleteMutation = trpc.auth.deleteProfilePicture
@@ -23,6 +24,7 @@ interface SettingsPortalModalProps {
 
 const navigationItems = [
   { id: 'account', label: 'Account', icon: User },
+  { id: 'school', label: 'School Profile', icon: Building2 },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'usage', label: 'Usage', icon: BarChart3 },
   { id: 'billing', label: 'Billing', icon: CreditCard },
@@ -737,8 +739,13 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
               <PaymentsSettingsTab />
             )}
 
+            {/* School Profile Tab */}
+            {activeTab === 'school' && (
+              <SchoolProfileSettingsTab />
+            )}
+
             {/* Placeholder for other tabs */}
-            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && (
+            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && activeTab !== 'school' && (
               <div style={{
                 padding: '48px',
                 textAlign: 'center',

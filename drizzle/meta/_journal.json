@@ -519,6 +519,13 @@
       "when": 1769636466943,
       "tag": "0073_keen_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "5",
+      "when": 1769699965800,
+      "tag": "0074_certain_silver_sable",
+      "breakpoints": true
     }
   ]
 }
