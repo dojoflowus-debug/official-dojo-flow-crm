@@ -6272,3 +6272,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wire up navigation state to keep sidebar and content panel in sync
 - [x] Add status pills to PC Bank Card card (Not started / Draft / Submitted / Approved)
 - [x] Add dynamic CTA button (Apply / Continue / View status) based on application status
+- [x] Fix 'React is not defined' error in SettingsPortalModal - add React import and replace React.useState with useState
