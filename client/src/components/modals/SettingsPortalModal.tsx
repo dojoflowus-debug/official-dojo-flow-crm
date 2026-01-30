@@ -26,7 +26,6 @@ interface SettingsPortalModalProps {
 const navigationItems = [
   { id: 'account', label: 'Account', icon: User },
   { id: 'school', label: 'School Profile', icon: Building2 },
-  { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'usage', label: 'Usage', icon: BarChart3 },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { 

@@ -6315,3 +6315,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Create webhook handler for FillFaster status updates
 - [x] Update frontend PC Bank Card wizard to bind to real backend data (already connected)
 - [x] Test end-to-end PC Bank Card submission to FillFaster (backend verified, UI connected)
+
+## PC Bank Card Test Submission (Jan 30, 2026)
+- [ ] Fill out all 7 steps of PC Bank Card wizard with complete test data
+- [ ] Submit application through UI and capture submission ID
+- [ ] Verify submission appears in FillFaster dashboard
+
+## UI Cleanup (Jan 30, 2026)
+- [x] Remove redundant "Settings" navigation item from Settings modal sidebar
