@@ -1321,7 +1321,7 @@ export default function KaiCommand() {
       window.removeEventListener('resize', updateCenterPanelPosition);
       resizeObserver.disconnect();
     };
-  }, [commandCenterWidth]);
+  }, []); // Empty deps - ResizeObserver handles all updates
 
   // Upload mutation
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();

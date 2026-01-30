@@ -6306,3 +6306,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add Submit button to Step 7 Review page
 - [x] Show submission success/error messages
 - [x] Lock form editing after submission (Submit button disabled when status !== DRAFT)
+- [x] Fix 'Maximum update depth exceeded' error in KaiCommand.tsx handleMouseMove - infinite loop causing setState on every mousemove
