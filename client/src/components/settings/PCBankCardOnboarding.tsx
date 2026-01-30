@@ -521,6 +521,38 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
         </p>
       </div>
 
+      {/* Progress Bar */}
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+        }}>
+          <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>
+            Step {currentStep} of {STEPS.length}
+          </span>
+          <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>
+            {Math.round((currentStep / STEPS.length) * 100)}% Complete
+          </span>
+        </div>
+        <div style={{
+          width: '100%',
+          height: '8px',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '4px',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            width: `${(currentStep / STEPS.length) * 100}%`,
+            height: '100%',
+            backgroundColor: '#ef4444',
+            borderRadius: '4px',
+            transition: 'width 300ms ease',
+          }} />
+        </div>
+      </div>
+
       {/* Stepper */}
       <div style={{ 
         display: 'flex', 
