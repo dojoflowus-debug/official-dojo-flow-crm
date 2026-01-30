@@ -244,14 +244,14 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                           const ChildIcon = child.icon
                           const isChildActive = activeTab === child.id
                           const hasGrandChildren = 'children' in child && child.children
-                          const [childExpanded, setChildExpanded] = React.useState(true)
+                          const childExpanded = expandedItems[child.id] !== undefined ? expandedItems[child.id] : true
                           
                           return (
                             <div key={child.id}>
                               <button
                                 onClick={() => {
                                   if (hasGrandChildren) {
-                                    setChildExpanded(!childExpanded)
+                                    setExpandedItems(prev => ({ ...prev, [child.id]: !childExpanded }))
                                   } else {
                                     setActiveTab(child.id as SettingsTab)
                                   }
