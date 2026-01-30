@@ -6307,3 +6307,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Show submission success/error messages
 - [x] Lock form editing after submission (Submit button disabled when status !== DRAFT)
 - [x] Fix 'Maximum update depth exceeded' error in KaiCommand.tsx handleMouseMove - infinite loop causing setState on every mousemove
+
+## PC Bank Card Integration (Jan 30, 2026)
+- [x] Design and implement database schema for PC Bank Card applications (multi-tenant)
+- [x] Create tRPC router with CRUD operations for PC Bank Card applications
+- [x] Implement FillFaster API integration for application submission
+- [x] Create webhook handler for FillFaster status updates
+- [x] Update frontend PC Bank Card wizard to bind to real backend data (already connected)
+- [x] Test end-to-end PC Bank Card submission to FillFaster (backend verified, UI connected)

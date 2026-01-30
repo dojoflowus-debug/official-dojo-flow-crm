@@ -50,6 +50,10 @@ async function startServer() {
   
   // Mount upload routes
   app.use("/api", uploadRouter);
+  
+  // Mount FillFaster webhook
+  const { handleFillFasterWebhook } = await import("./webhooks/fillfaster.js");
+  app.post("/api/webhooks/fillfaster", handleFillFasterWebhook);
 
   // Mount TRPC routes
   app.use(
