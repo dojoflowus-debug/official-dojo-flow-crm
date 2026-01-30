@@ -44,6 +44,7 @@ import { kioskManagerRouter } from './kioskManagerRouter';
 import { paymentProviderRouter } from './paymentProviderRouter';
 import { schoolProfileRouter } from './schoolProfileRouter';
 import { pcBankCardRouter } from './pcBankCardRouter';
+import { messagingRouter } from './routers/messaging';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -405,6 +406,7 @@ export const appRouter = router({
   paymentProvider: paymentProviderRouter,
   schoolProfile: schoolProfileRouter,
   pcBankCard: pcBankCardRouter,
+  dojoFlowMessaging: messagingRouter,
   
   // File upload for attachments
   upload: router({

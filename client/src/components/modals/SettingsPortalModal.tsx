@@ -13,8 +13,8 @@ import { UserAvatar } from '@/components/UserAvatar'
 import AddCreditModal from '@/components/modals/AddCreditModal'
 import PaymentsSettingsTab from '@/components/settings/PaymentsSettingsTab'
 import { SchoolProfileSettingsTab } from '@/components/settings/SchoolProfileSettingsTab'
-import PCBankCardOnboarding from '@/components/settings/PCBankCardOnboarding'
-
+import PCBankCardOnboarding from '@/components/settings/PCBankCardOnboarding';
+import { DojoFlowMessagingTab } from '@/components/settings/DojoFlowMessagingTab';
 const uploadMutation = trpc.auth.uploadProfilePicture
 const deleteMutation = trpc.auth.deleteProfilePicture
 
@@ -796,6 +796,9 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                 </div>
               </div>
             )}
+
+            {/* Dojo Flow Messaging Tab */}
+            {activeTab === 'mail' && <DojoFlowMessagingTab />}
 
             {/* Personalization Tab */}
             {activeTab === 'personalization' && (

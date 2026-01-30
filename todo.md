@@ -6324,3 +6324,33 @@ Transform kiosk from admin dashboard to premium location experience
 ## UI Cleanup (Jan 30, 2026)
 - [x] Remove redundant "Settings" navigation item from Settings modal sidebar
 - [x] Rename "Mail Manus" to "Dojo Flow Messaging" in Settings modal navigation
+
+## Dojo Flow Messaging Implementation (Jan 30, 2026)
+- [ ] Design database schema for email templates and SMS campaigns
+- [ ] Create tRPC router for messaging operations (CRUD for templates and campaigns)
+- [ ] Build email template management UI with default templates
+- [ ] Build SMS campaign creation and sending UI
+- [ ] Add template editor with variable substitution support
+- [ ] Integrate messaging panel into Settings modal
+- [ ] Test email template creation and editing
+- [ ] Test SMS campaign creation and sending
+
+
+## Dojo Flow Messaging Implementation (Jan 30, 2026)
+- [ ] Design database schema for email templates and SMS campaigns
+- [ ] Create tRPC router for messaging operations (CRUD for templates and campaigns)
+- [ ] Build email template management UI with default templates
+- [ ] Build SMS campaign creation and sending UI
+- [ ] Add template editor with variable substitution support
+- [ ] Integrate messaging panel into Settings modal
+- [ ] Test email template creation and editing
+- [ ] Test SMS campaign creation and sending
+
+- [x] Design database schema for email templates and SMS campaigns
+- [x] Create tRPC router for messaging operations (CRUD for templates and campaigns)
+- [x] Build email template management UI with default templates
+- [x] Build SMS campaign creation and sending UI
+- [x] Add template editor with variable substitution support
+- [x] Integrate messaging panel into Settings modal
+- [x] Test email template creation and editing
+- [x] Test SMS campaign creation and sending

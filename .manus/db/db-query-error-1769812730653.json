@@ -1,0 +1,19 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS sms_campaigns (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  org_id INTEGER NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  message TEXT NOT NULL,\n  status VARCHAR(50) DEFAULT 'draft',\n  scheduled_at DATETIME,\n  sent_at DATETIME,\n  recipient_count INTEGER DEFAULT 0,\n  delivered_count INTEGER DEFAULT 0,\n  failed_count INTEGER DEFAULT 0,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  created_by INTEGER,\n  FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE\n);\n\nCREATE INDEX IF NOT EXISTS idx_sms_campaigns_org ON sms_campaigns(org_id);\nCREATE INDEX IF NOT EXISTS idx_sms_campaigns_status ON sms_campaigns(org_id, status);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \nCREATE TABLE IF NOT EXISTS sms_campaigns (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  org_id INTEGER NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  message TEXT NOT NULL,\n  status VARCHAR(50) DEFAULT 'draft',\n  scheduled_at DATETIME,\n  sent_at DATETIME,\n  recipient_count INTEGER DEFAULT 0,\n  delivered_count INTEGER DEFAULT 0,\n  failed_count INTEGER DEFAULT 0,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  created_by INTEGER,\n  FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE\n);\n\nCREATE INDEX IF NOT EXISTS idx_sms_campaigns_org ON sms_campaigns(org_id);\nCREATE INDEX IF NOT EXISTS idx_sms_campaigns_status ON sms_campaigns(org_id, status);\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 2: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 2 column 39 near \"AUTOINCREMENT,",
+    "  org_id INTEGER NOT NULL,",
+    "  name VARCHAR(255) NOT NULL,",
+    "  message TEXT NOT NULL,",
+    "  status VARCHAR(50) DEFAULT 'draft',",
+    "  scheduled_at DATETIME,",
+    "  sent_at DATETIME,",
+    "  recipient_count INTEGER DEFAULT 0,",
+    "  delivered_count INTEGER DEFAULT 0,",
+    "  failed_count INTEGER DEFAULT 0,",
+    "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,",
+    "  updated_at DATETIME DEFAULT"
+  ]
+}
