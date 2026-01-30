@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `payment_webhook_events` (\n  `id` INT AUTO_INCREMENT PRIMARY KEY,\n  `organizationId` INT NOT NULL,\n  `eventType` VARCHAR(100) NOT NULL,\n  `payloadHash` VARCHAR(64) NOT NULL,\n  `payload` TEXT NOT NULL,\n  `linkedInvoiceId` INT,\n  `linkedStudentId` INT,\n  `status` ENUM('received', 'processed', 'failed') DEFAULT 'received' NOT NULL,\n  `processedAt` TIMESTAMP NULL,\n  `errorMessage` TEXT,\n  `receivedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX `idx_payment_webhook_org` (`organizationId`),\n  INDEX `idx_payment_webhook_event_type` (`eventType`),\n  INDEX `idx_payment_webhook_status` (`status`),\n  INDEX `idx_payment_webhook_received` (`receivedAt`)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS `payment_webhook_events` (\n  `id` INT AUTO_INCREMENT PRIMARY KEY,\n  `organizationId` INT NOT NULL,\n  `eventType` VARCHAR(100) NOT NULL,\n  `payloadHash` VARCHAR(64) NOT NULL,\n  `payload` TEXT NOT NULL,\n  `linkedInvoiceId` INT,\n  `linkedStudentId` INT,\n  `status` ENUM('received', 'processed', 'failed') DEFAULT 'received' NOT NULL,\n  `processedAt` TIMESTAMP NULL,\n  `errorMessage` TEXT,\n  `receivedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX `idx_payment_webhook_org` (`organizationId`),\n  INDEX `idx_payment_webhook_event_type` (`eventType`),\n  INDEX `idx_payment_webhook_status` (`status`),\n  INDEX `idx_payment_webhook_received` (`receivedAt`)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 467
+}
