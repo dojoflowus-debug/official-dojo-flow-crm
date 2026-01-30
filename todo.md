@@ -6290,3 +6290,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix React Hooks error 'Rendered more hooks than during the previous render' in SettingsPortalModal - moved useState outside of map function
 - [x] Fix React error #310 when clicking Settings - removed useState from nested children map function
 - [x] Fix database query errors - created missing tables: payment_webhook_events, payment_provider_connections, billing_settings
+- [x] Fix billing_settings schema column names - added explicit column name mappings

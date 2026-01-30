@@ -1581,30 +1581,30 @@ export const paymentProviderConnections = mysqlTable("payment_provider_connectio
 
 export const billingSettings = mysqlTable("billing_settings", {
 	id: int().autoincrement().notNull(),
-	organizationId: int().notNull(),
-	recurringEnabled: int().default(0).notNull(),
-	billingCadence: mysqlEnum(['monthly', 'weekly', 'custom']).default('monthly'),
-	customBillingDay: int(), // 1-31 for day of month
-	retryAttempts: int().default(3).notNull(),
-	retryIntervalDays: int().default(3).notNull(),
-	autoEmailReceipts: int().default(1).notNull(),
-	sendFailedPaymentNotices: int().default(1).notNull(),
-	posTrackingEnabled: int().default(0).notNull(),
-	posMode: mysqlEnum(['standalone_terminal', 'integrated_checkout']),
-	dailySettlementSyncTime: varchar({ length: 5 }), // HH:MM format
-	paymentMatchingMethod: mysqlEnum(['invoice_number', 'student_name', 'amount_date']).default('invoice_number'),
-	chargeApiEnabled: int().default(0).notNull(),
-	refundApiEnabled: int().default(0).notNull(),
+	organizationId: int("organizationId").notNull(),
+	recurringEnabled: int("recurringEnabled").default(0).notNull(),
+	billingCadence: mysqlEnum("billingCadence", ['monthly', 'weekly', 'custom']).default('monthly'),
+	customBillingDay: int("customBillingDay"), // 1-31 for day of month
+	retryAttempts: int("retryAttempts").default(3).notNull(),
+	retryIntervalDays: int("retryIntervalDays").default(3).notNull(),
+	autoEmailReceipts: int("autoEmailReceipts").default(1).notNull(),
+	sendFailedPaymentNotices: int("sendFailedPaymentNotices").default(1).notNull(),
+	posTrackingEnabled: int("posTrackingEnabled").default(0).notNull(),
+	posMode: mysqlEnum("posMode", ['standalone_terminal', 'integrated_checkout']),
+	dailySettlementSyncTime: varchar("dailySettlementSyncTime", { length: 5 }), // HH:MM format
+	paymentMatchingMethod: mysqlEnum("paymentMatchingMethod", ['invoice_number', 'student_name', 'amount_date']).default('invoice_number'),
+	chargeApiEnabled: int("chargeApiEnabled").default(0).notNull(),
+	refundApiEnabled: int("refundApiEnabled").default(0).notNull(),
 	// Dual Pricing / Cash Discount fields
-	dualPricingEnabled: int().default(0).notNull(),
-	dualPricingPosEnabled: int().default(0).notNull(),
-	dualPricingSubscriptionsEnabled: int().default(0).notNull(),
-	cashDiscountPercent: decimal({ precision: 5, scale: 2 }).default('3.99').notNull(), // Default 3.99%
-	receiptDisclosureText: text(), // Customizable receipt disclosure
-	complianceAcknowledged: int().default(0).notNull(), // User acknowledged compliance requirements
-	complianceAcknowledgedAt: timestamp({ mode: 'string' }),
-	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+	dualPricingEnabled: int("dualPricingEnabled").default(0).notNull(),
+	dualPricingPosEnabled: int("dualPricingPosEnabled").default(0).notNull(),
+	dualPricingSubscriptionsEnabled: int("dualPricingSubscriptionsEnabled").default(0).notNull(),
+	cashDiscountPercent: decimal("cashDiscountPercent", { precision: 5, scale: 2 }).default('3.99').notNull(), // Default 3.99%
+	receiptDisclosureText: text("receiptDisclosureText"), // Customizable receipt disclosure
+	complianceAcknowledged: int("complianceAcknowledged").default(0).notNull(), // User acknowledged compliance requirements
+	complianceAcknowledgedAt: timestamp("complianceAcknowledgedAt", { mode: 'string' }),
+	createdAt: timestamp("createdAt", { mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
+	updatedAt: timestamp("updatedAt", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 },
 (table) => [
 	index("idx_billing_settings_org").on(table.organizationId),
