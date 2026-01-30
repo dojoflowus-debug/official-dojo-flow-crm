@@ -6293,3 +6293,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix billing_settings schema column names - added explicit column name mappings
 - [x] Add visual progress bar to PC Bank Card wizard showing current step and completion percentage
 - [x] Build Review & Submit step (Step 7) with complete data summary and edit navigation
+
+## FillFaster API Integration
+- [x] Review FillFaster API documentation and understand submission format
+- [x] Add FILLFASTER_API_KEY to environment variables
+- [x] Find PC Bank Card form ID in FillFaster (jnukQqZkA3)
+- [x] Create FillFaster API client utility
+- [x] Implement pcBankCard.submit() tRPC endpoint
+- [x] Map DojoFlow form data to FillFaster API format
+- [x] Store submission ID returned from FillFaster
+- [x] Update application status to SUBMITTED after successful submission
+- [x] Add Submit button to Step 7 Review page
+- [x] Show submission success/error messages
+- [x] Lock form editing after submission (Submit button disabled when status !== DRAFT)

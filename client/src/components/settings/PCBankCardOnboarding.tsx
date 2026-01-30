@@ -55,6 +55,9 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
   // Upload file mutation
   const uploadFileMutation = trpc.pcBankCard.uploadFile.useMutation()
 
+  // Submit mutation
+  const submitMutation = trpc.pcBankCard.submit.useMutation()
+
   const handleSaveDraft = async () => {
     setSaving(true)
     try {
@@ -68,6 +71,43 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
       toast.error(error.message || 'Failed to save draft')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!formData.confirmAccuracy) {
+      toast.error('Please confirm the accuracy of your information')
+      return
+    }
+
+    if (status !== 'DRAFT') {
+      toast.error('Application has already been submitted')
+      return
+    }
+
+    try {
+      // Save current state first
+      await saveDraftMutation.mutateAsync({
+        currentStep,
+        dataJson: formData,
+      })
+
+      // Submit to FillFaster
+      const result = await submitMutation.mutateAsync()
+      
+      toast.success('Application submitted successfully!')
+      setStatus('SUBMITTED')
+      applicationQuery.refetch()
+      
+      // Show submission link
+      if (result.submissionLink) {
+        toast.info('You can view your submission at: ' + result.submissionLink, {
+          duration: 10000,
+        })
+      }
+    } catch (error: any) {
+      console.error('[handleSubmit] Error:', error)
+      toast.error(error.message || 'Failed to submit application')
     }
   }
 
@@ -887,23 +927,25 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
             </button>
           ) : (
             <button
-              onClick={() => toast.info('Submit functionality will be implemented in Phase 3')}
+              onClick={handleSubmit}
+              disabled={!formData.confirmAccuracy || submitMutation.isLoading || status !== 'DRAFT'}
               style={{
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: '#22c55e',
+                backgroundColor: status !== 'DRAFT' ? 'rgba(34, 197, 94, 0.3)' : '#22c55e',
                 color: 'white',
                 fontSize: '14px',
                 fontWeight: '500',
-                cursor: 'pointer',
+                cursor: (!formData.confirmAccuracy || submitMutation.isLoading || status !== 'DRAFT') ? 'not-allowed' : 'pointer',
+                opacity: (!formData.confirmAccuracy || submitMutation.isLoading || status !== 'DRAFT') ? 0.5 : 1,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
               }}
             >
               <Send size={16} />
-              Submit Application
+              {submitMutation.isLoading ? 'Submitting...' : status === 'SUBMITTED' ? 'Submitted' : 'Submit Application'}
             </button>
           )}
         </div>

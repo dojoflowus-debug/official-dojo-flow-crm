@@ -4,6 +4,7 @@ import { getDb } from './db'
 import { paymentProcessorApplication, paymentProcessorApplicationFile } from '../drizzle/schema'
 import { eq, and } from 'drizzle-orm'
 import { storagePut } from './storage'
+import { createPCBankCardSubmission } from './lib/fillfaster'
 
 export const pcBankCardRouter = router({
   // Get existing application or create draft
@@ -163,6 +164,69 @@ export const pcBankCardRouter = router({
         fileType: input.fileType,
       }
     }),
+
+  // Submit application to FillFaster
+  submit: protectedProcedure.mutation(async ({ ctx }) => {
+    const orgId = ctx.user.activeOrgId || 0
+    const db = await getDb()
+    if (!db) throw new Error('Database not available')
+    
+    // Get application
+    const app = await db
+      .select()
+      .from(paymentProcessorApplication)
+      .where(
+        and(
+          eq(paymentProcessorApplication.organizationId, orgId),
+          eq(paymentProcessorApplication.processor, 'PC_BANK_CARD')
+        )
+      )
+      .limit(1)
+    
+    if (app.length === 0) {
+      throw new Error('Application not found')
+    }
+    
+    if (app[0].status === 'SUBMITTED' || app[0].status === 'UNDER_REVIEW' || app[0].status === 'APPROVED') {
+      throw new Error('Application has already been submitted')
+    }
+    
+    const data = app[0].dataJson as any
+    
+    // Validate required fields
+    if (!data.businessName || !data.ein || !data.businessEmail) {
+      throw new Error('Missing required business information')
+    }
+    
+    // Create FillFaster submission
+    try {
+      const submission = await createPCBankCardSubmission(data, {
+        dojoflow_org_id: orgId,
+        dojoflow_user_id: ctx.user.id,
+        dojoflow_app_id: app[0].id,
+      })
+      
+      // Update application status
+      await db
+        .update(paymentProcessorApplication)
+        .set({
+          status: 'SUBMITTED',
+          submittedAt: new Date().toISOString(),
+          submissionId: submission.submission_id,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(paymentProcessorApplication.id, app[0].id))
+      
+      return {
+        success: true,
+        submissionId: submission.submission_id,
+        submissionLink: submission.submission_link,
+      }
+    } catch (error: any) {
+      console.error('[pcBankCard.submit] FillFaster API error:', error)
+      throw new Error(`Failed to submit to FillFaster: ${error.message}`)
+    }
+  }),
 
   // Get uploaded files
   getFiles: protectedProcedure.query(async ({ ctx }) => {
