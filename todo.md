@@ -6323,3 +6323,4 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## UI Cleanup (Jan 30, 2026)
 - [x] Remove redundant "Settings" navigation item from Settings modal sidebar
+- [x] Rename "Mail Manus" to "Dojo Flow Messaging" in Settings modal navigation

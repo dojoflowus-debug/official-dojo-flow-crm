@@ -45,7 +45,7 @@ const navigationItems = [
     ]
   },
   { id: 'scheduled', label: 'Scheduled tasks', icon: Clock },
-  { id: 'mail', label: 'Mail Manus', icon: Mail },
+  { id: 'mail', label: 'Dojo Flow Messaging', icon: Mail },
   { id: 'data', label: 'Data controls', icon: Database },
   { id: 'cloud', label: 'Cloud browser', icon: Cloud },
   { id: 'personalization', label: 'Personalization', icon: Palette },
