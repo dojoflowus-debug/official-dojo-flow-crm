@@ -456,35 +456,249 @@ export default function PCBankCardOnboarding({ onBack }: PCBankCardOnboardingPro
 
       case 7:
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'white', marginBottom: '8px' }}>
               Review & Submit
             </h3>
+            <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
+              Please review all information below before submitting your application.
+            </p>
+
+            {/* Business Identity */}
             <div style={{ 
-              padding: '16px', 
-              borderRadius: '8px', 
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              padding: '20px', 
+              borderRadius: '12px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}>
-              <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>
-                Application Summary
-              </h4>
-              <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6' }}>
-                <p><strong>Business:</strong> {formData.legalBusinessName || 'N/A'}</p>
-                <p><strong>Email:</strong> {formData.businessEmail || 'N/A'}</p>
-                <p><strong>Owner:</strong> {formData.ownerFullName || 'N/A'}</p>
-                <p><strong>Location:</strong> {formData.locationCity}, {formData.locationState}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: '600', color: 'white', margin: 0 }}>
+                  Business Identity
+                </h4>
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Legal Business Name:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.legalBusinessName || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>DBA Name:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.dbaName || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Business Email:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.businessEmail || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Business Phone:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.businessPhone || 'N/A'}</p>
+                </div>
               </div>
             </div>
+
+            {/* Location Info */}
+            <div style={{ 
+              padding: '20px', 
+              borderRadius: '12px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: '600', color: 'white', margin: 0 }}>
+                  Location Info
+                </h4>
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
+              </div>
+              <div style={{ fontSize: '13px' }}>
+                <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Address:</span>
+                <p style={{ color: 'white', margin: '4px 0 0 0' }}>
+                  {formData.locationAddressStreet || 'N/A'}<br />
+                  {formData.locationCity}, {formData.locationState} {formData.locationZip}
+                </p>
+              </div>
+            </div>
+
+            {/* Corporate / Tax */}
+            <div style={{ 
+              padding: '20px', 
+              borderRadius: '12px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: '600', color: 'white', margin: 0 }}>
+                  Corporate / Tax
+                </h4>
+                <button
+                  onClick={() => setCurrentStep(3)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Corporate Legal Name:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.corporateLegalName || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>EIN / Tax ID:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.einOrTaxId || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Owner / Principal */}
+            <div style={{ 
+              padding: '20px', 
+              borderRadius: '12px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: '600', color: 'white', margin: 0 }}>
+                  Owner / Principal
+                </h4>
+                <button
+                  onClick={() => setCurrentStep(4)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Full Name:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.ownerFullName || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Title:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.ownerTitle || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Email:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.ownerEmail || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Phone:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.ownerPhone || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Banking & Processing */}
+            <div style={{ 
+              padding: '20px', 
+              borderRadius: '12px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: '600', color: 'white', margin: 0 }}>
+                  Banking & Processing
+                </h4>
+                <button
+                  onClick={() => setCurrentStep(5)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Bank Name:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.bankName || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Routing Number:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.routingNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Monthly Volume:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.monthlyProcessingVolume || 'N/A'}</p>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Avg Transaction:</span>
+                  <p style={{ color: 'white', margin: '4px 0 0 0' }}>{formData.averageTransactionAmount || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Confirmation Checkbox */}
             <label style={{ 
               display: 'flex', 
               alignItems: 'flex-start', 
-              gap: '8px',
+              gap: '12px',
               cursor: 'pointer',
+              padding: '16px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(239, 68, 68, 0.05)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
             }}>
-              <input type="checkbox" style={{ marginTop: '4px' }} />
-              <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)' }}>
-                I confirm this information is accurate and I am authorized to submit on behalf of this business.
+              <input 
+                type="checkbox" 
+                checked={formData.confirmAccuracy || false}
+                onChange={(e) => setFormData({ ...formData, confirmAccuracy: e.target.checked })}
+                style={{ marginTop: '4px', cursor: 'pointer' }} 
+              />
+              <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.5' }}>
+                I confirm that all information provided is accurate and complete. I am authorized to submit this application on behalf of the business and agree to the terms and conditions of PC Bank Card processing services.
               </span>
             </label>
           </div>
