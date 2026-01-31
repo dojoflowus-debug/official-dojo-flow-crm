@@ -451,20 +451,20 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                             try {
                               // Read file as base64
                               const reader = new FileReader();
-                              reader.onload = async (event) => {
-                                const base64Data = (event.target?.result as string)?.split(',')[1];
-                                if (!base64Data) {
-                                  setUploadError('Failed to read file');
-                                  setUploading(false);
-                                  return;
-                                }
+              reader.onload = async (event) => {
+                const dataUrl = event.target?.result as string;
+                if (!dataUrl) {
+                  setUploadError('Failed to read file');
+                  setUploading(false);
+                  return;
+                }
 
-                                try {
-                                  // Call tRPC upload endpoint
-                                  const result = await uploadProfilePictureMutation.mutateAsync({
-                                    imageData: base64Data,
-                                    mimeType: file.type,
-                                  });
+                try {
+                  // Call tRPC upload endpoint
+                  const result = await uploadProfilePictureMutation.mutateAsync({
+                    imageData: dataUrl,
+                    mimeType: file.type,
+                  });
 
                                   if (result.success) {
                                     setPreviewUrl(result.photoUrl);

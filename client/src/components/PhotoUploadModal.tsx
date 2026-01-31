@@ -148,8 +148,8 @@ export function PhotoUploadModal({
         ctx.drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
 
         // Compress to JPEG
-        const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
-        resolve({ base64, mimeType: 'image/jpeg' });
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        resolve({ base64: dataUrl, mimeType: 'image/jpeg' });
       };
       img.src = preview;
     });

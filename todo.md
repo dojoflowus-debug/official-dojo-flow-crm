@@ -6358,3 +6358,12 @@ Transform kiosk from admin dashboard to premium location experience
 ## Fix tRPC Mutation Error in Photo Upload (Jan 31, 2026)
 - [x] Fix "hooks[lastArg] is not a function" error in SettingsPortalModal line 598
 - [x] Test photo upload after fix (server restarted, fix applied)
+
+
+## CRITICAL - Photo Uploads Not Saving (Jan 31, 2026)
+- [x] Investigate backend upload endpoints (auth.uploadProfilePicture, student photo upload, logo upload)
+- [x] Check S3 integration and storage configuration
+- [x] Fix upload logic to ensure photos are saved (frontend was sending base64 without data URL prefix)
+- [x] Test profile photo upload (fix applied - sending full data URL)
+- [x] Test student photo upload (PhotoUploadModal fixed)
+- [x] Test school logo upload (LogoUploadSection already correct)
