@@ -25,6 +25,12 @@ export function DojoFlowMessagingTab() {
   const createSMSMutation = trpc.dojoFlowMessaging.createSMSCampaign.useMutation();
   const sendSMSMutation = trpc.dojoFlowMessaging.sendSMSCampaign.useMutation();
 
+  // Email sending
+  const sendEmailMutation = trpc.dojoFlowMessaging.sendEmail.useMutation();
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [sendTemplateId, setSendTemplateId] = useState<number | null>(null);
+  const [recipientEmail, setRecipientEmail] = useState('');
+
   const handleInstallDefaults = async () => {
     try {
       const result = await installDefaultsMutation.mutateAsync();
@@ -71,6 +77,29 @@ export function DojoFlowMessagingTab() {
       emailTemplatesQuery.refetch();
     } catch (error: any) {
       toast.error(error.message || 'Failed to reset template');
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!sendTemplateId || !recipientEmail) {
+      toast.error('Please provide recipient email');
+      return;
+    }
+    try {
+      await sendEmailMutation.mutateAsync({
+        templateId: sendTemplateId,
+        to: recipientEmail,
+        variables: {
+          school_name: 'DojoFlow Academy',
+          student_name: 'Student',
+        },
+      });
+      toast.success('Email sent successfully!');
+      setShowSendDialog(false);
+      setRecipientEmail('');
+      setSendTemplateId(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send email');
     }
   };
 
@@ -273,6 +302,23 @@ export function DojoFlowMessagingTab() {
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
                             onClick={() => {
+                              setSendTemplateId(template.id);
+                              setShowSendDialog(true);
+                            }}
+                            style={{
+                              padding: '8px',
+                              background: 'rgba(34, 197, 94, 0.2)',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#22c55e',
+                              cursor: 'pointer',
+                            }}
+                            title="Send Email"
+                          >
+                            <Send size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
                               setSelectedTemplate(template);
                               setShowPreview(true);
                             }}
@@ -464,6 +510,98 @@ export function DojoFlowMessagingTab() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Send Email Dialog */}
+      {showSendDialog && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#1a1a1a',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '24px',
+            width: '90%',
+            maxWidth: '500px',
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>
+              Send Email
+            </h3>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)' }}>
+                Recipient Email *
+              </label>
+              <input
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="student@example.com"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '6px',
+                  color: 'white',
+                  fontSize: '14px',
+                }}
+              />
+            </div>
+            <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '20px' }}>
+              Template variables will be filled with sample data for testing.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowSendDialog(false);
+                  setRecipientEmail('');
+                  setSendTemplateId(null);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendEmail}
+                disabled={sendEmailMutation.isPending || !recipientEmail}
+                style={{
+                  padding: '10px 20px',
+                  background: sendEmailMutation.isPending || !recipientEmail ? 'rgba(239, 68, 68, 0.5)' : '#ef4444',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  cursor: sendEmailMutation.isPending || !recipientEmail ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <Send size={16} />
+                {sendEmailMutation.isPending ? 'Sending...' : 'Send Email'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

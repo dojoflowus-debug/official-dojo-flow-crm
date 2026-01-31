@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../_core/trpc';
 import { getDb } from '../db';
 import { emailTemplates, smsCampaigns } from '../../drizzle/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import { sendEmail, replaceTemplateVariables } from '../lib/sendgrid';
 
 // Default email templates that every school gets
 const DEFAULT_EMAIL_TEMPLATES = [
@@ -241,6 +242,51 @@ export const messagingRouter = router({
         );
 
       return { success: true };
+    }),
+
+  sendEmail: protectedProcedure
+    .input(z.object({
+      templateId: z.number(),
+      to: z.union([z.string().email(), z.array(z.string().email())]),
+      variables: z.record(z.any()).optional(),
+      from: z.string().email().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      // Get the template
+      const [template] = await db
+        .select()
+        .from(emailTemplates)
+        .where(
+          and(
+            eq(emailTemplates.id, input.templateId),
+            eq(emailTemplates.orgId, ctx.currentOrganizationId)
+          )
+        )
+        .limit(1);
+      
+      if (!template) {
+        throw new Error('Template not found');
+      }
+
+      // Replace variables in subject and body
+      const variables = input.variables || {};
+      const subject = replaceTemplateVariables(template.subject, variables);
+      const html = replaceTemplateVariables(template.bodyHtml, variables);
+      const text = template.bodyText ? replaceTemplateVariables(template.bodyText, variables) : undefined;
+
+      // Send the email
+      await sendEmail({
+        to: input.to,
+        from: input.from,
+        subject,
+        html,
+        text,
+      });
+
+      return { success: true, message: 'Email sent successfully' };
     }),
 
   installDefaultTemplates: protectedProcedure
