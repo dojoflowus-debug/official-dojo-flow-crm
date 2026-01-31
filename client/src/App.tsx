@@ -260,7 +260,7 @@ function Router() {
 
       <Route path="/simple-dashboard" element={<SimpleDashboard />} />
       <Route path="/students" element={<AppShell><StudentsElevated /></AppShell>} />
-      <Route path="/students/:id" element={<StudentCommandProfile />} />
+      <Route path="/students/:id" element={<AppShell><StudentCommandProfile /></AppShell>} />
       <Route path="/students-classic" element={<Students />} />
       <Route path="/students-old" element={<StudentsDashboard />} />
       <Route path="/students-management" element={<StudentsManagement />} />

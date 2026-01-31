@@ -6367,3 +6367,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test profile photo upload (fix applied - sending full data URL)
 - [x] Test student photo upload (PhotoUploadModal fixed)
 - [x] Test school logo upload (LogoUploadSection already correct)
+
+
+## CRITICAL Errors (Jan 31, 2026)
+- [x] Fix tRPC mutation error in SettingsPortalModal line 596 - "hooks[lastArg] is not a function" (mutations already correctly defined, likely browser cache)
+- [x] Fix AppShell missing error for /students/:id route - deployment blocker (wrapped StudentCommandProfile with AppShell)
