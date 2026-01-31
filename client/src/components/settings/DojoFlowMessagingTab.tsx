@@ -27,9 +27,15 @@ export function DojoFlowMessagingTab() {
 
   // Email sending
   const sendEmailMutation = trpc.dojoFlowMessaging.sendEmail.useMutation();
+  const sendBulkEmailMutation = trpc.dojoFlowMessaging.sendBulkEmail.useMutation();
   const [showSendDialog, setShowSendDialog] = useState(false);
+  const [showBulkSendDialog, setShowBulkSendDialog] = useState(false);
   const [sendTemplateId, setSendTemplateId] = useState<number | null>(null);
   const [recipientEmail, setRecipientEmail] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+  
+  // Get students for bulk email
+  const studentsQuery = trpc.students.list.useQuery({ status: 'active' });
 
   const handleInstallDefaults = async () => {
     try {
@@ -100,6 +106,55 @@ export function DojoFlowMessagingTab() {
       setSendTemplateId(null);
     } catch (error: any) {
       toast.error(error.message || 'Failed to send email');
+    }
+  };
+
+  const handleSendBulkEmail = async () => {
+    if (!sendTemplateId || selectedStudents.length === 0) {
+      toast.error('Please select at least one student');
+      return;
+    }
+    try {
+      const recipients = selectedStudents.map(student => ({
+        email: student.email,
+        variables: {
+          school_name: 'DojoFlow Academy',
+          student_name: student.name,
+          first_class_date: new Date().toLocaleDateString(),
+          instructor_name: 'Instructor',
+        },
+      }));
+
+      const result = await sendBulkEmailMutation.mutateAsync({
+        templateId: sendTemplateId,
+        recipients,
+      });
+
+      toast.success(result.message);
+      setShowBulkSendDialog(false);
+      setSelectedStudents([]);
+      setSendTemplateId(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send bulk emails');
+    }
+  };
+
+  const toggleStudentSelection = (student: any) => {
+    setSelectedStudents(prev => {
+      const exists = prev.find(s => s.id === student.id);
+      if (exists) {
+        return prev.filter(s => s.id !== student.id);
+      } else {
+        return [...prev, student];
+      }
+    });
+  };
+
+  const selectAllStudents = () => {
+    if (selectedStudents.length === studentsQuery.data?.students?.length) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(studentsQuery.data?.students || []);
     }
   };
 
@@ -316,6 +371,23 @@ export function DojoFlowMessagingTab() {
                             title="Send Email"
                           >
                             <Send size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSendTemplateId(template.id);
+                              setShowBulkSendDialog(true);
+                            }}
+                            style={{
+                              padding: '8px',
+                              background: 'rgba(59, 130, 246, 0.2)',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#3b82f6',
+                              cursor: 'pointer',
+                            }}
+                            title="Bulk Send"
+                          >
+                            <Mail size={16} />
                           </button>
                           <button
                             onClick={() => {
@@ -599,6 +671,153 @@ export function DojoFlowMessagingTab() {
               >
                 <Send size={16} />
                 {sendEmailMutation.isPending ? 'Sending...' : 'Send Email'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Send Email Dialog */}
+      {showBulkSendDialog && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#1a1a1a',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '24px',
+            width: '90%',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflow: 'auto',
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>
+              Bulk Send Email
+            </h3>
+            
+            {/* Student Selection */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <label style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)' }}>
+                  Select Students ({selectedStudents.length} selected)
+                </label>
+                <button
+                  onClick={selectAllStudents}
+                  style={{
+                    padding: '6px 12px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    borderRadius: '6px',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  {selectedStudents.length === studentsQuery.data?.students?.length ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              
+              {studentsQuery.isLoading ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                  Loading students...
+                </div>
+              ) : studentsQuery.data?.students?.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                  No active students found
+                </div>
+              ) : (
+                <div style={{
+                  maxHeight: '300px',
+                  overflow: 'auto',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                }}>
+                  {studentsQuery.data?.students?.map((student: any) => (
+                    <div
+                      key={student.id}
+                      onClick={() => toggleStudentSelection(student)}
+                      style={{
+                        padding: '12px',
+                        background: selectedStudents.find(s => s.id === student.id)
+                          ? 'rgba(59, 130, 246, 0.2)'
+                          : 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid ' + (selectedStudents.find(s => s.id === student.id)
+                          ? 'rgba(59, 130, 246, 0.5)'
+                          : 'rgba(255, 255, 255, 0.1)'),
+                        borderRadius: '6px',
+                        marginBottom: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: '500' }}>{student.name}</div>
+                        <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>{student.email}</div>
+                      </div>
+                      {selectedStudents.find(s => s.id === student.id) && (
+                        <CheckCircle size={18} style={{ color: '#3b82f6' }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '20px' }}>
+              Template variables will be personalized for each student.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowBulkSendDialog(false);
+                  setSelectedStudents([]);
+                  setSendTemplateId(null);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendBulkEmail}
+                disabled={sendBulkEmailMutation.isPending || selectedStudents.length === 0}
+                style={{
+                  padding: '10px 20px',
+                  background: sendBulkEmailMutation.isPending || selectedStudents.length === 0 ? 'rgba(239, 68, 68, 0.5)' : '#ef4444',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  cursor: sendBulkEmailMutation.isPending || selectedStudents.length === 0 ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <Mail size={16} />
+                {sendBulkEmailMutation.isPending ? 'Sending...' : `Send to ${selectedStudents.length} Student${selectedStudents.length !== 1 ? 's' : ''}`}
               </button>
             </div>
           </div>

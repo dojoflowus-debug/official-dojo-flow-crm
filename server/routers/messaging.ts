@@ -289,6 +289,73 @@ export const messagingRouter = router({
       return { success: true, message: 'Email sent successfully' };
     }),
 
+  sendBulkEmail: protectedProcedure
+    .input(z.object({
+      templateId: z.number(),
+      recipients: z.array(z.object({
+        email: z.string().email(),
+        variables: z.record(z.any()).optional(),
+      })),
+      from: z.string().email().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      // Get the template
+      const [template] = await db
+        .select()
+        .from(emailTemplates)
+        .where(
+          and(
+            eq(emailTemplates.id, input.templateId),
+            eq(emailTemplates.orgId, ctx.currentOrganizationId)
+          )
+        )
+        .limit(1);
+      
+      if (!template) {
+        throw new Error('Template not found');
+      }
+
+      // Send emails to all recipients
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as string[],
+      };
+
+      for (const recipient of input.recipients) {
+        try {
+          // Replace variables in subject and body for this recipient
+          const variables = recipient.variables || {};
+          const subject = replaceTemplateVariables(template.subject, variables);
+          const html = replaceTemplateVariables(template.bodyHtml, variables);
+          const text = template.bodyText ? replaceTemplateVariables(template.bodyText, variables) : undefined;
+
+          // Send the email
+          await sendEmail({
+            to: recipient.email,
+            from: input.from,
+            subject,
+            html,
+            text,
+          });
+
+          results.success++;
+        } catch (error: any) {
+          results.failed++;
+          results.errors.push(`${recipient.email}: ${error.message}`);
+        }
+      }
+
+      return {
+        success: results.failed === 0,
+        message: `Sent ${results.success} emails successfully${results.failed > 0 ? `, ${results.failed} failed` : ''}`,
+        results,
+      };
+    }),
+
   installDefaultTemplates: protectedProcedure
     .mutation(async ({ ctx }) => {
       const db = await getDb();
