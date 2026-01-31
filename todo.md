@@ -6395,3 +6395,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add retry logic for failed uploads - Not needed (no S3 failures)
 - [x] Add auditing table/log entry for uploads - Server-side logging implemented
 - [x] Implement backfill job if orphaned files exist - Not needed (no orphaned files)
+
+
+## Fix /kai Page JavaScript Error (Jan 31, 2026) - COMPLETED
+- [x] Investigate "t[r] is not a function" error on /kai page - Caused by CloudFront 403 errors
+- [x] Identify component causing the error (likely related to user photoUrl) - User photoUrl pointing to inaccessible CloudFront URL
+- [x] Fix photo URL handling to gracefully handle CloudFront 403 errors - Updated uploadProfilePicture to use base64 data URLs
+- [x] Test the fix on /kai page - Page loads without JavaScript errors
+- [x] Verify user profile photo displays correctly or falls back to initials - Cleared old CloudFront URL, now uses fallback initials

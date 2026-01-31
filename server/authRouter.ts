@@ -231,32 +231,50 @@ export const authRouter = router({
       }
 
       try {
-        // Convert base64 to buffer
+        // Validate MIME type
+        const validMimeTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
+        if (!validMimeTypes.includes(input.mimeType)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid image format. Supported formats: JPG, PNG, HEIC, WebP",
+          });
+        }
+
+        // Remove data URL prefix if present
         const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
-        const buffer = Buffer.from(base64Data, "base64");
 
-        // Generate unique filename
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 8);
-        const extension = input.mimeType.split("/")[1] || "png";
-        const fileKey = `profile-pictures/${ctx.user.id}-${timestamp}-${randomSuffix}.${extension}`;
+        // Validate base64 data size (max 2MB for profile photos)
+        const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+        const estimatedSize = Math.ceil(base64Data.length * 0.75); // base64 is ~33% larger than binary
+        if (estimatedSize > maxSizeBytes) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Photo is too large. Maximum size is 2MB. Please use a smaller image or reduce quality.",
+          });
+        }
 
-        // Upload to S3 - storagePut returns a public URL
-        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        // Create data URL from base64 data
+        // Use image/jpeg for HEIC/HEIF since the frontend converts them to JPEG
+        const effectiveMimeType = input.mimeType.includes('heic') || input.mimeType.includes('heif') 
+          ? 'image/jpeg' 
+          : input.mimeType;
+        const dataUrl = `data:${effectiveMimeType};base64,${base64Data}`;
 
-        // Update user record with photo URL
+        // Update user record with data URL
         await db
           .update(users)
           .set({
-            photoUrl: url,
-            photoUrlSmall: url, // For now, use same URL for both
-            updatedAt:new Date().toISOString(),
+            photoUrl: dataUrl,
+            photoUrlSmall: dataUrl, // For now, use same URL for both
+            updatedAt: new Date().toISOString(),
           })
           .where(eq(users.id, ctx.user.id));
 
+        console.log(`[Profile Photo Upload] User ${ctx.user.id}: Photo saved as data URL (${Math.round(estimatedSize / 1024)}KB)`);
+
         return {
           success: true,
-          photoUrl: url,
+          photoUrl: dataUrl,
         };
       } catch (error) {
         console.error("Error uploading profile picture:", error);
