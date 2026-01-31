@@ -15,8 +15,7 @@ import PaymentsSettingsTab from '@/components/settings/PaymentsSettingsTab'
 import { SchoolProfileSettingsTab } from '@/components/settings/SchoolProfileSettingsTab'
 import PCBankCardOnboarding from '@/components/settings/PCBankCardOnboarding';
 import { DojoFlowMessagingTab } from '@/components/settings/DojoFlowMessagingTab';
-const uploadMutation = trpc.auth.uploadProfilePicture
-const deleteMutation = trpc.auth.deleteProfilePicture
+// Removed - mutations should be called inside component
 
 interface SettingsPortalModalProps {
   isOpen?: boolean
@@ -69,8 +68,8 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({ payments: true, processors: true })
   
   // Use tRPC mutations at component level
-  const uploadProfilePictureMutation = uploadMutation.useMutation()
-  const deleteProfilePictureMutation = deleteMutation.useMutation()
+  const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation()
+  const deleteProfilePictureMutation = trpc.auth.deleteProfilePicture.useMutation()
   const billingPortalMutation = trpc.subscription.createBillingPortalSession.useMutation()
 
   // Prevent body scroll when modal is open

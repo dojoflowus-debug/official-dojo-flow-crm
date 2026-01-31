@@ -6354,3 +6354,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Integrate messaging panel into Settings modal
 - [x] Test email template creation and editing
 - [x] Test SMS campaign creation and sending
+
+## Fix tRPC Mutation Error in Photo Upload (Jan 31, 2026)
+- [x] Fix "hooks[lastArg] is not a function" error in SettingsPortalModal line 598
+- [x] Test photo upload after fix (server restarted, fix applied)
