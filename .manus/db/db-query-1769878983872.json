@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, firstName, lastName, photoUrl FROM students WHERE id = 360018;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, photoUrl FROM students WHERE id = 360018;",
+  "rows": [
+    {
+      "id": "360018",
+      "firstName": "Amanda",
+      "lastName": "Lee",
+      "photoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/360018/student-360018-1769878835224-51e5z0.jpeg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tphotoUrl\n360018\tAmanda\tLee\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/360018/student-360018-1769878835224-51e5z0.jpeg\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

@@ -1,0 +1,38 @@
+{
+  "query": "SELECT id, firstName, lastName, LEFT(photoUrl, 100) as photoUrlPrefix, organizationId FROM students WHERE photoUrl IS NOT NULL AND photoUrl != '';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, LEFT(photoUrl, 100) as photoUrlPrefix, organizationId FROM students WHERE photoUrl IS NOT NULL AND photoUrl != '';",
+  "rows": [
+    {
+      "id": "450001",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "photoUrlPrefix": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local",
+      "organizationId": "120001"
+    },
+    {
+      "id": "510005",
+      "firstName": "Vincent",
+      "lastName": "Holmes",
+      "photoUrlPrefix": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local",
+      "organizationId": "120001"
+    },
+    {
+      "id": "1260001",
+      "firstName": "Alex",
+      "lastName": "Chen",
+      "photoUrlPrefix": "/test-student-photo.jpg",
+      "organizationId": "1"
+    },
+    {
+      "id": "1350002",
+      "firstName": "Ashley",
+      "lastName": "Boydo",
+      "photoUrlPrefix": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/13500",
+      "organizationId": "120001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tphotoUrlPrefix\torganizationId\n450001\tJane\tDoe\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local\t120001\n510005\tVincent\tHolmes\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local\t120001\n1260001\tAlex\tChen\t/test-student-photo.jpg\t1\n1350002\tAshley\tBoydo\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/13500\t120001\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

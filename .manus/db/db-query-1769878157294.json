@@ -1,0 +1,35 @@
+{
+  "query": "SELECT organizationId, COUNT(*) as student_count, SUM(CASE WHEN photoUrl IS NOT NULL AND photoUrl != '' THEN 1 ELSE 0 END) as with_photos FROM students GROUP BY organizationId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT organizationId, COUNT(*) as student_count, SUM(CASE WHEN photoUrl IS NOT NULL AND photoUrl != '' THEN 1 ELSE 0 END) as with_photos FROM students GROUP BY organizationId;",
+  "rows": [
+    {
+      "organizationId": "NULL",
+      "student_count": "186",
+      "with_photos": "0"
+    },
+    {
+      "organizationId": "120001",
+      "student_count": "8",
+      "with_photos": "3"
+    },
+    {
+      "organizationId": "1",
+      "student_count": "91",
+      "with_photos": "1"
+    },
+    {
+      "organizationId": "180001",
+      "student_count": "30",
+      "with_photos": "0"
+    },
+    {
+      "organizationId": "330001",
+      "student_count": "1",
+      "with_photos": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "organizationId\tstudent_count\twith_photos\nNULL\t186\t0\n120001\t8\t3\n1\t91\t1\n180001\t30\t0\n330001\t1\t0\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

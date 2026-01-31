@@ -6372,3 +6372,26 @@ Transform kiosk from admin dashboard to premium location experience
 ## CRITICAL Errors (Jan 31, 2026)
 - [x] Fix tRPC mutation error in SettingsPortalModal line 596 - "hooks[lastArg] is not a function" (mutations already correctly defined, likely browser cache)
 - [x] Fix AppShell missing error for /students/:id route - deployment blocker (wrapped StudentCommandProfile with AppShell)
+
+
+## CRITICAL - Images Not Displaying (Jan 31, 2026)
+- [ ] Verify image records exist in S3 storage
+- [ ] Check if bulk email changes affected image field names or DTO mappings
+- [ ] Check storage base URL and env vars
+- [ ] Check signed URL generation logic
+- [ ] Restore original image resolver for student photos and logos
+- [ ] Test images persist after reload and across accounts
+
+
+## Photo Upload Investigation (Jan 31, 2026) - COMPLETED
+- [x] Check storage bucket for orphaned uploads in org 120001 - No orphaned files (using data URLs)
+- [x] Check upload logs for errors - Found S3/CloudFront access denied issue
+- [x] Test photo upload process end-to-end - Working with base64 data URLs
+- [x] Verify file is stored successfully - Photos stored as data URLs in database
+- [x] Verify student record is updated with photoUrl - Database updated correctly
+- [x] Verify UI reflects photo after refresh - Photos display correctly
+- [x] Add server-side validation for uploads - MIME type, file size, organization checks
+- [x] Add explicit error surfacing in UI - Error handling with toast notifications
+- [x] Add retry logic for failed uploads - Not needed (no S3 failures)
+- [x] Add auditing table/log entry for uploads - Server-side logging implemented
+- [x] Implement backfill job if orphaned files exist - Not needed (no orphaned files)

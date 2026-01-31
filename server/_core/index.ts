@@ -11,6 +11,7 @@ import customBackgroundsRouter from "../api.cinematic-backgrounds.js";
 import leadCaptureRouter from "../leadCaptureRouter";
 import locationConfigRouter from "../locationConfigRouter";
 import webhookManagementRouter from "../webhookManagementRouter";
+import storageProxyRouter from "../storageProxyRouter";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -87,6 +88,9 @@ async function startServer() {
   
   // Mount webhook management routes
   app.use("/api/webhook-management", webhookManagementRouter);
+  
+  // Mount storage proxy for serving S3 images (needed because CloudFront URLs don't have public access)
+  app.use("/api/storage-proxy", storageProxyRouter);
   
   // ElevenLabs Text-to-Speech endpoint
   app.post("/api/tts", async (req, res) => {

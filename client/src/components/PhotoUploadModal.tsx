@@ -91,13 +91,13 @@ export function PhotoUploadModal({
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
     if (!validTypes.includes(file.type)) {
-      alert('Please select a JPG, PNG, or HEIC image');
+      onError?.('Please select a JPG, PNG, or HEIC image');
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('Image must be smaller than 10MB');
+      onError?.('Image must be smaller than 10MB');
       return;
     }
 
@@ -156,18 +156,30 @@ export function PhotoUploadModal({
   };
 
   const handleSave = async () => {
-    if (!selectedFile || !hasChanges) return;
+    console.log('[PhotoUpload] handleSave called, selectedFile:', !!selectedFile, 'hasChanges:', hasChanges);
+    if (!selectedFile || !hasChanges) {
+      console.log('[PhotoUpload] Skipping save - no file or no changes');
+      return;
+    }
 
     try {
       setIsSaving(true);
       const cropped = await cropAndCompress();
+      console.log('[PhotoUpload] Cropped result:', cropped ? { mimeType: cropped.mimeType, base64Length: cropped.base64.length } : null);
       if (!cropped) {
         const errorMsg = 'Failed to process image';
+        console.error('[PhotoUpload] Crop failed');
         onError?.(errorMsg);
         return;
       }
 
-      await onSave(cropped.base64, cropped.mimeType);
+      // Strip the data URL prefix - backend expects raw base64 data
+      const base64Data = cropped.base64.includes(',') 
+        ? cropped.base64.split(',')[1] 
+        : cropped.base64;
+      console.log('[PhotoUpload] Calling onSave with base64 length:', base64Data.length, 'mimeType:', cropped.mimeType);
+      await onSave(base64Data, cropped.mimeType);
+      console.log('[PhotoUpload] onSave completed successfully');
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -342,7 +354,13 @@ export function PhotoUploadModal({
             </Button>
             <Button
               type="button"
-              onClick={handleSave}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[PhotoUpload] Save button clicked directly');
+                console.log('[PhotoUpload] hasChanges:', hasChanges, 'selectedFile:', !!selectedFile, 'isLoading:', isLoading, 'isSaving:', isSaving);
+                handleSave();
+              }}
               disabled={!hasChanges || isLoading || isSaving}
               title={!hasChanges ? 'Make changes to enable save' : 'Save photo (Enter)'}
             >

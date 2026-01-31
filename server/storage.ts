@@ -110,3 +110,53 @@ export async function storageGetBuffer(relKey: string): Promise<ArrayBuffer> {
   }
   return response.arrayBuffer();
 }
+
+/**
+ * Extract the full storage path from a CloudFront URL
+ * CloudFront URLs have format: https://xxx.cloudfront.net/{uid}/{projectId}/{relativePath}
+ * The download API expects the full path: {uid}/{projectId}/{relativePath}
+ */
+export function extractStoragePathFromUrl(cloudFrontUrl: string): string {
+  try {
+    const url = new URL(cloudFrontUrl);
+    // Remove leading slash from pathname
+    return url.pathname.replace(/^\/+/, '');
+  } catch {
+    // If it's not a valid URL, assume it's already a path
+    return cloudFrontUrl.replace(/^\/+/, '');
+  }
+}
+
+/**
+ * Fetch file directly from storage API with authentication
+ * This bypasses CloudFront and fetches directly from the storage proxy
+ * 
+ * @param fullPath - The full storage path (including uid/projectId prefix) or a CloudFront URL
+ */
+export async function storageDownload(fullPath: string): Promise<{ buffer: ArrayBuffer; contentType: string }> {
+  const { baseUrl, apiKey } = getStorageConfig();
+  
+  // If it looks like a URL, extract the path
+  const path = fullPath.startsWith('http') 
+    ? extractStoragePathFromUrl(fullPath)
+    : normalizeKey(fullPath);
+  
+  // Use the download endpoint with authentication
+  const downloadUrl = new URL("v1/storage/download", ensureTrailingSlash(baseUrl));
+  downloadUrl.searchParams.set("path", path);
+  
+  const response = await fetch(downloadUrl, {
+    method: "GET",
+    headers: buildAuthHeaders(apiKey),
+  });
+  
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(`Storage download failed (${response.status}): ${message}`);
+  }
+  
+  const contentType = response.headers.get('content-type') || 'application/octet-stream';
+  const buffer = await response.arrayBuffer();
+  
+  return { buffer, contentType };
+}

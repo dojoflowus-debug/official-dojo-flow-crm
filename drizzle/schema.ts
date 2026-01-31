@@ -1,4 +1,4 @@
-import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, timestamp, varchar, datetime, json, tinyint, decimal } from "drizzle-orm/mysql-core"
+import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
 export const accountFlags = mysqlTable("account_flags", {
@@ -1276,7 +1276,7 @@ export const students = mysqlTable("students", {
 	membershipStatus: varchar({ length: 100 }),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
-	photoUrl: varchar({ length: 500 }),
+	photoUrl: mediumtext(),
 	program: varchar({ length: 100 }),
 	streetAddress: varchar({ length: 255 }),
 	city: varchar({ length: 100 }),

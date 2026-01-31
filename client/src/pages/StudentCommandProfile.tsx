@@ -130,10 +130,15 @@ function StudentCommandProfile() {
   };
 
   const handlePhotoUpload = async (base64Data: string, mimeType: string) => {
-    if (!student) return;
+    console.log('[StudentProfile] handlePhotoUpload called, base64 length:', base64Data.length, 'mimeType:', mimeType);
+    if (!student) {
+      console.error('[StudentProfile] No student found');
+      return;
+    }
     setIsUploadingPhoto(true);
     setPhotoError(null);
     try {
+      console.log('[StudentProfile] Calling uploadPhotoMutation for student:', student.id);
       await uploadPhotoMutation.mutateAsync({
         studentId: student.id,
         base64Data,

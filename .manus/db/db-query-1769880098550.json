@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, school_name, logo_light_url, logo_dark_url FROM school_profiles LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, school_name, logo_light_url, logo_dark_url FROM school_profiles LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "school_name": "Test Dojo ",
+      "logo_light_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769876210836-my35g1-logo.png",
+      "logo_dark_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769703418530-ynm701-logo.png"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tschool_name\tlogo_light_url\tlogo_dark_url\n1\tTest Dojo \thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769876210836-my35g1-logo.png\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769703418530-ynm701-logo.png\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

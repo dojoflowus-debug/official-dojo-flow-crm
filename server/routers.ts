@@ -2165,6 +2165,9 @@ export const appRouter = router({
       }),
     
     // Upload photo and save to student record
+    // NOTE: Photos are stored as base64 data URLs directly in the database
+    // because the S3/CloudFront storage doesn't support public access.
+    // This approach works well for profile photos which are typically small (<500KB after compression)
     uploadPhotoToStudent: protectedProcedure
       .input(z.object({
         studentId: z.number(),
@@ -2172,7 +2175,6 @@ export const appRouter = router({
         mimeType: z.string(), // e.g., 'image/jpeg', 'image/png', 'image/heic'
       }))
       .mutation(async ({ input, ctx }) => {
-        const { storagePut } = await import("./storage");
         const { getDb } = await import("./db");
         const { students } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
@@ -2194,28 +2196,31 @@ export const appRouter = router({
         }
         
         // Validate MIME type
-        const validMimeTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
+        const validMimeTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
         if (!validMimeTypes.includes(input.mimeType)) {
-          throw new Error('Invalid image format. Supported formats: JPG, PNG, HEIC');
+          throw new Error('Invalid image format. Supported formats: JPG, PNG, HEIC, WebP');
         }
         
-        // Generate unique file key
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 8);
-        const extension = input.mimeType.split('/')[1] || 'jpg';
-        const fileName = `student-${input.studentId}-${timestamp}-${randomSuffix}.${extension}`;
-        const fileKey = `student-photos/${input.studentId}/${fileName}`;
+        // Validate base64 data size (max 2MB for profile photos)
+        const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+        const estimatedSize = Math.ceil(input.base64Data.length * 0.75); // base64 is ~33% larger than binary
+        if (estimatedSize > maxSizeBytes) {
+          throw new Error('Photo is too large. Maximum size is 2MB. Please use a smaller image or reduce quality.');
+        }
         
-        // Convert base64 to buffer
-        const buffer = Buffer.from(input.base64Data, 'base64');
+        // Create data URL from base64 data
+        // Use image/jpeg for HEIC/HEIF since the frontend converts them to JPEG
+        const effectiveMimeType = input.mimeType.includes('heic') || input.mimeType.includes('heif') 
+          ? 'image/jpeg' 
+          : input.mimeType;
+        const dataUrl = `data:${effectiveMimeType};base64,${input.base64Data}`;
         
-        // Upload to S3
-        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        // Update student record with data URL
+        await db.update(students).set({ photoUrl: dataUrl }).where(eq(students.id, input.studentId));
         
-        // Update student record with photo URL
-        await db.update(students).set({ photoUrl: url }).where(eq(students.id, input.studentId));
+        console.log(`[Photo Upload] Student ${input.studentId}: Photo saved as data URL (${Math.round(estimatedSize / 1024)}KB)`);
         
-        return { success: true, url, photoUrl: url };
+        return { success: true, url: dataUrl, photoUrl: dataUrl };
       }),
     
     // Remove photo from student (revert to initials)

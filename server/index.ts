@@ -6,6 +6,7 @@ import session from "express-session";
 import passport from "./auth/passport";
 import socialAuthRouter from "./auth/socialAuthRouter.js";
 import uploadRouter from "./uploadRouter.js";
+import storageProxyRouter from "./storageProxyRouter.js";
 import customBackgroundsRouter from "./api.cinematic-backgrounds.js";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "./routers";
@@ -50,6 +51,9 @@ async function startServer() {
   
   // Mount upload routes
   app.use("/api", uploadRouter);
+  
+  // Mount storage proxy for serving S3 images
+  app.use("/api/storage-proxy", storageProxyRouter);
   
   // Mount FillFaster webhook
   const { handleFillFasterWebhook } = await import("./webhooks/fillfaster.js");

@@ -1,0 +1,38 @@
+{
+  "query": "SELECT id, firstName, lastName, organizationId, SUBSTRING(photoUrl, 1, 80) as photo_prefix FROM students WHERE photoUrl IS NOT NULL AND photoUrl != '' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, organizationId, SUBSTRING(photoUrl, 1, 80) as photo_prefix FROM students WHERE photoUrl IS NOT NULL AND photoUrl != '' LIMIT 10;",
+  "rows": [
+    {
+      "id": "450001",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "organizationId": "120001",
+      "photo_prefix": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/"
+    },
+    {
+      "id": "510005",
+      "firstName": "Vincent",
+      "lastName": "Holmes",
+      "organizationId": "120001",
+      "photo_prefix": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/"
+    },
+    {
+      "id": "1260001",
+      "firstName": "Alex",
+      "lastName": "Chen",
+      "organizationId": "1",
+      "photo_prefix": "/test-student-photo.jpg"
+    },
+    {
+      "id": "1350002",
+      "firstName": "Ashley",
+      "lastName": "Boydo",
+      "organizationId": "120001",
+      "photo_prefix": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\torganizationId\tphoto_prefix\n450001\tJane\tDoe\t120001\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/\n510005\tVincent\tHolmes\t120001\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/\n1260001\tAlex\tChen\t1\t/test-student-photo.jpg\n1350002\tAshley\tBoydo\t120001\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

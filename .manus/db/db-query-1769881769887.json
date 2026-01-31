@@ -1,0 +1,58 @@
+{
+  "query": "SELECT id, firstName, lastName, photoUrl FROM students WHERE organizationId = 120001 LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, firstName, lastName, photoUrl FROM students WHERE organizationId = 120001 LIMIT 20;",
+  "rows": [
+    {
+      "id": "450001",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "photoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local_2580004_bc4b3fd4e936808e/test-photo.png"
+    },
+    {
+      "id": "480001",
+      "firstName": "Test",
+      "lastName": "Student",
+      "photoUrl": "NULL"
+    },
+    {
+      "id": "510001",
+      "firstName": "Test",
+      "lastName": "Student",
+      "photoUrl": "NULL"
+    },
+    {
+      "id": "510002",
+      "firstName": "NewTest",
+      "lastName": "StudentTwo",
+      "photoUrl": "NULL"
+    },
+    {
+      "id": "510005",
+      "firstName": "Vincent",
+      "lastName": "Holmes",
+      "photoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local_2580004_bc4b3fd4e936808e/test_photo2.png"
+    },
+    {
+      "id": "1320001",
+      "firstName": "Damien",
+      "lastName": "DiCiolli",
+      "photoUrl": "NULL"
+    },
+    {
+      "id": "1350002",
+      "firstName": "Ashley",
+      "lastName": "Boydo",
+      "photoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/1350002/student-1350002-1769877757941-k2vpdm.jpeg"
+    },
+    {
+      "id": "1650001",
+      "firstName": "Jose",
+      "lastName": "Mairena",
+      "photoUrl": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\tphotoUrl\n450001\tJane\tDoe\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local_2580004_bc4b3fd4e936808e/test-photo.png\n480001\tTest\tStudent\tNULL\n510001\tTest\tStudent\tNULL\n510002\tNewTest\tStudentTwo\tNULL\n510005\tVincent\tHolmes\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/local_2580004_bc4b3fd4e936808e/test_photo2.png\n1320001\tDamien\tDiCiolli\tNULL\n1350002\tAshley\tBoydo\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/student-photos/1350002/student-1350002-1769877757941-k2vpdm.jpeg\n1650001\tJose\tMairena\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 76
+}
