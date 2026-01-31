@@ -3,7 +3,6 @@ import { router, protectedProcedure } from '../_core/trpc';
 import { getDb } from '../db';
 import { emailTemplates, smsCampaigns } from '../../drizzle/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import { sendEmail, replaceTemplateVariables } from '../lib/sendgrid';
 
 // Default email templates that every school gets
 const DEFAULT_EMAIL_TEMPLATES = [
@@ -242,118 +241,6 @@ export const messagingRouter = router({
         );
 
       return { success: true };
-    }),
-
-  sendEmail: protectedProcedure
-    .input(z.object({
-      templateId: z.number(),
-      to: z.union([z.string().email(), z.array(z.string().email())]),
-      variables: z.record(z.any()).optional(),
-      from: z.string().email().optional(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database not available');
-      
-      // Get the template
-      const [template] = await db
-        .select()
-        .from(emailTemplates)
-        .where(
-          and(
-            eq(emailTemplates.id, input.templateId),
-            eq(emailTemplates.orgId, ctx.currentOrganizationId)
-          )
-        )
-        .limit(1);
-      
-      if (!template) {
-        throw new Error('Template not found');
-      }
-
-      // Replace variables in subject and body
-      const variables = input.variables || {};
-      const subject = replaceTemplateVariables(template.subject, variables);
-      const html = replaceTemplateVariables(template.bodyHtml, variables);
-      const text = template.bodyText ? replaceTemplateVariables(template.bodyText, variables) : undefined;
-
-      // Send the email
-      await sendEmail({
-        to: input.to,
-        from: input.from,
-        subject,
-        html,
-        text,
-      });
-
-      return { success: true, message: 'Email sent successfully' };
-    }),
-
-  sendBulkEmail: protectedProcedure
-    .input(z.object({
-      templateId: z.number(),
-      recipients: z.array(z.object({
-        email: z.string().email(),
-        variables: z.record(z.any()).optional(),
-      })),
-      from: z.string().email().optional(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database not available');
-      
-      // Get the template
-      const [template] = await db
-        .select()
-        .from(emailTemplates)
-        .where(
-          and(
-            eq(emailTemplates.id, input.templateId),
-            eq(emailTemplates.orgId, ctx.currentOrganizationId)
-          )
-        )
-        .limit(1);
-      
-      if (!template) {
-        throw new Error('Template not found');
-      }
-
-      // Send emails to all recipients
-      const results = {
-        success: 0,
-        failed: 0,
-        errors: [] as string[],
-      };
-
-      for (const recipient of input.recipients) {
-        try {
-          // Replace variables in subject and body for this recipient
-          const variables = recipient.variables || {};
-          const subject = replaceTemplateVariables(template.subject, variables);
-          const html = replaceTemplateVariables(template.bodyHtml, variables);
-          const text = template.bodyText ? replaceTemplateVariables(template.bodyText, variables) : undefined;
-
-          // Send the email
-          await sendEmail({
-            to: recipient.email,
-            from: input.from,
-            subject,
-            html,
-            text,
-          });
-
-          results.success++;
-        } catch (error: any) {
-          results.failed++;
-          results.errors.push(`${recipient.email}: ${error.message}`);
-        }
-      }
-
-      return {
-        success: results.failed === 0,
-        message: `Sent ${results.success} emails successfully${results.failed > 0 ? `, ${results.failed} failed` : ''}`,
-        results,
-      };
     }),
 
   installDefaultTemplates: protectedProcedure
