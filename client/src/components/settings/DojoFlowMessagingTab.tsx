@@ -6,11 +6,40 @@ import {
   Download, Clock, CheckCircle, XCircle 
 } from 'lucide-react';
 
+// Sample data for template variable substitution
+const SAMPLE_DATA: Record<string, string> = {
+  student_name: 'John Smith',
+  student_first_name: 'John',
+  student_last_name: 'Smith',
+  new_belt: 'Blue Belt',
+  current_belt: 'Green Belt',
+  school_name: 'Dragon Martial Arts Academy',
+  instructor_name: 'Master Chen',
+  class_name: 'Advanced Karate',
+  promotion_date: 'March 15, 2026',
+  test_date: 'March 10, 2026',
+  amount: '$150.00',
+  due_date: 'February 15, 2026',
+  parent_name: 'Sarah Smith',
+  phone: '(555) 123-4567',
+  email: 'john.smith@example.com',
+};
+
+// Utility function to substitute template variables
+function substituteVariables(text: string | undefined | null, data: Record<string, string> = SAMPLE_DATA): string {
+  if (!text) return '';
+  return text.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+    const trimmedKey = key.trim();
+    return data[trimmedKey] || match;
+  });
+}
+
 export function DojoFlowMessagingTab() {
   const [activeTab, setActiveTab] = useState<'email' | 'sms'>('email');
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showRawTemplate, setShowRawTemplate] = useState(false);
 
   // Email Templates
   const emailTemplatesQuery = trpc.dojoFlowMessaging.getEmailTemplates.useQuery();
@@ -512,44 +541,112 @@ export function DojoFlowMessagingTab() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: '600' }}>Preview: {selectedTemplate.name}</h3>
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setShowPreview(false);
-                  setSelectedTemplate(null);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  cursor: 'pointer',
-                  fontSize: '24px',
-                  padding: '0',
-                  lineHeight: '1',
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <div style={{ marginBottom: '16px' }}>
-              <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Subject:</strong>
-              <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '8px' }}>{selectedTemplate.subject}</p>
-            </div>
-            <div>
-              <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Body:</strong>
-              <div
-                style={{
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  marginTop: '8px',
-                  whiteSpace: 'pre-wrap',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  padding: '16px',
-                  borderRadius: '8px',
-                }}
-              >
-                {selectedTemplate.body}
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setShowRawTemplate(!showRawTemplate);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    background: showRawTemplate ? '#ef4444' : 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                  }}
+                >
+                  {showRawTemplate ? 'Show Preview' : 'Show Raw'}
+                </button>
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setShowPreview(false);
+                    setSelectedTemplate(null);
+                    setShowRawTemplate(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    cursor: 'pointer',
+                    fontSize: '24px',
+                    padding: '0',
+                    lineHeight: '1',
+                  }}
+                >
+                  ×
+                </button>
               </div>
             </div>
+            
+            {showRawTemplate ? (
+              // Raw template view
+              <>
+                <div style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Subject (Raw):</strong>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '8px', fontFamily: 'monospace' }}>{selectedTemplate.subject}</p>
+                </div>
+                <div>
+                  <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Body (Raw):</strong>
+                  <div
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      marginTop: '8px',
+                      whiteSpace: 'pre-wrap',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      fontFamily: 'monospace',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {selectedTemplate.body}
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Preview with substituted variables
+              <>
+                <div style={{ 
+                  marginBottom: '16px',
+                  padding: '12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '8px',
+                }}>
+                  <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px' }}>
+                    📧 This preview shows how the email will appear with sample data. Variables like <code style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>{'{{student_name}}'}</code> are replaced with example values.
+                  </p>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Subject:</strong>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '8px', fontSize: '16px', fontWeight: '500' }}>
+                    {substituteVariables(selectedTemplate.subject)}
+                  </p>
+                </div>
+                <div>
+                  <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Body:</strong>
+                  <div
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      marginTop: '8px',
+                      whiteSpace: 'pre-wrap',
+                      background: 'white',
+                      padding: '24px',
+                      borderRadius: '8px',
+                      color: '#1a1a1a',
+                      lineHeight: '1.6',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    {substituteVariables(selectedTemplate.body)}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

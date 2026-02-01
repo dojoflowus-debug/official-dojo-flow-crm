@@ -6522,3 +6522,12 @@ Transform kiosk from admin dashboard to premium location experience
   - Changed all icon button event handlers from `onClick` to `onMouseDown` with `preventDefault()` to work around React event delegation bug
   - All three icon buttons now working: Preview (eye), Edit (pencil), Delete/Reset (trash)
   - Modals include close functionality via × button and click-outside-to-close
+
+## Enhancement - Email Template Preview with Variable Substitution
+
+- [x] Create variable substitution utility function
+- [x] Define sample data for common template variables (student name, belt, school name, etc.)
+- [x] Update Preview Modal to show substituted content alongside original template
+- [x] Add toggle button to switch between raw template and preview with sample data
+- [x] Add info banner explaining variable substitution in preview mode
+- [x] Style preview body with white background to simulate actual email appearance
