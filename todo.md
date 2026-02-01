@@ -6414,3 +6414,18 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verify email configuration (from address, reply-to, etc.) - Configured SENDGRID_FROM_EMAIL
 - [x] Implement error handling and logging for email failures - Already implemented
 - [x] Add email delivery status tracking to database - Already implemented
+
+
+## Email Template Management System (Jan 31, 2026)
+- [x] Design database schema for email templates with multi-tenancy support
+- [x] Create default email templates with variable support (welcome, payment, class reminder, belt promotion, merchandise, password reset)
+- [ ] Implement template versioning and revision history table
+- [ ] Build template management API endpoints (list, get, update, revert)
+- [ ] Add safe variable validation (detect missing/unknown variables)
+- [ ] Implement preview endpoint with sample data rendering
+- [ ] Add audit logging for template changes (who edited what + when)
+- [ ] Build Settings UI for email template management
+- [ ] Add template editor with rich text support
+- [ ] Implement revert-to-version functionality
+- [ ] Test template customization end-to-end
+- [ ] Write unit tests for template management
