@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { trpc } from '../../lib/trpc';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
@@ -85,7 +85,7 @@ export default function EmailTemplatesSettings() {
   
   // Update preview when editing
   useEffect(() => {
-    if (isEditing && selectedTemplate && showLivePreview) {
+    if (isEditing && selectedTemplate && showLivePreview && (editedSubject || editedBodyHtml)) {
       const debounceTimer = setTimeout(() => {
         const sampleData = getSampleDataForTemplate(selectedTemplate.templateType);
         previewMutation.mutate({
@@ -97,7 +97,7 @@ export default function EmailTemplatesSettings() {
       
       return () => clearTimeout(debounceTimer);
     }
-  }, [editedSubject, editedBodyHtml, isEditing, selectedTemplate, showLivePreview]);
+  }, [editedSubject, editedBodyHtml, isEditing, selectedTemplate, showLivePreview, previewMutation]);
   
   // Get revisions query
   const { data: revisions } = trpc.emailTemplates.getRevisions.useQuery(
@@ -110,6 +110,7 @@ export default function EmailTemplatesSettings() {
     setEditedSubject(template.subject);
     setEditedBodyHtml(template.bodyHtml);
     setChangeNote('');
+    setRenderedPreview(null); // Reset preview
     setIsEditing(true);
   };
   

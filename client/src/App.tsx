@@ -85,6 +85,7 @@ import CommunicationSettings from "./pages/CommunicationSettings";
 import { OwnerCommandCenter } from "./pages/OwnerCommandCenter";
 import WebhookSettings from "./pages/WebhookSettings";
 import KioskSettings from "./pages/KioskSettings";
+import EmailTemplatesSettings from "./pages/settings/EmailTemplatesSettings";
 import KioskStudio from "./pages/KioskStudio";
 import KioskStudioBuilder2 from "./pages/KioskStudioBuilder2";
 import KioskStudioSimplified from "./pages/KioskStudioSimplified";
@@ -311,6 +312,7 @@ function Router() {
       <Route path="/settings/floor-plans" element={<FloorPlanBuilder />} />
       <Route path="/settings/profile" element={<ProfileSettings />} />
       <Route path="/settings/owner-profile" element={<OwnerProfile />} />
+      <Route path="/settings/email-templates" element={<EmailTemplatesSettings />} />
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/campaigns/create" element={<CampaignCreate />} />
       <Route path="/campaigns/:id" element={<CampaignDetail />} />

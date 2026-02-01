@@ -6451,3 +6451,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add "Send Test Email" button to preview panel
 - [ ] Test live preview with template editing
 - [ ] Ensure preview updates instantly when switching templates
+
+
+## Fix Email Template Buttons (Jan 31, 2026)
+- [ ] Investigate why view/edit buttons aren't working
+- [ ] Check button click handlers and event propagation
+- [ ] Fix routing to email templates settings page
+- [ ] Test template viewing functionality
+- [ ] Test template editing functionality
+- [ ] Verify live preview works when editing
