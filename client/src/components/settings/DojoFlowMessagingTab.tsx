@@ -272,7 +272,8 @@ export function DojoFlowMessagingTab() {
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setSelectedTemplate(template);
                               setShowPreview(true);
                             }}
@@ -289,7 +290,8 @@ export function DojoFlowMessagingTab() {
                             <Eye size={16} />
                           </button>
                           <button
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setSelectedTemplate(template);
                               setIsEditing(true);
                             }}
@@ -307,7 +309,10 @@ export function DojoFlowMessagingTab() {
                           </button>
                           {template.is_default && (
                             <button
-                              onClick={() => handleResetTemplate(template.id)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleResetTemplate(template.id);
+                              }}
                               style={{
                                 padding: '8px',
                                 background: 'rgba(255, 255, 255, 0.1)',
@@ -323,7 +328,10 @@ export function DojoFlowMessagingTab() {
                           )}
                           {!template.is_default && (
                             <button
-                              onClick={() => handleDeleteTemplate(template.id)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleDeleteTemplate(template.id);
+                              }}
                               style={{
                                 padding: '8px',
                                 background: 'rgba(239, 68, 68, 0.2)',
@@ -464,6 +472,282 @@ export function DojoFlowMessagingTab() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreview && selectedTemplate && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              e.preventDefault();
+              setShowPreview(false);
+              setSelectedTemplate(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: '#1a1a1a',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '32px',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '600' }}>Preview: {selectedTemplate.name}</h3>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setShowPreview(false);
+                  setSelectedTemplate(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  cursor: 'pointer',
+                  fontSize: '24px',
+                  padding: '0',
+                  lineHeight: '1',
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Subject:</strong>
+              <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '8px' }}>{selectedTemplate.subject}</p>
+            </div>
+            <div>
+              <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Body:</strong>
+              <div
+                style={{
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  marginTop: '8px',
+                  whiteSpace: 'pre-wrap',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '16px',
+                  borderRadius: '8px',
+                }}
+              >
+                {selectedTemplate.body}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditing && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              e.preventDefault();
+              setIsEditing(false);
+              setSelectedTemplate(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: '#1a1a1a',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '32px',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '600' }}>
+                {selectedTemplate ? 'Edit Template' : 'New Template'}
+              </h3>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setIsEditing(false);
+                  setSelectedTemplate(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  cursor: 'pointer',
+                  fontSize: '24px',
+                  padding: '0',
+                  lineHeight: '1',
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                handleSaveTemplate({
+                  name: formData.get('name'),
+                  subject: formData.get('subject'),
+                  body: formData.get('body'),
+                  category: formData.get('category') || 'general',
+                });
+              }}
+            >
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                  Template Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={selectedTemplate?.name || ''}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px',
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  name="subject"
+                  defaultValue={selectedTemplate?.subject || ''}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px',
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                  Category
+                </label>
+                <select
+                  name="category"
+                  defaultValue={selectedTemplate?.category || 'general'}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px',
+                  }}
+                >
+                  <option value="general">General</option>
+                  <option value="achievements">Achievements</option>
+                  <option value="billing">Billing</option>
+                  <option value="onboarding">Onboarding</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                  Body
+                </label>
+                <textarea
+                  name="body"
+                  defaultValue={selectedTemplate?.body || ''}
+                  required
+                  rows={10}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontFamily: 'monospace',
+                    resize: 'vertical',
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setIsEditing(false);
+                    setSelectedTemplate(null);
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '10px 20px',
+                    background: '#ef4444',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Save Template
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

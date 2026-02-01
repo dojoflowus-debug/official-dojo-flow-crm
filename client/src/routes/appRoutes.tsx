@@ -80,7 +80,7 @@ const CommunicationSettings = lazy(() => import("../pages/CommunicationSettings"
 const OwnerCommandCenter = lazy(() => import("../pages/OwnerCommandCenter").then(m => ({ default: m.OwnerCommandCenter })));
 const WebhookSettings = lazy(() => import("../pages/WebhookSettings"));
 const KioskSettings = lazy(() => import("../pages/KioskSettings"));
-const EmailTemplatesSettings = lazy(() => import("../pages/settings/EmailTemplatesSettings"));
+
 const KioskStudio = lazy(() => import("../pages/KioskStudio"));
 const KioskStudioBuilder2 = lazy(() => import("../pages/KioskStudioBuilder2"));
 const KioskStudioSimplified = lazy(() => import("../pages/KioskStudioSimplified"));
@@ -145,6 +145,7 @@ const MasterSchoolDetail = lazy(() => import("../pages/MasterSchoolDetail"));
 const KioskDashboard = lazy(() => import("../pages/KioskDashboard"));
 const KioskManager = lazy(() => import("../pages/KioskManager"));
 const Onboarding = lazy(() => import("../pages/Onboarding").then(m => ({ default: m.Onboarding })));
+const TestSettingsModal = lazy(() => import("../pages/TestSettingsModal"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 
 export interface RouteConfig {
@@ -175,6 +176,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/forgot-password", element: <ForgotPassword />, label: "Forgot Password" },
   { path: "/reset-password", element: <ResetPassword />, label: "Reset Password" },
   { path: "/kai/release-notes/v0-9-0-beta", element: <AppShell><ReleaseNotes /></AppShell>, label: "Release Notes" },
+  { path: "/test-settings", element: <TestSettingsModal />, label: "Test Settings Modal" },
   { path: "/kai", element: <AppShell><KaiCommand /></AppShell>, label: "Kai Command" },
   { path: "/kai-command", element: <Navigate to="/kai" replace />, label: "Kai Command Redirect" },
   { path: "/command", element: <Navigate to="/kai" replace />, label: "Command Redirect" },
@@ -295,7 +297,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/settings/floor-plans", element: <FloorPlanBuilder />, label: "Floor Plan Builder" },
   { path: "/settings/profile", element: <ProfileSettings />, label: "Profile Settings" },
   { path: "/settings/owner-profile", element: <OwnerProfile />, label: "Owner Profile" },
-  { path: "/settings/email-templates", element: <EmailTemplatesSettings />, label: "Email Templates Settings" },
+
   { path: "/campaigns", element: <Campaigns />, label: "Campaigns" },
   { path: "/campaigns/create", element: <CampaignCreate />, label: "Create Campaign" },
   { path: "/campaigns/:id", element: <CampaignDetail />, label: "Campaign Detail" },

@@ -179,10 +179,10 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={handleOpenProfile}><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleOpenSettings}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleOpenProfile} onMouseDown={(e) => { e.preventDefault(); handleOpenProfile(); }}><User className="h-4 w-4 mr-2" />Profile</DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleOpenSettings} onMouseDown={(e) => { e.preventDefault(); handleOpenSettings(); }}><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => logout()} className="text-red-500">
+            <DropdownMenuItem onSelect={() => logout()} className="text-red-500">
               <LogOut className="h-4 w-4 mr-2" />Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

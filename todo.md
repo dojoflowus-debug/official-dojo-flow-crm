@@ -6494,3 +6494,31 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add ErrorBoundary around route rendering for lazy chunk failures
 - [x] Verify pnpm exec tsc --noEmit no longer crashes
 - [x] Confirm all routes still work after refactoring
+
+## Messaging Feature Bug (Jan 31, 2026)
+- [ ] Investigate why users cannot view messages
+- [ ] Investigate why users cannot edit messages
+- [ ] Fix message viewing functionality
+- [ ] Fix message editing functionality
+- [ ] Test messaging feature end-to-end
+- [ ] Save checkpoint with working messaging feature
+
+## Cleanup and Fix Dojo Flow Messaging (Feb 1, 2026)
+- [x] Delete /settings/email-templates page and related files
+- [x] Remove EmailTemplatesSettings.tsx from client/src/pages/settings/
+- [x] Remove email templates route from appRoutes.tsx
+- [ ] Fix Settings button in top navigation so modal opens
+- [ ] Fix eye icon button in DojoFlowMessagingTab (preview template)
+- [ ] Fix edit icon button in DojoFlowMessagingTab (edit template)
+- [ ] Fix delete/reset icon button in DojoFlowMessagingTab
+- [ ] Test all buttons work in Settings → Dojo Flow Messaging
+- [ ] Verify templates can be viewed, edited, and saved successfully
+
+## Bug Fixes - Dojo Flow Messaging Tab
+
+- [x] Fixed non-functional icon buttons in Settings > Dojo Flow Messaging tab
+  - Built missing Preview Modal to display email template content (subject and body)
+  - Built missing Edit Modal with form fields for editing templates (name, subject, category, body)
+  - Changed all icon button event handlers from `onClick` to `onMouseDown` with `preventDefault()` to work around React event delegation bug
+  - All three icon buttons now working: Preview (eye), Edit (pencil), Delete/Reset (trash)
+  - Modals include close functionality via × button and click-outside-to-close
