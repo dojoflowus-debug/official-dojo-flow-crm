@@ -6589,3 +6589,29 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Style credit display with bold number and smaller label
 - [x] Test credit display with real-time updates - WORKING
 - [x] Fixed: Credit balance now displays "10,000 Credits" in header
+
+
+## Bug Fix - Kai Chat Double-Send Issue (Feb 1, 2026)
+
+- [ ] Find Kai chat input component and message submission logic
+- [ ] Check if sendMessage is triggered by BOTH onKeyDown (Enter) and form onSubmit
+- [ ] Add console logging to confirm sendMessage is called twice
+- [ ] Remove message sending from onKeyDown handler (keep only preventDefault)
+- [ ] Keep ONLY form onSubmit for message sending
+- [ ] Add isSending lock to prevent duplicate submissions
+- [ ] Test that one Enter press sends only one message
+- [ ] Verify no duplicate messages from optimistic UI + server echo
+
+
+## Bug Fix - Kai Chat Double-Send Bug (Feb 1, 2026)
+
+- [x] Find Kai chat input component and identify duplicate submission triggers
+- [x] Confirmed: Both MentionInput onKeyDown AND form onSubmit were calling handleSendMessage
+- [x] Add console logging to confirm sendMessage is called twice
+- [x] Fix duplicate triggers by keeping only form onSubmit
+- [x] Prevent Enter from sending in MentionInput (only prevent newline)
+- [x] Add sending lock (sendingRef.current = true) to prevent duplicate submissions
+- [x] Release lock on all early returns (uploading, conversation creation fail, message save fail)
+- [x] Test fix and verify one Enter press sends only one message
+- [x] Remove console logging after verification
+- [x] Fixed: One Enter press now sends only ONE message

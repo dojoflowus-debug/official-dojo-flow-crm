@@ -1914,9 +1914,14 @@ export default function KaiCommand() {
       return;
     }
     
+    // Acquire the sending lock immediately to prevent race conditions
+    sendingRef.current = true;
+    console.log('[KaiSend] Lock acquired, source:', source);
+    
     // Check if any attachments are still uploading
     if (inputAttachments.some(att => att.uploading)) {
       console.log('HANDLE_SEND_BLOCKED_REASON', 'Attachments still uploading');
+      sendingRef.current = false; // Release lock on early return
       toast.error('Please wait for attachments to finish uploading');
       return;
     }
@@ -1997,6 +2002,7 @@ export default function KaiCommand() {
         console.error('[handleSendMessage] Auto-create failed:', errorMessage, error);
         toast.error(`Failed to create conversation: ${errorMessage}`);
         setIsLoading(false);
+        sendingRef.current = false; // Release lock on early return
         return;
       }
     }
@@ -2027,6 +2033,7 @@ export default function KaiCommand() {
         // Remove the optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
         setIsLoading(false);
+        sendingRef.current = false; // Release lock on early return
         return;
       }
     } else {
@@ -3349,7 +3356,6 @@ export default function KaiCommand() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              console.log('SEND_SUBMIT');
               handleSendMessage('submit');
             }}
             className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-10 border focus-within:kai-command-bar-focus`}
