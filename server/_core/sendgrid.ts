@@ -2,8 +2,13 @@
  * SendGrid Email Helper Functions
  * 
  * This module provides helper functions for sending emails
- * using the SendGrid API.
+ * using the SendGrid API with integrated template system support.
  */
+
+import { getDb } from '../db';
+import { emailTemplates } from '../../drizzle/schema';
+import { eq, and } from 'drizzle-orm';
+import { defaultEmailTemplates, replaceVariables } from '../lib/defaultEmailTemplates';
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL;
@@ -16,7 +21,7 @@ interface EmailRecipient {
 
 interface SendEmailOptions {
   to: EmailRecipient | EmailRecipient[];
-  subject: string;
+  subject?: string;
   text?: string;
   html?: string;
   from?: EmailRecipient;
@@ -31,6 +36,10 @@ interface SendEmailOptions {
     type?: string;
     disposition?: 'attachment' | 'inline';
   }>;
+  // Template system integration
+  templateType?: string; // e.g., 'welcome', 'payment_confirmation'
+  templateData?: Record<string, any>; // Variables to substitute
+  organizationId?: number; // For fetching org-specific templates
 }
 
 interface SendEmailResult {
@@ -40,12 +49,87 @@ interface SendEmailResult {
 }
 
 /**
+ * Fetch and render email template
+ * 
+ * @param templateType - Type of template to fetch
+ * @param organizationId - Organization ID for custom templates
+ * @param templateData - Data to substitute in template
+ * @returns Rendered subject and HTML
+ */
+async function fetchAndRenderTemplate(
+  templateType: string,
+  organizationId: number,
+  templateData: Record<string, any>
+): Promise<{ subject: string; html: string } | null> {
+  try {
+    const db = await getDb();
+    
+    // Try to fetch custom template first
+    const customTemplate = await db
+      .select()
+      .from(emailTemplates)
+      .where(and(
+        eq(emailTemplates.orgId, organizationId),
+        eq(emailTemplates.templateType, templateType)
+      ))
+      .limit(1);
+    
+    let template;
+    
+    if (customTemplate.length > 0) {
+      template = customTemplate[0];
+      console.log(`[SendGrid] Using custom template: ${templateType} for org ${organizationId}`);
+    } else {
+      // Fall back to default template
+      const defaultTemplate = defaultEmailTemplates.find(t => t.templateType === templateType);
+      
+      if (!defaultTemplate) {
+        console.error(`[SendGrid] Template not found: ${templateType}`);
+        return null;
+      }
+      
+      template = defaultTemplate;
+      console.log(`[SendGrid] Using default template: ${templateType}`);
+    }
+    
+    // Render template with data
+    const renderedSubject = replaceVariables(template.subject, templateData);
+    const renderedHtml = replaceVariables(template.bodyHtml, templateData);
+    
+    console.log(`[SendGrid] Template rendered: ${templateType}`);
+    
+    return {
+      subject: renderedSubject,
+      html: renderedHtml
+    };
+  } catch (error) {
+    console.error(`[SendGrid] Error fetching template: ${templateType}`, error);
+    return null;
+  }
+}
+
+/**
  * Send an email using SendGrid (internal - no credit deduction)
  * 
  * @param options - Email options including recipients, subject, and content
  * @returns Promise with success status
  */
 async function sendEmailInternal(options: SendEmailOptions): Promise<SendEmailResult> {
+  // If templateType is provided, fetch and render template
+  if (options.templateType && options.organizationId && options.templateData) {
+    const rendered = await fetchAndRenderTemplate(
+      options.templateType,
+      options.organizationId,
+      options.templateData
+    );
+    
+    if (rendered) {
+      options.subject = rendered.subject;
+      options.html = rendered.html;
+    } else {
+      console.warn(`[SendGrid] Failed to render template ${options.templateType}, falling back to provided content`);
+    }
+  }
   if (!SENDGRID_API_KEY) {
     console.error('[SendGrid] Missing SendGrid API key');
     return {
@@ -71,6 +155,13 @@ async function sendEmailInternal(options: SendEmailOptions): Promise<SendEmailRe
   const toRecipients = Array.isArray(options.to) ? options.to : [options.to];
 
   try {
+    if (!options.subject) {
+      return {
+        success: false,
+        error: 'Subject is required'
+      };
+    }
+    
     const payload: Record<string, any> = {
       personalizations: [{
         to: toRecipients.map(r => ({ email: r.email, name: r.name })),
@@ -161,91 +252,134 @@ async function sendEmailInternal(options: SendEmailOptions): Promise<SendEmailRe
 }
 
 /**
- * Send a welcome email to a new student
+ * Send a welcome email to a new student using template system
  */
 export async function sendWelcomeEmail(
   to: EmailRecipient,
-  studentName: string,
-  dojoName: string
+  studentData: {
+    studentName: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    beltRank?: string;
+  },
+  dojoData: {
+    dojoName: string;
+    dojoAddress?: string;
+    dojoPhone?: string;
+    dojoEmail?: string;
+    dojoWebsite?: string;
+  },
+  organizationId: number
 ): Promise<SendEmailResult> {
   return sendEmail({
     to,
-    subject: `Welcome to ${dojoName}!`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #E53935;">Welcome to ${dojoName}!</h1>
-        <p>Hi ${studentName},</p>
-        <p>We're excited to have you join our martial arts family!</p>
-        <p>Your journey begins now. Here's what you can expect:</p>
-        <ul>
-          <li>World-class instruction from experienced instructors</li>
-          <li>A supportive community of fellow martial artists</li>
-          <li>Progress tracking and belt advancement</li>
-        </ul>
-        <p>If you have any questions, don't hesitate to reach out.</p>
-        <p>See you on the mat!</p>
-        <p style="color: #666;">- The ${dojoName} Team</p>
-      </div>
-    `
+    templateType: 'welcome_student',
+    templateData: {
+      studentName: studentData.studentName,
+      firstName: studentData.firstName || studentData.studentName.split(' ')[0],
+      lastName: studentData.lastName || studentData.studentName.split(' ').slice(1).join(' '),
+      email: studentData.email || to.email,
+      phone: studentData.phone || '',
+      beltRank: studentData.beltRank || 'White Belt',
+      dojoName: dojoData.dojoName,
+      schoolName: dojoData.dojoName,
+      dojoAddress: dojoData.dojoAddress || '',
+      dojoPhone: dojoData.dojoPhone || '',
+      dojoEmail: dojoData.dojoEmail || '',
+      dojoWebsite: dojoData.dojoWebsite || '',
+      currentDate: new Date().toLocaleDateString(),
+      currentYear: new Date().getFullYear().toString(),
+    },
+    organizationId
   });
 }
 
 /**
- * Send a class reminder email
+ * Send a class reminder email using template system
  */
 export async function sendClassReminder(
   to: EmailRecipient,
-  studentName: string,
-  className: string,
-  classTime: string,
-  classDate: string
+  classData: {
+    studentName: string;
+    className: string;
+    classTime: string;
+    classDate: string;
+    classLocation?: string;
+    instructorName?: string;
+  },
+  dojoData: {
+    dojoName: string;
+    dojoPhone?: string;
+  },
+  organizationId: number
 ): Promise<SendEmailResult> {
   return sendEmail({
     to,
-    subject: `Class Reminder: ${className}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #E53935;">Class Reminder</h1>
-        <p>Hi ${studentName},</p>
-        <p>This is a friendly reminder about your upcoming class:</p>
-        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0;"><strong>Class:</strong> ${className}</p>
-          <p style="margin: 10px 0 0;"><strong>Date:</strong> ${classDate}</p>
-          <p style="margin: 10px 0 0;"><strong>Time:</strong> ${classTime}</p>
-        </div>
-        <p>Don't forget to bring your gear and arrive a few minutes early!</p>
-        <p>See you there!</p>
-      </div>
-    `
+    templateType: 'class_reminder',
+    templateData: {
+      studentName: classData.studentName,
+      firstName: classData.studentName.split(' ')[0],
+      className: classData.className,
+      classTime: classData.classTime,
+      classDate: classData.classDate,
+      classLocation: classData.classLocation || 'Main Dojo',
+      instructorName: classData.instructorName || 'Your Instructor',
+      dojoName: dojoData.dojoName,
+      schoolName: dojoData.dojoName,
+      dojoPhone: dojoData.dojoPhone || '',
+      currentDate: new Date().toLocaleDateString(),
+      currentYear: new Date().getFullYear().toString(),
+    },
+    organizationId
   });
 }
 
 /**
- * Send a payment confirmation email
+ * Send a payment confirmation email using template system
  */
 export async function sendPaymentConfirmation(
   to: EmailRecipient,
-  studentName: string,
-  amount: string,
-  description: string,
-  receiptUrl?: string
+  paymentData: {
+    studentName: string;
+    amount: string;
+    currency?: string;
+    description?: string;
+    membershipType?: string;
+    paymentMethod?: string;
+    transactionId?: string;
+    invoiceUrl?: string;
+    receiptUrl?: string;
+  },
+  dojoData: {
+    dojoName: string;
+    dojoEmail?: string;
+    dojoPhone?: string;
+  },
+  organizationId: number
 ): Promise<SendEmailResult> {
   return sendEmail({
     to,
-    subject: 'Payment Confirmation',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #E53935;">Payment Confirmed</h1>
-        <p>Hi ${studentName},</p>
-        <p>Thank you for your payment! Here are the details:</p>
-        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0;"><strong>Amount:</strong> ${amount}</p>
-          <p style="margin: 10px 0 0;"><strong>Description:</strong> ${description}</p>
-        </div>
-        ${receiptUrl ? `<p><a href="${receiptUrl}" style="color: #E53935;">View Receipt</a></p>` : ''}
-        <p>If you have any questions about this payment, please contact us.</p>
-      </div>
-    `
+    templateType: 'payment_confirmation',
+    templateData: {
+      studentName: paymentData.studentName,
+      firstName: paymentData.studentName.split(' ')[0],
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'USD',
+      membershipType: paymentData.description || paymentData.membershipType || 'Monthly Membership',
+      paymentMethod: paymentData.paymentMethod || 'Card',
+      transactionId: paymentData.transactionId || '',
+      invoiceUrl: paymentData.invoiceUrl || '',
+      receiptUrl: paymentData.receiptUrl || '',
+      dojoName: dojoData.dojoName,
+      schoolName: dojoData.dojoName,
+      dojoEmail: dojoData.dojoEmail || '',
+      dojoPhone: dojoData.dojoPhone || '',
+      currentDate: new Date().toLocaleDateString(),
+      currentYear: new Date().getFullYear().toString(),
+    },
+    organizationId
   });
 }
 
