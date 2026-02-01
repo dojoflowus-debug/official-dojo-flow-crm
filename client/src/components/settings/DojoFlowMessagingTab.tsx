@@ -603,7 +603,7 @@ export function DojoFlowMessagingTab() {
                       fontSize: '13px',
                     }}
                   >
-                    {selectedTemplate.body}
+                    {selectedTemplate.bodyHtml}
                   </div>
                 </div>
               </>
@@ -642,7 +642,7 @@ export function DojoFlowMessagingTab() {
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                     }}
                   >
-                    {substituteVariables(selectedTemplate.body)}
+                    {substituteVariables(selectedTemplate.bodyHtml)}
                   </div>
                 </div>
               </>
@@ -716,7 +716,7 @@ export function DojoFlowMessagingTab() {
                 handleSaveTemplate({
                   name: formData.get('name'),
                   subject: formData.get('subject'),
-                  body: formData.get('body'),
+                  bodyHtml: formData.get('bodyHtml'),
                   category: formData.get('category') || 'general',
                 });
               }}
@@ -789,8 +789,8 @@ export function DojoFlowMessagingTab() {
                   Body
                 </label>
                 <textarea
-                  name="body"
-                  defaultValue={selectedTemplate?.body || ''}
+                  name="bodyHtml"
+                  defaultValue={selectedTemplate?.bodyHtml || ''}
                   required
                   rows={10}
                   style={{

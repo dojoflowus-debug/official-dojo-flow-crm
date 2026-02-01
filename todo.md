@@ -6531,3 +6531,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add toggle button to switch between raw template and preview with sample data
 - [x] Add info banner explaining variable substitution in preview mode
 - [x] Style preview body with white background to simulate actual email appearance
+
+
+## Bug Fix - Preview Modal Field Name Error (Feb 1, 2026)
+
+- [x] Fix Preview Modal to use correct field name (bodyHtml instead of body)
+- [x] Fix Edit Modal textarea to use bodyHtml field
+- [x] Fix Edit Modal form submission to send bodyHtml
+- [x] Test Preview Modal with variable substitution
+- [x] Verify all email templates display correctly in preview
+- [x] Verify Edit Modal populates bodyHtml correctly
