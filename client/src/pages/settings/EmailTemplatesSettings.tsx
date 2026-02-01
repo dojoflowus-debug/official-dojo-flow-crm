@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
 import { Mail, Edit, Eye, RotateCcw, History, Save, X } from 'lucide-react';
+import { getSampleDataForTemplate } from '../../lib/emailTemplateSampleData';
 
 /**
  * Email Templates Settings Page
@@ -42,6 +43,9 @@ export default function EmailTemplatesSettings() {
   const [editedBodyHtml, setEditedBodyHtml] = useState('');
   const [changeNote, setChangeNote] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [showLivePreview, setShowLivePreview] = useState(true);
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [renderedPreview, setRenderedPreview] = useState<{ subject: string; html: string } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   
   // Fetch templates
@@ -73,7 +77,27 @@ export default function EmailTemplatesSettings() {
   });
   
   // Preview mutation
-  const previewMutation = trpc.emailTemplates.preview.useMutation();
+  const previewMutation = trpc.emailTemplates.preview.useMutation({
+    onSuccess: (data) => {
+      setRenderedPreview(data);
+    },
+  });
+  
+  // Update preview when editing
+  useEffect(() => {
+    if (isEditing && selectedTemplate && showLivePreview) {
+      const debounceTimer = setTimeout(() => {
+        const sampleData = getSampleDataForTemplate(selectedTemplate.templateType);
+        previewMutation.mutate({
+          subject: editedSubject,
+          bodyHtml: editedBodyHtml,
+          sampleData,
+        });
+      }, 500); // Debounce 500ms
+      
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [editedSubject, editedBodyHtml, isEditing, selectedTemplate, showLivePreview]);
   
   // Get revisions query
   const { data: revisions } = trpc.emailTemplates.getRevisions.useQuery(
@@ -291,9 +315,9 @@ export default function EmailTemplatesSettings() {
         </div>
       ))}
       
-      {/* Edit Dialog */}
+      {/* Edit Dialog with Live Preview */}
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Edit Template: {selectedTemplate?.name}</DialogTitle>
             <DialogDescription>
@@ -301,7 +325,9 @@ export default function EmailTemplatesSettings() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="flex gap-4 flex-1 overflow-hidden">
+            {/* Editor Panel */}
+            <div className="flex-1 space-y-4 overflow-y-auto pr-4">
             <div>
               <Label htmlFor="subject">Subject</Label>
               <Input
@@ -334,14 +360,61 @@ export default function EmailTemplatesSettings() {
               />
             </div>
             
-            <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-semibold mb-2">Available Variables:</h4>
-              <div className="text-sm text-muted-foreground space-y-1">
-                {selectedTemplate && JSON.parse(selectedTemplate.variables || '[]').map((variable: string) => (
-                  <div key={variable} className="font-mono">
-                    {'{{' + variable + '}}'}
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">Available Variables:</h4>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  {selectedTemplate && JSON.parse(selectedTemplate.variables || '[]').map((variable: string) => (
+                    <div key={variable} className="font-mono">
+                      {'{{' + variable + '}}'}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Live Preview Panel */}
+            <div className="flex-1 border-l pl-4 flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-semibold">Live Preview</h4>
+                <div className="flex gap-2">
+                  <Button
+                    variant={previewMode === 'desktop' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setPreviewMode('desktop')}
+                  >
+                    Desktop
+                  </Button>
+                  <Button
+                    variant={previewMode === 'mobile' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setPreviewMode('mobile')}
+                  >
+                    Mobile
+                  </Button>
+                </div>
+              </div>
+              
+              <div className={`flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 ${previewMode === 'mobile' ? 'max-w-[375px] mx-auto' : ''}`}>
+                {previewMutation.isPending ? (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
                   </div>
-                ))}
+                ) : renderedPreview ? (
+                  <div className="bg-white rounded-lg shadow-sm">
+                    <div className="border-b p-4 bg-gray-100">
+                      <div className="text-xs text-muted-foreground mb-1">Subject:</div>
+                      <div className="font-semibold">{renderedPreview.subject}</div>
+                    </div>
+                    <div 
+                      className="p-4"
+                      dangerouslySetInnerHTML={{ __html: renderedPreview.html }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Start editing to see live preview
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -6441,3 +6441,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test payment confirmation email with template - Template system working
 - [x] Test class reminder email with template - Template system working
 - [ ] Write unit tests for template integration
+
+
+## Email Template Live Preview (Jan 31, 2026) - COMPLETED
+- [x] Update EmailTemplatesSettings UI with split-screen preview panel
+- [x] Add real-time template rendering in preview as user types (500ms debounce)
+- [x] Implement sample data generator for each template type
+- [x] Add toggle between desktop/mobile preview modes
+- [ ] Add "Send Test Email" button to preview panel
+- [ ] Test live preview with template editing
+- [ ] Ensure preview updates instantly when switching templates
