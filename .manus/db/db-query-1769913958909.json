@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS email_template_revisions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  template_id INT NOT NULL,\n  version INT NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  subject VARCHAR(500) NOT NULL,\n  body_html TEXT NOT NULL,\n  body_text TEXT,\n  variables TEXT,\n  change_note TEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  created_by INT,\n  INDEX idx_template_revisions_template (template_id),\n  INDEX idx_template_revisions_version (template_id, version)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute CREATE TABLE IF NOT EXISTS email_template_revisions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  template_id INT NOT NULL,\n  version INT NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  subject VARCHAR(500) NOT NULL,\n  body_html TEXT NOT NULL,\n  body_text TEXT,\n  variables TEXT,\n  change_note TEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  created_by INT,\n  INDEX idx_template_revisions_template (template_id),\n  INDEX idx_template_revisions_version (template_id, version)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 838
+}

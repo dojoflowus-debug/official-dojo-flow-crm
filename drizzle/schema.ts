@@ -1812,14 +1812,16 @@ export const pcBankApplicationHistory = mysqlTable("pc_bank_application_history"
 
 export const emailTemplates = mysqlTable("email_templates", {
   id: int().autoincrement().notNull().primaryKey(),
-  orgId: int("org_id").notNull(),
+  orgId: int("org_id").notNull(), // 0 = system default
   name: varchar({ length: 255 }).notNull(),
+  templateType: varchar("template_type", { length: 100 }), // welcome_student, payment_confirmation, etc.
   subject: varchar({ length: 500 }).notNull(),
   bodyHtml: text("body_html").notNull(),
   bodyText: text("body_text"),
   category: varchar({ length: 100 }),
-  isDefault: int("is_default").default(0).notNull(),
-  variables: text(),
+  isDefault: int("is_default").default(0).notNull(), // 1 = system default
+  isCustom: int("is_custom").default(0).notNull(), // 1 = customized by organization
+  variables: text(), // JSON array of available variables
   createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
   createdBy: int("created_by"),
@@ -1827,6 +1829,25 @@ export const emailTemplates = mysqlTable("email_templates", {
 (table) => [
   index("idx_email_templates_org").on(table.orgId),
   index("idx_email_templates_category").on(table.orgId, table.category),
+  index("idx_email_templates_type").on(table.orgId, table.templateType),
+]);
+
+export const emailTemplateRevisions = mysqlTable("email_template_revisions", {
+  id: int().autoincrement().notNull().primaryKey(),
+  templateId: int("template_id").notNull(), // FK to email_templates.id
+  version: int().notNull(), // Auto-incrementing version number per template
+  name: varchar({ length: 255 }).notNull(),
+  subject: varchar({ length: 500 }).notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text"),
+  variables: text(), // JSON array
+  changeNote: text("change_note"), // Optional note about what changed
+  createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+  createdBy: int("created_by"), // User who made this change
+},
+(table) => [
+  index("idx_template_revisions_template").on(table.templateId),
+  index("idx_template_revisions_version").on(table.templateId, table.version),
 ]);
 
 export const smsCampaigns = mysqlTable("sms_campaigns", {

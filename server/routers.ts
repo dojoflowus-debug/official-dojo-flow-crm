@@ -45,6 +45,7 @@ import { paymentProviderRouter } from './paymentProviderRouter';
 import { schoolProfileRouter } from './schoolProfileRouter';
 import { pcBankCardRouter } from './pcBankCardRouter';
 import { messagingRouter } from './routers/messaging';
+import { emailTemplatesRouter } from './emailTemplatesRouter';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -396,6 +397,7 @@ export const appRouter = router({
   studentAuth: studentAuthRouter,
   googleAuth: googleAuthRouter,
   welcomeMessage: welcomeMessageRouter,
+  emailTemplates: emailTemplatesRouter,
   onboarding: onboardingRouter,
   kaiOnboarding: kaiOnboardingRouter,
   setupMode: setupModeRouter,
