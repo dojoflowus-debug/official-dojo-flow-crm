@@ -54,20 +54,25 @@ export const useSubscriptionStatus = (organizationId?: number) => {
 
   /**
    * Check if user can access a paid feature
-   * Returns true if user has active subscription or is in trial
+   * Returns true if user has active subscription, is in trial, or has credits
    */
   const canAccessFeature = (): boolean => {
     if (!subscriptionInfo) return false;
     if (subscriptionInfo.isExempt) return true;
+    // Allow access if user has credits
+    if (subscriptionInfo.creditBalance > 0) return true;
     return subscriptionInfo.status === 'trialing' || subscriptionInfo.status === 'active';
   };
 
   /**
    * Check if user needs to see paywall
+   * Don't show paywall if user has credits available
    */
   const shouldShowPaywall = (): boolean => {
     if (!subscriptionInfo) return true;
     if (subscriptionInfo.isExempt) return false;
+    // Don't show paywall if user has credits
+    if (subscriptionInfo.creditBalance > 0) return false;
     return !canAccessFeature();
   };
 

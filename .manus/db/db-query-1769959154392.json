@@ -1,0 +1,25 @@
+{
+  "query": "SELECT * FROM ai_credit_balance WHERE organizationId = 120001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM ai_credit_balance WHERE organizationId = 120001;",
+  "rows": [
+    {
+      "id": "1320001",
+      "organizationId": "120001",
+      "balance": "10000",
+      "periodAllowance": "10000",
+      "periodUsed": "0",
+      "totalPurchased": "0",
+      "totalUsed": "0",
+      "lastResetAt": "NULL",
+      "nextResetAt": "NULL",
+      "lowCreditThreshold": "50",
+      "lowCreditAlertSent": "0",
+      "createdAt": "2026-02-01 15:19:03",
+      "updatedAt": "2026-02-01 15:19:03"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torganizationId\tbalance\tperiodAllowance\tperiodUsed\ttotalPurchased\ttotalUsed\tlastResetAt\tnextResetAt\tlowCreditThreshold\tlowCreditAlertSent\tcreatedAt\tupdatedAt\n1320001\t120001\t10000\t10000\t0\t0\t0\tNULL\tNULL\t50\t0\t2026-02-01 15:19:03\t2026-02-01 15:19:03\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

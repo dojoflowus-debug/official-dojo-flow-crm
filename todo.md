@@ -6549,3 +6549,20 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verify /owner page loads without module errors
 - [x] Test that OwnerAuth component loads correctly
 - [x] Fixed: Module loading errors resolved by server restart and cache clear
+
+
+## Testing - Add Credits to Test Account (Feb 1, 2026)
+
+- [x] Check database schema for credits/balance field (ai_credit_balance table)
+- [x] Add 10,000 credits to solbittech@gmail.com user account (organization 120001)
+- [x] Verify credits are available for testing features
+
+
+## Bug Fix - Free Trial Message Display Logic (Feb 1, 2026)
+
+- [x] Find where "7 day free trial" message is displayed (PaywallModal component)
+- [x] Update logic to check credit balance before showing trial message
+- [x] Updated useSubscriptionStatus hook to check creditBalance > 0
+- [x] Trial message now only shows when credits = 0
+- [x] Test with account that has credits (should not show message) - PASSED
+- [x] Fixed: Paywall no longer appears when user has credits available
