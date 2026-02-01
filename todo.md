@@ -6615,3 +6615,49 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test fix and verify one Enter press sends only one message
 - [x] Remove console logging after verification
 - [x] Fixed: One Enter press now sends only ONE message
+
+
+## Bug Fix - Kai Chat Duplicate Messages & Composer Unusability (Feb 1, 2026)
+
+### Issue 1: Duplicate Messages (double-submit + double-render)
+- [ ] Investigate current message handling to identify duplication sources
+- [ ] Verify sending lock (isSendingRef) is properly implemented with try-finally
+- [ ] Implement message deduplication by ID
+- [ ] Generate clientMessageId (uuid) for optimistic user messages
+- [ ] Send clientMessageId to backend
+- [ ] Use Map keyed by id || clientMessageId to dedupe messages in state
+- [ ] Prevent optimistic append + server echo duplication
+
+### Issue 2: Composer Becomes Unusable When Message List Grows
+- [ ] Fix chat layout with proper flex container structure
+- [ ] Outer chat container: `h-full flex flex-col min-h-0`
+- [ ] Messages list: `flex-1 min-h-0 overflow-y-auto pb-24`
+- [ ] Composer: `sticky bottom-0 z-50` with background blur
+- [ ] Ensure parent pane has `overflow: hidden` so only messages scroll
+- [ ] Add auto-scroll to bottom after successful send
+- [ ] Maintain input focus after send (prevent focus loss on re-render)
+
+### Acceptance Criteria
+- [ ] Press Enter once => one message (no duplicates)
+- [ ] Click send => one message (no duplicates)
+- [ ] When chat has many messages, input remains visible and clickable
+- [ ] Sending still works when message list is long
+- [ ] No "page scroll steals the composer"
+- [ ] Report which caused duplication: double handler, optimistic + server echo, or both
+
+
+## Bug Fix - Kai Chat Composer Layout (Conservative Refactor) (Feb 1, 2026)
+
+- [ ] Identify center pane container in KaiCommand.tsx
+- [ ] Ensure center pane has h-full, overflow-hidden, flex flex-col, min-h-0
+- [ ] Wrap messages in flex-1 min-h-0 overflow-y-auto pb-28 container
+- [ ] Keep composer as shrink-0 sticky bottom-0 z-50 (or last flex child if sticky breaks)
+- [ ] Test composer renders and is clickable with long chat
+- [ ] Implement clientMessageId with uuid for message deduplication
+- [ ] Dedupe messages by id || clientMessageId using Map
+- [ ] Add auto-scroll to bottom after message send
+- [ ] Maintain input focus after send
+- [ ] Test: 50+ messages, composer stays visible
+- [ ] Test: Press Enter once = 1 message
+- [ ] Test: No message hidden behind composer
+- [ ] Test: Messages scroll, page does not

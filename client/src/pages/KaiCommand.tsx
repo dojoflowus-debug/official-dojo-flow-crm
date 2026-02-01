@@ -98,6 +98,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  clientMessageId?: string; // For deduplication of optimistic messages
   attachments?: Attachment[];
   audioUrl?: string; // TTS audio URL
   audioDuration?: number; // Audio duration in milliseconds
@@ -1069,10 +1070,43 @@ export default function KaiCommand() {
         id: m.id.toString(),
         role: m.role as 'user' | 'assistant',
         content: m.content,
-        timestamp: new Date(m.createdAt)
+        timestamp: new Date(m.createdAt),
+        clientMessageId: m.metadata?.clientMessageId as string | undefined
       }));
       console.log('[KaiCommand] Loaded messages:', loadedMessages);
-      setMessages(loadedMessages);
+      
+      // Deduplicate messages: merge loaded messages with existing optimistic messages
+      // Use clientMessageId to match optimistic messages with server messages
+      setMessages(prev => {
+        const messageMap = new Map<string, Message>();
+        const clientIdMap = new Map<string, string>(); // clientMessageId -> final id
+        
+        // First pass: index loaded messages by both id and clientMessageId
+        loadedMessages.forEach(msg => {
+          messageMap.set(msg.id, msg);
+          if (msg.clientMessageId) {
+            clientIdMap.set(msg.clientMessageId, msg.id);
+          }
+        });
+        
+        // Second pass: merge existing messages, replacing optimistic ones that match clientMessageId
+        prev.forEach(msg => {
+          // Check if this is an optimistic message that has been saved to server
+          if (msg.id.startsWith('client-') && clientIdMap.has(msg.id)) {
+            // Skip this optimistic message - it's already in messageMap with server ID
+            return;
+          }
+          // Check if this message already exists (by server ID)
+          if (!messageMap.has(msg.id)) {
+            messageMap.set(msg.id, msg);
+          }
+        });
+        
+        // Convert back to array, sorted by timestamp
+        return Array.from(messageMap.values()).sort((a, b) => 
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+      });
     } else if (messagesQuery.data && messagesQuery.data.length === 0) {
       console.log('[KaiCommand] No messages for this conversation');
       setMessages([]);
@@ -1968,15 +2002,7 @@ export default function KaiCommand() {
       }
     }
 
-    const userMessage: Message = {
-      id: (messageIdCounterRef.current++).toString(),
-      role: 'user',
-      content: messageContent,
-      timestamp: new Date(),
-      attachments: [...inputAttachments]
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    // Store input before clearing
     const currentInput = messageContent;
     setMessageInput('');
     setAttachments([]); // Clear attachments after sending
@@ -2007,13 +2033,16 @@ export default function KaiCommand() {
       }
     }
     
-    // Optimistic UI update: Add user message to local state immediately
+    // Optimistic UI update: Add user message to local state immediately with clientMessageId
+    const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const optimisticUserMessage: Message = {
-      id: Date.now().toString(),
+      id: clientMessageId,
+      clientMessageId: clientMessageId, // Store for deduplication
       role: 'user',
       content: currentInput,
       timestamp: new Date(),
-      ui_blocks: []
+      ui_blocks: [],
+      attachments: [...inputAttachments]
     };
     setMessages(prev => [...prev, optimisticUserMessage]);
     
@@ -2023,7 +2052,8 @@ export default function KaiCommand() {
         const messageResult = await addMessageMutation.mutateAsync({
           conversationId,
           role: 'user',
-          content: currentInput
+          content: currentInput,
+          metadata: { clientMessageId }
         });
         console.log('[handleSendMessage] User message saved:', messageResult);
       } catch (error) {
@@ -2198,6 +2228,10 @@ export default function KaiCommand() {
         sendingRef.current = false;
       } finally {
         setIsLoading(false);
+        // Maintain input focus after send
+        setTimeout(() => {
+          messageInputRef.current?.focus();
+        }, 100);
       }
     } else {
       // No Kai response in group conversation without @Kai mention
@@ -2206,6 +2240,10 @@ export default function KaiCommand() {
       pendingMessageIdsRef.current.delete(messageId);
       // Release lock
       sendingRef.current = false;
+      // Maintain input focus
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 100);
       if (staffMentions.length === 0) {
         // No mentions at all in group conversation - show hint
         toast.info('In group conversations, use @Kai to get AI assistance or @Staff to message team members');
@@ -2953,8 +2991,8 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative min-h-0 w-full ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'} pb-48`}
-            style={{ zIndex: 10, paddingBottom: '192px' }}
+            className={`content-layer flex-1 relative min-h-0 w-full ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
+            style={{ zIndex: 10, paddingBottom: '20px' }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
             <div className="w-full" style={{
@@ -3334,25 +3372,19 @@ export default function KaiCommand() {
             </div>
           </div>
 
-
-        </div>
-      </div>
-
-      {/* COMPOSER DOCK - Anchored to center panel in Cinematic mode */}
-      {
-        <div 
-          className={isCinematic ? "absolute flex justify-center" : "fixed flex justify-center"}
-          style={{
-            zIndex: 9999,
-            position: 'fixed',
-            bottom: isCinematic ? '168px' : '120px',
-            left: `${centerPanelPosition.left + 132}px`,
-            width: `${centerPanelPosition.width - 264}px`,
-            transition: 'left 0.1s ease-out, width 0.1s ease-out',
-            padding: '0 16px',
-            boxSizing: 'border-box'
-          }}
-        >
+          {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
+          <div 
+            className="flex justify-center w-full flex-shrink-0"
+            style={{
+              zIndex: 50,
+              padding: '0px 8px 8px 8px',
+              minHeight: '90px',
+              boxSizing: 'border-box',
+              background: isDark || isCinematic ? 'rgba(10, 10, 11, 0.95)' : 'rgba(250, 251, 252, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)'
+            }}
+          >
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -3447,8 +3479,10 @@ export default function KaiCommand() {
               )}
             </Button>
           </form>
+          </div>
+
         </div>
-      }
+      </div>
 
       {/* INFO PANEL - Third Column */}
       <InfoPanel 
