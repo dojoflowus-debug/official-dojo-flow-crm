@@ -6566,3 +6566,26 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Trial message now only shows when credits = 0
 - [x] Test with account that has credits (should not show message) - PASSED
 - [x] Fixed: Paywall no longer appears when user has credits available
+
+
+## Feature - Credit Balance Display in Header (Feb 1, 2026)
+
+- [ ] Find header component (CommandHeader or KaiCommand header)
+- [ ] Add credit balance query using useSubscriptionStatus hook
+- [ ] Design credit display component with icon and number
+- [ ] Add real-time updates when credits change
+- [ ] Style to match existing header design
+- [ ] Test credit display shows correct balance
+- [ ] Test credit display updates after AI actions
+
+
+## Feature - Credit Balance Display in UI Header (Feb 1, 2026)
+
+- [x] Find header component (CommandHeader.tsx)
+- [x] Add useSubscriptionStatus hook to fetch credit balance
+- [x] Update Credits button to show balance number with comma formatting
+- [x] Fix field name mismatch (creditData.balance → creditData.creditsRemaining)
+- [x] Add 10,000 credits to test account (organization 180001)
+- [x] Style credit display with bold number and smaller label
+- [x] Test credit display with real-time updates - WORKING
+- [x] Fixed: Credit balance now displays "10,000 Credits" in header

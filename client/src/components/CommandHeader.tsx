@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { useModal } from '@/contexts/ModalContext'
+import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus'
 import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector'
@@ -38,6 +39,9 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   const { openSettings } = useModal()
   const [isEnvironmentSelectorOpen, setIsEnvironmentSelectorOpen] = useState(false)
   const isCinematic = theme === 'cinematic'
+  
+  // Get credit balance
+  const { subscriptionInfo } = useSubscriptionStatus(user?.activeOrgId)
   
   const handleOpenProfile = () => {
     openSettings({ initialTab: 'profile' })
@@ -123,7 +127,9 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
             className={cn("gap-2", isCinematic ? "text-white hover:text-white" : isDarkMode ? "text-white/60 hover:text-white" : "text-gray-600 hover:text-gray-900")} 
             title="View credit dashboard"
           >
-            <Coins className="h-4 w-4" />Credits
+            <Coins className="h-4 w-4" />
+            <span className="font-semibold">{subscriptionInfo?.creditBalance?.toLocaleString() || '0'}</span>
+            <span className="text-xs opacity-70">Credits</span>
           </Button>
         </Link>
         

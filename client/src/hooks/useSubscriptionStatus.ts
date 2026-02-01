@@ -45,7 +45,7 @@ export const useSubscriptionStatus = (organizationId?: number) => {
         status: status as SubscriptionStatus,
         trialEndsAt: subscription?.trialEndsAt,
         currentPeriodEnd: subscription?.currentPeriodEnd,
-        creditBalance: creditData.balance || 0,
+        creditBalance: creditData.creditsRemaining || 0,
         isExempt: subscription?.billingExempt || false,
       });
       setIsLoading(false);
