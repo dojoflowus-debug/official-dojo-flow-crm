@@ -2725,7 +2725,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 h-full ${isCinematic ? 'overflow-visible' : 'overflow-hidden'} ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
           style={{ zIndex: 10, position: 'relative' }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -2991,8 +2991,8 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 relative min-h-0 w-full ${isFocusMode && messages.length === 0 ? 'overflow-hidden flex items-center justify-center' : 'overflow-y-auto scrollbar-visible'} ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
-            style={{ zIndex: 10, paddingBottom: '20px' }}
+            className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible pb-28 ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
+            style={{ zIndex: 10 }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
             <div className="w-full" style={{
@@ -3374,11 +3374,10 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
           <div 
-            className="flex justify-center w-full flex-shrink-0"
+            className="flex justify-center w-full flex-shrink-0 border-t border-white/10 mb-[72px]"
             style={{
               zIndex: 50,
-              padding: '0px 8px 8px 8px',
-              minHeight: '90px',
+              padding: '16px',
               boxSizing: 'border-box',
               background: isDark || isCinematic ? 'rgba(10, 10, 11, 0.95)' : 'rgba(250, 251, 252, 0.95)',
               backdropFilter: 'blur(20px)',

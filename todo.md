@@ -6661,3 +6661,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test: Press Enter once = 1 message
 - [ ] Test: No message hidden behind composer
 - [ ] Test: Messages scroll, page does not
+
+## Bug Fix - Composer Missing from Kai Chat (Feb 1, 2026)
+- [x] Fix composer completely missing from Kai chat interface
+- [x] Debug container hierarchy causing composer to not render
+- [x] Remove any conditional rendering hiding composer
+- [x] Ensure composer is sibling of messages list, not child of scroll container
+- [x] Add debug styling to confirm composer is rendering
+- [x] Fix overlap with bottom navigation bar by adding mb-[72px]
