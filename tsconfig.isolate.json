@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts",
+    "client/src/pages/settings/EmailTemplatesSettings.tsx",
+    "client/src/lib/emailTemplateSampleData.ts",
+    "server/emailTemplatesRouter.ts",
+    "server/lib/defaultEmailTemplates.ts",
+    "server/scripts/seedEmailTemplates.ts"
+  ]
+}

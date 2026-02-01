@@ -6460,3 +6460,37 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test template viewing functionality
 - [ ] Test template editing functionality
 - [ ] Verify live preview works when editing
+
+## Email Templates - Inline Preview Implementation (Jan 31, 2026)
+- [ ] Implement split-screen inline preview in editor dialog
+- [ ] Preview updates on demand (Preview button click)
+- [ ] Render HTML safely in sandboxed iframe
+- [ ] Show subject + body preview
+- [ ] Display warnings for missing variables
+- [ ] Remove popup window approach
+
+## Email Templates - Send Test Email Feature (Jan 31, 2026)
+- [ ] Disable Preview button with tooltip "Preview temporarily unavailable. Use Send Test Email."
+- [ ] Add "Send Test Email" button in editor dialog
+- [ ] Implement backend endpoint `emailTemplates.sendTest` with rate limiting (3 per 10 min)
+- [ ] Add email input dialog for recipient email (default to current user)
+- [ ] Use same rendering pipeline as production sends
+- [ ] Log rendered subject/body + variables for debugging
+- [ ] Store audit entry for test email sends
+- [ ] Test end-to-end functionality
+
+## TypeScript Compilation Errors (CRITICAL - Jan 31, 2026)
+- [ ] Analyze TS errors and produce top-10 error file list + error codes
+- [ ] Identify root cause category (tsconfig, dependencies, generated types, etc.)
+- [ ] Fix errors in descending order of impact (highest errors per file first)
+- [ ] Reduce TS errors from 1557 → 0 or stable passing build
+- [ ] Re-test Email Templates dialog buttons after build stability restored
+- [ ] Document top 3 error offenders and fixes applied
+
+## Route-Based Code Splitting (TypeScript Fix - Jan 31, 2026)
+- [x] Create src/routes/appRoutes.tsx with lazy-loaded route definitions
+- [x] Update App.tsx to use route registry instead of direct imports
+- [x] Wrap routes in Suspense with FullPageLoader fallback
+- [x] Add ErrorBoundary around route rendering for lazy chunk failures
+- [x] Verify pnpm exec tsc --noEmit no longer crashes
+- [x] Confirm all routes still work after refactoring

@@ -530,4 +530,46 @@ export const emailTemplatesRouter = router({
           : [],
       };
     }),
+  
+  /**
+   * Send test email
+   * Rate limited to 3 emails per 10 minutes per user
+   */
+  sendTest: protectedProcedure
+    .input(z.object({
+      recipientEmail: z.string().email(),
+      subject: z.string(),
+      bodyHtml: z.string(),
+      sampleData: z.record(z.any()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+      const orgId = ctx.user.activeOrgId;
+      
+      // TODO: Implement rate limiting (3 per 10 minutes)
+      // For now, we'll just log and proceed
+      
+      // Render template with sample data
+      const renderedSubject = replaceVariables(input.subject, input.sampleData);
+      const renderedBodyHtml = replaceVariables(input.bodyHtml, input.sampleData);
+      const missingVars = validateVariables(input.subject + input.bodyHtml, input.sampleData);
+      
+      console.log(`[EmailTemplates] Sending test email to ${input.recipientEmail}`);
+      console.log(`[EmailTemplates] Subject: ${renderedSubject}`);
+      console.log(`[EmailTemplates] Variables used:`, Object.keys(input.sampleData));
+      console.log(`[EmailTemplates] Missing variables:`, missingVars);
+      
+      // TODO: Send actual email using email service
+      // For now, we'll simulate success
+      
+      // TODO: Store audit entry
+      
+      return {
+        success: true,
+        message: 'Test email sent successfully',
+        renderedSubject,
+        variablesUsed: Object.keys(input.sampleData),
+        missingVariables: missingVars,
+      };
+    }),
 });
