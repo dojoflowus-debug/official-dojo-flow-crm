@@ -249,17 +249,24 @@ export async function enforceFeatureAccess(
   // Check subscription status
   const subscription = await checkSubscriptionStatus(organizationId);
 
-  if (!subscription.hasActiveSubscription && !subscription.isBillingExempt) {
+  // If billing exempt, allow access immediately
+  if (subscription.isBillingExempt) {
+    return;
+  }
+
+  // Check if user has sufficient credits
+  const hasCredits = await hasSufficientCredits(organizationId, featureType);
+  if (hasCredits) {
+    return; // Has credits, allow access
+  }
+
+  // If no credits, check if they have an active subscription
+  if (!subscription.hasActiveSubscription) {
     throw new Error('SUBSCRIPTION_REQUIRED');
   }
 
-  // Check credits only if not exempt
-  if (!subscription.isBillingExempt) {
-    const hasCredits = await hasSufficientCredits(organizationId, featureType);
-    if (!hasCredits) {
-      throw new Error('INSUFFICIENT_CREDITS');
-    }
-  }
+  // Has subscription but no credits
+  throw new Error('INSUFFICIENT_CREDITS');
 }
 
 /**
