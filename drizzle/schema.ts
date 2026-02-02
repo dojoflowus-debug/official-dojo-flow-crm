@@ -751,6 +751,7 @@ export const messages = mysqlTable("messages", {
 	role: mysqlEnum(['user','assistant']).notNull(),
 	content: text().notNull(),
 	attachments: json(),
+	metadata: text(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 });
 

@@ -6959,3 +6959,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Changed bottom position: Focus mode from 24px to 72px, Normal mode from 96px to 144px
 - [x] Test button positioning in all three modes
 - [x] Save checkpoint
+
+
+## Fix TRPC Metadata Validation Error (COMPLETED)
+- [x] Fixed TRPC validation error on /kai page where metadata field expected string but received object
+  - Added `metadata: text()` column to `messages` table schema in drizzle/schema.ts
+  - Executed SQL migration: `ALTER TABLE messages ADD COLUMN metadata TEXT;`
+  - Server code already correctly serializes metadata with `JSON.stringify()`
+  - Created comprehensive vitest tests for metadata functionality (kai.addMessage.metadata.test.ts)
+  - All 3 tests passing: with metadata, without metadata, complex metadata objects
+  - Error resolved: "Invalid input: expected string, received object" no longer occurs
