@@ -6742,3 +6742,25 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verified Cinematic mode composer moved down by 48px
 - [x] Verified Day mode composer position unchanged
 - [x] Verified Night mode composer position unchanged
+
+
+## Fix Composer Locking - ChatGPT Behavior (Feb 2, 2026)
+- [ ] Ensure center pane has h-full min-h-0 flex flex-col overflow-hidden
+- [ ] Make ONLY messages container scrollable with flex-1 min-h-0 overflow-y-auto
+- [ ] Ensure composer is outside scroll container as last flex child with shrink-0
+- [ ] Remove any transform or overflow properties from ancestors that break sticky/fixed positioning
+- [ ] Test that scrolling messages doesn't move composer
+- [ ] Verify no double scrolling (page doesn't scroll inside center pane)
+
+
+## Fix Composer Locking - ChatGPT Style (Feb 2, 2026)
+- [x] Remove transform property that breaks sticky/fixed positioning
+- [x] Ensure center pane has h-full min-h-0 flex flex-col overflow-hidden
+- [x] Ensure messages container has flex-1 min-h-0 overflow-y-auto
+- [x] Ensure composer is outside scroll container as last flex child with shrink-0
+- [x] Test that only messages scroll while composer stays pinned
+- [x] Test across all themes (Day, Night, Cinematic)
+- [x] Removed transform: translateY(-96px) from composer wrapper
+- [x] Verified composer is outside scroll container (composerIsOutsideScroll: true)
+- [x] Verified messages container has overflow (scrollHeight: 6925px, clientHeight: 504px)
+- [x] Tested in Day, Night, and Cinematic modes - all working correctly
