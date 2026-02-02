@@ -6702,3 +6702,26 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Ensure consistent spacing across all themes (Day, Night, Cinematic)
 - [x] Test composer position in all three themes
 - [x] Implemented Strategy A: single consistent spacing strategy
+
+## Unified Chat Layout Contract Refactor (Feb 1, 2026)
+- [ ] Define global CSS variables for layout constants (bottom-nav-h, composer-h, z-index values)
+- [ ] Refactor center pane to use unified structure with CSS variables
+- [ ] Ensure backdrop layer has pointer-events-none and z-index 0
+- [ ] Set composer z-index to 60 (above bottom nav at 50)
+- [ ] Remove all theme-specific positioning (sticky, bottom-*, conditional pb-*)
+- [ ] Test layout in Day, Night, and Cinematic modes
+- [ ] Verify composer is always visible and clickable
+- [ ] Verify messages scroll properly with 100+ messages
+
+## Unified Chat Layout Contract Refactor (Feb 1, 2026)
+- [x] Define global layout constants with CSS variables
+- [x] Refactor chat shell structure to unified layout contract
+- [x] Remove all theme-specific positioning and offsets
+- [x] Test layout across all themes (Day, Night, Cinematic)
+- [x] Ensure backdrop has pointer-events-none
+- [x] Ensure composer uses consistent z-index across all themes
+- [x] Created LAYOUT_CONSTANTS with bottomNavHeight, composerHeight, chatZIndex, composerZIndex, backdropZIndex
+- [x] Updated center panel to use LAYOUT_CONSTANTS.chatZIndex
+- [x] Updated backdrop to use LAYOUT_CONSTANTS.backdropZIndex
+- [x] Updated messages container padding to use calculated value with LAYOUT_CONSTANTS
+- [x] Updated composer wrapper to use LAYOUT_CONSTANTS.composerZIndex and paddingBottom

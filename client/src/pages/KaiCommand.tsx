@@ -30,6 +30,16 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { UserAvatar } from '@/components/UserAvatar';
 import '@/styles/kai-light-command-center.css';
+
+// Global layout constants for unified chat layout
+const LAYOUT_CONSTANTS = {
+  bottomNavHeight: '88px',
+  composerHeight: '84px',
+  chatZIndex: 20,
+  composerZIndex: 60,
+  backdropZIndex: 0,
+  bottomNavZIndex: 50
+};
 import { 
   Search, 
   Plus, 
@@ -2725,8 +2735,8 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden pb-[88px] ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
-          style={{ zIndex: 10, position: 'relative' }}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
+          style={{ zIndex: LAYOUT_CONSTANTS.chatZIndex, position: 'relative', height: '100%' }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
@@ -2758,7 +2768,7 @@ export default function KaiCommand() {
           {isCinematic && (
             <div 
               className="environment-layer absolute inset-0 pointer-events-none overflow-hidden"
-              style={{ zIndex: 0 }}
+              style={{ zIndex: LAYOUT_CONSTANTS.backdropZIndex }}
             >
               {/* Vignette Overlay - now inside main content area */}
               <div 
@@ -2991,8 +3001,11 @@ export default function KaiCommand() {
           {/* Small pb-4 just for visual breathing room above the composer */}
           <div 
             ref={scrollContainerRef}
-            className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible pb-28 ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
-            style={{ zIndex: 10 }}
+            className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
+            style={{ 
+              zIndex: 10,
+              paddingBottom: `calc(${LAYOUT_CONSTANTS.composerHeight} + ${LAYOUT_CONSTANTS.bottomNavHeight} + 16px)`
+            }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
             <div className="w-full" style={{
@@ -3376,9 +3389,13 @@ export default function KaiCommand() {
           <div 
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
-              zIndex: 100,
-              padding: '16px',
-              boxSizing: 'border-box'
+              zIndex: LAYOUT_CONSTANTS.composerZIndex,
+              paddingBottom: LAYOUT_CONSTANTS.bottomNavHeight,
+              paddingTop: '16px',
+              paddingLeft: '16px',
+              paddingRight: '16px',
+              boxSizing: 'border-box',
+              background: 'transparent'
             }}
           >
           <form
