@@ -6936,3 +6936,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Ensure composer is visible and positioned correctly - Now 96px from bottom
 - [x] Verify Light and Dark modes still work correctly - Use position: fixed
 - [x] Save checkpoint
+
+
+## Move Cinematic Mode Composer Up Additional 1 Inch (Feb 2, 2026)
+- [x] Increase bottom position from 144px to 240px (additional 1 inch = 96px)
+- [x] Verify composer is fully visible in Cinematic mode
+- [x] Verify Light and Dark modes unchanged - Use position: fixed
+- [x] Save checkpoint
