@@ -6943,3 +6943,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verify composer is fully visible in Cinematic mode
 - [x] Verify Light and Dark modes unchanged - Use position: fixed
 - [x] Save checkpoint
+
+
+## Move Cinematic Mode Composer Down ½ Inch (Feb 2, 2026)
+- [x] Decrease bottom position from 240px to 192px (down ½ inch = 48px)
+- [x] Verify composer is fully visible in Cinematic mode
+- [x] Verify Light and Dark modes unchanged - Use position: fixed
+- [x] Save checkpoint
