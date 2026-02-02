@@ -6809,3 +6809,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test composer sits ½ inch higher than before
 - [x] Verify composer still pinned and clickable
 - [x] Verify messages still scroll normally
+
+
+## Debug and Fix Composer Offset in Day/Dark Mode (Feb 2, 2026)
+- [x] Add debug outline (3px solid red) to composer wrapper in Day/Dark modes
+- [x] Add console.log for getBoundingClientRect to verify element
+- [x] Apply offset via padding adjustment (reduce paddingBottom by 48px)
+- [x] Test composer moves visibly in Day/Dark modes
+- [x] Remove debug markers after verification
+- [x] Keep Cinematic mode unchanged
+- [x] File: /home/ubuntu/dojoflow/client/src/pages/KaiCommand.tsx (line 3410-3422)
+- [x] Applied: paddingBottom: calc(88px - 48px) = 40px in Day/Dark modes
+- [x] Cinematic mode: paddingBottom remains 88px (unchanged)

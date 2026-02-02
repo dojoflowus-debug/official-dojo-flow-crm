@@ -264,6 +264,7 @@ export default function KaiCommand() {
   // Unique ID generator for messages to prevent duplicate key warnings
   const messageIdCounterRef = useRef(Date.now());
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
 
   // In-flight lock to prevent duplicate sends
   const sendingRef = useRef(false);
@@ -3391,16 +3392,16 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
           <div 
+            ref={composerRef}
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: LAYOUT_CONSTANTS.bottomNavHeight,
+              paddingBottom: isCinematic ? LAYOUT_CONSTANTS.bottomNavHeight : `calc(${LAYOUT_CONSTANTS.bottomNavHeight} - 48px)`,
               paddingTop: '16px',
               paddingLeft: '16px',
               paddingRight: '16px',
               boxSizing: 'border-box',
-              background: isCinematic ? 'transparent' : (isDark ? '#0A0A0B' : '#FAFBFC'),
-              transform: isCinematic ? 'none' : 'translateY(48px)'
+              background: isCinematic ? 'transparent' : (isDark ? '#0A0A0B' : '#FAFBFC')
             }}
           >
           <form
