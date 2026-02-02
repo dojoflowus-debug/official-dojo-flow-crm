@@ -6950,3 +6950,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verify composer is fully visible in Cinematic mode
 - [x] Verify Light and Dark modes unchanged - Use position: fixed
 - [x] Save checkpoint
+
+
+## Move Focus Mode Button Up ½ Inch on All Modes (Feb 2, 2026)
+- [x] Locate Focus mode button in KaiCommand.tsx - Found at lines 3484-3593
+- [x] Adjust position to move button up by 48px (½ inch)
+- [x] Apply to all modes: Light, Dark, and Cinematic
+- [x] Changed bottom position: Focus mode from 24px to 72px, Normal mode from 96px to 144px
+- [x] Test button positioning in all three modes
+- [x] Save checkpoint

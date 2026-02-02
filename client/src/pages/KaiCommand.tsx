@@ -3482,13 +3482,14 @@ export default function KaiCommand() {
       />
       
       {/* Floating Focus Mode Toggle Button - Auto-hides when idle */}
-      <div className={`fixed z-[60] flex flex-col gap-3 ${autoHideTransition} ${
-        isFocusMode 
-          ? 'bottom-6 right-6' 
-          : 'bottom-24 right-6'
-      } ${
-        isFocusMode && isUIHidden ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
-      }`}>
+      <div 
+        className={`fixed z-[60] flex flex-col gap-3 ${autoHideTransition} right-6 ${
+          isFocusMode && isUIHidden ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
+        }`}
+        style={{
+          bottom: isFocusMode ? 'calc(24px + 48px)' : 'calc(96px + 48px)'
+        }}
+      >
         {/* Presentation Mode Button (only shown in Focus Mode with Cinematic) */}
         {isFocusMode && isCinematic && (
           <button
