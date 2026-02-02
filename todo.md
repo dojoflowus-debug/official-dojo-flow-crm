@@ -6882,3 +6882,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test Dark mode: same behavior
 - [x] Verify Cinematic mode unchanged - Uses original var(--bottomnav-h, 88px)
 - [x] Save checkpoint
+
+
+## Fix Unwanted Scroll at Rest in Light/Dark Mode (Feb 2, 2026)
+- [x] Identify source of unwanted scroll causing composer to move at rest - Messages container paddingBottom too small
+- [x] Check if messages container paddingBottom is too small - Yes, was calc(var(--composer-h, 84px) + 16px) = 100px
+- [x] Verify status bar "COMMAND CENTER • OPERATIONAL STATUS: ACTIVE • ALL SYSTEMS NOMINAL" is fully visible
+- [x] Adjust spacing to eliminate scroll at rest position - Increased to calc(var(--composer-h, 84px) + 32px) = 116px
+- [x] Ensure composer stays stable at rest (no movement)
+- [x] Test in Light and Dark modes
+- [x] Verify Cinematic mode unchanged
+- [x] Save checkpoint

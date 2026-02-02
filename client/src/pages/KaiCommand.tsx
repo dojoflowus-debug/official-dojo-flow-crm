@@ -2975,7 +2975,7 @@ export default function KaiCommand() {
             className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
             style={{ 
               zIndex: 10,
-              paddingBottom: 'calc(var(--composer-h, 84px) + 16px)'
+              paddingBottom: 'calc(var(--composer-h, 84px) + 32px)'
             }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
