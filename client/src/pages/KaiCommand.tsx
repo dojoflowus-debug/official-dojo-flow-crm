@@ -3378,10 +3378,7 @@ export default function KaiCommand() {
             style={{
               zIndex: 100,
               padding: '16px',
-              boxSizing: 'border-box',
-              background: isDark || isCinematic ? 'rgba(10, 10, 11, 0.95)' : 'rgba(250, 251, 252, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)'
+              boxSizing: 'border-box'
             }}
           >
           <form
@@ -3391,7 +3388,7 @@ export default function KaiCommand() {
             }}
             className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-[100] border focus-within:kai-command-bar-focus`}
             style={{
-              background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
+              background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               ...(isCinematic ? {} : { width: `${centerPanelPosition.width - 32}px` }),

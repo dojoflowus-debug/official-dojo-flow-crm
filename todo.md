@@ -6688,3 +6688,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Increase composer bottom margin by additional 96px (1 inch) to move it higher in Cinematic mode
 - [x] Test final position to ensure optimal visibility
 - [x] Final margin-bottom: 216px (increased from 120px)
+
+## Remove Black Strip Behind Composer (Feb 1, 2026)
+- [x] Remove solid black background from composer wrapper
+- [x] Make composer wrapper transparent or use subtle gradient
+- [x] Test that composer remains visible and messages don't hide under bottom nav
+- [x] Changed wrapper background from rgba(10, 10, 11, 0.95) to transparent
+- [x] Changed form background from rgba(0, 0, 0, 0.85) to rgba(0, 0, 0, 0.4)
