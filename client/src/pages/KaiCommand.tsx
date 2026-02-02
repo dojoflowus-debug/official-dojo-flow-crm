@@ -3374,7 +3374,7 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
           <div 
-            className="flex justify-center w-full flex-shrink-0 border-t border-white/10 mb-[120px]"
+            className="flex justify-center w-full flex-shrink-0 border-t border-white/10 mb-[216px]"
             style={{
               zIndex: 100,
               padding: '16px',
