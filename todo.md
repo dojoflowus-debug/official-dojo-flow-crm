@@ -6848,3 +6848,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test thoroughly in browser with screenshot
 - [ ] Provide screenshot proof to user
 - [ ] Save final checkpoint with verified fix
+
+
+## Fix Composer Position in Light/Dark Mode (Feb 2, 2026)
+- [x] Lower composer by ½ inch (48px) in Light and Dark modes only
+- [x] Fix scroll-dependent movement - composer must stay fixed while scrolling
+- [x] Verify composer uses CSS variable --bottomnav-h for spacing
+- [x] Adjust paddingBottom to add 48px offset - Changed to `calc(var(--bottomnav-h, 88px) + 48px)`
+- [x] Composer is already outside scroll container as `flex-shrink-0` sibling (line 3360)
+- [x] Layout structure is correct - only messages scroll, composer stays fixed
+- [x] Verify Cinematic mode unchanged - Uses original `var(--bottomnav-h, 88px)`
+- [x] Test in Light and Dark modes
+- [x] Save checkpoint with verified fix
