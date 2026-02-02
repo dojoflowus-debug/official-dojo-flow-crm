@@ -6821,3 +6821,20 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] File: /home/ubuntu/dojoflow/client/src/pages/KaiCommand.tsx (line 3410-3422)
 - [x] Applied: paddingBottom: calc(88px - 48px) = 40px in Day/Dark modes
 - [x] Cinematic mode: paddingBottom remains 88px (unchanged)
+
+
+## Fix Light Mode Composer Issues (Feb 2, 2026)
+- [x] Remove blue/gray strip under composer in Light mode
+- [x] Find and remove bg-blue-*, bg-slate-*, bg-gray-* backgrounds behind composer
+- [x] Ensure messages container has bg-transparent (center panel: line 2739)
+- [x] Remove any bottom spacer divs (not needed)
+- [x] Make composer position permanent (no scroll-dependent movement)
+- [x] Verify center chat shell has overflow-hidden (line 2739)
+- [x] Verify only messages list scrolls (overflow-y-auto) (line 3009)
+- [x] Verify composer is last flex child, not sticky, not inside scroller (line 3396)
+- [x] Remove sticky or bottom:* behavior in Light mode (no sticky positioning found)
+- [x] Remove dynamic padding or conditional classes that change with scroll
+- [x] Changed: Center panel bg from bg-[#FAFBFC] to bg-transparent in Light mode
+- [x] Changed: Composer wrapper background to transparent for all modes
+- [x] Changed: Light mode paddingBottom to 88px (no reduction), Dark mode keeps calc(88px - 48px)
+- [x] Verify Dark and Cinematic modes unchanged

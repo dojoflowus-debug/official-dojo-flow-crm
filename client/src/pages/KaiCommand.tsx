@@ -2736,7 +2736,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-transparent'}`}
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
@@ -3396,12 +3396,12 @@ export default function KaiCommand() {
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: isCinematic ? LAYOUT_CONSTANTS.bottomNavHeight : `calc(${LAYOUT_CONSTANTS.bottomNavHeight} - 48px)`,
+              paddingBottom: isCinematic ? LAYOUT_CONSTANTS.bottomNavHeight : (isDark ? `calc(${LAYOUT_CONSTANTS.bottomNavHeight} - 48px)` : LAYOUT_CONSTANTS.bottomNavHeight),
               paddingTop: '16px',
               paddingLeft: '16px',
               paddingRight: '16px',
               boxSizing: 'border-box',
-              background: isCinematic ? 'transparent' : (isDark ? '#0A0A0B' : '#FAFBFC')
+              background: 'transparent'
             }}
           >
           <form
