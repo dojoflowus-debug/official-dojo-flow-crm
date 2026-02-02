@@ -3400,7 +3400,7 @@ export default function KaiCommand() {
               paddingRight: '16px',
               boxSizing: 'border-box',
               background: isCinematic ? 'transparent' : (isDark ? '#0A0A0B' : '#FAFBFC'),
-              transform: isCinematic ? 'none' : 'translateY(96px)'
+              transform: isCinematic ? 'none' : 'translateY(48px)'
             }}
           >
           <form

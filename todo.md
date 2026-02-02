@@ -6800,3 +6800,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test composer sits ~1 inch lower in Day/Dark modes
 - [x] Verify composer still pinned and clickable
 - [x] Verify messages still scroll normally
+
+
+## Raise Composer by ½ Inch in Day/Dark Mode (Feb 2, 2026)
+- [x] Reduce transform: translateY from 96px to 48px in Day/Dark modes
+- [x] Keep Cinematic mode unchanged
+- [x] Do NOT modify layout logic, scroll behavior, padding, or z-index
+- [x] Test composer sits ½ inch higher than before
+- [x] Verify composer still pinned and clickable
+- [x] Verify messages still scroll normally
