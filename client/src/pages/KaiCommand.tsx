@@ -264,7 +264,6 @@ export default function KaiCommand() {
   // Unique ID generator for messages to prevent duplicate key warnings
   const messageIdCounterRef = useRef(Date.now());
   const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const composerRef = useRef<HTMLDivElement>(null);
 
   // In-flight lock to prevent duplicate sends
   const sendingRef = useRef(false);
@@ -2736,7 +2735,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-transparent'}`}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
@@ -3392,16 +3391,15 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
           <div 
-            ref={composerRef}
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: isCinematic ? LAYOUT_CONSTANTS.bottomNavHeight : (isDark ? `calc(${LAYOUT_CONSTANTS.bottomNavHeight} - 48px)` : LAYOUT_CONSTANTS.bottomNavHeight),
+              paddingBottom: LAYOUT_CONSTANTS.bottomNavHeight,
               paddingTop: '16px',
               paddingLeft: '16px',
               paddingRight: '16px',
               boxSizing: 'border-box',
-              background: 'transparent'
+              background: isCinematic ? 'transparent' : (isDark ? '#0A0A0B' : '#FAFBFC')
             }}
           >
           <form
