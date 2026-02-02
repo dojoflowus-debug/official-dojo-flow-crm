@@ -1308,7 +1308,7 @@ export const appRouter = router({
         callOutcome: z.enum(["answered", "voicemail", "no_answer", "busy", "wrong_number"]).optional(),
         isAutomated: z.boolean().optional().default(false),
         createdByName: z.string().optional(),
-        metadata: z.record(z.any()).optional(),
+        metadata: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { getDb } = await import("./db");
@@ -2789,7 +2789,7 @@ export const appRouter = router({
         conversationId: z.number(),
         role: z.enum(["user", "assistant", "system"]),
         content: z.string(),
-        metadata: z.record(z.any()).optional(),
+        metadata: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
