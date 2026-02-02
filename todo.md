@@ -6893,3 +6893,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test in Light and Dark modes
 - [x] Verify Cinematic mode unchanged
 - [x] Save checkpoint
+
+
+## Deep Investigation - Persistent Unwanted Scroll at Rest (Feb 2, 2026)
+- [x] Check actual rendered composer height vs --composer-h variable (84px) - Variable was incorrect
+- [x] Verify center panel height calculation is correct
+- [x] Check if there's content overflow causing scroll - Yes, insufficient padding
+- [x] Investigate if status bar height is accounted for - Not fully accounted for
+- [x] Check for any min-height constraints causing issues
+- [x] Measure exact spacing needed to show status bar without scroll - 140px needed
+- [x] Apply precise fix based on measurements - Changed paddingBottom to 140px
+- [x] Test thoroughly in Light and Dark modes
+- [x] Save checkpoint
