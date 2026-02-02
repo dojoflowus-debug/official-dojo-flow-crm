@@ -6695,3 +6695,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test that composer remains visible and messages don't hide under bottom nav
 - [x] Changed wrapper background from rgba(10, 10, 11, 0.95) to transparent
 - [x] Changed form background from rgba(0, 0, 0, 0.85) to rgba(0, 0, 0, 0.4)
+
+## Fix Composer Spacing in Day/Night Mode (Feb 1, 2026)
+- [x] Remove excessive bottom margin (mb-[216px]) from composer wrapper
+- [x] Add padding-bottom (pb-[88px]) to chat shell to reserve space for bottom nav
+- [x] Ensure consistent spacing across all themes (Day, Night, Cinematic)
+- [x] Test composer position in all three themes
+- [x] Implemented Strategy A: single consistent spacing strategy

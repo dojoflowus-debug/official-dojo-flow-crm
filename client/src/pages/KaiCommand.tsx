@@ -2725,7 +2725,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
+          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden pb-[88px] ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
           style={{ zIndex: 10, position: 'relative' }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -3374,7 +3374,7 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
           <div 
-            className="flex justify-center w-full flex-shrink-0 border-t border-white/10 mb-[216px]"
+            className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: 100,
               padding: '16px',
