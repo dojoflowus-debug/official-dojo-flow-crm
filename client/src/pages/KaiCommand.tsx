@@ -3361,7 +3361,7 @@ export default function KaiCommand() {
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: isCinematic ? 'var(--bottomnav-h, 88px)' : 'calc(var(--bottomnav-h, 88px) + 48px)',
+              paddingBottom: isCinematic ? 'var(--bottomnav-h, 88px)' : 'calc(var(--bottomnav-h, 88px) + 96px)',
               paddingTop: '16px',
               paddingLeft: '16px',
               paddingRight: '16px',

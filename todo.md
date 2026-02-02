@@ -6860,3 +6860,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verify Cinematic mode unchanged - Uses original `var(--bottomnav-h, 88px)`
 - [x] Test in Light and Dark modes
 - [x] Save checkpoint with verified fix
+
+
+## Move Composer Down by 1 Inch in Light/Dark Mode (Feb 2, 2026)
+- [x] Increase paddingBottom offset from 48px to 96px
+- [x] Change `calc(var(--bottomnav-h, 88px) + 48px)` to `calc(var(--bottomnav-h, 88px) + 96px)`
+- [x] Verify Cinematic mode unchanged - Uses original `var(--bottomnav-h, 88px)`
+- [x] Save checkpoint
