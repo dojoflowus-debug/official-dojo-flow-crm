@@ -3376,7 +3376,7 @@ export default function KaiCommand() {
           <div 
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10 mb-[72px]"
             style={{
-              zIndex: 50,
+              zIndex: 100,
               padding: '16px',
               boxSizing: 'border-box',
               background: isDark || isCinematic ? 'rgba(10, 10, 11, 0.95)' : 'rgba(250, 251, 252, 0.95)',
@@ -3389,7 +3389,7 @@ export default function KaiCommand() {
               e.preventDefault();
               handleSendMessage('submit');
             }}
-            className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-10 border focus-within:kai-command-bar-focus`}
+            className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-[100] border focus-within:kai-command-bar-focus`}
             style={{
               background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(20px)',

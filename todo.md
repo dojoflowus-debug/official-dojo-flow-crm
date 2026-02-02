@@ -6669,3 +6669,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Ensure composer is sibling of messages list, not child of scroll container
 - [x] Add debug styling to confirm composer is rendering
 - [x] Fix overlap with bottom navigation bar by adding mb-[72px]
+
+## Bug Fix - Composer Hidden in Cinematic Mode (Feb 1, 2026)
+- [x] Identify cinematic backdrop/overlay layer causing z-index stacking issue
+- [x] Set proper z-index hierarchy: backdrop (z-0), content (z-10), composer (z-100)
+- [x] Add pointer-events-none to cinematic backdrop to prevent click interception
+- [x] Ensure composer is not clipped by bottom nav in Cinematic mode
+- [x] Test composer visibility and clickability in Cinematic mode
+- [x] Increased composer wrapper z-index from 50 to 100
+- [x] Increased composer form z-index from 10 to 100
