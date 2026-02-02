@@ -6734,3 +6734,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verified Day mode composer position unchanged
 - [x] Verified Night mode composer position unchanged
 - [x] Verified Cinematic mode composer moved up 1.5 inches (144px)
+
+## Cinematic Mode Composer Offset Adjustment (Feb 2, 2026)
+- [x] Reduce translateY offset from -144px to -96px to move composer down 0.5 inch (48px)
+- [x] Test that Day and Night modes remain unchanged
+- [x] Verify composer remains clickable in Cinematic mode
+- [x] Verified Cinematic mode composer moved down by 48px
+- [x] Verified Day mode composer position unchanged
+- [x] Verified Night mode composer position unchanged
