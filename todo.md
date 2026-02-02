@@ -6905,3 +6905,17 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Apply precise fix based on measurements - Changed paddingBottom to 140px
 - [x] Test thoroughly in Light and Dark modes
 - [x] Save checkpoint
+
+
+## Lock Composer in Fixed Position - No Movement (Feb 2, 2026)
+- [x] Investigate what's causing composer to move - Composer was using flex layout without fixed positioning
+- [x] Check if composer wrapper has dynamic positioning - Was using flex-shrink-0 only
+- [x] Check if center panel height changes are causing movement - Yes, flex layout allows movement
+- [x] Verify composer is truly outside scroll container - Yes, but not truly fixed
+- [x] Implement position: fixed or position: sticky to lock composer - Added position: fixed for Light/Dark
+- [x] Ensure composer stays at exact same position regardless of scroll
+- [x] Applied: position: fixed, bottom: var(--bottomnav-h, 88px), left: centerPanelPosition.left, width: centerPanelPosition.width
+- [x] Cinematic mode uses position: relative (unchanged)
+- [x] Test thoroughly - composer must NEVER move
+- [x] Verify in Light, Dark, and Cinematic modes
+- [x] Save checkpoint
