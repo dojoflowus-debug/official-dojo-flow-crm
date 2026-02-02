@@ -6926,3 +6926,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Change from var(--bottomnav-h, 88px) to calc(var(--bottomnav-h, 88px) - 96px)
 - [x] Verify Light and Dark modes unchanged - Light/Dark use fixed positioning with 16px padding
 - [x] Save checkpoint
+
+
+## Fix Invisible Composer in Cinematic Mode (Feb 2, 2026)
+- [x] Investigate why composer is not visible in Cinematic mode - calc(88px - 96px) = -8px (invalid)
+- [x] Check if calc(var(--bottomnav-h, 88px) - 96px) resulted in negative or invalid value - Yes, negative padding
+- [x] Restore proper paddingBottom value for Cinematic mode - Changed to 16px
+- [x] Use position: absolute with bottom: 96px instead of negative padding
+- [x] Ensure composer is visible and positioned correctly - Now 96px from bottom
+- [x] Verify Light and Dark modes still work correctly - Use position: fixed
+- [x] Save checkpoint
