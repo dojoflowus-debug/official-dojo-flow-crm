@@ -6725,3 +6725,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Updated backdrop to use LAYOUT_CONSTANTS.backdropZIndex
 - [x] Updated messages container padding to use calculated value with LAYOUT_CONSTANTS
 - [x] Updated composer wrapper to use LAYOUT_CONSTANTS.composerZIndex and paddingBottom
+
+## Cinematic Mode Composer Vertical Offset (Feb 2, 2026)
+- [x] Add translateY(-144px) offset to composer in Cinematic mode only
+- [x] Test that Day and Night modes remain unchanged
+- [x] Verify composer remains clickable and usable in Cinematic mode
+- [x] Applied transform: translateY(-144px) conditional on isCinematic flag
+- [x] Verified Day mode composer position unchanged
+- [x] Verified Night mode composer position unchanged
+- [x] Verified Cinematic mode composer moved up 1.5 inches (144px)
