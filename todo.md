@@ -6833,3 +6833,18 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Consolidate to single clean background layer - Now only 2 layers: Background Image + Single overlay
 - [x] Verify no visual artifacts or duplicate layers
 - [x] Test in Light, Dark, and Cinematic modes
+
+
+## Fix Persistent Multiple Background Layers Issue (Feb 2, 2026)
+- [x] Restart dev server to ensure changes are applied
+- [x] Verify the Cinematic mode changes were actually deployed
+- [x] Investigate if there are OTHER sources of background layers (not just Cinematic mode)
+- [x] Check if Light/Dark modes also have redundant backgrounds - FOUND IT!
+- [x] Remove ALL duplicate background layers across all themes
+- [x] Root cause: `/home/ubuntu/dojoflow/client/src/styles/kai-light-command-center.css`
+- [x] The `.kaiLightCommandCenter` class had a background image with dark gradient overlay
+- [x] Removed: `url('/backgrounds/command-center-light.jpg')` and gradient from lines 7-12
+- [x] Now uses clean white background from page wrapper
+- [ ] Test thoroughly in browser with screenshot
+- [ ] Provide screenshot proof to user
+- [ ] Save final checkpoint with verified fix

@@ -4,15 +4,7 @@
 /* Command Center Background - Light Mode Only */
 .kaiLightCommandCenter {
   position: relative;
-  background: linear-gradient(135deg, 
-    rgba(15, 23, 42, 0.95) 0%, 
-    rgba(30, 41, 59, 0.92) 50%, 
-    rgba(51, 65, 85, 0.90) 100%
-  ),
-  url('/backgrounds/command-center-light.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: scroll;
+  /* Background removed - clean white background from page wrapper */
 }
 
 /* Centered Header Block - Light Mode Only */
