@@ -6678,3 +6678,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test composer visibility and clickability in Cinematic mode
 - [x] Increased composer wrapper z-index from 50 to 100
 - [x] Increased composer form z-index from 10 to 100
+
+## Composer Position Adjustment (Feb 1, 2026)
+- [x] Increase composer bottom margin to position it higher above bottom navigation menu in Cinematic mode
+- [x] Test composer visibility and ensure it doesn't overlap with bottom nav icons
+- [x] Changed margin-bottom from 72px to 120px
