@@ -3387,7 +3387,7 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
           <div 
-            className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
+            className={`flex justify-center w-full flex-shrink-0 border-t border-white/10 ${!isCinematic ? 'sticky bottom-0' : ''}`}
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
               paddingBottom: LAYOUT_CONSTANTS.bottomNavHeight,
@@ -3395,7 +3395,7 @@ export default function KaiCommand() {
               paddingLeft: '16px',
               paddingRight: '16px',
               boxSizing: 'border-box',
-              background: 'transparent'
+              background: isCinematic ? 'transparent' : (isDark ? '#0A0A0B' : '#FAFBFC')
             }}
           >
           <form

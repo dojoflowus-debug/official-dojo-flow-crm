@@ -6764,3 +6764,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verified composer is outside scroll container (composerIsOutsideScroll: true)
 - [x] Verified messages container has overflow (scrollHeight: 6925px, clientHeight: 504px)
 - [x] Tested in Day, Night, and Cinematic modes - all working correctly
+
+
+## Fix Composer Locking in Day/Dark Mode Only - ChatGPT Style (Feb 2, 2026)
+- [x] Add sticky bottom-0 positioning to composer in Day/Dark modes only
+- [x] Add background color to composer to prevent content showing through
+- [x] Verify center panel has overflow-hidden with flex flex-col min-h-0
+- [x] Verify messages container has overflow-y-auto with flex-1 min-h-0
+- [x] Verify composer is outside scroll container with flex-shrink-0
+- [x] Keep Cinematic mode unchanged (no sticky positioning)
+- [x] Create comprehensive vitest tests (10 tests, all passing)
+- [x] Test layout structure matches ChatGPT contract
+- [x] Test composer positioning in Day, Dark, and Cinematic modes
+- [x] Test z-index layering and padding calculations
