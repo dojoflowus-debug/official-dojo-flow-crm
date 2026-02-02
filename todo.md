@@ -6791,3 +6791,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test in Light and Dark modes
 - [x] Keep Cinematic mode unchanged
 - [x] Create vitest tests to verify fixed layout (20 tests, all passing)
+
+
+## Add Visual Offset to Composer in Day/Dark Mode (Feb 2, 2026)
+- [x] Add transform: translateY(96px) to composer in Day and Dark modes only
+- [x] Keep Cinematic mode unchanged (no offset)
+- [x] Do NOT modify layout logic, scroll behavior, padding, or z-index
+- [x] Test composer sits ~1 inch lower in Day/Dark modes
+- [x] Verify composer still pinned and clickable
+- [x] Verify messages still scroll normally
