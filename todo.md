@@ -6919,3 +6919,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test thoroughly - composer must NEVER move
 - [x] Verify in Light, Dark, and Cinematic modes
 - [x] Save checkpoint
+
+
+## Move Composer Up 1 Inch in Cinematic Mode (Feb 2, 2026)
+- [x] Reduce Cinematic mode composer paddingBottom by 96px
+- [x] Change from var(--bottomnav-h, 88px) to calc(var(--bottomnav-h, 88px) - 96px)
+- [x] Verify Light and Dark modes unchanged - Light/Dark use fixed positioning with 16px padding
+- [x] Save checkpoint

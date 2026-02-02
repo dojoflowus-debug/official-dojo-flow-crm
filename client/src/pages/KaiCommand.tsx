@@ -3365,7 +3365,7 @@ export default function KaiCommand() {
               left: isCinematic ? 'auto' : centerPanelPosition.left,
               width: isCinematic ? '100%' : centerPanelPosition.width,
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: isCinematic ? 'var(--bottomnav-h, 88px)' : '16px',
+              paddingBottom: isCinematic ? 'calc(var(--bottomnav-h, 88px) - 96px)' : '16px',
               paddingTop: '16px',
               paddingLeft: '16px',
               paddingRight: '16px',
