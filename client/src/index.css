@@ -9,6 +9,7 @@
   /* Kai Command Layout Variables */
   --topbar-h: 64px;  /* Main header/menu height */
   --bottomnav-h: 88px;  /* Bottom navigation height */
+  --composer-h: 84px;  /* Composer height */
 }
 
 /* Bottom Navigation - Owns the bottom 72px */

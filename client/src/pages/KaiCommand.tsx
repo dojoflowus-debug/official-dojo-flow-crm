@@ -2735,7 +2735,7 @@ export default function KaiCommand() {
         {/* Row 3: Composer dock (flex-shrink-0, reserved height) */}
         <div 
           ref={centerPanelRef}
-          className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
+          className="flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden bg-transparent"
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
@@ -3008,7 +3008,7 @@ export default function KaiCommand() {
             className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
             style={{ 
               zIndex: 10,
-              paddingBottom: `calc(${LAYOUT_CONSTANTS.composerHeight} + ${LAYOUT_CONSTANTS.bottomNavHeight} + 16px)`
+              paddingBottom: 'calc(var(--composer-h, 84px) + var(--bottomnav-h, 88px) + 16px)'
             }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
@@ -3394,12 +3394,12 @@ export default function KaiCommand() {
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: LAYOUT_CONSTANTS.bottomNavHeight,
+              paddingBottom: 'var(--bottomnav-h, 88px)',
               paddingTop: '16px',
               paddingLeft: '16px',
               paddingRight: '16px',
               boxSizing: 'border-box',
-              background: isCinematic ? 'transparent' : (isDark ? '#0A0A0B' : '#FAFBFC')
+              background: 'transparent'
             }}
           >
           <form

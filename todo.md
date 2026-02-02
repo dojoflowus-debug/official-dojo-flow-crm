@@ -6791,3 +6791,21 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test in Light and Dark modes
 - [x] Keep Cinematic mode unchanged
 - [x] Create vitest tests to verify fixed layout (20 tests, all passing)
+
+
+## Hard Reset and Implement Stable ChatGPT-Style Layout (Feb 2, 2026)
+- [x] Revert to last working checkpoint (before recent layout changes) - Rolled back to 4a5bc468
+- [x] Create immediate checkpoint after revert - Version b558743b
+- [x] Define CSS variables in index.css: --bottomnav-h: 88px, --composer-h: 84px
+- [x] Implement single permanent layout contract (no theme-specific positioning)
+- [x] Backdrop layer with pointer-events-none and z-0 (Cinematic mode already correct)
+- [x] Content layer with z-10, h-full, overflow-hidden
+- [x] Messages scroll area with flex-1, overflow-y-auto
+- [x] Composer pinned with shrink-0, z-50, bg-transparent
+- [x] Use CSS variables for padding calculations
+- [x] Remove all translateY, bottom: 48px, per-theme magic numbers
+- [x] Remove blue strip by ensuring bg-transparent and no spacer divs
+- [x] Center panel: bg-transparent (line 2738)
+- [x] Messages: paddingBottom uses calc(var(--composer-h) + var(--bottomnav-h) + 16px) (line 3011)
+- [x] Composer: background transparent, paddingBottom uses var(--bottomnav-h) (lines 3397, 3402)
+- [x] All tests passed - ready for checkpoint
