@@ -2441,7 +2441,7 @@ export default function KaiCommand() {
   const getKaiCommandBgClass = () => {
     if (isCinematic) return 'bg-[#0A0A0B]';
     if (isDark) return 'bg-[#0A0A0B]';
-    return 'bg-[#FAFBFC]'; // Light mode: clean white-ish background
+    return 'bg-white'; // Light mode: clean white background
   };
 
   // Get theme-aware sidebar background

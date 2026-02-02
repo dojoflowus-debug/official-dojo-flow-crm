@@ -6809,3 +6809,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Messages: paddingBottom uses calc(var(--composer-h) + var(--bottomnav-h) + 16px) (line 3011)
 - [x] Composer: background transparent, paddingBottom uses var(--bottomnav-h) (lines 3397, 3402)
 - [x] All tests passed - ready for checkpoint
+
+
+## Fix Blue Background in Light Mode (Feb 2, 2026)
+- [x] Identify source of blue background color - Found in getKaiCommandBgClass() function
+- [x] Check page-level background settings - Line 2518 applies bg class to page wrapper
+- [x] Check App.tsx or root component background - Issue in KaiCommand.tsx
+- [x] Remove blue background and set proper white/light background - Changed bg-[#FAFBFC] to bg-white
+- [x] Verify Light mode has clean white background
+- [x] Verify Dark and Cinematic modes unchanged
