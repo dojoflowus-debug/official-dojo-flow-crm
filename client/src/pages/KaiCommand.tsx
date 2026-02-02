@@ -2975,7 +2975,7 @@ export default function KaiCommand() {
             className={`content-layer flex-1 min-h-0 relative w-full overflow-y-auto scrollbar-visible ${isFocusMode ? 'pt-16' : isCinematic ? 'pt-6' : 'pt-6'}`}
             style={{ 
               zIndex: 10,
-              paddingBottom: 'calc(var(--composer-h, 84px) + var(--bottomnav-h, 88px) + 16px)'
+              paddingBottom: 'calc(var(--composer-h, 84px) + 16px)'
             }}
           >
             {/* Shared content column wrapper - constrained to chat bar width */}
@@ -3361,7 +3361,7 @@ export default function KaiCommand() {
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
-              paddingBottom: isCinematic ? 'var(--bottomnav-h, 88px)' : 'calc(var(--bottomnav-h, 88px) + 96px)',
+              paddingBottom: isCinematic ? 'var(--bottomnav-h, 88px)' : '16px',
               paddingTop: '16px',
               paddingLeft: '16px',
               paddingRight: '16px',

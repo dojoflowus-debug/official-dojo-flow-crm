@@ -6867,3 +6867,18 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Change `calc(var(--bottomnav-h, 88px) + 48px)` to `calc(var(--bottomnav-h, 88px) + 96px)`
 - [x] Verify Cinematic mode unchanged - Uses original `var(--bottomnav-h, 88px)`
 - [x] Save checkpoint
+
+
+## Remove Double Bottom Spacing in Light/Dark Mode (Feb 2, 2026)
+- [x] Identify all bottom spacing sources (center shell, composer wrapper, spacer divs)
+- [x] Remove paddingBottom from composer wrapper in Light/Dark modes - Changed to 16px
+- [x] Keep only pb-4 (16px) for composer's internal padding
+- [x] Ensure center chat shell has pb-[--bottom-nav-h] - Uses calc(100vh - var(--topbar-h) - var(--bottomnav-h))
+- [x] Remove any extra spacer divs below composer - None found
+- [x] Verify messages list has proper padding - Changed to calc(var(--composer-h, 84px) + 16px)
+- [x] Fixed: Composer wrapper paddingBottom from calc(var(--bottomnav-h, 88px) + 96px) to 16px
+- [x] Fixed: Messages container paddingBottom from calc(var(--composer-h) + var(--bottomnav-h) + 16px) to calc(var(--composer-h) + 16px)
+- [x] Test Light mode: composer sits just above bottom nav (tight, no giant gap)
+- [x] Test Dark mode: same behavior
+- [x] Verify Cinematic mode unchanged - Uses original var(--bottomnav-h, 88px)
+- [x] Save checkpoint
