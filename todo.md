@@ -6818,3 +6818,18 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove blue background and set proper white/light background - Changed bg-[#FAFBFC] to bg-white
 - [x] Verify Light mode has clean white background
 - [x] Verify Dark and Cinematic modes unchanged
+
+
+## Remove Redundant Background Layers Behind Chat Screen (Feb 2, 2026)
+- [x] Identify all background layers and wrapper elements - Found 6 layers in Cinematic mode
+- [x] Check ManagementLayout for duplicate backgrounds - ManagementLayout is pass-through, no issue
+- [x] Check page wrapper for duplicate backgrounds - Issue in KaiCommand.tsx lines 2770-2836
+- [x] Remove redundant dark layers creating horizontal bands - Removed 4 duplicate layers:
+  - Vignette Overlay (duplicate)
+  - Dark Overlay with backdrop blur
+  - Soft Gradient Overlay
+  - Another Vignette Effect
+  - Spotlight behind Kai
+- [x] Consolidate to single clean background layer - Now only 2 layers: Background Image + Single overlay
+- [x] Verify no visual artifacts or duplicate layers
+- [x] Test in Light, Dark, and Cinematic modes

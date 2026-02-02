@@ -2767,21 +2767,12 @@ export default function KaiCommand() {
               </div>
             </div>
           )}
-          {/* ENVIRONMENT LAYER - All background elements with z-index: 0 */}
-          {/* Constrained to main content column only, not full page */}
+          {/* ENVIRONMENT LAYER - Single clean backdrop for Cinematic mode */}
           {isCinematic && (
             <div 
               className="environment-layer absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: LAYOUT_CONSTANTS.backdropZIndex }}
             >
-              {/* Vignette Overlay - now inside main content area */}
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
-                  animation: 'cinematicFadeIn 0.8s ease-out'
-                }}
-              />
               {/* Background Image Layer with Parallax */}
               <div 
                 className="absolute inset-0 will-change-transform pointer-events-none"
@@ -2793,7 +2784,6 @@ export default function KaiCommand() {
                   transform: `scale(1.1) translateY(${-parallaxOffset}px)`,
                   transition: 'opacity 0.4s ease-out',
                   opacity: isTransitioning ? 0 : 1,
-                  // Extend background to allow parallax movement
                   top: '-5%',
                   left: '-5%',
                   right: '-5%',
@@ -2802,35 +2792,12 @@ export default function KaiCommand() {
                   height: '110%'
                 }}
               />
-              {/* Dark Overlay for readability - with backdrop blur for focus mode */}
+              {/* Single overlay for readability */}
               <div 
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background: currentEnvironment.overlayColor,
-                  transition: 'background 0.4s ease-out',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)'
-                }}
-              />
-              {/* Soft Gradient Overlay for UI Contrast (20-30% darkening) */}
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.20) 70%, rgba(0,0,0,0.35) 100%)'
-                }}
-              />
-              {/* Vignette Effect */}
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)'
-                }}
-              />
-              {/* Spotlight behind Kai */}
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at 50% 35%, rgba(255,76,76,0.15) 0%, transparent 40%)'
+                  transition: 'background 0.4s ease-out'
                 }}
               />
             </div>
