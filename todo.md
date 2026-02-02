@@ -6777,3 +6777,17 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test layout structure matches ChatGPT contract
 - [x] Test composer positioning in Day, Dark, and Cinematic modes
 - [x] Test z-index layering and padding calculations
+
+
+## Fix Composer Scrolling Behind Header in Light/Dark Mode (Feb 2, 2026)
+- [x] Define CSS variables for header height (--topbar-h) and bottom nav height (--bottomnav-h)
+- [x] Implement fixed-height center pane using calc(100vh - var(--topbar-h) - var(--bottomnav-h))
+- [x] Remove sticky positioning from composer and rely on flex layout
+- [x] Ensure only messages container has overflow-y-auto
+- [x] Verify composer is outside scroll container as last flex child
+- [x] Remove any parent scroll containers that include composer
+- [x] Test scrolling 200+ messages - composer and header stay fixed, only messages scroll
+- [x] Verify composer never goes behind main menu bar
+- [x] Test in Light and Dark modes
+- [x] Keep Cinematic mode unchanged
+- [x] Create vitest tests to verify fixed layout (20 tests, all passing)

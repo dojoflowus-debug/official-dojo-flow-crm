@@ -6,6 +6,9 @@
   --nav-h: 72px;
   --kai-gap: 12px;
   --kai-max: 980px;
+  /* Kai Command Layout Variables */
+  --topbar-h: 64px;  /* Main header/menu height */
+  --bottomnav-h: 88px;  /* Bottom navigation height */
 }
 
 /* Bottom Navigation - Owns the bottom 72px */

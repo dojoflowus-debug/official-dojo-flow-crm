@@ -2736,7 +2736,11 @@ export default function KaiCommand() {
         <div 
           ref={centerPanelRef}
           className={`flex-1 flex flex-col relative min-w-0 min-h-0 overflow-hidden ${isDark || isCinematic ? 'bg-[#0A0A0B]' : 'bg-[#FAFBFC]'}`}
-          style={{ zIndex: LAYOUT_CONSTANTS.chatZIndex, position: 'relative', height: '100%' }}
+          style={{ 
+            zIndex: LAYOUT_CONSTANTS.chatZIndex, 
+            position: 'relative', 
+            height: isCinematic ? '100%' : 'calc(100vh - var(--topbar-h) - var(--bottomnav-h))'
+          }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
@@ -3387,7 +3391,7 @@ export default function KaiCommand() {
 
           {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
           <div 
-            className={`flex justify-center w-full flex-shrink-0 border-t border-white/10 ${!isCinematic ? 'sticky bottom-0' : ''}`}
+            className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
               paddingBottom: LAYOUT_CONSTANTS.bottomNavHeight,
