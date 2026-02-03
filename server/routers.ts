@@ -154,7 +154,7 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       return { count: stats?.total_students || 0, status: args.status || 'all' };
     
     case 'find_student':
-      const students = await searchStudents(args.query);
+      const students = await searchStudents(args.query, ctx.currentOrganizationId);
       if (students.length > 0) {
         const student = students[0];
         return {
@@ -183,7 +183,7 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
     
     case 'search_students':
       console.log('[executeCRMFunction] search_students called with query:', args.query);
-      const searchedStudents = await searchStudents(args.query);
+      const searchedStudents = await searchStudents(args.query, ctx.currentOrganizationId);
       console.log('[executeCRMFunction] search_students found:', searchedStudents.length, 'students');
       return {
         students: searchedStudents.map(s => ({

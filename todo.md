@@ -7054,3 +7054,64 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Verify logs show tool_calls in LLM response
 - [ ] Verify executeCRMFunction is called with correct parameters
 - [ ] Verify Kai responds with accurate database data
+
+
+## Bug: Kai Cannot Find Students by Name (Feb 3, 2026)
+
+- [ ] Check find_student tool implementation in executeCRMFunction
+- [ ] Verify database query is searching correctly
+- [ ] Check if query is case-sensitive (should be case-insensitive)
+- [ ] Verify orgId filtering is working
+- [ ] Test with partial name matches
+- [ ] Add logging to see what query is being executed
+- [ ] Fix the search query to properly match student names
+
+## Fix: Student Search Missing Organization Context (Feb 3, 2026)
+
+- [x] Identified root cause: find_student and search_students not passing organizationId
+- [x] Fixed find_student to pass ctx.currentOrganizationId to searchStudents
+- [x] Fixed search_students to pass ctx.currentOrganizationId to searchStudents
+- [x] Restarted server and verified search works
+- [x] Tested: Kai can now find students by name
+
+## Feature: Student Card Results in Kai Chat (Feb 3, 2026)
+
+### Backend API Endpoints
+- [ ] Create students.searchForKai({ query, orgId, locationId? }) endpoint
+- [ ] Create students.getCardForKai({ studentId, orgId, locationId? }) endpoint
+- [ ] Create students.getDetails({ studentId, orgId, locationId? }) endpoint
+- [ ] Ensure all endpoints are tenant-scoped by orgId and locationId
+- [ ] Return structured card payload with photo, rank, program, status, attendance, alerts
+
+### Rich Message Format
+- [ ] Define KaiMessage type union (text | student_card | action)
+- [ ] Update message schema to support rich blocks
+- [ ] Wire Kai tool to return student_card messages
+- [ ] Handle multiple student matches (show list of cards)
+
+### Student Card Component
+- [ ] Create StudentCard component with photo/avatar
+- [ ] Display name, rank/belt, program, status badge
+- [ ] Show attendance last 30 days and last check-in
+- [ ] Display alerts (absent 14+ days, payment failed, balance due)
+- [ ] Make card clickable and keyboard accessible (role="button", tabIndex=0)
+- [ ] Add hover/focus states
+
+### Third Column Panel
+- [ ] Implement rightPanel state management (null | { type, id })
+- [ ] Create layout logic for 2-column vs 3-column modes
+- [ ] Build smooth transitions (200-250ms slide-in animation)
+- [ ] Implement chat column width shrinking when panel opens
+- [ ] Add close button (X) to restore chat width
+- [ ] Build student details header with photo + quick actions
+- [ ] Implement tabs: Overview, Attendance, Billing, Rank, Notes
+- [ ] Handle responsive behavior (slide-over drawer on narrow screens)
+
+### Testing & Polish
+- [ ] Test: "Show me student Vincent Holmes" → card appears
+- [ ] Test: Click card → right panel opens, chat shrinks
+- [ ] Test: Close panel → chat returns to full width
+- [ ] Test: Ask another student → new card, clicking replaces panel
+- [ ] Test: No duplicate messages in Light/Dark/Cinematic modes
+- [ ] Test: Multiple matches UI shows list of cards
+- [ ] Add quick action buttons (Open Profile, Attendance, Send Message)
