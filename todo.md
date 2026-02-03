@@ -7247,7 +7247,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove hardcoded test student card that appears in every conversation
 - [x] Fix Jane Doe student card showing minimal UI (only name, no full details like photo/rank/attendance)
 
-## Student Details Panel Overlay (Feb 3, 2026)
-- [x] Make StudentDetailsPanel open as slide-over overlay on top of chat area (like Manus artifacts)
-- [x] Panel should cover center chat area, not push content to the side
-- [x] Add close button or click-outside-to-close functionality
+## Student Details Panel - True 3-Column Grid Layout (Feb 3, 2026)
+- [x] Convert main layout from flex to CSS Grid
+- [x] Implement 2-column state (detailsOpen=false): 320px | 1fr
+- [x] Implement 3-column state (detailsOpen=true): 320px | minmax(520px, 1fr) | clamp(360px, 30vw, 520px)
+- [x] Remove overlay/backdrop/dimming from StudentDetailsPanel
+- [x] Make StudentDetailsPanel a normal grid column (not fixed/absolute)
+- [x] Keep chat input bar inside center column (not fixed to viewport)
+- [x] Chat input bar must resize with center column when details panel opens
+- [x] Close button and ESC key close details panel
+- [x] Center column expands back to full width when details closed
