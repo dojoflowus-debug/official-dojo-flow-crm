@@ -7115,3 +7115,22 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test: No duplicate messages in Light/Dark/Cinematic modes
 - [ ] Test: Multiple matches UI shows list of cards
 - [ ] Add quick action buttons (Open Profile, Attendance, Send Message)
+
+
+## Bug: Student Cards Not Rendering in Kai Chat (Feb 3, 2026)
+
+**Problem**: Kai prints student names as plain text instead of rendering visual student cards
+
+**Root Cause**: Backend and component exist but are not wired together
+- find_student tool doesn't return student_card metadata
+- Chat renderer doesn't detect/render student_card message types
+
+**Fix Tasks**:
+- [x] Update find_student in executeCRMFunction to call getStudentCardForKai()
+- [x] Return student_card metadata structure in tool response
+- [x] Update formatFunctionResults to handle student_card type
+- [x] Update UIBlockRenderer to render KaiStudentCard component inline
+- [x] Add console logging to verify payload reaches client
+- [x] Wire KaiStudentCard component into UI renderer
+- [ ] Test end-to-end with live Kai responses
+- [ ] Verify clicking card opens third column panel (future phase)

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Users, User } from 'lucide-react';
+import { KaiStudentCard, KaiStudentCardData } from './KaiStudentCard';
 
 interface UIBlock {
   type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
@@ -8,6 +9,7 @@ interface UIBlock {
   studentIds?: number[];
   leadId?: number;
   leadIds?: number[];
+  student?: KaiStudentCardData; // Full student data for inline rendering
   label: string;
 }
 
@@ -24,8 +26,23 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
   const isCinematic = theme === 'cinematic';
 
   return (
-    <div className="flex flex-wrap gap-2 mt-3">
+    <div className="flex flex-col gap-3 mt-3">
       {blocks.map((block, index) => {
+        // Render inline student card if full data is provided
+        if (block.type === 'student_card' && block.student) {
+          return (
+            <KaiStudentCard
+              key={index}
+              student={block.student}
+              onClick={() => onBlockClick?.(block)}
+              isDark={isDark}
+              isCinematic={isCinematic}
+              isFocusMode={false}
+            />
+          );
+        }
+        
+        // Otherwise render as clickable badge/button
         const isCard = block.type === 'student_card' || block.type === 'lead_card';
         const isList = block.type === 'student_list' || block.type === 'lead_list';
         const isStudent = block.type.startsWith('student');

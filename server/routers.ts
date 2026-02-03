@@ -57,7 +57,7 @@ import { eq, and } from "drizzle-orm";
 
 // Helper functions for CRM queries
 async function executeCRMFunction(name: string, args: any, ctx?: any) {
-  const { getDashboardStats, searchStudents, getKioskCheckIns, getKioskVisitors, getKioskWaivers } = await import("./db");
+  const { getDashboardStats, searchStudents, getKioskCheckIns, getKioskVisitors, getKioskWaivers, getStudentCardForKai } = await import("./db");
   
   switch (name) {
     case 'get_dashboard_stats':
@@ -155,23 +155,23 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       return { count: stats?.total_students || 0, status: args.status || 'all' };
     
     case 'find_student':
+      console.log('[executeCRMFunction] find_student called', { query: args.query, orgId: ctx?.currentOrganizationId });
       const students = await searchStudents(args.query, ctx.currentOrganizationId);
       if (students.length > 0) {
         const student = students[0];
-        return {
-          type: 'student_lookup',
-          student: {
-            first_name: student.firstName,
-            last_name: student.lastName,
-            belt_rank: student.beltRank,
-            status: student.status,
-            email: student.email,
-            phone: student.phone,
-            age: student.age,
-            membership_status: student.membershipStatus,
-          }
-        };
+        console.log('[executeCRMFunction] find_student found student', { id: student.id, name: `${student.firstName} ${student.lastName}` });
+        
+        // Get rich card data
+        const cardData = await getStudentCardForKai(student.id, ctx.currentOrganizationId, null);
+        if (cardData) {
+          console.log('[executeCRMFunction] find_student returning student_card', { studentId: student.id });
+          return {
+            type: 'student_card',
+            student: cardData
+          };
+        }
       }
+      console.log('[executeCRMFunction] find_student - no student found');
       return { error: 'Student not found' };
     
     case 'get_revenue':
@@ -448,6 +448,20 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
     };
   }
   
+  // Handle student_card result (new rich card format)
+  if (result.type === 'student_card' && result.student) {
+    const s = result.student;
+    return {
+      text: `Here's ${s.fullName}'s profile:`,
+      ui_blocks: [{
+        type: 'student_card',
+        student: s,
+        label: s.fullName
+      }]
+    };
+  }
+  
+  // Handle student_lookup result (legacy format)
   if (result.type === 'student_lookup') {
     const s = result.student;
     return {
