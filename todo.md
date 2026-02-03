@@ -7193,3 +7193,21 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Implement smooth slide-in/slide-out animations
 - [x] Add responsive behavior for mobile (full-screen overlay)
 - [x] Test theme consistency across light/dark/cinematic modes
+
+
+## 🚨 CRITICAL BUG: Student Cards STILL Not Rendering (Feb 3, 2026)
+
+**Status**: BLOCKING - Must fix before any other work
+
+**Problem**: After multiple attempts, student cards are still not displaying in Kai chat when searching for students
+
+**Debug Steps**:
+- [x] Check server logs for errors when find_student is called
+- [x] Found root cause: LLM calling search_students instead of find_student
+- [x] Updated tool descriptions to guide LLM to use find_student for single lookups
+- [ ] Test if Kai now calls find_student correctly
+- [ ] Verify student card renders after fix
+
+**Expected Behavior**: When user asks "Show me student [name]", a visual card should appear with photo, rank, attendance stats
+
+**Actual Behavior**: Unknown - need to test and verify what's actually happening

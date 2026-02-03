@@ -43,7 +43,7 @@ const crmTools = [
     type: 'function' as const,
     function: {
       name: 'find_student',
-      description: 'Find a student by name, email, or phone number',
+      description: 'Get detailed student information with a visual card showing photo, rank, attendance, and status. Use this when the user asks to "show", "find", or "look up" a specific student. This is the PRIMARY tool for student lookups.',
       parameters: {
         type: 'object',
         properties: {
@@ -94,7 +94,7 @@ const crmTools = [
     type: 'function' as const,
     function: {
       name: 'search_students',
-      description: 'Search for students by name, email, or phone number. Returns a list of matching students with their IDs.',
+      description: 'Search for MULTIPLE students and return a simple list of IDs and names. Only use this for bulk operations or when explicitly asked for a "list" of students. For single student lookups, use find_student instead.',
       parameters: {
         type: 'object',
         properties: {
