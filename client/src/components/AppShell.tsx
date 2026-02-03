@@ -99,15 +99,20 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
   // Should show bottom nav (not in focus mode and not explicitly hidden)
   const showBottomNav = !hideBottomNav && !isFocusMode
 
+  // When both header and bottom nav are hidden (like /kai page), use strict 100vh containment
+  const useStrictContainment = hideHeader && hideBottomNav;
+
   return (
     <KaiBarProvider>
-      <div className="app-shell min-h-screen flex flex-col">
+      <div 
+        className={`app-shell flex flex-col ${useStrictContainment ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'}`}
+      >
         {/* Universal Top Header */}
         {!hideHeader && <CommandHeader title="Operations" isDarkMode={isDark} />}
         
         {/* Main Content - with bottom padding for fixed nav and KaiBar (on /kai route only) */}
         <main 
-          className="flex-1"
+          className={useStrictContainment ? 'flex-1 overflow-hidden' : 'flex-1'}
           style={{
             paddingBottom: '0px'
           }}
