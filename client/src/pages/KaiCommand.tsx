@@ -22,6 +22,7 @@ import { InfoPanel, InfoPanelData } from '@/components/InfoPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
 import { useKaiResponseParser } from '@/hooks/useKaiResponseParser';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
+import { StudentDetailsPanel } from '@/components/StudentDetailsPanel';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
@@ -214,6 +215,10 @@ export default function KaiCommand() {
   // Info Panel state
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [infoPanelData, setInfoPanelData] = useState<InfoPanelData | undefined>(undefined);
+  
+  // Student Details Panel state
+  const [studentDetailsPanelOpen, setStudentDetailsPanelOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   
   // Initialize response parser
   const { parseResponse } = useKaiResponseParser();
@@ -3283,13 +3288,13 @@ export default function KaiCommand() {
                               <UIBlockRenderer 
                                 blocks={message.ui_blocks} 
                                 onBlockClick={(block) => {
-                                  // Open Results Panel with student/lead data
-                                  if (block.type === 'student_card' && block.studentId) {
-                                    setResultsPanelData({
-                                      type: 'student_card',
-                                      studentId: block.studentId,
-                                    });
-                                    setIsResultsPanelOpen(true);
+                                  // Open Student Details Panel for student cards
+                                  if (block.type === 'student_card' && block.student) {
+                                    setSelectedStudentId(block.student.id);
+                                    setStudentDetailsPanelOpen(true);
+                                  } else if (block.type === 'student_card' && block.studentId) {
+                                    setSelectedStudentId(block.studentId);
+                                    setStudentDetailsPanelOpen(true);
                                   } else if (block.type === 'student_list' && block.studentIds) {
                                     setResultsPanelData({
                                       type: 'student_list',
@@ -3684,6 +3689,19 @@ export default function KaiCommand() {
         subscriptionStatus="no_subscription"
         featureName={paywallFeatureName}
       />
+      
+      {/* Student Details Panel - Third Column */}
+      {selectedStudentId && (
+        <StudentDetailsPanel
+          studentId={selectedStudentId}
+          isOpen={studentDetailsPanelOpen}
+          onClose={() => {
+            setStudentDetailsPanelOpen(false);
+            setSelectedStudentId(null);
+          }}
+          theme={theme}
+        />
+      )}
     </AppShell>
   );
 }

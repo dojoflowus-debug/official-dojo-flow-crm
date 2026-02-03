@@ -7168,3 +7168,28 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix Message interface to include student field in ui_blocks
 - [ ] Test with real student lookup to verify cards render
 - [x] Fix any prop mismatches or missing fields
+
+
+## Feature: Third Column Student Details Panel (Feb 3, 2026)
+
+**Goal**: Build sliding third column panel that opens when clicking student cards in Kai chat
+
+**Requirements**:
+- Smooth 2-column → 3-column layout transition
+- Tabs: Overview, Attendance, Billing, Rank, Notes
+- Close button and click-outside-to-close behavior
+- Responsive: on mobile, panel should overlay full screen
+- Theme-aware styling (light/dark/cinematic modes)
+
+**Implementation Tasks**:
+- [x] Create StudentDetailsPanel component with tab navigation
+- [x] Implement Overview tab (student profile, contact info, status)
+- [x] Implement Attendance tab (30-day history, check-in times)
+- [x] Implement Billing tab (membership plan, balance due, payment history)
+- [x] Implement Rank tab (belt rank, progress, promotions)
+- [x] Implement Notes tab (add/view notes, activity log)
+- [x] Add layout state management in KaiCommand.tsx
+- [x] Wire student card onClick to open panel with student data
+- [x] Implement smooth slide-in/slide-out animations
+- [x] Add responsive behavior for mobile (full-screen overlay)
+- [x] Test theme consistency across light/dark/cinematic modes
