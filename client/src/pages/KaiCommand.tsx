@@ -2532,7 +2532,10 @@ export default function KaiCommand() {
         style={{
           gridTemplateColumns: studentDetailsPanelOpen 
             ? `${commandCenterWidth}px minmax(520px, 1fr) clamp(360px, 30vw, 520px)`
-            : `${commandCenterWidth}px 1fr`
+            : `${commandCenterWidth}px 1fr`,
+          gridAutoFlow: 'column',
+          height: '100vh',
+          maxHeight: '100vh'
         }}
       >
         {/* Command Center - Left Panel - Floating Module Style */}
@@ -2543,7 +2546,9 @@ export default function KaiCommand() {
             opacity: isFocusMode ? 0 : 1,
             transform: isFocusMode ? 'translateX(-20px)' : 'translateX(0)',
             pointerEvents: isFocusMode ? 'none' : 'auto',
-            zIndex: 20
+            zIndex: 20,
+            minWidth: 0,
+            minHeight: 0
           }}
           className={`conversation-panel ${getSidebarBgClass()} border rounded-sm flex flex-col flex-shrink-0 m-4 mr-0 ${isDark || isCinematic ? 'shadow-[0_4px_24px_rgba(0,0,0,0.7)]' : 'shadow-lg'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
         >
@@ -2758,7 +2763,7 @@ export default function KaiCommand() {
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
-            height: isCinematic ? '100%' : 'calc(100vh - var(--topbar-h) - var(--bottomnav-h))'
+            height: '100%'
           }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}

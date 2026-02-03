@@ -66,6 +66,11 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
         border-l
         ${isCinematic ? 'border-white/10' : isDark ? 'border-slate-700' : 'border-slate-200'}
       `}
+      style={{
+        minWidth: 0,
+        minHeight: 0,
+        overflow: 'hidden'
+      }}
     >
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${
