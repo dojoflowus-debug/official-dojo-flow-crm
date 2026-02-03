@@ -3510,6 +3510,18 @@ export default function KaiCommand() {
           </form>
           </div>
 
+          {/* Student Details Panel - Overlay */}
+          {selectedStudentId && (
+            <StudentDetailsPanel
+              studentId={selectedStudentId}
+              isOpen={studentDetailsPanelOpen}
+              onClose={() => {
+                setStudentDetailsPanelOpen(false);
+                setSelectedStudentId(null);
+              }}
+              theme={theme}
+            />
+          )}
         </div>
       </div>
 
@@ -3723,18 +3735,7 @@ export default function KaiCommand() {
         featureName={paywallFeatureName}
       />
       
-      {/* Student Details Panel - Third Column */}
-      {selectedStudentId && (
-        <StudentDetailsPanel
-          studentId={selectedStudentId}
-          isOpen={studentDetailsPanelOpen}
-          onClose={() => {
-            setStudentDetailsPanelOpen(false);
-            setSelectedStudentId(null);
-          }}
-          theme={theme}
-        />
-      )}
+
     </AppShell>
   );
 }

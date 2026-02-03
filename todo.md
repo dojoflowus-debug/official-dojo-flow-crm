@@ -7246,3 +7246,8 @@ Transform kiosk from admin dashboard to premium location experience
 ## Kai Student Card Bugs (Feb 3, 2026)
 - [x] Remove hardcoded test student card that appears in every conversation
 - [x] Fix Jane Doe student card showing minimal UI (only name, no full details like photo/rank/attendance)
+
+## Student Details Panel Overlay (Feb 3, 2026)
+- [x] Make StudentDetailsPanel open as slide-over overlay on top of chat area (like Manus artifacts)
+- [x] Panel should cover center chat area, not push content to the side
+- [x] Add close button or click-outside-to-close functionality

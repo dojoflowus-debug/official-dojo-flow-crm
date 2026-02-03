@@ -54,9 +54,9 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
 
   return (
     <>
-      {/* Backdrop for mobile */}
+      {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity ${
+        className={`absolute inset-0 bg-black/50 z-40 transition-opacity ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -65,7 +65,7 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
       {/* Sliding Panel */}
       <div
         className={`
-          fixed top-0 right-0 h-full w-full lg:w-[420px] z-50
+          absolute top-0 right-0 bottom-0 w-full lg:w-[420px] z-50
           transform transition-transform duration-300 ease-out
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
           ${bgClass}
