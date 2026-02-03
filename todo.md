@@ -7134,3 +7134,37 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wire KaiStudentCard component into UI renderer
 - [ ] Test end-to-end with live Kai responses
 - [ ] Verify clicking card opens third column panel (future phase)
+
+
+## Bug: getStudentCardForKai throws "Cannot read properties of undefined (reading 'id')" (Feb 3, 2026)
+
+**Problem**: Student cards fail to render with error "Cannot read properties of undefined (reading 'id')"
+
+**Root Cause**: getStudentCardForKai function has a bug accessing student.id
+
+**Fix Tasks**:
+- [ ] Read getStudentCardForKai implementation in server/db.ts
+- [ ] Fix the undefined access error
+- [ ] Add null/undefined checks for student data
+- [ ] Test with real student lookup
+- [ ] Verify student cards render successfully
+
+
+## Bug: Student Card Not Rendering Despite Correct Backend Data (Feb 3, 2026)
+
+**Problem**: Backend returns correct student_card data in ui_blocks, but frontend doesn't render KaiStudentCard component
+
+**Evidence from logs**:
+- ✅ Backend returns `type: 'student_card'` with full student data
+- ✅ ui_blocks array contains student object
+- ❌ No visual card appears in chat (only text)
+
+**Root Cause**: Frontend rendering issue - either component import error, TypeScript error, or UIBlockRenderer not detecting student data
+
+**Fix Tasks**:
+- [x] Check KaiStudentCard component for TypeScript errors
+- [x] Verify UIBlockRenderer import of KaiStudentCard
+- [x] Check if block.student data structure matches KaiStudentCardData interface
+- [x] Fix Message interface to include student field in ui_blocks
+- [ ] Test with real student lookup to verify cards render
+- [x] Fix any prop mismatches or missing fields

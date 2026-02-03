@@ -118,6 +118,7 @@ interface Message {
     studentIds?: number[];
     leadId?: number;
     leadIds?: number[];
+    student?: any; // Full student data for inline rendering
     label: string;
   }>;
 }

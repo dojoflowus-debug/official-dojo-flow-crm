@@ -156,21 +156,46 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
     
     case 'find_student':
       console.log('[executeCRMFunction] find_student called', { query: args.query, orgId: ctx?.currentOrganizationId });
+      
+      if (!ctx?.currentOrganizationId) {
+        console.error('[executeCRMFunction] find_student - no organizationId in context');
+        return { error: 'Organization context missing' };
+      }
+      
       const students = await searchStudents(args.query, ctx.currentOrganizationId);
-      if (students.length > 0) {
+      console.log('[executeCRMFunction] find_student - searchStudents returned', students?.length || 0, 'results');
+      
+      if (students && students.length > 0) {
         const student = students[0];
+        
+        if (!student || !student.id) {
+          console.error('[executeCRMFunction] find_student - student object invalid', student);
+          return { error: 'Invalid student data' };
+        }
+        
         console.log('[executeCRMFunction] find_student found student', { id: student.id, name: `${student.firstName} ${student.lastName}` });
         
         // Get rich card data
-        const cardData = await getStudentCardForKai(student.id, ctx.currentOrganizationId, null);
-        if (cardData) {
-          console.log('[executeCRMFunction] find_student returning student_card', { studentId: student.id });
-          return {
-            type: 'student_card',
-            student: cardData
-          };
+        try {
+          const cardData = await getStudentCardForKai(student.id, ctx.currentOrganizationId, null);
+          console.log('[executeCRMFunction] find_student - getStudentCardForKai returned', cardData ? 'data' : 'null');
+          
+          if (cardData) {
+            console.log('[executeCRMFunction] find_student returning student_card', { studentId: student.id, fullName: cardData.fullName });
+            return {
+              type: 'student_card',
+              student: cardData
+            };
+          } else {
+            console.error('[executeCRMFunction] find_student - cardData is null');
+            return { error: 'Could not load student card data' };
+          }
+        } catch (err) {
+          console.error('[executeCRMFunction] find_student - error getting card data', err);
+          return { error: 'Error loading student data' };
         }
       }
+      
       console.log('[executeCRMFunction] find_student - no student found');
       return { error: 'Student not found' };
     
