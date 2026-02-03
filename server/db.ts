@@ -2360,3 +2360,191 @@ export async function removeCustomBackground(locationId: number): Promise<boolea
     return false;
   }
 }
+
+
+/**
+ * Kai Student Lookup Functions
+ * These functions provide rich student data for Kai chat interactions
+ */
+
+export async function searchStudentsForKai(query: string, organizationId: number, locationId?: number | null) {
+  console.log('[searchStudentsForKai] Query:', query, 'OrgId:', organizationId, 'LocationId:', locationId);
+  const db = await getDb();
+  if (!db) {
+    console.log('[searchStudentsForKai] Database not available');
+    return [];
+  }
+  
+  const { students } = await import("../drizzle/schema");
+  const { or, like, sql, and, eq } = await import("drizzle-orm");
+  
+  const searchPattern = `%${query}%`;
+  
+  // Search conditions
+  const searchConditions = or(
+    like(students.firstName, searchPattern),
+    like(students.lastName, searchPattern),
+    like(students.email, searchPattern),
+    like(students.phone, searchPattern),
+    sql`CONCAT(${students.firstName}, ' ', ${students.lastName}) LIKE ${searchPattern}`
+  );
+  
+  // Apply organization filter (and location if provided)
+  const whereCondition = locationId
+    ? and(eq(students.organizationId, organizationId), searchConditions)
+    : and(eq(students.organizationId, organizationId), searchConditions);
+  
+  const results = await db.select({
+    id: students.id,
+    fullName: sql<string>`CONCAT(${students.firstName}, ' ', ${students.lastName})`,
+    photoUrl: students.photoUrl,
+    program: students.program,
+    rank: students.beltRank,
+    status: students.status,
+  }).from(students).where(whereCondition).limit(10);
+  
+  console.log('[searchStudentsForKai] Results count:', results.length);
+  return results;
+}
+
+export async function getStudentCardForKai(studentId: number, organizationId: number, locationId?: number | null) {
+  console.log('[getStudentCardForKai] StudentId:', studentId, 'OrgId:', organizationId);
+  const db = await getDb();
+  if (!db) {
+    console.log('[getStudentCardForKai] Database not available');
+    return null;
+  }
+  
+  const { students, studentAttendance } = await import("../drizzle/schema");
+  const { eq, and, gte, sql } = await import("drizzle-orm");
+  
+  // Get student basic info
+  const studentResult = await db.select().from(students)
+    .where(and(eq(students.id, studentId), eq(students.organizationId, organizationId)))
+    .limit(1);
+  
+  if (studentResult.length === 0) {
+    console.log('[getStudentCardForKai] Student not found');
+    return null;
+  }
+  
+  const student = studentResult[0];
+  
+  // Calculate attendance last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString();
+  
+  const attendanceResult = await db.select({
+    count: sql<number>`COUNT(*)`,
+  }).from(studentAttendance)
+    .where(and(
+      eq(studentAttendance.studentId, studentId),
+      eq(studentAttendance.status, 'attended'),
+      gte(studentAttendance.classDate, thirtyDaysAgoStr)
+    ));
+  
+  const attendance30Days = attendanceResult[0]?.count || 0;
+  
+  // Get last check-in
+  const lastCheckInResult = await db.select({
+    checkedInAt: studentAttendance.checkedInAt,
+  }).from(studentAttendance)
+    .where(and(
+      eq(studentAttendance.studentId, studentId),
+      eq(studentAttendance.status, 'attended')
+    ))
+    .orderBy(sql`${studentAttendance.checkedInAt} DESC`)
+    .limit(1);
+  
+  const lastCheckIn = lastCheckInResult[0]?.checkedInAt || null;
+  
+  // Calculate alerts
+  const alerts: string[] = [];
+  
+  // Check if absent for 14+ days
+  if (lastCheckIn) {
+    const lastCheckInDate = new Date(lastCheckIn);
+    const daysSinceLastCheckIn = Math.floor((Date.now() - lastCheckInDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceLastCheckIn >= 14) {
+      alerts.push(`${daysSinceLastCheckIn} days absent`);
+    }
+  }
+  
+  // Check status
+  if (student.status === 'Inactive') {
+    alerts.push('Inactive status');
+  } else if (student.status === 'On Hold') {
+    alerts.push('On hold');
+  }
+  
+  return {
+    id: student.id,
+    fullName: `${student.firstName} ${student.lastName}`,
+    photoUrl: student.photoUrl,
+    rank: student.beltRank,
+    program: student.program,
+    status: student.status,
+    lastCheckIn,
+    attendance30Days,
+    membershipPlan: student.membershipStatus,
+    balanceDue: null, // TODO: Calculate from billing system
+    alerts,
+  };
+}
+
+export async function getStudentDetailsForKai(studentId: number, organizationId: number, locationId?: number | null) {
+  console.log('[getStudentDetailsForKai] StudentId:', studentId, 'OrgId:', organizationId);
+  const db = await getDb();
+  if (!db) {
+    console.log('[getStudentDetailsForKai] Database not available');
+    return null;
+  }
+  
+  const { students, studentAttendance } = await import("../drizzle/schema");
+  const { eq, and, desc } = await import("drizzle-orm");
+  
+  // Get full student info
+  const studentResult = await db.select().from(students)
+    .where(and(eq(students.id, studentId), eq(students.organizationId, organizationId)))
+    .limit(1);
+  
+  if (studentResult.length === 0) {
+    return null;
+  }
+  
+  const student = studentResult[0];
+  
+  // Get recent attendance (last 10 records)
+  const recentAttendance = await db.select().from(studentAttendance)
+    .where(eq(studentAttendance.studentId, studentId))
+    .orderBy(desc(studentAttendance.classDate))
+    .limit(10);
+  
+  return {
+    id: student.id,
+    firstName: student.firstName,
+    lastName: student.lastName,
+    fullName: `${student.firstName} ${student.lastName}`,
+    email: student.email,
+    phone: student.phone,
+    dateOfBirth: student.dateOfBirth,
+    age: student.age,
+    photoUrl: student.photoUrl,
+    beltRank: student.beltRank,
+    program: student.program,
+    status: student.status,
+    membershipStatus: student.membershipStatus,
+    guardianName: student.guardianName,
+    guardianRelationship: student.guardianRelationship,
+    guardianPhone: student.guardianPhone,
+    guardianEmail: student.guardianEmail,
+    streetAddress: student.streetAddress,
+    city: student.city,
+    state: student.state,
+    zipCode: student.zipCode,
+    createdAt: student.createdAt,
+    updatedAt: student.updatedAt,
+    recentAttendance,
+  };
+}

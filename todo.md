@@ -7077,11 +7077,11 @@ Transform kiosk from admin dashboard to premium location experience
 ## Feature: Student Card Results in Kai Chat (Feb 3, 2026)
 
 ### Backend API Endpoints
-- [ ] Create students.searchForKai({ query, orgId, locationId? }) endpoint
-- [ ] Create students.getCardForKai({ studentId, orgId, locationId? }) endpoint
-- [ ] Create students.getDetails({ studentId, orgId, locationId? }) endpoint
-- [ ] Ensure all endpoints are tenant-scoped by orgId and locationId
-- [ ] Return structured card payload with photo, rank, program, status, attendance, alerts
+- [x] Create students.searchForKai({ query, orgId, locationId? }) endpoint
+- [x] Create students.getCardForKai({ studentId, orgId, locationId? }) endpoint
+- [x] Create students.getDetails({ studentId, orgId, locationId? }) endpoint
+- [x] Ensure all endpoints are tenant-scoped by orgId and locationId
+- [x] Return structured card payload with photo, rank, program, status, attendance, alerts
 
 ### Rich Message Format
 - [ ] Define KaiMessage type union (text | student_card | action)
@@ -7090,7 +7090,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Handle multiple student matches (show list of cards)
 
 ### Student Card Component
-- [ ] Create StudentCard component with photo/avatar
+- [x] Create KaiStudentCard component with photo/avatar
 - [ ] Display name, rank/belt, program, status badge
 - [ ] Show attendance last 30 days and last check-in
 - [ ] Display alerts (absent 14+ days, payment failed, balance due)
