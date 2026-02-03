@@ -43,9 +43,10 @@ const NAVIGATION = [
 interface AppShellProps {
   children: React.ReactNode
   hideBottomNav?: boolean
+  hideHeader?: boolean
 }
 
-export default function AppShell({ children, hideBottomNav = false }: AppShellProps) {
+export default function AppShell({ children, hideBottomNav = false, hideHeader = false }: AppShellProps) {
   const location = useLocation()
   const { theme } = useTheme()
   const { isFocusMode, toggleFocusMode, showOverlay, isEntering, showEscHint } = useFocusMode()
@@ -102,7 +103,7 @@ export default function AppShell({ children, hideBottomNav = false }: AppShellPr
     <KaiBarProvider>
       <div className="app-shell min-h-screen flex flex-col">
         {/* Universal Top Header */}
-        <CommandHeader title="Operations" isDarkMode={isDark} />
+        {!hideHeader && <CommandHeader title="Operations" isDarkMode={isDark} />}
         
         {/* Main Content - with bottom padding for fixed nav and KaiBar (on /kai route only) */}
         <main 

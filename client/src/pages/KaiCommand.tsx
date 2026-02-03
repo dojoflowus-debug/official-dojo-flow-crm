@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import ManagementLayout from '@/components/ManagementLayout';
+import AppShell from '@/components/AppShell';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusMode } from '@/contexts/FocusModeContext';
@@ -2500,7 +2500,7 @@ export default function KaiCommand() {
   };
 
   return (
-    <ManagementLayout>
+    <AppShell hideBottomNav={true} hideHeader={true}>
       {/* Error Alert for API failures */}
       <KaiErrorAlert
         error={apiError}
@@ -3681,7 +3681,7 @@ export default function KaiCommand() {
         subscriptionStatus="no_subscription"
         featureName={paywallFeatureName}
       />
-    </ManagementLayout>
+    </AppShell>
   );
 }
 
