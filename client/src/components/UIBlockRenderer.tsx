@@ -20,7 +20,11 @@ interface UIBlockRendererProps {
 }
 
 export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlockRendererProps) {
-  if (!blocks || blocks.length === 0) return null;
+  console.log('[UIBlockRenderer] Rendering blocks:', blocks);
+  if (!blocks || blocks.length === 0) {
+    console.log('[UIBlockRenderer] No blocks to render');
+    return null;
+  }
 
   const isDark = theme === 'dark';
   const isCinematic = theme === 'cinematic';
@@ -30,6 +34,7 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
       {blocks.map((block, index) => {
         // Render inline student card if full data is provided
         if (block.type === 'student_card' && block.student) {
+          console.log('[UIBlockRenderer] Rendering KaiStudentCard:', block.student);
           return (
             <KaiStudentCard
               key={index}

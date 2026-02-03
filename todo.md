@@ -7211,3 +7211,34 @@ Transform kiosk from admin dashboard to premium location experience
 **Expected Behavior**: When user asks "Show me student [name]", a visual card should appear with photo, rank, attendance stats
 
 **Actual Behavior**: Unknown - need to test and verify what's actually happening
+
+
+## Phase A: Hardcoded Student Card Test (BLOCKING)
+
+**Goal**: Prove the UI renderer works with a hardcoded student_card message before touching backend
+
+**Tasks**:
+- [ ] Inject hardcoded student_card message into Kai chat on page load
+- [ ] Verify visual card renders (not text)
+- [ ] Verify clicking card opens third column panel
+- [ ] If card doesn't render, fix message renderer first
+
+**Hardcoded Test Data**:
+```
+{
+  type: "student_card",
+  student: {
+    id: "test_1",
+    fullName: "Test Student",
+    rank: "White Belt",
+    program: "Dragon Kids",
+    status: "ACTIVE",
+    attendance30Days: 8,
+    lastCheckIn: null,
+    photoUrl: null,
+    alerts: ["Test alert"]
+  }
+}
+```
+
+**Acceptance**: Visual student card appears in chat, clicking opens panel

@@ -1091,6 +1091,33 @@ export default function KaiCommand() {
       }));
       console.log('[KaiCommand] Loaded messages:', loadedMessages);
       
+      // PHASE A TEST: Inject hardcoded student_card message
+      const hardcodedTestCard: Message = {
+        id: 'hardcoded-test-card',
+        role: 'assistant',
+        content: "Here's a test student card:",
+        timestamp: new Date(),
+        ui_blocks: [{
+          type: 'student_card',
+          student: {
+            id: 'test_1',
+            fullName: 'Test Student',
+            rank: 'White Belt',
+            program: 'Dragon Kids',
+            status: 'ACTIVE',
+            attendance30Days: 8,
+            lastCheckIn: null,
+            photoUrl: null,
+            alerts: ['Test alert']
+          },
+          label: 'Test Student'
+        }]
+      };
+      loadedMessages.push(hardcodedTestCard);
+      console.log('[PHASE A TEST] Injected hardcoded student card:', hardcodedTestCard);
+      console.log('[PHASE A TEST] Test card has ui_blocks:', hardcodedTestCard.ui_blocks);
+      console.log('[PHASE A TEST] loadedMessages count:', loadedMessages.length);
+      
       // Deduplicate messages: merge loaded messages with existing optimistic messages
       // Use clientMessageId to match optimistic messages with server messages
       setMessages(prev => {
@@ -1119,9 +1146,16 @@ export default function KaiCommand() {
         });
         
         // Convert back to array, sorted by timestamp
-        return Array.from(messageMap.values()).sort((a, b) => 
+        const finalMessages = Array.from(messageMap.values()).sort((a, b) => 
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
+        console.log('[PHASE A TEST] Final messages after deduplication:', finalMessages.length);
+        const testCard = finalMessages.find(m => m.id === 'hardcoded-test-card');
+        console.log('[PHASE A TEST] Test card survived?', testCard);
+        if (testCard) {
+          console.log('[PHASE A TEST] Test card ui_blocks:', testCard.ui_blocks);
+        }
+        return finalMessages;
       });
     } else if (messagesQuery.data && messagesQuery.data.length === 0) {
       console.log('[KaiCommand] No messages for this conversation');
@@ -3285,7 +3319,9 @@ export default function KaiCommand() {
                             </div>
                             {/* Render UI blocks (student cards, lists, etc.) */}
                             {message.ui_blocks && message.ui_blocks.length > 0 && (
-                              <UIBlockRenderer 
+                              <>
+                                {console.log('[KaiCommand] Rendering ui_blocks for message:', message.id, message.ui_blocks)}
+                                <UIBlockRenderer 
                                 blocks={message.ui_blocks} 
                                 onBlockClick={(block) => {
                                   // Open Student Details Panel for student cards
@@ -3317,6 +3353,7 @@ export default function KaiCommand() {
                                 }}
                                 theme={isCinematic ? 'cinematic' : isDark ? 'dark' : 'light'}
                               />
+                              </>
                             )}
                           </div>
                         </>
