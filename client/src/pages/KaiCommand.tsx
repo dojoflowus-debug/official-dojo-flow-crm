@@ -196,8 +196,7 @@ export default function KaiCommand() {
   const centerPanelRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   
-  // Track center panel position and size for fixed chat bar
-  const [centerPanelPosition, setCenterPanelPosition] = useState({ left: 0, width: 0 });
+
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
@@ -1367,33 +1366,6 @@ export default function KaiCommand() {
       document.body.style.userSelect = '';
     };
   }, [isResizing]);
-
-  // Update center panel position and size for fixed chat bar
-  useEffect(() => {
-    const updateCenterPanelPosition = () => {
-      if (centerPanelRef.current) {
-        const rect = centerPanelRef.current.getBoundingClientRect();
-        setCenterPanelPosition({
-          left: rect.left,
-          width: rect.width
-        });
-      }
-    };
-
-    updateCenterPanelPosition();
-    
-    // Update on resize and when commandCenterWidth changes
-    window.addEventListener('resize', updateCenterPanelPosition);
-    const resizeObserver = new ResizeObserver(updateCenterPanelPosition);
-    if (centerPanelRef.current) {
-      resizeObserver.observe(centerPanelRef.current);
-    }
-
-    return () => {
-      window.removeEventListener('resize', updateCenterPanelPosition);
-      resizeObserver.disconnect();
-    };
-  }, []); // Empty deps - ResizeObserver handles all updates
 
   // Upload mutation
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();
@@ -3514,18 +3486,16 @@ export default function KaiCommand() {
         </div>
       </div>
 
-      {/* Student Details Panel - Third Grid Column */}
-      {selectedStudentId && studentDetailsPanelOpen && (
-        <StudentDetailsPanel
-          studentId={selectedStudentId}
-          isOpen={studentDetailsPanelOpen}
-          onClose={() => {
-            setStudentDetailsPanelOpen(false);
-            setSelectedStudentId(null);
-          }}
-          theme={theme}
-        />
-      )}
+      {/* Student Details Panel - Third Grid Column (always present for grid layout) */}
+      <StudentDetailsPanel
+        studentId={selectedStudentId}
+        isOpen={studentDetailsPanelOpen}
+        onClose={() => {
+          setStudentDetailsPanelOpen(false);
+          setSelectedStudentId(null);
+        }}
+        theme={theme}
+      />
 
       {/* INFO PANEL - Third Column */}
       <InfoPanel 

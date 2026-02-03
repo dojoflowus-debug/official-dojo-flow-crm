@@ -7257,3 +7257,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Chat input bar must resize with center column when details panel opens
 - [x] Close button and ESC key close details panel
 - [x] Center column expands back to full width when details closed
+
+## Fix Viewport-Fixed Patterns (Feb 3, 2026)
+- [x] Remove all position: fixed from composer
+- [x] Remove centerPanelPosition calculations and usage
+- [x] Make StudentDetailsPanel always present in grid (not conditionally rendered)
+- [x] Configure center panel as flex column: display: flex, flex-direction: column, min-width: 0
+- [x] Make message list area: flex: 1, overflow: auto, min-height: 0
+- [x] Pin composer at bottom using flex layout (no fixed positioning)
+- [x] Remove any width: 100vw, left: 0, right: 0, inset: 0 patterns
+- [x] Remove z-index hacks (kept z-100 on form for layering within relative position)
+- [ ] Test: composer must shrink with center column when details panel opens

@@ -52,6 +52,11 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
   const textClass = isCinematic || isDark ? 'text-white' : 'text-slate-900';
   const mutedTextClass = isCinematic ? 'text-white/60' : isDark ? 'text-slate-400' : 'text-slate-600';
 
+  // Return empty div when closed to maintain grid structure
+  if (!isOpen || !studentId) {
+    return <div className="hidden" />;
+  }
+
   return (
     <div
       className={`
