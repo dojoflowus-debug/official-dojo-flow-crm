@@ -35,16 +35,25 @@ export function UIBlockRenderer({ blocks, onBlockClick, theme = 'light' }: UIBlo
         // Render inline student card if full data is provided
         if (block.type === 'student_card' && block.student) {
           console.log('[UIBlockRenderer] Rendering KaiStudentCard:', block.student);
-          return (
-            <KaiStudentCard
-              key={index}
-              student={block.student}
-              onClick={() => onBlockClick?.(block)}
-              isDark={isDark}
-              isCinematic={isCinematic}
-              isFocusMode={false}
-            />
-          );
+          try {
+            return (
+              <KaiStudentCard
+                key={index}
+                student={block.student}
+                onClick={() => onBlockClick?.(block)}
+                isDark={isDark}
+                isCinematic={isCinematic}
+                isFocusMode={false}
+              />
+            );
+          } catch (error) {
+            console.error('[UIBlockRenderer] Error rendering KaiStudentCard:', error);
+            return (
+              <div key={index} className="p-4 bg-red-100 border border-red-300 rounded text-red-700">
+                Error rendering student card: {error instanceof Error ? error.message : String(error)}
+              </div>
+            );
+          }
         }
         
         // Otherwise render as clickable badge/button

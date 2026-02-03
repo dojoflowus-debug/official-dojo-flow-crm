@@ -1100,11 +1100,11 @@ export default function KaiCommand() {
         ui_blocks: [{
           type: 'student_card',
           student: {
-            id: 'test_1',
+            id: 999,
             fullName: 'Test Student',
             rank: 'White Belt',
             program: 'Dragon Kids',
-            status: 'ACTIVE',
+            status: 'Active',
             attendance30Days: 8,
             lastCheckIn: null,
             photoUrl: null,
