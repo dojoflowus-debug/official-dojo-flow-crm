@@ -455,7 +455,36 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
     };
   }
   
-  if (result.count !== undefined) {
+  // Handle get_dashboard_stats results
+  if (result.activeStudents !== undefined || result.totalStudents !== undefined) {
+    const active = result.activeStudents || 0;
+    const total = result.totalStudents || 0;
+    const leads = result.activeLeads || 0;
+    const attendance = result.attendanceToday || 0;
+    const atRisk = result.atRiskStudents || 0;
+    
+    let text = `You currently have ${active} active students across your organization.`;
+    
+    if (total > active) {
+      text += ` (${total} total including inactive)`;
+    }
+    
+    if (leads > 0) {
+      text += ` You also have ${leads} active leads in your pipeline.`;
+    }
+    
+    if (attendance > 0) {
+      text += ` ${attendance} students attended today.`;
+    }
+    
+    if (atRisk > 0) {
+      text += ` Note: ${atRisk} students are currently inactive.`;
+    }
+    
+    return { text, ui_blocks: [] };
+  }
+  
+    if (result.count !== undefined) {
     return { text: `Found ${result.count} results.`, ui_blocks: [] };
   }
   

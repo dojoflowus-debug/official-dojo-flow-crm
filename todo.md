@@ -7031,3 +7031,26 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Verify proper org/location scoping
 - [ ] Verify auth context is passed correctly
 - [ ] Check debug logs for userId, orgId, locationId, activeStudents
+
+
+## Bug: Kai Cannot Retrieve Student Data (Feb 3, 2026)
+
+- [ ] Check server logs for errors when Kai tries to retrieve stats
+- [ ] Test dashboard.getStats endpoint directly via TRPC
+- [ ] Verify get_dashboard_stats tool is being invoked by LLM
+- [ ] Check if executeCRMFunction is receiving correct parameters
+- [ ] Verify database queries are executing without errors
+- [ ] Check if ctx.currentOrganizationId is defined
+- [ ] Test with actual user session to verify auth context
+- [ ] Add more detailed error logging to identify failure point
+
+## Fix: OpenAI Provider Not Passing Tools to API (Feb 3, 2026)
+
+- [x] Identified root cause: invokeOpenAI() in openai-provider.ts was not extracting tools/tool_choice from params
+- [x] Fixed invokeOpenAI() to extract tools, tool_choice, and toolChoice from params
+- [x] Added conditional logic to include tools and tool_choice in OpenAI API payload
+- [x] Restarted dev server to apply changes
+- [ ] Test: Ask Kai "How many students do I have?" and verify tool is invoked
+- [ ] Verify logs show tool_calls in LLM response
+- [ ] Verify executeCRMFunction is called with correct parameters
+- [ ] Verify Kai responds with accurate database data
