@@ -1096,7 +1096,7 @@ export default function KaiCommand() {
         id: 'hardcoded-test-card',
         role: 'assistant',
         content: "Here's a test student card:",
-        timestamp: new Date(),
+        timestamp: new Date(Date.now() + 1000000000), // Future timestamp to appear at bottom
         ui_blocks: [{
           type: 'student_card',
           student: {
