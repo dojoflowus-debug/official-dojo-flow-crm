@@ -2063,7 +2063,7 @@ export default function KaiCommand() {
           conversationId,
           role: 'user',
           content: currentInput,
-          metadata: { clientMessageId }
+          metadata: JSON.stringify({ clientMessageId })
         });
         console.log('[handleSendMessage] User message saved:', messageResult);
       } catch (error) {

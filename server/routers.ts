@@ -3497,7 +3497,7 @@ Return the data as a structured JSON object.`
         })).optional(),
         organizationId: z.number().optional(), // For credit consumption
       }).strict())
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         // Validate input is not undefined
         if (!input) {
           throw new Error('Input is required for kai.chat mutation');
