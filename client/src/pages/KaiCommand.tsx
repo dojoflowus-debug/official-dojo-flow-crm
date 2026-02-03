@@ -1106,33 +1106,6 @@ export default function KaiCommand() {
       console.log('[KaiCommand] Loaded messages with ui_blocks:', loadedMessages.filter(m => m.ui_blocks && m.ui_blocks.length > 0).length);
       console.log('[KaiCommand] Loaded messages:', loadedMessages);
       
-      // PHASE A TEST: Inject hardcoded student_card message
-      const hardcodedTestCard: Message = {
-        id: 'hardcoded-test-card',
-        role: 'assistant',
-        content: "Here's a test student card:",
-        timestamp: new Date(Date.now() + 1000000000), // Future timestamp to appear at bottom
-        ui_blocks: [{
-          type: 'student_card',
-          student: {
-            id: 999,
-            fullName: 'Test Student',
-            rank: 'White Belt',
-            program: 'Dragon Kids',
-            status: 'Active',
-            attendance30Days: 8,
-            lastCheckIn: null,
-            photoUrl: null,
-            alerts: ['Test alert']
-          },
-          label: 'Test Student'
-        }]
-      };
-      loadedMessages.push(hardcodedTestCard);
-      console.log('[PHASE A TEST] Injected hardcoded student card:', hardcodedTestCard);
-      console.log('[PHASE A TEST] Test card has ui_blocks:', hardcodedTestCard.ui_blocks);
-      console.log('[PHASE A TEST] loadedMessages count:', loadedMessages.length);
-      
       // Deduplicate messages: merge loaded messages with existing optimistic messages
       // Use clientMessageId to match optimistic messages with server messages
       setMessages(prev => {

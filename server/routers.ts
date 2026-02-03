@@ -211,6 +211,25 @@ async function executeCRMFunction(name: string, args: any, ctx?: any) {
       console.log('[executeCRMFunction] search_students called with query:', args.query);
       const searchedStudents = await searchStudents(args.query, ctx.currentOrganizationId);
       console.log('[executeCRMFunction] search_students found:', searchedStudents.length, 'students');
+      
+      // If single student found, return full card data
+      if (searchedStudents.length === 1) {
+        const student = searchedStudents[0];
+        try {
+          const cardData = await getStudentCardForKai(student.id, ctx.currentOrganizationId, null);
+          if (cardData) {
+            console.log('[executeCRMFunction] search_students returning full card for:', cardData.fullName);
+            return {
+              type: 'student_card',
+              student: cardData
+            };
+          }
+        } catch (err) {
+          console.error('[executeCRMFunction] search_students - error getting card data', err);
+        }
+      }
+      
+      // Multiple students or error - return list format
       return {
         students: searchedStudents.map(s => ({
           id: s.id,

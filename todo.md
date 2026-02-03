@@ -7242,3 +7242,7 @@ Transform kiosk from admin dashboard to premium location experience
 ```
 
 **Acceptance**: Visual student card appears in chat, clicking opens panel
+
+## Kai Student Card Bugs (Feb 3, 2026)
+- [x] Remove hardcoded test student card that appears in every conversation
+- [x] Fix Jane Doe student card showing minimal UI (only name, no full details like photo/rank/attendance)
