@@ -6970,3 +6970,30 @@ Transform kiosk from admin dashboard to premium location experience
   - All 3 tests passing: with metadata, without metadata, complex metadata objects
   - Error resolved: "Invalid input: expected string, received object" no longer occurs
 
+
+
+## Feature: Enter-to-Send in Kai Chat (Feb 3, 2026)
+
+- [x] Wrap composer in <form> with onSubmit handler (already exists at line 3385)
+- [x] Add onKeyDown to textarea: Enter sends, Shift+Enter newlines (already implemented in MentionInput)
+- [x] Check IME composition to prevent premature send (added !e.nativeEvent.isComposing)
+- [x] Remove conflicting key handlers in MentionInput (none found - Enter correctly prevents default)
+- [x] Fix send button onClick to call handleSendMessage('click')
+- [ ] Test: Enter sends once, Shift+Enter newlines, arrow button works, no duplicates
+
+
+## Fix: Enter Key Not Sending Messages in Kai Chat (Feb 3, 2026)
+
+- [x] Verify form onSubmit handler calls handleSendMessage correctly (line 3386-3389)
+- [x] Update MentionInput onKeyDown to use form.requestSubmit() instead of just preventDefault
+- [x] Ensure Enter key triggers form submission (not just prevents default)
+- [ ] Test: Enter sends message, Shift+Enter creates newline, arrow button works, no duplicates
+
+
+## Regression: Second Message Won't Send After Enter-to-Send (Feb 3, 2026)
+
+- [ ] Verify handleSendMessage has finally block that ALWAYS resets isSendingRef.current
+- [ ] Ensure clientMessageId is generated fresh each send (crypto.randomUUID())
+- [ ] Verify conversationId doesn't become undefined after first send
+- [ ] Add comprehensive logging: [SEND] attempt, request, success, error, unlock
+- [ ] Test: Send 2-3 messages with Enter key, verify all send successfully

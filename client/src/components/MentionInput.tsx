@@ -206,10 +206,13 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!showSuggestions) {
       // ChatGPT-style input: Enter submits form, Shift+Enter creates newline
-      if (e.key === 'Enter' && !e.shiftKey) {
-        // Prevent newline on plain Enter - let the form's onSubmit handle sending
+      if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+        // Prevent newline and trigger form submission
         e.preventDefault();
-        // DO NOT call onSubmit here - the form's onSubmit will be triggered automatically
+        const form = e.currentTarget.form;
+        if (form) {
+          form.requestSubmit();
+        }
       }
       return;
     }

@@ -1919,25 +1919,29 @@ export default function KaiCommand() {
     
     return mentions;
   };
-
   const handleSendMessage = async (
     source: 'submit' | 'click' | 'keydown' = 'click',
     overrideInput?: string,
     overrideAttachments?: typeof attachments
   ) => {
+    console.log('[SEND] click/enter', {
+      conversationId: selectedConversationId,
+      textLen: messageInput?.length,
+      isSending: sendingRef.current,
+      ts: Date.now()
+    });
     // Use override values if provided, otherwise fall back to state
     const inputText = overrideInput !== undefined ? overrideInput : messageInput;
     const inputAttachments = overrideAttachments !== undefined ? overrideAttachments : attachments;
     
-    console.log('HANDLE_SEND_START', { 
-      text: inputText, 
-      len: inputText?.length, 
-      convoId: selectedConversationId, 
-      isSending: sendingRef.current, 
-      isLoading,
-      attachmentsCount: inputAttachments.length,
+    // Initial logging with exact format requested
+    console.log('[SEND] attempt', {
+      conversationId: selectedConversationId,
+      textLen: inputText?.length,
+      isSending: sendingRef.current,
+      ts: Date.now(),
       source,
-      usingOverride: overrideInput !== undefined
+      attachmentsCount: inputAttachments.length
     });
     
     // Check subscription status before sending message
@@ -1949,8 +1953,7 @@ export default function KaiCommand() {
     
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
-      console.log('HANDLE_SEND_BLOCKED_REASON', 'Send already in progress');
-      console.warn('[KaiSend] Send already in progress, ignoring duplicate call', { source });
+      console.warn('[SEND] blocked by lock', { source, ts: Date.now() });
       return;
     }
     if (!inputText.trim() && inputAttachments.length === 0) {
@@ -2044,7 +2047,8 @@ export default function KaiCommand() {
     }
     
     // Optimistic UI update: Add user message to local state immediately with clientMessageId
-    const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const clientMessageId = crypto.randomUUID();
+    console.log('[SEND] request', { clientMessageId });
     const optimisticUserMessage: Message = {
       id: clientMessageId,
       clientMessageId: clientMessageId, // Store for deduplication
@@ -2177,6 +2181,7 @@ export default function KaiCommand() {
             // Refresh conversations to update preview
             await utils.kai.getConversations.invalidate();
             console.log('[handleSendMessage] Conversations list refreshed');
+            console.log('[SEND] success', { clientMessageId });
           } catch (error) {
             console.error('[handleSendMessage] Failed to save AI message:', error);
             toast.error('Failed to save AI response to database');
@@ -2234,10 +2239,12 @@ export default function KaiCommand() {
         
         // Remove from pending set on error
         pendingMessageIdsRef.current.delete(messageId);
-        // Release lock on error
-        sendingRef.current = false;
+        console.error('[SEND] error', error);
       } finally {
+        // CRITICAL: Always reset sending lock in finally block
+        sendingRef.current = false;
         setIsLoading(false);
+        console.log('[SEND] unlock', { ts: Date.now() });
         // Maintain input focus after send
         setTimeout(() => {
           messageInputRef.current?.focus();
@@ -2250,6 +2257,7 @@ export default function KaiCommand() {
       pendingMessageIdsRef.current.delete(messageId);
       // Release lock
       sendingRef.current = false;
+      console.log('[SEND] no-kai-response - lock released');
       // Maintain input focus
       setTimeout(() => {
         messageInputRef.current?.focus();
@@ -2261,12 +2269,7 @@ export default function KaiCommand() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage('keydown');
-    }
-  };
+  // Removed handleKeyPress - Enter key is now handled by MentionInput.tsx via form.requestSubmit()
 
   const handlePromptClick = (text: string) => {
     const match = text.match(/"([^"]+)"/);
@@ -3458,7 +3461,6 @@ export default function KaiCommand() {
               size="icon"
               className="h-9 w-9 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-full shadow-sm flex-shrink-0"
               disabled={(!messageInput.trim() && attachments.length === 0) || isLoading}
-              onClick={() => console.log('SEND_CLICK')}
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#FFFFFF' }} />
