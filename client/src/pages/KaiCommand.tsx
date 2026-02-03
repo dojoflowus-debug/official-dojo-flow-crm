@@ -1082,13 +1082,28 @@ export default function KaiCommand() {
   useEffect(() => {
     console.log('[KaiCommand] messagesQuery.data changed:', messagesQuery.data);
     if (messagesQuery.data && messagesQuery.data.length > 0) {
-      const loadedMessages: Message[] = messagesQuery.data.map(m => ({
-        id: m.id.toString(),
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-        timestamp: new Date(m.createdAt),
-        clientMessageId: m.metadata?.clientMessageId as string | undefined
-      }));
+      const loadedMessages: Message[] = messagesQuery.data.map(m => {
+        // Parse metadata to extract ui_blocks
+        let ui_blocks: any[] = [];
+        if (m.metadata) {
+          try {
+            const metadata = typeof m.metadata === 'string' ? JSON.parse(m.metadata) : m.metadata;
+            ui_blocks = metadata.ui_blocks || [];
+          } catch (e) {
+            console.error('[KaiCommand] Failed to parse metadata for message', m.id, e);
+          }
+        }
+        
+        return {
+          id: m.id.toString(),
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          timestamp: new Date(m.createdAt),
+          clientMessageId: m.metadata?.clientMessageId as string | undefined,
+          ui_blocks
+        };
+      });
+      console.log('[KaiCommand] Loaded messages with ui_blocks:', loadedMessages.filter(m => m.ui_blocks && m.ui_blocks.length > 0).length);
       console.log('[KaiCommand] Loaded messages:', loadedMessages);
       
       // PHASE A TEST: Inject hardcoded student_card message
@@ -2191,8 +2206,10 @@ export default function KaiCommand() {
           timestamp: new Date(),
           attachments: response.attachments || [],
           audioUrl,
-          audioDuration
+          audioDuration,
+          ui_blocks: response.ui_blocks || [] // Include UI blocks from backend
         };
+        console.log('[KaiCommand] Created AI message with ui_blocks:', aiMessage.ui_blocks);
         setMessages(prev => [...prev, aiMessage]);
         
         // Parse response for structured data to populate InfoPanel
@@ -2215,8 +2232,14 @@ export default function KaiCommand() {
             const aiMessageResult = await addMessageMutation.mutateAsync({
               conversationId,
               role: 'assistant',
-              content: response.response
+              content: response.response,
+              metadata: JSON.stringify({
+                ui_blocks: response.ui_blocks || [],
+                audioUrl,
+                audioDuration
+              })
             });
+            console.log('[handleSendMessage] Saved with ui_blocks:', response.ui_blocks);
             console.log('[handleSendMessage] AI message saved:', aiMessageResult);
             // Refresh conversations to update preview
             await utils.kai.getConversations.invalidate();
