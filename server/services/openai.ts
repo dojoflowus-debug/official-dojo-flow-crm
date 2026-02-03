@@ -5,8 +5,28 @@ const crmTools = [
   {
     type: 'function' as const,
     function: {
+      name: 'get_dashboard_stats',
+      description: 'Get comprehensive dashboard statistics including student counts, lead counts, attendance, and at-risk students. Use this for questions like "how many students do I have?" or "how many leads?"',
+      parameters: {
+        type: 'object',
+        properties: {
+          locationId: {
+            type: 'number',
+            description: 'Optional location ID to filter stats by specific location',
+          },
+          includeInactive: {
+            type: 'boolean',
+            description: 'Whether to include inactive students in total count (default: false, returns only active)',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
       name: 'get_student_count',
-      description: 'Get the total number of students in the dojo',
+      description: 'Get the total number of students in the dojo (legacy, prefer get_dashboard_stats)',
       parameters: {
         type: 'object',
         properties: {
@@ -202,12 +222,19 @@ export async function chatWithKai(
 
 **Data Query Tools Available:**
 You have access to these functions for querying data:
+- get_dashboard_stats: Get comprehensive statistics (student counts, lead counts, attendance, at-risk students). Use this for questions like "how many students do I have?" or "how many leads?"
 - search_students: Search for students by name, email, or phone
 - get_student: Get full details for a specific student by ID
 - list_at_risk_students: Find students who are inactive or on hold
 - list_late_payments: Find students with overdue payments
 - search_leads: Search for leads by name, email, or phone
 - get_lead: Get full details for a specific lead by ID
+
+**Important Stats Definitions:**
+- "How many students do I have?" means ACTIVE students (default)
+- Use includeInactive: true if user asks for "all students" or "total students including inactive"
+- Stats are automatically scoped to the user's organization
+- If user specifies a location (e.g., "at the HQ location"), pass locationId parameter
 
 **Response Format:**
 After using function calls to retrieve data, format your response as conversational text.

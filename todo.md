@@ -6997,3 +6997,37 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Verify conversationId doesn't become undefined after first send
 - [ ] Add comprehensive logging: [SEND] attempt, request, success, error, unlock
 - [ ] Test: Send 2-3 messages with Enter key, verify all send successfully
+
+## Phase: Kai Stats & Data Retrieval System
+
+### Backend Stats Endpoint
+- [x] Create dashboard.getStats() endpoint with org/location scoping
+- [x] Implement activeStudents count query
+- [x] Implement activeLeads count query
+- [x] Implement thisMonthRevenue calculation (optional)
+- [x] Implement attendanceToday count (optional)
+- [x] Implement atRiskStudents count (optional)
+- [x] Add proper orgId and locationId filtering
+- [x] Add authentication and permission checks
+
+### Kai Tools Integration
+- [x] Create get_dashboard_stats tool for Kai
+- [x] Create students_count tool with status filtering (legacy tool kept)
+- [x] Wire tools into Kai chat endpoint
+- [x] Pass userId, orgId, locationId from session context
+- [x] Add tool invocation logging (client-side)
+- [x] Add tool execution logging (server-side with userId, orgId, locationId, results)
+
+### Stats Definitions & Defaults
+- [x] Define "active students" as default for "how many students"
+- [x] Support location-specific queries
+- [x] Support status filters (active, inactive, all)
+- [ ] Support date range filters for leads
+
+### Testing & Validation
+- [ ] Test: "How many students do I have?" → returns active count for org
+- [ ] Test: "How many active students at the HQ location?" → filtered count
+- [ ] Test: "How many leads do I have this week?" → pipeline count filtered by date
+- [ ] Verify proper org/location scoping
+- [ ] Verify auth context is passed correctly
+- [ ] Check debug logs for userId, orgId, locationId, activeStudents

@@ -55,10 +55,100 @@ import { organizationUsers } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
 // Helper functions for CRM queries
-async function executeCRMFunction(name: string, args: any) {
+async function executeCRMFunction(name: string, args: any, ctx?: any) {
   const { getDashboardStats, searchStudents, getKioskCheckIns, getKioskVisitors, getKioskWaivers } = await import("./db");
   
   switch (name) {
+    case 'get_dashboard_stats':
+      console.log('[executeCRMFunction] get_dashboard_stats called', {
+        locationId: args.locationId,
+        includeInactive: args.includeInactive,
+        userId: ctx?.userId,
+        orgId: ctx?.currentOrganizationId,
+      });
+      
+      // Call the dashboard.getStats endpoint directly
+      const { getDb: getDbForStats } = await import("./db");
+      const { students: studentsForStats, leads: leadsForStats, studentAttendance: attendanceForStats } = await import("../drizzle/schema");
+      const { eq: eqForStats, and: andForStats, count: countForStats, gte: gteForStats } = await import("drizzle-orm");
+      
+      const dbForStats = await getDbForStats();
+      if (!dbForStats) return { error: 'Database not available' };
+      
+      const orgId = ctx?.currentOrganizationId;
+      if (!orgId) {
+        return {
+          activeStudents: 0,
+          totalStudents: 0,
+          activeLeads: 0,
+          totalLeads: 0,
+          attendanceToday: 0,
+          atRiskStudents: 0,
+        };
+      }
+      
+      // Build base conditions
+      const studentBaseCondition = args.locationId
+        ? andForStats(eqForStats(studentsForStats.organizationId, orgId))
+        : eqForStats(studentsForStats.organizationId, orgId);
+      
+      const leadBaseCondition = args.locationId
+        ? andForStats(eqForStats(leadsForStats.organizationId, orgId), eqForStats(leadsForStats.locationId, args.locationId))
+        : eqForStats(leadsForStats.organizationId, orgId);
+      
+      // Count active students
+      const activeStudentsResult = await dbForStats.select({ count: countForStats() })
+        .from(studentsForStats)
+        .where(andForStats(
+          studentBaseCondition,
+          eqForStats(studentsForStats.status, 'Active')
+        ));
+      
+      // Count total students
+      const totalStudentsResult = await dbForStats.select({ count: countForStats() })
+        .from(studentsForStats)
+        .where(studentBaseCondition);
+      
+      // Count active leads
+      const activeLeadsResult = await dbForStats.select({ count: countForStats() })
+        .from(leadsForStats)
+        .where(leadBaseCondition);
+      
+      // Count total leads
+      const totalLeadsResult = await dbForStats.select({ count: countForStats() })
+        .from(leadsForStats)
+        .where(leadBaseCondition);
+      
+      // Today's attendance
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const todayAttendanceResult = await dbForStats.select({ count: countForStats() })
+        .from(attendanceForStats)
+        .where(andForStats(
+          gteForStats(attendanceForStats.checkedInAt, todayStart.toISOString()),
+          eqForStats(attendanceForStats.status, 'attended')
+        ));
+      
+      // At-risk students (inactive status)
+      const atRiskStudentsResult = await dbForStats.select({ count: countForStats() })
+        .from(studentsForStats)
+        .where(andForStats(
+          studentBaseCondition,
+          eqForStats(studentsForStats.status, 'Inactive')
+        ));
+      
+      const result = {
+        activeStudents: activeStudentsResult[0]?.count || 0,
+        totalStudents: totalStudentsResult[0]?.count || 0,
+        activeLeads: activeLeadsResult[0]?.count || 0,
+        totalLeads: totalLeadsResult[0]?.count || 0,
+        attendanceToday: todayAttendanceResult[0]?.count || 0,
+        atRiskStudents: atRiskStudentsResult[0]?.count || 0,
+      };
+      
+      console.log('[executeCRMFunction] get_dashboard_stats result', result);
+      return result;
+    
     case 'get_student_count':
       const stats = await getDashboardStats();
       return { count: stats?.total_students || 0, status: args.status || 'all' };
@@ -1066,6 +1156,101 @@ export const appRouter = router({
         todays_classes: []
       };
     }),
+    
+    // Enhanced stats endpoint for Kai with location support
+    getStats: protectedProcedure
+      .input(z.object({
+        locationId: z.number().optional(),
+        includeInactive: z.boolean().optional().default(false),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const { students, leads, studentAttendance } = await import("../drizzle/schema");
+        const { eq, and, count, gte } = await import("drizzle-orm");
+        
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        
+        const orgId = ctx.currentOrganizationId;
+        if (!orgId) {
+          return {
+            activeStudents: 0,
+            totalStudents: 0,
+            activeLeads: 0,
+            totalLeads: 0,
+            attendanceToday: 0,
+            atRiskStudents: 0,
+          };
+        }
+        
+        // Build base conditions
+        const studentBaseCondition = input.locationId
+          ? and(eq(students.organizationId, orgId))
+          : eq(students.organizationId, orgId);
+        
+        const leadBaseCondition = input.locationId
+          ? and(eq(leads.organizationId, orgId), eq(leads.locationId, input.locationId))
+          : eq(leads.organizationId, orgId);
+        
+        // Count active students
+        const activeStudentsResult = await db.select({ count: count() })
+          .from(students)
+          .where(and(
+            studentBaseCondition,
+            eq(students.status, 'Active')
+          ));
+        
+        // Count total students
+        const totalStudentsResult = await db.select({ count: count() })
+          .from(students)
+          .where(studentBaseCondition);
+        
+        // Count active leads (not in 'won' or 'lost' stage)
+        const activeLeadsResult = await db.select({ count: count() })
+          .from(leads)
+          .where(leadBaseCondition);
+        
+        // Count total leads
+        const totalLeadsResult = await db.select({ count: count() })
+          .from(leads)
+          .where(leadBaseCondition);
+        
+        // Today's attendance
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todayAttendanceResult = await db.select({ count: count() })
+          .from(studentAttendance)
+          .where(and(
+            gte(studentAttendance.checkedInAt, todayStart.toISOString()),
+            eq(studentAttendance.status, 'attended')
+          ));
+        
+        // At-risk students (inactive status)
+        const atRiskStudentsResult = await db.select({ count: count() })
+          .from(students)
+          .where(and(
+            studentBaseCondition,
+            eq(students.status, 'Inactive')
+          ));
+        
+        console.log('[dashboard.getStats] Query executed', {
+          userId: ctx.userId,
+          orgId,
+          locationId: input.locationId,
+          activeStudents: activeStudentsResult[0]?.count || 0,
+          totalStudents: totalStudentsResult[0]?.count || 0,
+          activeLeads: activeLeadsResult[0]?.count || 0,
+        });
+        
+        return {
+          activeStudents: activeStudentsResult[0]?.count || 0,
+          totalStudents: totalStudentsResult[0]?.count || 0,
+          activeLeads: activeLeadsResult[0]?.count || 0,
+          totalLeads: totalLeadsResult[0]?.count || 0,
+          attendanceToday: todayAttendanceResult[0]?.count || 0,
+          atRiskStudents: atRiskStudentsResult[0]?.count || 0,
+        };
+      }),
     
     getLeads: protectedProcedure.input(z.object({})).query(async ({ ctx }) => {
       const { getDb } = await import("./db");
@@ -3548,7 +3733,8 @@ Return the data as a structured JSON object.`
             
             for (const call of aiResponse.functionCalls) {
               console.log('[Kai Chat] Executing function:', call.name, 'with args:', call.arguments);
-              const result = await executeCRMFunction(call.name, call.arguments);
+              console.log('[Kai Chat] Context:', { userId: ctx.userId, orgId: ctx.currentOrganizationId });
+              const result = await executeCRMFunction(call.name, call.arguments, ctx);
               console.log('[Kai Chat] Function result:', JSON.stringify(result, null, 2));
               functionResults.push(result);
             }
