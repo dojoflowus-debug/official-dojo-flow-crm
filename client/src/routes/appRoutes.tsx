@@ -255,7 +255,7 @@ export const appRoutes: RouteConfig[] = [
   { path: "/leads", element: <AppShell><Leads /></AppShell>, label: "Leads" },
   { path: "/test-data", element: <TestData />, label: "Test Data" },
   { path: "/classes", element: <AppShell><Classes /></AppShell>, label: "Classes" },
-  { path: "/class-schedule", element: <AppShell><ClassSchedule /></AppShell>, label: "Class Schedule" },
+  { path: "/class-schedule", element: <ProtectedRoute><AppShell><ClassSchedule /></AppShell></ProtectedRoute>, label: "Class Schedule" },
   { path: "/floor-plans", element: <AppShell><FloorPlansCinematic /></AppShell>, label: "Floor Plans" },
   { path: "/floor-plans-old", element: <AppShell><FloorPlans /></AppShell>, label: "Floor Plans Old" },
   { path: "/programs", element: <Programs />, label: "Programs" },
