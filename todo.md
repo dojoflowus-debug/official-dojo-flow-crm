@@ -7547,3 +7547,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Create deployment documentation with embed codes
 - [x] Test public access without authentication
 - [x] Save checkpoint with public chatbot deployment
+
+## Fix Public Chatbot Authentication Issue (Feb 4, 2026)
+
+- [x] Investigate AppShellGuard component for authentication blocking
+- [x] Check if lead-capture route is being caught by auth middleware (found in main.tsx global error handler)
+- [x] Remove authentication requirements from /lead-capture route
+- [x] Test chatbot access in incognito/private browsing mode
+- [x] Verify chatbot works without any login
+- [x] Save checkpoint with working public chatbot access

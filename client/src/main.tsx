@@ -20,6 +20,32 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
+  // Don't redirect on public pages
+  const publicRoutes = [
+    '/lead-capture',
+    '/lead-capture-location',
+    '/locations',
+    '/public',
+    '/kiosk-home',
+    '/kiosk-live',
+    '/owner',
+    '/staff/login',
+    '/student-login',
+    '/login',
+    '/forgot-password',
+    '/reset-password',
+  ];
+  
+  const currentPath = window.location.pathname;
+  const isPublicRoute = publicRoutes.some(route => 
+    currentPath === route || currentPath.startsWith(route + '/')
+  );
+  
+  if (isPublicRoute) {
+    console.log('[Auth] Skipping redirect on public route:', currentPath);
+    return;
+  }
+
   // Redirect to owner login page
   window.location.href = "/owner";
 };
