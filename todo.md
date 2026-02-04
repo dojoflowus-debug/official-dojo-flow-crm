@@ -7536,3 +7536,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Implement delivered status indicator below sent messages
 - [x] Implement read status indicator below sent messages
 - [x] Test all UI changes in lead capture chat
+
+## Public Lead Capture Chatbot Deployment (Feb 4, 2026)
+
+- [x] Analyze current authentication requirements for /lead-capture route
+- [x] Remove authentication restrictions from lead capture page (already public)
+- [x] Ensure chatbot API endpoints allow public access
+- [x] Create embeddable iframe/widget code for external websites
+- [x] Generate shareable public URL for the chatbot
+- [x] Create deployment documentation with embed codes
+- [x] Test public access without authentication
+- [x] Save checkpoint with public chatbot deployment

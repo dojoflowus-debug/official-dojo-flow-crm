@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DojoFlow Chatbot Embed Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+        
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+        }
+        
+        .example {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .example h2 {
+            color: #3b82f6;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .example p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .code-block {
+            background: #1a1a1a;
+            color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .demo-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        
+        .demo-button:hover {
+            background: #2563eb;
+        }
+        
+        .preview {
+            margin-top: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 100px;
+        }
+        
+        /* Floating Widget Styles */
+        #kai-chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 600px;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            display: none;
+        }
+        
+        #kai-chat-widget.open {
+            display: block;
+        }
+        
+        #kai-chat-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        #kai-chat-button:hover {
+            transform: scale(1.1);
+        }
+        
+        #kai-chat-button.hidden {
+            display: none;
+        }
+        
+        #kai-chat-button svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+        
+        @media (max-width: 768px) {
+            #kai-chat-widget {
+                width: 100%;
+                height: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🥋 DojoFlow Chatbot Embed Examples</h1>
+    <p class="subtitle">Copy and paste these code snippets to embed the chatbot on your website</p>
+
+    <!-- Example 1: Full Page Embed -->
+    <div class="example">
+        <h2>1. Full Page Embed</h2>
+        <p>Perfect for a dedicated chat page or landing page.</p>
+        <div class="code-block">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Chat with Kai&lt;/title&gt;
+    &lt;style&gt;
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;iframe 
+        src="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001"
+        allow="microphone"
+        title="DojoFlow Chat"&gt;
+    &lt;/iframe&gt;
+&lt;/body&gt;
+&lt;/html&gt;</div>
+        <a href="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001" target="_blank">
+            <button class="demo-button">View Live Demo →</button>
+        </a>
+    </div>
+
+    <!-- Example 2: Inline Embed -->
+    <div class="example">
+        <h2>2. Inline Section Embed</h2>
+        <p>Embed the chatbot as a section within your existing page.</p>
+        <div class="code-block">&lt;div style="max-width: 800px; margin: 40px auto;"&gt;
+    &lt;h2&gt;Chat with Our Virtual Assistant&lt;/h2&gt;
+    &lt;iframe 
+        src="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001"
+        style="width: 100%; height: 600px; border: none; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);"
+        allow="microphone"
+        title="DojoFlow Chat"&gt;
+    &lt;/iframe&gt;
+&lt;/div&gt;</div>
+        <div class="preview">
+            <h3>Preview:</h3>
+            <iframe 
+                src="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001"
+                style="width: 100%; height: 500px; border: none; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);"
+                allow="microphone"
+                title="DojoFlow Chat">
+            </iframe>
+        </div>
+    </div>
+
+    <!-- Example 3: Floating Widget -->
+    <div class="example">
+        <h2>3. Floating Chat Widget (Bottom Right)</h2>
+        <p>Add a floating chat button that opens the chatbot overlay.</p>
+        <div class="code-block">&lt;!-- Add before closing &lt;/body&gt; tag --&gt;
+&lt;style&gt;
+    #kai-chat-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 400px;
+        height: 600px;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        display: none;
+    }
+    #kai-chat-widget.open { display: block; }
+    #kai-chat-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        z-index: 9998;
+    }
+    #kai-chat-button.hidden { display: none; }
+&lt;/style&gt;
+
+&lt;button id="kai-chat-button" onclick="toggleKaiChat()"&gt;💬&lt;/button&gt;
+&lt;iframe id="kai-chat-widget" 
+    src="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001"
+    allow="microphone"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;
+    function toggleKaiChat() {
+        const widget = document.getElementById('kai-chat-widget');
+        const button = document.getElementById('kai-chat-button');
+        widget.classList.toggle('open');
+        button.classList.toggle('hidden');
+    }
+&lt;/script&gt;</div>
+        <button class="demo-button" onclick="toggleKaiChat()">Try Floating Widget →</button>
+    </div>
+
+    <!-- Example 4: Simple Link Button -->
+    <div class="example">
+        <h2>4. Simple Link Button</h2>
+        <p>Direct link that opens the chatbot in a new tab.</p>
+        <div class="code-block">&lt;a href="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001" 
+   target="_blank"
+   style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;"&gt;
+   💬 Chat with Kai
+&lt;/a&gt;</div>
+        <div class="preview">
+            <h3>Preview:</h3>
+            <a href="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001" 
+               target="_blank"
+               style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">
+               💬 Chat with Kai
+            </a>
+        </div>
+    </div>
+
+    <!-- Example 5: WordPress Shortcode -->
+    <div class="example">
+        <h2>5. WordPress Shortcode</h2>
+        <p>Add this to your theme's functions.php file, then use the shortcode in any page.</p>
+        <div class="code-block">// Add to functions.php
+function dojoflow_chatbot_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        'org' => '120001',
+        'height' => '600px'
+    ), $atts);
+    
+    return '&lt;iframe 
+        src="https://dojoflow-2awpr243.manus.space/lead-capture?org=' . esc_attr($atts['org']) . '"
+        style="width: 100%; height: ' . esc_attr($atts['height']) . '; border: none; border-radius: 8px;"
+        allow="microphone"
+        title="DojoFlow Chat"&gt;
+    &lt;/iframe&gt;';
+}
+add_shortcode('dojoflow_chat', 'dojoflow_chatbot_shortcode');
+
+// Usage in WordPress editor:
+[dojoflow_chat org="120001" height="700px"]</div>
+    </div>
+
+    <!-- Floating Widget Implementation -->
+    <button id="kai-chat-button" onclick="toggleKaiChat()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+        </svg>
+    </button>
+
+    <iframe 
+        id="kai-chat-widget"
+        src="https://dojoflow-2awpr243.manus.space/lead-capture?org=120001"
+        allow="microphone"
+        title="DojoFlow Chat">
+    </iframe>
+
+    <script>
+        function toggleKaiChat() {
+            const widget = document.getElementById('kai-chat-widget');
+            const button = document.getElementById('kai-chat-button');
+            
+            if (widget.classList.contains('open')) {
+                widget.classList.remove('open');
+                button.classList.remove('hidden');
+            } else {
+                widget.classList.add('open');
+                button.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

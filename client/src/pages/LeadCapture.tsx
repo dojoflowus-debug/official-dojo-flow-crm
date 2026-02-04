@@ -32,7 +32,7 @@ export const LeadCapture: React.FC = () => {
     );
   }
 
-  if (!organizationId) {
+  if (!organizationId || organizationId === 0) {
     return (
       <div className="w-full h-screen flex items-center justify-center" style={{ backgroundColor: '#0f172a' }}>
         <div className="text-center">
