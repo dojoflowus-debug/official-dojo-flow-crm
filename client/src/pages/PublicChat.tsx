@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { Send, ArrowUp } from "lucide-react";
 import { useOrganizationSettings } from "@/hooks/useOrganizationSettings";
 import { getEffectiveTheme, getInitials, type PlatformType } from "@/lib/platformDetection";
@@ -25,7 +25,8 @@ interface Message {
 }
 
 export default function PublicChat() {
-  const [, navigate] = useLocation();
+  console.log('[PublicChat] Component rendering - NEW iOS DESIGN');
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
