@@ -7507,3 +7507,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Ensure proper z-index and positioning
 - [x] Test that Header Display appears below tabs
 - [x] Save checkpoint with fixed layout
+
+
+## Deep Investigation of Header Display Overlap (Feb 4, 2026)
+
+- [x] Re-examine user screenshot to understand exact overlap issue
+- [x] Check if "Header Display" label is rendering outside scrollable area
+- [x] Verify modal header section doesn't include ChatCustomization content
+- [x] Check for CSS issues causing content to escape scrollable container
+- [x] Implement definitive fix
+- [ ] Test with browser and confirm no overlap
+- [ ] Save checkpoint only after visual confirmation

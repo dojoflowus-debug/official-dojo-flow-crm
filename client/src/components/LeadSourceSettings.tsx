@@ -148,7 +148,7 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
           </div>
 
           {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto px-8 pb-4">
+          <div className="flex-1 overflow-y-auto px-8 pb-4 relative">
             {activeTab === 'sources' ? (
               isLoading ? (
               <div className="flex items-center justify-center py-12">
