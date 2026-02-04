@@ -7460,3 +7460,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove Lead Settings route from appRoutes
 - [x] Test Settings tab in Leads page
 - [x] Save checkpoint with integrated settings
+
+
+## Add Chat Customization UI to Chat Settings Tab (Feb 4, 2026)
+
+- [x] Read LeadSettings page to extract chat customization UI
+- [x] Create ChatCustomization component with all controls
+- [x] Add live preview to ChatCustomization component
+- [x] Integrate ChatCustomization into Chat Settings tab
+- [x] Test all customization options (logo toggle, welcome message)
+- [x] Save checkpoint with working chat customization

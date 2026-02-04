@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Switch } from "@/components/ui/switch";
+import ChatCustomization from "@/components/ChatCustomization";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -199,9 +200,8 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
             )
             ) : (
               // Chat Settings Tab
-              <div className="max-w-4xl mx-auto py-6">
-                <p className="text-slate-400 text-center mb-6">Chat customization settings will be integrated here.</p>
-                {/* TODO: Add chat customization UI from LeadSettings page */}
+              <div className="w-full">
+                <ChatCustomization />
               </div>
             )}
           </div>
