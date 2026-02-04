@@ -498,8 +498,13 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   
   // Choose icon logo based on background brightness (light bg = dark logo, dark bg = light logo)
   const iconLogoUrl = usesDarkText 
-    ? (orgInfo?.logoIconDarkUrl || orgInfo?.logoUrl) 
-    : (orgInfo?.logoIconLightUrl || orgInfo?.logoUrl);
+    ? (orgInfo?.logoIconDarkUrl || orgInfo?.logoDarkUrl || orgInfo?.logoUrl) 
+    : (orgInfo?.logoIconLightUrl || orgInfo?.logoLightUrl || orgInfo?.logoUrl);
+  
+  // Choose full logo for title area (horizontal logo)
+  const fullLogoUrl = usesDarkText 
+    ? (orgInfo?.logoDarkUrl) 
+    : (orgInfo?.logoLightUrl);
 
   return (
     <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden relative`}>
@@ -527,9 +532,18 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
               {(orgInfo?.name || 'Kai').charAt(0).toUpperCase()}
             </div>
           )}
-          <div>
-            <h2 className="font-semibold">{orgInfo?.name || 'Kai'}</h2>
-            <p className="text-sm" style={{ color: textOpacity }}>{orgInfo?.name || locationName} • Always here to help</p>
+          <div className="flex flex-col">
+            {fullLogoUrl ? (
+              <img 
+                src={fullLogoUrl} 
+                alt={orgInfo?.name || 'Logo'} 
+                className="h-6 object-contain object-left"
+                style={{ maxWidth: '200px' }}
+              />
+            ) : (
+              <h2 className="font-semibold text-lg">{orgInfo?.name || 'Kai'}</h2>
+            )}
+            <p className="text-sm mt-0.5" style={{ color: textOpacity }}>{orgInfo?.name || locationName} • Always here to help</p>
           </div>
         </div>
       </div>

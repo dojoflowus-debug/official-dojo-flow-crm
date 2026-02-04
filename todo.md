@@ -7416,3 +7416,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update organizations API to return all logo variants
 - [ ] Test icon logo display in chat header with light and dark brand colors
 - [ ] Test full logo display in appropriate contexts
+
+
+## Update Chat Header Layout and Logo Logic (Feb 4, 2026)
+- [x] Fix logo variant selection: light background should use DARK logo, dark background should use LIGHT logo
+- [x] Update chat header title area to support full logo display (horizontal)
+- [x] Add fallback to school name text if full logo not uploaded
+- [ ] Add database field for chat display preference (use_full_logo_in_header boolean)
+- [ ] Update organizations API to return full logo URLs
+- [ ] Create lead settings page with chat customization options
+- [ ] Add live preview of chat appearance in lead settings
+- [ ] Add toggle for "Use full logo in header" vs "Use school name text"
+- [ ] Test all logo combinations (icon + full logo, icon + text, light/dark variants)
