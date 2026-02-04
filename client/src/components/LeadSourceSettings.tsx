@@ -42,6 +42,7 @@ interface LeadSourceSettingsProps {
 }
 
 export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettingsProps) {
+  const [activeTab, setActiveTab] = useState<'sources' | 'chat'>('sources');
   const utils = trpc.useUtils();
   const { data: sources, isLoading } = trpc.leadSources.list.useQuery();
   const toggleMutation = trpc.leadSources.toggle.useMutation({
@@ -105,10 +106,34 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
 
               {/* Title */}
               <div className="text-center">
-                <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Choose Lead Sources</h1>
+                <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Lead Settings</h1>
                 <p className="text-base text-slate-400">
-                  Select the methods for adding new leads to your pipeline.
+                  Manage your lead sources and chat appearance.
                 </p>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex justify-center gap-2 mt-6">
+                <button
+                  onClick={() => setActiveTab('sources')}
+                  className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+                    activeTab === 'sources'
+                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+                      : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  Lead Sources
+                </button>
+                <button
+                  onClick={() => setActiveTab('chat')}
+                  className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+                    activeTab === 'chat'
+                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+                      : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  Chat Settings
+                </button>
               </div>
             </div>
 
@@ -123,7 +148,8 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto px-8 pb-4">
-            {isLoading ? (
+            {activeTab === 'sources' ? (
+              isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-red-500" />
               </div>
@@ -169,6 +195,13 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
                     </Card>
                   );
                 })}
+              </div>
+            )
+            ) : (
+              // Chat Settings Tab
+              <div className="max-w-4xl mx-auto py-6">
+                <p className="text-slate-400 text-center mb-6">Chat customization settings will be integrated here.</p>
+                {/* TODO: Add chat customization UI from LeadSettings page */}
               </div>
             )}
           </div>

@@ -7449,3 +7449,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Position menu item in logical location (near Marketing or Settings)
 - [x] Test navigation from menu to Lead Settings page
 - [x] Save checkpoint with navigation menu update
+
+
+## Integrate Lead Settings into Leads Page (Feb 4, 2026)
+- [x] Examine Leads page structure and tabs
+- [x] Add "Settings" tab to Leads page
+- [x] Move chat customization UI into Settings tab
+- [x] Remove Lead Settings standalone page
+- [x] Remove Lead Settings from navigation menu
+- [x] Remove Lead Settings route from appRoutes
+- [x] Test Settings tab in Leads page
+- [x] Save checkpoint with integrated settings
