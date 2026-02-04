@@ -7577,3 +7577,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verify ClassSchedule component is exported correctly
 - [x] Test page access after fix
 - [x] Save checkpoint with working route
+
+## Fix Class Schedule BottomNavMissingError (Feb 4, 2026)
+
+- [x] Debug BottomNavMissingError - AppShell conflict
+- [x] Check AppShell configuration for layout rendering
+- [x] Fix route to properly render DashboardLayout - Removed AppShell wrapper
+- [x] Test page renders correctly with sidebar
+- [x] Save checkpoint with working page
