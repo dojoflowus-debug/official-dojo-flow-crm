@@ -489,12 +489,17 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
     window.open(checkoutUrl, '_blank');
   };
 
-  // Determine text color based on brand color brightness
+  // Determine text color and logo variant based on brand color brightness
   const brandColor = orgInfo?.brandColorPrimary || '#EF4444';
   const usesDarkText = isLightColor(brandColor);
   const textColor = usesDarkText ? '#000000' : '#FFFFFF';
   const textOpacity = usesDarkText ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.8)';
   const avatarBg = usesDarkText ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)';
+  
+  // Choose icon logo based on background brightness (light bg = dark logo, dark bg = light logo)
+  const iconLogoUrl = usesDarkText 
+    ? (orgInfo?.logoIconDarkUrl || orgInfo?.logoUrl) 
+    : (orgInfo?.logoIconLightUrl || orgInfo?.logoUrl);
 
   return (
     <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden relative`}>
@@ -507,10 +512,10 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
         }}
       >
         <div className="flex items-center gap-3">
-          {orgInfo?.logoUrl ? (
+          {iconLogoUrl ? (
             <img 
-              src={orgInfo.logoUrl} 
-              alt={orgInfo.name} 
+              src={iconLogoUrl} 
+              alt={orgInfo?.name || 'Logo'} 
               className="w-10 h-10 rounded-full object-cover"
               style={{ backgroundColor: avatarBg }}
             />

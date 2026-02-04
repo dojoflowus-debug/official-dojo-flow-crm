@@ -7405,3 +7405,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test with white/light brand colors (should show black text)
 - [x] Test with dark brand colors (should show white text)
 - [x] Verify text is always readable regardless of brand color choice
+
+
+## Add Icon Logo and Full Logo Options (Feb 4, 2026)
+- [x] Update database schema to add logo_icon_light, logo_icon_dark, logo_full_light, logo_full_dark columns
+- [x] Run database migration to apply schema changes
+- [x] Update School Profile settings UI to show separate upload fields for icon and full logos
+- [x] Add light/dark mode variants for both icon and full logos
+- [x] Update lead capture chat header to use icon logo (light/dark based on brand color)
+- [x] Update organizations API to return all logo variants
+- [ ] Test icon logo display in chat header with light and dark brand colors
+- [ ] Test full logo display in appropriate contexts

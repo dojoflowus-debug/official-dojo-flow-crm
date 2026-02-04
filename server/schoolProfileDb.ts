@@ -16,6 +16,8 @@ export interface SchoolProfileData {
   addressCountry?: string | null;
   logoLightUrl?: string | null;
   logoDarkUrl?: string | null;
+  logoIconLightUrl?: string | null;
+  logoIconDarkUrl?: string | null;
   brandColorPrimary?: string | null;
   brandColorSecondary?: string | null;
   brandColorTertiary?: string | null;
@@ -103,6 +105,8 @@ export async function upsertSchoolProfile(
         addressCountry: data.addressCountry,
         logoLightUrl: data.logoLightUrl,
         logoDarkUrl: data.logoDarkUrl,
+        logoIconLightUrl: data.logoIconLightUrl,
+        logoIconDarkUrl: data.logoIconDarkUrl,
         brandColorPrimary: data.brandColorPrimary,
         brandColorSecondary: data.brandColorSecondary,
         brandColorTertiary: data.brandColorTertiary,
@@ -138,6 +142,8 @@ export async function upsertSchoolProfile(
         addressCountry: data.addressCountry,
         logoLightUrl: data.logoLightUrl,
         logoDarkUrl: data.logoDarkUrl,
+        logoIconLightUrl: data.logoIconLightUrl,
+        logoIconDarkUrl: data.logoIconDarkUrl,
         brandColorPrimary: data.brandColorPrimary,
         brandColorSecondary: data.brandColorSecondary,
         brandColorTertiary: data.brandColorTertiary,
@@ -162,7 +168,7 @@ export async function upsertSchoolProfile(
  */
 export async function updateSchoolLogo(
   organizationId: number,
-  type: "light" | "dark",
+  type: "light" | "dark" | "icon-light" | "icon-dark",
   url: string | null
 ) {
   const db = await getDb();
@@ -172,9 +178,11 @@ export async function updateSchoolLogo(
     throw new Error('Database not available');
   }
   
-  const updateData = type === "light" 
-    ? { logoLightUrl: url }
-    : { logoDarkUrl: url };
+  const updateData = 
+    type === "light" ? { logoLightUrl: url } :
+    type === "dark" ? { logoDarkUrl: url } :
+    type === "icon-light" ? { logoIconLightUrl: url } :
+    { logoIconDarkUrl: url };
   
   await db
     .update(schoolProfiles)

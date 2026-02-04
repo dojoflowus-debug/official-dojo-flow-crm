@@ -1653,8 +1653,12 @@ export const schoolProfiles = mysqlTable("school_profiles", {
 	addressPostal: varchar("address_postal", { length: 20 }),
 	addressCountry: varchar("address_country", { length: 100 }),
 	// Branding
+	// Full logos (horizontal, for headers and wide spaces)
 	logoLightUrl: varchar("logo_light_url", { length: 1000 }),
 	logoDarkUrl: varchar("logo_dark_url", { length: 1000 }),
+	// Icon logos (square, for avatars and compact spaces)
+	logoIconLightUrl: varchar("logo_icon_light_url", { length: 1000 }),
+	logoIconDarkUrl: varchar("logo_icon_dark_url", { length: 1000 }),
 	brandColorPrimary: varchar("brand_color_primary", { length: 7 }), // Main brand color
 	brandColorSecondary: varchar("brand_color_secondary", { length: 7 }), // Accent color
 	brandColorTertiary: varchar("brand_color_tertiary", { length: 7 }), // Additional accent

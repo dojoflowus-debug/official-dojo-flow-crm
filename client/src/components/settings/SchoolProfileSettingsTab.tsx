@@ -360,6 +360,8 @@ export function SchoolProfileSettingsTab() {
   const [addressCountry, setAddressCountry] = useState('');
   const [logoLightUrl, setLogoLightUrl] = useState<string | null>(null);
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
+  const [logoIconLightUrl, setLogoIconLightUrl] = useState<string | null>(null);
+  const [logoIconDarkUrl, setLogoIconDarkUrl] = useState<string | null>(null);
   const [brandColorPrimary, setBrandColorPrimary] = useState('#EF4444'); // Default red
   const [brandColorSecondary, setBrandColorSecondary] = useState('#1E40AF'); // Default blue
   const [brandColorTertiary, setBrandColorTertiary] = useState('#F59E0B'); // Default amber
@@ -370,6 +372,8 @@ export function SchoolProfileSettingsTab() {
   const [saving, setSaving] = useState(false);
   const [uploadingLight, setUploadingLight] = useState(false);
   const [uploadingDark, setUploadingDark] = useState(false);
+  const [uploadingIconLight, setUploadingIconLight] = useState(false);
+  const [uploadingIconDark, setUploadingIconDark] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -416,6 +420,8 @@ export function SchoolProfileSettingsTab() {
       setAddressCountry(data.addressCountry || '');
       setLogoLightUrl(data.logoLightUrl || null);
       setLogoDarkUrl(data.logoDarkUrl || null);
+      setLogoIconLightUrl(data.logoIconLightUrl || null);
+      setLogoIconDarkUrl(data.logoIconDarkUrl || null);
       setBrandColorPrimary(data.brandColorPrimary || '#EF4444');
       setBrandColorSecondary(data.brandColorSecondary || '#1E40AF');
       setBrandColorTertiary(data.brandColorTertiary || '#F59E0B');
@@ -493,6 +499,8 @@ export function SchoolProfileSettingsTab() {
         addressCountry: addressCountry || null,
         logoLightUrl,
         logoDarkUrl,
+        logoIconLightUrl,
+        logoIconDarkUrl,
         brandColorPrimary: brandColorPrimary || null,
         brandColorSecondary: brandColorSecondary || null,
         brandColorTertiary: brandColorTertiary || null,
@@ -535,14 +543,23 @@ export function SchoolProfileSettingsTab() {
   };
   
   // Logo upload handler
-  const handleLogoUpload = async (file: File, type: 'light' | 'dark') => {
+  const handleLogoUpload = async (file: File, type: 'light' | 'dark' | 'icon-light' | 'icon-dark') => {
     if (file.size > 5 * 1024 * 1024) {
       toast.error('File size must be less than 5MB');
       return;
     }
     
-    const setUploading = type === 'light' ? setUploadingLight : setUploadingDark;
-    const setUrl = type === 'light' ? setLogoLightUrl : setLogoDarkUrl;
+    const setUploading = 
+      type === 'light' ? setUploadingLight :
+      type === 'dark' ? setUploadingDark :
+      type === 'icon-light' ? setUploadingIconLight :
+      setUploadingIconDark;
+    
+    const setUrl = 
+      type === 'light' ? setLogoLightUrl :
+      type === 'dark' ? setLogoDarkUrl :
+      type === 'icon-light' ? setLogoIconLightUrl :
+      setLogoIconDarkUrl;
     
     setUploading(true);
     try {
@@ -582,8 +599,12 @@ export function SchoolProfileSettingsTab() {
   };
   
   // Logo remove handler
-  const handleLogoRemove = async (type: 'light' | 'dark') => {
-    const setUrl = type === 'light' ? setLogoLightUrl : setLogoDarkUrl;
+  const handleLogoRemove = async (type: 'light' | 'dark' | 'icon-light' | 'icon-dark') => {
+    const setUrl = 
+      type === 'light' ? setLogoLightUrl :
+      type === 'dark' ? setLogoDarkUrl :
+      type === 'icon-light' ? setLogoIconLightUrl :
+      setLogoIconDarkUrl;
     
     try {
       await updateLogoMutation.mutateAsync({
@@ -781,23 +802,74 @@ export function SchoolProfileSettingsTab() {
         {/* Branding Card */}
         <SettingsCard 
           title="Branding" 
-          subtitle="Upload logos and set your brand color"
+          subtitle="Upload logos for different contexts and themes"
           icon={Image}
         >
-          <LogoUpload
-            label="Logo (Light Background)"
-            currentUrl={logoLightUrl}
-            onUpload={(file) => handleLogoUpload(file, 'light')}
-            onRemove={() => handleLogoRemove('light')}
-            uploading={uploadingLight}
-          />
-          <LogoUpload
-            label="Logo (Dark Background)"
-            currentUrl={logoDarkUrl}
-            onUpload={(file) => handleLogoUpload(file, 'dark')}
-            onRemove={() => handleLogoRemove('dark')}
-            uploading={uploadingDark}
-          />
+          {/* Full Logos Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{ 
+              fontSize: '14px', 
+              fontWeight: '600', 
+              color: 'rgba(255, 255, 255, 0.9)', 
+              marginBottom: '12px' 
+            }}>
+              Full Logos (Horizontal)
+            </h4>
+            <p style={{ 
+              fontSize: '12px', 
+              color: 'rgba(255, 255, 255, 0.5)', 
+              marginBottom: '16px' 
+            }}>
+              Used in headers, navigation bars, and wide spaces
+            </p>
+            <LogoUpload
+              label="Light Background Version"
+              currentUrl={logoLightUrl}
+              onUpload={(file) => handleLogoUpload(file, 'light')}
+              onRemove={() => handleLogoRemove('light')}
+              uploading={uploadingLight}
+            />
+            <LogoUpload
+              label="Dark Background Version"
+              currentUrl={logoDarkUrl}
+              onUpload={(file) => handleLogoUpload(file, 'dark')}
+              onRemove={() => handleLogoRemove('dark')}
+              uploading={uploadingDark}
+            />
+          </div>
+          
+          {/* Icon Logos Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{ 
+              fontSize: '14px', 
+              fontWeight: '600', 
+              color: 'rgba(255, 255, 255, 0.9)', 
+              marginBottom: '12px' 
+            }}>
+              Icon Logos (Square)
+            </h4>
+            <p style={{ 
+              fontSize: '12px', 
+              color: 'rgba(255, 255, 255, 0.5)', 
+              marginBottom: '16px' 
+            }}>
+              Used in chat avatars, favicons, and compact spaces
+            </p>
+            <LogoUpload
+              label="Light Background Version"
+              currentUrl={logoIconLightUrl}
+              onUpload={(file) => handleLogoUpload(file, 'icon-light')}
+              onRemove={() => handleLogoRemove('icon-light')}
+              uploading={uploadingIconLight}
+            />
+            <LogoUpload
+              label="Dark Background Version"
+              currentUrl={logoIconDarkUrl}
+              onUpload={(file) => handleLogoUpload(file, 'icon-dark')}
+              onRemove={() => handleLogoRemove('icon-dark')}
+              uploading={uploadingIconDark}
+            />
+          </div>
                    {/* Brand Colors */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ 

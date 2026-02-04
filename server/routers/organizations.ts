@@ -53,6 +53,8 @@ export const organizationsRouter = router({
       const response = {
         name: data.schoolName || data.displayName || data.orgName || 'Dojo AI',
         logoUrl: data.logoLightUrl || data.logoDarkUrl || data.orgLogoUrl || null,
+        logoIconLightUrl: data.logoIconLightUrl || null,
+        logoIconDarkUrl: data.logoIconDarkUrl || null,
         brandColorPrimary: data.brandColorPrimary || '#EF4444',
         brandColorSecondary: data.brandColorSecondary || '#1E40AF',
         brandColorTertiary: data.brandColorTertiary || '#F59E0B',
