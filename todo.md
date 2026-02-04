@@ -7497,3 +7497,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Center all chat customization content
 - [x] Test that no overlap occurs
 - [x] Save checkpoint with fixed layout
+
+
+## Fix Header Display Overlapping Tabs (Feb 4, 2026)
+
+- [x] Examine LeadSourceSettings modal structure
+- [x] Verify tabs are in fixed header section
+- [x] Verify ChatCustomization content is in scrollable area
+- [x] Ensure proper z-index and positioning
+- [x] Test that Header Display appears below tabs
+- [x] Save checkpoint with fixed layout

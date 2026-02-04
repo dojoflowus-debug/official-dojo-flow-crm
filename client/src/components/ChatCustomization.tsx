@@ -65,7 +65,7 @@ export default function ChatCustomization({ onSave }: ChatCustomizationProps = {
   }
 
   return (
-    <div className="space-y-6 py-4 max-w-3xl mx-auto">
+    <div className="space-y-6 pt-8 pb-4 max-w-3xl mx-auto">
       {/* Settings Controls */}
       <div className="space-y-6">
         {/* Logo Display Option */}
