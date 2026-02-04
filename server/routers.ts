@@ -47,6 +47,7 @@ import { schoolProfileRouter } from './schoolProfileRouter';
 import { pcBankCardRouter } from './pcBankCardRouter';
 import { messagingRouter } from './routers/messaging';
 import { emailTemplatesRouter } from './emailTemplatesRouter';
+import { organizationsRouter } from './routers/organizations';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -557,6 +558,7 @@ function formatFunctionResults(results: any[]): { text: string; ui_blocks: any[]
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  organizations: organizationsRouter,
   kaiCommand: kaiCommandRouter,
   kaiStudents: kaiStudentsRouter,
   kioskDesigner: kioskDesignerRouter,

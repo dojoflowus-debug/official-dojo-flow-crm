@@ -7341,3 +7341,13 @@ Transform kiosk from admin dashboard to premium location experience
 ## Fix User Message Bubble Color (Feb 4, 2026)
 - [x] Change user message bubble from red/pink to iOS blue (#007AFF or blue-500)
 - [x] Ensure blue matches Apple Messages aesthetic
+
+
+## School Branding Customization in Lead Capture (Feb 4, 2026)
+- [x] Add brandColor field to organizations table in database schema
+- [x] Run database migration to add brandColor column
+- [x] Update KaiChatStateful to fetch organization logo and brandColor from settings
+- [x] Replace "Kai" text in header with school logo (or initials fallback)
+- [x] Change dark blue banner background to use school's brandColor
+- [x] Add fallback color (default to red #EF4444) if brandColor not set
+- [ ] Test with different brand colors to ensure text contrast is readable

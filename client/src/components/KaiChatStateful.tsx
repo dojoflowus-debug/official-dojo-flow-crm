@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { UserAvatar } from './UserAvatar';
+import { trpc } from '@/lib/trpc';
 import {
   ConversationState,
   ConversationStage,
@@ -66,6 +67,12 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   locationId,
   embedded = false,
 }) => {
+  // Fetch organization branding (logo, name, brandColor)
+  const { data: orgInfo } = trpc.organizations.getPublicInfo.useQuery(
+    { organizationId },
+    { enabled: !!organizationId }
+  );
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -466,14 +473,27 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   return (
     <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden relative`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-4 text-white">
+      <div 
+        className="p-4 text-white"
+        style={{
+          background: `linear-gradient(135deg, ${orgInfo?.brandColor || '#EF4444'} 0%, ${orgInfo?.brandColor || '#EF4444'}dd 100%)`
+        }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center font-bold text-lg">
-            K
-          </div>
+          {orgInfo?.logoUrl ? (
+            <img 
+              src={orgInfo.logoUrl} 
+              alt={orgInfo.name} 
+              className="w-10 h-10 rounded-full object-cover bg-white/10"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">
+              {(orgInfo?.name || 'Kai').charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
-            <h2 className="font-semibold">Kai</h2>
-            <p className="text-sm text-gray-300">{locationName} • Always here to help</p>
+            <h2 className="font-semibold">{orgInfo?.name || 'Kai'}</h2>
+            <p className="text-sm text-white/80">{locationName} • Always here to help</p>
           </div>
         </div>
       </div>
@@ -490,8 +510,21 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             )}
             {msg.role === 'kai' && (
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center font-bold text-white text-sm">K</div>
-                <span className="text-sm font-semibold text-gray-700">Kai</span>
+                {orgInfo?.logoUrl ? (
+                  <img 
+                    src={orgInfo.logoUrl} 
+                    alt={orgInfo.name} 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm"
+                    style={{ backgroundColor: orgInfo?.brandColor || '#EF4444' }}
+                  >
+                    {(orgInfo?.name || 'K').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-semibold text-gray-700">{orgInfo?.name || 'Kai'}</span>
               </div>
             )}
             <div

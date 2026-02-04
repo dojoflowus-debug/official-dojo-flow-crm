@@ -830,6 +830,7 @@ export const organizations = mysqlTable("organizations", {
 	estimatedStudents: int(),
 	launchDate: timestamp({ mode: 'string' }),
 	logoUrl: varchar({ length: 500 }),
+	brandColor: varchar({ length: 7 }).default('#EF4444'),
 	planId: int(),
 	subscriptionStatus: mysqlEnum(['trial','active','past_due','cancelled','inactive']).default('trial').notNull(),
 	trialEndsAt: timestamp({ mode: 'string' }),
