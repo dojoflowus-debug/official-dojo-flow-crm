@@ -7470,3 +7470,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Integrate ChatCustomization into Chat Settings tab
 - [x] Test all customization options (logo toggle, welcome message)
 - [x] Save checkpoint with working chat customization
+
+
+## Fix Jumbled Chat Settings Layout (Feb 4, 2026)
+
+- [x] Diagnose layout issues in ChatCustomization component
+- [x] Remove grid layout causing overlap in modal
+- [x] Stack controls vertically for better modal fit
+- [x] Adjust spacing and padding for readability
+- [x] Test layout in modal and save checkpoint

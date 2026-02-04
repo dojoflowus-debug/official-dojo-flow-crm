@@ -84,7 +84,7 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
       >
         {/* Modal Content */}
         <div 
-          className="bg-black border-2 border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl"
+          className="bg-black border-2 border-slate-800 rounded-3xl w-full max-w-6xl max-h-[95vh] flex flex-col shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with Close Button */}

@@ -50,9 +50,9 @@ export default function ChatCustomization() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-4">
-      {/* Left: Settings Controls */}
-      <div className="space-y-6">
+    <div className="space-y-6 py-4">
+      {/* Settings Controls */}
+      <div className="space-y-6 max-w-2xl">
         {/* Logo Display Option */}
         <div>
           <label className="block text-base font-semibold text-white mb-4">
@@ -142,11 +142,11 @@ export default function ChatCustomization() {
         </Button>
       </div>
 
-      {/* Right: Live Preview */}
-      <div className="lg:sticky lg:top-4 lg:self-start">
+      {/* Live Preview */}
+      <div className="max-w-2xl">
         <div className="bg-slate-900/60 border-2 border-slate-700/40 rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Live Preview</h3>
-          <div className="border-2 border-slate-700 rounded-xl overflow-hidden shadow-2xl">
+          <div className="border-2 border-slate-700 rounded-xl overflow-hidden shadow-2xl" style={{ height: '600px' }}>
             <KaiChatStateful
               embedded={false}
               locationName={profile?.schoolName || 'Your School'}
