@@ -1655,7 +1655,9 @@ export const schoolProfiles = mysqlTable("school_profiles", {
 	// Branding
 	logoLightUrl: varchar("logo_light_url", { length: 1000 }),
 	logoDarkUrl: varchar("logo_dark_url", { length: 1000 }),
-	brandColor: varchar("brand_color", { length: 7 }), // Hex color code
+	brandColorPrimary: varchar("brand_color_primary", { length: 7 }), // Main brand color
+	brandColorSecondary: varchar("brand_color_secondary", { length: 7 }), // Accent color
+	brandColorTertiary: varchar("brand_color_tertiary", { length: 7 }), // Additional accent
 	// Preferences
 	timezone: varchar({ length: 100 }),
 	currency: varchar({ length: 10 }),

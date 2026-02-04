@@ -16,7 +16,9 @@ export interface SchoolProfileData {
   addressCountry?: string | null;
   logoLightUrl?: string | null;
   logoDarkUrl?: string | null;
-  brandColor?: string | null;
+  brandColorPrimary?: string | null;
+  brandColorSecondary?: string | null;
+  brandColorTertiary?: string | null;
   timezone?: string | null;
   currency?: string | null;
 }
@@ -101,7 +103,9 @@ export async function upsertSchoolProfile(
         addressCountry: data.addressCountry,
         logoLightUrl: data.logoLightUrl,
         logoDarkUrl: data.logoDarkUrl,
-        brandColor: data.brandColor,
+        brandColorPrimary: data.brandColorPrimary,
+        brandColorSecondary: data.brandColorSecondary,
+        brandColorTertiary: data.brandColorTertiary,
         timezone: data.timezone,
         currency: data.currency,
       })
@@ -134,7 +138,9 @@ export async function upsertSchoolProfile(
         addressCountry: data.addressCountry,
         logoLightUrl: data.logoLightUrl,
         logoDarkUrl: data.logoDarkUrl,
-        brandColor: data.brandColor,
+        brandColorPrimary: data.brandColorPrimary,
+        brandColorSecondary: data.brandColorSecondary,
+        brandColorTertiary: data.brandColorTertiary,
         timezone: data.timezone,
         currency: data.currency,
       })

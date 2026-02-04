@@ -67,7 +67,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   locationId,
   embedded = false,
 }) => {
-  // Fetch organization branding (logo, name, brandColor)
+  // Fetch organization branding (logo, name, brand colors)
   const { data: orgInfo } = trpc.organizations.getPublicInfo.useQuery(
     { organizationId },
     { enabled: !!organizationId }
@@ -476,7 +476,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
       <div 
         className="p-4 text-white"
         style={{
-          background: `linear-gradient(135deg, ${orgInfo?.brandColor || '#EF4444'} 0%, ${orgInfo?.brandColor || '#EF4444'}dd 100%)`
+          background: `linear-gradient(135deg, ${orgInfo?.brandColorPrimary || '#EF4444'} 0%, ${orgInfo?.brandColorPrimary || '#EF4444'}dd 100%)`
         }}
       >
         <div className="flex items-center gap-3">
@@ -519,7 +519,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
                 ) : (
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm"
-                    style={{ backgroundColor: orgInfo?.brandColor || '#EF4444' }}
+                    style={{ backgroundColor: orgInfo?.brandColorPrimary || '#EF4444' }}
                   >
                     {(orgInfo?.name || 'K').charAt(0).toUpperCase()}
                   </div>

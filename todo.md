@@ -7369,3 +7369,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update schoolProfileDb interface and upsert function
 - [x] Add brandColor column to database via SQL
 - [ ] Test color picker and verify changes save correctly
+
+
+## Expand Brand Color System to Three Colors (Feb 4, 2026)
+- [x] Rename brandColor to brandColorPrimary in database schema
+- [x] Add brandColorSecondary and brandColorTertiary columns to school_profiles table
+- [x] Update SchoolProfileData interface with three color fields
+- [x] Update schoolProfile router validation for three colors
+- [x] Update SchoolProfileSettingsTab UI with three color pickers (Primary, Secondary, Tertiary)
+- [x] Add helpful labels: "Primary (headers, main branding)", "Secondary (accents, buttons)", "Tertiary (highlights)"
+- [x] Update organizations.getPublicInfo to return all three colors
+- [x] Update KaiChatStateful to use brandColorPrimary for header
+- [ ] Test color picker with all three colors and verify they save correctly

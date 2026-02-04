@@ -360,7 +360,9 @@ export function SchoolProfileSettingsTab() {
   const [addressCountry, setAddressCountry] = useState('');
   const [logoLightUrl, setLogoLightUrl] = useState<string | null>(null);
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
-  const [brandColor, setBrandColor] = useState('#EF4444'); // Default red
+  const [brandColorPrimary, setBrandColorPrimary] = useState('#EF4444'); // Default red
+  const [brandColorSecondary, setBrandColorSecondary] = useState('#1E40AF'); // Default blue
+  const [brandColorTertiary, setBrandColorTertiary] = useState('#F59E0B'); // Default amber
   const [timezone, setTimezone] = useState('');
   const [currency, setCurrency] = useState('');
   
@@ -414,7 +416,9 @@ export function SchoolProfileSettingsTab() {
       setAddressCountry(data.addressCountry || '');
       setLogoLightUrl(data.logoLightUrl || null);
       setLogoDarkUrl(data.logoDarkUrl || null);
-      setBrandColor(data.brandColor || '#EF4444');
+      setBrandColorPrimary(data.brandColorPrimary || '#EF4444');
+      setBrandColorSecondary(data.brandColorSecondary || '#1E40AF');
+      setBrandColorTertiary(data.brandColorTertiary || '#F59E0B');
       setTimezone(data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setCurrency(data.currency || 'USD');
       setOriginalData(data);
@@ -437,12 +441,14 @@ export function SchoolProfileSettingsTab() {
         addressState !== (originalData.addressState || '') ||
         addressPostal !== (originalData.addressPostal || '') ||
         addressCountry !== (originalData.addressCountry || '') ||
-        brandColor !== (originalData.brandColor || '#EF4444') ||
+        brandColorPrimary !== (originalData.brandColorPrimary || '#EF4444') ||
+        brandColorSecondary !== (originalData.brandColorSecondary || '#1E40AF') ||
+        brandColorTertiary !== (originalData.brandColorTertiary || '#F59E0B') ||
         timezone !== (originalData.timezone || '') ||
         currency !== (originalData.currency || '');
       setHasChanges(changed);
     }
-  }, [schoolName, displayName, tagline, phone, email, website, addressStreet, addressCity, addressState, addressPostal, addressCountry, brandColor, timezone, currency, originalData]);
+  }, [schoolName, displayName, tagline, phone, email, website, addressStreet, addressCity, addressState, addressPostal, addressCountry, brandColorPrimary, brandColorSecondary, brandColorTertiary, timezone, currency, originalData]);
   
   // Validate form
   const validate = () => {
@@ -487,7 +493,9 @@ export function SchoolProfileSettingsTab() {
         addressCountry: addressCountry || null,
         logoLightUrl,
         logoDarkUrl,
-        brandColor: brandColor || null,
+        brandColorPrimary: brandColorPrimary || null,
+        brandColorSecondary: brandColorSecondary || null,
+        brandColorTertiary: brandColorTertiary || null,
         timezone: timezone || null,
         currency: currency || null,
       });
@@ -516,7 +524,9 @@ export function SchoolProfileSettingsTab() {
       setAddressState(originalData.addressState || '');
       setAddressPostal(originalData.addressPostal || '');
       setAddressCountry(originalData.addressCountry || '');
-      setBrandColor(originalData.brandColor || '#EF4444');
+      setBrandColorPrimary(originalData.brandColorPrimary || '#EF4444');
+      setBrandColorSecondary(originalData.brandColorSecondary || '#1E40AF');
+      setBrandColorTertiary(originalData.brandColorTertiary || '#F59E0B');
       setTimezone(originalData.timezone || '');
       setCurrency(originalData.currency || '');
       setErrors({});
@@ -788,22 +798,25 @@ export function SchoolProfileSettingsTab() {
             onRemove={() => handleLogoRemove('dark')}
             uploading={uploadingDark}
           />
-          
-          {/* Brand Color Picker */}
+                   {/* Brand Colors */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ 
               display: 'block', 
               fontSize: '14px', 
-              color: 'rgba(255, 255, 255, 0.7)', 
-              marginBottom: '8px',
+              color: 'rgba(255, 255, 255, 0.9)', 
+              marginBottom: '4px',
+              fontWeight: 600,
             }}>
-              Brand Color
+              Primary Color
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '8px', marginTop: 0 }}>
+              Used for headers, main branding elements
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
               <input
                 type="color"
-                value={brandColor}
-                onChange={(e) => setBrandColor(e.target.value)}
+                value={brandColorPrimary}
+                onChange={(e) => setBrandColorPrimary(e.target.value)}
                 style={{
                   width: '60px',
                   height: '44px',
@@ -815,8 +828,8 @@ export function SchoolProfileSettingsTab() {
               />
               <input
                 type="text"
-                value={brandColor}
-                onChange={(e) => setBrandColor(e.target.value)}
+                value={brandColorPrimary}
+                onChange={(e) => setBrandColorPrimary(e.target.value)}
                 placeholder="#EF4444"
                 maxLength={7}
                 style={{
@@ -835,19 +848,122 @@ export function SchoolProfileSettingsTab() {
                   width: '44px',
                   height: '44px',
                   borderRadius: '10px',
-                  backgroundColor: brandColor,
+                  backgroundColor: brandColorPrimary,
                   border: '1px solid rgba(255, 255, 255, 0.15)',
                 }}
-                title="Color preview"
+                title="Primary color preview"
               />
             </div>
-            <p style={{ 
-              fontSize: '12px', 
-              color: 'rgba(255, 255, 255, 0.4)', 
-              marginTop: '6px',
+
+            <label style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              color: 'rgba(255, 255, 255, 0.9)', 
+              marginBottom: '4px',
+              fontWeight: 600,
             }}>
-              This color will be used in chat headers and branding elements
+              Secondary Color
+            </label>
+            <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '8px', marginTop: 0 }}>
+              Used for accents, buttons, highlights
             </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <input
+                type="color"
+                value={brandColorSecondary}
+                onChange={(e) => setBrandColorSecondary(e.target.value)}
+                style={{
+                  width: '60px',
+                  height: '44px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(30, 30, 30, 1)',
+                  cursor: 'pointer',
+                }}
+              />
+              <input
+                type="text"
+                value={brandColorSecondary}
+                onChange={(e) => setBrandColorSecondary(e.target.value)}
+                placeholder="#1E40AF"
+                maxLength={7}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(30, 30, 30, 1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
+              />
+              <div 
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '10px',
+                  backgroundColor: brandColorSecondary,
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                }}
+                title="Secondary color preview"
+              />
+            </div>
+
+            <label style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              color: 'rgba(255, 255, 255, 0.9)', 
+              marginBottom: '4px',
+              fontWeight: 600,
+            }}>
+              Tertiary Color
+            </label>
+            <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '8px', marginTop: 0 }}>
+              Used for additional highlights, badges
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input
+                type="color"
+                value={brandColorTertiary}
+                onChange={(e) => setBrandColorTertiary(e.target.value)}
+                style={{
+                  width: '60px',
+                  height: '44px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(30, 30, 30, 1)',
+                  cursor: 'pointer',
+                }}
+              />
+              <input
+                type="text"
+                value={brandColorTertiary}
+                onChange={(e) => setBrandColorTertiary(e.target.value)}
+                placeholder="#F59E0B"
+                maxLength={7}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(30, 30, 30, 1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
+              />
+              <div 
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '10px',
+                  backgroundColor: brandColorTertiary,
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                }}
+                title="Tertiary color preview"
+              />
+            </div>
           </div>
         </SettingsCard>
         

@@ -18,7 +18,9 @@ const schoolProfileSchema = z.object({
   addressCountry: z.string().max(100).optional().nullable(),
   logoLightUrl: z.string().max(1000).optional().nullable(),
   logoDarkUrl: z.string().max(1000).optional().nullable(),
-  brandColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().nullable(),
+  brandColorPrimary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().nullable(),
+  brandColorSecondary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().nullable(),
+  brandColorTertiary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().nullable(),
   timezone: z.string().max(100).optional().nullable(),
   currency: z.string().max(10).optional().nullable(),
 });

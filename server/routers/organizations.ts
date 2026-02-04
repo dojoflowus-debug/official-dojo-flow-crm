@@ -21,7 +21,9 @@ export const organizationsRouter = router({
         .select({
           name: organizations.name,
           logoUrl: organizations.logoUrl,
-          brandColor: organizations.brandColor,
+          brandColorPrimary: organizations.brandColorPrimary,
+          brandColorSecondary: organizations.brandColorSecondary,
+          brandColorTertiary: organizations.brandColorTertiary,
         })
         .from(organizations)
         .where(eq(organizations.id, input.organizationId))
@@ -31,14 +33,18 @@ export const organizationsRouter = router({
         return {
           name: 'Dojo AI',
           logoUrl: null,
-          brandColor: '#EF4444', // Default red
+          brandColorPrimary: '#EF4444', // Default red
+          brandColorSecondary: '#1E40AF', // Default blue
+          brandColorTertiary: '#F59E0B', // Default amber
         };
       }
 
       return {
         name: org[0].name || 'Dojo AI',
         logoUrl: org[0].logoUrl || null,
-        brandColor: org[0].brandColor || '#EF4444',
+        brandColorPrimary: org[0].brandColorPrimary || '#EF4444',
+        brandColorSecondary: org[0].brandColorSecondary || '#1E40AF',
+        brandColorTertiary: org[0].brandColorTertiary || '#F59E0B',
       };
     }),
 });
