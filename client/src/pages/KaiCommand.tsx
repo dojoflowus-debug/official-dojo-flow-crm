@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePreviewCard';
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { InfoPanel, InfoPanelData } from '@/components/InfoPanel';
+import { StudentDetailsColumn } from '@/components/StudentDetailsColumn';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
 import { useKaiResponseParser } from '@/hooks/useKaiResponseParser';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
@@ -2554,7 +2555,15 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page w-full flex h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div 
+        ref={containerRef} 
+        className={`kai-command-page w-full grid h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}
+        style={{
+          gridTemplateColumns: studentDetailsPanelOpen
+            ? `${commandCenterWidth}px minmax(520px, 1fr) clamp(360px, 30vw, 520px)`
+            : `${commandCenterWidth}px 1fr`
+        }}
+      >
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -2563,7 +2572,9 @@ export default function KaiCommand() {
             opacity: isFocusMode ? 0 : 1,
             transform: isFocusMode ? 'translateX(-20px)' : 'translateX(0)',
             pointerEvents: isFocusMode ? 'none' : 'auto',
-            zIndex: 20
+            zIndex: 20,
+            minWidth: 0,
+            minHeight: 0
           }}
           className={`conversation-panel ${getSidebarBgClass()} border rounded-sm flex flex-col flex-shrink-0 m-4 mr-0 ${isDark || isCinematic ? 'shadow-[0_4px_24px_rgba(0,0,0,0.7)]' : 'shadow-lg'} overflow-hidden transition-all duration-300 ease-in-out ${isFocusMode ? 'invisible' : 'visible'} relative`}
         >
@@ -3524,6 +3535,16 @@ export default function KaiCommand() {
           )}
         </div>
       </div>
+
+      {/* STUDENT DETAILS COLUMN - Third Column */}
+      <StudentDetailsColumn
+        isOpen={studentDetailsPanelOpen}
+        studentId={selectedStudentId}
+        onClose={() => {
+          setStudentDetailsPanelOpen(false);
+          setSelectedStudentId(null);
+        }}
+      />
 
       {/* INFO PANEL - Third Column */}
       <InfoPanel 

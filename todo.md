@@ -7251,3 +7251,36 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Make StudentDetailsPanel open as slide-over overlay on top of chat area (like Manus artifacts)
 - [x] Panel should cover center chat area, not push content to the side
 - [x] Add close button or click-outside-to-close functionality
+
+
+## Third Column for Student Details (Feb 3, 2026) - MINIMAL SURGICAL APPROACH
+**Hard Rules:**
+- No overlay, no backdrop, no portal
+- Student details panel must be normal grid column (layout participates in width)
+- Do NOT change chat composer positioning model - keep it exactly as it currently works
+- Make layout changes ONLY in /kai page shell component
+- Do NOT change unrelated UI. Do NOT redesign. No animations. No new theme changes.
+
+**Implementation Steps:**
+- [ ] Step 1: Add state for selected student (selectedStudentId, openStudentDetails, closeStudentDetails)
+- [ ] Step 2: Convert page shell to 2-or-3 column grid (Closed: 320px 1fr, Open: 320px minmax(520px,1fr) clamp(360px,30vw,520px))
+- [ ] Step 3: Ensure center chat stays contained (flex column, message list flex:1, composer at bottom)
+- [ ] Step 4: Create StudentDetailsColumn component, render only when selectedStudentId !== null
+- [ ] Step 5: Wire student cards to openStudentDetails on click
+- [ ] Test: 2 columns when no student selected
+- [ ] Test: Click student card → third column appears, center shrinks, composer stays in center
+- [ ] Test: Click another student → third column updates
+- [ ] Test: Close → third column disappears, center returns full width
+- [ ] Test: No dimming, no overlay, no duplicated bands, no page scroll
+
+
+## Third Column for Student Details (Feb 3, 2026) - COMPLETED
+- [x] Convert page shell to 2-or-3 column CSS Grid (not overlay)
+- [x] Grid columns when closed: 320px | 1fr
+- [x] Grid columns when open: 320px | minmax(520px, 1fr) | clamp(360px, 30vw, 520px)
+- [x] Create StudentDetailsColumn component
+- [x] Wire student cards to open third column on click
+- [x] Chat composer stays inside center column and resizes with it
+- [x] No overlay, no backdrop, no dimming
+- [x] Close button and ESC key close details column
+- [ ] Test: Center column and composer shrink when details opens
