@@ -48,6 +48,7 @@ import { pcBankCardRouter } from './pcBankCardRouter';
 import { messagingRouter } from './routers/messaging';
 import { emailTemplatesRouter } from './emailTemplatesRouter';
 import { organizationsRouter } from './routers/organizations';
+import { classesRouter } from './classesRouter';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -573,6 +574,7 @@ export const appRouter = router({
   masterDashboard: masterDashboardRouter,
   
   // Multi-tenant authentication (public)
+  classes: classesRouter,
   ownerAuth: ownerAuthRouter,
   staffAuth: staffAuthRouter,
   studentAuth: studentAuthRouter,

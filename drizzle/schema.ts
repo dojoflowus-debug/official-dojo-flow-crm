@@ -1,4 +1,4 @@
-import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal, boolean } from "drizzle-orm/mysql-core"
+import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal, boolean, date } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
 export const accountFlags = mysqlTable("account_flags", {
@@ -269,6 +269,12 @@ export const classes = mysqlTable("classes", {
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow().notNull(),
 	floorPlanId: int(),
 	organizationId: int(),
+	locationId: int('location_id'),
+	startDate: date('start_date'),
+	endDate: date('end_date'),
+	duration: int('duration_minutes').default(60).notNull(),
+	recurringPattern: mysqlEnum('recurring_pattern', ['weekly','biweekly','monthly','one_time']).default('weekly'),
+	notes: text('class_notes'),
 });
 
 export const conversations = mysqlTable("conversations", {

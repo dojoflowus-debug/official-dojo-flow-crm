@@ -631,7 +631,6 @@ export function DojoFlowMessagingTab() {
                   <strong style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Body:</strong>
                   <div
                     style={{
-                      color: 'rgba(255, 255, 255, 0.9)',
                       marginTop: '8px',
                       whiteSpace: 'pre-wrap',
                       background: 'white',

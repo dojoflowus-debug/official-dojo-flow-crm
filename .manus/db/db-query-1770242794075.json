@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE classes \nADD COLUMN location_id INT,\nADD COLUMN start_date DATE,\nADD COLUMN end_date DATE,\nADD COLUMN duration_minutes INT DEFAULT 60 NOT NULL,\nADD COLUMN recurring_pattern ENUM('weekly','biweekly','monthly','one_time') DEFAULT 'weekly',\nADD COLUMN class_notes TEXT;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute ALTER TABLE classes \nADD COLUMN location_id INT,\nADD COLUMN start_date DATE,\nADD COLUMN end_date DATE,\nADD COLUMN duration_minutes INT DEFAULT 60 NOT NULL,\nADD COLUMN recurring_pattern ENUM('weekly','biweekly','monthly','one_time') DEFAULT 'weekly',\nADD COLUMN class_notes TEXT;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1980
+}
