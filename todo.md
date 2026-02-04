@@ -7264,3 +7264,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] DO NOT modify chat composer positioning or structure - Removed position:fixed, uses natural flex flow
 - [x] Test: Composer stays in center column and works correctly - Verified in browser
 - [ ] Test: Management UI opens/closes smoothly without breaking layout - Ready for user testing
+
+
+## Kai Dashboard Composer Positioning Adjustment (Feb 4, 2026)
+- [x] Move composer up by 1.5 inches in Cinematic mode only
+- [x] No changes to Light or Dark mode composer positioning
+- [x] Test in Cinematic mode to verify positioning
