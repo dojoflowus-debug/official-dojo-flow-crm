@@ -30,6 +30,7 @@ import { KaiBarProvider } from '@/contexts/KaiBarContext'
 const NAVIGATION = [
   { id: 'students', name: 'Students', href: '/students', icon: Users },
   { id: 'leads', name: 'Leads', href: '/leads', icon: UserPlus },
+  { id: 'lead-settings', name: 'Lead Settings', href: '/lead-settings', icon: Settings },
   { id: 'kai-command', name: 'Kai', href: '/kai', icon: Sparkles, isCenter: true },
   { id: 'classes', name: 'Classes', href: '/classes', icon: Calendar },
   { id: 'floor-plans', name: 'Floor Plans', href: '/floor-plans', icon: Grid3x3 },

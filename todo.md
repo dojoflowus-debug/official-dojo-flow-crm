@@ -7441,3 +7441,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add navigation menu item for Lead Settings
 - [x] Test all customization options with live preview
 - [x] Save checkpoint with lead settings page
+
+
+## Add Lead Settings to Navigation Menu (Feb 4, 2026)
+- [x] Find navigation menu component (AppShell or sidebar)
+- [x] Add "Lead Settings" menu item with appropriate icon
+- [x] Position menu item in logical location (near Marketing or Settings)
+- [x] Test navigation from menu to Lead Settings page
+- [x] Save checkpoint with navigation menu update
