@@ -7381,3 +7381,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update organizations.getPublicInfo to return all three colors
 - [x] Update KaiChatStateful to use brandColorPrimary for header
 - [ ] Test color picker with all three colors and verify they save correctly
+
+
+## Fix Organization Name and Logo Not Displaying in Lead Capture (Feb 4, 2026)
+- [x] Investigate why "MyDojo" fallback is showing instead of actual school name - Found: organization name IS "MyDojo" in database
+- [x] Check if organization ID is being passed correctly to lead capture page - Correct (180001)
+- [x] Verify organizations.getPublicInfo API is returning correct data - Working correctly, joins school_profiles
+- [x] Check if logoUrl field is being queried and returned properly - Working correctly
+- [x] Fix data fetching or API query issue - API is working correctly, returns data from both tables
+- [x] Test with actual school data - System working correctly, shows "MyDojo" because that's the actual org name
+- [x] Conclusion: User needs to update School Profile settings with actual school name and logo
