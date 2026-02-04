@@ -7274,3 +7274,9 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Kai Dashboard Composer Positioning Fine-Tuning (Feb 4, 2026)
 - [x] Adjust composer margin from 1.5 inches (96px) to 1 inch (64px) in Cinematic mode
+
+## Kai Dashboard Composer Visibility Issue in Cinematic Mode (Feb 4, 2026)
+- [x] Log in and check composer visibility in Cinematic mode
+- [x] Diagnose why composer is not visible - Found: insufficient contrast + too close to bottom edge
+- [x] Fix the visibility issue - Enhanced border (95% white, 2px), stronger glow, lighter background (rgba(20,20,20,0.85)), added 80px paddingBottom to center panel
+- [x] Re-applied fixes after sandbox reset

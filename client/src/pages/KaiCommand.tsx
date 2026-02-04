@@ -2789,7 +2789,8 @@ export default function KaiCommand() {
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
-            height: isCinematic ? '100%' : 'calc(100vh - var(--topbar-h) - var(--bottomnav-h))'
+            height: isCinematic ? '100%' : 'calc(100vh - var(--topbar-h) - var(--bottomnav-h))',
+            paddingBottom: isCinematic ? '80px' : '0px'
           }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -3432,7 +3433,7 @@ export default function KaiCommand() {
             }}
             className={`kaiBar flex items-center gap-2 transition-all duration-300 relative z-[100] border focus-within:kai-command-bar-focus`}
             style={{
-              background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.95)',
+              background: isCinematic ? 'rgba(20, 20, 20, 0.85)' : (isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.95)'),
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               maxWidth: '664px',
@@ -3441,10 +3442,11 @@ export default function KaiCommand() {
               borderRadius: '999px',
               padding: '12px 16px',
               transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              borderColor: isDark || isCinematic ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.1)',
-              borderWidth: '1px',
+              borderColor: isCinematic ? 'rgba(255, 255, 255, 0.95)' : (isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.1)'),
+              borderWidth: isCinematic ? '2px' : '1px',
               boxSizing: 'border-box',
-              position: 'relative'
+              position: 'relative',
+              boxShadow: isCinematic ? '0 0 30px rgba(255, 255, 255, 0.3), 0 0 60px rgba(255, 255, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5)' : 'none'
             }}
           >
             {/* Hidden file input */}
