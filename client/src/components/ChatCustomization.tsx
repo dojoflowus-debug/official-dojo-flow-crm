@@ -65,9 +65,9 @@ export default function ChatCustomization({ onSave }: ChatCustomizationProps = {
   }
 
   return (
-    <div className="space-y-6 py-4">
+    <div className="space-y-6 py-4 max-w-3xl mx-auto">
       {/* Settings Controls */}
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6">
         {/* Logo Display Option */}
         <div>
           <label className="block text-base font-semibold text-white mb-4">
@@ -144,7 +144,7 @@ export default function ChatCustomization({ onSave }: ChatCustomizationProps = {
       </div>
 
       {/* Live Preview */}
-      <div className="max-w-2xl">
+      <div>
         <div className="bg-slate-900/60 border-2 border-slate-700/40 rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Live Preview</h3>
           <div className="border-2 border-slate-700 rounded-xl overflow-hidden shadow-2xl" style={{ height: '400px' }}>

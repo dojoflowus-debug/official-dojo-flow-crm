@@ -7488,3 +7488,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Ensure header and footer remain fixed
 - [x] Test scrolling with all content visible
 - [x] Save checkpoint with working scroll
+
+
+## Fix Header Display Overlap (Feb 4, 2026)
+
+- [x] Identify why Header Display is positioned on left overlapping title
+- [x] Move Header Display section below tabs in modal
+- [x] Center all chat customization content
+- [x] Test that no overlap occurs
+- [x] Save checkpoint with fixed layout
