@@ -360,6 +360,7 @@ export function SchoolProfileSettingsTab() {
   const [addressCountry, setAddressCountry] = useState('');
   const [logoLightUrl, setLogoLightUrl] = useState<string | null>(null);
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
+  const [brandColor, setBrandColor] = useState('#EF4444'); // Default red
   const [timezone, setTimezone] = useState('');
   const [currency, setCurrency] = useState('');
   
@@ -413,6 +414,7 @@ export function SchoolProfileSettingsTab() {
       setAddressCountry(data.addressCountry || '');
       setLogoLightUrl(data.logoLightUrl || null);
       setLogoDarkUrl(data.logoDarkUrl || null);
+      setBrandColor(data.brandColor || '#EF4444');
       setTimezone(data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setCurrency(data.currency || 'USD');
       setOriginalData(data);
@@ -435,11 +437,12 @@ export function SchoolProfileSettingsTab() {
         addressState !== (originalData.addressState || '') ||
         addressPostal !== (originalData.addressPostal || '') ||
         addressCountry !== (originalData.addressCountry || '') ||
+        brandColor !== (originalData.brandColor || '#EF4444') ||
         timezone !== (originalData.timezone || '') ||
         currency !== (originalData.currency || '');
       setHasChanges(changed);
     }
-  }, [schoolName, displayName, tagline, phone, email, website, addressStreet, addressCity, addressState, addressPostal, addressCountry, timezone, currency, originalData]);
+  }, [schoolName, displayName, tagline, phone, email, website, addressStreet, addressCity, addressState, addressPostal, addressCountry, brandColor, timezone, currency, originalData]);
   
   // Validate form
   const validate = () => {
@@ -484,6 +487,7 @@ export function SchoolProfileSettingsTab() {
         addressCountry: addressCountry || null,
         logoLightUrl,
         logoDarkUrl,
+        brandColor: brandColor || null,
         timezone: timezone || null,
         currency: currency || null,
       });
@@ -512,6 +516,7 @@ export function SchoolProfileSettingsTab() {
       setAddressState(originalData.addressState || '');
       setAddressPostal(originalData.addressPostal || '');
       setAddressCountry(originalData.addressCountry || '');
+      setBrandColor(originalData.brandColor || '#EF4444');
       setTimezone(originalData.timezone || '');
       setCurrency(originalData.currency || '');
       setErrors({});
@@ -766,7 +771,7 @@ export function SchoolProfileSettingsTab() {
         {/* Branding Card */}
         <SettingsCard 
           title="Branding" 
-          subtitle="Upload logos for light and dark themes"
+          subtitle="Upload logos and set your brand color"
           icon={Image}
         >
           <LogoUpload
@@ -783,6 +788,67 @@ export function SchoolProfileSettingsTab() {
             onRemove={() => handleLogoRemove('dark')}
             uploading={uploadingDark}
           />
+          
+          {/* Brand Color Picker */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              color: 'rgba(255, 255, 255, 0.7)', 
+              marginBottom: '8px',
+            }}>
+              Brand Color
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input
+                type="color"
+                value={brandColor}
+                onChange={(e) => setBrandColor(e.target.value)}
+                style={{
+                  width: '60px',
+                  height: '44px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(30, 30, 30, 1)',
+                  cursor: 'pointer',
+                }}
+              />
+              <input
+                type="text"
+                value={brandColor}
+                onChange={(e) => setBrandColor(e.target.value)}
+                placeholder="#EF4444"
+                maxLength={7}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(30, 30, 30, 1)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
+              />
+              <div 
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '10px',
+                  backgroundColor: brandColor,
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                }}
+                title="Color preview"
+              />
+            </div>
+            <p style={{ 
+              fontSize: '12px', 
+              color: 'rgba(255, 255, 255, 0.4)', 
+              marginTop: '6px',
+            }}>
+              This color will be used in chat headers and branding elements
+            </p>
+          </div>
         </SettingsCard>
         
         {/* Preferences Card */}

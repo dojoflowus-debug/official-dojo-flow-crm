@@ -7351,3 +7351,21 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Change dark blue banner background to use school's brandColor
 - [x] Add fallback color (default to red #EF4444) if brandColor not set
 - [ ] Test with different brand colors to ensure text contrast is readable
+
+
+## Add Brand Color Picker to School Profile Settings (Feb 4, 2026)
+- [ ] Find School Profile settings component file
+- [ ] Add brand color picker input field to Branding section
+- [ ] Create API endpoint to update organization brandColor
+- [ ] Wire color picker to save brand color to database
+- [ ] Test color picker and verify changes reflect in lead capture chat
+
+
+## Add Brand Color Picker to School Profile Settings (Feb 4, 2026)
+- [x] Add brandColor field to SchoolProfileSettingsTab state
+- [x] Add color picker input to Branding section UI
+- [x] Update save mutation to include brandColor
+- [x] Add brandColor to schoolProfile router validation schema
+- [x] Update schoolProfileDb interface and upsert function
+- [x] Add brandColor column to database via SQL
+- [ ] Test color picker and verify changes save correctly
