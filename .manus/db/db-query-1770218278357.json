@@ -1,0 +1,15 @@
+{
+  "query": "SELECT brand_color_primary, brand_color_secondary, brand_color_tertiary FROM school_profiles WHERE organization_id = 120001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT brand_color_primary, brand_color_secondary, brand_color_tertiary FROM school_profiles WHERE organization_id = 120001;",
+  "rows": [
+    {
+      "brand_color_primary": "#ffffff",
+      "brand_color_secondary": "#003cff",
+      "brand_color_tertiary": "#ffffff"
+    }
+  ],
+  "messages": [],
+  "stdout": "brand_color_primary\tbrand_color_secondary\tbrand_color_tertiary\n#ffffff\t#003cff\t#ffffff\n",
+  "stderr": "",
+  "execution_time_ms": 128
+}

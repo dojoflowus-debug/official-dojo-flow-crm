@@ -7397,3 +7397,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update KaiChatStateful subtitle to use orgInfo.name instead of locationName prop
 - [x] Test that subtitle shows "Test Dojo • Always here to help" instead of "MyDojo • Always here to help"
 - [x] Verify both title and subtitle update when organization name changes
+
+
+## Fix Text Color Contrast in Lead Capture Header (Feb 4, 2026)
+- [x] Implement luminance detection function to calculate brightness of brand color
+- [x] Update KaiChatStateful header to use black text on light backgrounds and white text on dark backgrounds
+- [x] Test with white/light brand colors (should show black text)
+- [x] Test with dark brand colors (should show white text)
+- [x] Verify text is always readable regardless of brand color choice

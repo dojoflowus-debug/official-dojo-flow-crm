@@ -60,6 +60,25 @@ const debugLog = (label: string, data: any) => {
   }
 };
 
+// Calculate luminance of a color to determine if text should be dark or light
+// Returns true if the color is light (needs dark text), false if dark (needs light text)
+const isLightColor = (hexColor: string): boolean => {
+  // Remove # if present
+  const hex = hexColor.replace('#', '');
+  
+  // Convert to RGB
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Calculate relative luminance using the formula from WCAG
+  // https://www.w3.org/TR/WCAG20/#relativeluminancedef
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return true if luminance > 0.5 (light color)
+  return luminance > 0.5;
+};
+
 export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
   organizationId,
   locationSlug,
@@ -470,13 +489,21 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
     window.open(checkoutUrl, '_blank');
   };
 
+  // Determine text color based on brand color brightness
+  const brandColor = orgInfo?.brandColorPrimary || '#EF4444';
+  const usesDarkText = isLightColor(brandColor);
+  const textColor = usesDarkText ? '#000000' : '#FFFFFF';
+  const textOpacity = usesDarkText ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.8)';
+  const avatarBg = usesDarkText ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)';
+
   return (
     <div className={`flex flex-col ${embedded ? 'h-screen' : 'h-[600px]'} bg-white rounded-lg shadow-lg overflow-hidden relative`}>
       {/* Header */}
       <div 
-        className="p-4 text-white"
+        className="p-4"
         style={{
-          background: `linear-gradient(135deg, ${orgInfo?.brandColorPrimary || '#EF4444'} 0%, ${orgInfo?.brandColorPrimary || '#EF4444'}dd 100%)`
+          background: `linear-gradient(135deg, ${brandColor} 0%, ${brandColor}dd 100%)`,
+          color: textColor
         }}
       >
         <div className="flex items-center gap-3">
@@ -484,16 +511,20 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             <img 
               src={orgInfo.logoUrl} 
               alt={orgInfo.name} 
-              className="w-10 h-10 rounded-full object-cover bg-white/10"
+              className="w-10 h-10 rounded-full object-cover"
+              style={{ backgroundColor: avatarBg }}
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg"
+              style={{ backgroundColor: avatarBg }}
+            >
               {(orgInfo?.name || 'Kai').charAt(0).toUpperCase()}
             </div>
           )}
           <div>
             <h2 className="font-semibold">{orgInfo?.name || 'Kai'}</h2>
-            <p className="text-sm text-white/80">{orgInfo?.name || locationName} • Always here to help</p>
+            <p className="text-sm" style={{ color: textOpacity }}>{orgInfo?.name || locationName} • Always here to help</p>
           </div>
         </div>
       </div>
