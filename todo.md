@@ -7251,3 +7251,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Make StudentDetailsPanel open as slide-over overlay on top of chat area (like Manus artifacts)
 - [x] Panel should cover center chat area, not push content to the side
 - [x] Add close button or click-outside-to-close functionality
+
+
+## Manus-Style 3-Column Layout for Kai Dashboard (Feb 4, 2026)
+- [x] Study current working layout structure (DO NOT break existing functionality)
+- [x] Create right Management UI panel component (collapsible, like Manus)
+- [x] Add tabs to Management UI: Student Details, History, Analytics
+- [x] Update main container to support 3-column grid when Management UI is open
+- [x] Grid columns: 320px (left sidebar) | minmax(520px, 1fr) (center chat) | clamp(360px, 30vw, 520px) (right Management UI)
+- [x] Wire student card clicks to open Management UI with student details
+- [x] Add close button to collapse Management UI back to 2-column layout
+- [x] DO NOT modify chat composer positioning or structure - Removed position:fixed, uses natural flex flow
+- [x] Test: Composer stays in center column and works correctly - Verified in browser
+- [ ] Test: Management UI opens/closes smoothly without breaking layout - Ready for user testing

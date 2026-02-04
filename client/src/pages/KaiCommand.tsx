@@ -23,6 +23,7 @@ import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
 import { useKaiResponseParser } from '@/hooks/useKaiResponseParser';
 import { UIBlockRenderer } from '@/components/UIBlockRenderer';
 import { StudentDetailsPanel } from '@/components/StudentDetailsPanel';
+import { ManagementPanel } from '@/components/kai/ManagementPanel';
 import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
@@ -219,6 +220,9 @@ export default function KaiCommand() {
   // Student Details Panel state
   const [studentDetailsPanelOpen, setStudentDetailsPanelOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  
+  // Management Panel state (right column)
+  const [managementPanelOpen, setManagementPanelOpen] = useState(false);
   
   // Initialize response parser
   const { parseResponse } = useKaiResponseParser();
@@ -2554,7 +2558,14 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page w-full flex h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
+      <div ref={containerRef} className={`kai-command-page w-full h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`} style={{
+        display: 'grid',
+        gridTemplateColumns: managementPanelOpen 
+          ? `${isFocusMode ? 0 : commandCenterWidth}px 8px minmax(520px, 1fr) clamp(360px, 30vw, 520px)`
+          : `${isFocusMode ? 0 : commandCenterWidth}px 8px 1fr`,
+        gridAutoFlow: 'column',
+        transition: 'grid-template-columns 0.3s ease-in-out'
+      }}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -3320,13 +3331,15 @@ export default function KaiCommand() {
                                 <UIBlockRenderer 
                                 blocks={message.ui_blocks} 
                                 onBlockClick={(block) => {
-                                  // Open Student Details Panel for student cards
+                                  // Open Management Panel for student cards
                                   if (block.type === 'student_card' && block.student) {
                                     setSelectedStudentId(block.student.id);
-                                    setStudentDetailsPanelOpen(true);
+                                    setManagementPanelOpen(true);
+                                    setStudentDetailsPanelOpen(false);
                                   } else if (block.type === 'student_card' && block.studentId) {
                                     setSelectedStudentId(block.studentId);
-                                    setStudentDetailsPanelOpen(true);
+                                    setManagementPanelOpen(true);
+                                    setStudentDetailsPanelOpen(false);
                                   } else if (block.type === 'student_list' && block.studentIds) {
                                     setResultsPanelData({
                                       type: 'student_list',
@@ -3398,14 +3411,10 @@ export default function KaiCommand() {
             </div>
           </div>
 
-          {/* COMPOSER DOCK - Pinned at bottom of center panel via flex layout */}
+          {/* COMPOSER DOCK - Natural flex positioning at bottom of center panel */}
           <div 
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
-              position: isCinematic ? 'absolute' : 'fixed',
-              bottom: isCinematic ? '192px' : 'var(--bottomnav-h, 88px)',
-              left: isCinematic ? '0' : centerPanelPosition.left,
-              width: isCinematic ? '100%' : centerPanelPosition.width,
               zIndex: LAYOUT_CONSTANTS.composerZIndex,
               paddingBottom: '16px',
               paddingTop: '16px',
@@ -3420,12 +3429,13 @@ export default function KaiCommand() {
               e.preventDefault();
               handleSendMessage('submit');
             }}
-            className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-[100] border focus-within:kai-command-bar-focus`}
+            className={`kaiBar flex items-center gap-2 transition-all duration-300 relative z-[100] border focus-within:kai-command-bar-focus`}
             style={{
               background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              ...(isCinematic ? {} : { width: `${centerPanelPosition.width - 32}px` }),
+              maxWidth: '664px',
+              width: '100%',
               minHeight: '56px',
               borderRadius: '999px',
               padding: '12px 16px',
@@ -3510,8 +3520,8 @@ export default function KaiCommand() {
           </form>
           </div>
 
-          {/* Student Details Panel - Overlay */}
-          {selectedStudentId && (
+          {/* Student Details Panel - Overlay (keep for backward compatibility) */}
+          {selectedStudentId && studentDetailsPanelOpen && !managementPanelOpen && (
             <StudentDetailsPanel
               studentId={selectedStudentId}
               isOpen={studentDetailsPanelOpen}
@@ -3523,6 +3533,17 @@ export default function KaiCommand() {
             />
           )}
         </div>
+        
+        {/* Management Panel - Right Column (Grid Column 4) */}
+        <ManagementPanel
+          isOpen={managementPanelOpen}
+          onClose={() => {
+            setManagementPanelOpen(false);
+            setSelectedStudentId(null);
+          }}
+          studentId={selectedStudentId}
+          theme={theme}
+        />
       </div>
 
       {/* INFO PANEL - Third Column */}
