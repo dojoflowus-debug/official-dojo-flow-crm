@@ -147,7 +147,7 @@ describe('Kiosk Mode', () => {
       const kioskConfig = {
         schoolId: '1',
         schoolName: 'Test Dojo',
-        schoolLogo: '/logo.png',
+        schoolLogo: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/pMOPONkdqAXGePSF.png',
         lockedAt: Date.now(),
       };
 

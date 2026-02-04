@@ -41,7 +41,7 @@ export function BrandLogo({
   }
   
   const logoSrc = iconOnly 
-    ? '/logo-icon.png'
+    ? 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png'
     : variant === 'light' 
       ? '/logo-light.png' 
       : '/logo-dark.png'
@@ -79,7 +79,7 @@ export function BrandLogoWithText({
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <img
-        src="/logo-icon.png"
+        src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png"
         alt=""
         className={`${sizeClasses[size].icon} object-contain`}
       />

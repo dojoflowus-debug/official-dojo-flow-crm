@@ -42,7 +42,7 @@ export default function AccountTypeSelection() {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
             <img
-              src="/kai-avatar.png"
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/RWtkCgdJjxxOQJjI.png"
               alt="DojoFlow"
               className="h-16 w-16"
               onError={(e) => {

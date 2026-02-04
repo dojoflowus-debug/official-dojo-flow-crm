@@ -114,7 +114,7 @@ export default function PublicHome() {
           <div className="relative max-w-6xl mx-auto">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-red-500/20 border border-white/10">
               <img 
-                src="/01-kai-command-hero.png" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/AVmIVPDveHMjluYN.png" 
                 alt="DojoFlow Kai Command Center" 
                 className="w-full h-auto"
               />
@@ -190,7 +190,7 @@ export default function PublicHome() {
           <div className="order-1 md:order-2">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/10 border border-white/10">
               <img 
-                src="/02-students-map-list.png" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ghpAprnPbjZUTeLb.png" 
                 alt="Student Management with Map View" 
                 className="w-full h-auto"
               />
@@ -203,7 +203,7 @@ export default function PublicHome() {
           <div>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/10 border border-white/10">
               <img 
-                src="/03-student-detail-drawer.png" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/YHSFXolnAzliZPwf.png" 
                 alt="Student Detail View" 
                 className="w-full h-auto"
               />
@@ -268,7 +268,7 @@ export default function PublicHome() {
           <div className="order-1 md:order-2">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-green-500/10 border border-white/10">
               <img 
-                src="/04-classes-schedule.png" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/YKypZxwKnLUcOnWo.png" 
                 alt="Class Schedule Grid" 
                 className="w-full h-auto"
               />
@@ -281,7 +281,7 @@ export default function PublicHome() {
           <div>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-red-500/10 border border-white/10">
               <img 
-                src="/05-kai-in-action.png" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/evXlIhPCsZkTslUv.png" 
                 alt="Kai AI Taking Action" 
                 className="w-full h-auto"
               />

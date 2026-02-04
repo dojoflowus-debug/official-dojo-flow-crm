@@ -188,7 +188,7 @@ export default function ForFitness() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="/fitness-gym-interior.jpg" 
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/LdvGiMXAKXQpZGqZ.jpg" 
             alt="Modern fitness facility" 
             className="w-full h-full object-cover opacity-20"
           />

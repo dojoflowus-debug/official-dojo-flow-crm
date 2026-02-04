@@ -290,7 +290,7 @@ export default function StudentRegister() {
             </button>
 
             <div className="flex items-center gap-3 mb-3">
-              <img src="/dojoflow-icon.png" alt="DojoFlow" className="w-12 h-12 flex-shrink-0" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/BWtduOXzuLeNGwyb.png" alt="DojoFlow" className="w-12 h-12 flex-shrink-0" />
               <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
                 Start Your Journey
               </h1>
@@ -727,7 +727,7 @@ export default function StudentRegister() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url('/carousel/adult-martial-arts.jpg')`,
+            backgroundImage: `url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/eMelZLyMqndQanoX.jpg')`,
           }}
         />
         {/* Overlay */}

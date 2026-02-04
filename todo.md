@@ -7280,3 +7280,50 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Diagnose why composer is not visible - Found: insufficient contrast + too close to bottom edge
 - [x] Fix the visibility issue - Enhanced border (95% white, 2px), stronger glow, lighter background (rgba(20,20,20,0.85)), added 80px paddingBottom to center panel
 - [x] Re-applied fixes after sandbox reset
+
+
+## Apple iOS Messages-Style Chat UI Redesign (Feb 4, 2026)
+### Phase 1: School Logo & Settings Integration
+- [x] Fetch school logo and name from organization/school settings
+- [x] Display logo (32px) + school name in chat header (left aligned)
+- [x] Add fallback: monogram circle with school initials if no logo
+- [x] Ensure automatic updates when settings change (no hardcoding)
+
+### Phase 2: Platform Detection & Theme System
+- [x] Create getPlatformTheme() utility function
+- [x] Implement platform detection: iOS | Android | Desktop
+- [x] Add themeOverride setting: auto | apple | android (default: auto)
+- [x] Store theme preference in user settings or local storage
+
+### Phase 3: iOS "Apple" Design Mode
+- [x] Design iOS-style sticky header with blur/translucent background
+- [x] Add secondary line: "Kai • Always here to help" (small, subtle)
+- [x] Implement iOS message bubbles (user: blue/red, assistant: light gray)
+- [x] Create iOS "pill" composer input with circular send button
+- [x] Add smooth "typing" indicator dots (subtle)
+- [x] Apply iOS typography: system-ui, 18-20 semibold title, 15-16 body, 12-13 secondary
+- [x] Use backdrop-filter: blur(16px) and translucent backgrounds
+- [x] Apply iOS bubble radius (18-22px)
+
+### Phase 4: Android "Material" Design Mode
+- [x] Implement Material-style header with elevation shadow
+- [x] Use squarer corners (12-16px) for Material feel
+- [x] Create Material-style message bubbles
+- [x] Design filled icon button for send action
+- [x] Apply Material 3 styling to input and bubbles
+
+### Phase 5: Responsive & Functional Requirements
+- [x] Ensure Enter sends message, Shift+Enter adds line break (desktop)
+- [x] Add large touch targets for mobile (40px+ buttons)
+- [x] Keep existing chat logic and message sending functionality
+- [x] Ensure responsive design inside iframe/embedded container
+- [x] Implement smooth scrolling with no layout jumps
+- [ ] Verify Apple theme on iPhone/iPad/macOS Safari - Ready for user testing
+- [ ] Verify Material theme on Android Chrome - Ready for user testing
+- [ ] Test manual theme override in settings - Ready for implementation
+
+### Phase 6: Polish & Apple-like Details
+- [x] Make borders almost invisible, rely on spacing + subtle separators
+- [x] Add "sheet" feel: rounded container, soft shadow, slight blur in header
+- [x] Make send button feel like iMessage: compact, confident, not chunky
+- [x] Ensure accessible contrast for all text elements

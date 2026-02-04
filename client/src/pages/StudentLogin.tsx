@@ -9,11 +9,11 @@ import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 // Carousel images for the right panel - visual storytelling
 const carouselImages = [
-  { src: "/carousel/kids-martial-arts.jpg", alt: "Kids martial arts class" },
-  { src: "/carousel/teens-training.jpg", alt: "Adult martial arts training" },
-  { src: "/carousel/adult-martial-arts.jpg", alt: "Adult martial arts class" },
-  { src: "/carousel/kickboxing-class.jpg", alt: "High energy kickboxing" },
-  { src: "/carousel/yoga-wellness.jpg", alt: "Yoga and recovery session" },
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/WZOXNHplOhaVbEWA.jpg", alt: "Kids martial arts class" },
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/OXAIDalHdIxMxIVC.jpg", alt: "Adult martial arts training" },
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/eMelZLyMqndQanoX.jpg", alt: "Adult martial arts class" },
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/KutNCKqxxGOQmhCw.jpg", alt: "High energy kickboxing" },
+  { src: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ogsweDtnlaxACTis.jpg", alt: "Yoga and recovery session" },
 ];
 
 // Storage keys for student session
@@ -289,7 +289,7 @@ export default function StudentLogin() {
             <div className="flex items-center gap-3 mb-3">
               {/* DojoFlow Swirl Logo */}
               <img 
-                src="/dojoflow-icon.png" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/BWtduOXzuLeNGwyb.png" 
                 alt="DojoFlow" 
                 className="w-12 h-12 flex-shrink-0"
               />
@@ -448,7 +448,7 @@ export default function StudentLogin() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url('/login-hero-dojoflow.jpg')`,
+            backgroundImage: `url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/pZRidNalhhnGhhfJ.jpg')`,
           }}
         />
         

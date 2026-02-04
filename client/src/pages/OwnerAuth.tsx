@@ -33,7 +33,7 @@ export default function OwnerAuth() {
         <div className="w-full max-w-md mx-auto">
           {/* Logo */}
           <div className="flex items-center gap-2 mb-10">
-            <img src="/logo-icon.png" alt="DojoFlow" className="h-9 w-9" />
+            <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png" alt="DojoFlow" className="h-9 w-9" />
             <span className="text-white text-xl font-semibold">DojoFlow</span>
           </div>
 
@@ -91,7 +91,7 @@ export default function OwnerAuth() {
 
         {/* Faint DojoFlow Swirl Watermark */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.08]">
-          <img src="/logo-icon.png" alt="" className="w-[500px] h-[500px] object-contain" />
+          <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png" alt="" className="w-[500px] h-[500px] object-contain" />
         </div>
 
         {/* Floating Feature Cards */}
@@ -188,7 +188,7 @@ export default function OwnerAuth() {
             style={{ transitionDelay: "1200ms" }}
           >
             <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
-              <img src="/logo-icon.png" alt="" className="w-7 h-7" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png" alt="" className="w-7 h-7" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">
               AI with a black belt in operations

@@ -105,7 +105,7 @@ export function FloatingKaiButton({ onClick, showHint = false }: FloatingKaiButt
           {/* Button */}
           <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] flex items-center justify-center transition-all">
             <img 
-              src="/kai-icon-hero.png" 
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nDbbiINIuNulnQxs.png" 
               alt="Kai" 
               className="w-10 h-10 drop-shadow-lg"
               onError={(e) => {

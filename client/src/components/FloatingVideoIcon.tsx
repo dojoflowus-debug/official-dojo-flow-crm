@@ -147,7 +147,7 @@ export function FloatingVideoIcon({ videoSrc, posterSrc, heroRef }: FloatingVide
           {/* DojoFlow swirl icon overlay */}
           <div className="absolute inset-0 flex items-center justify-center p-3">
             <img 
-              src="/kai-icon-hero.png" 
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nDbbiINIuNulnQxs.png" 
               alt="DojoFlow"
               className="w-full h-full object-contain transition-all duration-300"
               style={{

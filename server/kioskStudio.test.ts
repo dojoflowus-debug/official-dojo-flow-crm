@@ -238,7 +238,7 @@ describe('Kiosk Studio - Acceptance Tests', () => {
   describe('Screensaver Behavior', () => {
     it('should display logo on screensaver', () => {
       // Screensaver should render logo-icon.png
-      expect('/logo-icon.png').toBeDefined();
+      expect('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png').toBeDefined();
     });
 
     it('should display "Tap to begin" message', () => {

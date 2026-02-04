@@ -41,7 +41,7 @@ export default function Step0KaiAppearance({ onNext, onAppearanceSelect, avatarN
       id: 'orb' as const,
       name: 'Orb',
       description: 'Plasma particles',
-      image: '/kai-appearance-plasma.png',
+      image: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/QxgKSwKGphZweQTJ.png',
     },
     {
       id: 'particles' as const,

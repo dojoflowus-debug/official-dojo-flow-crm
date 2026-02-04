@@ -199,7 +199,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
                   >
                     {item.isCenter ? (
                       <img 
-                        src="/logo-icon.png" 
+                        src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png" 
                         alt="Kai" 
                         className={`h-7 w-7 object-contain transition-all duration-200 ${active ? 'scale-110' : hoveredIndex === index ? 'opacity-100 scale-105' : 'opacity-90'}`}
                       />

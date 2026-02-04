@@ -404,14 +404,14 @@ export const kioskRouter = router({
       {
         key: 'belt-ceremony',
         label: 'Belt Ceremony',
-        imageUrl: '/belt-ceremony.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uYEOkKpvvrKpVZSd.jpg',
         category: 'events',
       },
       // Wellness & Yoga
       {
         key: 'yoga-class',
         label: 'Yoga Class',
-        imageUrl: '/yoga-class.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/GdoSQiQBsJYnSmYP.jpg',
         category: 'wellness',
       },
       {
@@ -430,7 +430,7 @@ export const kioskRouter = router({
       {
         key: 'fitness-gym-interior',
         label: 'Fitness Gym',
-        imageUrl: '/fitness-gym-interior.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/LdvGiMXAKXQpZGqZ.jpg',
         category: 'fitness',
       },
       {
@@ -442,7 +442,7 @@ export const kioskRouter = router({
       {
         key: 'fitness-hiit-class',
         label: 'HIIT Class',
-        imageUrl: '/fitness-hiit-class.png',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/OoAIOWSzzrtOeGct.png',
         category: 'fitness',
       },
       {
@@ -461,31 +461,31 @@ export const kioskRouter = router({
       {
         key: 'env-zen-bamboo',
         label: 'Zen Bamboo',
-        imageUrl: '/env-zen-bamboo.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/DAMSUsdbzODERGTZ.jpg',
         category: 'ambiance',
       },
       {
         key: 'env-modern-white',
         label: 'Modern White',
-        imageUrl: '/env-modern-white.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ZsouCVeOgEIjYUOk.jpg',
         category: 'ambiance',
       },
       {
         key: 'env-luxury-dojo',
         label: 'Luxury Dojo',
-        imageUrl: '/env-luxury-dojo.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/synbACcAtcrjANvY.jpg',
         category: 'ambiance',
       },
       {
         key: 'env-neon-dojo',
         label: 'Neon Dojo',
-        imageUrl: '/env-neon-dojo.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ZBpYBQPXaEIVcTIs.jpg',
         category: 'ambiance',
       },
       {
         key: 'env-samurai-dojo',
         label: 'Samurai Dojo',
-        imageUrl: '/env-samurai-dojo.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/AAtHwKyLeHXmdqPs.jpg',
         category: 'ambiance',
       },
       // Welcome Screens
@@ -498,7 +498,7 @@ export const kioskRouter = router({
       {
         key: 'login-hero-dojoflow',
         label: 'DojoFlow Hero',
-        imageUrl: '/login-hero-dojoflow.jpg',
+        imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/pZRidNalhhnGhhfJ.jpg',
         category: 'welcome',
       },
     ];

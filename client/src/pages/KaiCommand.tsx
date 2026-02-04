@@ -88,7 +88,7 @@ import {
 
 // Kai Logo for center panel - uses actual logo image
 const KaiLogo = ({ className = "w-20 h-20" }: { className?: string }) => (
-  <img src="/dojoflow-logo-icon.png" alt="Kai" className={className} />
+  <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/tqunsEQSWfyTetQA.png" alt="Kai" className={className} />
 );
 
 // Conversation type
@@ -461,7 +461,7 @@ export default function KaiCommand() {
             title={isKai ? 'Kai - AI Assistant' : `${staffMember?.fullName || mentionName} - ${staffMember?.role || 'Staff'}`}
           >
             {isKai ? (
-              <img src="/kai-avatar.png" alt="Kai" className="w-4 h-4 rounded-full" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/RWtkCgdJjxxOQJjI.png" alt="Kai" className="w-4 h-4 rounded-full" />
             ) : staffMember?.photoUrl ? (
               <img src={staffMember.photoUrl} alt={mentionName} className="w-4 h-4 rounded-full object-cover" />
             ) : (
@@ -3292,7 +3292,7 @@ export default function KaiCommand() {
                       ) : (
                         <>
                           <div className="w-8 h-8 rounded-full shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
-                            <img src="/kai-avatar.png" alt="Kai" className="w-full h-full object-cover" />
+                            <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/RWtkCgdJjxxOQJjI.png" alt="Kai" className="w-full h-full object-cover" />
                           </div>
                           <div className="flex-1">
                             <div 
@@ -3373,7 +3373,7 @@ export default function KaiCommand() {
                   {isLoading && (
                     <div className="flex gap-3 relative" style={{ zIndex: 30 }}>
                       <div className="w-8 h-8 rounded-full shrink-0 shadow-lg shadow-red-500/30 overflow-hidden">
-                        <img src="/kai-avatar.png" alt="Kai" className="w-full h-full object-cover animate-pulse" />
+                        <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/RWtkCgdJjxxOQJjI.png" alt="Kai" className="w-full h-full object-cover animate-pulse" />
                       </div>
                       <div className="flex-1">
                         <div 

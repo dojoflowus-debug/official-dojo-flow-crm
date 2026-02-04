@@ -95,7 +95,7 @@ export default function KioskScreensaver({ onReturn, message = 'Tap the screen t
             }}
           >
             <img
-              src="/logo-icon.png"
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png"
               alt="DojoFlow"
               className="h-32 w-32 object-contain drop-shadow-2xl"
             />

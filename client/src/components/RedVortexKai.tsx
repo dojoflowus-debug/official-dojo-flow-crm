@@ -153,7 +153,7 @@ export default function RedVortexKai({ isSpeaking = false, className = '' }: Red
         }}
       >
         <img 
-          src="/yinyang-red-white.png" 
+          src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ValpvirOWlmCKuhs.png" 
           alt="Yin Yang" 
           className="w-full h-full"
           style={{ 

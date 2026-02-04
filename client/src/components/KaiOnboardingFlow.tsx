@@ -649,7 +649,7 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                 }}
               />
               <img 
-                src="/kai-icon-hero.png" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nDbbiINIuNulnQxs.png" 
                 alt="Kai" 
                 className="w-12 h-12 relative z-10 drop-shadow-lg"
               />
@@ -718,7 +718,7 @@ export function KaiOnboardingFlow({ isActive, onClose, onComplete }: KaiOnboardi
                     }}
                   />
                   <img 
-                    src="/kai-icon-hero.png" 
+                    src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nDbbiINIuNulnQxs.png" 
                     alt="Kai" 
                     className="w-24 h-24 md:w-32 md:h-32 relative z-10 drop-shadow-2xl"
                   />

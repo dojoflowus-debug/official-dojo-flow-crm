@@ -258,19 +258,19 @@ export default function PublicLanding() {
       quote: "DojoFlow transformed my school. Kai handles 80% of parent questions, and I finally have time to focus on teaching. Revenue is up 40% since we started.",
       author: "Master Chen",
       role: "Owner, Dragon Martial Arts",
-      avatar: "/images/testimonials/avatar-1.jpg"
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/rZjQsPKJqBelAEmG.jpg"
     },
     {
       quote: "The billing automation alone saved me 10 hours per week. No more chasing payments or manual invoicing. It just works.",
       author: "Sensei Rodriguez",
       role: "Head Instructor, Elite Karate Academy",
-      avatar: "/images/testimonials/avatar-2.jpg"
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nnvbmwPstsbqiBUN.jpg"
     },
     {
       quote: "I was skeptical about AI, but Kai is incredible. Parents love getting instant answers at 11 PM. My phone finally stopped ringing during dinner.",
       author: "Coach Williams",
       role: "Founder, Williams BJJ",
-      avatar: "/images/testimonials/avatar-3.jpg"
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uDlxAPOIqFElRVKD.jpg"
     }
   ];
 
@@ -296,9 +296,9 @@ export default function PublicLanding() {
           loop
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
-          poster="/images/hero/hero-background.jpg"
+          poster="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
         >
-          <source src="/videos/hero-background.mp4" type="video/mp4" />
+          <source src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4" type="video/mp4" />
           {/* Fallback to image if video doesn't load */}
         </video>
         
@@ -328,7 +328,7 @@ export default function PublicLanding() {
                 
                 {/* Inner orb with breathing effect */}
                 <div className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-red-500/40 to-red-600/20 flex items-center justify-center shadow-lg shadow-red-500/30 animate-pulse-slow">
-                  <img src="/kai-icon-hero.png" alt="Kai" className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 drop-shadow-lg" />
+                  <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nDbbiINIuNulnQxs.png" alt="Kai" className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 drop-shadow-lg" />
                 </div>
               </div>
             </div>
@@ -755,7 +755,7 @@ export default function PublicLanding() {
             <div className="relative">
               <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
                 <img 
-                  src="/images/audience/martial-arts-school.jpg" 
+                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/XoEPWBnrzCNQjIBM.jpg" 
                   alt="Children practicing martial arts in dojo" 
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -774,7 +774,7 @@ export default function PublicLanding() {
             <div className="relative order-2 md:order-1">
               <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
                 <img 
-                  src="/images/audience/fitness-facility.jpg" 
+                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/tcbVKpLefGBpxqma.jpg" 
                   alt="Personal training session with battle ropes" 
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -841,7 +841,7 @@ export default function PublicLanding() {
             <div className="relative">
               <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
                 <img 
-                  src="/images/audience/yoga-studio.jpg" 
+                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/wKVIbJBkIZnJgylk.jpg" 
                   alt="Yoga class in serene studio" 
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -1061,8 +1061,8 @@ export default function PublicLanding() {
       
       {/* Floating Video Icon - appears when scrolling past hero */}
       <FloatingVideoIcon 
-        videoSrc="/videos/hero-background.mp4"
-        posterSrc="/images/hero/hero-background.jpg"
+        videoSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4"
+        posterSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
         heroRef={heroRef as React.RefObject<HTMLElement>}
       />
       

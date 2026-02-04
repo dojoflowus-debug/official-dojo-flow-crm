@@ -22,7 +22,7 @@ import {
   ChevronDown,
   Menu
 } from 'lucide-react'
-import logo from '../assets/logo.png'
+import logo ../assets/logo.pnghttps://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/pMOPONkdqAXGePSF.png../assets/logo.png
 import CreditCounter from './CreditCounter'
 
 export default function Layout({ children, onLogout, theme, toggleTheme }) {
