@@ -52,21 +52,26 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
   const textClass = isCinematic || isDark ? 'text-white' : 'text-slate-900';
   const mutedTextClass = isCinematic ? 'text-white/60' : isDark ? 'text-slate-400' : 'text-slate-600';
 
-  // Return empty div when closed to maintain grid structure
-  if (!isOpen || !studentId) {
-    return <div className="hidden" />;
-  }
-
   return (
-    <div
-      className={`
-        h-full w-full
-        ${bgClass}
-        flex flex-col
-        border-l
-        ${isCinematic ? 'border-white/10' : isDark ? 'border-slate-700' : 'border-slate-200'}
-      `}
-    >
+    <>
+      {/* Backdrop */}
+      <div
+        className={`absolute inset-0 bg-black/50 z-40 transition-opacity ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
+
+      {/* Sliding Panel */}
+      <div
+        className={`
+          absolute top-0 right-0 bottom-0 w-full lg:w-[420px] z-50
+          transform transition-transform duration-300 ease-out
+          ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+          ${bgClass}
+          flex flex-col
+        `}
+      >
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${
           isCinematic ? 'border-white/10' : isDark ? 'border-slate-700' : 'border-slate-200'
@@ -242,6 +247,7 @@ export function StudentDetailsPanel({ studentId, isOpen, onClose, theme = 'light
             </TabsContent>
           </ScrollArea>
         </Tabs>
-    </div>
+      </div>
+    </>
   );
 }

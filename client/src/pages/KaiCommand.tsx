@@ -196,7 +196,8 @@ export default function KaiCommand() {
   const centerPanelRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   
-
+  // Track center panel position and size for fixed chat bar
+  const [centerPanelPosition, setCenterPanelPosition] = useState({ left: 0, width: 0 });
   
   // Auto-hide UI state for Focus Mode
   const [isUIHidden, setIsUIHidden] = useState(false);
@@ -1367,6 +1368,33 @@ export default function KaiCommand() {
     };
   }, [isResizing]);
 
+  // Update center panel position and size for fixed chat bar
+  useEffect(() => {
+    const updateCenterPanelPosition = () => {
+      if (centerPanelRef.current) {
+        const rect = centerPanelRef.current.getBoundingClientRect();
+        setCenterPanelPosition({
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
+    updateCenterPanelPosition();
+    
+    // Update on resize and when commandCenterWidth changes
+    window.addEventListener('resize', updateCenterPanelPosition);
+    const resizeObserver = new ResizeObserver(updateCenterPanelPosition);
+    if (centerPanelRef.current) {
+      resizeObserver.observe(centerPanelRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateCenterPanelPosition);
+      resizeObserver.disconnect();
+    };
+  }, []); // Empty deps - ResizeObserver handles all updates
+
   // Upload mutation
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();
   
@@ -2526,15 +2554,7 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div 
-        ref={containerRef} 
-        className={`kai-command-page w-full grid h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}
-        style={{
-          gridTemplateColumns: studentDetailsPanelOpen 
-            ? `${commandCenterWidth}px minmax(520px, 1fr) clamp(360px, 30vw, 520px)`
-            : `${commandCenterWidth}px 1fr`
-        }}
-      >
+      <div ref={containerRef} className={`kai-command-page w-full flex h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`}>
         {/* Command Center - Left Panel - Floating Module Style */}
         {/* Sidebar: fixed width, z-index 20 to stay above main content but below modals */}
         <div 
@@ -3382,6 +3402,11 @@ export default function KaiCommand() {
           <div 
             className="flex justify-center w-full flex-shrink-0 border-t border-white/10"
             style={{
+              position: isCinematic ? 'absolute' : 'fixed',
+              bottom: isCinematic ? '192px' : 'var(--bottomnav-h, 88px)',
+              left: isCinematic ? '0' : centerPanelPosition.left,
+              width: isCinematic ? '100%' : centerPanelPosition.width,
+              zIndex: LAYOUT_CONSTANTS.composerZIndex,
               paddingBottom: '16px',
               paddingTop: '16px',
               paddingLeft: '16px',
@@ -3395,11 +3420,12 @@ export default function KaiCommand() {
               e.preventDefault();
               handleSendMessage('submit');
             }}
-            className={`kaiBar w-full flex items-center gap-2 transition-all duration-300 relative z-[100] border focus-within:kai-command-bar-focus`}
+            className={`kaiBar ${isCinematic ? 'w-full' : ''} flex items-center gap-2 transition-all duration-300 relative z-[100] border focus-within:kai-command-bar-focus`}
             style={{
               background: isDark || isCinematic ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
+              ...(isCinematic ? {} : { width: `${centerPanelPosition.width - 32}px` }),
               minHeight: '56px',
               borderRadius: '999px',
               padding: '12px 16px',
@@ -3483,19 +3509,21 @@ export default function KaiCommand() {
             </Button>
           </form>
           </div>
+
+          {/* Student Details Panel - Overlay */}
+          {selectedStudentId && (
+            <StudentDetailsPanel
+              studentId={selectedStudentId}
+              isOpen={studentDetailsPanelOpen}
+              onClose={() => {
+                setStudentDetailsPanelOpen(false);
+                setSelectedStudentId(null);
+              }}
+              theme={theme}
+            />
+          )}
         </div>
       </div>
-
-      {/* Student Details Panel - Third Grid Column (always present for grid layout) */}
-      <StudentDetailsPanel
-        studentId={selectedStudentId}
-        isOpen={studentDetailsPanelOpen}
-        onClose={() => {
-          setStudentDetailsPanelOpen(false);
-          setSelectedStudentId(null);
-        }}
-        theme={theme}
-      />
 
       {/* INFO PANEL - Third Column */}
       <InfoPanel 
