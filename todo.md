@@ -7336,3 +7336,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test /chat page to confirm redesigned UI is visible - Component renders, DOM inspection confirms iOS design elements present
 - [x] Fix any import/export issues preventing new UI from loading - Fixed wouter->react-router-dom
 - [ ] USER VERIFICATION REQUIRED - Screenshot tool may not be capturing correctly, user needs to test manually
+
+
+## Fix User Message Bubble Color (Feb 4, 2026)
+- [x] Change user message bubble from red/pink to iOS blue (#007AFF or blue-500)
+- [x] Ensure blue matches Apple Messages aesthetic

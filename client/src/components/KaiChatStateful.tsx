@@ -497,7 +497,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             <div
               className={`max-w-xs px-4 py-2 rounded-lg ${
                 msg.role === 'user'
-                  ? 'bg-red-500 text-white rounded-br-none'
+                  ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-none'
                   : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none'
               }`}
             >
@@ -604,7 +604,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 flex items-center gap-2"
+              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 flex items-center gap-2"
             >
               <span>Send</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
