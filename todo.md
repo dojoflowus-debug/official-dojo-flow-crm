@@ -7428,3 +7428,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add live preview of chat appearance in lead settings
 - [ ] Add toggle for "Use full logo in header" vs "Use school name text"
 - [ ] Test all logo combinations (icon + full logo, icon + text, light/dark variants)
+
+
+## Lead Settings Page - Chat Customization (Feb 4, 2026)
+- [x] Design lead settings page structure and layout
+- [x] Add database fields for chat customization preferences (use_full_logo_in_header, welcome_message, etc.)
+- [x] Create LeadSettings page component with tabs (Appearance, Messages, Behavior)
+- [x] Add toggle control for "Use full logo in header" vs "Use school name text"
+- [x] Add welcome message customization field
+- [x] Build live chat preview component that updates in real-time
+- [x] Create backend API endpoints for saving/loading lead settings
+- [x] Add navigation menu item for Lead Settings
+- [x] Test all customization options with live preview
+- [x] Save checkpoint with lead settings page

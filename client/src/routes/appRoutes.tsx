@@ -89,6 +89,7 @@ const KioskHome = lazy(() => import("../pages/KioskHome"));
 const KioskLive = lazy(() => import("../pages/KioskLive").then(m => ({ default: m.KioskLive })));
 const LeadCapture = lazy(() => import("../pages/LeadCapture").then(m => ({ default: m.LeadCapture })));
 const LeadCaptureLocation = lazy(() => import("../pages/LeadCaptureLocation"));
+const LeadSettings = lazy(() => import("../pages/LeadSettings"));
 const Campaigns = lazy(() => import("../pages/Campaigns"));
 const CampaignCreate = lazy(() => import("../pages/CampaignCreate"));
 const CampaignDetail = lazy(() => import("../pages/CampaignDetail"));
@@ -189,6 +190,7 @@ export const appRoutes: RouteConfig[] = [
   // Kiosk Routes
   { path: "/lead-capture", element: <LeadCapture />, label: "Lead Capture" },
   { path: "/lead-capture-location", element: <LeadCaptureLocation />, label: "Lead Capture Location" },
+  { path: "/lead-settings", element: <AppShell><ProtectedRoute requireSetup={false}><LeadSettings /></ProtectedRoute></AppShell>, label: "Lead Settings" },
   { path: "/locations/:slug/chat", element: <LeadCaptureLocation />, label: "Location Chat" },
   { path: "/kiosk-home", element: <KioskHome />, label: "Kiosk Home" },
   { path: "/kiosk-studio", element: <AppShell><ProtectedRoute requireSetup={false}><KioskStudioExact /></ProtectedRoute></AppShell>, label: "Kiosk Studio" },

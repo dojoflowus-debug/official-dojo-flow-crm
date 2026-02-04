@@ -97,6 +97,41 @@ export const schoolProfileRouter = router({
     }),
 
   /**
+   * Update chat customization settings
+   */
+  updateChatSettings: orgScopedProcedure
+    .input(z.object({
+      chatUseFullLogo: z.boolean(),
+      chatWelcomeMessage: z.string().nullable(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { db } = await import("./db");
+        const { schoolProfiles } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+
+        // Update the school profile with chat settings
+        await db.update(schoolProfiles)
+          .set({
+            chatUseFullLogo: input.chatUseFullLogo,
+            chatWelcomeMessage: input.chatWelcomeMessage,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(schoolProfiles.organizationId, ctx.currentOrganizationId));
+
+        // Return the updated profile
+        const profile = await getSchoolProfile(ctx.currentOrganizationId);
+        return profile;
+      } catch (error: any) {
+        console.error("[SchoolProfile] Error updating chat settings:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update chat settings",
+        });
+      }
+    }),
+
+  /**
    * Get list of common timezones
    */
   getTimezones: orgScopedProcedure

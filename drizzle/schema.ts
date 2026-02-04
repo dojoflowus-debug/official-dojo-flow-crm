@@ -1,4 +1,4 @@
-import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal } from "drizzle-orm/mysql-core"
+import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal, boolean } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
 export const accountFlags = mysqlTable("account_flags", {
@@ -1665,6 +1665,9 @@ export const schoolProfiles = mysqlTable("school_profiles", {
 	// Preferences
 	timezone: varchar({ length: 100 }),
 	currency: varchar({ length: 10 }),
+	// Chat Customization
+	chatUseFullLogo: boolean("chat_use_full_logo").default(false),
+	chatWelcomeMessage: text("chat_welcome_message"),
 	// Timestamps
 	createdAt: timestamp("created_at", { mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
