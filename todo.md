@@ -7281,8 +7281,3 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test: Page does NOT scroll vertically as whole (only message list scrolls)
 - [ ] Test: No repeated horizontal strips
 - [ ] Test: Opening details shrinks center, composer shrinks with it
-
-## AppShell Investigation (Feb 3, 2026)
-- [x] Check if AppShell is adding extra wrappers that break 100vh containment
-- [x] Fixed AppShell to use h-screen max-h-screen overflow-hidden when both header and bottomNav hidden
-- [x] Ensure single root container for /kai page without intermediate wrappers
