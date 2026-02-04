@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
 import { KaiChatStateful } from './KaiChatStateful';
 import { Button } from './ui/button';
 import { Loader2 } from 'lucide-react';
 
-export default function ChatCustomization() {
+interface ChatCustomizationProps {
+  onSave?: (settings: { useFullLogo: boolean; welcomeMessage: string }) => Promise<void>;
+}
+
+export default function ChatCustomization({ onSave }: ChatCustomizationProps = {}) {
   const [useFullLogo, setUseFullLogo] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -28,11 +32,15 @@ export default function ChatCustomization() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateMutation.mutateAsync({
-        chatUseFullLogo: useFullLogo,
-        chatWelcomeMessage: welcomeMessage || null,
-      });
-      alert('Chat settings saved successfully!');
+      if (onSave) {
+        await onSave({ useFullLogo, welcomeMessage });
+      } else {
+        await updateMutation.mutateAsync({
+          chatUseFullLogo: useFullLogo,
+          chatWelcomeMessage: welcomeMessage || null,
+        });
+        alert('Chat settings saved successfully!');
+      }
     } catch (error) {
       console.error('Failed to save settings:', error);
       alert('Failed to save settings. Please try again.');
@@ -40,6 +48,13 @@ export default function ChatCustomization() {
       setIsSaving(false);
     }
   };
+
+  // Expose save function to parent
+  React.useEffect(() => {
+    if (onSave) {
+      (window as any).__chatCustomizationSave = handleSave;
+    }
+  }, [useFullLogo, welcomeMessage]);
 
   if (isLoading) {
     return (
@@ -125,28 +140,14 @@ export default function ChatCustomization() {
           </p>
         </div>
 
-        {/* Save Button */}
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-base font-semibold rounded-xl shadow-lg shadow-red-500/40 transition-all duration-200 hover:shadow-red-500/60 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              Saving...
-            </>
-          ) : (
-            'Save Changes'
-          )}
-        </Button>
+        {/* Note: Save functionality will be handled by parent modal's Continue button */}
       </div>
 
       {/* Live Preview */}
       <div className="max-w-2xl">
         <div className="bg-slate-900/60 border-2 border-slate-700/40 rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Live Preview</h3>
-          <div className="border-2 border-slate-700 rounded-xl overflow-hidden shadow-2xl" style={{ height: '600px' }}>
+          <div className="border-2 border-slate-700 rounded-xl overflow-hidden shadow-2xl" style={{ height: '400px' }}>
             <KaiChatStateful
               embedded={false}
               locationName={profile?.schoolName || 'Your School'}

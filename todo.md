@@ -7479,3 +7479,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Stack controls vertically for better modal fit
 - [x] Adjust spacing and padding for readability
 - [x] Test layout in modal and save checkpoint
+
+
+## Fix Modal Scrolling for Chat Settings (Feb 4, 2026)
+
+- [x] Identify modal content container that needs scrolling
+- [x] Add overflow-y-auto to scrollable content area
+- [x] Ensure header and footer remain fixed
+- [x] Test scrolling with all content visible
+- [x] Save checkpoint with working scroll
