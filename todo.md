@@ -7391,3 +7391,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix data fetching or API query issue - API is working correctly, returns data from both tables
 - [x] Test with actual school data - System working correctly, shows "MyDojo" because that's the actual org name
 - [x] Conclusion: User needs to update School Profile settings with actual school name and logo
+
+
+## Fix Subtitle in Lead Capture to Show Organization Name (Feb 4, 2026)
+- [x] Update KaiChatStateful subtitle to use orgInfo.name instead of locationName prop
+- [x] Test that subtitle shows "Test Dojo • Always here to help" instead of "MyDojo • Always here to help"
+- [x] Verify both title and subtitle update when organization name changes

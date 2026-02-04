@@ -493,7 +493,7 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
           )}
           <div>
             <h2 className="font-semibold">{orgInfo?.name || 'Kai'}</h2>
-            <p className="text-sm text-white/80">{locationName} • Always here to help</p>
+            <p className="text-sm text-white/80">{orgInfo?.name || locationName} • Always here to help</p>
           </div>
         </div>
       </div>

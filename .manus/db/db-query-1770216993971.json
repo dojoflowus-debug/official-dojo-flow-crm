@@ -1,0 +1,34 @@
+{
+  "query": "SELECT * FROM school_profiles;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM school_profiles;",
+  "rows": [
+    {
+      "id": "1",
+      "organization_id": "120001",
+      "school_name": "Test Dojo ",
+      "display_name": "United States",
+      "tagline": "test. speed. fun",
+      "phone": "2818189288",
+      "email": "Solbittech@gmail.com",
+      "website": "https://www.test.com/",
+      "address_street": "10000 Emmet F. Lowry Blvd Suite 4000",
+      "address_city": "Texas City",
+      "address_state": "Texas",
+      "address_postal": "77591",
+      "address_country": "United States",
+      "logo_light_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769876210836-my35g1-logo.png",
+      "logo_dark_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769703418530-ynm701-logo.png",
+      "brand_color_primary": "#ff0000",
+      "brand_color_secondary": "#181b25",
+      "brand_color_tertiary": "#ffffff",
+      "timezone": "America/Chicago",
+      "currency": "USD",
+      "created_at": "2026-01-29 15:53:01",
+      "updated_at": "2026-02-04 14:41:03"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torganization_id\tschool_name\tdisplay_name\ttagline\tphone\temail\twebsite\taddress_street\taddress_city\taddress_state\taddress_postal\taddress_country\tlogo_light_url\tlogo_dark_url\tbrand_color_primary\tbrand_color_secondary\tbrand_color_tertiary\ttimezone\tcurrency\tcreated_at\tupdated_at\n1\t120001\tTest Dojo \tUnited States\ttest. speed. fun\t2818189288\tSolbittech@gmail.com\thttps://www.test.com/\t10000 Emmet F. Lowry Blvd Suite 4000\tTexas City\tTexas\t77591\tUnited States\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769876210836-my35g1-logo.png\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/2Awpr243D2Jitpj6Cn66Rx/attachments/general/2580004/1769703418530-ynm701-logo.png\t#ff0000\t#181b25\t#ffffff\tAmerica/Chicago\tUSD\t2026-01-29 15:53:01\t2026-02-04 14:41:03\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT organization_id, school_name, display_name FROM school_profiles WHERE organization_id = 120001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT organization_id, school_name, display_name FROM school_profiles WHERE organization_id = 120001;",
+  "rows": [
+    {
+      "organization_id": "120001",
+      "school_name": "Test Dojo ",
+      "display_name": "United States"
+    }
+  ],
+  "messages": [],
+  "stdout": "organization_id\tschool_name\tdisplay_name\n120001\tTest Dojo \tUnited States\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
