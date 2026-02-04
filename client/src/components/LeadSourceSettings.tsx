@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Switch } from "@/components/ui/switch";
-import ChatCustomization from "@/components/ChatCustomization";
+// ChatCustomization removed
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -43,7 +43,7 @@ interface LeadSourceSettingsProps {
 }
 
 export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettingsProps) {
-  const [activeTab, setActiveTab] = useState<'sources' | 'chat'>('sources');
+  // Removed chat tab - only lead sources now
   const utils = trpc.useUtils();
   const { data: sources, isLoading } = trpc.leadSources.list.useQuery();
   const toggleMutation = trpc.leadSources.toggle.useMutation({
@@ -109,33 +109,11 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
               <div className="text-center">
                 <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Lead Settings</h1>
                 <p className="text-base text-slate-400">
-                  Manage your lead sources and chat appearance.
+                  Manage your lead sources and capture settings.
                 </p>
               </div>
 
-              {/* Tabs */}
-              <div className="flex justify-center gap-2 mt-6">
-                <button
-                  onClick={() => setActiveTab('sources')}
-                  className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
-                    activeTab === 'sources'
-                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
-                      : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  Lead Sources
-                </button>
-                <button
-                  onClick={() => setActiveTab('chat')}
-                  className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
-                    activeTab === 'chat'
-                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
-                      : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  Chat Settings
-                </button>
-              </div>
+              {/* Tabs - Removed, only Lead Sources now */}
             </div>
 
             {/* Close Button */}
@@ -149,8 +127,7 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto px-8 pb-4 relative">
-            {activeTab === 'sources' ? (
-              isLoading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-red-500" />
               </div>
@@ -195,13 +172,7 @@ export default function LeadSourceSettings({ isOpen, onClose }: LeadSourceSettin
                       </div>
                     </Card>
                   );
-                })}
-              </div>
-            )
-            ) : (
-              // Chat Settings Tab
-              <div className="w-full">
-                <ChatCustomization />
+                 })}
               </div>
             )}
           </div>
