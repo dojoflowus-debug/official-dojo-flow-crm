@@ -7585,3 +7585,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix route to properly render DashboardLayout - Removed AppShell wrapper
 - [x] Test page renders correctly with sidebar
 - [x] Save checkpoint with working page
+
+## Add Class Schedule to Navigation Menu (Feb 4, 2026)
+
+- [x] Add Class Schedule menu item to DashboardLayout sidebar
+- [x] Choose appropriate icon for Class Schedule - Calendar icon
+- [x] Test navigation link works correctly
+- [x] Save checkpoint with updated navigation

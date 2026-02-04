@@ -23,7 +23,7 @@ import {
 import { APP_TITLE, APP_LOGO } from "@/const";
 import { useThemeAwareLogo } from "@/hooks/useThemeAwareLogo";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Monitor } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Monitor, Calendar } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -32,6 +32,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/kai" },
   { icon: Users, label: "Students", path: "/students" },
+  { icon: Calendar, label: "Class Schedule", path: "/class-schedule" },
   { icon: Monitor, label: "Kiosk", path: "/kiosk-studio/1", allowedRoles: ["admin", "owner", "staff"] },
 ];
 
