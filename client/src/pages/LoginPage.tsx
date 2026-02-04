@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import logo ../assets/logo.pnghttps://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/pMOPONkdqAXGePSF.png../assets/logo.png
+import logo from '../assets/logo.png'
 
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('')

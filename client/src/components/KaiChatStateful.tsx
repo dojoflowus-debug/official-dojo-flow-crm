@@ -586,6 +586,19 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
             >
               <p className="text-sm">{msg.text}</p>
             </div>
+            
+            {/* Message Status Indicators (iOS-style) */}
+            {msg.role === 'user' && (
+              <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                <span>Read</span>
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <svg className="w-3 h-3 -ml-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
           </div>
         ))}
         {/* Calendar Picker for Schedule Selection */}
@@ -681,8 +694,21 @@ export const KaiChatStateful: React.FC<KaiChatStatefulProps> = ({
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Type your message..."
               disabled={isLoading}
-              className="flex-1 px-4 py-3 bg-slate-800/40 backdrop-blur-md border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/30 focus:bg-slate-800/60 transition-all duration-200 shadow-lg focus:shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+              className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all duration-200 shadow-sm focus:shadow-md"
             />
+            
+            {/* Microphone Button for Voice Input */}
+            <button
+              type="button"
+              onClick={() => alert('Voice input feature coming soon!')}
+              className="p-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+              title="Voice input"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+            
             {/* Send Button - Glowing Red */}
             <button
               type="submit"

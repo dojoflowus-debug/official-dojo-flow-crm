@@ -7527,3 +7527,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove activeTab state management for chat tab
 - [x] Update modal title to remove chat appearance reference
 - [x] Save checkpoint with clean lead settings modal
+
+
+## Lead Capture Chat UI Improvements (Feb 4, 2026)
+
+- [x] Change input field to white background with grey placeholder text
+- [x] Add microphone icon button for voice input feature
+- [x] Implement delivered status indicator below sent messages
+- [x] Implement read status indicator below sent messages
+- [x] Test all UI changes in lead capture chat
