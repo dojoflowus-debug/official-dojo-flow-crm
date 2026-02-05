@@ -130,10 +130,10 @@ function DialogContent({
           "inset-0 sm:inset-auto sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]",
           "w-full h-full sm:w-auto sm:h-auto sm:max-w-[calc(100%-2rem)] sm:max-w-lg",
           "rounded-none p-0 sm:p-6 bg-transparent sm:max-h-[85vh] sm:overflow-y-auto",
+          "z-[10000]", // Modal z-index (above fog overlay)
           className
         )}
         style={{
-          zIndex: 10000, // Modal z-index (above fog overlay)
           boxShadow: '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)',
           border: '3px solid #ffffff',
           borderRadius: '20px',

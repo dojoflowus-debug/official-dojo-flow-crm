@@ -7694,3 +7694,25 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove the ClassFormFields component and inline the fields with single-column layout
 - [x] Test form submission works correctly
 - [x] Save checkpoint with correct modal redesigned
+
+## Fix Dropdown Buttons Not Opening (Feb 4, 2026)
+- [ ] Investigate why Program, Instructor, and Level dropdowns are not opening
+- [ ] Check if SelectTrigger className changes broke functionality
+- [ ] Fix the issue while maintaining Apple-inspired styling
+- [ ] Test all dropdowns work correctly
+- [ ] Save checkpoint with fix
+
+## Fix db.select Error on /leads Page (Feb 5, 2026)
+- [x] Find the leads router file
+- [x] Identify the query causing db.select is not a function error
+- [x] Fix the database query syntax
+- [ ] Test the /leads page works correctly
+- [ ] Save checkpoint with fix
+
+## Fix Dropdown Z-Index Issue (Feb 5, 2026)
+- [x] Fix Select dropdown z-index so options appear above modal backdrop
+- [x] Test Program dropdown
+- [x] Test Instructor dropdown
+- [x] Test Level dropdown
+- [x] Test Floor Plan dropdown
+- [x] Save checkpoint with fix

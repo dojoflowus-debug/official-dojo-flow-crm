@@ -323,7 +323,7 @@ const ClassForm = ({
         <div>
           <Label htmlFor="program" className="text-base font-medium mb-2 block">Program</Label>
           <Select value={formData.program} onValueChange={(value) => onProgramChange(value)}>
-            <SelectTrigger className="h-12 text-base rounded-xl">
+            <SelectTrigger className="!h-12 text-base rounded-xl">
               <SelectValue placeholder="Select program" />
             </SelectTrigger>
             <SelectContent>
@@ -351,7 +351,7 @@ const ClassForm = ({
               handleSelectChange('instructor', instructor?.name || '');
             }}
           >
-            <SelectTrigger className={`h-10 ${instructorConflict ? 'border-amber-500' : ''}`}>
+            <SelectTrigger className={`!h-12 text-base rounded-xl ${instructorConflict ? 'border-amber-500' : ''}`}>
               <SelectValue placeholder="Select instructor">
                 {formData.instructorId && instructors.find(i => i.id === formData.instructorId) && (
                   <div className="flex items-center gap-2">
@@ -422,7 +422,7 @@ const ClassForm = ({
         <div>
           <Label htmlFor="level" className="text-base font-medium mb-2 block">Level</Label>
           <Select value={formData.level} onValueChange={(value) => handleSelectChange('level', value)}>
-            <SelectTrigger className="h-12 text-base rounded-xl">
+            <SelectTrigger className="!h-12 text-base rounded-xl">
               <SelectValue placeholder="All Levels" />
             </SelectTrigger>
             <SelectContent>
@@ -514,7 +514,7 @@ const ClassForm = ({
             }));
           }}
         >
-          <SelectTrigger className="h-12 text-base rounded-xl">
+          <SelectTrigger className="!h-12 text-base rounded-xl">
             <SelectValue placeholder="Select floor plan" />
           </SelectTrigger>
           <SelectContent>

@@ -1887,3 +1887,15 @@ export const smsCampaigns = mysqlTable("sms_campaigns", {
   index("idx_sms_campaigns_org").on(table.orgId),
   index("idx_sms_campaigns_status").on(table.orgId, table.status),
 ]);
+
+export const leadSources = mysqlTable("lead_sources", {
+  id: int().autoincrement().notNull().primaryKey(),
+  orgId: int("org_id").notNull(),
+  name: varchar({ length: 255 }).notNull(), // e.g., "Website", "Facebook", "Referral", "Walk-in"
+  isActive: int("is_active").default(1).notNull(), // 1 = active, 0 = inactive
+  createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+},
+(table) => [
+  index("idx_lead_sources_org").on(table.orgId),
+]);

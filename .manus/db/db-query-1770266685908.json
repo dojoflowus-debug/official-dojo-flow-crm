@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO lead_sources (org_id, name, is_active) VALUES\n(120001, 'Website', 1),\n(120001, 'Facebook', 1),\n(120001, 'Instagram', 1),\n(120001, 'Google Search', 1),\n(120001, 'Referral', 1),\n(120001, 'Walk-in', 1),\n(120001, 'Phone Call', 1),\n(120001, 'Email', 1),\n(120001, 'Event', 1),\n(120001, 'Other', 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute INSERT INTO lead_sources (org_id, name, is_active) VALUES\n(120001, 'Website', 1),\n(120001, 'Facebook', 1),\n(120001, 'Instagram', 1),\n(120001, 'Google Search', 1),\n(120001, 'Referral', 1),\n(120001, 'Walk-in', 1),\n(120001, 'Phone Call', 1),\n(120001, 'Email', 1),\n(120001, 'Event', 1),\n(120001, 'Other', 1);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 71
+}
