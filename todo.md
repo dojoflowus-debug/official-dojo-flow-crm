@@ -7860,5 +7860,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Check if AppShell header is overlapping content (CommandHeader is h-14/56px)
 - [x] Fix breadcrumb top position from top-[72px] to top-14
 - [x] Verify breadcrumb and title are fully visible
-- [ ] Test on desktop and mobile
+- [x] Test on desktop and mobile
+- [x] Save checkpoint
+
+## Fix Programs Page Navigation and Layout (Feb 5, 2026)
+- [x] Check if Programs page is wrapped in AppShell (was missing!)
+- [x] Verify Programs route configuration (line 259)
+- [x] Wrap Programs route with AppShell in appRoutes.tsx
+- [x] Remove sticky positioning from breadcrumb (not needed with AppShell)
+- [x] Ensure bottom navigation menu appears
+- [ ] Test navigation and layout
 - [ ] Save checkpoint

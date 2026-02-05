@@ -392,7 +392,7 @@ export default function Programs() {
     <ManagementLayout>
       <div className={`min-h-full ${isDark ? 'bg-[#0F1115]' : 'bg-gray-50'}`}>
         {/* Breadcrumb */}
-        <div className={`sticky top-14 z-10 backdrop-blur-sm border-b ${isDark ? 'bg-[#0F1115]/80 border-white/10' : 'bg-white/80 border-gray-200'}`}>
+        <div className={`backdrop-blur-sm border-b ${isDark ? 'bg-[#0F1115]/80 border-white/10' : 'bg-white/80 border-gray-200'}`}>
           <div className="px-6 py-2">
             <Breadcrumb items={[{ label: 'Kai Command', href: '/' }, { label: 'Programs' }]} />
           </div>
