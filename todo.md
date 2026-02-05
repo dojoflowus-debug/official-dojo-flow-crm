@@ -7685,3 +7685,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Apply true minimal Apple aesthetic (like iOS Settings app)
 - [x] Test form submission still works
 - [x] Save checkpoint with actual redesign
+
+## Redesign ACTUAL Add Class Modal on /classes Page (Feb 4, 2026)
+- [x] Identify the inline form in Classes.tsx (line ~1214-1240)
+- [x] Remove the right-side LandscapePreviewCard panel
+- [x] Convert all two-column layouts to single-column full-width
+- [x] Apply Apple-inspired styling (larger inputs, generous spacing, no section headers)
+- [x] Remove the ClassFormFields component and inline the fields with single-column layout
+- [x] Test form submission works correctly
+- [x] Save checkpoint with correct modal redesigned

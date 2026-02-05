@@ -319,11 +319,11 @@ const ClassForm = ({
       </div>
 
       {/* Row 1: Program & Instructor */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-5">
         <div>
-          <Label htmlFor="program" className="text-xs font-medium mb-1.5 block">Program</Label>
+          <Label htmlFor="program" className="text-base font-medium mb-2 block">Program</Label>
           <Select value={formData.program} onValueChange={(value) => onProgramChange(value)}>
-            <SelectTrigger className="h-10">
+            <SelectTrigger className="h-12 text-base rounded-xl">
               <SelectValue placeholder="Select program" />
             </SelectTrigger>
             <SelectContent>
@@ -341,7 +341,7 @@ const ClassForm = ({
         </div>
 
         <div>
-          <Label htmlFor="instructor" className="text-xs font-medium mb-1.5 block">Instructor</Label>
+          <Label htmlFor="instructor" className="text-base font-medium mb-2 block">Instructor</Label>
           <Select 
             value={formData.instructorId?.toString() || ''} 
             onValueChange={(value) => {
@@ -418,11 +418,11 @@ const ClassForm = ({
       )}
 
       {/* Row 2: Level & Room */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-5">
         <div>
-          <Label htmlFor="level" className="text-xs font-medium mb-1.5 block">Level</Label>
+          <Label htmlFor="level" className="text-base font-medium mb-2 block">Level</Label>
           <Select value={formData.level} onValueChange={(value) => handleSelectChange('level', value)}>
-            <SelectTrigger className="h-10">
+            <SelectTrigger className="h-12 text-base rounded-xl">
               <SelectValue placeholder="All Levels" />
             </SelectTrigger>
             <SelectContent>
@@ -435,21 +435,21 @@ const ClassForm = ({
         </div>
 
         <div>
-          <Label htmlFor="room" className="text-xs font-medium mb-1.5 block">Room / Mat</Label>
+          <Label htmlFor="room" className="text-base font-medium mb-2 block">Room / Mat</Label>
           <Input
             id="room"
             name="room"
             value={formData.room}
             onChange={handleInputChange}
             placeholder="Mat A"
-            className="h-10"
+            className="h-12 text-base rounded-xl"
           />
         </div>
       </div>
 
       {/* Days - Prominent */}
       <div>
-        <Label className="text-xs font-medium mb-2 block">Days</Label>
+        <Label className="text-base font-medium mb-3 block">Days</Label>
         <div className="flex gap-1.5 justify-between">
           {days.map((day) => (
             <DayChip
@@ -464,29 +464,29 @@ const ClassForm = ({
       </div>
 
       {/* Row 3: Time */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-5">
         <div>
-          <Label htmlFor="startTime" className="text-xs font-medium mb-1.5 block">Start</Label>
+          <Label htmlFor="startTime" className="text-base font-medium mb-2 block">Start</Label>
           <Input
             id="startTime"
             name="startTime"
             type="time"
             value={formData.startTime}
             onChange={handleInputChange}
-            className="h-10"
+            className="h-12 text-base rounded-xl"
             required
           />
         </div>
 
         <div>
-          <Label htmlFor="endTime" className="text-xs font-medium mb-1.5 block">End</Label>
+          <Label htmlFor="endTime" className="text-base font-medium mb-2 block">End</Label>
           <Input
             id="endTime"
             name="endTime"
             type="time"
             value={formData.endTime}
             onChange={handleInputChange}
-            className="h-10"
+            className="h-12 text-base rounded-xl"
             required
           />
         </div>
@@ -501,7 +501,7 @@ const ClassForm = ({
 
       {/* Floor Plan - Optional */}
       <div>
-        <Label htmlFor="floorPlan" className="text-xs font-medium mb-1.5 block">Floor Plan (Optional)</Label>
+        <Label htmlFor="floorPlan" className="text-base font-medium mb-2 block">Floor Plan (Optional)</Label>
         <Select
           value={formData.floorPlanId?.toString() || "none"}
           onValueChange={(value) => {
@@ -514,7 +514,7 @@ const ClassForm = ({
             }));
           }}
         >
-          <SelectTrigger className="h-10">
+          <SelectTrigger className="h-12 text-base rounded-xl">
             <SelectValue placeholder="Select floor plan" />
           </SelectTrigger>
           <SelectContent>
@@ -530,7 +530,7 @@ const ClassForm = ({
 
       {/* Capacity - Always visible */}
       <div>
-        <Label htmlFor="capacity" className="text-xs font-medium mb-1.5 block">Capacity</Label>
+        <Label htmlFor="capacity" className="text-base font-medium mb-2 block">Capacity</Label>
         <Input
           id="capacity"
           name="capacity"
@@ -538,7 +538,7 @@ const ClassForm = ({
           value={formData.capacity}
           onChange={handleInputChange}
           placeholder="15"
-          className="h-10 w-24"
+          className="h-12 text-base rounded-xl w-full"
           required
         />
         {formData.floorPlanId && (
@@ -564,7 +564,7 @@ const ClassForm = ({
         {showAgeRules && (
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div>
-              <Label htmlFor="ageMin" className="text-xs font-medium mb-1.5 block">Min Age</Label>
+              <Label htmlFor="ageMin" className="text-base font-medium mb-2 block">Min Age</Label>
               <Input
                 id="ageMin"
                 name="ageMin"
@@ -572,12 +572,12 @@ const ClassForm = ({
                 value={formData.ageMin}
                 onChange={handleInputChange}
                 placeholder="5"
-                className="h-10"
+                className="h-12 text-base rounded-xl"
               />
             </div>
 
             <div>
-              <Label htmlFor="ageMax" className="text-xs font-medium mb-1.5 block">Max Age</Label>
+              <Label htmlFor="ageMax" className="text-base font-medium mb-2 block">Max Age</Label>
               <Input
                 id="ageMax"
                 name="ageMax"
@@ -585,7 +585,7 @@ const ClassForm = ({
                 value={formData.ageMax}
                 onChange={handleInputChange}
                 placeholder="12"
-                className="h-10"
+                className="h-12 text-base rounded-xl"
               />
             </div>
           </div>
@@ -608,19 +608,19 @@ const ClassForm = ({
         {showAdvanced && (
           <div className="space-y-3 mt-3">
             <div>
-              <Label htmlFor="name" className="text-xs font-medium mb-1.5 block">Display Name</Label>
+              <Label htmlFor="name" className="text-base font-medium mb-2 block">Display Name</Label>
               <Input
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
                 placeholder="Custom name for schedule"
-                className="h-10"
+                className="h-12 text-base rounded-xl"
               />
             </div>
 
             <div>
-              <Label htmlFor="monthlyCost" className="text-xs font-medium mb-1.5 block">Price Override</Label>
+              <Label htmlFor="monthlyCost" className="text-base font-medium mb-2 block">Price Override</Label>
               <div className="flex items-center gap-2">
                 <span className={`text-sm ${isDark ? 'text-white/40' : 'text-gray-400'}`}>$</span>
                 <Input
@@ -637,7 +637,7 @@ const ClassForm = ({
             </div>
 
             <div>
-              <Label htmlFor="description" className="text-xs font-medium mb-1.5 block">Notes</Label>
+              <Label htmlFor="description" className="text-base font-medium mb-2 block">Notes</Label>
               <Textarea
                 id="description"
                 name="description"
@@ -1203,16 +1203,14 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 Add New Class
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Class Time</DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   Create a recurring class time under an existing program.
                 </p>
               </DialogHeader>
-              <div className="flex gap-6">
-                {/* Form - Left side (60%) */}
-                <div className="flex-[3] min-w-0">
+              <div className="px-2">
                   <ClassForm 
                     formData={formData}
                     handleInputChange={handleInputChange}
@@ -1235,11 +1233,6 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                     timeError={timeError}
                     isDark={isDarkMode}
                   />
-                </div>
-                {/* Preview - Right side (40%) - Hidden on mobile */}
-                <div className="hidden md:block flex-[2] min-w-0">
-                  <LandscapePreviewCard formData={formData} programs={programs} instructors={instructors} isDark={isDarkMode} />
-                </div>
               </div>
             </DialogContent>
           </Dialog>
