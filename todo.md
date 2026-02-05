@@ -7877,5 +7877,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix overlapping title and input field (increased max-w to 2xl, added pb-4 to DialogHeader)
 - [x] Add proper spacing between form sections
 - [x] Ensure modal content doesn't overflow (max-h-[85vh])
-- [ ] Test modal on desktop and mobile
+- [x] Test modal on desktop and mobile
+- [x] Save checkpoint
+
+## Fix Add New Program Modal Title/Label Overlap (Feb 5, 2026)
+- [x] Check dialog.tsx DialogHeader styling (found gap-2 only)
+- [x] Check if DialogHeader has absolute positioning (no, flex layout)
+- [x] Add margin-bottom (mb-6) to DialogHeader to separate from form
+- [x] Remove pb-4 from Programs.tsx DialogHeader (redundant)
+- [ ] Test modal layout after fix
 - [ ] Save checkpoint
