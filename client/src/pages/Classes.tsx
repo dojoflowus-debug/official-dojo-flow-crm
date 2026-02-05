@@ -1203,14 +1203,14 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                 Add New Class
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-visible flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle>Add Class Time</DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   Create a recurring class time under an existing program.
                 </p>
               </DialogHeader>
-              <div className="px-2">
+              <div className="px-2 overflow-y-auto flex-1 min-h-0">
                   <ClassForm 
                     formData={formData}
                     handleInputChange={handleInputChange}
@@ -1471,14 +1471,14 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
 
         {/* Edit Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-visible flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>Edit Class Time</DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 Update the class time details.
               </p>
             </DialogHeader>
-            <div className="flex gap-6">
+            <div className="flex gap-6 overflow-y-auto flex-1 min-h-0">
               {/* Form - Left side (60%) */}
               <div className="flex-[3] min-w-0">
                 <ClassForm 
@@ -1671,8 +1671,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
             setEnrollmentSearchQuery('');
           }
         }}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-visible flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Manage Enrollments - {selectedClassForEnrollment?.name}
@@ -1682,7 +1682,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               </p>
             </DialogHeader>
 
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1 min-h-0">
               {/* Search */}
               <Input
                 placeholder="Search students..."

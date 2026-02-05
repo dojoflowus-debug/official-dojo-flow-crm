@@ -7757,3 +7757,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Removed backdrop-blur from DialogOverlay (stacking context trap)
 - [x] Changed DialogContent overflow to visible (prevent clipping)
 - [x] Applied proper z-index scale: overlay=2000, modal=2001, dropdown=3000
+
+## Fix Modal Scrolling (Feb 5, 2026)
+- [x] Restore modal scrolling while keeping dropdowns visible
+- [x] Use inner scrollable container instead of DialogContent overflow
+- [x] Applied fix to Add Class, Edit Class, and Enrollments modals
+- [ ] Test both scrolling and dropdown visibility
+- [ ] Save checkpoint with fix
