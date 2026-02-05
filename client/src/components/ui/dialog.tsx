@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import * as React from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Context to track composition state across dialog children
 const DialogCompositionContext = React.createContext<{
@@ -100,6 +101,8 @@ function DialogContent({
   showCloseButton?: boolean;
 }) {
   const { isComposing } = useDialogComposition();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark' || theme === 'cinematic';
 
   const handleEscapeKeyDown = React.useCallback(
     (e: KeyboardEvent) => {
@@ -134,10 +137,16 @@ function DialogContent({
           className
         )}
         style={{
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.15)',
-          border: '2px solid rgba(255,255,255,0.2)',
+          boxShadow: isDark 
+            ? '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)'
+            : '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.05)',
+          border: isDark 
+            ? '2px solid rgba(255,255,255,0.2)'
+            : '2px solid rgba(0,0,0,0.1)',
           borderRadius: '20px',
-          background: 'rgba(255,255,255,0.85)',
+          background: isDark 
+            ? 'rgba(0,0,0,0.92)'
+            : 'rgba(255,255,255,0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           padding: '24px',

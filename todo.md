@@ -7810,3 +7810,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Adjust modal background opacity for glass effect
 - [x] Test glass morphism appearance in light mode
 - [ ] Save checkpoint
+
+## Fix Add Class Modal Light Mode (Feb 5, 2026)
+- [x] Check dialog.tsx for hardcoded dark mode styles
+- [x] Update modal background to respond to theme
+- [x] Update modal border to respond to theme
+- [x] Test modal appearance in Light and Dark modes
+- [ ] Save checkpoint
