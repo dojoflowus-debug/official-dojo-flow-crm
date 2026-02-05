@@ -7903,3 +7903,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove pt-4 from ProgramForm (now using mt-4 on wrapper)
 - [ ] Test immediately
 - [ ] Save checkpoint
+
+## Add Spacing Between Labels and Input Fields
+- [x] Read Programs.tsx to find label styling
+- [x] Add mb-2 block to all 8 label elements
+- [ ] Test modal appearance
+- [ ] Save checkpoint

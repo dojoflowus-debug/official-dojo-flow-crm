@@ -211,7 +211,7 @@ export default function Programs() {
       {/* Basic Info */}
       <div className="space-y-4">
         <div>
-          <Label htmlFor="name">Program Name *</Label>
+          <Label htmlFor="name" className="mb-2 block">Program Name *</Label>
           <Input
             id="name"
             name="name"
@@ -224,7 +224,7 @@ export default function Programs() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="type">Program Type *</Label>
+            <Label htmlFor="type" className="mb-2 block">Program Type *</Label>
             <Select value={formData.type} onValueChange={(value) => handleSelectChange('type', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
@@ -239,7 +239,7 @@ export default function Programs() {
           </div>
 
           <div>
-            <Label htmlFor="ageRange">Age Range</Label>
+            <Label htmlFor="ageRange" className="mb-2 block">Age Range</Label>
             <Input
               id="ageRange"
               name="ageRange"
@@ -260,7 +260,7 @@ export default function Programs() {
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="price">Price ($)</Label>
+            <Label htmlFor="price" className="mb-2 block">Price ($)</Label>
             <Input
               id="price"
               name="price"
@@ -273,7 +273,7 @@ export default function Programs() {
           </div>
 
           <div>
-            <Label htmlFor="billing">Billing Cycle</Label>
+            <Label htmlFor="billing" className="mb-2 block">Billing Cycle</Label>
             <Select value={formData.billing} onValueChange={(value) => handleSelectChange('billing', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select billing" />
@@ -288,7 +288,7 @@ export default function Programs() {
           </div>
 
           <div>
-            <Label htmlFor="contractLength">Contract</Label>
+            <Label htmlFor="contractLength" className="mb-2 block">Contract</Label>
             <Select value={formData.contractLength} onValueChange={(value) => handleSelectChange('contractLength', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select contract" />
@@ -307,7 +307,7 @@ export default function Programs() {
       {/* Capacity & Description */}
       <div className="space-y-4">
         <div>
-          <Label htmlFor="maxSize">Max Class Size</Label>
+          <Label htmlFor="maxSize" className="mb-2 block">Max Class Size</Label>
           <Input
             id="maxSize"
             name="maxSize"
@@ -319,7 +319,7 @@ export default function Programs() {
         </div>
 
         <div>
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description" className="mb-2 block">Description</Label>
           <Textarea
             id="description"
             name="description"
