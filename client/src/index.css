@@ -1049,3 +1049,18 @@ h3 {
   transform: translateZ(0);
   will-change: transform;
 }
+
+/* Native Select Red Highlight - Match DojoFlow Theme */
+select option:checked,
+select option:hover {
+  background-color: #dc2626 !important; /* red-600 */
+  color: white !important;
+}
+
+/* Firefox-specific styling */
+@-moz-document url-prefix() {
+  select option:checked {
+    background: linear-gradient(#dc2626, #dc2626) !important;
+    color: white !important;
+  }
+}

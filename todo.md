@@ -7786,4 +7786,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix select option text colors (white text on dark background)
 - [x] Fix select option hover/selected state colors (red accent instead of blue)
 - [x] Test dropdown appearance in dark mode
+- [x] Save checkpoint
+
+## Change Dropdown Highlight to Red (Feb 5, 2026)
+- [x] Add custom CSS to change option:checked background to red
+- [x] Add custom CSS to change option:hover background to red
+- [x] Test dropdown highlight colors
 - [ ] Save checkpoint
