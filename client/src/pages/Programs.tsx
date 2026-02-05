@@ -252,7 +252,7 @@ export default function Programs() {
       </div>
 
       {/* Pricing */}
-      <div className={`p-4 rounded-lg border ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
+      <div className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <DollarSign className="w-4 h-4 text-primary" />
           <span className={`text-sm font-semibold ${isDark ? 'text-white/80' : 'text-gray-700'}`}>Pricing</span>
@@ -332,7 +332,7 @@ export default function Programs() {
       </div>
 
       {/* Options */}
-      <div className={`p-4 rounded-lg border ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
+      <div className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="w-4 h-4 text-primary" />
           <span className={`text-sm font-semibold ${isDark ? 'text-white/80' : 'text-gray-700'}`}>Options</span>

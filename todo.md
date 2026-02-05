@@ -7907,5 +7907,13 @@ Transform kiosk from admin dashboard to premium location experience
 ## Add Spacing Between Labels and Input Fields
 - [x] Read Programs.tsx to find label styling
 - [x] Add mb-2 block to all 8 label elements
+- [x] Test modal appearance
+- [x] Save checkpoint
+
+## Remove White Background from Pricing and Options Sections
+- [x] Find Pricing section wrapper in Programs.tsx (line 255)
+- [x] Remove white background (removed border and bg classes)
+- [x] Find Options section wrapper in Programs.tsx (line 335)
+- [x] Remove white background from Options section
 - [ ] Test modal appearance
 - [ ] Save checkpoint
