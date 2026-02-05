@@ -7716,3 +7716,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test Level dropdown
 - [x] Test Floor Plan dropdown
 - [x] Save checkpoint with fix
+
+## Implement Proper Z-Index Scale (Feb 5, 2026)
+- [x] Set DialogOverlay to z-index: 999
+- [x] Set DialogContent to z-index: 1000
+- [x] Set SelectContent to z-index: 1100
+- [x] Remove overflow: hidden from modal, use overflow-y: auto (already using overflow-y-auto)
+- [x] Test Program dropdown appears above modal
+- [x] Test Instructor dropdown appears above modal
+- [x] Test Level dropdown appears above modal
+- [x] Test Floor Plan dropdown appears above modal
+- [x] Save checkpoint with proper z-index system
