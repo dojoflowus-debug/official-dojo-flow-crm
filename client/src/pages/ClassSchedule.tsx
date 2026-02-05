@@ -383,9 +383,14 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
             <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-3">
               <p className="font-medium mb-1">No instructors found</p>
               <p>Please add team members with instructor, coach, or trainer role before creating classes.</p>
-              <a href="/staff" className="text-amber-700 underline hover:text-amber-800 mt-2 inline-block">
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                onClick={() => window.location.href = '/staff'}
+              >
                 Go to Staff Management →
-              </a>
+              </Button>
             </div>
           )}
         </div>

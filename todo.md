@@ -7640,3 +7640,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Restart dev server after fixing router
 - [x] Test classes.getAll and classes.getInstructors endpoints
 - [x] Save checkpoint with working router
+
+
+## Enhance Staff Management Link in No Instructors Message (Feb 4, 2026)
+- [x] Check current link implementation in ClassSchedule.tsx
+- [x] Make link more prominent with button styling
+- [x] Test link navigation to staff page
+- [x] Save checkpoint with enhanced link
