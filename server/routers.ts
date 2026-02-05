@@ -5110,8 +5110,8 @@ Return the data as a structured JSON object.`
       }),
   }),
 
-  // Classes router for schedule extraction and class management
-  classes: router({
+  // Schedule extractor router for parsing uploaded class schedules
+  scheduleExtractor: router({
     // Extract schedule from uploaded file - robust parser with column detection
     extractSchedule: protectedProcedure
       .input(z.object({

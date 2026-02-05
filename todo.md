@@ -7632,3 +7632,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add link to staff page in empty state message
 - [x] Test dropdown functionality
 - [x] Save checkpoint
+
+
+## Fix TRPC Classes Router Errors (Feb 4)
+- [x] Check if classes router is properly exported in classesRouter.ts
+- [x] Verify classes router is registered in routers.ts
+- [x] Restart dev server after fixing router
+- [x] Test classes.getAll and classes.getInstructors endpoints
+- [x] Save checkpoint with working router
