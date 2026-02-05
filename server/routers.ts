@@ -5551,15 +5551,26 @@ Return the data as a structured JSON object.`
   // Programs management router
   programs: router({
     // Get all programs
-    list: publicProcedure.query(async () => {
+    list: publicProcedure.query(async ({ ctx }) => {
       const { getDb } = await import("./db");
       const { programs } = await import("../drizzle/schema");
-      const { desc } = await import("drizzle-orm");
+      const { desc, eq } = await import("drizzle-orm");
       
       const db = await getDb();
       if (!db) throw new Error('Database not available');
       
-      const result = await db.select().from(programs).orderBy(desc(programs.createdAt));
+      // Get organization ID from context for multi-tenancy
+      const organizationId = ctx.currentOrganizationId;
+      
+      // SECURITY: Require organization ID for multi-tenancy - no org = empty list
+      if (!organizationId) {
+        console.log('[programs.list] No organization ID found, returning empty list for data isolation');
+        return [];
+      }
+      
+      const result = await db.select().from(programs)
+        .where(eq(programs.organizationId, organizationId))
+        .orderBy(desc(programs.createdAt));
       return result;
     }),
 

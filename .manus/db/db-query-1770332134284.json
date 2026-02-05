@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, name, organizationId, isActive FROM classes LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, organizationId, isActive FROM classes LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Kids Karate",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "2",
+      "name": "Teen Martial Arts Updated",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30001",
+      "name": "Test Import Class",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30002",
+      "name": "Test Import Class",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30003",
+      "name": "Little Ninjas Basics",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30004",
+      "name": "Little Ninjas Basics",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30005",
+      "name": "Kids Beginner",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30006",
+      "name": "Kids Beginner",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30007",
+      "name": "Kids Intermediate",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30008",
+      "name": "Teen Martial Arts",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30009",
+      "name": "Teen Martial Arts",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30010",
+      "name": "Adult Martial Arts",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30011",
+      "name": "Adult Martial Arts",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30012",
+      "name": "Cardio Kickboxing",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30013",
+      "name": "Cardio Kickboxing",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30014",
+      "name": "Leadership Training",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30015",
+      "name": "Bo Staff Training",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30016",
+      "name": "Open Sparring",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30017",
+      "name": "Family Class",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30018",
+      "name": "Little Ninjas Basics",
+      "organizationId": "NULL",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\torganizationId\tisActive\n1\tKids Karate\tNULL\t0\n2\tTeen Martial Arts Updated\tNULL\t0\n30001\tTest Import Class\tNULL\t0\n30002\tTest Import Class\tNULL\t0\n30003\tLittle Ninjas Basics\tNULL\t0\n30004\tLittle Ninjas Basics\tNULL\t0\n30005\tKids Beginner\tNULL\t0\n30006\tKids Beginner\tNULL\t0\n30007\tKids Intermediate\tNULL\t0\n30008\tTeen Martial Arts\tNULL\t0\n30009\tTeen Martial Arts\tNULL\t0\n30010\tAdult Martial Arts\tNULL\t0\n30011\tAdult Martial Arts\tNULL\t0\n30012\tCardio Kickboxing\tNULL\t0\n30013\tCardio Kickboxing\tNULL\t0\n30014\tLeadership Training\tNULL\t0\n30015\tBo Staff Training\tNULL\t0\n30016\tOpen Sparring\tNULL\t0\n30017\tFamily Class\tNULL\t0\n30018\tLittle Ninjas Basics\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
