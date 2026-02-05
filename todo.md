@@ -7657,3 +7657,20 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add section headers to organize content
 - [x] Test form layout and usability
 - [x] Save checkpoint with redesigned form
+
+
+## Apple-Inspired Add Class Modal Redesign (Feb 4, 2026)
+- [x] Remove right-side summary panel
+- [x] Implement single-column layout
+- [x] Section 1: Program - [ ] Section 1: Program & Instructor dropdowns with inline row Instructor dropdowns with inline row
+- [x] Section 2: Day pill toggles (Mon-Sun)
+- [x] Section 2: Start time - [ ] Section 2: Start time & End time inline End time inline
+- [x] Section 3: Room/Mat and Floor Plan fields
+- [x] Section 4: Capacity stepper (+/-) and Level dropdown
+- [x] Create Advanced Options accordion (collapsed by default)
+- [x] Move Age Range, Notes to Advanced Options
+- [x] Add sticky bottom bar with Cancel and Add Class buttons
+- [x] Apply Apple-inspired styling (rounded inputs, more spacing, subtle separators)
+- [x] Remove heavy glowing borders and neon outlines
+- [x] Test modal UX and functionality
+- [x] Save checkpoint with redesigned modal
