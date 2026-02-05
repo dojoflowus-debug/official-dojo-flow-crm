@@ -7853,4 +7853,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add Programs to AppShell navigation
 - [x] Add BookOpen icon import
 - [x] Remove billing filter logic
+- [x] Save checkpoint
+
+## Fix Programs Page Top Content Covered (Feb 5, 2026)
+- [x] Read Programs.tsx to understand current layout
+- [x] Check if AppShell header is overlapping content (CommandHeader is h-14/56px)
+- [x] Fix breadcrumb top position from top-[72px] to top-14
+- [x] Verify breadcrumb and title are fully visible
+- [ ] Test on desktop and mobile
 - [ ] Save checkpoint
