@@ -7592,3 +7592,18 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Choose appropriate icon for Class Schedule - Calendar icon
 - [x] Test navigation link works correctly
 - [x] Save checkpoint with updated navigation
+
+## Debug Class Schedule Not Showing in Navigation (Feb 4, 2026)
+
+- [ ] Verify DashboardLayout menuItems array includes Class Schedule
+- [ ] Check if browser cache needs clearing
+- [ ] Restart dev server if needed
+- [ ] Confirm menu renders on pages using DashboardLayout
+
+## Add Class Schedule to Bottom Navigation Bar (Feb 4, 2026)
+
+- [x] Add Class Schedule to AppShell NAVIGATION array
+- [x] Update class-schedule route to use AppShell wrapper
+- [x] Choose appropriate position in bottom nav - After Classes
+- [x] Test navigation works correctly
+- [x] Save checkpoint with bottom nav update
