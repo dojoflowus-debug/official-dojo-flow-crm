@@ -128,7 +128,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed grid gap-4 duration-200",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed flex flex-col gap-4 duration-200",
           // Mobile: full-screen, Desktop: centered modal
           "inset-0 sm:inset-0 sm:m-auto",
           "w-full h-full sm:w-auto sm:h-auto sm:max-w-[calc(100%-2rem)] sm:max-w-lg",
