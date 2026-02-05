@@ -7,7 +7,7 @@ import {
   Sparkles,
   Calendar,
   UserCog,
-  CreditCard,
+  BookOpen,
   BarChart3,
   Settings,
   Eye,
@@ -36,7 +36,7 @@ const NAVIGATION = [
   { id: 'operations', name: 'Operations', href: '/operations/merchandise', icon: Package },
   { id: 'kiosk-studio', name: 'Kiosk', href: '/kiosk-studio', icon: Grid3x3 },
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
-  { id: 'billing', name: 'Billing', href: '/billing', icon: CreditCard },
+  { id: 'programs', name: 'Programs', href: '/programs', icon: BookOpen },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
 ]
 
@@ -163,8 +163,6 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
                 if (badgeCounts && badgeCounts[item.id]) {
                   if (item.id === 'leads') {
                     return `${item.href}?filter=needs-followup`
-                  } else if (item.id === 'billing') {
-                    return `${item.href}?filter=overdue`
                   }
                 }
                 return item.href

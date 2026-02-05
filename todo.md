@@ -7842,5 +7842,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove Billing from navigation menu
 - [x] Programs already in navigation menu
 - [x] Verify Programs page route is working
-- [ ] Test navigation on desktop and mobile
+- [x] Test navigation on desktop and mobile
+- [x] Save checkpoint
+
+## Remove Billing from All Navigation Files (Feb 5, 2026)
+- [x] Check ManagementLayout for Billing references
+- [x] Check Layout.tsx for Billing references
+- [x] Check AppShell.tsx (found Billing here)
+- [x] Remove Billing from AppShell navigation
+- [x] Add Programs to AppShell navigation
+- [x] Add BookOpen icon import
+- [x] Remove billing filter logic
 - [ ] Save checkpoint
