@@ -7674,3 +7674,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove heavy glowing borders and neon outlines
 - [x] Test modal UX and functionality
 - [x] Save checkpoint with redesigned modal
+
+## TRUE Apple-Inspired Add Class Modal Redesign (Feb 4, 2026)
+- [x] Remove ALL two-column grid layouts - make everything single column
+- [x] Stack all fields vertically with generous spacing
+- [x] Instructor dropdown should be full width below Program
+- [x] Time fields should be full width, not side-by-side
+- [x] Remove section headers and separators for cleaner look
+- [x] Use larger, more prominent inputs
+- [x] Apply true minimal Apple aesthetic (like iOS Settings app)
+- [x] Test form submission still works
+- [x] Save checkpoint with actual redesign
