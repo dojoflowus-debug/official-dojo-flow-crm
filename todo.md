@@ -7885,5 +7885,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Check if DialogHeader has absolute positioning (no, flex layout)
 - [x] Add margin-bottom (mb-6) to DialogHeader to separate from form
 - [x] Remove pb-4 from Programs.tsx DialogHeader (redundant)
-- [ ] Test modal layout after fix
+- [x] Test modal layout after fix
+- [x] Save checkpoint
+
+## URGENT: Fix Modal Overlap (Feb 5, 2026 - 2:14 PM)
+- [x] Check if ProgramForm has negative margin or absolute positioning (no issues found)
+- [x] Add explicit pt-4 padding to ProgramForm
+- [ ] Verify DialogHeader mb-6 is actually rendering
+- [ ] Test immediately after fix
 - [ ] Save checkpoint

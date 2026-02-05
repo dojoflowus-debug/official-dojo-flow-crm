@@ -207,7 +207,7 @@ export default function Programs() {
   };
 
   const ProgramForm = ({ onSubmit, submitText }: { onSubmit: (e: React.FormEvent) => void; submitText: string }) => (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6 pt-4">
       {/* Basic Info */}
       <div className="space-y-4">
         <div>
