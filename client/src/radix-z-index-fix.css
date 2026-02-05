@@ -1,0 +1,30 @@
+/* Radix UI Z-Index Fix for Dropdowns in Modals */
+/* Z-Index Scale: base=0-99, sticky=200, dropdowns=3000, modal=2000, toasts=4000 */
+
+/* Dialog (Modal) Layer */
+[data-radix-dialog-overlay] {
+  z-index: 2000 !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 2001 !important;
+}
+
+/* Select Dropdown Layer (Above Modal) - MUST be higher than modal */
+[data-radix-select-content] {
+  z-index: 3000 !important;
+}
+
+[data-radix-popper-content-wrapper] {
+  z-index: 3000 !important;
+}
+
+/* Popover Layer (if used) */
+[data-radix-popover-content] {
+  z-index: 3000 !important;
+}
+
+/* Ensure dropdown content is not clipped */
+[data-radix-select-viewport] {
+  overflow: visible !important;
+}

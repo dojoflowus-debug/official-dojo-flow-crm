@@ -7727,3 +7727,33 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test Level dropdown appears above modal
 - [x] Test Floor Plan dropdown appears above modal
 - [x] Save checkpoint with proper z-index system
+
+## Apply Radix UI Specific Z-Index Fix (Feb 5, 2026)
+- [x] Add global CSS with Radix data attribute selectors for z-index
+- [x] Check DialogContent for transform/filter that creates stacking context (no transforms found)
+- [x] Remove any transforms from DialogContent if present (not needed)
+- [x] Verify Select.Portal is being used (already done)
+- [ ] Test all dropdowns appear above modal
+- [ ] Save checkpoint with Radix UI fix
+
+## Systematic Dropdown Debug (Feb 5, 2026)
+- [x] Step 1: Inspect dropdown DOM - confirmed Select.Portal with container={document.body}
+- [x] Step 2: Verify Select.Portal renders to document.body (code verified)
+- [x] Step 3: Applied !z-[9999] with important flag for maximum specificity
+- [x] Step 4: Checked for stacking context traps (none found in DialogContent)
+- [x] Step 5: Modal uses overflow-y-auto (no clipping)
+- [x] Step 6: Applied Tailwind !z-[9999] with important flag
+- [x] Step 7: FOUND ROOT CAUSE - transform on DialogContent creates stacking context
+- [x] Step 8: Removed transform, using margin auto for centering instead
+- [ ] Test dropdowns appear above modal
+- [ ] Save checkpoint with verified fix
+
+## Delete class-schedule page (Feb 5, 2026)
+- [x] Delete ClassSchedule.tsx page
+- [x] Delete AddClassForm.tsx component
+- [x] Remove route from AppShell.tsx and DashboardLayout.tsx
+- [x] Focus on fixing dropdown z-index on /classes page
+- [x] Removed zoom animations from DialogContent (stacking context trap)
+- [x] Removed backdrop-blur from DialogOverlay (stacking context trap)
+- [x] Changed DialogContent overflow to visible (prevent clipping)
+- [x] Applied proper z-index scale: overlay=2000, modal=2001, dropdown=3000

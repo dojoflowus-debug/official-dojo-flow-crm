@@ -7,6 +7,7 @@ import superjson from "superjson";
 import App from "./App.tsx";
 import "./index.css";
 import "./styles/dojo-animations.css";
+import "./radix-z-index-fix.css";
 
 console.log('DojoFlow Kiosk - main.tsx loaded');
 

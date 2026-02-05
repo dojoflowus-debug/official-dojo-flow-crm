@@ -54,7 +54,6 @@ const SimpleDashboard = lazy(() => import("../pages/SimpleDashboard"));
 const DataDashboard = lazy(() => import("../pages/DataDashboard"));
 const MinimalDashboard = lazy(() => import("../pages/MinimalDashboard"));
 const Classes = lazy(() => import("../pages/Classes"));
-const ClassSchedule = lazy(() => import("../pages/ClassSchedule").then(m => ({ default: m.ClassSchedule })));
 const Programs = lazy(() => import("../pages/Programs"));
 const Staff = lazy(() => import("../pages/Staff"));
 const Billing = lazy(() => import("../pages/Billing"));
@@ -255,7 +254,6 @@ export const appRoutes: RouteConfig[] = [
   { path: "/leads", element: <AppShell><Leads /></AppShell>, label: "Leads" },
   { path: "/test-data", element: <TestData />, label: "Test Data" },
   { path: "/classes", element: <AppShell><Classes /></AppShell>, label: "Classes" },
-  { path: "/class-schedule", element: <ProtectedRoute><AppShell><ClassSchedule /></AppShell></ProtectedRoute>, label: "Class Schedule" },
   { path: "/floor-plans", element: <AppShell><FloorPlansCinematic /></AppShell>, label: "Floor Plans" },
   { path: "/floor-plans-old", element: <AppShell><FloorPlans /></AppShell>, label: "Floor Plans Old" },
   { path: "/programs", element: <Programs />, label: "Programs" },

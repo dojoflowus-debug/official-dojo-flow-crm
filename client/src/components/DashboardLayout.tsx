@@ -32,7 +32,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/kai" },
   { icon: Users, label: "Students", path: "/students" },
-  { icon: Calendar, label: "Class Schedule", path: "/class-schedule" },
+  { icon: Calendar, label: "Classes", path: "/classes" },
   { icon: Monitor, label: "Kiosk", path: "/kiosk-studio/1", allowedRoles: ["admin", "owner", "staff"] },
 ];
 

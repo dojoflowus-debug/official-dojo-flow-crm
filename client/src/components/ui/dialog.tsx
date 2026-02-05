@@ -79,7 +79,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[999] bg-black/55 backdrop-blur-[10px]",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[2000] bg-black/70",
         className
       )}
       {...props}
@@ -125,12 +125,12 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed grid gap-4 duration-200",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed grid gap-4 duration-200",
           // Mobile: full-screen, Desktop: centered modal
-          "inset-0 sm:inset-auto sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]",
+          "inset-0 sm:inset-0 sm:m-auto",
           "w-full h-full sm:w-auto sm:h-auto sm:max-w-[calc(100%-2rem)] sm:max-w-lg",
-          "rounded-none p-0 sm:p-6 bg-transparent sm:max-h-[85vh] sm:overflow-y-auto",
-          "z-[1000]", // Modal z-index (above backdrop at 999)
+          "rounded-none p-0 sm:p-6 bg-transparent sm:max-h-[85vh] sm:overflow-visible",
+          "z-[2001]", // Modal z-index (above backdrop at 2000)
           className
         )}
         style={{
