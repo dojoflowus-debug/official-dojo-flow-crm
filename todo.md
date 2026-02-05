@@ -7607,3 +7607,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Choose appropriate position in bottom nav - After Classes
 - [x] Test navigation works correctly
 - [x] Save checkpoint with bottom nav update
+
+## Fix getDisplayName Error on Schedule Page (Feb 4, 2026)
+
+- [x] Found - ClassSchedule was using DashboardLayout
+- [x] Removed DashboardLayout wrapper from ClassSchedule
+- [x] Test schedule page loads without errors
+- [x] Save checkpoint with fix

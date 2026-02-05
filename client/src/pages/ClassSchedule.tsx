@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,6 @@ export const ClassSchedule: React.FC = () => {
   }, {} as Record<string, typeof classes>);
 
   return (
-    <DashboardLayout>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -192,7 +191,6 @@ export const ClassSchedule: React.FC = () => {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 };
 
