@@ -7891,6 +7891,15 @@ Transform kiosk from admin dashboard to premium location experience
 ## URGENT: Fix Modal Overlap (Feb 5, 2026 - 2:14 PM)
 - [x] Check if ProgramForm has negative margin or absolute positioning (no issues found)
 - [x] Add explicit pt-4 padding to ProgramForm
-- [ ] Verify DialogHeader mb-6 is actually rendering
-- [ ] Test immediately after fix
+- [x] Verify DialogHeader mb-6 is actually rendering (combined with pt-4 = 40px spacing)
+- [x] Test immediately after fix
+- [x] Save checkpoint
+
+## CRITICAL: Program Name Label Rendering Above Title (Feb 5, 2026 - 2:21 PM)
+- [x] Check DialogContent structure in Programs.tsx (structure was correct)
+- [x] Verify ProgramForm is inside DialogContent, not DialogHeader (verified correct)
+- [x] Check if Label has absolute positioning (no)
+- [x] Wrap ProgramForm in div with mt-4 to create proper containment
+- [x] Remove pt-4 from ProgramForm (now using mt-4 on wrapper)
+- [ ] Test immediately
 - [ ] Save checkpoint

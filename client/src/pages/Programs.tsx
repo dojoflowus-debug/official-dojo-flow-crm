@@ -207,7 +207,7 @@ export default function Programs() {
   };
 
   const ProgramForm = ({ onSubmit, submitText }: { onSubmit: (e: React.FormEvent) => void; submitText: string }) => (
-    <form onSubmit={onSubmit} className="space-y-6 pt-4">
+    <form onSubmit={onSubmit} className="space-y-6">
       {/* Basic Info */}
       <div className="space-y-4">
         <div>
@@ -419,7 +419,9 @@ export default function Programs() {
                 <DialogHeader>
                   <DialogTitle>Add New Program</DialogTitle>
                 </DialogHeader>
-                <ProgramForm onSubmit={handleCreate} submitText="Create Program" />
+                <div className="mt-4">
+                  <ProgramForm onSubmit={handleCreate} submitText="Create Program" />
+                </div>
               </DialogContent>
             </Dialog>
           </div>
