@@ -329,8 +329,8 @@ const ClassForm = ({
             onChange={(e) => onProgramChange(e.target.value)}
             className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
               isDark 
-                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20' 
-                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300'
+                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20 [&>option]:bg-gray-900 [&>option]:text-white' 
+                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300 [&>option]:bg-white [&>option]:text-gray-900'
             } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
               isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
             }`}
@@ -363,8 +363,8 @@ const ClassForm = ({
             }}
             className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
               isDark 
-                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20' 
-                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300'
+                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20 [&>option]:bg-gray-900 [&>option]:text-white' 
+                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300 [&>option]:bg-white [&>option]:text-gray-900'
             } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
               isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
             } ${instructorConflict ? 'border-amber-500' : ''}`}
@@ -501,8 +501,8 @@ const ClassForm = ({
           }}
           className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
             isDark 
-              ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20' 
-              : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300'
+              ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20 [&>option]:bg-gray-900 [&>option]:text-white' 
+              : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300 [&>option]:bg-white [&>option]:text-gray-900'
           } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
             isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
           }`}

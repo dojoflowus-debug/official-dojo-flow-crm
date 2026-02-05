@@ -7778,5 +7778,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Keep Apple-inspired styling (rounded, soft background, subtle border)
 - [x] Maintain all existing data binding and validation
 - [x] Add TODO comment about upgrading to custom popover later
-- [ ] Test on desktop and mobile
+- [x] Test on desktop and mobile
+- [x] Save checkpoint
+
+## Fix Native Select Dropdown Colors (Feb 5, 2026)
+- [x] Fix select option background colors to match dark theme
+- [x] Fix select option text colors (white text on dark background)
+- [x] Fix select option hover/selected state colors (red accent instead of blue)
+- [x] Test dropdown appearance in dark mode
 - [ ] Save checkpoint
