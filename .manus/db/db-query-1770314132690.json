@@ -1,0 +1,82 @@
+{
+  "query": "SELECT id, name, email, role, organizationId, isActive, createdAt FROM team_members WHERE isActive = 1 ORDER BY organizationId, id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, email, role, organizationId, isActive, createdAt FROM team_members WHERE isActive = 1 ORDER BY organizationId, id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Sarah Martinez",
+      "email": "sarah.martinez@dojoflow.com",
+      "role": "instructor",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "createdAt": "2025-12-13 21:21:59"
+    },
+    {
+      "id": "2",
+      "name": "James Chen",
+      "email": "james.chen@dojoflow.com",
+      "role": "manager",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "createdAt": "2025-12-13 21:21:59"
+    },
+    {
+      "id": "3",
+      "name": "Maria Santos",
+      "email": "maria.santos@dojoflow.com",
+      "role": "instructor",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "createdAt": "2025-12-13 21:21:59"
+    },
+    {
+      "id": "4",
+      "name": "David Kim",
+      "email": "david.kim@dojoflow.com",
+      "role": "front_desk",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "createdAt": "2025-12-13 21:21:59"
+    },
+    {
+      "id": "5",
+      "name": "Emily Johnson",
+      "email": "emily.johnson@dojoflow.com",
+      "role": "coach",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "createdAt": "2025-12-13 21:21:59"
+    },
+    {
+      "id": "6",
+      "name": "Michael Brown",
+      "email": "michael.brown@dojoflow.com",
+      "role": "assistant",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "createdAt": "2025-12-13 21:21:59"
+    },
+    {
+      "id": "60001",
+      "name": "Damien DiCiolli",
+      "email": "d.diciolli@gmail.com",
+      "role": "instructor",
+      "organizationId": "NULL",
+      "isActive": "1",
+      "createdAt": "2026-01-26 22:42:52"
+    },
+    {
+      "id": "90001",
+      "name": "Vincent Holmes",
+      "email": "vincent.holmes00@gmail.com",
+      "role": "instructor",
+      "organizationId": "120001",
+      "isActive": "1",
+      "createdAt": "2026-02-05 03:37:58"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\torganizationId\tisActive\tcreatedAt\n1\tSarah Martinez\tsarah.martinez@dojoflow.com\tinstructor\tNULL\t1\t2025-12-13 21:21:59\n2\tJames Chen\tjames.chen@dojoflow.com\tmanager\tNULL\t1\t2025-12-13 21:21:59\n3\tMaria Santos\tmaria.santos@dojoflow.com\tinstructor\tNULL\t1\t2025-12-13 21:21:59\n4\tDavid Kim\tdavid.kim@dojoflow.com\tfront_desk\tNULL\t1\t2025-12-13 21:21:59\n5\tEmily Johnson\temily.johnson@dojoflow.com\tcoach\tNULL\t1\t2025-12-13 21:21:59\n6\tMichael Brown\tmichael.brown@dojoflow.com\tassistant\tNULL\t1\t2025-12-13 21:21:59\n60001\tDamien DiCiolli\td.diciolli@gmail.com\tinstructor\tNULL\t1\t2026-01-26 22:42:52\n90001\tVincent Holmes\tvincent.holmes00@gmail.com\tinstructor\t120001\t1\t2026-02-05 03:37:58\n",
+  "stderr": "",
+  "execution_time_ms": 48
+}

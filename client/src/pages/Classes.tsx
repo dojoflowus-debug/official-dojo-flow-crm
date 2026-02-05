@@ -768,12 +768,12 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   }, [isEnrollmentModalOpen, selectedClassForEnrollment]);
 
   // Fetch instructors using tRPC
-  const { data: instructorsData } = trpc.staff.getInstructors.useQuery({});
+  const { data: instructorsData } = trpc.classes.getInstructors.useQuery();
   
   // Update instructors state when data changes
   useEffect(() => {
-    if (instructorsData?.instructors) {
-      setInstructors(instructorsData.instructors);
+    if (instructorsData) {
+      setInstructors(instructorsData);
     }
   }, [instructorsData]);
 

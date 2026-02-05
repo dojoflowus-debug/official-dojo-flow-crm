@@ -7824,4 +7824,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Compare filtering logic between the two queries
 - [x] Update Staff page to use getInstructors query
 - [x] Test that instructor dropdown matches staff list
+- [x] Save checkpoint
+
+## Fix Instructor Query Organization Filtering (Feb 5, 2026)
+- [x] Review getInstructors query organization filtering logic
+- [x] Check if organizationId is being passed correctly
+- [x] Query database to check for test/orphaned instructor data
+- [x] Add logging to verify organization context
+- [x] Fix Classes.tsx to use correct trpc endpoint (trpc.classes.getInstructors)
+- [x] Fix instructorsData access (returns array directly)
+- [ ] Test instructor dropdown with single instructor
 - [ ] Save checkpoint

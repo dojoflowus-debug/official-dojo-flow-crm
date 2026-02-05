@@ -331,7 +331,10 @@ export const classesRouter = router({
 
     const organizationId = ctx.currentOrganizationId;
     
+    console.log('[getInstructors] Organization ID:', organizationId);
+    
     if (!organizationId) {
+      console.log('[getInstructors] No organization ID, returning empty array');
       return [];
     }
 
@@ -354,6 +357,9 @@ export const classesRouter = router({
         )
       );
 
+    console.log('[getInstructors] Found', instructors.length, 'instructors for org', organizationId);
+    console.log('[getInstructors] Instructors:', instructors.map(i => ({ id: i.id, name: i.name, role: i.role })));
+    
     return instructors;
   }),
 });
