@@ -7764,3 +7764,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Applied fix to Add Class, Edit Class, and Enrollments modals
 - [ ] Test both scrolling and dropdown visibility
 - [ ] Save checkpoint with fix
+
+## Fix Dropdown Behind Modal - Nuclear Option (Feb 5, 2026)
+- [x] Applied inline style with z-index: 999999 to SelectContent
+- [x] Removed !z-[3000] Tailwind class (inline style takes precedence)
+- [x] Portal already renders to document.body
+- [ ] Test and save checkpoint
