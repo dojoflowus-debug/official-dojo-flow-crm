@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import ManagementLayout from '@/components/ManagementLayout';
+import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,7 +48,6 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const [loading, setLoading] = useState(true)
   
   const [stats, setStats] = useState({
     total_staff: 0,
@@ -75,30 +75,22 @@ export default function Staff({ onLogout, theme, toggleTheme }) {
   const uploadFileMutation = trpc.upload.uploadAttachment.useMutation()
   const updatePhotoMutation = trpc.staff.updatePhoto.useMutation()
   
-  const [staffMembers, setStaffMembers] = useState([])
+  // Use trpc query to fetch instructors (same as Classes page)
+  const { data: staffMembers = [], isLoading: loading, refetch: fetchStaff } = trpc.classes.getInstructors.useQuery();
+  
+  const [staffMembersState, setStaffMembers] = useState([])
 
-  // Fetch staff and stats on mount
+  // Fetch stats on mount
   useEffect(() => {
-    fetchStaff()
     fetchStats()
   }, [])
-
-  const fetchStaff = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(`${API_URL}/staff`)
-      const data = await response.json()
-      
-      if (Array.isArray(data)) {
-        setStaffMembers(data)
-      }
-    } catch (error) {
-      console.error('Error fetching staff:', error)
-      toast.error('Failed to load staff members')
-    } finally {
-      setLoading(false)
+  
+  // Update local state when trpc data changes
+  useEffect(() => {
+    if (staffMembers) {
+      setStaffMembers(staffMembers)
     }
-  }
+  }, [staffMembers])
 
   const fetchStats = async () => {
     try {

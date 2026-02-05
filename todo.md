@@ -7816,4 +7816,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update modal background to respond to theme
 - [x] Update modal border to respond to theme
 - [x] Test modal appearance in Light and Dark modes
+- [x] Save checkpoint
+
+## Fix Instructor Dropdown to Match Staff List (Feb 5, 2026)
+- [x] Find getInstructors query in backend
+- [x] Find staff list query in backend
+- [x] Compare filtering logic between the two queries
+- [x] Update Staff page to use getInstructors query
+- [x] Test that instructor dropdown matches staff list
 - [ ] Save checkpoint
