@@ -121,6 +121,9 @@ export const ClassSchedule: React.FC = () => {
                           {classItem.level && (
                             <Badge variant="secondary">{classItem.level}</Badge>
                           )}
+                          {classItem.ageRange && (
+                            <Badge variant="outline" className="text-blue-600 border-blue-600">{classItem.ageRange}</Badge>
+                          )}
                         </div>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -266,6 +269,7 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
     level: '',
     room: '',
     duration: 60,
+    ageRange: '',
   });
 
   const createMutation = trpc.classes.create.useMutation({
@@ -389,6 +393,16 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
             value={formData.room}
             onChange={(e) => setFormData({ ...formData, room: e.target.value })}
             placeholder="e.g., Main Dojo, Studio A"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="ageRange">Age Range</Label>
+          <Input
+            id="ageRange"
+            value={formData.ageRange}
+            onChange={(e) => setFormData({ ...formData, ageRange: e.target.value })}
+            placeholder="e.g., Kids 4-7, Teens 13-17, Adults 18+"
           />
         </div>
       </div>
