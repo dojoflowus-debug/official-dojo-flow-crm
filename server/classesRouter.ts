@@ -247,6 +247,7 @@ export const classesRouter = router({
       program: z.string().optional(),
       level: z.string().optional(),
       room: z.string().optional(),
+      ageRange: z.string().optional(),
       locationId: z.number().optional(),
       startDate: z.string().optional(),
       endDate: z.string().optional(),
