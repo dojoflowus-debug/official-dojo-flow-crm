@@ -322,81 +322,64 @@ const ClassForm = ({
       <div className="space-y-5">
         <div>
           <Label htmlFor="program" className="text-base font-medium mb-2 block">Program</Label>
-          <Select value={formData.program} onValueChange={(value) => onProgramChange(value)}>
-            <SelectTrigger className="!h-12 text-base rounded-xl">
-              <SelectValue placeholder="Select program" />
-            </SelectTrigger>
-            <SelectContent>
-              {programs.length === 0 ? (
-                <SelectItem value="__no_programs__" disabled>No programs yet</SelectItem>
-              ) : (
-                programs.map((program) => (
-                  <SelectItem key={program.id} value={program.name}>
-                    {program.name} {program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          {/* TODO: Upgrade to custom popover select after we stabilize modal stacking contexts */}
+          <select
+            id="program"
+            value={formData.program}
+            onChange={(e) => onProgramChange(e.target.value)}
+            className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
+              isDark 
+                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20' 
+                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300'
+            } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+              isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
+            }`}
+          >
+            <option value="">Select program</option>
+            {programs.length === 0 ? (
+              <option value="" disabled>No programs yet</option>
+            ) : (
+              programs.map((program) => (
+                <option key={program.id} value={program.name}>
+                  {program.name} {program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}
+                </option>
+              ))
+            )}
+          </select>
         </div>
 
         <div>
           <Label htmlFor="instructor" className="text-base font-medium mb-2 block">Instructor</Label>
-          <Select 
-            value={formData.instructorId?.toString() || ''} 
-            onValueChange={(value) => {
+          {/* TODO: Upgrade to custom popover select after we stabilize modal stacking contexts */}
+          <select
+            id="instructor"
+            value={formData.instructorId?.toString() || ''}
+            onChange={(e) => {
+              const value = e.target.value;
               const id = parseInt(value);
               const instructor = instructors.find(i => i.id === id);
               handleSelectChange('instructorId', value);
               handleSelectChange('instructor', instructor?.name || '');
             }}
+            className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
+              isDark 
+                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20' 
+                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300'
+            } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+              isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
+            } ${instructorConflict ? 'border-amber-500' : ''}`}
           >
-            <SelectTrigger className={`!h-12 text-base rounded-xl ${instructorConflict ? 'border-amber-500' : ''}`}>
-              <SelectValue placeholder="Select instructor">
-                {formData.instructorId && instructors.find(i => i.id === formData.instructorId) && (
-                  <div className="flex items-center gap-2">
-                    {instructors.find(i => i.id === formData.instructorId)?.photoUrl ? (
-                      <img 
-                        src={instructors.find(i => i.id === formData.instructorId)?.photoUrl || ''} 
-                        alt="" 
-                        className="w-5 h-5 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium ${
-                        isDark ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
-                      }`}>
-                        {instructors.find(i => i.id === formData.instructorId)?.name?.charAt(0) || '?'}
-                      </div>
-                    )}
-                    <span>{instructors.find(i => i.id === formData.instructorId)?.name}</span>
-                  </div>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {instructors.length === 0 ? (
-                <SelectItem value="__no_instructors__" disabled>No instructors available</SelectItem>
-              ) : (
-                instructors.map((instructor) => (
-                  <SelectItem key={instructor.id} value={instructor.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      {instructor.photoUrl ? (
-                        <img src={instructor.photoUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
-                      ) : (
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium ${
-                          isDark ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
-                        }`}>
-                          {instructor.name?.charAt(0) || '?'}
-                        </div>
-                      )}
-                      <span>{instructor.name}</span>
-                      <span className="text-xs text-muted-foreground">({instructor.role})</span>
-                    </div>
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+            <option value="">Select instructor</option>
+            {instructors.length === 0 ? (
+              <option value="" disabled>No instructors available</option>
+            ) : (
+              instructors.map((instructor) => (
+                <option key={instructor.id} value={instructor.id.toString()}>
+                  {instructor.name} ({instructor.role})
+                </option>
+              ))
+            )}
+          </select>
         </div>
       </div>
       
@@ -502,9 +485,12 @@ const ClassForm = ({
       {/* Floor Plan - Optional */}
       <div>
         <Label htmlFor="floorPlan" className="text-base font-medium mb-2 block">Floor Plan (Optional)</Label>
-        <Select
+        {/* TODO: Upgrade to custom popover select after we stabilize modal stacking contexts */}
+        <select
+          id="floorPlan"
           value={formData.floorPlanId?.toString() || "none"}
-          onValueChange={(value) => {
+          onChange={(e) => {
+            const value = e.target.value;
             const floorPlanId = value === "none" ? null : parseInt(value);
             const selectedPlan = floorPlansData?.find(p => p.id === floorPlanId);
             setFormData(prev => ({
@@ -513,19 +499,21 @@ const ClassForm = ({
               capacity: selectedPlan ? selectedPlan.maxCapacity.toString() : prev.capacity
             }));
           }}
+          className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
+            isDark 
+              ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20' 
+              : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300'
+          } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+            isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
+          }`}
         >
-          <SelectTrigger className="!h-12 text-base rounded-xl">
-            <SelectValue placeholder="Select floor plan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No floor plan</SelectItem>
-            {floorPlansData?.map((plan) => (
-              <SelectItem key={plan.id} value={plan.id.toString()}>
-                {plan.roomName} ({plan.maxCapacity} spots)
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="none">No floor plan</option>
+          {floorPlansData?.map((plan) => (
+            <option key={plan.id} value={plan.id.toString()}>
+              {plan.roomName} ({plan.maxCapacity} spots)
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Capacity - Always visible */}

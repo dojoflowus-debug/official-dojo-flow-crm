@@ -7770,3 +7770,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Removed !z-[3000] Tailwind class (inline style takes precedence)
 - [x] Portal already renders to document.body
 - [ ] Test and save checkpoint
+
+## Replace Radix Select with Native HTML Select (Feb 5, 2026)
+- [x] Replace Program Select with native HTML select
+- [x] Replace Instructor Select with native HTML select
+- [x] Replace Floor Plan Select with native HTML select
+- [x] Keep Apple-inspired styling (rounded, soft background, subtle border)
+- [x] Maintain all existing data binding and validation
+- [x] Add TODO comment about upgrading to custom popover later
+- [ ] Test on desktop and mobile
+- [ ] Save checkpoint
