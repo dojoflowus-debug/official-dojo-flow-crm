@@ -251,7 +251,7 @@
 - [ ] Verify no 500 errors from database queries
 - [ ] Test needs-attention filter with reason badges
 - [ ] Responsive design validation
-- [ ] Save checkpoint before delivery
+- [x] Save checkpoint before delivery
 
 
 - [x] Fixed TRPC validation error on /students?filter=needs-attention page
@@ -561,7 +561,7 @@
 - [ ] Write vitest tests for editing functionality - Pending
 
 ### Deployment
-- [ ] Save checkpoint - Ready
+- [x] Save checkpoint - Ready
 - [ ] Deliver to user for testing - Ready
 
 ## Current Issues - FIXED (Session 2)
@@ -956,7 +956,7 @@
 - [ ] Responsive design across all breakpoints
 - [ ] No console errors or warnings
 - [ ] All data bindings correct
-- [ ] Save checkpoint before feature expansion
+- [x] Save checkpoint before feature expansion
 
 
 ## STABILITY PASS (Jan 10, 2026) - LIMITED SCOPE
@@ -1841,7 +1841,7 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Document kiosk setup process
 - [ ] Create admin guide for kiosk customization
 - [ ] Add kiosk routes to navigation
-- [ ] Save checkpoint with kiosk manager implementation
+- [x] Save checkpoint with kiosk manager implementation
 
 
 ## Phase 17: Kiosk Manager - Core Module Integration (IN PROGRESS)
@@ -2865,7 +2865,7 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] All flows working end-to-end
 - [ ] Device behaviors functional
 - [ ] Deploy tab operational
-- [ ] Save checkpoint with fully functional kiosk
+- [x] Save checkpoint with fully functional kiosk
 
 
 ## Phase 19: Functional Kiosk Implementation (MVP with Mock Data)
@@ -3430,7 +3430,7 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Style InfoPanel to match Kai Command aesthetic
 - [ ] Test layout with sample data
 - [ ] Verify no interference with left/center columns
-- [ ] Save checkpoint for INFO PANEL feature
+- [x] Save checkpoint for INFO PANEL feature
 
 
 ## Bug Fix - Cinematic Mode Overlay Issues (Jan 20, 2026)
@@ -3531,7 +3531,7 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [ ] Align content horizontally with KaiBar position (calc(50% + 96px))
 - [ ] Ensure content doesn't exceed KaiBar width
 - [ ] Test and verify alignment on different screen sizes
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Constrain Content Width to Match KaiBar (Jan 20, 2026) - IN PROGRESS
@@ -3540,7 +3540,7 @@ All three errors have been fixed by adding proper error handling and graceful fa
 - [x] Remove max-width constraints from KaiCommand content wrapper
 - [x] Add CSS class to constrain kai-command-page width and alignment
 - [ ] Test and verify content alignment with KaiBar (CSS not fully applying yet)
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 Note: CSS styling added but not fully taking effect. The kai-command-page has width 540px instead of 980px. The CSS `!important` rules are being added but the transform and marginLeft are not applying correctly. Further investigation needed to understand why the CSS is not overriding the inline styles or if there's a parent container issue.
 
@@ -3636,7 +3636,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Identify why HTML is being returned instead of JSON
 - [ ] Fix the server-side error or routing issue
 - [ ] Test /owner page to verify it loads without errors
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Fix TRPC Error on /owner Page (Jan 20, 2026) - COMPLETED
@@ -3672,7 +3672,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Update CSS bottom position calculation
 - [x] Test cinematic mode KaiBar positioning
 - [x] Verify light and dark modes remain unchanged
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Fix TRPC JSON Parsing Error on /owner Page (Jan 20, 2026)
@@ -3680,7 +3680,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Check server routing configuration
 - [ ] Fix middleware or route handler issue
 - [ ] Test /owner page loads without errors
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Move KaiBar Down 2 Inches in Cinematic Mode (Jan 20, 2026)
@@ -3893,7 +3893,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Test Light and Dark modes to verify identical layouts
 - [x] Take screenshots of Light and Dark modes to verify identical layouts
 - [x] Document exact files and rules changed
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Fix Theme Isolation Between Dashboard and Marketing Website (Jan 21, 2026)
@@ -3904,7 +3904,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test: Change dashboard theme to Light, verify marketing website stays correct
 - [ ] Test: Change dashboard theme to Dark, verify marketing website stays correct
 - [ ] Test: Change dashboard theme to Cinematic, verify marketing website stays correct
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 ## Fix Theme Isolation - New Approach (Jan 21, 2026)
 - [ ] Debug why PublicLandingWrapper approach failed
@@ -3914,7 +3914,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test: Dashboard Light mode should not affect marketing website
 - [ ] Test: Dashboard Dark mode should not affect marketing website
 - [ ] Test: Dashboard Cinematic mode should not affect marketing website
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Implement Light Mode Command Center Styling for /kai (Jan 21, 2026)
@@ -3948,7 +3948,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [x] Update CSS selectors to match actual DOM structure (button[class*="snap-start"])
 - [x] Verify nth-child selectors target correct elements (div[class*="snap-x"] > button)
 - [x] Test images display in Light mode
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 ## Fix Left Carousel Arrow Cut-off in Light Mode (Jan 21, 2026)
 - [x] Add px-12 padding to carousel container to create space for arrows
@@ -4117,7 +4117,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Check console for JavaScript errors
 - [ ] Fix broken click handlers
 - [ ] Test chat input and prompt card clicks
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 ## Fix Send Button Not Working (Jan 21, 2026)
 - [x] Investigate why send button (red arrow) doesn't work
@@ -4143,7 +4143,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Wire modal to show on first load in KaiCommand
 - [ ] Add routing for /kai/release-notes/v0-9-0-beta
 - [ ] Test modal display, persistence, and notification creation
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Beta Notice Modal System Implementation (Jan 21, 2026)
@@ -4194,7 +4194,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Ensure conversationId exists or create on first send
 - [ ] Test message sending with optimistic UI
 - [ ] Add error logging and toast notifications for API failures
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 ## Bug Fix - Kai Chat Bar Not Working (Jan 21, 2026)
 - [x] Diagnose why chat bar input and send button are not working
@@ -4223,7 +4223,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Test and analyze logs to find blocking point
 - [ ] Fix identified issue
 - [ ] Remove diagnostic logs after fix confirmed
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 ## Bug Fix - Send Button Glows But Message Never Sends (Jan 21, 2026)
 - [x] Add comprehensive console logging (SEND_CLICK, SEND_SUBMIT, HANDLE_SEND_START, SEND_REQUEST_PAYLOAD, SEND_FAILED)
@@ -4274,7 +4274,7 @@ Note: CSS styling added but not fully taking effect. The kai-command-page has wi
 - [ ] Move composer inside center panel container
 - [ ] Apply sticky bottom-0 w-full to composer wrapper
 - [ ] Test divider drag to verify composer resizes with center panel
-- [ ] Save checkpoint
+- [x] Save checkpoint
 
 
 ## Chat Bar Positioning Fix
@@ -5747,7 +5747,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test question repetition prevention
 - [ ] Test invalid input handling
 - [ ] Test debug overlay visibility in dev/prod
-- [ ] Save checkpoint after all improvements
+- [x] Save checkpoint after all improvements
 
 
 ## Phase 20: Kai Conversation Improvements - Validation & State Machine (COMPLETED)
@@ -6147,7 +6147,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add openSettingsModal function to close dropdown and open modal
 - [ ] Test Settings click opens modal immediately without page navigation
 - [ ] Verify no duplicate modals on repeated clicks
-- [ ] Save checkpoint with immediate modal opening
+- [x] Save checkpoint with immediate modal opening
 
 
 ## Phase 26: Top-Right Menu Cleanup (COMPLETED)
@@ -6501,7 +6501,7 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Fix message viewing functionality
 - [ ] Fix message editing functionality
 - [ ] Test messaging feature end-to-end
-- [ ] Save checkpoint with working messaging feature
+- [x] Save checkpoint with working messaging feature
 
 ## Cleanup and Fix Dojo Flow Messaging (Feb 1, 2026)
 - [x] Delete /settings/email-templates page and related files
@@ -7622,3 +7622,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add create class API mutation
 - [x] Test adding a class works correctly
 - [x] Save checkpoint with working Add Class feature
+
+## Instructor Dropdown for Add Class (Feb 4, 2026)
+
+- [x] Check staff/instructor database schema and API endpoints - Found teamMembers table
+- [x] Fetch instructor list in Add Class form
+- [x] Replace instructor text input with Select dropdown
+- [x] Add empty state message when no instructors exist
+- [x] Add link to staff page in empty state message
+- [x] Test dropdown functionality
+- [x] Save checkpoint

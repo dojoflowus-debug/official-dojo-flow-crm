@@ -259,6 +259,9 @@ const ClassCard: React.FC<{ classItem: any }> = ({ classItem }) => {
 // Add Class Form Component
 const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = ({ onSuccess, onCancel }) => {
   const { toast } = useToast();
+  
+  // Fetch instructors list
+  const instructorsQuery = trpc.classes.getInstructors.useQuery();
   const [formData, setFormData] = useState({
     name: '',
     dayOfWeek: 'Monday',
@@ -358,12 +361,33 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
 
         <div>
           <Label htmlFor="instructor">Instructor</Label>
-          <Input
-            id="instructor"
-            value={formData.instructor}
-            onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
-            placeholder="Instructor name"
-          />
+          {instructorsQuery.isLoading ? (
+            <div className="text-sm text-gray-500">Loading instructors...</div>
+          ) : instructorsQuery.data && instructorsQuery.data.length > 0 ? (
+            <Select
+              value={formData.instructor}
+              onValueChange={(value) => setFormData({ ...formData, instructor: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an instructor" />
+              </SelectTrigger>
+              <SelectContent>
+                {instructorsQuery.data.map(instructor => (
+                  <SelectItem key={instructor.id} value={instructor.name}>
+                    {instructor.name} ({instructor.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-3">
+              <p className="font-medium mb-1">No instructors found</p>
+              <p>Please add team members with instructor, coach, or trainer role before creating classes.</p>
+              <a href="/staff" className="text-amber-700 underline hover:text-amber-800 mt-2 inline-block">
+                Go to Staff Management →
+              </a>
+            </div>
+          )}
         </div>
 
         <div>
@@ -414,7 +438,7 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
         <Button 
           type="submit" 
           className="bg-red-600 hover:bg-red-700"
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || !instructorsQuery.data || instructorsQuery.data.length === 0}
         >
           {createMutation.isPending ? 'Adding...' : 'Add Class'}
         </Button>

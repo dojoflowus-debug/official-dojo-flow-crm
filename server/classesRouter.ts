@@ -314,4 +314,46 @@ export const classesRouter = router({
 
       return { success: true };
     }),
+
+  /**
+   * Get all instructors/team members for the current organization
+   */
+  getInstructors: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.db) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Database not available",
+      });
+    }
+
+    const { teamMembers } = await import("../drizzle/schema");
+    const { eq, and, inArray } = await import("drizzle-orm");
+
+    const organizationId = ctx.currentOrganizationId;
+    
+    if (!organizationId) {
+      return [];
+    }
+
+    // Get instructors (role = instructor) or coaches/trainers
+    const instructors = await ctx.db
+      .select({
+        id: teamMembers.id,
+        name: teamMembers.name,
+        role: teamMembers.role,
+        email: teamMembers.email,
+        phone: teamMembers.phone,
+        photoUrl: teamMembers.photoUrl,
+      })
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.organizationId, organizationId),
+          eq(teamMembers.isActive, 1),
+          inArray(teamMembers.role, ['instructor', 'coach', 'trainer', 'manager', 'owner'])
+        )
+      );
+
+    return instructors;
+  }),
 });
