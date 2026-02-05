@@ -7869,5 +7869,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wrap Programs route with AppShell in appRoutes.tsx
 - [x] Remove sticky positioning from breadcrumb (not needed with AppShell)
 - [x] Ensure bottom navigation menu appears
-- [ ] Test navigation and layout
+- [x] Test navigation and layout
+- [x] Save checkpoint
+
+## Fix Add New Program Modal Layout (Feb 5, 2026)
+- [x] Read Programs.tsx modal section
+- [x] Fix overlapping title and input field (increased max-w to 2xl, added pb-4 to DialogHeader)
+- [x] Add proper spacing between form sections
+- [x] Ensure modal content doesn't overflow (max-h-[85vh])
+- [ ] Test modal on desktop and mobile
 - [ ] Save checkpoint

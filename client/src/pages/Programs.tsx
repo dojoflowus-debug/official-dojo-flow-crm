@@ -415,8 +415,8 @@ export default function Programs() {
                   Add Program
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader className="pb-4">
                   <DialogTitle>Add New Program</DialogTitle>
                 </DialogHeader>
                 <ProgramForm onSubmit={handleCreate} submitText="Create Program" />
