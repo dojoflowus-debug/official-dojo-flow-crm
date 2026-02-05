@@ -7802,4 +7802,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Replace Instructor select with CustomSelect
 - [x] Replace Floor Plan select with CustomSelect
 - [x] Test dropdown interactions and colors
+- [x] Save checkpoint
+
+## Add Glass Morphism to Light Mode Modal (Feb 5, 2026)
+- [x] Add backdrop-blur to DialogOverlay for light mode
+- [x] Add backdrop-blur to DialogContent for light mode
+- [x] Adjust modal background opacity for glass effect
+- [x] Test glass morphism appearance in light mode
 - [ ] Save checkpoint

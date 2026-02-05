@@ -79,7 +79,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[2000] bg-black/70",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm",
         className
       )}
       {...props}
@@ -134,10 +134,12 @@ function DialogContent({
           className
         )}
         style={{
-          boxShadow: '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)',
-          border: '3px solid #ffffff',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.15)',
+          border: '2px solid rgba(255,255,255,0.2)',
           borderRadius: '20px',
-          background: 'rgba(0,0,0,0.92)',
+          background: 'rgba(255,255,255,0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           padding: '24px',
           ...style,
         }}
