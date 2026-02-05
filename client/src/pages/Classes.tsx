@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Calendar, Clock, Users, User, MapPin, Edit, Trash2, LayoutGrid, Eye, CheckCircle, DollarSign, ChevronDown, ChevronUp, AlertCircle, GraduationCap, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { CustomSelect } from '@/components/CustomSelect';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FloorPlanManager from '../components/FloorPlanManagerNew';
@@ -322,64 +323,44 @@ const ClassForm = ({
       <div className="space-y-5">
         <div>
           <Label htmlFor="program" className="text-base font-medium mb-2 block">Program</Label>
-          {/* TODO: Upgrade to custom popover select after we stabilize modal stacking contexts */}
-          <select
+          <CustomSelect
             id="program"
             value={formData.program}
-            onChange={(e) => onProgramChange(e.target.value)}
-            className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
-              isDark 
-                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20 [&>option]:bg-gray-900 [&>option]:text-white' 
-                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300 [&>option]:bg-white [&>option]:text-gray-900'
-            } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-              isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
-            }`}
-          >
-            <option value="">Select program</option>
-            {programs.length === 0 ? (
-              <option value="" disabled>No programs yet</option>
-            ) : (
-              programs.map((program) => (
-                <option key={program.id} value={program.name}>
-                  {program.name} {program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}
-                </option>
-              ))
-            )}
-          </select>
+            onChange={(value) => onProgramChange(value)}
+            options={[
+              ...(programs.length === 0 ? [{ value: '', label: 'No programs yet', disabled: true }] : []),
+              ...programs.map((program) => ({
+                value: program.name,
+                label: `${program.name} ${program.price ? `($${(program.price / 100).toFixed(0)}/mo)` : ''}`
+              }))
+            ]}
+            placeholder="Select program"
+            isDark={isDark}
+          />
         </div>
 
         <div>
           <Label htmlFor="instructor" className="text-base font-medium mb-2 block">Instructor</Label>
-          {/* TODO: Upgrade to custom popover select after we stabilize modal stacking contexts */}
-          <select
+          <CustomSelect
             id="instructor"
             value={formData.instructorId?.toString() || ''}
-            onChange={(e) => {
-              const value = e.target.value;
+            onChange={(value) => {
               const id = parseInt(value);
               const instructor = instructors.find(i => i.id === id);
               handleSelectChange('instructorId', value);
               handleSelectChange('instructor', instructor?.name || '');
             }}
-            className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
-              isDark 
-                ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20 [&>option]:bg-gray-900 [&>option]:text-white' 
-                : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300 [&>option]:bg-white [&>option]:text-gray-900'
-            } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-              isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
-            } ${instructorConflict ? 'border-amber-500' : ''}`}
-          >
-            <option value="">Select instructor</option>
-            {instructors.length === 0 ? (
-              <option value="" disabled>No instructors available</option>
-            ) : (
-              instructors.map((instructor) => (
-                <option key={instructor.id} value={instructor.id.toString()}>
-                  {instructor.name} ({instructor.role})
-                </option>
-              ))
-            )}
-          </select>
+            options={[
+              ...(instructors.length === 0 ? [{ value: '', label: 'No instructors available', disabled: true }] : []),
+              ...instructors.map((instructor) => ({
+                value: instructor.id.toString(),
+                label: `${instructor.name} (${instructor.role})`
+              }))
+            ]}
+            placeholder="Select instructor"
+            isDark={isDark}
+            error={instructorConflict}
+          />
         </div>
       </div>
       
@@ -485,12 +466,10 @@ const ClassForm = ({
       {/* Floor Plan - Optional */}
       <div>
         <Label htmlFor="floorPlan" className="text-base font-medium mb-2 block">Floor Plan (Optional)</Label>
-        {/* TODO: Upgrade to custom popover select after we stabilize modal stacking contexts */}
-        <select
+        <CustomSelect
           id="floorPlan"
           value={formData.floorPlanId?.toString() || "none"}
-          onChange={(e) => {
-            const value = e.target.value;
+          onChange={(value) => {
             const floorPlanId = value === "none" ? null : parseInt(value);
             const selectedPlan = floorPlansData?.find(p => p.id === floorPlanId);
             setFormData(prev => ({
@@ -499,21 +478,16 @@ const ClassForm = ({
               capacity: selectedPlan ? selectedPlan.maxCapacity.toString() : prev.capacity
             }));
           }}
-          className={`h-12 w-full text-base rounded-xl px-3 border transition-colors ${
-            isDark 
-              ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 focus:border-white/20 [&>option]:bg-gray-900 [&>option]:text-white' 
-              : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 focus:border-gray-300 [&>option]:bg-white [&>option]:text-gray-900'
-          } focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-            isDark ? 'focus:ring-white/20' : 'focus:ring-gray-200'
-          }`}
-        >
-          <option value="none">No floor plan</option>
-          {floorPlansData?.map((plan) => (
-            <option key={plan.id} value={plan.id.toString()}>
-              {plan.roomName} ({plan.maxCapacity} spots)
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: 'none', label: 'No floor plan' },
+            ...(floorPlansData?.map((plan) => ({
+              value: plan.id.toString(),
+              label: `${plan.roomName} (${plan.maxCapacity} spots)`
+            })) || [])
+          ]}
+          placeholder="Select floor plan"
+          isDark={isDark}
+        />
       </div>
 
       {/* Capacity - Always visible */}

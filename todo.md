@@ -7792,4 +7792,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add custom CSS to change option:checked background to red
 - [x] Add custom CSS to change option:hover background to red
 - [x] Test dropdown highlight colors
+- [x] Save checkpoint
+
+## Create Custom Select Component with Red Highlight (Feb 5, 2026)
+- [x] Create CustomSelect component with dropdown menu
+- [x] Add red hover and selected states
+- [x] Match Apple-inspired styling (rounded-xl, h-12, text-base)
+- [x] Replace Program select with CustomSelect
+- [x] Replace Instructor select with CustomSelect
+- [x] Replace Floor Plan select with CustomSelect
+- [x] Test dropdown interactions and colors
 - [ ] Save checkpoint
