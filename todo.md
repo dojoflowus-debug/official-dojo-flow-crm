@@ -7833,5 +7833,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add logging to verify organization context
 - [x] Fix Classes.tsx to use correct trpc endpoint (trpc.classes.getInstructors)
 - [x] Fix instructorsData access (returns array directly)
-- [ ] Test instructor dropdown with single instructor
+- [x] Test instructor dropdown with single instructor
+- [x] Save checkpoint
+
+## Replace Billing with Programs in Navigation (Feb 5, 2026)
+- [x] Find bottom navigation menu configuration
+- [x] Locate existing Programs page
+- [x] Remove Billing from navigation menu
+- [x] Programs already in navigation menu
+- [x] Verify Programs page route is working
+- [ ] Test navigation on desktop and mobile
 - [ ] Save checkpoint

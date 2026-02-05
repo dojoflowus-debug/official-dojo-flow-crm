@@ -48,7 +48,6 @@ const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: 'programs', name: 'Programs', href: '/programs', icon: 'BookOpen' },
   { id: 'receptionist', name: 'Receptionist', href: '/receptionist', icon: 'Headphones' },
   { id: 'staff', name: 'Staff', href: '/staff', icon: 'UserCog' },
-  { id: 'billing', name: 'Billing', href: '/billing', icon: 'CreditCard' },
   { id: 'reports', name: 'Reports', href: '/reports', icon: 'BarChart3' },
   {
     id: 'operations',
