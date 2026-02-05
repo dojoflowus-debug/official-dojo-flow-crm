@@ -7614,3 +7614,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Removed DashboardLayout wrapper from ClassSchedule
 - [x] Test schedule page loads without errors
 - [x] Save checkpoint with fix
+
+## Fix Add Class Button (Feb 4, 2026)
+
+- [x] Check Add Class button click handler
+- [x] Implement add class dialog/form
+- [x] Add create class API mutation
+- [x] Test adding a class works correctly
+- [x] Save checkpoint with working Add Class feature

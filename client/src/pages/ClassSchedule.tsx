@@ -9,7 +9,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, Clock, Users, MapPin, Edit, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Clock, Users, MapPin, Edit, Trash2, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { trpc } from '@/lib/trpc';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,6 +40,7 @@ export const ClassSchedule: React.FC = () => {
   }, {} as Record<string, typeof classes>);
 
   return (
+    <>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -191,10 +196,31 @@ export const ClassSchedule: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Add Class Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Class</DialogTitle>
+          </DialogHeader>
+          <AddClassForm 
+            onSuccess={() => {
+              setShowAddDialog(false);
+              classesQuery.refetch();
+              toast({
+                title: "Success",
+                description: "Class added successfully",
+              });
+            }}
+            onCancel={() => setShowAddDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
-// Compact class card for weekly view
+// Compact class card for weekly vieww
 const ClassCard: React.FC<{ classItem: any }> = ({ classItem }) => {
   return (
     <div className="p-3 bg-white border border-gray-200 rounded-lg hover:border-red-300 hover:shadow-md transition-all cursor-pointer">
@@ -224,5 +250,161 @@ const ClassCard: React.FC<{ classItem: any }> = ({ classItem }) => {
         />
       </div>
     </div>
+  );
+};
+
+// Add Class Form Component
+const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = ({ onSuccess, onCancel }) => {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: '',
+    dayOfWeek: 'Monday',
+    time: '',
+    capacity: 20,
+    instructor: '',
+    program: '',
+    level: '',
+    room: '',
+    duration: 60,
+  });
+
+  const createMutation = trpc.classes.create.useMutation({
+    onSuccess: () => {
+      onSuccess();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create class",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="col-span-2">
+          <Label htmlFor="name">Class Name *</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="e.g., Kids Karate"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="dayOfWeek">Day of Week *</Label>
+          <Select
+            value={formData.dayOfWeek}
+            onValueChange={(value) => setFormData({ ...formData, dayOfWeek: value })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DAYS_OF_WEEK.map(day => (
+                <SelectItem key={day} value={day}>{day}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="time">Time *</Label>
+          <Input
+            id="time"
+            type="time"
+            value={formData.time}
+            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="capacity">Capacity *</Label>
+          <Input
+            id="capacity"
+            type="number"
+            value={formData.capacity}
+            onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
+            min="1"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="duration">Duration (minutes)</Label>
+          <Input
+            id="duration"
+            type="number"
+            value={formData.duration}
+            onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+            min="15"
+            step="15"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="instructor">Instructor</Label>
+          <Input
+            id="instructor"
+            value={formData.instructor}
+            onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
+            placeholder="Instructor name"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="program">Program</Label>
+          <Input
+            id="program"
+            value={formData.program}
+            onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+            placeholder="e.g., Karate, BJJ, MMA"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="level">Level</Label>
+          <Input
+            id="level"
+            value={formData.level}
+            onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+            placeholder="e.g., Beginner, Advanced"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="room">Room/Location</Label>
+          <Input
+            id="room"
+            value={formData.room}
+            onChange={(e) => setFormData({ ...formData, room: e.target.value })}
+            placeholder="e.g., Main Dojo, Studio A"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          className="bg-red-600 hover:bg-red-700"
+          disabled={createMutation.isPending}
+        >
+          {createMutation.isPending ? 'Adding...' : 'Add Class'}
+        </Button>
+      </div>
+    </form>
   );
 };
