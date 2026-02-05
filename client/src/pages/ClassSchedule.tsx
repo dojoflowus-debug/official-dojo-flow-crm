@@ -294,21 +294,63 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <Label htmlFor="name">Class Name *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g., Kids Karate"
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Basic Information Section */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Basic Information</h3>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Class Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g., Kids Karate"
+              required
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="dayOfWeek">Day of Week *</Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="program">Program</Label>
+              <Input
+                id="program"
+                value={formData.program}
+                onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                placeholder="e.g., Karate, BJJ, MMA"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="level">Level</Label>
+              <Input
+                id="level"
+                value={formData.level}
+                onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                placeholder="e.g., Beginner, Advanced"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="ageRange">Age Range</Label>
+            <Input
+              id="ageRange"
+              value={formData.ageRange}
+              onChange={(e) => setFormData({ ...formData, ageRange: e.target.value })}
+              placeholder="e.g., Kids 4-7, Teens 13-17, Adults 18+"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Schedule Section */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Schedule</h3>
+        <div className="grid grid-cols-2 gap-4">
+
+          <div>
+            <Label htmlFor="dayOfWeek">Day of Week *</Label>
           <Select
             value={formData.dayOfWeek}
             onValueChange={(value) => setFormData({ ...formData, dayOfWeek: value })}
@@ -322,10 +364,10 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
               ))}
             </SelectContent>
           </Select>
-        </div>
+          </div>
 
-        <div>
-          <Label htmlFor="time">Time *</Label>
+          <div>
+            <Label htmlFor="time">Time *</Label>
           <Input
             id="time"
             type="time"
@@ -333,10 +375,10 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
             onChange={(e) => setFormData({ ...formData, time: e.target.value })}
             required
           />
-        </div>
+          </div>
 
-        <div>
-          <Label htmlFor="capacity">Capacity *</Label>
+          <div>
+            <Label htmlFor="capacity">Capacity *</Label>
           <Input
             id="capacity"
             type="number"
@@ -345,10 +387,10 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
             min="1"
             required
           />
-        </div>
+          </div>
 
-        <div>
-          <Label htmlFor="duration">Duration (minutes)</Label>
+          <div>
+            <Label htmlFor="duration">Duration (minutes)</Label>
           <Input
             id="duration"
             type="number"
@@ -357,10 +399,16 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
             min="15"
             step="15"
           />
+          </div>
         </div>
+      </div>
 
-        <div>
-          <Label htmlFor="instructor">Instructor</Label>
+      {/* Instructor & Location Section */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Instructor & Location</h3>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="instructor">Instructor</Label>
           {instructorsQuery.isLoading ? (
             <div className="text-sm text-gray-500">Loading instructors...</div>
           ) : instructorsQuery.data && instructorsQuery.data.length > 0 ? (
@@ -393,46 +441,17 @@ const AddClassForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = 
               </Button>
             </div>
           )}
-        </div>
+          </div>
 
-        <div>
-          <Label htmlFor="program">Program</Label>
-          <Input
-            id="program"
-            value={formData.program}
-            onChange={(e) => setFormData({ ...formData, program: e.target.value })}
-            placeholder="e.g., Karate, BJJ, MMA"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="level">Level</Label>
-          <Input
-            id="level"
-            value={formData.level}
-            onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-            placeholder="e.g., Beginner, Advanced"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="room">Room/Location</Label>
-          <Input
-            id="room"
-            value={formData.room}
-            onChange={(e) => setFormData({ ...formData, room: e.target.value })}
-            placeholder="e.g., Main Dojo, Studio A"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="ageRange">Age Range</Label>
-          <Input
-            id="ageRange"
-            value={formData.ageRange}
-            onChange={(e) => setFormData({ ...formData, ageRange: e.target.value })}
-            placeholder="e.g., Kids 4-7, Teens 13-17, Adults 18+"
-          />
+          <div>
+            <Label htmlFor="room">Room/Location</Label>
+            <Input
+              id="room"
+              value={formData.room}
+              onChange={(e) => setFormData({ ...formData, room: e.target.value })}
+              placeholder="e.g., Main Dojo, Studio A"
+            />
+          </div>
         </div>
       </div>
 

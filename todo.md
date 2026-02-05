@@ -7647,3 +7647,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Make link more prominent with button styling
 - [x] Test link navigation to staff page
 - [x] Save checkpoint with enhanced link
+
+
+## Redesign Add Class Form Layout (Feb 4)
+- [x] Reorganize form into logical sections (Basic Info, Schedule, Details)
+- [x] Add proper spacing between fields (increase gap from 4 to 6)
+- [ ] Increase dialog width for more breathing room
+- [x] Group related fields together visually)
+- [x] Add section headers to organize content
+- [x] Test form layout and usability
+- [x] Save checkpoint with redesigned form
