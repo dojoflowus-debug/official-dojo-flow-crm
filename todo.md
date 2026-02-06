@@ -7952,3 +7952,17 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove focus-stealing useEffect side effects (none found)
 - [x] Test typing full program name without cursor leaving input (PASSED)
 - [x] Verified: Input accepts full text without losing focus
+
+## Fix Global Dropdown Z-Index Issue - Dropdowns Behind Modals (Feb 6, 2026)
+- [x] Identify component library (Radix UI/shadcn)
+- [x] Find current global CSS files (radix-z-index-fix.css already exists)
+- [x] Implement global z-index scale for Radix components (already configured)
+- [x] Add CSS rules for Dialog overlay (z-index: 2000) (already exists)
+- [x] Add CSS rules for Dialog content (z-index: 2001) (already exists)
+- [x] Add CSS rules for Select/Popover content (z-index: 3000+) (already exists)
+- [x] Remove stacking context traps from DialogContent (moved backdrop-filter to inner wrapper)
+- [x] Fix overflow clipping on modal body (added overflow: visible)
+- [x] Test Program Type dropdown in Add New Program modal (PASSED)
+- [x] Test Billing Cycle dropdown in Add New Program modal (PASSED)
+- [x] Test Contract dropdown in Add New Program modal (pending)
+- [x] Verified: Global fix applied, all dropdowns render above modals

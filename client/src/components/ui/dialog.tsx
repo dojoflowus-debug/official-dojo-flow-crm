@@ -132,34 +132,50 @@ function DialogContent({
           // Mobile: full-screen, Desktop: centered modal
           "inset-0 sm:inset-0 sm:m-auto",
           "w-full h-full sm:w-auto sm:h-auto sm:max-w-[calc(100%-2rem)] sm:max-w-lg",
-          "rounded-none p-0 sm:p-6 bg-transparent sm:max-h-[85vh] sm:overflow-visible",
+          "rounded-none p-0 sm:p-6 bg-transparent sm:max-h-[85vh]",
           "z-[2001]", // Modal z-index (above backdrop at 2000)
           className
         )}
         style={{
-          boxShadow: isDark 
-            ? '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)'
-            : '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.05)',
-          border: isDark 
-            ? '2px solid rgba(255,255,255,0.2)'
-            : '2px solid rgba(0,0,0,0.1)',
           borderRadius: '20px',
-          background: isDark 
-            ? 'rgba(0,0,0,0.92)'
-            : 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
           padding: '24px',
+          overflow: 'visible', // CRITICAL: Allow dropdowns to overflow modal
+          position: 'relative', // Establish positioning context
           ...style,
         }}
         onEscapeKeyDown={handleEscapeKeyDown}
         {...props}
       >
-        {children}
+        {/* Inner glass effect wrapper - prevents stacking context trap */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            boxShadow: isDark 
+              ? '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)'
+              : '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.05)',
+            border: isDark 
+              ? '2px solid rgba(255,255,255,0.2)'
+              : '2px solid rgba(0,0,0,0.1)',
+            borderRadius: '20px',
+            background: isDark 
+              ? 'rgba(0,0,0,0.92)'
+              : 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            pointerEvents: 'none', // Allow clicks to pass through to content
+            zIndex: -1, // Behind content
+          }}
+        />
+        {/* Content wrapper with relative positioning */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {children}
+        </div>
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
             className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            style={{ zIndex: 2 }} // Above content wrapper
           >
             <XIcon />
             <span className="sr-only">Close</span>
@@ -231,4 +247,3 @@ export {
   DialogTitle,
   DialogTrigger
 };
-
