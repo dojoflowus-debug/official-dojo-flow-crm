@@ -8016,3 +8016,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Verify dropdown component is not actually disabled (confirmed working)
 - [x] Test dropdown functionality in all forms (PASSED)
 - [x] Confirmed: Dropdowns work correctly, were showing "No programs yet" because no data existed
+
+## Fix Dropdown Not Working Issue (Feb 6, 2026)
+- [ ] Identify which dropdown is not working (Add Program modal, Add Class modal, etc.)
+- [ ] Reproduce the issue and check browser console for errors
+- [ ] Diagnose root cause (z-index, event handlers, data loading, etc.)
+- [ ] Fix dropdown functionality
+- [ ] Test dropdown opens and closes correctly
+- [ ] Test dropdown options are selectable
+- [ ] Verify fix works across all modals and forms
+- [ ] Save checkpoint
