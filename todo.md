@@ -7986,3 +7986,33 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix modal centering (changed to left-50% top-50% translate)
 - [x] Test with DevTools to confirm DialogContent exists and is visible (PASSED)
 - [x] Verified: Modal appears centered and visible in all themes
+
+## Fix Class Creation Not Displaying Results (Feb 6, 2026)
+- [ ] Check Classes page data fetching after class creation
+- [ ] Verify class creation API response and database insertion
+- [ ] Check if classes list needs manual refresh or automatic refetch
+- [ ] Test class creation end-to-end
+
+## Fix All Dropdowns Disabled (Feb 6, 2026)
+- [ ] Investigate why all Select dropdowns are disabled
+- [ ] Check if Dialog overflow changes broke dropdown functionality
+- [ ] Verify Select component props and disabled states
+- [ ] Test dropdowns in all modals (Programs, Classes, Students)
+- [ ] Save checkpoint
+
+## Fix Program Creation Not Displaying Results (Feb 6, 2026)
+- [x] Investigate program creation success but no display issue
+- [x] Check database for created programs (0 programs for org 120001)
+- [x] Verify programs API endpoint filters by organizationId (working correctly)
+- [x] Check if program creation mutation includes organizationId (MISSING - ROOT CAUSE)
+- [x] Add organizationId to programs.create mutation
+- [x] Test program creation after fix (SUCCESS - Kids Karate Program created)
+- [x] Verify program appears in dropdown for class creation (PASSED)
+- [x] Root cause: programs.create missing organizationId field (FIXED)
+
+## Fix Dropdowns Appearing Disabled (Feb 6, 2026)
+- [x] Investigate why dropdowns appear disabled (NOT disabled, just empty)
+- [x] Check if dropdowns have data to display (no programs existed)
+- [x] Verify dropdown component is not actually disabled (confirmed working)
+- [x] Test dropdown functionality in all forms (PASSED)
+- [x] Confirmed: Dropdowns work correctly, were showing "No programs yet" because no data existed

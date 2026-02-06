@@ -5604,14 +5604,21 @@ Return the data as a structured JSON object.`
         allowAutopilot: z.boolean().optional(),
         description: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
         const { programs } = await import("../drizzle/schema");
         
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         
+        // SECURITY: Require organization ID for multi-tenancy
+        const organizationId = ctx.currentOrganizationId;
+        if (!organizationId) {
+          throw new Error('Organization ID required for program creation');
+        }
+        
         const result = await db.insert(programs).values({
+          organizationId,
           name: input.name,
           type: input.type,
           ageRange: input.ageRange,
