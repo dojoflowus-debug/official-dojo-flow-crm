@@ -8036,3 +8036,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Tested Billing Cycle dropdown - PASSED (opens, shows options, selection works)
 - [x] Tested Contract dropdown - PASSED (opens, shows options, selection works)
 - [x] All dropdowns render above modal content with proper z-index
+
+## FINAL Fix: Dropdowns Inside Modals (Feb 6, 2026)
+- [x] Created ModalSelect component with inline rendering (no portal)
+- [x] Replaced Radix Select in ProgramForm with ModalSelect
+- [x] Dropdown renders inside modal DOM tree with absolute positioning
+- [x] No stacking context traps (no backdrop-filter, no transform)
+- [x] Modal stays open when selecting dropdown options
+- [x] Tested Program Type dropdown - PASSED
+- [x] Tested Billing Cycle dropdown - PASSED
+- [x] Tested Contract dropdown - PASSED
+- [x] Root cause: Radix portal + Dialog overlay interaction causing "outside click" to close modal

@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ModalSelect } from '@/components/ui/modal-select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Users, DollarSign, Calendar, BookOpen, Sparkles, AlertCircle } from 'lucide-react';
@@ -117,17 +118,17 @@ const ProgramForm = React.memo(({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="type" className="mb-2 block">Program Type *</Label>
-          <Select value={formData.type} onValueChange={(value) => handleSelectChange('type', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="membership">Membership</SelectItem>
-              <SelectItem value="class_pack">Class Pack</SelectItem>
-              <SelectItem value="drop_in">Drop-In</SelectItem>
-              <SelectItem value="private">Private Lessons</SelectItem>
-            </SelectContent>
-          </Select>
+          <ModalSelect
+            value={formData.type}
+            onValueChange={(value) => handleSelectChange('type', value)}
+            placeholder="Select type"
+            options={[
+              { value: 'membership', label: 'Membership' },
+              { value: 'class_pack', label: 'Class Pack' },
+              { value: 'drop_in', label: 'Drop-In' },
+              { value: 'private', label: 'Private Lessons' },
+            ]}
+          />
         </div>
 
         <div>
@@ -166,32 +167,32 @@ const ProgramForm = React.memo(({
 
         <div>
           <Label htmlFor="billing" className="mb-2 block">Billing Cycle</Label>
-          <Select value={formData.billing} onValueChange={(value) => handleSelectChange('billing', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select billing" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="per_session">Per Session</SelectItem>
-              <SelectItem value="one_time">One Time</SelectItem>
-            </SelectContent>
-          </Select>
+          <ModalSelect
+            value={formData.billing}
+            onValueChange={(value) => handleSelectChange('billing', value)}
+            placeholder="Select billing"
+            options={[
+              { value: 'monthly', label: 'Monthly' },
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'per_session', label: 'Per Session' },
+              { value: 'one_time', label: 'One Time' },
+            ]}
+          />
         </div>
 
         <div>
           <Label htmlFor="contractLength" className="mb-2 block">Contract</Label>
-          <Select value={formData.contractLength} onValueChange={(value) => handleSelectChange('contractLength', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select contract" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="month-to-month">Month-to-Month</SelectItem>
-              <SelectItem value="3 months">3 Months</SelectItem>
-              <SelectItem value="6 months">6 Months</SelectItem>
-              <SelectItem value="12 months">12 Months</SelectItem>
-            </SelectContent>
-          </Select>
+          <ModalSelect
+            value={formData.contractLength}
+            onValueChange={(value) => handleSelectChange('contractLength', value)}
+            placeholder="Select contract"
+            options={[
+              { value: 'month-to-month', label: 'Month-to-Month' },
+              { value: '3 months', label: '3 Months' },
+              { value: '6 months', label: '6 Months' },
+              { value: '12 months', label: '12 Months' },
+            ]}
+          />
         </div>
       </div>
     </div>

@@ -145,6 +145,24 @@ function DialogContent({
           padding: '24px',
         }}
         onEscapeKeyDown={handleEscapeKeyDown}
+        onInteractOutside={(e) => {
+          // Prevent dialog from closing when clicking on portaled elements
+          // (like ModalSelect dropdowns that render at document.body level)
+          const target = e.target as HTMLElement;
+          if (target?.closest?.('[data-modal-select-portal]')) {
+            e.preventDefault();
+          }
+          // Also check if click is on the invisible backdrop of ModalSelect
+          if (target?.dataset?.modalSelectBackdrop) {
+            e.preventDefault();
+          }
+        }}
+        onPointerDownOutside={(e) => {
+          const target = e.target as HTMLElement;
+          if (target?.closest?.('[data-modal-select-portal]') || target?.dataset?.modalSelectBackdrop) {
+            e.preventDefault();
+          }
+        }}
         {...props}
       >
         {children}
