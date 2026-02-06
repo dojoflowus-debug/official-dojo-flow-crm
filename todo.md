@@ -7942,3 +7942,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update kioskEnvironments.ts with correct thumbnail paths
 - [x] Verify all 7 thumbnail files exist and are accessible
 - [x] Fixed console errors: "[CinematicEnvironmentSelector] Failed to load thumbnail"
+
+## Fix Add New Program Modal Input Focus Bug (Feb 6, 2026)
+- [x] Locate AddNewProgramModal component (ProgramForm in Programs.tsx)
+- [x] Identify re-rendering issue causing input to lose focus after 1 character (component defined inside parent)
+- [x] Remove changing key props from input elements (no keys found)
+- [x] Fix form state management (extracted component outside parent to prevent re-creation)
+- [x] Wrap defaultValues in useMemo if using React Hook Form (not using RHF, used functional setState)
+- [x] Remove focus-stealing useEffect side effects (none found)
+- [x] Test typing full program name without cursor leaving input (PASSED)
+- [x] Verified: Input accepts full text without losing focus

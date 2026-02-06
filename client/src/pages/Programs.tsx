@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import ManagementLayout from '@/components/ManagementLayout';
 import { useTheme } from '@/contexts/ThemeContext';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -76,6 +76,209 @@ const defaultFormData: ProgramFormData = {
   showOnKiosk: true,
   allowAutopilot: false,
 };
+
+// ProgramForm component extracted outside to prevent re-creation on every render
+interface ProgramFormProps {
+  formData: ProgramFormData;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSelectChange: (field: string, value: string) => void;
+  handleSwitchChange: (field: string, checked: boolean) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  submitText: string;
+  isDark: boolean;
+  isPending: boolean;
+}
+
+const ProgramForm = React.memo(({ 
+  formData, 
+  handleInputChange, 
+  handleSelectChange, 
+  handleSwitchChange, 
+  onSubmit, 
+  submitText, 
+  isDark, 
+  isPending 
+}: ProgramFormProps) => (
+  <form onSubmit={onSubmit} className="space-y-6">
+    {/* Basic Info */}
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="name" className="mb-2 block">Program Name *</Label>
+        <Input
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          placeholder="e.g., Kids Martial Arts"
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="type" className="mb-2 block">Program Type *</Label>
+          <Select value={formData.type} onValueChange={(value) => handleSelectChange('type', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="membership">Membership</SelectItem>
+              <SelectItem value="class_pack">Class Pack</SelectItem>
+              <SelectItem value="drop_in">Drop-In</SelectItem>
+              <SelectItem value="private">Private Lessons</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="ageRange" className="mb-2 block">Age Range</Label>
+          <Input
+            id="ageRange"
+            name="ageRange"
+            value={formData.ageRange}
+            onChange={handleInputChange}
+            placeholder="e.g., 6-12 years"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Pricing */}
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-4">
+        <DollarSign className="w-4 h-4 text-primary" />
+        <span className={`text-sm font-semibold ${isDark ? 'text-white/80' : 'text-gray-700'}`}>Pricing</span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="price" className="mb-2 block">Price ($)</Label>
+          <Input
+            id="price"
+            name="price"
+            type="number"
+            step="0.01"
+            value={formData.price}
+            onChange={handleInputChange}
+            placeholder="99.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="billing" className="mb-2 block">Billing Cycle</Label>
+          <Select value={formData.billing} onValueChange={(value) => handleSelectChange('billing', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select billing" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="per_session">Per Session</SelectItem>
+              <SelectItem value="one_time">One Time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="contractLength" className="mb-2 block">Contract</Label>
+          <Select value={formData.contractLength} onValueChange={(value) => handleSelectChange('contractLength', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select contract" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month-to-month">Month-to-Month</SelectItem>
+              <SelectItem value="3 months">3 Months</SelectItem>
+              <SelectItem value="6 months">6 Months</SelectItem>
+              <SelectItem value="12 months">12 Months</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+
+    {/* Capacity & Description */}
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="maxSize" className="mb-2 block">Max Class Size</Label>
+        <Input
+          id="maxSize"
+          name="maxSize"
+          type="number"
+          value={formData.maxSize}
+          onChange={handleInputChange}
+          placeholder="20"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="description" className="mb-2 block">Description</Label>
+        <Textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          placeholder="Brief description of this program..."
+          rows={3}
+        />
+      </div>
+    </div>
+
+    {/* Options */}
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Sparkles className="w-4 h-4 text-primary" />
+        <span className={`text-sm font-semibold ${isDark ? 'text-white/80' : 'text-gray-700'}`}>Options</span>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label>Core Program</Label>
+            <p className={`text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
+              Featured prominently in enrollment
+            </p>
+          </div>
+          <Switch
+            checked={formData.isCoreProgram}
+            onCheckedChange={(checked) => handleSwitchChange('isCoreProgram', checked)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <Label>Show on Kiosk</Label>
+            <p className={`text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
+              Visible on self-service kiosk
+            </p>
+          </div>
+          <Switch
+            checked={formData.showOnKiosk}
+            onCheckedChange={(checked) => handleSwitchChange('showOnKiosk', checked)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <Label>Allow Autopilot</Label>
+            <p className={`text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
+              Enable automated billing
+            </p>
+          </div>
+          <Switch
+            checked={formData.allowAutopilot}
+            onCheckedChange={(checked) => handleSwitchChange('allowAutopilot', checked)}
+          />
+        </div>
+      </div>
+    </div>
+
+    <DialogFooter>
+      <Button type="submit" disabled={isPending}>
+        {isPending ? 'Saving...' : submitText}
+      </Button>
+    </DialogFooter>
+  </form>
+));
 
 export default function Programs() {
   const isDark = useDarkMode();
@@ -206,187 +409,7 @@ export default function Programs() {
     setIsDeleteOpen(true);
   };
 
-  const ProgramForm = ({ onSubmit, submitText }: { onSubmit: (e: React.FormEvent) => void; submitText: string }) => (
-    <form onSubmit={onSubmit} className="space-y-6">
-      {/* Basic Info */}
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="name" className="mb-2 block">Program Name *</Label>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            placeholder="e.g., Kids Martial Arts"
-            required
-          />
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="type" className="mb-2 block">Program Type *</Label>
-            <Select value={formData.type} onValueChange={(value) => handleSelectChange('type', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="membership">Membership</SelectItem>
-                <SelectItem value="class_pack">Class Pack</SelectItem>
-                <SelectItem value="drop_in">Drop-In</SelectItem>
-                <SelectItem value="private">Private Lessons</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="ageRange" className="mb-2 block">Age Range</Label>
-            <Input
-              id="ageRange"
-              name="ageRange"
-              value={formData.ageRange}
-              onChange={handleInputChange}
-              placeholder="e.g., 6-12 years"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <DollarSign className="w-4 h-4 text-primary" />
-          <span className={`text-sm font-semibold ${isDark ? 'text-white/80' : 'text-gray-700'}`}>Pricing</span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="price" className="mb-2 block">Price ($)</Label>
-            <Input
-              id="price"
-              name="price"
-              type="number"
-              step="0.01"
-              value={formData.price}
-              onChange={handleInputChange}
-              placeholder="99.00"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="billing" className="mb-2 block">Billing Cycle</Label>
-            <Select value={formData.billing} onValueChange={(value) => handleSelectChange('billing', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select billing" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="per_session">Per Session</SelectItem>
-                <SelectItem value="one_time">One Time</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="contractLength" className="mb-2 block">Contract</Label>
-            <Select value={formData.contractLength} onValueChange={(value) => handleSelectChange('contractLength', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select contract" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="month-to-month">Month-to-Month</SelectItem>
-                <SelectItem value="3 months">3 Months</SelectItem>
-                <SelectItem value="6 months">6 Months</SelectItem>
-                <SelectItem value="12 months">12 Months</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Capacity & Description */}
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="maxSize" className="mb-2 block">Max Class Size</Label>
-          <Input
-            id="maxSize"
-            name="maxSize"
-            type="number"
-            value={formData.maxSize}
-            onChange={handleInputChange}
-            placeholder="20"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="description" className="mb-2 block">Description</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            placeholder="Brief description of this program..."
-            rows={3}
-          />
-        </div>
-      </div>
-
-      {/* Options */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className={`text-sm font-semibold ${isDark ? 'text-white/80' : 'text-gray-700'}`}>Options</span>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Core Program</Label>
-              <p className={`text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-                Featured prominently in enrollment
-              </p>
-            </div>
-            <Switch
-              checked={formData.isCoreProgram}
-              onCheckedChange={(checked) => handleSwitchChange('isCoreProgram', checked)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Show on Kiosk</Label>
-              <p className={`text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-                Visible on self-service kiosk
-              </p>
-            </div>
-            <Switch
-              checked={formData.showOnKiosk}
-              onCheckedChange={(checked) => handleSwitchChange('showOnKiosk', checked)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Allow Autopilot</Label>
-              <p className={`text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-                Enable automated billing
-              </p>
-            </div>
-            <Switch
-              checked={formData.allowAutopilot}
-              onCheckedChange={(checked) => handleSwitchChange('allowAutopilot', checked)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <DialogFooter>
-        <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-          {createMutation.isPending || updateMutation.isPending ? 'Saving...' : submitText}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
 
   return (
     <ManagementLayout>
@@ -420,7 +443,16 @@ export default function Programs() {
                   <DialogTitle>Add New Program</DialogTitle>
                 </DialogHeader>
                 <div className="mt-4">
-                  <ProgramForm onSubmit={handleCreate} submitText="Create Program" />
+                  <ProgramForm 
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                    handleSelectChange={handleSelectChange}
+                    handleSwitchChange={handleSwitchChange}
+                    onSubmit={handleCreate} 
+                    submitText="Create Program"
+                    isDark={isDark}
+                    isPending={createMutation.isPending}
+                  />
                 </div>
               </DialogContent>
             </Dialog>
@@ -553,7 +585,16 @@ export default function Programs() {
           <DialogHeader>
             <DialogTitle>Edit Program</DialogTitle>
           </DialogHeader>
-          <ProgramForm onSubmit={handleUpdate} submitText="Save Changes" />
+          <ProgramForm 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSelectChange={handleSelectChange}
+            handleSwitchChange={handleSwitchChange}
+            onSubmit={handleUpdate} 
+            submitText="Save Changes"
+            isDark={isDark}
+            isPending={updateMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
 

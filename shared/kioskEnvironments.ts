@@ -154,7 +154,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'kids-dojo',
     name: 'Kids Dojo',
     category: 'kids',
-    thumbnailPath: '/environments/kids-dojo-thumb.png',
+    thumbnailPath: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/VtAzxXWyAHBbcmVd.png',
     backgroundImageUrl: '/environments/kids-karate-dojo.jpg',
     atmosphere: {
       blur: 0,

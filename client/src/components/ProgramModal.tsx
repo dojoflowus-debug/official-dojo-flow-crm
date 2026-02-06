@@ -51,24 +51,26 @@ export function ProgramModal({ open, onOpenChange, program, onSuccess }: Program
   });
 
   useEffect(() => {
-    if (program) {
-      setFormData({
-        name: program.name || "",
-        description: program.description || "",
-        termLength: program.termLength || 12,
-        eligibility: program.eligibility || "open",
-        ageRange: program.ageRange || "",
-        showOnKiosk: program.showOnKiosk ?? 1,
-      });
-    } else {
-      setFormData({
-        name: "",
-        description: "",
-        termLength: 12,
-        eligibility: "open",
-        ageRange: "",
-        showOnKiosk: 1,
-      });
+    if (open) {
+      if (program) {
+        setFormData({
+          name: program.name || "",
+          description: program.description || "",
+          termLength: program.termLength || 12,
+          eligibility: program.eligibility || "open",
+          ageRange: program.ageRange || "",
+          showOnKiosk: program.showOnKiosk ?? 1,
+        });
+      } else {
+        setFormData({
+          name: "",
+          description: "",
+          termLength: 12,
+          eligibility: "open",
+          ageRange: "",
+          showOnKiosk: 1,
+        });
+      }
     }
   }, [program, open]);
 
@@ -93,7 +95,7 @@ export function ProgramModal({ open, onOpenChange, program, onSuccess }: Program
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="e.g., Kids Karate"
               required
             />
@@ -104,7 +106,7 @@ export function ProgramModal({ open, onOpenChange, program, onSuccess }: Program
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Describe the program..."
               rows={3}
             />
@@ -117,7 +119,7 @@ export function ProgramModal({ open, onOpenChange, program, onSuccess }: Program
                 id="termLength"
                 type="number"
                 value={formData.termLength}
-                onChange={(e) => setFormData({ ...formData, termLength: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setFormData(prev => ({ ...prev, termLength: parseInt(e.target.value) || 0 }))}
                 placeholder="12"
               />
             </div>
@@ -127,7 +129,7 @@ export function ProgramModal({ open, onOpenChange, program, onSuccess }: Program
               <Input
                 id="ageRange"
                 value={formData.ageRange}
-                onChange={(e) => setFormData({ ...formData, ageRange: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, ageRange: e.target.value }))}
                 placeholder="e.g., Ages 4-12"
               />
             </div>
@@ -138,7 +140,7 @@ export function ProgramModal({ open, onOpenChange, program, onSuccess }: Program
               <Label htmlFor="eligibility">Eligibility</Label>
               <Select
                 value={formData.eligibility}
-                onValueChange={(value: "open" | "invitation_only") => setFormData({ ...formData, eligibility: value })}
+                onValueChange={(value: "open" | "invitation_only") => setFormData(prev => ({ ...prev, eligibility: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -154,7 +156,7 @@ export function ProgramModal({ open, onOpenChange, program, onSuccess }: Program
               <Label htmlFor="showOnKiosk">Show on Kiosk</Label>
               <Select
                 value={formData.showOnKiosk.toString()}
-                onValueChange={(value) => setFormData({ ...formData, showOnKiosk: parseInt(value) })}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, showOnKiosk: parseInt(value) }))}
               >
                 <SelectTrigger>
                   <SelectValue />
