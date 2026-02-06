@@ -8026,3 +8026,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Test dropdown options are selectable
 - [ ] Verify fix works across all modals and forms
 - [ ] Save checkpoint
+
+## Fix Dropdown Not Working - FINAL FIX (Feb 6, 2026)
+- [x] Root cause: backdrop-filter on DialogContent creates stacking context trapping Radix Select portal
+- [x] Fix: Removed backdrop-filter, transform, filter from DialogContent root
+- [x] Used solid background (rgb(255,255,255) light / rgb(15,15,15) dark) instead of glass effect
+- [x] Used inset-0 m-auto centering instead of transform: translate(-50%, -50%)
+- [x] Tested Program Type dropdown - PASSED (opens, shows options, selection works)
+- [x] Tested Billing Cycle dropdown - PASSED (opens, shows options, selection works)
+- [x] Tested Contract dropdown - PASSED (opens, shows options, selection works)
+- [x] All dropdowns render above modal content with proper z-index

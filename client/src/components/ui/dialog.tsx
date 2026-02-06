@@ -80,7 +80,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[2000] bg-black/50",
         className
       )}
       {...props}
@@ -104,17 +104,11 @@ function DialogContent({
 
   const handleEscapeKeyDown = React.useCallback(
     (e: KeyboardEvent) => {
-      // Check both the native isComposing property and our context state
-      // This handles Safari's timing issues with composition events
       const isCurrentlyComposing = (e as any).isComposing || isComposing();
-
-      // If IME is composing, prevent dialog from closing
       if (isCurrentlyComposing) {
         e.preventDefault();
         return;
       }
-
-      // Call user's onEscapeKeyDown if provided
       onEscapeKeyDown?.(e);
     },
     [isComposing, onEscapeKeyDown]
@@ -127,51 +121,42 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-          "fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]", // Center the modal
+          "fixed z-[2001]",
           "w-[calc(100%-2rem)] max-w-lg max-h-[85vh]",
-          "z-[2001]", // Modal z-index (above backdrop at 2000)
-          "overflow-y-auto overflow-x-visible", // Allow vertical scroll, horizontal overflow for dropdowns
+          "overflow-y-auto",
+          "rounded-[20px]",
+          /* Center using inset + margin auto - NO transform needed */
+          "inset-0 m-auto",
           className
         )}
         style={{
+          /* Use inset-0 + margin:auto for centering (no stacking context) */
+          height: 'fit-content',
           ...style,
+          /* CRITICAL: No backdrop-filter, no transform, no filter on this element */
+          /* These create stacking contexts that trap Radix Select portals */
+          background: isDark ? 'rgb(15, 15, 15)' : 'rgb(255, 255, 255)',
+          boxShadow: isDark
+            ? '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)'
+            : '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.05)',
+          border: isDark
+            ? '2px solid rgba(255,255,255,0.2)'
+            : '2px solid rgba(0,0,0,0.1)',
+          padding: '24px',
         }}
         onEscapeKeyDown={handleEscapeKeyDown}
         {...props}
       >
-        {/* Inner glass effect wrapper - prevents stacking context trap */}
-        <div
-          style={{
-            boxShadow: isDark 
-              ? '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)'
-              : '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.05)',
-            border: isDark 
-              ? '2px solid rgba(255,255,255,0.2)'
-              : '2px solid rgba(0,0,0,0.1)',
-            borderRadius: '20px',
-            background: isDark 
-              ? 'rgba(0,0,0,0.92)'
-              : 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            padding: '24px',
-            position: 'relative',
-          }}
-        >
-          {/* Content wrapper */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {children}
-          </div>
-          {showCloseButton && (
-            <DialogPrimitive.Close
-              data-slot="dialog-close"
-              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-            >
-              <XIcon />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
-          )}
-        </div>
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close
+            data-slot="dialog-close"
+            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+          >
+            <XIcon />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   );
