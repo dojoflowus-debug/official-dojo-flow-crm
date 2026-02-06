@@ -7966,3 +7966,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test Billing Cycle dropdown in Add New Program modal (PASSED)
 - [x] Test Contract dropdown in Add New Program modal (pending)
 - [x] Verified: Global fix applied, all dropdowns render above modals
+
+## Fix Add Program Button Not Opening Modal (Feb 6, 2026)
+- [x] Verify click handler fires (button works correctly)
+- [x] Check modal open state changes (state management working)
+- [x] Verify Dialog open and onOpenChange props are wired correctly (no issues found)
+- [x] Check for runtime errors in browser console (no errors)
+- [x] Verify modal exists in DOM when open (modal present in DOM)
+- [x] Check z-index and visibility (FIXED: changed glass wrapper zIndex from -1 to 0)
+- [x] Test modal opens reliably after fix (PASSED)
+- [x] Verified: Modal renders correctly with glass effect and all form fields visible

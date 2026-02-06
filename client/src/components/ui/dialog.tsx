@@ -132,7 +132,7 @@ function DialogContent({
           // Mobile: full-screen, Desktop: centered modal
           "inset-0 sm:inset-0 sm:m-auto",
           "w-full h-full sm:w-auto sm:h-auto sm:max-w-[calc(100%-2rem)] sm:max-w-lg",
-          "rounded-none p-0 sm:p-6 bg-transparent sm:max-h-[85vh]",
+          "rounded-none p-0 sm:p-6 sm:max-h-[85vh]",
           "z-[2001]", // Modal z-index (above backdrop at 2000)
           className
         )}
@@ -164,7 +164,7 @@ function DialogContent({
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             pointerEvents: 'none', // Allow clicks to pass through to content
-            zIndex: -1, // Behind content
+            zIndex: 0, // At same level as root, behind content
           }}
         />
         {/* Content wrapper with relative positioning */}
