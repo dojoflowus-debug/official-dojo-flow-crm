@@ -7976,3 +7976,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Check z-index and visibility (FIXED: changed glass wrapper zIndex from -1 to 0)
 - [x] Test modal opens reliably after fix (PASSED)
 - [x] Verified: Modal renders correctly with glass effect and all form fields visible
+
+## Fix Add Program Modal Content Invisibility (Feb 6, 2026)
+- [x] Check Dialog component z-index layering (DialogOverlay: 2000, DialogContent: 2001+)
+- [x] Remove visibility-hiding styles (no opacity/display issues found)
+- [x] Remove stacking context traps from DialogContent root (moved backdrop-filter to inner wrapper)
+- [x] Move glass effect to inner child element, not root (FIXED)
+- [x] Verify DialogContent renders when open=true (renders correctly)
+- [x] Fix modal centering (changed to left-50% top-50% translate)
+- [x] Test with DevTools to confirm DialogContent exists and is visible (PASSED)
+- [x] Verified: Modal appears centered and visible in all themes

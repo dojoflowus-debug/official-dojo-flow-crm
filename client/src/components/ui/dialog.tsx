@@ -80,7 +80,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm",
         className
       )}
       {...props}
@@ -88,14 +88,12 @@ function DialogOverlay({
   );
 }
 
-DialogOverlay.displayName = "DialogOverlay";
-
 function DialogContent({
   className,
   children,
-  showCloseButton = true,
-  onEscapeKeyDown,
   style,
+  onEscapeKeyDown,
+  showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
@@ -128,19 +126,14 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed flex flex-col gap-4 duration-200",
-          // Mobile: full-screen, Desktop: centered modal
-          "inset-0 sm:inset-0 sm:m-auto",
-          "w-full h-full sm:w-auto sm:h-auto sm:max-w-[calc(100%-2rem)] sm:max-w-lg",
-          "rounded-none p-0 sm:p-6 sm:max-h-[85vh]",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]", // Center the modal
+          "w-[calc(100%-2rem)] max-w-lg max-h-[85vh]",
           "z-[2001]", // Modal z-index (above backdrop at 2000)
+          "overflow-y-auto overflow-x-visible", // Allow vertical scroll, horizontal overflow for dropdowns
           className
         )}
         style={{
-          borderRadius: '20px',
-          padding: '24px',
-          overflow: 'visible', // CRITICAL: Allow dropdowns to overflow modal
-          position: 'relative', // Establish positioning context
           ...style,
         }}
         onEscapeKeyDown={handleEscapeKeyDown}
@@ -149,8 +142,6 @@ function DialogContent({
         {/* Inner glass effect wrapper - prevents stacking context trap */}
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
             boxShadow: isDark 
               ? '0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.15)'
               : '0 20px 60px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.05)',
@@ -163,24 +154,24 @@ function DialogContent({
               : 'rgba(255,255,255,0.95)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            pointerEvents: 'none', // Allow clicks to pass through to content
-            zIndex: 0, // At same level as root, behind content
+            padding: '24px',
+            position: 'relative',
           }}
-        />
-        {/* Content wrapper with relative positioning */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {children}
+        >
+          {/* Content wrapper */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {children}
+          </div>
+          {showCloseButton && (
+            <DialogPrimitive.Close
+              data-slot="dialog-close"
+              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            >
+              <XIcon />
+              <span className="sr-only">Close</span>
+            </DialogPrimitive.Close>
+          )}
         </div>
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-            style={{ zIndex: 2 }} // Above content wrapper
-          >
-            <XIcon />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   );
@@ -200,10 +191,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
-      )}
+      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   );
@@ -216,7 +204,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn("text-lg font-semibold", className)}
       {...props}
     />
   );
@@ -237,13 +225,13 @@ function DialogDescription({
 
 export {
   Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogOverlay,
   DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
   DialogTitle,
-  DialogTrigger
+  DialogDescription,
 };
