@@ -74,7 +74,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'martial-arts-dojo',
     name: 'Martial Arts Dojo',
     category: 'martial-arts',
-    thumbnailPath: '/dojo-background.jpg',
+    thumbnailPath: '/environments/martial-arts-dojo-thumb.jpg',
     backgroundImageUrl: '/environments/samurai-red-dojo.jpg',
     atmosphere: {
       blur: 0,
@@ -90,7 +90,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'karate-training',
     name: 'Karate Training',
     category: 'martial-arts',
-    thumbnailPath: '/env-samurai-dojo.jpg',
+    thumbnailPath: '/environments/karate-training-thumb.jpg',
     backgroundImageUrl: '/environments/samurai-red-dojo.jpg',
     atmosphere: {
       blur: 0,
@@ -106,7 +106,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'zen-studio',
     name: 'Zen Studio',
     category: 'yoga',
-    thumbnailPath: '/env-zen-bamboo.jpg',
+    thumbnailPath: '/environments/zen-studio-thumb.jpg',
     backgroundImageUrl: '/environments/zen-bamboo-garden.jpg',
     atmosphere: {
       blur: 2,
@@ -122,7 +122,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'luxury-gym',
     name: 'Luxury Gym',
     category: 'fitness',
-    thumbnailPath: '/env-luxury-dojo.jpg',
+    thumbnailPath: '/environments/luxury-gym-thumb.jpg',
     backgroundImageUrl: '/environments/luxury-dojo-lounge.jpg',
     atmosphere: {
       blur: 1,
@@ -138,7 +138,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'kickboxing-floor',
     name: 'Kickboxing Floor',
     category: 'fitness',
-    thumbnailPath: '/env-neon-dojo.jpg',
+    thumbnailPath: '/environments/kickboxing-floor-thumb.jpg',
     backgroundImageUrl: '/environments/futuristic-neon-dojo.jpg',
     atmosphere: {
       blur: 0,
@@ -154,7 +154,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'kids-dojo',
     name: 'Kids Dojo',
     category: 'kids',
-    thumbnailPath: '/environments/kids-karate-dojo.jpg',
+    thumbnailPath: '/environments/kids-dojo-thumb.png',
     backgroundImageUrl: '/environments/kids-karate-dojo.jpg',
     atmosphere: {
       blur: 0,
@@ -170,7 +170,7 @@ export const KIOSK_ENVIRONMENTS: EnvironmentDefinition[] = [
     id: 'modern-studio',
     name: 'Modern Studio',
     category: 'studio',
-    thumbnailPath: '/environments/modern-white-dojo.jpg',
+    thumbnailPath: '/environments/modern-studio-thumb.jpeg',
     backgroundImageUrl: '/environments/modern-white-dojo.jpg',
     atmosphere: {
       blur: 1,
