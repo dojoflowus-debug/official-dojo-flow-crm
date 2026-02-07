@@ -24,11 +24,13 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
     email: '',
     phone: '',
     status: 'Active',
+    programId: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const createStudentMutation = trpc.students.create.useMutation();
+  const { data: programs = [] } = trpc.programs.list.useQuery();
 
   if (!isOpen) return null;
 
@@ -45,9 +47,10 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
         phone: formData.phone || null,
         status: formData.status,
         beltRank: 'White Belt',
+        programId: formData.programId ? parseInt(formData.programId) : undefined,
       });
       
-      setFormData({ firstName: '', lastName: '', email: '', phone: '', status: 'Active' });
+      setFormData({ firstName: '', lastName: '', email: '', phone: '', status: 'Active', programId: '' });
       if (onSuccess) {
         onSuccess();
       }
@@ -154,6 +157,26 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
                   <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Program</label>
+              <Select value={formData.programId} onValueChange={(value) => setFormData({ ...formData, programId: value })} disabled={isLoading}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a program" />
+                </SelectTrigger>
+                <SelectContent>
+                  {programs.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">No programs available</div>
+                  ) : (
+                    programs.map((program: any) => (
+                      <SelectItem key={program.id} value={program.id.toString()}>
+                        {program.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">Optional: Select a program to enroll the student</p>
             </div>
 
             {/* Actions */}

@@ -1919,6 +1919,7 @@ export const appRouter = router({
         status: z.string().optional().nullable(),
         membershipStatus: z.string().optional().nullable(),
         program: z.string().optional().nullable(),
+        programId: z.number().optional(),
         streetAddress: z.string().optional().nullable(),
         city: z.string().optional().nullable(),
         state: z.string().optional().nullable(),
@@ -1934,7 +1935,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const { getDb } = await import("./db");
-        const { students } = await import("../drizzle/schema");
+        const { students, programEnrollments } = await import("../drizzle/schema");
         const { geocodeAddress } = await import("./geocoding");
         
         const db = await getDb();
@@ -1999,6 +2000,23 @@ export const appRouter = router({
           guardianEmail: input.guardianEmail || null,
           guardianPhone: input.guardianPhone || null,
         });
+        
+        // If a program was selected, create a program enrollment
+        if (input.programId) {
+          try {
+            await db.insert(programEnrollments).values({
+              studentId: newStudent.insertId,
+              programId: input.programId,
+              status: 'active',
+              enrollmentType: 'instructor_approval',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          } catch (enrollmentError) {
+            console.error('Failed to create program enrollment:', enrollmentError);
+            // Don't fail the student creation if enrollment fails
+          }
+        }
         
         return { success: true, id: newStudent.insertId };
       }),
