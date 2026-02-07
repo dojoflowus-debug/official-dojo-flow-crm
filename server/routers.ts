@@ -50,6 +50,7 @@ import { emailTemplatesRouter } from './emailTemplatesRouter';
 import { organizationsRouter } from './routers/organizations';
 import { classesRouter } from './classesRouter';
 import { publicLeadRouter } from './publicLeadRouter';
+import { waiverRouter } from './waiverRouter';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -594,6 +595,7 @@ export const appRouter = router({
   pcBankCard: pcBankCardRouter,
   dojoFlowMessaging: messagingRouter,
   publicLead: publicLeadRouter,
+  waiver: waiverRouter,
   
   // File upload for attachments
   upload: router({
