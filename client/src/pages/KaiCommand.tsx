@@ -1403,7 +1403,7 @@ export default function KaiCommand() {
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();
   
   // Schedule extraction mutations
-  const extractScheduleMutation = trpc.classes.extractSchedule.useMutation();
+  const extractScheduleMutation = trpc.scheduleExtractor.extractSchedule.useMutation();
   const createClassesMutation = trpc.classes.createClassesFromSchedule.useMutation();
 
   // Handle file selection
