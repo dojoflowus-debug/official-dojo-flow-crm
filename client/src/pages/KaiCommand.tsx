@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePreviewCard';
+import { ScheduleApprovalModal } from '@/components/ScheduleApprovalModal';
 import { ScheduleReviewScreen } from '@/components/ScheduleReviewScreen';
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { InfoPanel, InfoPanelData } from '@/components/InfoPanel';
@@ -158,6 +159,7 @@ export default function KaiCommand() {
     confidence?: number;
     warnings?: string[];
   } | null>(null);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [isExtractingSchedule, setIsExtractingSchedule] = useState(false);
   const [isCreatingClasses, setIsCreatingClasses] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -1744,13 +1746,16 @@ export default function KaiCommand() {
       console.log('[KaiCommand] Extraction result:', result);
       
       if (result.success && result.classes.length > 0) {
-        // Show preview card
+        // Store preview data and show approval modal (3rd screen)
         setSchedulePreview({
           classes: result.classes,
           fileName,
           confidence: result.confidence,
           warnings: result.warnings
         });
+        
+        // Show the approval modal
+        setShowApprovalModal(true);
         
         // Update Kai message with details
         let successContent = `I found **${result.classes.length} classes** in your schedule!`;
@@ -1778,7 +1783,7 @@ export default function KaiCommand() {
           }
         }
         
-        successContent += `\n\nPlease review the classes below and click "Create Classes" to add them to your dojo.`;
+        successContent += `\n\n**Ready to review?** Open the approval screen to check/uncheck classes and approve the import.`;
         
         const successMessage: Message = {
           id: `extracted-${Date.now()}`,
@@ -3395,19 +3400,43 @@ export default function KaiCommand() {
                     </div>
                   )}
                   
+                  {/* Approval Modal - 3rd Screen */}
                   {schedulePreview && (
-                    <div className="mt-4" style={{ zIndex: 30, maxHeight: '600px', overflow: 'auto' }}>
-                      <ScheduleReviewScreen
-                        classes={schedulePreview.classes}
-                        instructors={instructors}
-                        onImportComplete={() => {
-                          setSchedulePreview(null);
-                          instructorsQuery.refetch();
-                          toast.success('Classes imported successfully!');
-                        }}
-                        onCancel={() => setSchedulePreview(null)}
-                      />
-                    </div>
+                    <ScheduleApprovalModal
+                      isOpen={showApprovalModal}
+                      classes={schedulePreview.classes}
+                      fileName={schedulePreview.fileName}
+                      onApprove={async (selectedClasses) => {
+                        try {
+                          const result = await createClassesMutation.mutateAsync({
+                            classes: selectedClasses
+                          });
+                          
+                          if (result.success) {
+                            toast.success(`Successfully imported ${result.createdCount} classes`);
+                            setSchedulePreview(null);
+                            setShowApprovalModal(false);
+                            instructorsQuery.refetch();
+                            
+                            const successMessage: Message = {
+                              id: `success-${Date.now()}`,
+                              role: 'assistant',
+                              content: `✅ **Schedule imported successfully!** I've added **${result.createdCount} classes** to your schedule.`,
+                              timestamp: new Date()
+                            };
+                            setMessages(prev => [...prev, successMessage]);
+                          } else {
+                            toast.error(result.errors?.[0] || 'Failed to import classes');
+                          }
+                        } catch (error: any) {
+                          toast.error('Failed to import classes: ' + error.message);
+                        }
+                      }}
+                      onCancel={() => {
+                        setShowApprovalModal(false);
+                        setSchedulePreview(null);
+                      }}
+                    />
                   )}
                   
                   <div ref={messagesEndRef} />
