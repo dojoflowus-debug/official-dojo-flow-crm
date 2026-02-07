@@ -5299,7 +5299,104 @@ Return the data as a structured JSON object.`
           
           console.log('[Schedule Extract] Headers:', rawHeaders);
           
-          // Auto-detect column mapping if not provided
+          // DETECT GRID-BASED SCHEDULE FORMAT
+          // Grid format: First column = Time, other columns = Days of week with class names in cells
+          const isGridFormat = () => {
+            if (data.length < 2) return false;
+            const firstCol = rawHeaders[0]?.toLowerCase() || '';
+            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            
+            // Check if first column looks like time and other columns are day names
+            const isTimeColumn = /time|start|hour|slot/i.test(firstCol);
+            const otherHeadersAreDays = rawHeaders.slice(1).filter(h => h).every(h => {
+              const normalized = h.toLowerCase();
+              return dayNames.some(day => normalized.includes(day));
+            });
+            
+            return isTimeColumn && otherHeadersAreDays && rawHeaders.slice(1).filter(h => h).length >= 3;
+          };
+          
+          // If grid format detected, parse it differently
+          if (isGridFormat()) {
+            console.log('[Schedule Extract] Detected GRID-BASED format');
+            
+            const classes: any[] = [];
+            const dayColumns: Record<number, string> = {};
+            
+            // Map column indices to day names
+            for (let i = 1; i < rawHeaders.length; i++) {
+              const dayName = rawHeaders[i]?.toLowerCase() || '';
+              const dayMap: Record<string, string> = {
+                'monday': 'Monday', 'mon': 'Monday', 'm': 'Monday',
+                'tuesday': 'Tuesday', 'tue': 'Tuesday', 'tues': 'Tuesday', 't': 'Tuesday',
+                'wednesday': 'Wednesday', 'wed': 'Wednesday', 'w': 'Wednesday',
+                'thursday': 'Thursday', 'thu': 'Thursday', 'thurs': 'Thursday', 'th': 'Thursday',
+                'friday': 'Friday', 'fri': 'Friday', 'f': 'Friday',
+                'saturday': 'Saturday', 'sat': 'Saturday', 's': 'Saturday',
+                'sunday': 'Sunday', 'sun': 'Sunday', 'su': 'Sunday',
+              };
+              
+              for (const [key, value] of Object.entries(dayMap)) {
+                if (dayName.includes(key)) {
+                  dayColumns[i] = value;
+                  break;
+                }
+              }
+            }
+            
+            console.log('[Schedule Extract] Day columns:', dayColumns);
+            
+            // Parse each time slot row
+            for (let i = 1; i < data.length; i++) {
+              const row = data[i];
+              if (!row || row.every(cell => !cell)) continue;
+              
+              const timeSlot = String(row[0] || '').trim();
+              if (!timeSlot) continue;
+              
+              const startTime = parseTime(timeSlot);
+              if (!startTime) continue;
+              
+              // For each day column, check if there's a class name
+              for (const [colIdx, dayName] of Object.entries(dayColumns)) {
+                const className = String(row[parseInt(colIdx)] || '').trim();
+                if (className && className.toLowerCase() !== 'none' && className !== '-') {
+                  classes.push({
+                    name: className,
+                    dayOfWeek: dayName,
+                    startTime: startTime,
+                    endTime: undefined, // Will be set to 1 hour after start time
+                    instructor: undefined,
+                    location: undefined,
+                    level: 'All Levels',
+                    maxCapacity: 20,
+                  });
+                }
+              }
+            }
+            
+            // Calculate end times (assume 1 hour duration if not specified)
+            const classesWithEndTime = classes.map(cls => {
+              if (!cls.endTime && cls.startTime) {
+                const [hours, minutes] = cls.startTime.split(':').map(Number);
+                const endHours = (hours + 1) % 24;
+                cls.endTime = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+              }
+              return cls;
+            });
+            
+            console.log('[Schedule Extract] Grid format parsed', classesWithEndTime.length, 'classes');
+            
+            return {
+              success: true,
+              classes: classesWithEndTime,
+              confidence: 1.0,
+              formatDetected: 'grid',
+              rawHeaders,
+            };
+          }
+          
+          // Auto-detect column mapping if not provided (for traditional format)
           let mapping = input.columnMapping || {};
           const detectedMapping: Record<string, number> = {};
           const unmappedRequired: string[] = [];
