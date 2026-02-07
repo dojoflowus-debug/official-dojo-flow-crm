@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { SchedulePreviewCard, ExtractedClass } from '@/components/SchedulePreviewCard';
+import { ScheduleReviewScreen } from '@/components/ScheduleReviewScreen';
 import { ResultsPanel, ResultsPanelData } from '@/components/ResultsPanel';
 import { InfoPanel, InfoPanelData } from '@/components/InfoPanel';
 import { parseKaiMessage, renderParsedMessage } from '@/lib/kaiUIBlocks';
@@ -152,9 +153,9 @@ export default function KaiCommand() {
   
   // Schedule extraction state
   const [schedulePreview, setSchedulePreview] = useState<{
-    classes: ExtractedClass[];
-    fileName: string;
-    confidence: number;
+    classes: any[];
+    fileName?: string;
+    confidence?: number;
     warnings?: string[];
   } | null>(null);
   const [isExtractingSchedule, setIsExtractingSchedule] = useState(false);
@@ -1405,6 +1406,10 @@ export default function KaiCommand() {
   // Schedule extraction mutations
   const extractScheduleMutation = trpc.scheduleExtractor.extractSchedule.useMutation();
   const createClassesMutation = trpc.classes.createClassesFromSchedule.useMutation();
+  
+  // Get instructors for the review screen
+  const instructorsQuery = trpc.classes.getInstructors.useQuery();
+  const instructors = instructorsQuery.data || [];
 
   // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1911,6 +1916,7 @@ export default function KaiCommand() {
   // Cancel schedule preview
   const handleCancelSchedulePreview = () => {
     setSchedulePreview(null);
+    // Clear any related state
     const cancelMessage: Message = {
       id: `cancelled-${Date.now()}`,
       role: 'assistant',
@@ -3390,18 +3396,16 @@ export default function KaiCommand() {
                   )}
                   
                   {schedulePreview && (
-                    <div className="mt-4" style={{ zIndex: 30 }}>
-                      <SchedulePreviewCard
+                    <div className="mt-4" style={{ zIndex: 30, maxHeight: '600px', overflow: 'auto' }}>
+                      <ScheduleReviewScreen
                         classes={schedulePreview.classes}
-                        fileName={schedulePreview.fileName}
-                        confidence={schedulePreview.confidence}
-                        warnings={schedulePreview.warnings}
-                        onConfirm={handleCreateClasses}
-                        onCancel={handleCancelSchedulePreview}
-                        isProcessing={isCreatingClasses}
-                        isDark={isDark}
-                        isCinematic={isCinematic}
-                        isFocusMode={isFocusMode}
+                        instructors={instructors}
+                        onImportComplete={() => {
+                          setSchedulePreview(null);
+                          instructorsQuery.refetch();
+                          toast.success('Classes imported successfully!');
+                        }}
+                        onCancel={() => setSchedulePreview(null)}
                       />
                     </div>
                   )}
