@@ -49,6 +49,7 @@ import { messagingRouter } from './routers/messaging';
 import { emailTemplatesRouter } from './emailTemplatesRouter';
 import { organizationsRouter } from './routers/organizations';
 import { classesRouter } from './classesRouter';
+import { publicLeadRouter } from './publicLeadRouter';
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -592,6 +593,7 @@ export const appRouter = router({
   schoolProfile: schoolProfileRouter,
   pcBankCard: pcBankCardRouter,
   dojoFlowMessaging: messagingRouter,
+  publicLead: publicLeadRouter,
   
   // File upload for attachments
   upload: router({
