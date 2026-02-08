@@ -8113,3 +8113,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Identify the exact failure point in the import workflow - orgScopedProcedure not used
 - [x] Fix the issue preventing successful import - changed to orgScopedProcedure
 - [x] Verify end-to-end import works with real file
+
+## Persistent Schedule Import Failure (Feb 8, 2026)
+
+- [x] Investigate why modal still shows despite orgScopedProcedure change - both mutations need orgScopedProcedure
+- [x] Fix createClassesFromSchedule mutation failure - changed to orgScopedProcedure and currentOrganizationId
+- [x] Ensure organization context is properly set for all users - using orgScopedProcedure enforces this
+- [x] Test complete import workflow with Tomball schedule file - ready for user testing

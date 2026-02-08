@@ -5787,7 +5787,7 @@ Return the data as a structured JSON object.`
       }),
 
     // Create classes from extracted schedule
-    createClassesFromSchedule: protectedProcedure
+    createClassesFromSchedule: orgScopedProcedure
       .input(z.object({
         classes: z.array(z.object({
           name: z.string(),
@@ -5812,7 +5812,7 @@ Return the data as a structured JSON object.`
         }
         
         // Get organization ID from context
-        const organizationId = ctx.organizationId;
+        const organizationId = ctx.currentOrganizationId;
         if (!organizationId) {
           return { success: false, createdCount: 0, error: 'Organization not found' };
         }
