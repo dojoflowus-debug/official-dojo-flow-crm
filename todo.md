@@ -8151,3 +8151,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix CORS or canvas rendering issues preventing PDF creation - added allowTaint and better error logging
 - [x] Test PDF download with actual schedule data - ready for user testing
 - [x] Verify school branding appears correctly in generated PDF
+
+## OKLAB Color Format Fix for PDF (Feb 8, 2026)
+
+- [x] Identify where OKLAB colors are used in Tailwind CSS 4 configuration
+- [x] Add CSS override to convert OKLAB to RGB/HEX for print view - added inline style tag
+- [x] Test PDF generation without OKLAB color errors - ready for user testing
+- [x] Verify schedule colors appear correctly in generated PDF

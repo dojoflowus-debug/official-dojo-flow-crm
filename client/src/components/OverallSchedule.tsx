@@ -334,6 +334,28 @@ export default function OverallSchedule({
           </div>
         </div>
 
+        {/* CSS Override for OKLAB colors (html2canvas doesn't support OKLAB) */}
+        <style>{`
+          .print-schedule * {
+            background-color: rgb(255, 255, 255) !important;
+            color: rgb(0, 0, 0) !important;
+            border-color: rgb(229, 231, 235) !important;
+          }
+          .print-schedule .bg-blue-500 { background-color: rgb(59, 130, 246) !important; }
+          .print-schedule .bg-green-500 { background-color: rgb(34, 197, 94) !important; }
+          .print-schedule .bg-purple-500 { background-color: rgb(168, 85, 247) !important; }
+          .print-schedule .bg-orange-500 { background-color: rgb(249, 115, 22) !important; }
+          .print-schedule .bg-red-500 { background-color: rgb(239, 68, 68) !important; }
+          .print-schedule .bg-yellow-500 { background-color: rgb(234, 179, 8) !important; }
+          .print-schedule .bg-pink-500 { background-color: rgb(236, 72, 153) !important; }
+          .print-schedule .bg-indigo-500 { background-color: rgb(99, 102, 241) !important; }
+          .print-schedule .text-gray-600 { color: rgb(75, 85, 99) !important; }
+          .print-schedule .text-gray-700 { color: rgb(55, 65, 81) !important; }
+          .print-schedule .text-gray-800 { color: rgb(31, 41, 55) !important; }
+          .print-schedule .border-gray-200 { border-color: rgb(229, 231, 235) !important; }
+          .print-schedule .border-gray-300 { border-color: rgb(209, 213, 219) !important; }
+        `}</style>
+        
         {/* Schedule Grid - Printable Area */}
         <div ref={printRef} className="print-schedule">
           {/* Print Header with Branding (hidden on screen, shown on print) */}
