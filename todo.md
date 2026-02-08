@@ -8106,3 +8106,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Ensure extractSchedule creates conversation and navigates to it (not showing modal)
 - [x] Fix "Approve & Import 23 Classes" button in modal to actually create classes
 - [x] Test complete approval workflow end-to-end
+
+## Schedule Import Testing with Real File (Feb 8, 2026)
+
+- [x] Test schedule import with Tomball_Optimized_Schedule(3).xlsx
+- [x] Identify the exact failure point in the import workflow - orgScopedProcedure not used
+- [x] Fix the issue preventing successful import - changed to orgScopedProcedure
+- [x] Verify end-to-end import works with real file

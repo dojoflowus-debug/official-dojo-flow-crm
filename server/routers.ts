@@ -51,7 +51,7 @@ import { organizationsRouter } from './routers/organizations';
 import { classesRouter } from './classesRouter';
 import { publicLeadRouter } from './publicLeadRouter';
 import { waiverRouter } from './waiverRouter';
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, orgScopedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as bcrypt from "bcryptjs";
@@ -5133,7 +5133,7 @@ Return the data as a structured JSON object.`
   // Schedule extractor router for parsing uploaded class schedules
   scheduleExtractor: router({
     // Extract schedule from uploaded file - robust parser with column detection
-    extractSchedule: protectedProcedure
+    extractSchedule: orgScopedProcedure
       .input(z.object({
         fileUrl: z.string().optional(),
         storageKey: z.string().optional(),
