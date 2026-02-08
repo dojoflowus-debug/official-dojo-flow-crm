@@ -247,8 +247,11 @@ export default function OverallSchedule({
       const canvas = await html2canvas(printRef.current, {
         scale: 2, // Higher quality
         useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
+        allowTaint: true,
+        logging: true,
+        backgroundColor: '#ffffff',
+        imageTimeout: 0,
+        removeContainer: true
       });
       
       // Calculate PDF dimensions (A4 landscape)
@@ -271,7 +274,8 @@ export default function OverallSchedule({
       pdf.save(fileName);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
+      alert(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
   };
 
