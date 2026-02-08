@@ -38,10 +38,13 @@ interface ClassItem {
   instructor?: string;
   instructorId?: number;
   instructorAvatar?: string;
-  day_of_week?: string;
+  dayOfWeek?: string; // Database field
+  day_of_week?: string; // Legacy support
   schedule?: string;
-  start_time?: string;
-  end_time?: string;
+  startTime?: string; // Database field
+  start_time?: string; // Legacy support
+  endTime?: string; // Database field
+  end_time?: string; // Legacy support
   time?: string; // Formatted time like "4:30 PM - 5:00 PM"
   room?: string;
   capacity?: number;
@@ -166,10 +169,22 @@ export default function OverallSchedule({
     });
     
     classes.forEach(cls => {
-      const day = cls.day_of_week || cls.schedule;
-      if (day && grouped[day]) {
-        grouped[day].push(cls);
-      }
+      // Get day from either field (camelCase or snake_case)
+      const dayStr = cls.dayOfWeek || cls.day_of_week || cls.schedule;
+      if (!dayStr) return;
+      
+      // Handle comma-separated days (e.g., "Monday,Wednesday")
+      const days = dayStr.split(',').map(d => d.trim());
+      
+      days.forEach(day => {
+        // Convert full day names to abbreviations
+        const dayIndex = FULL_DAYS.findIndex(d => d.toLowerCase() === day.toLowerCase());
+        const shortDay = dayIndex >= 0 ? DAYS[dayIndex] : day;
+        
+        if (grouped[shortDay]) {
+          grouped[shortDay].push(cls);
+        }
+      });
     });
     
     return grouped;
@@ -178,8 +193,8 @@ export default function OverallSchedule({
   // Get classes for a specific day and time slot
   const getClassesForSlot = (day: string, hour: number): ClassItem[] => {
     return classesByDay[day]?.filter(cls => {
-      // Try start_time first, then parse from time field
-      let startTime = cls.start_time;
+      // Try startTime (camelCase) first, then start_time (snake_case), then parse from time field
+      let startTime = cls.startTime || cls.start_time;
       if (!startTime && cls.time) {
         const parsed = parseTimeRange(cls.time);
         startTime = parsed.start;
@@ -192,8 +207,8 @@ export default function OverallSchedule({
 
   // Calculate class block height based on duration
   const getClassHeight = (cls: ClassItem): number => {
-    let startTime = cls.start_time;
-    let endTime = cls.end_time;
+    let startTime = cls.startTime || cls.start_time;
+    let endTime = cls.endTime || cls.end_time;
     
     // Parse from time field if not available
     if ((!startTime || !endTime) && cls.time) {

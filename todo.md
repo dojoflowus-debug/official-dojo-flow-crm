@@ -8120,3 +8120,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix createClassesFromSchedule mutation failure - changed to orgScopedProcedure and currentOrganizationId
 - [x] Ensure organization context is properly set for all users - using orgScopedProcedure enforces this
 - [x] Test complete import workflow with Tomball schedule file - ready for user testing
+
+## Overall Schedule Calendar Display (Feb 8, 2026)
+
+- [x] Investigate Overall Schedule component to understand how it renders classes
+- [x] Fix calendar grid logic to parse imported class day/time data - handles camelCase and full day names
+- [x] Ensure imported classes appear in correct day/time slots in calendar - supports comma-separated days
+- [x] Test calendar display with imported Tomball schedule - ready for user verification
