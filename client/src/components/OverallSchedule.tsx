@@ -244,16 +244,49 @@ export default function OverallSchedule({
     if (!printRef.current) return;
     
     try {
-      // Capture the schedule grid as canvas
-      const canvas = await html2canvas(printRef.current, {
+      // Clone the element and convert all OKLAB colors to RGB before html2canvas
+      const clone = printRef.current.cloneNode(true) as HTMLElement;
+      document.body.appendChild(clone);
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      
+      // Force all elements to use RGB colors instead of OKLAB
+      const allElements = clone.querySelectorAll('*');
+      allElements.forEach((el: Element) => {
+        const htmlEl = el as HTMLElement;
+        const computedStyle = window.getComputedStyle(el);
+        
+        // Get computed color values and apply them as inline styles
+        const bgColor = computedStyle.backgroundColor;
+        const textColor = computedStyle.color;
+        const borderColor = computedStyle.borderColor;
+        
+        // Apply computed RGB values as inline styles to override OKLAB
+        if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+          htmlEl.style.backgroundColor = bgColor;
+        }
+        if (textColor) {
+          htmlEl.style.color = textColor;
+        }
+        if (borderColor) {
+          htmlEl.style.borderColor = borderColor;
+        }
+      });
+      
+      // Capture the cloned element as canvas
+      const canvas = await html2canvas(clone, {
         scale: 2, // Higher quality
         useCORS: true,
         allowTaint: true,
-        logging: true,
+        logging: false,
         backgroundColor: '#ffffff',
         imageTimeout: 0,
         removeContainer: true
       });
+      
+      // Remove the clone
+      document.body.removeChild(clone);
       
       // Calculate PDF dimensions (A4 landscape)
       const imgWidth = 297; // A4 width in mm (landscape)
