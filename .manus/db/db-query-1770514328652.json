@@ -1,0 +1,35 @@
+{
+  "query": "\nSELECT * FROM organizations LIMIT 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \nSELECT * FROM organizations LIMIT 1;\n",
+  "rows": [
+    {
+      "id": "120001",
+      "name": "MyDojo",
+      "address": "NULL",
+      "city": "NULL",
+      "state": "NULL",
+      "zipCode": "NULL",
+      "timezone": "America/New_York",
+      "programs": "NULL",
+      "estimatedStudents": "NULL",
+      "launchDate": "NULL",
+      "logoUrl": "NULL",
+      "brandColor": "#EF4444",
+      "planId": "NULL",
+      "subscriptionStatus": "trial",
+      "trialEndsAt": "NULL",
+      "createdAt": "2025-12-30 23:44:55",
+      "updatedAt": "2025-12-30 23:44:55",
+      "lastActivity": "NULL",
+      "settings": "NULL",
+      "onboardingStatus": "not_started",
+      "onboardingStep": "1",
+      "billingExempt": "0",
+      "bagsOnHand": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\taddress\tcity\tstate\tzipCode\ttimezone\tprograms\testimatedStudents\tlaunchDate\tlogoUrl\tbrandColor\tplanId\tsubscriptionStatus\ttrialEndsAt\tcreatedAt\tupdatedAt\tlastActivity\tsettings\tonboardingStatus\tonboardingStep\tbillingExempt\tbagsOnHand\n120001\tMyDojo\tNULL\tNULL\tNULL\tNULL\tAmerica/New_York\tNULL\tNULL\tNULL\tNULL\t#EF4444\tNULL\ttrial\tNULL\t2025-12-30 23:44:55\t2025-12-30 23:44:55\tNULL\tNULL\tnot_started\t1\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

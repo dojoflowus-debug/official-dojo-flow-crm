@@ -1,0 +1,12 @@
+{
+  "query": "\n-- Check the organization_users table to find the organization\nSELECT * FROM organization_users WHERE userId = 9870148 LIMIT 1;\n\n-- Get organization info\nSELECT * FROM organizations WHERE id IN (\n  SELECT organizationId FROM organization_users WHERE userId = 9870148\n) LIMIT 1;\n\n-- Update credits\nUPDATE organizations \nSET credits = credits + 50000 \nWHERE id IN (\n  SELECT organizationId FROM organization_users WHERE userId = 9870148\n);\n\n-- Verify\nSELECT id, name, credits FROM organizations WHERE id IN (\n  SELECT organizationId FROM organization_users WHERE userId = 9870148\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \n-- Check the organization_users table to find the organization\nSELECT * FROM organization_users WHERE userId = 9870148 LIMIT 1;\n\n-- Get organization info\nSELECT * FROM organizations WHERE id IN (\n  SELECT organizationId FROM organization_users WHERE userId = 9870148\n) LIMIT 1;\n\n-- Update credits\nUPDATE organizations \nSET credits = credits + 50000 \nWHERE id IN (\n  SELECT organizationId FROM organization_users WHERE userId = 9870148\n);\n\n-- Verify\nSELECT id, name, credits FROM organizations WHERE id IN (\n  SELECT organizationId FROM organization_users WHERE userId = 9870148\n);\n",
+  "returncode": 1,
+  "logs": [
+    "id\tuserId\torganizationId\trole\tisPrimary\tcreatedAt\tupdatedAt",
+    "1020001\t9870148\t1080001\towner\t1\t2026-02-06 23:39:01\t2026-02-06 23:39:01",
+    "id\tname\taddress\tcity\tstate\tzipCode\ttimezone\tprograms\testimatedStudents\tlaunchDate\tlogoUrl\tbrandColor\tplanId\tsubscriptionStatus\ttrialEndsAt\tcreatedAt\tupdatedAt\tlastActivity\tsettings\tonboardingStatus\tonboardingStep\tbillingExempt\tbagsOnHand",
+    "1080001\tMyDojo\tNULL\tNULL\tNULL\tNULL\tAmerica/New_York\t[\"Karate\",\"Kids Classes\",\"Adult Classes\"]\t50\tNULL\tNULL\t#EF4444\t1\ttrial\t2026-02-20 23:39:01\t2026-02-06 23:39:01\t2026-02-06 23:39:01\tNULL\tNULL\tnot_started\t1\t0\t0",
+    "ERROR 1054 (42S22) at line 11: Unknown column 'credits' in 'field list'"
+  ]
+}

@@ -1069,7 +1069,6 @@ export const appRouter = router({
       }),
   }),
 
-
   // Messaging router for @mentions and directed messages
   messaging: router({
     // Get classes for mention dropdown (bulk messaging)
@@ -4114,7 +4113,7 @@ Return the data as a structured JSON object.`
           filename,
           mimeType,
           count: exportData.length,
-        };
+        }
       }),
 
     // Delete all messages from a conversation
@@ -4334,7 +4333,6 @@ Return the data as a structured JSON object.`
           return { summary: "Unable to generate summary" };
         }
       }),
-  }),
 
   // Subscription and credits management
   // Dojo Settings API
@@ -5511,11 +5509,42 @@ Return the data as a structured JSON object.`
             const capacityStr = getValue('capacity');
             const capacity = capacityStr ? parseInt(capacityStr) : undefined;
             
-            // Create class entry for each day
-            for (const day of days) {
+            // Create a single class entry with multiple days instead of separate entries
+            // This prevents duplicate class cards for recurring classes
+            const classKey = `${name}|${startTime}|${endTime}|${instructor || ''}|${level}|${capacity || 20}`;
+            
+            // Check if we already have this class with different days
+            const existingClass = classes.find(c => 
+              c.name === name &&
+              c.startTime === startTime &&
+              c.endTime === endTime &&
+              c.instructor === instructor &&
+              c.level === level &&
+              c.maxCapacity === (capacity || 20)
+            );
+            
+            if (existingClass) {
+              // Add days to existing class entry
+              const daysArray = Array.isArray(existingClass.dayOfWeek) 
+                ? existingClass.dayOfWeek 
+                : [existingClass.dayOfWeek];
+              
+              for (const day of days) {
+                if (!daysArray.includes(day)) {
+                  daysArray.push(day);
+                }
+              }
+              
+              // Sort days in week order
+              const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+              daysArray.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+              
+              existingClass.dayOfWeek = daysArray;
+            } else {
+              // Create new class entry with all days
               classes.push({
                 name,
-                dayOfWeek: day,
+                dayOfWeek: days.length === 1 ? days[0] : days,
                 startTime,
                 endTime,
                 instructor,
@@ -5595,7 +5624,7 @@ Return the data as a structured JSON object.`
       .input(z.object({
         classes: z.array(z.object({
           name: z.string(),
-          dayOfWeek: z.string(),
+          dayOfWeek: z.union([z.string(), z.array(z.string())]),
           startTime: z.string(),
           endTime: z.string(),
           instructor: z.string().optional(),
@@ -5605,13 +5634,20 @@ Return the data as a structured JSON object.`
           notes: z.string().optional(),
         }))
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { getDb } = await import('./db');
         const { classes } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
         
         const db = await getDb();
         if (!db) {
           return { success: false, createdCount: 0, error: 'Database not available' };
+        }
+        
+        // Get organization ID from context
+        const organizationId = ctx.organizationId;
+        if (!organizationId) {
+          return { success: false, createdCount: 0, error: 'Organization not found' };
         }
         
         // Helper to format 24h time to 12h display format
@@ -5626,37 +5662,58 @@ Return the data as a structured JSON object.`
         const errors: string[] = [];
         const createdIds: number[] = [];
         
-        for (const classData of input.classes) {
-          try {
-            // Format time for display (e.g., "4:00 PM - 5:00 PM")
-            const timeDisplay = `${formatTime(classData.startTime)} - ${formatTime(classData.endTime)}`;
-            
-            console.log('[CreateClasses] Creating:', classData.name, classData.dayOfWeek, timeDisplay);
-            
-            // Only use fields that exist in the schema
-            const result = await db.insert(classes).values({
-              name: classData.name,
-              dayOfWeek: classData.dayOfWeek,
-              time: timeDisplay,
-              instructor: classData.instructor || null,
-              capacity: classData.maxCapacity || 20,
-              isActive: 1,
-              enrolled: 0,
-            });
-            
-            // Get the inserted ID
-            if (result.insertId) {
-              createdIds.push(Number(result.insertId));
+        try {
+          // Expand multi-day classes into individual class entries
+          const expandedClasses = input.classes.flatMap(cls => {
+            const days = Array.isArray(cls.dayOfWeek) ? cls.dayOfWeek : [cls.dayOfWeek];
+            return days.map(day => ({
+              ...cls,
+              dayOfWeek: day
+            }));
+          });
+          
+          for (const cls of expandedClasses) {
+            try {
+              // Format time for display (e.g., "4:00 PM - 5:00 PM")
+              const timeDisplay = `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`;
+              
+              console.log('[CreateClasses] Creating:', cls.name, cls.dayOfWeek, timeDisplay);
+              
+              // Only use fields that exist in the schema
+              const result = await db.insert(classes).values({
+                name: cls.name,
+                dayOfWeek: cls.dayOfWeek,
+                time: timeDisplay,
+                instructor: cls.instructor || null,
+                capacity: cls.maxCapacity || 20,
+                isActive: 1,
+                enrolled: 0,
+                organizationId: organizationId,
+              });
+              
+              // Get the inserted ID
+              if (result.insertId) {
+                createdIds.push(Number(result.insertId));
+              }
+              
+              createdCount++;
+            } catch (error: any) {
+              console.error(`[CreateClasses] Failed to create class ${cls.name}:`, error);
+              errors.push(`Failed to create ${cls.name}: ${error.message}`);
             }
-            
-            createdCount++;
-          } catch (error: any) {
-            console.error(`[CreateClasses] Failed to create class ${classData.name}:`, error);
-            errors.push(`Failed to create ${classData.name}: ${error.message}`);
           }
-        }
         
-        console.log('[CreateClasses] Created', createdCount, 'classes, IDs:', createdIds);
+          console.log('[CreateClasses] Created', createdCount, 'classes, IDs:', createdIds);
+        } catch (error: any) {
+          console.error('[CreateClasses] Outer error:', error);
+          return {
+            success: false,
+            createdCount: createdCount,
+            createdIds: createdIds,
+            error: error.message || 'Failed to create classes',
+            errors: errors.length > 0 ? errors : undefined
+          };
+        }
         
         return {
           success: createdCount > 0,
@@ -6292,6 +6349,7 @@ Membership plans available:
         
         return { valid: errors.length === 0, errors };
       }),
+  }),
   }),
 });
 

@@ -74,8 +74,45 @@ export const ScheduleApprovalModal: React.FC<ScheduleApprovalModalProps> = ({
   };
 
   const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const sortedClasses = [...classes].sort((a, b) => {
-    const dayDiff = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
+  
+  // Group classes by their attributes (name, time, instructor, level, capacity)
+  // and combine multiple days into a single class entry
+  const groupedClasses = classes.reduce((acc, cls) => {
+    // Create a key based on class attributes (excluding day)
+    const key = `${cls.name}|${cls.startTime}|${cls.endTime}|${cls.instructor || ''}|${cls.level || ''}|${cls.maxCapacity || ''}`;
+    
+    const existing = acc.find(item => item.key === key);
+    if (existing) {
+      // Add day to existing class if not already present
+      const daysArray = Array.isArray(existing.class.dayOfWeek)
+        ? existing.class.dayOfWeek
+        : [existing.class.dayOfWeek];
+      
+      const newDay = Array.isArray(cls.dayOfWeek) ? cls.dayOfWeek[0] : cls.dayOfWeek;
+      if (!daysArray.includes(newDay)) {
+        daysArray.push(newDay);
+        // Sort days in week order
+        daysArray.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+        existing.class.dayOfWeek = daysArray;
+      }
+    } else {
+      // Create new grouped class entry
+      acc.push({
+        key,
+        class: {
+          ...cls,
+          dayOfWeek: Array.isArray(cls.dayOfWeek) ? cls.dayOfWeek : [cls.dayOfWeek]
+        }
+      });
+    }
+    return acc;
+  }, [] as { key: string; class: ExtractedClass }[]);
+  
+  // Sort grouped classes
+  const sortedClasses = groupedClasses.map(item => item.class).sort((a, b) => {
+    const daysA = Array.isArray(a.dayOfWeek) ? a.dayOfWeek : [a.dayOfWeek];
+    const daysB = Array.isArray(b.dayOfWeek) ? b.dayOfWeek : [b.dayOfWeek];
+    const dayDiff = dayOrder.indexOf(daysA[0]) - dayOrder.indexOf(daysB[0]);
     if (dayDiff !== 0) return dayDiff;
     return a.startTime.localeCompare(b.startTime);
   });
@@ -113,69 +150,59 @@ export const ScheduleApprovalModal: React.FC<ScheduleApprovalModalProps> = ({
               </span>
             </div>
 
-            {/* Classes by Day */}
-            {dayOrder.map(day => {
-              const dayClasses = sortedClasses.filter(c => c.dayOfWeek === day);
-              if (dayClasses.length === 0) return null;
+            {/* Grouped Classes */}
+            {sortedClasses.map((cls, idx) => {
+              const isSelected = selectedClasses.has(idx);
+              const daysArray = Array.isArray(cls.dayOfWeek) ? cls.dayOfWeek : [cls.dayOfWeek];
+              const daysDisplay = daysArray.join(', ');
 
               return (
-                <div key={day} className="space-y-2">
-                  <div className="text-sm font-semibold text-slate-300 px-3 py-2 bg-slate-700/30 rounded">
-                    {day}
-                  </div>
-                  <div className="space-y-2 pl-4">
-                    {dayClasses.map((cls, idx) => {
-                      const globalIdx = classes.indexOf(cls);
-                      const isSelected = selectedClasses.has(globalIdx);
-
-                      return (
-                        <div
-                          key={globalIdx}
-                          onClick={() => toggleClass(globalIdx)}
-                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                            isSelected
-                              ? 'bg-emerald-900/30 border-emerald-500/50'
-                              : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => toggleClass(globalIdx)}
-                              className="w-5 h-5 mt-0.5"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-white truncate">{cls.name}</div>
-                              <div className="text-sm text-slate-300 mt-1 space-y-1">
-                                <div>
-                                  <span className="text-slate-400">Time:</span> {cls.startTime} - {cls.endTime}
-                                </div>
-                                {cls.instructor && (
-                                  <div>
-                                    <span className="text-slate-400">Instructor:</span> {cls.instructor}
-                                  </div>
-                                )}
-                                {cls.level && (
-                                  <div>
-                                    <span className="text-slate-400">Level:</span> {cls.level}
-                                  </div>
-                                )}
-                                {cls.maxCapacity && (
-                                  <div>
-                                    <span className="text-slate-400">Capacity:</span> {cls.maxCapacity}
-                                  </div>
-                                )}
-                                {cls.location && (
-                                  <div>
-                                    <span className="text-slate-400">Location:</span> {cls.location}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                <div
+                  key={idx}
+                  onClick={() => toggleClass(idx)}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-emerald-900/30 border-emerald-500/50'
+                      : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleClass(idx)}
+                      className="w-5 h-5 mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-white truncate">{cls.name}</div>
+                      <div className="text-sm text-slate-300 mt-1 space-y-1">
+                        <div>
+                          <span className="text-slate-400">Days:</span> {daysDisplay}
                         </div>
-                      );
-                    })}
+                        <div>
+                          <span className="text-slate-400">Time:</span> {cls.startTime} - {cls.endTime}
+                        </div>
+                        {cls.instructor && (
+                          <div>
+                            <span className="text-slate-400">Instructor:</span> {cls.instructor}
+                          </div>
+                        )}
+                        {cls.level && (
+                          <div>
+                            <span className="text-slate-400">Level:</span> {cls.level}
+                          </div>
+                        )}
+                        {cls.maxCapacity && (
+                          <div>
+                            <span className="text-slate-400">Capacity:</span> {cls.maxCapacity}
+                          </div>
+                        )}
+                        {cls.location && (
+                          <div>
+                            <span className="text-slate-400">Location:</span> {cls.location}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -187,16 +214,16 @@ export const ScheduleApprovalModal: React.FC<ScheduleApprovalModalProps> = ({
         <div className="grid grid-cols-4 gap-2 mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
           <div>
             <div className="text-xs text-slate-400">Total Classes</div>
-            <div className="text-lg font-bold text-white">{classes.length}</div>
+            <div className="text-lg font-bold text-white">{sortedClasses.length}</div>
           </div>
           <div>
             <div className="text-xs text-slate-400">Selected</div>
-            <div className="text-lg font-bold text-emerald-400">{selectedClasses.size}</div>
+            <div className="text-lg font-bold text-emerald-400">{Array.from(selectedClasses).filter(i => i < sortedClasses.length).length}</div>
           </div>
           <div>
             <div className="text-xs text-slate-400">With Instructor</div>
             <div className="text-lg font-bold text-blue-400">
-              {Array.from(selectedClasses).filter(i => classes[i].instructor).length}
+              {Array.from(selectedClasses).filter(i => i < sortedClasses.length && sortedClasses[i].instructor).length}
             </div>
           </div>
           <div>
