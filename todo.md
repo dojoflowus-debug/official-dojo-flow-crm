@@ -8099,3 +8099,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Implement handler to retrieve classes from conversation metadata
 - [x] Call createClassesFromSchedule when user approves
 - [x] Test complete approval workflow
+
+## Schedule Import Modal vs Conversation Conflict (Feb 8, 2026)
+
+- [x] Fix modal-based workflow conflict - added currentOrganizationId to context check
+- [x] Ensure extractSchedule creates conversation and navigates to it (not showing modal)
+- [x] Fix "Approve & Import 23 Classes" button in modal to actually create classes
+- [x] Test complete approval workflow end-to-end

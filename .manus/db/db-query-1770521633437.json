@@ -1,0 +1,9 @@
+{
+  "query": "SELECT m.id, m.conversationId, m.role, LEFT(m.content, 100) as content_preview, m.metadata FROM kai_messages m JOIN kai_conversations c ON m.conversationId = c.id WHERE c.priority = 'attention' AND m.metadata IS NOT NULL AND m.metadata LIKE '%extractedClasses%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT m.id, m.conversationId, m.role, LEFT(m.content, 100) as content_preview, m.metadata FROM kai_messages m JOIN kai_conversations c ON m.conversationId = c.id WHERE c.priority = 'attention' AND m.metadata IS NOT NULL AND m.metadata LIKE '%extractedClasses%' LIMIT 5;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 55
+}

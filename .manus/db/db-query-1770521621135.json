@@ -1,0 +1,31 @@
+{
+  "query": "SELECT id, title, priority, status, createdAt FROM kai_conversations WHERE priority = 'attention' ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, title, priority, status, createdAt FROM kai_conversations WHERE priority = 'attention' ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "270004",
+      "title": "Schedule belt test for next month",
+      "priority": "attention",
+      "status": "active",
+      "createdAt": "2025-12-22 02:30:14"
+    },
+    {
+      "id": "270005",
+      "title": "Review class enrollment trends",
+      "priority": "attention",
+      "status": "active",
+      "createdAt": "2025-12-22 02:30:14"
+    },
+    {
+      "id": "270003",
+      "title": "Follow up with new lead - Sarah Johnson",
+      "priority": "attention",
+      "status": "active",
+      "createdAt": "2025-12-22 02:30:14"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tpriority\tstatus\tcreatedAt\n270004\tSchedule belt test for next month\tattention\tactive\t2025-12-22 02:30:14\n270005\tReview class enrollment trends\tattention\tactive\t2025-12-22 02:30:14\n270003\tFollow up with new lead - Sarah Johnson\tattention\tactive\t2025-12-22 02:30:14\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

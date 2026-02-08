@@ -5649,8 +5649,14 @@ Return the data as a structured JSON object.`
           // Create a Kai conversation for approval workflow
           const { kaiConversations, kaiMessages } = await import('../drizzle/schema');
           
-          // Get organization ID from context
-          const organizationId = ctx.organizationId || ctx.user?.organizationId;
+          // Get organization ID from context - try multiple sources
+          const organizationId = ctx.currentOrganizationId || ctx.organizationId || ctx.user?.organizationId;
+          console.log('[Schedule Extract] Organization context:', { 
+            organizationId, 
+            currentOrgId: ctx.currentOrganizationId,
+            ctxOrgId: ctx.organizationId, 
+            userOrgId: ctx.user?.organizationId 
+          });
           if (!organizationId) {
             console.warn('[Schedule Extract] No organization ID, returning classes directly');
             return {
