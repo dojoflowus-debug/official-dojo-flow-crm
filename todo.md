@@ -8176,5 +8176,12 @@ Transform kiosk from admin dashboard to premium location experience
 
 - [x] Investigate schedule import day-of-week parsing logic
 - [x] Fix Saturday classes not appearing in Saturday column
-- [ ] Verify all days of week are parsed correctly (Mon-Sun)
-- [ ] Test with actual schedule data containing Saturday classes
+- [x] Verify all days of week are parsed correctly (Mon-Sun)
+- [x] Test with actual schedule data containing Saturday classes
+- [x] Fix class reminder service to handle comma-separated days
+
+## Missing programs.list tRPC Procedure (Feb 8, 2026)
+- [x] Check if programs router exists
+- [x] Add programs.list procedure to return all programs (already existed)
+- [x] Restart dev server to load router properly
+- [x] Test Classes page loads without errors
