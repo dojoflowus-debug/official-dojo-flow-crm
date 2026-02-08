@@ -67,6 +67,7 @@ interface DojoSettings {
   state?: string;
   zipCode?: string;
   contactPhone?: string;
+  contactEmail?: string;
   website?: string;
 }
 
@@ -336,65 +337,123 @@ export default function OverallSchedule({
 
         {/* CSS Override for OKLAB colors (html2canvas doesn't support OKLAB) */}
         <style>{`
-          .print-schedule * {
+          /* Base PDF styling */
+          .print-schedule {
             background-color: rgb(255, 255, 255) !important;
+            padding: 20px !important;
+          }
+          
+          /* Header styling */
+          .print-schedule h1,
+          .print-schedule .text-3xl {
             color: rgb(0, 0, 0) !important;
+          }
+          
+          .print-schedule .text-lg,
+          .print-schedule .text-base,
+          .print-schedule .text-sm {
+            color: rgb(75, 85, 99) !important;
+          }
+          
+          .print-schedule .text-blue-600 {
+            color: rgb(37, 99, 235) !important;
+          }
+          
+          /* Grid styling */
+          .print-schedule .border-gray-300 {
+            border-color: rgb(209, 213, 219) !important;
+          }
+          
+          .print-schedule .border-gray-200 {
             border-color: rgb(229, 231, 235) !important;
           }
-          .print-schedule .bg-blue-500 { background-color: rgb(59, 130, 246) !important; }
-          .print-schedule .bg-green-500 { background-color: rgb(34, 197, 94) !important; }
-          .print-schedule .bg-purple-500 { background-color: rgb(168, 85, 247) !important; }
-          .print-schedule .bg-orange-500 { background-color: rgb(249, 115, 22) !important; }
-          .print-schedule .bg-red-500 { background-color: rgb(239, 68, 68) !important; }
-          .print-schedule .bg-yellow-500 { background-color: rgb(234, 179, 8) !important; }
-          .print-schedule .bg-pink-500 { background-color: rgb(236, 72, 153) !important; }
-          .print-schedule .bg-indigo-500 { background-color: rgb(99, 102, 241) !important; }
-          .print-schedule .text-gray-600 { color: rgb(75, 85, 99) !important; }
-          .print-schedule .text-gray-700 { color: rgb(55, 65, 81) !important; }
-          .print-schedule .text-gray-800 { color: rgb(31, 41, 55) !important; }
-          .print-schedule .border-gray-200 { border-color: rgb(229, 231, 235) !important; }
-          .print-schedule .border-gray-300 { border-color: rgb(209, 213, 219) !important; }
+          
+          .print-schedule .bg-gray-100,
+          .print-schedule .bg-gray-50 {
+            background-color: rgb(249, 250, 251) !important;
+          }
+          
+          .print-schedule .text-gray-600 {
+            color: rgb(75, 85, 99) !important;
+          }
+          
+          .print-schedule .text-gray-700 {
+            color: rgb(55, 65, 81) !important;
+          }
+          
+          .print-schedule .text-gray-500 {
+            color: rgb(107, 114, 128) !important;
+          }
+          
+          /* Class card colors - use printBg variable */
+          .print-schedule button {
+            background-color: var(--print-bg) !important;
+            border-width: 1px !important;
+            border-color: rgb(209, 213, 219) !important;
+          }
+          
+          .print-schedule button > div {
+            color: rgb(31, 41, 55) !important;
+          }
         `}</style>
         
         {/* Schedule Grid - Printable Area */}
         <div ref={printRef} className="print-schedule">
           {/* Print Header with Branding (hidden on screen, shown on print) */}
-          <div className="hidden print:flex print:items-center print:justify-between print:mb-6 print:pb-4 print:border-b-2 print:border-gray-300">
-            {/* Left: Logo */}
-            <div className="flex items-center">
-              {dojoLogo ? (
-                <img src={dojoLogo} alt={dojoName} className="h-20 w-auto object-contain" />
-              ) : (
-                <div className="h-20 w-20 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
-                  Logo
+          <div className="hidden print:block print:mb-8 print:pb-6 print:border-b-2 print:border-gray-300">
+            <div className="flex items-start justify-between">
+              {/* Left: Logo and School Name */}
+              <div className="flex items-center gap-4">
+                {dojoLogo ? (
+                  <img src={dojoLogo} alt={dojoName} className="h-24 w-auto object-contain" />
+                ) : (
+                  <div className="h-24 w-24 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm font-medium">
+                    Logo
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-3xl font-bold text-black mb-2">{dojoName}</h1>
+                  <p className="text-lg text-gray-600 font-medium">Class Schedule</p>
                 </div>
-              )}
-            </div>
-            
-            {/* Center: Phone Number */}
-            <div className="flex-1 text-center">
-              {dojoPhone && (
-                <div className="text-2xl font-semibold text-black">
-                  {dojoPhone}
+              </div>
+              
+              {/* Right: Contact Information and QR Code */}
+              <div className="flex items-start gap-6">
+                {/* Contact Details */}
+                <div className="text-right space-y-1.5">
+                  {dojoPhone && (
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-sm text-gray-500 font-medium">Phone:</span>
+                      <span className="text-base font-semibold text-black">{dojoPhone}</span>
+                    </div>
+                  )}
+                  {dojoWebsite && (
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-sm text-gray-500 font-medium">Website:</span>
+                      <span className="text-base font-semibold text-blue-600">{dojoWebsite.replace(/^https?:\/\//, '')}</span>
+                    </div>
+                  )}
+                  {dojoSettings?.contactEmail && (
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-sm text-gray-500 font-medium">Email:</span>
+                      <span className="text-base font-semibold text-black">{dojoSettings.contactEmail}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            
-            {/* Right: QR Code */}
-            <div className="flex flex-col items-center">
-              {dojoWebsite ? (
-                <>
-                  <QRCodeSVG 
-                    value={dojoWebsite} 
-                    size={80}
-                    level="M"
-                    includeMargin={false}
-                  />
-                  <p className="text-[9px] text-gray-600 mt-1 font-medium">Scan for website</p>
-                </>
-              ) : (
-                <div className="w-20 h-20" />
-              )}
+                
+                {/* QR Code */}
+                {dojoWebsite && (
+                  <div className="flex flex-col items-center">
+                    <QRCodeSVG 
+                      value={dojoWebsite} 
+                      size={90}
+                      level="M"
+                      includeMargin={false}
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1.5 font-medium">Scan to visit</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
