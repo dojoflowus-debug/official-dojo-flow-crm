@@ -260,6 +260,8 @@ export const classes = mysqlTable("classes", {
 	capacity: int().default(20).notNull(),
 	instructor: varchar({ length: 255 }),
 	dayOfWeek: text('dayOfWeek'),
+	startTime: varchar({ length: 10 }),
+	endTime: varchar({ length: 10 }),
 	isActive: int().default(1).notNull(),
 	createdAt: timestamp({ mode: 'string' }).default('CURRENT_TIMESTAMP').notNull(),
 	instructorId: int(),

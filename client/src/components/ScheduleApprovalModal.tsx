@@ -15,6 +15,8 @@ export interface ExtractedClass {
   location?: string;
   level?: string;
   maxCapacity?: number;
+  isDuplicate?: boolean;
+  duplicateOf?: number;
 }
 
 interface ScheduleApprovalModalProps {
@@ -173,7 +175,15 @@ export const ScheduleApprovalModal: React.FC<ScheduleApprovalModalProps> = ({
                       className="w-5 h-5 mt-0.5"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-white truncate">{cls.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold text-white truncate">{cls.name}</div>
+                        {cls.isDuplicate && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30">
+                            <AlertCircle className="w-3 h-3" />
+                            Duplicate
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-slate-300 mt-1 space-y-1">
                         <div>
                           <span className="text-slate-400">Days:</span> {daysDisplay}

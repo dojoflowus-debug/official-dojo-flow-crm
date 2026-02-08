@@ -8059,3 +8059,25 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update schedule parser to group classes by attributes
 - [x] Update class creation logic to store grouped classes
 - [x] Update UI to display multi-day classes nicely
+
+
+## Duplicate Detection for Schedule Import (Feb 8, 2026)
+- [ ] Add duplicate detection to extractSchedule mutation to check existing classes
+- [ ] Update ScheduleApprovalModal to show duplicate warnings
+- [ ] Test duplicate detection with existing classes
+
+## Schedule Import Duplicate Detection (COMPLETED)
+- [x] Add startTime and endTime columns to classes table schema
+- [x] Migrate database to add new columns
+- [x] Add ctx parameter to extractSchedule mutation for organization context
+- [x] Implement duplicate detection logic in extractSchedule mutation
+- [x] Query existing classes filtered by organization
+- [x] Check for overlapping day/time combinations
+- [x] Mark duplicates with isDuplicate flag and duplicateOf reference
+- [x] Update ExtractedClass interface with duplicate fields
+- [x] Add visual duplicate warning badges in ScheduleApprovalModal
+- [x] Display amber "Duplicate" badge with AlertCircle icon
+- [x] Create comprehensive vitest tests for duplicate detection
+- [x] Test duplicate detection with overlapping days
+- [x] Test non-duplicate scenarios (different time, different day)
+- [x] All tests passing ✓

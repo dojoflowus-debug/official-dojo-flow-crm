@@ -5150,7 +5150,7 @@ Return the data as a structured JSON object.`
           capacity: z.number().optional(),
         }).optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const xlsx = await import('xlsx');
         const { storageGetBuffer } = await import('./storage');
         
@@ -5580,6 +5580,70 @@ Return the data as a structured JSON object.`
           // Add warnings for row errors
           if (rowErrors.length > 0) {
             warnings.push(`${rowErrors.length} row(s) had errors and were skipped`);
+          }
+          
+          // Check for duplicates against existing classes in the database
+          const { getDb } = await import('./db');
+          const { classes: classesTable } = await import('../drizzle/schema');
+          const { eq, and } = await import('drizzle-orm');
+          
+          const db = await getDb();
+          if (db) {
+            try {
+              // Get organization ID from context
+              const organizationId = ctx.user?.organizationId;
+              if (!organizationId) {
+                console.warn('[Schedule Extract] No organization ID in context');
+                return {
+                  success: true,
+                  classes,
+                  confidence,
+                  warnings,
+                  rawHeaders,
+                  detectedMapping,
+                };
+              }
+              
+              // Fetch existing classes for this organization
+              const existingClasses = await db.select().from(classesTable).where(eq(classesTable.organizationId, organizationId));
+              
+              // Mark duplicates in the extracted classes
+              for (const extractedClass of classes) {
+                const dayOfWeekStr = Array.isArray(extractedClass.dayOfWeek) 
+                  ? extractedClass.dayOfWeek.join(',') 
+                  : extractedClass.dayOfWeek;
+                
+                // Check if a class with the same day and time already exists
+                const duplicate = existingClasses.find(existing => {
+                  const existingDays = existing.dayOfWeek?.split(',') || [];
+                  const extractedDays = dayOfWeekStr?.split(',') || [];
+                  
+                  // Check if any day overlaps
+                  const hasOverlappingDay = extractedDays.some(day => 
+                    existingDays.includes(day.trim())
+                  );
+                  
+                  // Check if time matches (within 5 minutes tolerance)
+                  const timesMatch = existing.startTime === extractedClass.startTime;
+                  
+                  return hasOverlappingDay && timesMatch;
+                });
+                
+                if (duplicate) {
+                  extractedClass.isDuplicate = true;
+                  extractedClass.duplicateOf = duplicate.id;
+                }
+              }
+              
+              const duplicateCount = classes.filter(c => c.isDuplicate).length;
+              if (duplicateCount > 0) {
+                warnings.push(`${duplicateCount} class(es) may be duplicates of existing classes`);
+              }
+            } catch (dbError) {
+              console.error('[Schedule Extract] Error checking duplicates:', dbError);
+              // Don't fail the entire extraction if duplicate check fails
+              warnings.push('Could not check for duplicate classes');
+            }
           }
           
           return {
