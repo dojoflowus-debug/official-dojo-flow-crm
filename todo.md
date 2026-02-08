@@ -8136,3 +8136,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Pull all branding information from settings (logo, phone, website)
 - [x] Generate QR code pointing to school website - using qrcode.react library
 - [x] Test print preview with school branding
+
+## Schedule PDF Download (Feb 8, 2026)
+
+- [x] Install PDF generation library (html2canvas + jsPDF)
+- [x] Add "Download PDF" button next to "Print Schedule" button
+- [x] Implement PDF generation function with schedule grid
+- [x] Include school branding header (logo, phone, QR code) in PDF
+- [x] Test PDF download and verify output quality

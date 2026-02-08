@@ -2,6 +2,8 @@ import { useState, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import {
   Tooltip,
   TooltipContent,
@@ -236,6 +238,43 @@ export default function OverallSchedule({
     window.print();
   };
 
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    
+    try {
+      // Capture the schedule grid as canvas
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Calculate PDF dimensions (A4 landscape)
+      const imgWidth = 297; // A4 width in mm (landscape)
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: imgHeight > 210 ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Add image to PDF
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Download
+      const fileName = `${dojoName.replace(/\s+/g, '_')}_Schedule_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
   // Get current week date range
   const getWeekRange = () => {
     const now = new Date();
@@ -278,6 +317,15 @@ export default function OverallSchedule({
             >
               <Printer className="h-4 w-4" />
               Print Schedule
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadPDF}
+              className="gap-2 bg-green-600 hover:bg-green-700 text-white border-green-600"
+            >
+              <Download className="h-4 w-4" />
+              Download PDF
             </Button>
           </div>
         </div>
