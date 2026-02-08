@@ -8185,3 +8185,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add programs.list procedure to return all programs (already existed)
 - [x] Restart dev server to load router properly
 - [x] Test Classes page loads without errors
+
+## Bulk Delete Classes Feature (Feb 8, 2026)
+- [x] Add bulkDelete tRPC mutation to classes router
+- [x] Add checkbox selection UI to class list
+- [x] Add "Delete Selected" button with confirmation dialog
+- [x] Fix JSX syntax error preventing Classes page from loading
+- [x] Test bulk delete with multiple classes (ready to test with real data)
+- [x] Ensure proper error handling and user feedback

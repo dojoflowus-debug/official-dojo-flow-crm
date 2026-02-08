@@ -316,6 +316,38 @@ export const classesRouter = router({
     }),
 
   /**
+   * Bulk delete multiple classes
+   */
+  bulkDelete: publicProcedure
+    .input(z.object({ ids: z.array(z.number()) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
+
+      if (!ctx.db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+      }
+
+      const { classes } = await import("../drizzle/schema");
+      const { inArray } = await import("drizzle-orm");
+
+      // Soft delete by setting isActive to 0
+      await ctx.db
+        .update(classes)
+        .set({ isActive: 0 })
+        .where(inArray(classes.id, input.ids));
+
+      return { success: true, deletedCount: input.ids.length };
+    }),
+
+  /**
    * Get all instructors/team members for the current organization
    */
   getInstructors: publicProcedure.query(async ({ ctx }) => {

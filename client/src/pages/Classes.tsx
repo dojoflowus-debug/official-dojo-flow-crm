@@ -674,6 +674,10 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState('');
   const [enrollmentLoading, setEnrollmentLoading] = useState(false);
   
+  // Bulk selection state
+  const [selectedClassIds, setSelectedClassIds] = useState<number[]>([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  
   // Success confirmation modal state
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdClass, setCreatedClass] = useState<{
@@ -1089,8 +1093,47 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     }
   };
 
-  const handleDeleteClass = async (classId) => {
-    if (!confirm('Are you sure you want to delete this class?')) {
+  // Bulk delete mutation
+  const bulkDeleteMutation = trpc.classes.bulkDelete.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Successfully deleted ${data.deletedCount} class${data.deletedCount > 1 ? 'es' : ''}`);
+      fetchClasses();
+      setSelectedClassIds([]);
+      setIsSelectionMode(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete classes: ${error.message}`);
+    }
+  });
+
+  const handleBulkDelete = () => {
+    if (selectedClassIds.length === 0) {
+      toast.error('Please select at least one class to delete');
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete ${selectedClassIds.length} class${selectedClassIds.length > 1 ? 'es' : ''}?`)) {
+      bulkDeleteMutation.mutate({ ids: selectedClassIds });
+    }
+  };
+
+  const toggleClassSelection = (classId: number) => {
+    setSelectedClassIds(prev => 
+      prev.includes(classId) 
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedClassIds.length === classes.length) {
+      setSelectedClassIds([]);
+    } else {
+      setSelectedClassIds(classes.map(c => c.id));
+    }
+  };
+
+  const handleDeleteClass = async (classId: number) => {  if (!confirm('Are you sure you want to delete this class?')) {
       return;
     }
 
@@ -1158,7 +1201,47 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               </Button>
             </div>
             
-            <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+            <div className="flex items-center gap-2">
+              {classes.length > 0 && (
+                <>
+                  <Button
+                    variant={isSelectionMode ? "default" : "outline"}
+                    onClick={() => {
+                      setIsSelectionMode(!isSelectionMode);
+                      setSelectedClassIds([]);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    {isSelectionMode ? 'Cancel Selection' : 'Select Multiple'}
+                  </Button>
+                  
+                  {isSelectionMode && (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={toggleSelectAll}
+                        className="flex items-center gap-2"
+                      >
+                        {selectedClassIds.length === classes.length ? 'Deselect All' : 'Select All'}
+                      </Button>
+                      
+                      <Button
+                        variant="destructive"
+                        onClick={handleBulkDelete}
+                        disabled={selectedClassIds.length === 0 || bulkDeleteMutation.isLoading}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete Selected ({selectedClassIds.length})
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-5 w-5" />
@@ -1198,7 +1281,6 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               </div>
             </DialogContent>
           </Dialog>
-          </div>
         </div>
 
         {/* Stats Cards */}
@@ -1301,8 +1383,18 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
               
               return sortOrder === 'asc' ? comparison : -comparison;
             }).map((classItem) => (
-              <div key={classItem.id} id={`class-${classItem.id}`} className={`p-6 rounded-lg border hover:border-primary transition-all duration-300 ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'}`}>
-                <div className="flex items-start justify-between mb-4">
+              <div key={classItem.id} id={`class-${classItem.id}`} className={`p-6 rounded-lg border hover:border-primary transition-all duration-300 relative ${isDarkMode ? 'bg-[#18181A] border-white/10' : 'bg-card'} ${isSelectionMode && selectedClassIds.includes(classItem.id) ? 'ring-2 ring-primary' : ''}`}>
+                {isSelectionMode && (
+                  <div className="absolute top-4 left-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedClassIds.includes(classItem.id)}
+                      onChange={() => toggleClassSelection(classItem.id)}
+                      className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                  </div>
+                )}
+                <div className={`flex items-start justify-between mb-4 ${isSelectionMode ? 'ml-8' : ''}`}>
                   <div>
                     <h3 className="text-lg font-semibold mb-1">{classItem.name}</h3>
                     <span className="inline-block px-2 py-1 text-xs rounded bg-primary/10 text-primary">
