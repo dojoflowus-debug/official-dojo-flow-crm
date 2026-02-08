@@ -3355,6 +3355,63 @@ export default function KaiCommand() {
                                 renderMessageWithMentions(message.content, true)
                               )}
                             </div>
+                            {/* Schedule Import Action Buttons */}
+                            {message.metadata && (() => {
+                              try {
+                                const metadata = typeof message.metadata === 'string' ? JSON.parse(message.metadata) : message.metadata;
+                                if (metadata.extractedClasses && metadata.extractedClasses.length > 0) {
+                                  return (
+                                    <div className="mt-4 flex gap-2">
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            setIsCreatingClasses(true);
+                                            const result = await createClassesMutation.mutateAsync({
+                                              classes: metadata.extractedClasses.filter((c: any) => !c.isDuplicate)
+                                            });
+                                            
+                                            if (result.success) {
+                                              toast.success(`Successfully imported ${result.createdCount} classes`);
+                                              // Archive the conversation
+                                              await archiveConversationMutation.mutateAsync({ id: selectedConversationId! });
+                                              conversationsQuery.refetch();
+                                            } else {
+                                              toast.error(result.error || 'Failed to import classes');
+                                            }
+                                          } catch (error: any) {
+                                            toast.error(error.message || 'Failed to import classes');
+                                          } finally {
+                                            setIsCreatingClasses(false);
+                                          }
+                                        }}
+                                        disabled={isCreatingClasses}
+                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      >
+                                        {isCreatingClasses ? 'Importing...' : '✓ Approve & Import'}
+                                      </button>
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            await archiveConversationMutation.mutateAsync({ id: selectedConversationId! });
+                                            toast.success('Schedule import rejected');
+                                            conversationsQuery.refetch();
+                                          } catch (error: any) {
+                                            toast.error('Failed to reject import');
+                                          }
+                                        }}
+                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                                      >
+                                        ✗ Reject
+                                      </button>
+                                    </div>
+                                  );
+                                }
+                              } catch (e) {
+                                console.error('[KaiCommand] Error parsing message metadata:', e);
+                              }
+                              return null;
+                            })()}
+                            
                             {/* Render UI blocks (student cards, lists, etc.) */}
                             {message.ui_blocks && message.ui_blocks.length > 0 && (
                               <>
