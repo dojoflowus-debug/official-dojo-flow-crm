@@ -8164,3 +8164,17 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Implement temporary stylesheet approach to force RGB colors
 - [ ] Test PDF download with actual schedule data
 - [ ] Verify all OKLAB colors are converted before html2canvas
+
+## Dojo Flow API Lead Submission Fix (Feb 8, 2026)
+
+- [ ] Investigate current tRPC lead submission implementation
+- [ ] Identify correct endpoint format and payload structure
+- [ ] Fix tRPC client configuration for publicLead.submitLead
+- [ ] Test lead submission with correct format
+
+## Schedule Grid Day Placement Fix (Feb 8, 2026)
+
+- [x] Investigate schedule import day-of-week parsing logic
+- [x] Fix Saturday classes not appearing in Saturday column
+- [ ] Verify all days of week are parsed correctly (Mon-Sun)
+- [ ] Test with actual schedule data containing Saturday classes

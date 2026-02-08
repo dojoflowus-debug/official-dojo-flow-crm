@@ -175,22 +175,40 @@ export default function OverallSchedule({
     classes.forEach(cls => {
       // Get day from either field (camelCase or snake_case)
       const dayStr = cls.dayOfWeek || cls.day_of_week || cls.schedule;
-      if (!dayStr) return;
+      if (!dayStr) {
+        console.log('[OverallSchedule] Class has no day:', cls.name);
+        return;
+      }
       
-      // Handle comma-separated days (e.g., "Monday,Wednesday")
+      // Handle comma-separated days (e.g., "Monday,Wednesday" or "Monday, Wednesday")
       const days = dayStr.split(',').map(d => d.trim());
       
       days.forEach(day => {
-        // Convert full day names to abbreviations
-        const dayIndex = FULL_DAYS.findIndex(d => d.toLowerCase() === day.toLowerCase());
-        const shortDay = dayIndex >= 0 ? DAYS[dayIndex] : day;
+        // Remove any extra whitespace and normalize
+        const cleanDay = day.trim();
         
-        if (grouped[shortDay]) {
+        // Try to match full day name (case-insensitive)
+        const dayIndex = FULL_DAYS.findIndex(d => d.toLowerCase() === cleanDay.toLowerCase());
+        
+        if (dayIndex >= 0) {
+          // Found a match - use the short day abbreviation
+          const shortDay = DAYS[dayIndex];
           grouped[shortDay].push(cls);
+          console.log(`[OverallSchedule] Placed "${cls.name}" in ${shortDay} column (from "${cleanDay}")`);
+        } else {
+          // Try to match short day name (Mon, Tue, etc.)
+          const shortDayIndex = DAYS.findIndex(d => d.toLowerCase() === cleanDay.toLowerCase());
+          if (shortDayIndex >= 0) {
+            grouped[DAYS[shortDayIndex]].push(cls);
+            console.log(`[OverallSchedule] Placed "${cls.name}" in ${DAYS[shortDayIndex]} column (from "${cleanDay}")`);
+          } else {
+            console.warn(`[OverallSchedule] Could not match day "${cleanDay}" for class "${cls.name}"`);
+          }
         }
       });
     });
     
+    console.log('[OverallSchedule] Classes grouped by day:', grouped);
     return grouped;
   }, [classes]);
 

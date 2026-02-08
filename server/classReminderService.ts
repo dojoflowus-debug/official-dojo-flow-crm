@@ -242,8 +242,13 @@ export async function processClassReminders(): Promise<ReminderResult> {
     for (const classInfo of activeClasses) {
       if (!classInfo.dayOfWeek) continue;
       
-      // Calculate the next occurrence of this class
-      const nextClassDate = getNextClassDate(classInfo.dayOfWeek, classInfo.time);
+      // Handle comma-separated days (e.g., "Monday,Wednesday")
+      const days = classInfo.dayOfWeek.split(',').map(d => d.trim());
+      
+      // Process each day separately
+      for (const day of days) {
+        // Calculate the next occurrence of this class
+        const nextClassDate = getNextClassDate(day, classInfo.time);
       
       // Check if the class is within the reminder window (24 hours)
       const hoursUntilClass = (nextClassDate.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -337,7 +342,8 @@ export async function processClassReminders(): Promise<ReminderResult> {
           console.error(`[ClassReminder] Failed to send to ${student.firstName}: ${smsResult.error}`);
         }
       }
-    }
+      } // End of day loop
+    } // End of classInfo loop
     
     console.log(`[ClassReminder] Processing complete. Sent: ${result.sent}, Failed: ${result.failed}, Skipped: ${result.skipped}`);
     
