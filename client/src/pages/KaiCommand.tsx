@@ -1746,7 +1746,26 @@ export default function KaiCommand() {
       console.log('[KaiCommand] Extraction result:', result);
       
       if (result.success && result.classes.length > 0) {
-        // Store preview data and show approval modal (3rd screen)
+        // If a conversation was created, navigate to it
+        if (result.conversationId) {
+          console.log('[KaiCommand] Navigating to conversation:', result.conversationId);
+          setSelectedConversationId(result.conversationId);
+          
+          // Refresh conversations to show the new one
+          conversationsQuery.refetch();
+          
+          // Show success message
+          const successMessage: Message = {
+            id: `schedule-created-${Date.now()}`,
+            role: 'assistant',
+            content: `✅ Schedule import created! Check the **PENDING** column to review and approve ${result.classes.length} classes.`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev.filter(m => m.id !== analyzingMessage.id), successMessage]);
+          return;
+        }
+        
+        // Fallback: Store preview data and show approval modal (3rd screen)
         setSchedulePreview({
           classes: result.classes,
           fileName,

@@ -8086,3 +8086,9 @@ Transform kiosk from admin dashboard to premium location experience
 
 - [x] Fix missing tRPC procedure: scheduleExtractor.extractSchedule
 - [x] Fix missing tRPC procedure: settings.getDojoSettings
+
+## Schedule Import Column Assignment (Feb 8, 2026)
+
+- [x] Configure schedule import to create a pending operation in Kai dashboard third column (PENDING)
+- [x] Update schedule import to require approval before creating classes
+- [x] Test schedule import approval workflow

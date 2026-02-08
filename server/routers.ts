@@ -5646,15 +5646,112 @@ Return the data as a structured JSON object.`
             }
           }
           
-          return {
-            success: true,
-            classes,
-            confidence,
-            warnings,
-            rawHeaders,
-            detectedMapping,
-            rowErrors: rowErrors.slice(0, 10),
-          };
+          // Create a Kai conversation for approval workflow
+          const { kaiConversations, kaiMessages } = await import('../drizzle/schema');
+          
+          // Get organization ID from context
+          const organizationId = ctx.organizationId || ctx.user?.organizationId;
+          if (!organizationId) {
+            console.warn('[Schedule Extract] No organization ID, returning classes directly');
+            return {
+              success: true,
+              classes,
+              confidence,
+              warnings,
+              rawHeaders,
+              detectedMapping,
+              rowErrors: rowErrors.slice(0, 10),
+            };
+          }
+          
+          try {
+            // Create conversation for schedule approval
+            const conversationTitle = `Schedule Import: ${input.fileName}`;
+            const conversationResult = await db.insert(kaiConversations).values({
+              organizationId,
+              userId: ctx.user.id,
+              title: conversationTitle,
+              preview: `${classes.length} classes extracted from ${input.fileName}`,
+              category: 'operations',
+              priority: 'attention', // This puts it in PENDING column
+              status: 'active',
+              lastMessageAt: new Date().toISOString(),
+            });
+            
+            const conversationId = Number(conversationResult.insertId);
+            
+            // Create summary message with schedule details
+            const duplicateCount = classes.filter(c => c.isDuplicate).length;
+            const nonDuplicateCount = classes.length - duplicateCount;
+            
+            let summaryText = `📋 **Schedule Import Ready for Approval**\n\n`;
+            summaryText += `**File:** ${input.fileName}\n`;
+            summaryText += `**Total Classes:** ${classes.length}\n`;
+            summaryText += `**New Classes:** ${nonDuplicateCount}\n`;
+            if (duplicateCount > 0) {
+              summaryText += `**Duplicates:** ${duplicateCount} (will be skipped)\n`;
+            }
+            summaryText += `\n**Classes to Import:**\n`;
+            
+            // List first 10 classes
+            const classesToShow = classes.filter(c => !c.isDuplicate).slice(0, 10);
+            classesToShow.forEach(cls => {
+              const days = Array.isArray(cls.dayOfWeek) ? cls.dayOfWeek.join(', ') : cls.dayOfWeek;
+              summaryText += `• ${cls.name} - ${days} ${cls.startTime}-${cls.endTime}`;
+              if (cls.instructor) summaryText += ` (${cls.instructor})`;
+              summaryText += `\n`;
+            });
+            
+            if (nonDuplicateCount > 10) {
+              summaryText += `\n... and ${nonDuplicateCount - 10} more\n`;
+            }
+            
+            if (warnings.length > 0) {
+              summaryText += `\n⚠️ **Warnings:**\n${warnings.map(w => `• ${w}`).join('\n')}`;
+            }
+            
+            // Store extracted classes in message metadata for later approval
+            const metadata = JSON.stringify({
+              extractedClasses: classes,
+              fileName: input.fileName,
+              confidence,
+              warnings,
+              detectedMapping,
+            });
+            
+            await db.insert(kaiMessages).values({
+              conversationId,
+              organizationId,
+              role: 'assistant',
+              content: summaryText,
+              metadata,
+            });
+            
+            console.log('[Schedule Extract] Created conversation', conversationId, 'for approval');
+            
+            return {
+              success: true,
+              conversationId,
+              classes,
+              confidence,
+              warnings,
+              rawHeaders,
+              detectedMapping,
+              rowErrors: rowErrors.slice(0, 10),
+            };
+          } catch (convError) {
+            console.error('[Schedule Extract] Failed to create conversation:', convError);
+            // Fall back to returning classes directly
+            return {
+              success: true,
+              classes,
+              confidence,
+              warnings,
+              rawHeaders,
+              detectedMapping,
+              rowErrors: rowErrors.slice(0, 10),
+            };
+          }
         } catch (error: any) {
           console.error('[Schedule Extract] Error:', error);
           
