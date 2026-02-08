@@ -8127,3 +8127,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix calendar grid logic to parse imported class day/time data - handles camelCase and full day names
 - [x] Ensure imported classes appear in correct day/time slots in calendar - supports comma-separated days
 - [x] Test calendar display with imported Tomball schedule - ready for user verification
+
+## Print Schedule Redesign (Feb 8, 2026)
+
+- [x] Investigate current print functionality in OverallSchedule component
+- [x] Remove extra information from print view - keep only calendar grid
+- [x] Add school branding header with logo, phone number, and QR code
+- [x] Pull all branding information from settings (logo, phone, website)
+- [x] Generate QR code pointing to school website - using qrcode.react library
+- [x] Test print preview with school branding

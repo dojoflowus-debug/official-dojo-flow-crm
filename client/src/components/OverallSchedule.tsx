@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   Tooltip,
   TooltipContent,
@@ -284,44 +285,41 @@ export default function OverallSchedule({
         {/* Schedule Grid - Printable Area */}
         <div ref={printRef} className="print-schedule">
           {/* Print Header with Branding (hidden on screen, shown on print) */}
-          <div className="hidden print:flex print:items-start print:justify-between print:mb-4 print:pb-4 print:border-b-2 print:border-gray-300">
+          <div className="hidden print:flex print:items-center print:justify-between print:mb-6 print:pb-4 print:border-b-2 print:border-gray-300">
             {/* Left: Logo */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center">
               {dojoLogo ? (
-                <img src={dojoLogo} alt={dojoName} className="h-16 w-auto object-contain" />
+                <img src={dojoLogo} alt={dojoName} className="h-20 w-auto object-contain" />
               ) : (
-                <div className="h-16 w-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
+                <div className="h-20 w-20 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
                   Logo
                 </div>
               )}
             </div>
             
-            {/* Center: Name & Contact Info */}
-            <div className="text-center flex-1 px-4">
-              <h1 className="text-2xl font-bold text-black">{dojoName}</h1>
-              {dojoAddress && (
-                <p className="text-sm text-gray-600 mt-1">{dojoAddress}</p>
+            {/* Center: Phone Number */}
+            <div className="flex-1 text-center">
+              {dojoPhone && (
+                <div className="text-2xl font-semibold text-black">
+                  {dojoPhone}
+                </div>
               )}
-              <div className="flex items-center justify-center gap-4 mt-1 text-sm text-gray-600">
-                {dojoPhone && <span>{dojoPhone}</span>}
-                {dojoWebsite && <span>{dojoWebsite}</span>}
-              </div>
-              <p className="text-xs text-gray-500 mt-2 font-medium">
-                Schedule Effective: {getSeasonName()} {new Date().getFullYear()} | Week of {getWeekRange()}
-              </p>
             </div>
             
-            {/* Right: QR Code placeholder */}
+            {/* Right: QR Code */}
             <div className="flex flex-col items-center">
               {dojoWebsite ? (
-                <div className="w-16 h-16 border-2 border-gray-300 rounded flex items-center justify-center">
-                  <QrCode className="h-10 w-10 text-gray-400" />
-                </div>
+                <>
+                  <QRCodeSVG 
+                    value={dojoWebsite} 
+                    size={80}
+                    level="M"
+                    includeMargin={false}
+                  />
+                  <p className="text-[9px] text-gray-600 mt-1 font-medium">Scan for website</p>
+                </>
               ) : (
-                <div className="w-16 h-16" />
-              )}
-              {dojoWebsite && (
-                <p className="text-[8px] text-gray-500 mt-1">Scan for website</p>
+                <div className="w-20 h-20" />
               )}
             </div>
           </div>
