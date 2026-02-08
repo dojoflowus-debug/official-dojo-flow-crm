@@ -244,39 +244,71 @@ export default function OverallSchedule({
     if (!printRef.current) return;
     
     try {
-      // Clone the element and convert all OKLAB colors to RGB before html2canvas
+      // Create a temporary style element to override all OKLAB colors with RGB
+      const tempStyle = document.createElement('style');
+      tempStyle.id = 'pdf-export-override';
+      tempStyle.textContent = `
+        .pdf-export-temp * {
+          background-color: rgb(255, 255, 255) !important;
+          color: rgb(0, 0, 0) !important;
+          border-color: rgb(229, 231, 235) !important;
+        }
+        .pdf-export-temp h1,
+        .pdf-export-temp .text-3xl {
+          color: rgb(0, 0, 0) !important;
+        }
+        .pdf-export-temp .text-lg,
+        .pdf-export-temp .text-base,
+        .pdf-export-temp .text-sm {
+          color: rgb(75, 85, 99) !important;
+        }
+        .pdf-export-temp .text-blue-600 {
+          color: rgb(37, 99, 235) !important;
+        }
+        .pdf-export-temp .text-gray-500 {
+          color: rgb(107, 114, 128) !important;
+        }
+        .pdf-export-temp .text-gray-600 {
+          color: rgb(75, 85, 99) !important;
+        }
+        .pdf-export-temp .text-gray-700 {
+          color: rgb(55, 65, 81) !important;
+        }
+        .pdf-export-temp .bg-gray-50,
+        .pdf-export-temp .bg-gray-100 {
+          background-color: rgb(249, 250, 251) !important;
+        }
+        .pdf-export-temp .border-gray-200 {
+          border-color: rgb(229, 231, 235) !important;
+        }
+        .pdf-export-temp .border-gray-300 {
+          border-color: rgb(209, 213, 219) !important;
+        }
+        .pdf-export-temp button {
+          background-color: var(--print-bg, rgb(243, 244, 246)) !important;
+          border-width: 1px !important;
+          border-color: rgb(209, 213, 219) !important;
+        }
+        .pdf-export-temp button > div {
+          color: rgb(31, 41, 55) !important;
+        }
+      `;
+      document.head.appendChild(tempStyle);
+      
+      // Clone the element and add the override class
       const clone = printRef.current.cloneNode(true) as HTMLElement;
+      clone.classList.add('pdf-export-temp');
       document.body.appendChild(clone);
       clone.style.position = 'absolute';
       clone.style.left = '-9999px';
       clone.style.top = '0';
       
-      // Force all elements to use RGB colors instead of OKLAB
-      const allElements = clone.querySelectorAll('*');
-      allElements.forEach((el: Element) => {
-        const htmlEl = el as HTMLElement;
-        const computedStyle = window.getComputedStyle(el);
-        
-        // Get computed color values and apply them as inline styles
-        const bgColor = computedStyle.backgroundColor;
-        const textColor = computedStyle.color;
-        const borderColor = computedStyle.borderColor;
-        
-        // Apply computed RGB values as inline styles to override OKLAB
-        if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-          htmlEl.style.backgroundColor = bgColor;
-        }
-        if (textColor) {
-          htmlEl.style.color = textColor;
-        }
-        if (borderColor) {
-          htmlEl.style.borderColor = borderColor;
-        }
-      });
+      // Wait for styles to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Capture the cloned element as canvas
       const canvas = await html2canvas(clone, {
-        scale: 2, // Higher quality
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -285,8 +317,9 @@ export default function OverallSchedule({
         removeContainer: true
       });
       
-      // Remove the clone
+      // Clean up
       document.body.removeChild(clone);
+      document.head.removeChild(tempStyle);
       
       // Calculate PDF dimensions (A4 landscape)
       const imgWidth = 297; // A4 width in mm (landscape)

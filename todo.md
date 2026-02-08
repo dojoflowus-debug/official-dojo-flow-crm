@@ -8158,3 +8158,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add CSS override to convert OKLAB to RGB/HEX for print view - added inline style tag
 - [x] Test PDF generation without OKLAB color errors - ready for user testing
 - [x] Verify schedule colors appear correctly in generated PDF
+
+## PDF OKLAB Error - Robust Fix (Feb 8, 2026)
+
+- [x] Implement temporary stylesheet approach to force RGB colors
+- [ ] Test PDF download with actual schedule data
+- [ ] Verify all OKLAB colors are converted before html2canvas
