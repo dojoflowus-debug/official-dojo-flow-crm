@@ -8047,3 +8047,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Tested Billing Cycle dropdown - PASSED
 - [x] Tested Contract dropdown - PASSED
 - [x] Root cause: Radix portal + Dialog overlay interaction causing "outside click" to close modal
+
+
+## Class Grouping Feature (Current)
+- [ ] Implement class grouping - combine recurring classes (same name, time, instructor) into single cards with multiple days
+
+
+## Class Grouping Feature (Feb 7, 2026)
+- [x] Implement class grouping - combine recurring classes (same name, time, instructor) into single cards with multiple days
+- [x] Update database schema to support multi-day classes (dayOfWeek as text field)
+- [x] Update schedule parser to group classes by attributes
+- [x] Update class creation logic to store grouped classes
+- [x] Update UI to display multi-day classes nicely

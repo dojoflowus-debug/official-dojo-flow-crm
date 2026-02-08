@@ -1358,7 +1358,16 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>{classItem.day_of_week || classItem.schedule}</span>
+                    <span>
+                      {(() => {
+                        const days = classItem.day_of_week || classItem.schedule || '';
+                        // If it contains commas, it's a multi-day class - format it nicely
+                        if (days.includes(',')) {
+                          return days.split(',').map(d => d.trim()).join(', ');
+                        }
+                        return days;
+                      })()}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4" />

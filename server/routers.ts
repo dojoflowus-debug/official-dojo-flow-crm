@@ -5663,26 +5663,22 @@ Return the data as a structured JSON object.`
         const createdIds: number[] = [];
         
         try {
-          // Expand multi-day classes into individual class entries
-          const expandedClasses = input.classes.flatMap(cls => {
-            const days = Array.isArray(cls.dayOfWeek) ? cls.dayOfWeek : [cls.dayOfWeek];
-            return days.map(day => ({
-              ...cls,
-              dayOfWeek: day
-            }));
-          });
-          
-          for (const cls of expandedClasses) {
+          // Store classes with their days (single or multiple)
+          for (const cls of input.classes) {
+            // Convert dayOfWeek to comma-separated string for storage
+            const dayOfWeekStr = Array.isArray(cls.dayOfWeek) 
+              ? cls.dayOfWeek.join(',')
+              : cls.dayOfWeek;
             try {
               // Format time for display (e.g., "4:00 PM - 5:00 PM")
               const timeDisplay = `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`;
               
-              console.log('[CreateClasses] Creating:', cls.name, cls.dayOfWeek, timeDisplay);
+              console.log('[CreateClasses] Creating:', cls.name, dayOfWeekStr, timeDisplay);
               
               // Only use fields that exist in the schema
               const result = await db.insert(classes).values({
                 name: cls.name,
-                dayOfWeek: cls.dayOfWeek,
+                dayOfWeek: dayOfWeekStr,
                 time: timeDisplay,
                 instructor: cls.instructor || null,
                 capacity: cls.maxCapacity || 20,
