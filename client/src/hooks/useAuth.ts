@@ -40,7 +40,7 @@ export function useAuth() {
   );
 
   // Get setup completion status from dojo settings
-  const { data: dojoSettings, isLoading: settingsLoading } = trpc.settings.getDojoSettings.useQuery(
+  const { data: dojoSettings, isLoading: settingsLoading } = trpc.kai.settings.getDojoSettings.useQuery(
     undefined,
     {
       enabled: !!currentUser,

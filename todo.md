@@ -8081,3 +8081,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Test duplicate detection with overlapping days
 - [x] Test non-duplicate scenarios (different time, different day)
 - [x] All tests passing ✓
+
+## Bug Fixes - tRPC Procedures (Feb 8, 2026)
+
+- [x] Fix missing tRPC procedure: scheduleExtractor.extractSchedule
+- [x] Fix missing tRPC procedure: settings.getDojoSettings

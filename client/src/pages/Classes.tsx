@@ -638,7 +638,7 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const { data: floorPlansData } = trpc.floorPlans.list.useQuery({});
   
   // Fetch dojo settings for schedule branding
-  const { data: dojoSettings } = trpc.settings.getSettings.useQuery({});
+  const { data: dojoSettings } = trpc.kai.settings.getSettings.useQuery({});
   const [stats, setStats] = useState({
     totalClasses: 0,
     totalStudents: 0,

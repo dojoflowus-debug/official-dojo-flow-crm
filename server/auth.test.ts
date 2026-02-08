@@ -24,12 +24,12 @@ describe('Authentication System', () => {
   });
 
   it('should have settings.getDojoSettings endpoint for setup completion check', async () => {
-    expect(caller.settings.getDojoSettings).toBeDefined();
+    expect(caller.kai.settings.getDojoSettings).toBeDefined();
   });
 
   it('should return setupCompleted field from getDojoSettings', async () => {
     try {
-      const settings = await caller.settings.getDojoSettings();
+      const settings = await caller.kai.settings.getDojoSettings();
       expect(settings).toBeDefined();
       expect(settings).toHaveProperty('setupCompleted');
       expect(typeof settings.setupCompleted).toBe('number');

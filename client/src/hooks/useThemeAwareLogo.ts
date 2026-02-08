@@ -12,7 +12,7 @@ const DEFAULT_LIGHT_LOGO = "/logo-light.png"; // Light text logo for dark mode
  */
 export function useThemeAwareLogo() {
   const { theme } = useTheme();
-  const { data: settings } = trpc.settings.getSettings.useQuery();
+  const { data: settings } = trpc.kai.settings.getSettings.useQuery();
   
   // Get custom logos from settings
   const customDarkLogo = settings?.logoDarkUrl;
