@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, name, dayOfWeek, startTime, endTime, isActive FROM classes ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, dayOfWeek, startTime, endTime, isActive FROM classes ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "390074",
+      "name": "Kickboxing (Dojo 2)",
+      "dayOfWeek": "Tuesday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390073",
+      "name": "Kickboxing (Dojo 2)",
+      "dayOfWeek": "Tuesday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390072",
+      "name": "Weapons Class",
+      "dayOfWeek": "Friday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390071",
+      "name": "Adult Karate + Kickboxing",
+      "dayOfWeek": "Tuesday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390070",
+      "name": "Advanced/Black Belt + Kickboxing",
+      "dayOfWeek": "Wednesday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390069",
+      "name": "Adult Karate + Kickboxing",
+      "dayOfWeek": "Tuesday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390068",
+      "name": "Kickboxing (Dojo 2)",
+      "dayOfWeek": "Monday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390067",
+      "name": "Sparring",
+      "dayOfWeek": "Friday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390066",
+      "name": "Dragon Kids",
+      "dayOfWeek": "Tuesday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    },
+    {
+      "id": "390065",
+      "name": "Teen Warriors",
+      "dayOfWeek": "Wednesday",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayOfWeek\tstartTime\tendTime\tisActive\n390074\tKickboxing (Dojo 2)\tTuesday\tNULL\tNULL\t1\n390073\tKickboxing (Dojo 2)\tTuesday\tNULL\tNULL\t1\n390072\tWeapons Class\tFriday\tNULL\tNULL\t1\n390071\tAdult Karate + Kickboxing\tTuesday\tNULL\tNULL\t1\n390070\tAdvanced/Black Belt + Kickboxing\tWednesday\tNULL\tNULL\t1\n390069\tAdult Karate + Kickboxing\tTuesday\tNULL\tNULL\t1\n390068\tKickboxing (Dojo 2)\tMonday\tNULL\tNULL\t1\n390067\tSparring\tFriday\tNULL\tNULL\t1\n390066\tDragon Kids\tTuesday\tNULL\tNULL\t1\n390065\tTeen Warriors\tWednesday\tNULL\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 617
+}

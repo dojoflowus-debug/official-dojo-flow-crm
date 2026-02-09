@@ -1,0 +1,36 @@
+{
+  "query": "SELECT * FROM classes WHERE isActive = 1 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT * FROM classes WHERE isActive = 1 LIMIT 1;",
+  "rows": [
+    {
+      "id": "30018",
+      "name": "Little Ninjas Basics",
+      "time": "4:30 PM - 5:00 PM",
+      "enrolled": "0",
+      "capacity": "20",
+      "instructor": "Sensei Alex",
+      "dayOfWeek": "Mon",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "isActive": "1",
+      "createdAt": "2025-12-15 22:53:00",
+      "instructorId": "NULL",
+      "program": "NULL",
+      "level": "NULL",
+      "room": "NULL",
+      "updatedAt": "2025-12-16 03:08:20",
+      "floorPlanId": "NULL",
+      "organizationId": "NULL",
+      "location_id": "NULL",
+      "start_date": "NULL",
+      "end_date": "NULL",
+      "duration_minutes": "60",
+      "recurring_pattern": "weekly",
+      "class_notes": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttime\tenrolled\tcapacity\tinstructor\tdayOfWeek\tstartTime\tendTime\tisActive\tcreatedAt\tinstructorId\tprogram\tlevel\troom\tupdatedAt\tfloorPlanId\torganizationId\tlocation_id\tstart_date\tend_date\tduration_minutes\trecurring_pattern\tclass_notes\n30018\tLittle Ninjas Basics\t4:30 PM - 5:00 PM\t0\t20\tSensei Alex\tMon\tNULL\tNULL\t1\t2025-12-15 22:53:00\tNULL\tNULL\tNULL\tNULL\t2025-12-16 03:08:20\tNULL\tNULL\tNULL\tNULL\tNULL\t60\tweekly\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

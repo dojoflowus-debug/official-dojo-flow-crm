@@ -1,0 +1,8 @@
+{
+  "query": "\n-- Import Saturday classes first to test the alignment issue\nINSERT INTO classes (name, dayOfWeek, startTime, organizationId, isActive, createdAt, updatedAt) VALUES\n('Little Ninjas', 'Saturday', '8:00 AM', 180001, 1, NOW(), NOW()),\n('Dragon Kids', 'Saturday', '9:00 AM', 180001, 1, NOW(), NOW()),\n('Teen Warriors', 'Saturday', '10:00 AM', 180001, 1, NOW(), NOW());\n\nSELECT * FROM classes WHERE dayOfWeek = 'Saturday' AND isActive = 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \n-- Import Saturday classes first to test the alignment issue\nINSERT INTO classes (name, dayOfWeek, startTime, organizationId, isActive, createdAt, updatedAt) VALUES\n('Little Ninjas', 'Saturday', '8:00 AM', 180001, 1, NOW(), NOW()),\n('Dragon Kids', 'Saturday', '9:00 AM', 180001, 1, NOW(), NOW()),\n('Teen Warriors', 'Saturday', '10:00 AM', 180001, 1, NOW(), NOW());\n\nSELECT * FROM classes WHERE dayOfWeek = 'Saturday' AND isActive = 1;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1364 (HY000) at line 3: Field 'time' doesn't have a default value"
+  ]
+}

@@ -25,7 +25,10 @@ export const classesRouter = router({
     // Get organization ID from context
     const organizationId = ctx.currentOrganizationId;
     
+    console.log('[ClassesRouter] getAll - organizationId:', organizationId);
+    
     if (!organizationId) {
+      console.log('[ClassesRouter] No organizationId, returning empty array');
       // Return empty array for unauthenticated users or users without org
       return [];
     }
@@ -40,6 +43,9 @@ export const classesRouter = router({
         )
       )
       .orderBy(classes.dayOfWeek, classes.time);
+
+    console.log('[ClassesRouter] getAll - result count:', result.length);
+    console.log('[ClassesRouter] getAll - first 3 classes:', result.slice(0, 3));
 
     return result;
   }),

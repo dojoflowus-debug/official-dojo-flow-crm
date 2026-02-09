@@ -1,0 +1,28 @@
+{
+  "query": "\nINSERT INTO classes (name, time, dayOfWeek, startTime, organizationId, isActive, createdAt, updatedAt) VALUES\n('Little Ninjas', '8:00 AM - 9:00 AM', 'Saturday', '8:00 AM', 180001, 1, NOW(), NOW()),\n('Dragon Kids', '9:00 AM - 10:00 AM', 'Saturday', '9:00 AM', 180001, 1, NOW(), NOW()),\n('Teen Warriors', '10:00 AM - 11:00 AM', 'Saturday', '10:00 AM', 180001, 1, NOW(), NOW());\n\nSELECT id, name, dayOfWeek, startTime FROM classes WHERE dayOfWeek = 'Saturday' AND isActive = 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \nINSERT INTO classes (name, time, dayOfWeek, startTime, organizationId, isActive, createdAt, updatedAt) VALUES\n('Little Ninjas', '8:00 AM - 9:00 AM', 'Saturday', '8:00 AM', 180001, 1, NOW(), NOW()),\n('Dragon Kids', '9:00 AM - 10:00 AM', 'Saturday', '9:00 AM', 180001, 1, NOW(), NOW()),\n('Teen Warriors', '10:00 AM - 11:00 AM', 'Saturday', '10:00 AM', 180001, 1, NOW(), NOW());\n\nSELECT id, name, dayOfWeek, startTime FROM classes WHERE dayOfWeek = 'Saturday' AND isActive = 1;\n",
+  "rows": [
+    {
+      "id": "420001",
+      "name": "Little Ninjas",
+      "dayOfWeek": "Saturday",
+      "startTime": "8:00 AM"
+    },
+    {
+      "id": "420002",
+      "name": "Dragon Kids",
+      "dayOfWeek": "Saturday",
+      "startTime": "9:00 AM"
+    },
+    {
+      "id": "420003",
+      "name": "Teen Warriors",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00 AM"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayOfWeek\tstartTime\n420001\tLittle Ninjas\tSaturday\t8:00 AM\n420002\tDragon Kids\tSaturday\t9:00 AM\n420003\tTeen Warriors\tSaturday\t10:00 AM\n",
+  "stderr": "",
+  "execution_time_ms": 239
+}

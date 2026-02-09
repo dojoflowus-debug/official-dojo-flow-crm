@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, name, organizationId, dayOfWeek FROM classes WHERE isActive = 1 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT id, name, organizationId, dayOfWeek FROM classes WHERE isActive = 1 LIMIT 5;",
+  "rows": [
+    {
+      "id": "30018",
+      "name": "Little Ninjas Basics",
+      "organizationId": "NULL",
+      "dayOfWeek": "Mon"
+    },
+    {
+      "id": "30019",
+      "name": "Little Ninjas Basics",
+      "organizationId": "NULL",
+      "dayOfWeek": "Wed"
+    },
+    {
+      "id": "30020",
+      "name": "Kids Beginner",
+      "organizationId": "NULL",
+      "dayOfWeek": "Mon"
+    },
+    {
+      "id": "30021",
+      "name": "Kids Beginner",
+      "organizationId": "NULL",
+      "dayOfWeek": "Wed"
+    },
+    {
+      "id": "30022",
+      "name": "Kids Intermediate",
+      "organizationId": "NULL",
+      "dayOfWeek": "Tue"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\torganizationId\tdayOfWeek\n30018\tLittle Ninjas Basics\tNULL\tMon\n30019\tLittle Ninjas Basics\tNULL\tWed\n30020\tKids Beginner\tNULL\tMon\n30021\tKids Beginner\tNULL\tWed\n30022\tKids Intermediate\tNULL\tTue\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

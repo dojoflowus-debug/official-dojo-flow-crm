@@ -1,0 +1,50 @@
+{
+  "query": "\nSELECT id, name, dayOfWeek, startTime, organizationId, isActive \nFROM classes \nWHERE isActive = 1 \nORDER BY id DESC \nLIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \nSELECT id, name, dayOfWeek, startTime, organizationId, isActive \nFROM classes \nWHERE isActive = 1 \nORDER BY id DESC \nLIMIT 5;\n",
+  "rows": [
+    {
+      "id": "420003",
+      "name": "Teen Warriors",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "420002",
+      "name": "Dragon Kids",
+      "dayOfWeek": "Saturday",
+      "startTime": "9:00 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "420001",
+      "name": "Little Ninjas",
+      "dayOfWeek": "Saturday",
+      "startTime": "8:00 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "390074",
+      "name": "Kickboxing (Dojo 2)",
+      "dayOfWeek": "Tuesday",
+      "startTime": "NULL",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "390073",
+      "name": "Kickboxing (Dojo 2)",
+      "dayOfWeek": "Tuesday",
+      "startTime": "NULL",
+      "organizationId": "180001",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayOfWeek\tstartTime\torganizationId\tisActive\n420003\tTeen Warriors\tSaturday\t10:00 AM\t180001\t1\n420002\tDragon Kids\tSaturday\t9:00 AM\t180001\t1\n420001\tLittle Ninjas\tSaturday\t8:00 AM\t180001\t1\n390074\tKickboxing (Dojo 2)\tTuesday\tNULL\t180001\t1\n390073\tKickboxing (Dojo 2)\tTuesday\tNULL\t180001\t1\n",
+  "stderr": "",
+  "execution_time_ms": 122
+}

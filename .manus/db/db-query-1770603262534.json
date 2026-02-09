@@ -1,0 +1,25 @@
+{
+  "query": "\nSELECT name, dayOfWeek, startTime \nFROM classes \nWHERE isActive = 1 AND dayOfWeek LIKE '%Saturday%' \nORDER BY startTime;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \nSELECT name, dayOfWeek, startTime \nFROM classes \nWHERE isActive = 1 AND dayOfWeek LIKE '%Saturday%' \nORDER BY startTime;\n",
+  "rows": [
+    {
+      "name": "Teen Warriors",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00 AM"
+    },
+    {
+      "name": "Little Ninjas",
+      "dayOfWeek": "Saturday",
+      "startTime": "8:00 AM"
+    },
+    {
+      "name": "Dragon Kids",
+      "dayOfWeek": "Saturday",
+      "startTime": "9:00 AM"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tdayOfWeek\tstartTime\nTeen Warriors\tSaturday\t10:00 AM\nLittle Ninjas\tSaturday\t8:00 AM\nDragon Kids\tSaturday\t9:00 AM\n",
+  "stderr": "",
+  "execution_time_ms": 139
+}

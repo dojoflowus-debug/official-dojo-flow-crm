@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN organizationId IS NULL THEN 1 ELSE 0 END) as null_org FROM classes;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute SELECT COUNT(*) as total, SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN organizationId IS NULL THEN 1 ELSE 0 END) as null_org FROM classes;",
+  "rows": [
+    {
+      "total": "173",
+      "active": "117",
+      "null_org": "19"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tactive\tnull_org\n173\t117\t19\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

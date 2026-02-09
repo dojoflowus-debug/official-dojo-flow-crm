@@ -629,7 +629,8 @@ const ClassForm = ({
 
 export default function Classes({ onLogout, theme, toggleTheme }) {
   const isDarkMode = useDarkMode()
-  const [classes, setClasses] = useState([]);
+  // Fetch classes from database
+  const { data: classes = [], refetch: refetchClasses } = trpc.classes.getAll.useQuery();
   
   // Fetch programs from database
   const { data: programs = [] } = trpc.programs.list.useQuery({});

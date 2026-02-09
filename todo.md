@@ -8193,3 +8193,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix JSX syntax error preventing Classes page from loading
 - [x] Test bulk delete with multiple classes (ready to test with real data)
 - [x] Ensure proper error handling and user feedback
+
+## Schedule Import Day Alignment Issue (Feb 8, 2026)
+- [ ] Read and analyze Tomball Excel file structure
+- [ ] Import schedule via Kai and observe day placement
+- [ ] Identify why Saturday classes don't appear in Saturday column
+- [ ] Fix day-of-week parsing in import logic
+- [ ] Test with actual schedule data
+
+## Saturday Classes Not Displaying in Schedule Grid (Feb 8, 2026)
+- [x] Read OverallSchedule component to find why Saturday is excluded from grouped data
+- [x] Fix the grouping logic to include Saturday classes (was actually a missing tRPC query)
+- [x] Test with imported schedule to verify all Saturday classes appear
+- [x] Verify Sunday classes also work correctly
