@@ -391,7 +391,7 @@ export default function OverallSchedule({
 
   return (
     <TooltipProvider>
-      <div className={`rounded-2xl border mb-6 overflow-hidden ${isDark ? 'bg-[#18181A] border-white/10' : 'bg-card border-border'}`}>
+      <div className={`rounded-2xl border mb-6 overflow-hidden ${isDark ? 'bg-[#0a0a0b] border-white/10' : 'bg-card border-border'}`}>
         {/* Screen Header (hidden on print) */}
         <div className={`px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden ${isDark ? 'border-white/10' : 'border-border'}`}>
           <div>
@@ -424,10 +424,12 @@ export default function OverallSchedule({
 
         {/* CSS Override for OKLAB colors (html2canvas doesn't support OKLAB) */}
         <style>{`
-          /* Base PDF styling */
-          .print-schedule {
-            background-color: rgb(255, 255, 255) !important;
-            padding: 20px !important;
+          /* Base PDF styling - only apply white background for print */
+          @media print {
+            .print-schedule {
+              background-color: rgb(255, 255, 255) !important;
+              padding: 20px !important;
+            }
           }
           
           /* Header styling */
@@ -485,7 +487,7 @@ export default function OverallSchedule({
         `}</style>
         
         {/* Schedule Grid - Printable Area */}
-        <div ref={printRef} className="print-schedule">
+        <div ref={printRef} className={`print-schedule ${isDark ? 'bg-[#0a0a0b]' : 'bg-white'}`}>
           {/* Print Header with Branding (hidden on screen, shown on print) */}
           <div className="hidden print:block print:mb-8 print:pb-6 print:border-b-2 print:border-gray-300">
             <div className="flex items-start justify-between">
@@ -545,17 +547,17 @@ export default function OverallSchedule({
           </div>
 
           {/* Grid Container */}
-          <div className="overflow-x-auto print:overflow-visible">
+          <div className={`overflow-x-auto print:overflow-visible ${isDark ? 'bg-[#0a0a0b]' : 'bg-white'}`}>
             <div className="min-w-[900px] print:min-w-0 print:w-full">
               {/* Day Headers */}
               <div className={`grid grid-cols-8 border-b ${isDark ? 'border-white/10' : 'border-border'} print:border-gray-300`}>
-                <div className={`p-3 text-center text-sm font-medium ${isDark ? 'text-white/40 bg-white/5' : 'text-muted-foreground bg-muted/30'} print:bg-gray-100 print:text-gray-700`}>
+                <div className={`p-3 text-center text-sm font-medium ${isDark ? 'text-white/40 bg-[#18181a]' : 'text-muted-foreground bg-muted/30'} print:bg-gray-100 print:text-gray-700`}>
                   Time
                 </div>
                 {DAYS.map((day, idx) => (
                   <div 
                     key={day} 
-                    className={`p-3 text-center text-sm font-semibold ${isDark ? 'text-white border-l border-white/10' : 'text-foreground border-l border-border'} print:border-gray-300 print:text-black print:bg-gray-50`}
+                    className={`p-3 text-center text-sm font-semibold ${isDark ? 'text-white bg-[#18181a] border-l border-white/10' : 'text-foreground border-l border-border'} print:border-gray-300 print:text-black print:bg-gray-50`}
                   >
                     <span className="hidden sm:inline print:inline">{FULL_DAYS[idx]}</span>
                     <span className="sm:hidden print:hidden">{day}</span>
@@ -571,7 +573,7 @@ export default function OverallSchedule({
                   style={{ minHeight: '50px' }}
                 >
                   {/* Time Label */}
-                  <div className={`p-2 text-xs font-medium flex items-start justify-center ${isDark ? 'text-white/40 bg-white/[0.02]' : 'text-muted-foreground bg-muted/20'} print:bg-transparent print:text-gray-600`}>
+                  <div className={`p-2 text-xs font-medium flex items-start justify-center ${isDark ? 'text-white/40 bg-[#18181a]' : 'text-muted-foreground bg-muted/20'} print:bg-transparent print:text-gray-600`}>
                     {formatTime(hour)}
                   </div>
                   
@@ -586,9 +588,9 @@ export default function OverallSchedule({
                         key={`${day}-${hour}`} 
                         className={`relative border-l p-1 ${
                           isDark 
-                            ? 'border-white/5' 
+                            ? 'border-white/5 bg-[#0a0a0b]' 
                             : 'border-border/30'
-                        } print:border-gray-200 ${!isActiveSlot ? (isDark ? 'bg-white/[0.01]' : 'bg-muted/10') : ''} print:bg-transparent`}
+                        } print:border-gray-200 ${!isActiveSlot ? (isDark ? 'bg-[#18181a]/30' : 'bg-muted/10') : ''} print:bg-transparent`}
                       >
                         {slotClasses.map((cls, idx) => {
                           const colors = getColor(cls.type || cls.program);

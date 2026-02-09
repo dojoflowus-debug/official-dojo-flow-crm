@@ -8226,3 +8226,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Verify organizationId matches for all Saturday classes
 - [ ] Fix any data issues preventing Saturday classes from displaying
 - [ ] Test with user's actual imported schedule
+
+## Dark Mode Schedule Grid Styling (Feb 8, 2026)
+- [ ] Add dark mode classes to OverallSchedule grid background
+- [ ] Update grid borders and text colors for dark mode
+- [ ] Ensure class cards in grid use dark theme colors
+- [ ] Test dark mode appearance matches rest of UI
+
+## Dark Mode Schedule Grid Styling (Feb 8, 2026)
+- [x] Add dark mode classes to OverallSchedule grid background
+- [x] Update grid borders and text colors for dark mode
+- [x] Ensure class cards in grid use dark theme colors
+- [x] Test dark mode appearance matches rest of UI
+- [x] Fix CSS override to only apply white background during print, not on screen
