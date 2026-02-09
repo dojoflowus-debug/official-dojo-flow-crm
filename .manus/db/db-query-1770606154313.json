@@ -1,0 +1,110 @@
+{
+  "query": "\nSELECT id, name, dayOfWeek, startTime, endTime, time, organizationId, isActive\nFROM classes \nWHERE (dayOfWeek LIKE '%Saturday%' OR dayOfWeek LIKE '%Sat%')\nORDER BY startTime;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \nSELECT id, name, dayOfWeek, startTime, endTime, time, organizationId, isActive\nFROM classes \nWHERE (dayOfWeek LIKE '%Saturday%' OR dayOfWeek LIKE '%Sat%')\nORDER BY startTime;\n",
+  "rows": [
+    {
+      "id": "30015",
+      "name": "Bo Staff Training",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "11:00 AM - 12:00 PM",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30016",
+      "name": "Open Sparring",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "12:30 PM - 1:30 PM",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30017",
+      "name": "Family Class",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "10:00 AM - 10:45 AM",
+      "organizationId": "NULL",
+      "isActive": "0"
+    },
+    {
+      "id": "30031",
+      "name": "Bo Staff Training",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "11:00 AM - 12:00 PM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "30032",
+      "name": "Open Sparring",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "12:30 PM - 1:30 PM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "30033",
+      "name": "Family Class",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "10:00 AM - 10:45 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "420078",
+      "name": "Saturday Test Class",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "time": "10:00 AM - 11:00 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "420003",
+      "name": "Teen Warriors",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00 AM",
+      "endTime": "NULL",
+      "time": "10:00 AM - 11:00 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "420001",
+      "name": "Little Ninjas",
+      "dayOfWeek": "Saturday",
+      "startTime": "8:00 AM",
+      "endTime": "NULL",
+      "time": "8:00 AM - 9:00 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    },
+    {
+      "id": "420002",
+      "name": "Dragon Kids",
+      "dayOfWeek": "Saturday",
+      "startTime": "9:00 AM",
+      "endTime": "NULL",
+      "time": "9:00 AM - 10:00 AM",
+      "organizationId": "180001",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayOfWeek\tstartTime\tendTime\ttime\torganizationId\tisActive\n30015\tBo Staff Training\tSat\tNULL\tNULL\t11:00 AM - 12:00 PM\tNULL\t0\n30016\tOpen Sparring\tSat\tNULL\tNULL\t12:30 PM - 1:30 PM\tNULL\t0\n30017\tFamily Class\tSat\tNULL\tNULL\t10:00 AM - 10:45 AM\tNULL\t0\n30031\tBo Staff Training\tSat\tNULL\tNULL\t11:00 AM - 12:00 PM\t180001\t1\n30032\tOpen Sparring\tSat\tNULL\tNULL\t12:30 PM - 1:30 PM\t180001\t1\n30033\tFamily Class\tSat\tNULL\tNULL\t10:00 AM - 10:45 AM\t180001\t1\n420078\tSaturday Test Class\tSaturday\t10:00\t11:00\t10:00 AM - 11:00 AM\t180001\t1\n420003\tTeen Warriors\tSaturday\t10:00 AM\tNULL\t10:00 AM - 11:00 AM\t180001\t1\n420001\tLittle Ninjas\tSaturday\t8:00 AM\tNULL\t8:00 AM - 9:00 AM\t180001\t1\n420002\tDragon Kids\tSaturday\t9:00 AM\tNULL\t9:00 AM - 10:00 AM\t180001\t1\n",
+  "stderr": "",
+  "execution_time_ms": 77
+}

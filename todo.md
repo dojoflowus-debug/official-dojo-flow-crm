@@ -8219,3 +8219,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Change weekend time range from 8 AM - 2 PM to 8 AM - 9 PM
 - [x] Test that all Saturday classes now display in the grid
 - [x] Verify Sunday classes also benefit from extended range
+
+## Saturday Classes Not Appearing from Import (Feb 8, 2026)
+- [ ] Query database for all Saturday classes with full details
+- [ ] Check if imported Saturday classes have correct dayOfWeek format
+- [ ] Verify organizationId matches for all Saturday classes
+- [ ] Fix any data issues preventing Saturday classes from displaying
+- [ ] Test with user's actual imported schedule
