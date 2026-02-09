@@ -8206,3 +8206,16 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix the grouping logic to include Saturday classes (was actually a missing tRPC query)
 - [x] Test with imported schedule to verify all Saturday classes appear
 - [x] Verify Sunday classes also work correctly
+
+## Saturday Class Display Issue - Final Fix (Feb 8, 2026)
+- [ ] Add a test Saturday class to database
+- [ ] Verify class appears in Classes page list
+- [ ] Check if class appears in Saturday column of schedule grid
+- [ ] Diagnose why Saturday classes don't show in grid
+- [ ] Fix the root cause
+- [ ] Test with multiple Saturday classes
+
+## Extend Weekend Time Range for Saturday Classes (Feb 8, 2026)
+- [x] Change weekend time range from 8 AM - 2 PM to 8 AM - 9 PM
+- [x] Test that all Saturday classes now display in the grid
+- [x] Verify Sunday classes also benefit from extended range

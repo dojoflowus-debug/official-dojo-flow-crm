@@ -1,0 +1,59 @@
+{
+  "query": "\nSELECT name, dayOfWeek, startTime, endTime, time \nFROM classes \nWHERE dayOfWeek LIKE '%Saturday%' OR dayOfWeek LIKE '%Sat%'\nAND isActive = 1 \nAND organizationId = 180001\nORDER BY startTime;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.43c395b54aa0 --database 2Awpr243D2Jitpj6Cn66Rx --execute \nSELECT name, dayOfWeek, startTime, endTime, time \nFROM classes \nWHERE dayOfWeek LIKE '%Saturday%' OR dayOfWeek LIKE '%Sat%'\nAND isActive = 1 \nAND organizationId = 180001\nORDER BY startTime;\n",
+  "rows": [
+    {
+      "name": "Bo Staff Training",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "11:00 AM - 12:00 PM"
+    },
+    {
+      "name": "Open Sparring",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "12:30 PM - 1:30 PM"
+    },
+    {
+      "name": "Family Class",
+      "dayOfWeek": "Sat",
+      "startTime": "NULL",
+      "endTime": "NULL",
+      "time": "10:00 AM - 10:45 AM"
+    },
+    {
+      "name": "Saturday Test Class",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "time": "10:00 AM - 11:00 AM"
+    },
+    {
+      "name": "Teen Warriors",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00 AM",
+      "endTime": "NULL",
+      "time": "10:00 AM - 11:00 AM"
+    },
+    {
+      "name": "Little Ninjas",
+      "dayOfWeek": "Saturday",
+      "startTime": "8:00 AM",
+      "endTime": "NULL",
+      "time": "8:00 AM - 9:00 AM"
+    },
+    {
+      "name": "Dragon Kids",
+      "dayOfWeek": "Saturday",
+      "startTime": "9:00 AM",
+      "endTime": "NULL",
+      "time": "9:00 AM - 10:00 AM"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tdayOfWeek\tstartTime\tendTime\ttime\nBo Staff Training\tSat\tNULL\tNULL\t11:00 AM - 12:00 PM\nOpen Sparring\tSat\tNULL\tNULL\t12:30 PM - 1:30 PM\nFamily Class\tSat\tNULL\tNULL\t10:00 AM - 10:45 AM\nSaturday Test Class\tSaturday\t10:00\t11:00\t10:00 AM - 11:00 AM\nTeen Warriors\tSaturday\t10:00 AM\tNULL\t10:00 AM - 11:00 AM\nLittle Ninjas\tSaturday\t8:00 AM\tNULL\t8:00 AM - 9:00 AM\nDragon Kids\tSaturday\t9:00 AM\tNULL\t9:00 AM - 10:00 AM\n",
+  "stderr": "",
+  "execution_time_ms": 80
+}

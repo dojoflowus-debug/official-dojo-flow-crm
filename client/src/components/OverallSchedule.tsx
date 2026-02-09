@@ -31,7 +31,7 @@ const FULL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
 const WEEKDAY_START = 15; // 3:00 PM
 const WEEKDAY_END = 21;   // 9:00 PM
 const WEEKEND_START = 8;  // 8:00 AM
-const WEEKEND_END = 14;   // 2:00 PM
+const WEEKEND_END = 21;   // 9:00 PM (extended to match weekday hours)
 
 interface ClassItem {
   id: number;
@@ -209,6 +209,9 @@ export default function OverallSchedule({
     });
     
     console.log('[OverallSchedule] Classes grouped by day:', grouped);
+    console.log('[OverallSchedule] Saturday classes count:', grouped['Sat']?.length || 0);
+    console.log('[OverallSchedule] Sunday classes count:', grouped['Sun']?.length || 0);
+    console.log('[OverallSchedule] All days:', Object.keys(grouped));
     return grouped;
   }, [classes]);
 
