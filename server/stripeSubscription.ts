@@ -9,8 +9,22 @@ import { getDb } from './db';
 import { organizationSubscriptions, aiCreditBalance, subscriptionPlans, creditTopUps, aiCreditTransactions } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-11-17.clover' as any,
+// Lazy Stripe initialization — avoids crash at module load when STRIPE_SECRET_KEY is absent
+let _stripeInstance: Stripe | null = null;
+function getStripeInstance(): Stripe {
+  if (!_stripeInstance) {
+    const key = process.env.STRIPE_SECRET_KEY || '';
+    if (!key) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    _stripeInstance = new Stripe(key, { apiVersion: '2025-11-17.clover' as any });
+  }
+  return _stripeInstance;
+}
+const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    return (getStripeInstance() as any)[prop];
+  },
 });
 
 /**
