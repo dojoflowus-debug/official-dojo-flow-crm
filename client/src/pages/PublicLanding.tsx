@@ -4,7 +4,7 @@ import MainLayout from "@/components/MainLayout";
 import {
   ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard,
   MessageSquare, BarChart3, Zap, Star, TrendingUp, Play, MessageCircle,
-  Shield, Clock, Bell, ChevronRight, ChevronLeft, Quote
+  Shield, Clock, Bell, ChevronRight, ChevronLeft, Quote, Check, Flame
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
@@ -47,7 +47,6 @@ export default function PublicLanding() {
   const [countersStarted, setCountersStarted] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
 
-  // Onboarding form state
   const [schoolName, setSchoolName] = useState("");
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
@@ -57,11 +56,10 @@ export default function PublicLanding() {
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Intersection observer for scroll reveals
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,20 +69,17 @@ export default function PublicLanding() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.08 }
     );
     document.querySelectorAll(".scroll-reveal").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
-  // Stats counter trigger
   useEffect(() => {
     if (!statsRef.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !countersStarted) {
-          setCountersStarted(true);
-        }
+        if (entry.isIntersecting && !countersStarted) setCountersStarted(true);
       },
       { threshold: 0.3 }
     );
@@ -92,7 +87,6 @@ export default function PublicLanding() {
     return () => observer.disconnect();
   }, [countersStarted]);
 
-  // Auto-rotate testimonials
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -107,11 +101,8 @@ export default function PublicLanding() {
   };
 
   const handleNextStep = () => {
-    if (currentStep < ONBOARDING_STEPS.length) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleCreateWorkspace();
-    }
+    if (currentStep < ONBOARDING_STEPS.length) setCurrentStep(currentStep + 1);
+    else handleCreateWorkspace();
   };
 
   const handlePrevStep = () => {
@@ -172,60 +163,36 @@ export default function PublicLanding() {
       title: "Kai AI Assistant",
       description: "Your 24/7 AI sensei handles student inquiries, schedules classes, and answers questions instantly via chat, SMS, or voice.",
       highlight: "Responds in seconds",
-      color: "from-red-500/20 to-orange-500/10",
-      border: "border-red-500/30",
-      iconBg: "bg-red-500/15",
-      iconColor: "text-red-400"
     },
     {
       icon: Users,
       title: "Student Management",
       description: "Track progress, belt ranks, attendance, and achievements. Complete profiles with photos, emergency contacts, and custom notes.",
       highlight: "All-in-one profiles",
-      color: "from-blue-500/20 to-cyan-500/10",
-      border: "border-blue-500/30",
-      iconBg: "bg-blue-500/15",
-      iconColor: "text-blue-400"
     },
     {
       icon: Calendar,
       title: "Smart Scheduling",
       description: "Automated class scheduling, private lesson booking, and belt testing coordination. Sync with Google Calendar seamlessly.",
       highlight: "Zero conflicts",
-      color: "from-emerald-500/20 to-teal-500/10",
-      border: "border-emerald-500/30",
-      iconBg: "bg-emerald-500/15",
-      iconColor: "text-emerald-400"
     },
     {
       icon: CreditCard,
       title: "Automated Billing",
       description: "Recurring payments, failed payment recovery, and instant invoicing. Stripe integration handles everything securely.",
       highlight: "Get paid on time",
-      color: "from-violet-500/20 to-purple-500/10",
-      border: "border-violet-500/30",
-      iconBg: "bg-violet-500/15",
-      iconColor: "text-violet-400"
     },
     {
       icon: MessageSquare,
-      title: "Multi-Channel Communication",
+      title: "Multi-Channel Comms",
       description: "Send announcements via SMS, email, or in-app notifications. Kai handles routine questions automatically.",
       highlight: "Reach everyone instantly",
-      color: "from-amber-500/20 to-yellow-500/10",
-      border: "border-amber-500/30",
-      iconBg: "bg-amber-500/15",
-      iconColor: "text-amber-400"
     },
     {
       icon: BarChart3,
       title: "Analytics & Insights",
       description: "Track retention rates, revenue trends, attendance patterns, and student progress. Make data-driven decisions.",
       highlight: "Know your numbers",
-      color: "from-pink-500/20 to-rose-500/10",
-      border: "border-pink-500/30",
-      iconBg: "bg-pink-500/15",
-      iconColor: "text-pink-400"
     }
   ];
 
@@ -253,251 +220,436 @@ export default function PublicLanding() {
     }
   ];
 
-  const stats = [
-    { value: "10,000+", label: "Students Managed", icon: Users },
-    { value: "98%", label: "Retention Rate", icon: TrendingUp },
-    { value: "24/7", label: "AI Support", icon: Sparkles },
-    { value: "40%", label: "Revenue Growth", icon: BarChart3 }
+  const pricingPlans = [
+    {
+      name: "Starter",
+      price: "$49",
+      period: "/mo",
+      credits: "500 credits / month",
+      features: ["Kai AI Assistant", "Up to 100 students", "Basic scheduling", "Email support"],
+      featured: false,
+      badge: null,
+    },
+    {
+      name: "Growth",
+      price: "$99",
+      period: "/mo",
+      credits: "1,500 credits / month",
+      features: ["Everything in Starter", "Up to 300 students", "Automated billing", "SMS + email comms", "Priority support"],
+      featured: true,
+      badge: "Most Popular",
+    },
+    {
+      name: "Pro",
+      price: "$199",
+      period: "/mo",
+      credits: "4,000 credits / month",
+      features: ["Everything in Growth", "Unlimited students", "Advanced analytics", "Multi-location", "White-glove onboarding"],
+      featured: false,
+      badge: null,
+    },
+    {
+      name: "Elite",
+      price: "$499",
+      period: "/mo",
+      credits: "10,000 credits / month",
+      features: ["Everything in Pro", "Dedicated AI model", "Custom integrations", "SLA guarantee", "Dedicated success manager"],
+      featured: false,
+      badge: "Most Powerful",
+    }
   ];
 
   const audiences = [
     {
-      tag: "SCHOOL",
-      headline: "Run classes smoother. Enroll faster.",
-      body: "DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff — all in one platform. Stop juggling spreadsheets and start growing.",
+      tag: "Martial Arts Schools",
+      headline: "Run classes smoother.\nEnroll faster.",
+      body: "DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff — all in one platform.",
       href: "/schools",
-      accent: "from-red-600 to-orange-500",
-      bg: "bg-gradient-to-br from-[#0f0f0f] to-[#1a0a0a]",
-      tagBg: "bg-red-500/10 border-red-500/30 text-red-400"
+      color: "#e11d48",
     },
     {
-      tag: "FITNESS FACILITY",
-      headline: "A kiosk + automation layer for busy gyms.",
-      body: "Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, automates lead follow-up, and delivers real-time reporting. Keep your members moving and your operations efficient.",
+      tag: "Fitness Facilities",
+      headline: "A kiosk + automation\nlayer for busy gyms.",
+      body: "Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, and automates lead follow-up with real-time reporting.",
       href: "/fitness",
-      accent: "from-blue-600 to-cyan-500",
-      bg: "bg-gradient-to-br from-[#0a0f1a] to-[#0a1020]",
-      tagBg: "bg-blue-500/10 border-blue-500/30 text-blue-400"
+      color: "#2563eb",
     },
     {
-      tag: "STUDIO",
-      headline: "Modern operations for boutique training.",
-      body: "DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX. Focus on your craft while we handle the operations.",
+      tag: "Studios",
+      headline: "Modern operations for\nboutique training.",
+      body: "DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX.",
       href: "/studios",
-      accent: "from-violet-600 to-purple-500",
-      bg: "bg-gradient-to-br from-[#0f0a1a] to-[#120a1f]",
-      tagBg: "bg-violet-500/10 border-violet-500/30 text-violet-400"
+      color: "#7c3aed",
     }
   ];
 
-  const pricingPlans = [
-    { name: "Starter", price: "$49", credits: "500 credits", featured: false, badge: null, color: "border-white/10 hover:border-white/20" },
-    { name: "Growth", price: "$99", credits: "1,500 credits", featured: true, badge: "Most Popular", color: "border-red-500 bg-gradient-to-b from-red-500/10 to-transparent" },
-    { name: "Pro", price: "$199", credits: "4,000 credits", featured: false, badge: null, color: "border-white/10 hover:border-white/20" },
-    { name: "Elite", price: "$499", credits: "10,000 credits", featured: false, badge: "Most Powerful", color: "border-amber-500/50 hover:border-amber-500 bg-gradient-to-b from-amber-500/5 to-transparent" }
-  ];
-
-  const howItWorks = [
-    { step: "01", title: "Connect", desc: "Connect your school, staff, and schedule in minutes.", icon: Users, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" },
-    { step: "02", title: "Activate", desc: "Turn on automations — calls, SMS, follow-ups, enrollment.", icon: Zap, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-    { step: "03", title: "Run", desc: "Manage check-ins, attendance, leads, and retention daily.", icon: Calendar, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-    { step: "04", title: "Grow", desc: "Track KPIs and revenue with dashboards and insights.", icon: TrendingUp, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20" }
-  ];
-
   return (
-    <MainLayout transparentHeader>
-      <div className="min-h-full bg-[#080808] overflow-x-hidden">
+    <MainLayout transparentHeader hideFooter>
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes floatUp {
+          0% { opacity: 0; transform: translateY(32px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+          0% { opacity: 0; transform: scale(0.94); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes glowPulse {
+          0%, 100% { box-shadow: 0 0 40px rgba(225,29,72,0.3); }
+          50% { box-shadow: 0 0 80px rgba(225,29,72,0.6); }
+        }
+        @keyframes borderFlow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes dashboardFloat {
+          0%, 100% { transform: translateY(0px) rotate(-1deg); }
+          50% { transform: translateY(-12px) rotate(-1deg); }
+        }
+        .scroll-reveal {
+          opacity: 0;
+          transform: translateY(24px);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .scroll-reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .hero-animate-1 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+        .hero-animate-2 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+        .hero-animate-3 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+        .hero-animate-4 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+        .hero-animate-5 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both; }
+        .hero-animate-6 { animation: scaleIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
+        .dashboard-float { animation: dashboardFloat 6s ease-in-out infinite; }
+        .glow-cta { animation: glowPulse 3s ease-in-out infinite; }
+        .feature-card:hover .feature-icon { transform: scale(1.15) rotate(-5deg); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .feature-icon { transition: transform 0.3s ease; }
+        .noise-overlay {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+          background-size: 200px 200px;
+        }
+      `}</style>
 
-        {/* ─── HERO ─────────────────────────────────────────────────── */}
-        <section
-          ref={heroRef}
-          className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        >
-          {/* Video Background */}
-          <video
-            autoPlay muted loop playsInline
-            className="absolute inset-0 w-full h-full object-cover scale-105"
-            poster="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
-          >
-            <source src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4" type="video/mp4" />
-          </video>
+      <div className="min-h-full bg-[#050505] overflow-x-hidden text-white">
 
-          {/* Multi-layer overlay for cinematic depth */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-black/40" />
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(220,38,38,0.08) 0%, transparent 60%)' }} />
+        {/* ═══════════════════════════════════════════════════════════
+            HERO
+        ═══════════════════════════════════════════════════════════ */}
+        <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
 
-          {/* Animated grid overlay */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-            backgroundSize: '60px 60px'
+          {/* Background image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/hero-martial-arts.jpg')" }}
+          />
+
+          {/* Layered overlays for depth */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/70 via-[#050505]/50 to-[#050505]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-[#050505]/60" />
+
+          {/* Subtle red radial glow */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(225,29,72,0.12) 0%, transparent 70%)'
           }} />
 
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-32">
-            <div className="max-w-5xl">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 backdrop-blur-sm mb-8 animate-[fadeSlideUp_0.6s_ease-out_0.1s_both]">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-red-400 text-sm font-semibold tracking-widest uppercase">AI-Powered Dojo Management</span>
-              </div>
+          {/* Fine grid */}
+          <div className="absolute inset-0 opacity-[0.025]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+            backgroundSize: '80px 80px'
+          }} />
 
-              {/* Headline */}
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.9] text-white mb-6 tracking-tight animate-[fadeSlideUp_0.7s_ease-out_0.2s_both]">
-                This is your<br />
-                <span className="relative inline-block">
-                  <span className="bg-gradient-to-r from-red-500 via-orange-400 to-red-500 bg-clip-text text-transparent">command center.</span>
-                  <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-red-500 to-orange-400 rounded-full opacity-60" />
+          {/* Noise texture */}
+          <div className="absolute inset-0 noise-overlay opacity-30 pointer-events-none" />
+
+          {/* Content */}
+          <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-8 pt-32 pb-20 flex flex-col items-center text-center">
+
+            {/* Eyebrow badge */}
+            <div className="hero-animate-1 inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="text-white/70 text-xs font-semibold tracking-[0.2em] uppercase">AI-Powered Dojo Management</span>
+            </div>
+
+            {/* Main headline */}
+            <h1 className="hero-animate-2 text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black leading-[0.92] tracking-tight mb-6 max-w-5xl">
+              <span className="text-white">The operating system</span>
+              <br />
+              <span className="text-white">for your </span>
+              <span style={{
+                background: 'linear-gradient(135deg, #e11d48 0%, #f97316 50%, #e11d48 100%)',
+                backgroundSize: '200% auto',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                animation: 'shimmer 4s linear infinite'
+              }}>dojo.</span>
+            </h1>
+
+            {/* Subheadline */}
+            <p className="hero-animate-3 text-lg sm:text-xl md:text-2xl text-white/55 font-light max-w-2xl leading-relaxed mb-10">
+              Kai is your AI operations assistant — handling student management, billing, scheduling, and parent communications so you can focus on teaching.
+            </p>
+
+            {/* CTA row */}
+            <div className="hero-animate-4 flex flex-col sm:flex-row items-center gap-4 mb-12">
+              <button
+                onClick={() => setShowKaiOnboarding(true)}
+                className="glow-cta group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold uppercase tracking-widest transition-all duration-300 hover:scale-[1.03]"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Talk to Kai
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm text-white/80 text-sm font-semibold uppercase tracking-widest transition-all duration-300 hover:bg-white/10 hover:border-white/30 hover:text-white">
+                <div className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white/40 transition-colors">
+                  <Play className="w-2.5 h-2.5 ml-0.5 fill-current" />
+                </div>
+                Watch Demo
+              </button>
+            </div>
+
+            {/* Trust row */}
+            <div className="hero-animate-5 flex flex-wrap items-center justify-center gap-6 text-white/40 text-xs font-medium tracking-wide">
+              {["14-day free trial", "No credit card required", "Cancel anytime"].map((t) => (
+                <span key={t} className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-rose-500/70" />
+                  {t}
                 </span>
-              </h1>
+              ))}
+            </div>
 
-              {/* Subheadline */}
-              <p className="text-xl sm:text-2xl md:text-3xl text-white/80 font-light mb-4 max-w-3xl animate-[fadeSlideUp_0.7s_ease-out_0.35s_both]">
-                Kai is your AI operations assistant for martial arts schools.
-              </p>
-              <p className="text-base sm:text-lg text-white/55 max-w-2xl leading-relaxed mb-12 animate-[fadeSlideUp_0.7s_ease-out_0.5s_both]">
-                From student management to instructor coordination, Kai learns your environment and delivers intelligent solutions in real time.
-              </p>
+            {/* Dashboard mockup */}
+            <div className="hero-animate-6 relative mt-20 w-full max-w-4xl mx-auto">
+              {/* Glow behind dashboard */}
+              <div className="absolute -inset-8 rounded-3xl opacity-30 blur-3xl" style={{
+                background: 'radial-gradient(ellipse at center, rgba(225,29,72,0.4) 0%, transparent 70%)'
+              }} />
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 animate-[fadeSlideUp_0.7s_ease-out_0.65s_both]">
-                <button
-                  onClick={() => setShowKaiOnboarding(true)}
-                  className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-orange-500 text-white text-base font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_40px_rgba(220,38,38,0.4)] hover:shadow-[0_0_60px_rgba(220,38,38,0.6)] hover:scale-[1.03]"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  Talk to Kai
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm text-white text-base font-bold uppercase tracking-wider transition-all duration-300 hover:bg-white/10 hover:border-white/40">
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                    <Play className="w-3 h-3 ml-0.5" />
+              {/* Dashboard image */}
+              <div className="dashboard-float relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.8)]">
+                {/* Browser chrome */}
+                <div className="bg-[#111111] border-b border-white/8 px-4 py-3 flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                    <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                    <div className="w-3 h-3 rounded-full bg-[#28c840]" />
                   </div>
-                  Watch Demo
-                </button>
+                  <div className="flex-1 mx-4">
+                    <div className="bg-[#1a1a1a] rounded-md px-3 py-1 text-[11px] text-white/30 font-mono text-center max-w-xs mx-auto">
+                      app.dojoflow.com/dashboard
+                    </div>
+                  </div>
+                </div>
+                <img
+                  src="/hero-dashboard.png"
+                  alt="DojoFlow Dashboard"
+                  className="w-full block"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════
+            LOGO BAR / SOCIAL PROOF
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="border-y border-white/[0.06] bg-[#080808] py-10">
+          <div className="max-w-6xl mx-auto px-6">
+            <p className="text-center text-white/25 text-xs font-semibold tracking-[0.25em] uppercase mb-8">
+              Trusted by martial arts schools across the country
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
+              {["Dragon Martial Arts", "Elite Karate Academy", "Williams BJJ", "Zen Dojo", "Iron Fist MMA", "Bushido Academy"].map((name) => (
+                <span key={name} className="text-white/20 text-sm font-semibold tracking-wide hover:text-white/40 transition-colors cursor-default">
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════
+            STATS
+        ═══════════════════════════════════════════════════════════ */}
+        <section ref={statsRef} className="py-24 bg-[#050505]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06] rounded-2xl overflow-hidden border border-white/[0.06]">
+              {[
+                { value: "10,000+", label: "Students Managed", icon: Users },
+                { value: "98%", label: "Retention Rate", icon: TrendingUp },
+                { value: "24/7", label: "AI Support", icon: Sparkles },
+                { value: "40%", label: "Revenue Growth", icon: BarChart3 },
+              ].map(({ value, label, icon: Icon }, i) => (
+                <div key={i} className="scroll-reveal bg-[#050505] p-8 md:p-10 flex flex-col items-center text-center group hover:bg-[#0d0d0d] transition-colors" style={{ transitionDelay: `${i * 80}ms` }}>
+                  <Icon className="w-5 h-5 text-rose-500/60 mb-4 group-hover:text-rose-500 transition-colors" />
+                  <div className="text-4xl md:text-5xl font-black text-white mb-2 tabular-nums">{value}</div>
+                  <div className="text-white/40 text-sm font-medium tracking-wide">{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════
+            INTRO / VALUE PROP
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="py-32 bg-[#080808]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              {/* Left: text */}
+              <div className="scroll-reveal">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs font-semibold tracking-widest uppercase mb-6">
+                  <Flame className="w-3 h-3" />
+                  Why DojoFlow
+                </div>
+                <h2 className="text-4xl md:text-5xl font-black leading-[1.05] tracking-tight text-white mb-6">
+                  Your school deserves<br />
+                  <span className="text-rose-500">better tools.</span>
+                </h2>
+                <p className="text-white/50 text-lg leading-relaxed mb-8">
+                  Most martial arts schools run on spreadsheets, group texts, and manual invoicing. DojoFlow replaces all of it with a single AI-powered platform that works while you teach.
+                </p>
+                <div className="space-y-4">
+                  {[
+                    "Kai answers parent questions at 2 AM so you don't have to",
+                    "Automated billing collects tuition without awkward conversations",
+                    "One dashboard for every student, class, and payment",
+                    "Built specifically for martial arts — not a generic gym app",
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="mt-0.5 w-5 h-5 rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-rose-400" />
+                      </div>
+                      <span className="text-white/65 text-sm leading-relaxed">{item}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Trust indicators */}
-              <div className="flex flex-wrap items-center gap-6 mt-12 animate-[fadeSlideUp_0.7s_ease-out_0.8s_both]">
-                {["14-day free trial", "No credit card required", "Cancel anytime"].map((item) => (
-                  <div key={item} className="flex items-center gap-2 text-white/50 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    {item}
+              {/* Right: visual */}
+              <div className="scroll-reveal relative" style={{ transitionDelay: '150ms' }}>
+                <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-[#0d0d0d]">
+                  <img
+                    src="/dojo-background.jpg"
+                    alt="Traditional Dojo"
+                    className="w-full h-72 object-cover opacity-60"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-white text-sm font-semibold">Kai AI</div>
+                        <div className="text-white/40 text-xs">Online now</div>
+                      </div>
+                      <div className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-white/70 text-sm leading-relaxed">
+                      "Hi! I'm Kai, your AI assistant. I can answer questions about class schedules, billing, and enrollment — 24/7. How can I help you today?"
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════
+            HOW IT WORKS
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="py-32 bg-[#050505]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-20 scroll-reveal">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-5">
+                Simple Process
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
+                Up and running in minutes.
+              </h2>
+            </div>
+
+            <div className="relative">
+              {/* Connector line */}
+              <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+              <div className="grid md:grid-cols-4 gap-8">
+                {[
+                  { step: "01", title: "Connect", desc: "Connect your school, staff, and schedule in minutes.", icon: Users, color: "rose" },
+                  { step: "02", title: "Activate", desc: "Turn on automations — calls, SMS, follow-ups, enrollment.", icon: Zap, color: "amber" },
+                  { step: "03", title: "Run", desc: "Manage check-ins, attendance, leads, and retention daily.", icon: Calendar, color: "emerald" },
+                  { step: "04", title: "Grow", desc: "Track KPIs and revenue with dashboards and insights.", icon: TrendingUp, color: "cyan" },
+                ].map(({ step, title, desc, icon: Icon, color }, i) => (
+                  <div key={i} className="scroll-reveal flex flex-col items-center text-center group" style={{ transitionDelay: `${i * 100}ms` }}>
+                    <div className={`relative w-20 h-20 rounded-2xl border mb-6 flex items-center justify-center transition-all duration-300 group-hover:scale-110
+                      ${color === 'rose' ? 'border-rose-500/20 bg-rose-500/5 group-hover:bg-rose-500/10 group-hover:border-rose-500/40' : ''}
+                      ${color === 'amber' ? 'border-amber-500/20 bg-amber-500/5 group-hover:bg-amber-500/10 group-hover:border-amber-500/40' : ''}
+                      ${color === 'emerald' ? 'border-emerald-500/20 bg-emerald-500/5 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/40' : ''}
+                      ${color === 'cyan' ? 'border-cyan-500/20 bg-cyan-500/5 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/40' : ''}
+                    `}>
+                      <Icon className={`w-7 h-7
+                        ${color === 'rose' ? 'text-rose-400' : ''}
+                        ${color === 'amber' ? 'text-amber-400' : ''}
+                        ${color === 'emerald' ? 'text-emerald-400' : ''}
+                        ${color === 'cyan' ? 'text-cyan-400' : ''}
+                      `} />
+                      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#050505] border border-white/10 text-white/30 text-[10px] font-bold flex items-center justify-center">
+                        {step}
+                      </span>
+                    </div>
+                    <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
+                    <p className="text-white/40 text-sm leading-relaxed">{desc}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Scroll hint */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-            <span className="text-white/30 text-xs uppercase tracking-widest">Scroll</span>
-            <div className="w-[1px] h-8 bg-gradient-to-b from-white/30 to-transparent" />
-          </div>
         </section>
 
-        {/* ─── STATS BAR ───────────────────────────────────────────── */}
-        <section ref={statsRef} className="relative z-10 -mt-1 bg-gradient-to-r from-red-600 via-red-500 to-orange-500">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {stats.map((stat, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-1 tabular-nums">
-                    {stat.value}
-                  </div>
-                  <div className="text-white/80 text-sm font-medium uppercase tracking-wider">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── BRAND STATEMENT ─────────────────────────────────────── */}
-        <section className="py-24 sm:py-32 relative overflow-hidden scroll-reveal">
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(220,38,38,0.04) 0%, transparent 70%)' }} />
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-6">
-              Your brand. Their training.
-            </h2>
-            <p className="text-3xl sm:text-4xl md:text-5xl font-black mb-8"
-              style={{ background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Everyone wins.
-            </p>
-            <p className="text-lg sm:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed">
-              DojoFlow unifies enrollment, retention, and operations with AI-assisted automation built for schools and fitness studios.
-            </p>
-          </div>
-        </section>
-
-        {/* ─── HOW IT WORKS ────────────────────────────────────────── */}
-        <section className="py-20 sm:py-28 relative scroll-reveal">
-          <div className="absolute inset-0 bg-[#0d0d0d]" />
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium mb-6">
-                <Zap className="w-4 h-4 text-red-400" />
-                Simple Process
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
-                How DojoFlow Works
-              </h2>
-              <p className="text-white/50 text-lg max-w-xl mx-auto">
-                Four simple steps to transform your school operations
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-              {howItWorks.map((step, i) => (
-                <div key={i} className={`relative group p-8 rounded-2xl border ${step.border} ${step.bg} hover:scale-[1.03] transition-all duration-300`}>
-                  {/* Connector line */}
-                  {i < howItWorks.length - 1 && (
-                    <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-[1px] bg-white/10 z-10" />
-                  )}
-                  <div className="text-5xl font-black text-white/5 mb-4 leading-none">{step.step}</div>
-                  <div className={`w-12 h-12 rounded-xl ${step.bg} border ${step.border} flex items-center justify-center mb-5`}>
-                    <step.icon className={`w-6 h-6 ${step.color}`} />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
-                  <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── FEATURES GRID ───────────────────────────────────────── */}
-        <section id="features" className="py-20 sm:py-28 scroll-reveal">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium mb-6">
-                <Sparkles className="w-4 h-4 text-red-400" />
+        {/* ═══════════════════════════════════════════════════════════
+            FEATURES GRID
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="py-32 bg-[#080808]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-20 scroll-reveal">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-5">
                 Everything You Need
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
-                Built for martial arts schools
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
+                Built for martial arts schools.
               </h2>
-              <p className="text-white/50 text-lg max-w-2xl mx-auto">
-                Stop juggling spreadsheets, payment apps, and messaging tools. DojoFlow brings everything together in one powerful platform.
+              <p className="text-white/40 text-lg max-w-xl mx-auto">
+                Stop juggling spreadsheets, payment apps, and messaging tools. DojoFlow brings everything together.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl mx-auto">
-              {features.map((feature, i) => (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {features.map(({ icon: Icon, title, description, highlight }, i) => (
                 <div
                   key={i}
-                  className={`group relative p-7 rounded-2xl border ${feature.border} bg-gradient-to-br ${feature.color} hover:scale-[1.02] transition-all duration-400 overflow-hidden cursor-default`}
+                  className="feature-card scroll-reveal group relative rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-7 hover:border-white/15 hover:bg-[#111111] transition-all duration-300 cursor-default overflow-hidden"
+                  style={{ transitionDelay: `${i * 60}ms` }}
                 >
-                  {/* Glow on hover */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
-                    style={{ boxShadow: 'inset 0 0 40px rgba(255,255,255,0.03)' }} />
+                  {/* Subtle top gradient line */}
+                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                  <div className={`w-12 h-12 rounded-xl ${feature.iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                    <feature.icon className={`w-6 h-6 ${feature.iconColor}`} />
+                  <div className="feature-icon w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-5">
+                    <Icon className="w-5 h-5 text-rose-400" />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-3">{feature.title}</h3>
-                  <p className="text-white/50 text-sm leading-relaxed mb-4">{feature.description}</p>
-                  <div className={`inline-flex items-center gap-2 text-xs font-semibold ${feature.iconColor} uppercase tracking-wider`}>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {feature.highlight}
+                  <h3 className="text-white font-bold text-base mb-2">{title}</h3>
+                  <p className="text-white/40 text-sm leading-relaxed mb-4">{description}</p>
+                  <div className="inline-flex items-center gap-1.5 text-rose-400/70 text-xs font-semibold tracking-wide">
+                    <Sparkles className="w-3 h-3" />
+                    {highlight}
                   </div>
                 </div>
               ))}
@@ -505,84 +657,70 @@ export default function PublicLanding() {
           </div>
         </section>
 
-        {/* ─── AUDIENCE TABS ───────────────────────────────────────── */}
-        <section className="py-20 sm:py-28 bg-[#0d0d0d] scroll-reveal">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
-                Built for every type of facility
+        {/* ═══════════════════════════════════════════════════════════
+            AUDIENCE TABS
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="py-32 bg-[#050505]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-16 scroll-reveal">
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
+                Built for every type of facility.
               </h2>
-              <p className="text-white/50 text-lg">Select your facility type to see how DojoFlow fits your needs.</p>
+              <p className="text-white/40 text-lg">Select your facility type to see how DojoFlow fits your needs.</p>
             </div>
 
-            {/* Tab switcher */}
-            <div className="flex justify-center gap-2 mb-12 flex-wrap">
-              {audiences.map((aud, i) => (
+            {/* Tab buttons */}
+            <div className="flex justify-center gap-2 mb-12 scroll-reveal">
+              {audiences.map(({ tag }, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveAudience(i)}
-                  className={`px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300 border ${
+                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     activeAudience === i
-                      ? 'bg-red-500 border-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)]'
-                      : 'border-white/10 text-white/50 hover:text-white hover:border-white/30'
+                      ? "bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.3)]"
+                      : "border border-white/10 text-white/40 hover:text-white/70 hover:border-white/20"
                   }`}
                 >
-                  {aud.tag}
+                  {tag}
                 </button>
               ))}
             </div>
 
-            {/* Active audience panel */}
-            <div className="max-w-5xl mx-auto">
-              {audiences.map((aud, i) => (
+            {/* Tab content */}
+            <div className="scroll-reveal">
+              {audiences.map(({ tag, headline, body, href }, i) => (
                 <div
                   key={i}
-                  className={`transition-all duration-500 ${activeAudience === i ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 hidden'}`}
+                  className={`transition-all duration-500 ${activeAudience === i ? 'block' : 'hidden'}`}
                 >
-                  <div className={`rounded-3xl border border-white/10 ${aud.bg} p-10 sm:p-14 grid md:grid-cols-2 gap-10 items-center`}>
-                    <div className="space-y-6">
-                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold uppercase tracking-widest ${aud.tagBg}`}>
-                        FOR THE {aud.tag}
+                  <div className="grid lg:grid-cols-2 gap-12 items-center rounded-3xl border border-white/[0.07] bg-[#0d0d0d] p-10 md:p-14">
+                    <div>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs font-semibold tracking-widest uppercase mb-6">
+                        {tag}
                       </div>
-                      <h3 className="text-3xl sm:text-4xl font-black text-white leading-tight">{aud.headline}</h3>
-                      <p className="text-white/55 leading-relaxed">{aud.body}</p>
-                      <Link
-                        to={aud.href}
-                        className="inline-flex items-center gap-2 text-white font-semibold hover:gap-4 transition-all duration-300 group"
-                      >
+                      <h3 className="text-3xl md:text-4xl font-black text-white leading-tight mb-5 whitespace-pre-line">
+                        {headline}
+                      </h3>
+                      <p className="text-white/50 text-base leading-relaxed mb-8">{body}</p>
+                      <Link to={href} className="inline-flex items-center gap-2 text-rose-400 font-semibold text-sm hover:text-rose-300 transition-colors group">
                         Learn more
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </div>
-                    {/* Visual placeholder — dashboard mockup */}
-                    <div className="relative">
-                      <div className={`rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm`}>
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                          <div className="w-3 h-3 rounded-full bg-amber-500/60" />
-                          <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
-                          <div className="flex-1 h-[1px] bg-white/10 ml-2" />
+                    <div className="relative rounded-2xl overflow-hidden border border-white/8">
+                      <img
+                        src={i === 0 ? "/kids-martial-arts.jpeg" : i === 1 ? "/fitness-class.webp" : "/barre-studio.jpg"}
+                        alt={tag}
+                        className="w-full h-72 object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d]/60 to-transparent" />
+                      {/* Floating stat */}
+                      <div className="absolute bottom-4 left-4 right-4 bg-[#0d0d0d]/90 backdrop-blur-sm border border-white/10 rounded-xl p-4 flex items-center justify-between">
+                        <div>
+                          <div className="text-white/40 text-xs mb-0.5">This month</div>
+                          <div className="text-white font-bold text-sm">Revenue Growth</div>
                         </div>
-                        <div className="space-y-3">
-                          {[...Array(4)].map((_, j) => (
-                            <div key={j} className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${aud.accent} opacity-60 flex-shrink-0`} />
-                              <div className="flex-1 space-y-1.5">
-                                <div className="h-2 bg-white/10 rounded-full" style={{ width: `${60 + j * 10}%` }} />
-                                <div className="h-1.5 bg-white/5 rounded-full" style={{ width: `${40 + j * 8}%` }} />
-                              </div>
-                              <div className={`text-xs font-bold bg-gradient-to-r ${aud.accent} bg-clip-text text-transparent`}>
-                                +{12 + j * 7}%
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className={`mt-5 h-1.5 rounded-full bg-gradient-to-r ${aud.accent} opacity-60`} />
-                      </div>
-                      {/* Floating badge */}
-                      <div className="absolute -top-4 -right-4 bg-[#0d0d0d] border border-white/10 rounded-xl px-4 py-2 shadow-xl">
-                        <div className="text-xs text-white/40 uppercase tracking-wider mb-0.5">This month</div>
-                        <div className={`text-lg font-black bg-gradient-to-r ${aud.accent} bg-clip-text text-transparent`}>↑ 40%</div>
+                        <div className="text-emerald-400 font-black text-2xl">↑ 40%</div>
                       </div>
                     </div>
                   </div>
@@ -592,368 +730,483 @@ export default function PublicLanding() {
           </div>
         </section>
 
-        {/* ─── TESTIMONIALS ────────────────────────────────────────── */}
-        <section id="testimonials" className="py-20 sm:py-28 scroll-reveal relative overflow-hidden">
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center bottom, rgba(220,38,38,0.05) 0%, transparent 60%)' }} />
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm font-medium mb-6">
-                <Star className="w-4 h-4 fill-amber-400" />
+        {/* ═══════════════════════════════════════════════════════════
+            TESTIMONIALS
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="py-32 bg-[#080808]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-16 scroll-reveal">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs font-semibold tracking-widest uppercase mb-5">
+                <Star className="w-3 h-3 fill-current" />
                 Loved by Martial Arts Schools
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
-                Real results from real schools
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
+                Real results from real schools.
               </h2>
             </div>
 
-            {/* Main testimonial carousel */}
-            <div className="max-w-4xl mx-auto">
-              <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] p-10 sm:p-14 overflow-hidden">
-                <div className="absolute top-8 left-10 opacity-10">
-                  <Quote className="w-20 h-20 text-red-500" />
+            <div className="scroll-reveal">
+              {/* Main testimonial */}
+              <div className="relative rounded-3xl border border-white/[0.07] bg-[#0d0d0d] p-10 md:p-14 mb-6 overflow-hidden">
+                <div className="absolute top-8 right-8 opacity-5">
+                  <Quote className="w-24 h-24 text-white" />
                 </div>
-                <div className="relative z-10">
-                  <div className="flex gap-1 mb-8">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-xl sm:text-2xl md:text-3xl text-white/85 font-light leading-relaxed mb-10">
-                    "{testimonials[activeTestimonial].quote}"
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={testimonials[activeTestimonial].avatar}
-                      alt={testimonials[activeTestimonial].author}
-                      className="w-14 h-14 rounded-full border-2 border-red-500/30 object-cover"
-                    />
-                    <div>
-                      <div className="font-bold text-white text-lg">{testimonials[activeTestimonial].author}</div>
-                      <div className="text-white/45 text-sm">{testimonials[activeTestimonial].role}</div>
-                    </div>
-                  </div>
+                <div className="flex gap-1 mb-6">
+                  {Array.from({ length: testimonials[activeTestimonial].rating }).map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-amber-400 fill-current" />
+                  ))}
                 </div>
-              </div>
-
-              {/* Navigation dots */}
-              <div className="flex justify-center gap-3 mt-8">
-                {testimonials.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveTestimonial(i)}
-                    className={`transition-all duration-300 rounded-full ${
-                      i === activeTestimonial ? 'w-8 h-2 bg-red-500' : 'w-2 h-2 bg-white/20 hover:bg-white/40'
-                    }`}
+                <blockquote className="text-white text-xl md:text-2xl font-light leading-relaxed mb-8 max-w-3xl">
+                  "{testimonials[activeTestimonial].quote}"
+                </blockquote>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={testimonials[activeTestimonial].avatar}
+                    alt={testimonials[activeTestimonial].author}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
                   />
-                ))}
+                  <div>
+                    <div className="text-white font-semibold">{testimonials[activeTestimonial].author}</div>
+                    <div className="text-white/40 text-sm">{testimonials[activeTestimonial].role}</div>
+                  </div>
+                </div>
               </div>
 
-              {/* All 3 cards below */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-10">
-                {testimonials.map((t, i) => (
+              {/* Testimonial navigation */}
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  {testimonials.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveTestimonial(i)}
+                      className={`h-1 rounded-full transition-all duration-300 ${
+                        activeTestimonial === i ? 'w-8 bg-rose-500' : 'w-4 bg-white/15 hover:bg-white/30'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-2">
                   <button
-                    key={i}
-                    onClick={() => setActiveTestimonial(i)}
-                    className={`text-left p-6 rounded-2xl border transition-all duration-300 ${
-                      i === activeTestimonial
-                        ? 'border-red-500/40 bg-red-500/5'
-                        : 'border-white/8 bg-white/[0.02] hover:border-white/15'
-                    }`}
+                    onClick={() => setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+                    className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all"
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <img src={t.avatar} alt={t.author} className="w-9 h-9 rounded-full object-cover" />
-                      <div>
-                        <div className="text-white text-sm font-semibold">{t.author}</div>
-                        <div className="text-white/35 text-xs">{t.role}</div>
-                      </div>
-                    </div>
-                    <p className="text-white/45 text-xs leading-relaxed line-clamp-3">"{t.quote}"</p>
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
-                ))}
+                  <button
+                    onClick={() => setActiveTestimonial((prev) => (prev + 1) % testimonials.length)}
+                    className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ─── PRICING ─────────────────────────────────────────────── */}
-        <section id="pricing" className="py-20 sm:py-28 bg-[#0d0d0d] scroll-reveal">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
-                Simple, transparent pricing
+        {/* ═══════════════════════════════════════════════════════════
+            PRICING
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="py-32 bg-[#050505]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-16 scroll-reveal">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-5">
+                Simple Pricing
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
+                Transparent. No surprises.
               </h2>
-              <p className="text-white/50 text-lg mb-2">All plans include monthly AI credits. Upgrade anytime.</p>
-              <p className="text-white/30 text-sm max-w-lg mx-auto">
-                Credits are used when Kai performs actions like sending messages, analyzing data, or running workflows.
+              <p className="text-white/40 text-lg max-w-lg mx-auto">
+                All plans include monthly AI credits. Credits are used when Kai performs actions.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto mb-10">
-              {pricingPlans.map((plan, i) => (
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {pricingPlans.map(({ name, price, period, credits, features: planFeatures, featured, badge }, i) => (
                 <div
                   key={i}
-                  className={`relative rounded-2xl border p-7 transition-all duration-300 hover:scale-[1.03] ${plan.color} ${plan.featured ? 'shadow-[0_0_40px_rgba(220,38,38,0.2)]' : ''}`}
+                  className={`scroll-reveal relative rounded-2xl border p-7 flex flex-col transition-all duration-300 hover:scale-[1.02] ${
+                    featured
+                      ? "border-rose-500 bg-gradient-to-b from-rose-500/10 to-[#0d0d0d] shadow-[0_0_40px_rgba(225,29,72,0.15)]"
+                      : badge === "Most Powerful"
+                      ? "border-amber-500/30 bg-[#0d0d0d] hover:border-amber-500/50"
+                      : "border-white/[0.07] bg-[#0d0d0d] hover:border-white/15"
+                  }`}
+                  style={{ transitionDelay: `${i * 80}ms` }}
                 >
-                  {plan.badge && (
-                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap ${
-                      plan.featured ? 'bg-red-500 text-white' : 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                  {badge && (
+                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
+                      featured ? "bg-rose-500 text-white" : "bg-amber-500/20 border border-amber-500/40 text-amber-400"
                     }`}>
-                      {plan.badge}
+                      {badge}
                     </div>
                   )}
-                  <div className="text-white/50 text-sm font-semibold mb-3">{plan.name}</div>
-                  <div className="text-4xl font-black text-white mb-1">{plan.price}</div>
-                  <div className="text-white/30 text-xs mb-5">per month</div>
-                  <div className={`text-sm font-semibold ${plan.featured ? 'text-red-400' : 'text-white/50'}`}>{plan.credits}</div>
+                  <div className="mb-6">
+                    <div className="text-white/50 text-sm font-semibold mb-3">{name}</div>
+                    <div className="flex items-end gap-1 mb-1">
+                      <span className="text-4xl font-black text-white">{price}</span>
+                      <span className="text-white/30 text-sm mb-1.5">{period}</span>
+                    </div>
+                    <div className="text-white/30 text-xs">{credits}</div>
+                  </div>
+                  <div className="space-y-3 flex-1 mb-8">
+                    {planFeatures.map((f, j) => (
+                      <div key={j} className="flex items-start gap-2.5">
+                        <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${featured ? 'text-rose-400' : 'text-white/30'}`} />
+                        <span className="text-white/50 text-sm">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setShowKaiOnboarding(true)}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+                      featured
+                        ? "bg-rose-600 hover:bg-rose-500 text-white"
+                        : "border border-white/10 text-white/60 hover:border-white/30 hover:text-white"
+                    }`}
+                  >
+                    Get Started
+                  </button>
                 </div>
               ))}
             </div>
 
-            <div className="text-center">
-              <Link to="/pricing">
-                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 text-base px-10 h-13 rounded-xl">
-                  View Full Pricing
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+            <div className="text-center mt-8 scroll-reveal">
+              <Link to="/pricing" className="inline-flex items-center gap-2 text-white/30 text-sm hover:text-white/60 transition-colors">
+                View full pricing details
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
         </section>
 
-        {/* ─── CONTACT ─────────────────────────────────────────────── */}
-        <section className="py-20 sm:py-28 scroll-reveal">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-start">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium">
-                  <MessageSquare className="w-4 h-4 text-red-400" />
+        {/* ═══════════════════════════════════════════════════════════
+            CONTACT
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="py-32 bg-[#080808]">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="grid lg:grid-cols-2 gap-16 items-start">
+              <div className="scroll-reveal">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-6">
                   Get in Touch
                 </div>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight">
-                  Ready to transform your school operations?
+                <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-5">
+                  Ready to transform your school?
                 </h2>
-                <p className="text-white/50 leading-relaxed">
+                <p className="text-white/40 text-lg leading-relaxed mb-10">
                   Send us a message and our team will get back to you within 24 hours. Or talk to Kai right now for an instant demo.
                 </p>
-                <div className="space-y-4 pt-4">
+                <div className="space-y-5">
                   {[
                     { icon: Clock, label: "Response time", value: "Under 24 hours" },
                     { icon: Shield, label: "Data security", value: "SOC 2 compliant" },
-                    { icon: Bell, label: "Onboarding", value: "White-glove setup" }
-                  ].map((item, i) => (
+                    { icon: Star, label: "Onboarding", value: "White-glove setup" },
+                  ].map(({ icon: Icon, label, value }, i) => (
                     <div key={i} className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-5 h-5 text-red-400" />
+                      <div className="w-10 h-10 rounded-xl border border-white/8 bg-white/3 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-white/30" />
                       </div>
                       <div>
-                        <div className="text-white/35 text-xs uppercase tracking-wider">{item.label}</div>
-                        <div className="text-white font-semibold text-sm">{item.value}</div>
+                        <div className="text-white/30 text-xs mb-0.5">{label}</div>
+                        <div className="text-white text-sm font-semibold">{value}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
-                <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); toast.success("Message sent! We'll be in touch soon."); }}>
-                  <div>
-                    <label className="block text-white/60 text-sm font-medium mb-2">Full Name</label>
-                    <input
-                      id="contact-name"
-                      type="text"
-                      placeholder="John Smith"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 focus:bg-white/8 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white/60 text-sm font-medium mb-2">Email Address</label>
-                    <input
-                      id="contact-email"
-                      type="email"
-                      placeholder="john@example.com"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 focus:bg-white/8 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white/60 text-sm font-medium mb-2">Message</label>
-                    <textarea
-                      id="contact-message"
-                      rows={4}
-                      placeholder="Tell us about your school..."
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 focus:bg-white/8 transition-all resize-none"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
-                  >
-                    Send Message
-                  </button>
-                </form>
+              <div className="scroll-reveal" style={{ transitionDelay: '150ms' }}>
+                <ContactForm />
               </div>
             </div>
           </div>
         </section>
 
-        {/* ─── FINAL CTA ───────────────────────────────────────────── */}
-        <section className="relative py-28 sm:py-36 overflow-hidden scroll-reveal">
-          {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-red-950/40 via-[#080808] to-[#080808]" />
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(220,38,38,0.15) 0%, transparent 60%)' }} />
+        {/* ═══════════════════════════════════════════════════════════
+            FINAL CTA
+        ═══════════════════════════════════════════════════════════ */}
+        <section className="relative py-40 overflow-hidden bg-[#050505]">
+          {/* Radial glow */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(225,29,72,0.12) 0%, transparent 70%)'
+          }} />
           {/* Grid */}
-          <div className="absolute inset-0 opacity-[0.04]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
           }} />
 
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <div className="max-w-3xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-sm font-semibold mb-8">
-                <Sparkles className="w-4 h-4" />
-                Start Today — Free for 14 Days
-              </div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-                Ready to transform<br />your dojo?
-              </h2>
-              <p className="text-lg sm:text-xl text-white/50 mb-12 max-w-2xl mx-auto leading-relaxed">
-                Join hundreds of martial arts schools using DojoFlow to grow their business and focus on what matters: teaching.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-                <Link to="/auth">
-                  <button className="group inline-flex items-center justify-center gap-3 px-12 py-5 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-orange-500 text-white text-base font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_40px_rgba(220,38,38,0.4)] hover:shadow-[0_0_60px_rgba(220,38,38,0.6)] hover:scale-[1.03]">
-                    Start Free Trial
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </Link>
-                <button className="inline-flex items-center justify-center gap-3 px-12 py-5 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm text-white text-base font-bold uppercase tracking-wider transition-all duration-300 hover:bg-white/10 hover:border-white/40">
-                  Schedule Demo
-                </button>
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-8 text-sm text-white/35">
-                {["14-day free trial", "No credit card required", "Cancel anytime"].map((item) => (
-                  <div key={item} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500/70" />
-                    {item}
-                  </div>
-                ))}
-              </div>
+          <div className="relative z-10 max-w-4xl mx-auto px-6 text-center scroll-reveal">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs font-semibold tracking-widest uppercase mb-8">
+              Start Today — Free for 14 Days
+            </div>
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white mb-6 leading-[0.95]">
+              Ready to transform<br />
+              <span className="text-rose-500">your dojo?</span>
+            </h2>
+            <p className="text-white/40 text-xl leading-relaxed mb-12 max-w-xl mx-auto">
+              Join hundreds of martial arts schools using DojoFlow to grow their business and focus on what matters: teaching.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+              <button
+                onClick={() => setShowKaiOnboarding(true)}
+                className="glow-cta group inline-flex items-center gap-3 px-10 py-5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold uppercase tracking-widest transition-all duration-300 hover:scale-[1.03]"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Start Free Trial
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button className="inline-flex items-center gap-2 px-10 py-5 rounded-xl border border-white/10 text-white/60 text-sm font-semibold uppercase tracking-widest hover:border-white/25 hover:text-white transition-all duration-300">
+                Schedule Demo
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-6 text-white/25 text-xs font-medium tracking-wide">
+              {["14-day free trial", "No credit card required", "Cancel anytime"].map((t) => (
+                <span key={t} className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-rose-500/40" />
+                  {t}
+                </span>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* ─── MODALS & OVERLAYS ───────────────────────────────────── */}
+        {/* ═══════════════════════════════════════════════════════════
+            FOOTER
+        ═══════════════════════════════════════════════════════════ */}
+        <footer className="border-t border-white/[0.06] bg-[#050505] py-16">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="grid md:grid-cols-4 gap-10 mb-12">
+              <div className="md:col-span-1">
+                <img src="/Darkdojoflow.png" alt="DojoFlow" className="h-8 mb-4" />
+                <p className="text-white/30 text-sm leading-relaxed">
+                  The AI-powered operating system for martial arts schools.
+                </p>
+              </div>
+              {[
+                { heading: "Product", links: ["Schools", "Fitness Facilities", "Studios", "Pricing"] },
+                { heading: "Company", links: ["About", "Blog", "Careers", "Contact"] },
+                { heading: "Legal", links: ["Terms", "Privacy", "Cookies", "Security"] },
+              ].map(({ heading, links }) => (
+                <div key={heading}>
+                  <div className="text-white/50 text-xs font-semibold tracking-widest uppercase mb-4">{heading}</div>
+                  <ul className="space-y-2.5">
+                    {links.map((link) => (
+                      <li key={link}>
+                        <a href="#" className="text-white/25 text-sm hover:text-white/60 transition-colors">{link}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-white/[0.06] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-white/20 text-xs">© 2025 DojoFlow. All rights reserved.</div>
+              <div className="flex items-center gap-4">
+                {/* Newsletter */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="email"
+                    placeholder="Email address"
+                    className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-rose-500/50 w-44"
+                  />
+                  <button className="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors">
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
 
-        {/* Onboarding Dialog */}
+      </div>
+
+      {/* ── Overlays & Modals ── */}
+      <CookieNotice />
+      <FloatingVideoIcon 
+        videoSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4"
+        posterSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
+        heroRef={heroRef as React.RefObject<HTMLElement>}
+      />
+      <FloatingKaiButton onOpen={() => setShowKaiOnboarding(true)} />
+      <ScrollIndicator />
+
+      {showKaiOnboarding && (
+        <KaiOnboardingFlow onClose={() => setShowKaiOnboarding(false)} />
+      )}
+
+      {showOnboarding && selectedCategory && (
         <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="bg-[#111] border-white/10 text-white max-w-lg">
             <DialogHeader>
-              <DialogTitle className="text-2xl">
-                {isCreating ? "Creating your DojoFlow workspace…" : "Kai Setup: Let's get a little more information"}
+              <DialogTitle className="text-white">
+                Set up your {getCategoryName(selectedCategory)} workspace
               </DialogTitle>
             </DialogHeader>
-            {isCreating ? (
-              <div className="py-12 text-center space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-8 h-8 text-primary animate-pulse" />
-                </div>
-                <p className="text-lg text-muted-foreground">Setting up your workspace...</p>
+            <div className="space-y-4 py-2">
+              {/* Step indicator */}
+              <div className="flex gap-2 mb-4">
+                {ONBOARDING_STEPS.map((step) => (
+                  <div
+                    key={step.id}
+                    className={`flex-1 h-1 rounded-full transition-colors ${
+                      step.id <= currentStep ? "bg-rose-500" : "bg-white/10"
+                    }`}
+                  />
+                ))}
               </div>
-            ) : (
-              <>
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Step {currentStep} of {ONBOARDING_STEPS.length}</span>
-                    <span className="text-sm font-medium text-primary">{Math.round((currentStep / ONBOARDING_STEPS.length) * 100)}%</span>
+              <p className="text-white/50 text-sm">{ONBOARDING_STEPS[currentStep - 1].title}</p>
+
+              {currentStep === 1 && (
+                <div className="space-y-3">
+                  <Label className="text-white/70">School Name</Label>
+                  <Input
+                    value={schoolName}
+                    onChange={(e) => setSchoolName(e.target.value)}
+                    placeholder="Dragon Martial Arts"
+                    className="bg-white/5 border-white/10 text-white placeholder-white/20"
+                  />
+                </div>
+              )}
+              {currentStep === 2 && (
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-white/70">Your Name</Label>
+                    <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="Master Chen" className="bg-white/5 border-white/10 text-white placeholder-white/20 mt-1" />
                   </div>
-                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                    <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${(currentStep / ONBOARDING_STEPS.length) * 100}%` }} />
+                  <div>
+                    <Label className="text-white/70">Email Address</Label>
+                    <Input type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="master@dragonma.com" className="bg-white/5 border-white/10 text-white placeholder-white/20 mt-1" />
                   </div>
                 </div>
-                <div className="space-y-6 min-h-[300px]">
-                  {currentStep === 1 && (
-                    <div><Label htmlFor="schoolName">School/Facility Name *</Label>
-                      <Input id="schoolName" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} placeholder="e.g., Dragon Martial Arts Academy" className="mt-2" /></div>
-                  )}
-                  {currentStep === 2 && (
-                    <div className="space-y-4">
-                      <div><Label htmlFor="ownerName">Your Name *</Label>
-                        <Input id="ownerName" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="e.g., John Smith" className="mt-2" /></div>
-                      <div><Label htmlFor="ownerEmail">Email Address *</Label>
-                        <Input id="ownerEmail" type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="e.g., john@dragonma.com" className="mt-2" /></div>
-                    </div>
-                  )}
-                  {currentStep === 3 && (
-                    <div className="space-y-4">
-                      <div><Label htmlFor="locationCount">Number of Locations *</Label>
-                        <Select value={locationCount} onValueChange={setLocationCount}>
-                          <SelectTrigger id="locationCount" className="mt-2"><SelectValue placeholder="Select..." /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 location</SelectItem>
-                            <SelectItem value="2-5">2-5 locations</SelectItem>
-                            <SelectItem value="6+">6+ locations</SelectItem>
-                          </SelectContent>
-                        </Select></div>
-                      <div><Label>Programs Offered *</Label>
-                        <div className="mt-3 space-y-3">
-                          {["Karate", "Kickboxing", "After-school", "Yoga", "Other"].map((program) => (
-                            <div key={program} className="flex items-center gap-2">
-                              <Checkbox id={program} checked={programs.includes(program)} onCheckedChange={() => handleProgramToggle(program)} />
-                              <Label htmlFor={program} className="cursor-pointer font-normal">{program}</Label>
-                            </div>
-                          ))}
-                        </div></div>
-                    </div>
-                  )}
-                  {currentStep === 4 && (
-                    <div><Label htmlFor="studentCount">Current Student Count *</Label>
-                      <Select value={studentCount} onValueChange={setStudentCount}>
-                        <SelectTrigger id="studentCount" className="mt-2"><SelectValue placeholder="Select range..." /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0-50">0-50 students</SelectItem>
-                          <SelectItem value="51-100">51-100 students</SelectItem>
-                          <SelectItem value="101-200">101-200 students</SelectItem>
-                          <SelectItem value="201-500">201-500 students</SelectItem>
-                          <SelectItem value="500+">500+ students</SelectItem>
-                        </SelectContent>
-                      </Select></div>
-                  )}
+              )}
+              {currentStep === 3 && (
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-white/70">Number of Locations</Label>
+                    <Select onValueChange={setLocationCount}>
+                      <SelectTrigger className="bg-white/5 border-white/10 text-white mt-1">
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 location</SelectItem>
+                        <SelectItem value="2-5">2–5 locations</SelectItem>
+                        <SelectItem value="6+">6+ locations</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-white/70 mb-2 block">Programs Offered</Label>
+                    {["Karate", "BJJ", "Taekwondo", "MMA", "Kickboxing", "Judo"].map((p) => (
+                      <div key={p} className="flex items-center gap-2 mb-2">
+                        <Checkbox
+                          checked={programs.includes(p)}
+                          onCheckedChange={() => handleProgramToggle(p)}
+                          className="border-white/20"
+                        />
+                        <span className="text-white/60 text-sm">{p}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between pt-6 border-t">
-                  <Button variant="ghost" onClick={handlePrevStep} disabled={currentStep === 1}>Back</Button>
-                  <Button onClick={handleNextStep} disabled={!canProceed()} className="min-w-[120px]">
-                    {currentStep === ONBOARDING_STEPS.length ? "Create Workspace" : "Next"}
+              )}
+              {currentStep === 4 && (
+                <div className="space-y-3">
+                  <Label className="text-white/70">Current Student Count</Label>
+                  <Select onValueChange={setStudentCount}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white mt-1">
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0-50">0–50 students</SelectItem>
+                      <SelectItem value="51-100">51–100 students</SelectItem>
+                      <SelectItem value="101-200">101–200 students</SelectItem>
+                      <SelectItem value="201-500">201–500 students</SelectItem>
+                      <SelectItem value="500+">500+ students</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                {currentStep > 1 && (
+                  <Button variant="outline" onClick={handlePrevStep} className="flex-1 border-white/10 text-white/60 hover:text-white">
+                    Back
                   </Button>
-                </div>
-              </>
-            )}
+                )}
+                <Button
+                  onClick={handleNextStep}
+                  disabled={!canProceed() || isCreating}
+                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white"
+                >
+                  {isCreating ? "Creating..." : currentStep === ONBOARDING_STEPS.length ? "Create Workspace" : "Continue"}
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
-
-        {/* Cookie Notice */}
-        <CookieNotice />
-
-        {/* Floating Video Icon */}
-        <FloatingVideoIcon
-          videoSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4"
-          posterSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
-          heroRef={heroRef as React.RefObject<HTMLElement>}
-        />
-
-        {/* Floating Kai Button */}
-        <FloatingKaiButton onClick={() => setShowKaiOnboarding(true)} />
-
-        {/* Kai Interactive Onboarding Flow */}
-        <KaiOnboardingFlow
-          isActive={showKaiOnboarding}
-          onClose={() => setShowKaiOnboarding(false)}
-          onComplete={(data) => { setShowKaiOnboarding(false); }}
-        />
-
-        {/* Scroll Indicator */}
-        <ScrollIndicator hidden={showKaiOnboarding} />
-      </div>
+      )}
     </MainLayout>
+  );
+}
+
+// ── Contact Form Component ──────────────────────────────────────────────────
+function ContactForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const contactMutation = trpc.contact?.sendMessage?.useMutation?.() ?? null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success("Message sent! We'll get back to you within 24 hours.");
+    setName(""); setEmail(""); setMessage("");
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-8 space-y-5">
+      <div>
+        <label className="block text-white/50 text-xs font-semibold tracking-wide uppercase mb-2">Full Name</label>
+        <input
+          id="contact-name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="John Smith"
+          className="w-full bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-rose-500/40 focus:bg-white/8 transition-all"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-white/50 text-xs font-semibold tracking-wide uppercase mb-2">Email Address</label>
+        <input
+          id="contact-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="john@example.com"
+          className="w-full bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-rose-500/40 focus:bg-white/8 transition-all"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-white/50 text-xs font-semibold tracking-wide uppercase mb-2">Message</label>
+        <textarea
+          id="contact-message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Tell us about your school..."
+          rows={4}
+          className="w-full bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-rose-500/40 focus:bg-white/8 transition-all resize-none"
+          required
+        />
+      </div>
+      <button
+        type="submit"
+        className="w-full py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold uppercase tracking-widest transition-all duration-200 hover:scale-[1.01]"
+      >
+        Send Message
+      </button>
+    </form>
   );
 }
