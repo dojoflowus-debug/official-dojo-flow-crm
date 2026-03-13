@@ -1,8 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/MainLayout";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard, MessageSquare, BarChart3, Shield, Zap, Star, TrendingUp, Clock, Bell, Phone, Plus, Menu, X, MessageCircle, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import {
+  ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard,
+  MessageSquare, BarChart3, Zap, Star, TrendingUp, Play, MessageCircle,
+  Shield, Clock, Bell, ChevronRight, ChevronLeft, Quote
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -38,10 +41,11 @@ export default function PublicLanding() {
   const [selectedCategory, setSelectedCategory] = useState<PromptCategory | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [showKaiOnboarding, setShowKaiOnboarding] = useState(false);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [activeAudience, setActiveAudience] = useState(0);
+  const [countersStarted, setCountersStarted] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
 
   // Onboarding form state
   const [schoolName, setSchoolName] = useState("");
@@ -52,40 +56,13 @@ export default function PublicLanding() {
   const [studentCount, setStudentCount] = useState("");
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-      setIsScrolled(window.scrollY > 20);
-    };
-
+    const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on ESC key
+  // Intersection observer for scroll reveals
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && mobileMenuOpen) {
-        setMobileMenuOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [mobileMenuOpen]);
-
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileMenuOpen]);
-
-  useEffect(() => {
-    // Reveal animations on scroll
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -96,12 +73,31 @@ export default function PublicLanding() {
       },
       { threshold: 0.1 }
     );
-
-    document.querySelectorAll(".scroll-reveal").forEach((el) => {
-      observer.observe(el);
-    });
-
+    document.querySelectorAll(".scroll-reveal").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
+  }, []);
+
+  // Stats counter trigger
+  useEffect(() => {
+    if (!statsRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !countersStarted) {
+          setCountersStarted(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(statsRef.current);
+    return () => observer.disconnect();
+  }, [countersStarted]);
+
+  // Auto-rotate testimonials
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleCardClick = (category: PromptCategory) => {
@@ -119,9 +115,7 @@ export default function PublicLanding() {
   };
 
   const handlePrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const navigate = useNavigate();
@@ -129,127 +123,109 @@ export default function PublicLanding() {
 
   const handleCreateWorkspace = async () => {
     if (!selectedCategory) return;
-    
     setIsCreating(true);
-    
     try {
       const result = await quickSignupMutation.mutateAsync({
-        schoolName,
-        ownerName,
-        ownerEmail,
+        schoolName, ownerName, ownerEmail,
         locationCount: locationCount as "1" | "2-5" | "6+",
         programs,
         studentCount: studentCount as "0-50" | "51-100" | "101-200" | "201-500" | "500+",
         category: selectedCategory,
       });
-
       if (result.success) {
-        // Show success message
-        toast({
-          title: "Workspace Created!",
-          description: `Welcome to DojoFlow, ${ownerName}! Your ${getCategoryName(selectedCategory)} Command Center is ready.`,
-        });
-
-        // Redirect to welcome page with category tag
+        toast.success(`Welcome to DojoFlow, ${ownerName}! Your workspace is ready.`);
         window.location.href = `/welcome?category=${selectedCategory}`;
       }
     } catch (error: any) {
-      toast({
-        title: "Signup Failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Something went wrong. Please try again.");
       setIsCreating(false);
     }
   };
 
   const getCategoryName = (category: PromptCategory): string => {
-    switch (category) {
-      case "growth":
-        return "Growth";
-      case "health":
-        return "School Health";
-      case "billing":
-        return "Billing";
-      case "retention":
-        return "Retention";
-    }
-  };
-
-  const getCardPlaceholder = (category: PromptCategory): string => {
-    switch (category) {
-      case "growth":
-        return "Ask Kai how to grow your kids program...";
-      case "health":
-        return "Ask Kai about your school's health metrics...";
-      case "billing":
-        return "Ask Kai about billing and payments...";
-      case "retention":
-        return "Ask Kai about student retention strategies...";
-    }
+    const names: Record<PromptCategory, string> = {
+      growth: "Growth", health: "School Health", billing: "Billing",
+      retention: "Retention", enrollments: "Enrollments", "at-risk": "At-Risk",
+      "class-quality": "Class Quality", "parent-comms": "Parent Comms",
+      "staff-perf": "Staff Performance", financial: "Financial"
+    };
+    return names[category] || category;
   };
 
   const handleProgramToggle = (program: string) => {
-    setPrograms(prev => 
-      prev.includes(program) 
-        ? prev.filter(p => p !== program)
-        : [...prev, program]
-    );
+    setPrograms(prev => prev.includes(program) ? prev.filter(p => p !== program) : [...prev, program]);
   };
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1:
-        return schoolName.trim() !== "";
-      case 2:
-        return ownerName.trim() !== "" && ownerEmail.trim() !== "";
-      case 3:
-        return locationCount !== "" && programs.length > 0;
-      case 4:
-        return studentCount !== "";
-      default:
-        return false;
+      case 1: return schoolName.trim() !== "";
+      case 2: return ownerName.trim() !== "" && ownerEmail.trim() !== "";
+      case 3: return locationCount !== "" && programs.length > 0;
+      case 4: return studentCount !== "";
+      default: return false;
     }
   };
-
-
 
   const features = [
     {
       icon: Sparkles,
       title: "Kai AI Assistant",
       description: "Your 24/7 AI sensei handles student inquiries, schedules classes, and answers questions instantly via chat, SMS, or voice.",
-      highlight: "Responds in seconds"
+      highlight: "Responds in seconds",
+      color: "from-red-500/20 to-orange-500/10",
+      border: "border-red-500/30",
+      iconBg: "bg-red-500/15",
+      iconColor: "text-red-400"
     },
     {
       icon: Users,
       title: "Student Management",
       description: "Track progress, belt ranks, attendance, and achievements. Complete profiles with photos, emergency contacts, and custom notes.",
-      highlight: "All-in-one profiles"
+      highlight: "All-in-one profiles",
+      color: "from-blue-500/20 to-cyan-500/10",
+      border: "border-blue-500/30",
+      iconBg: "bg-blue-500/15",
+      iconColor: "text-blue-400"
     },
     {
       icon: Calendar,
       title: "Smart Scheduling",
       description: "Automated class scheduling, private lesson booking, and belt testing coordination. Sync with Google Calendar seamlessly.",
-      highlight: "Zero conflicts"
+      highlight: "Zero conflicts",
+      color: "from-emerald-500/20 to-teal-500/10",
+      border: "border-emerald-500/30",
+      iconBg: "bg-emerald-500/15",
+      iconColor: "text-emerald-400"
     },
     {
       icon: CreditCard,
       title: "Automated Billing",
       description: "Recurring payments, failed payment recovery, and instant invoicing. Stripe integration handles everything securely.",
-      highlight: "Get paid on time"
+      highlight: "Get paid on time",
+      color: "from-violet-500/20 to-purple-500/10",
+      border: "border-violet-500/30",
+      iconBg: "bg-violet-500/15",
+      iconColor: "text-violet-400"
     },
     {
       icon: MessageSquare,
       title: "Multi-Channel Communication",
       description: "Send announcements via SMS, email, or in-app notifications. Kai handles routine questions automatically.",
-      highlight: "Reach everyone instantly"
+      highlight: "Reach everyone instantly",
+      color: "from-amber-500/20 to-yellow-500/10",
+      border: "border-amber-500/30",
+      iconBg: "bg-amber-500/15",
+      iconColor: "text-amber-400"
     },
     {
       icon: BarChart3,
       title: "Analytics & Insights",
       description: "Track retention rates, revenue trends, attendance patterns, and student progress. Make data-driven decisions.",
-      highlight: "Know your numbers"
+      highlight: "Know your numbers",
+      color: "from-pink-500/20 to-rose-500/10",
+      border: "border-pink-500/30",
+      iconBg: "bg-pink-500/15",
+      iconColor: "text-pink-400"
     }
   ];
 
@@ -258,254 +234,682 @@ export default function PublicLanding() {
       quote: "DojoFlow transformed my school. Kai handles 80% of parent questions, and I finally have time to focus on teaching. Revenue is up 40% since we started.",
       author: "Master Chen",
       role: "Owner, Dragon Martial Arts",
-      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/rZjQsPKJqBelAEmG.jpg"
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/rZjQsPKJqBelAEmG.jpg",
+      rating: 5
     },
     {
       quote: "The billing automation alone saved me 10 hours per week. No more chasing payments or manual invoicing. It just works.",
       author: "Sensei Rodriguez",
       role: "Head Instructor, Elite Karate Academy",
-      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nnvbmwPstsbqiBUN.jpg"
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nnvbmwPstsbqiBUN.jpg",
+      rating: 5
     },
     {
       quote: "I was skeptical about AI, but Kai is incredible. Parents love getting instant answers at 11 PM. My phone finally stopped ringing during dinner.",
       author: "Coach Williams",
       role: "Founder, Williams BJJ",
-      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uDlxAPOIqFElRVKD.jpg"
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uDlxAPOIqFElRVKD.jpg",
+      rating: 5
     }
   ];
 
   const stats = [
-    { value: "10,000+", label: "Students Managed" },
-    { value: "98%", label: "Retention Rate" },
-    { value: "24/7", label: "AI Support" },
-    { value: "40%", label: "Revenue Growth" }
+    { value: "10,000+", label: "Students Managed", icon: Users },
+    { value: "98%", label: "Retention Rate", icon: TrendingUp },
+    { value: "24/7", label: "AI Support", icon: Sparkles },
+    { value: "40%", label: "Revenue Growth", icon: BarChart3 }
+  ];
+
+  const audiences = [
+    {
+      tag: "SCHOOL",
+      headline: "Run classes smoother. Enroll faster.",
+      body: "DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff — all in one platform. Stop juggling spreadsheets and start growing.",
+      href: "/schools",
+      accent: "from-red-600 to-orange-500",
+      bg: "bg-gradient-to-br from-[#0f0f0f] to-[#1a0a0a]",
+      tagBg: "bg-red-500/10 border-red-500/30 text-red-400"
+    },
+    {
+      tag: "FITNESS FACILITY",
+      headline: "A kiosk + automation layer for busy gyms.",
+      body: "Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, automates lead follow-up, and delivers real-time reporting. Keep your members moving and your operations efficient.",
+      href: "/fitness",
+      accent: "from-blue-600 to-cyan-500",
+      bg: "bg-gradient-to-br from-[#0a0f1a] to-[#0a1020]",
+      tagBg: "bg-blue-500/10 border-blue-500/30 text-blue-400"
+    },
+    {
+      tag: "STUDIO",
+      headline: "Modern operations for boutique training.",
+      body: "DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX. Focus on your craft while we handle the operations.",
+      href: "/studios",
+      accent: "from-violet-600 to-purple-500",
+      bg: "bg-gradient-to-br from-[#0f0a1a] to-[#120a1f]",
+      tagBg: "bg-violet-500/10 border-violet-500/30 text-violet-400"
+    }
+  ];
+
+  const pricingPlans = [
+    { name: "Starter", price: "$49", credits: "500 credits", featured: false, badge: null, color: "border-white/10 hover:border-white/20" },
+    { name: "Growth", price: "$99", credits: "1,500 credits", featured: true, badge: "Most Popular", color: "border-red-500 bg-gradient-to-b from-red-500/10 to-transparent" },
+    { name: "Pro", price: "$199", credits: "4,000 credits", featured: false, badge: null, color: "border-white/10 hover:border-white/20" },
+    { name: "Elite", price: "$499", credits: "10,000 credits", featured: false, badge: "Most Powerful", color: "border-amber-500/50 hover:border-amber-500 bg-gradient-to-b from-amber-500/5 to-transparent" }
+  ];
+
+  const howItWorks = [
+    { step: "01", title: "Connect", desc: "Connect your school, staff, and schedule in minutes.", icon: Users, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" },
+    { step: "02", title: "Activate", desc: "Turn on automations — calls, SMS, follow-ups, enrollment.", icon: Zap, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+    { step: "03", title: "Run", desc: "Manage check-ins, attendance, leads, and retention daily.", icon: Calendar, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+    { step: "04", title: "Grow", desc: "Track KPIs and revenue with dashboards and insights.", icon: TrendingUp, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20" }
   ];
 
   return (
     <MainLayout transparentHeader>
-      <div className="min-h-full bg-background overflow-x-hidden">
-      {/* Hero Section - Cinematic Kai Command Module */}
-      <section 
-        ref={heroRef}
-        className="relative h-full flex items-center justify-center overflow-hidden"
-      >
-        {/* Cinematic Hero Video Background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-          poster="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
+      <div className="min-h-full bg-[#080808] overflow-x-hidden">
+
+        {/* ─── HERO ─────────────────────────────────────────────────── */}
+        <section
+          ref={heroRef}
+          className="relative min-h-screen flex items-center justify-center overflow-hidden"
         >
-          <source src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4" type="video/mp4" />
-          {/* Fallback to image if video doesn't load */}
-        </video>
-        
-        {/* Fallback background image for browsers that don't support video */}
-        <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-center -z-10"
-          style={{ backgroundImage: 'url(/images/hero/hero-background.jpg)' }}
-        />
-        
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/85" />
-        
-        {/* Additional vignette for depth */}
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/30 to-black/70 pointer-events-none" />
+          {/* Video Background */}
+          <video
+            autoPlay muted loop playsInline
+            className="absolute inset-0 w-full h-full object-cover scale-105"
+            poster="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
+          >
+            <source src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4" type="video/mp4" />
+          </video>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-0 h-full flex items-center justify-center">
-          {/* Kai Command Center */}
-          <div className="max-w-6xl mx-auto w-full">
-            {/* Kai Emblem/Orb - Central Focus */}
-            <div className="flex justify-center mb-8 sm:mb-12 md:mb-16 animate-[fadeSlideUp_0.7s_ease-out_0.2s_forwards]">
-              <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 flex items-center justify-center">
-                {/* Outer glow ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-red-500/40 animate-spin" style={{ animationDuration: "8s" }} />
-                
-                {/* Middle ring */}
-                <div className="absolute inset-2 rounded-full border border-red-500/30" />
-                
-                {/* Inner orb with breathing effect */}
-                <div className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-red-500/40 to-red-600/20 flex items-center justify-center shadow-lg shadow-red-500/30 animate-pulse-slow">
-                  <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nDbbiINIuNulnQxs.png" alt="Kai" className="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 drop-shadow-lg" />
-                </div>
+          {/* Multi-layer overlay for cinematic depth */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-black/40" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(220,38,38,0.08) 0%, transparent 60%)' }} />
+
+          {/* Animated grid overlay */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
+          }} />
+
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-32">
+            <div className="max-w-5xl">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 backdrop-blur-sm mb-8 animate-[fadeSlideUp_0.6s_ease-out_0.1s_both]">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-red-400 text-sm font-semibold tracking-widest uppercase">AI-Powered Dojo Management</span>
               </div>
-            </div>
 
-            {/* Primary Headline - Authoritative & Powerful */}
-            <div className="text-center mb-6 sm:mb-8 md:mb-10 space-y-3 sm:space-y-4 md:space-y-5 animate-[fadeSlideUp_0.7s_ease-out_0.4s_forwards]">
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight text-white tracking-tight drop-shadow-2xl">
-                This is your command center.
+              {/* Headline */}
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.9] text-white mb-6 tracking-tight animate-[fadeSlideUp_0.7s_ease-out_0.2s_both]">
+                This is your<br />
+                <span className="relative inline-block">
+                  <span className="bg-gradient-to-r from-red-500 via-orange-400 to-red-500 bg-clip-text text-transparent">command center.</span>
+                  <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-red-500 to-orange-400 rounded-full opacity-60" />
+                </span>
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-slate-200 font-light tracking-wide px-4 sm:px-0">
+
+              {/* Subheadline */}
+              <p className="text-xl sm:text-2xl md:text-3xl text-white/80 font-light mb-4 max-w-3xl animate-[fadeSlideUp_0.7s_ease-out_0.35s_both]">
                 Kai is your AI operations assistant for martial arts schools.
               </p>
-            </div>
+              <p className="text-base sm:text-lg text-white/55 max-w-2xl leading-relaxed mb-12 animate-[fadeSlideUp_0.7s_ease-out_0.5s_both]">
+                From student management to instructor coordination, Kai learns your environment and delivers intelligent solutions in real time.
+              </p>
 
-            {/* Secondary Message - System-like Authority */}
-            <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-10 sm:mb-12 md:mb-14 px-4 sm:px-0 animate-[fadeSlideUp_0.7s_ease-out_0.6s_forwards]">
-              From student management to instructor coordination, Kai learns your environment and delivers intelligent solutions in real time.
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 animate-[fadeSlideUp_0.7s_ease-out_0.65s_both]">
+                <button
+                  onClick={() => setShowKaiOnboarding(true)}
+                  className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-orange-500 text-white text-base font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_40px_rgba(220,38,38,0.4)] hover:shadow-[0_0_60px_rgba(220,38,38,0.6)] hover:scale-[1.03]"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Talk to Kai
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm text-white text-base font-bold uppercase tracking-wider transition-all duration-300 hover:bg-white/10 hover:border-white/40">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <Play className="w-3 h-3 ml-0.5" />
+                  </div>
+                  Watch Demo
+                </button>
+              </div>
+
+              {/* Trust indicators */}
+              <div className="flex flex-wrap items-center gap-6 mt-12 animate-[fadeSlideUp_0.7s_ease-out_0.8s_both]">
+                {["14-day free trial", "No credit card required", "Cancel anytime"].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-white/50 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Scroll hint */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+            <span className="text-white/30 text-xs uppercase tracking-widest">Scroll</span>
+            <div className="w-[1px] h-8 bg-gradient-to-b from-white/30 to-transparent" />
+          </div>
+        </section>
+
+        {/* ─── STATS BAR ───────────────────────────────────────────── */}
+        <section ref={statsRef} className="relative z-10 -mt-1 bg-gradient-to-r from-red-600 via-red-500 to-orange-500">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, i) => (
+                <div key={i} className="text-center">
+                  <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-1 tabular-nums">
+                    {stat.value}
+                  </div>
+                  <div className="text-white/80 text-sm font-medium uppercase tracking-wider">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── BRAND STATEMENT ─────────────────────────────────────── */}
+        <section className="py-24 sm:py-32 relative overflow-hidden scroll-reveal">
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(220,38,38,0.04) 0%, transparent 70%)' }} />
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-6">
+              Your brand. Their training.
+            </h2>
+            <p className="text-3xl sm:text-4xl md:text-5xl font-black mb-8"
+              style={{ background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              Everyone wins.
             </p>
+            <p className="text-lg sm:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed">
+              DojoFlow unifies enrollment, retention, and operations with AI-assisted automation built for schools and fitness studios.
+            </p>
+          </div>
+        </section>
 
-            {/* CTA Buttons - Clear Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-[fadeSlideUp_0.7s_ease-out_0.8s_forwards]">
-              {/* Primary CTA */}
-              <button 
-                onClick={() => setShowKaiOnboarding(true)}
-                className="group inline-flex items-center gap-2 sm:gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-base sm:text-lg font-bold uppercase tracking-wider transition-all duration-300 shadow-lg shadow-red-500/40 hover:shadow-red-500/60 hover:scale-105"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Talk to Kai
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              
-              {/* Secondary CTA */}
-              <button 
-                className="group inline-flex items-center gap-2 sm:gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-lg border-2 border-red-500 text-red-400 hover:text-red-300 hover:border-red-400 text-base sm:text-lg font-bold uppercase tracking-wider transition-all duration-300 hover:bg-red-500/10"
-              >
-                Watch Demo
-                <Play className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Subtle Scroll Hint */}
-            <div className="pt-12 sm:pt-16 md:pt-20 animate-[fadeSlideUp_0.7s_ease-out_1s_forwards]">
-              <p className="text-xs text-slate-400/70 uppercase tracking-widest animate-bounce text-center">
-                Scroll to explore
+        {/* ─── HOW IT WORKS ────────────────────────────────────────── */}
+        <section className="py-20 sm:py-28 relative scroll-reveal">
+          <div className="absolute inset-0 bg-[#0d0d0d]" />
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium mb-6">
+                <Zap className="w-4 h-4 text-red-400" />
+                Simple Process
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
+                How DojoFlow Works
+              </h2>
+              <p className="text-white/50 text-lg max-w-xl mx-auto">
+                Four simple steps to transform your school operations
               </p>
             </div>
 
-
-          </div>
-        </div>
-      </section>
-
-      {/* Onboarding Dialog */}
-      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
-        <DialogContent className="max-w-2xl transition-all duration-500">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">
-              {isCreating ? "Creating your DojoFlow workspace…" : "Kai Setup: Let's get a little more information"}
-            </DialogTitle>
-          </DialogHeader>
-
-          {isCreating ? (
-            <div className="py-12 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-primary animate-pulse" />
-              </div>
-              <p className="text-lg text-muted-foreground">Setting up your workspace...</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              {howItWorks.map((step, i) => (
+                <div key={i} className={`relative group p-8 rounded-2xl border ${step.border} ${step.bg} hover:scale-[1.03] transition-all duration-300`}>
+                  {/* Connector line */}
+                  {i < howItWorks.length - 1 && (
+                    <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-[1px] bg-white/10 z-10" />
+                  )}
+                  <div className="text-5xl font-black text-white/5 mb-4 leading-none">{step.step}</div>
+                  <div className={`w-12 h-12 rounded-xl ${step.bg} border ${step.border} flex items-center justify-center mb-5`}>
+                    <step.icon className={`w-6 h-6 ${step.color}`} />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                  <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
             </div>
-          ) : (
-            <>
-              {/* Progress Indicator */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Step {currentStep} of {ONBOARDING_STEPS.length}
-                  </span>
-                  <span className="text-sm font-medium text-primary">
-                    {Math.round((currentStep / ONBOARDING_STEPS.length) * 100)}%
-                  </span>
-                </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
-                  <div 
-                    className="h-full bg-primary transition-all duration-500 ease-out"
-                    style={{ 
-                      width: `${(currentStep / ONBOARDING_STEPS.length) * 100}%`,
-                      boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
-                    }}
-                  />
-                </div>
+          </div>
+        </section>
+
+        {/* ─── FEATURES GRID ───────────────────────────────────────── */}
+        <section id="features" className="py-20 sm:py-28 scroll-reveal">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4 text-red-400" />
+                Everything You Need
               </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
+                Built for martial arts schools
+              </h2>
+              <p className="text-white/50 text-lg max-w-2xl mx-auto">
+                Stop juggling spreadsheets, payment apps, and messaging tools. DojoFlow brings everything together in one powerful platform.
+              </p>
+            </div>
 
-              {/* Step Content */}
-              <div className="space-y-6 min-h-[300px]">
-                {currentStep === 1 && (
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="schoolName">School/Facility Name *</Label>
-                      <Input
-                        id="schoolName"
-                        value={schoolName}
-                        onChange={(e) => setSchoolName(e.target.value)}
-                        placeholder="e.g., Dragon Martial Arts Academy"
-                        className="mt-2"
-                      />
-                    </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl mx-auto">
+              {features.map((feature, i) => (
+                <div
+                  key={i}
+                  className={`group relative p-7 rounded-2xl border ${feature.border} bg-gradient-to-br ${feature.color} hover:scale-[1.02] transition-all duration-400 overflow-hidden cursor-default`}
+                >
+                  {/* Glow on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
+                    style={{ boxShadow: 'inset 0 0 40px rgba(255,255,255,0.03)' }} />
+
+                  <div className={`w-12 h-12 rounded-xl ${feature.iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                    <feature.icon className={`w-6 h-6 ${feature.iconColor}`} />
                   </div>
-                )}
-
-                {currentStep === 2 && (
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="ownerName">Your Name *</Label>
-                      <Input
-                        id="ownerName"
-                        value={ownerName}
-                        onChange={(e) => setOwnerName(e.target.value)}
-                        placeholder="e.g., John Smith"
-                        className="mt-2"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ownerEmail">Email Address *</Label>
-                      <Input
-                        id="ownerEmail"
-                        type="email"
-                        value={ownerEmail}
-                        onChange={(e) => setOwnerEmail(e.target.value)}
-                        placeholder="e.g., john@dragonma.com"
-                        className="mt-2"
-                      />
-                    </div>
+                  <h3 className="text-lg font-bold text-white mb-3">{feature.title}</h3>
+                  <p className="text-white/50 text-sm leading-relaxed mb-4">{feature.description}</p>
+                  <div className={`inline-flex items-center gap-2 text-xs font-semibold ${feature.iconColor} uppercase tracking-wider`}>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {feature.highlight}
                   </div>
-                )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                {currentStep === 3 && (
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="locationCount">Number of Locations *</Label>
-                      <Select value={locationCount} onValueChange={setLocationCount}>
-                        <SelectTrigger id="locationCount" className="mt-2">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 location</SelectItem>
-                          <SelectItem value="2-5">2-5 locations</SelectItem>
-                          <SelectItem value="6+">6+ locations</SelectItem>
-                        </SelectContent>
-                      </Select>
+        {/* ─── AUDIENCE TABS ───────────────────────────────────────── */}
+        <section className="py-20 sm:py-28 bg-[#0d0d0d] scroll-reveal">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
+                Built for every type of facility
+              </h2>
+              <p className="text-white/50 text-lg">Select your facility type to see how DojoFlow fits your needs.</p>
+            </div>
+
+            {/* Tab switcher */}
+            <div className="flex justify-center gap-2 mb-12 flex-wrap">
+              {audiences.map((aud, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveAudience(i)}
+                  className={`px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300 border ${
+                    activeAudience === i
+                      ? 'bg-red-500 border-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)]'
+                      : 'border-white/10 text-white/50 hover:text-white hover:border-white/30'
+                  }`}
+                >
+                  {aud.tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Active audience panel */}
+            <div className="max-w-5xl mx-auto">
+              {audiences.map((aud, i) => (
+                <div
+                  key={i}
+                  className={`transition-all duration-500 ${activeAudience === i ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 hidden'}`}
+                >
+                  <div className={`rounded-3xl border border-white/10 ${aud.bg} p-10 sm:p-14 grid md:grid-cols-2 gap-10 items-center`}>
+                    <div className="space-y-6">
+                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold uppercase tracking-widest ${aud.tagBg}`}>
+                        FOR THE {aud.tag}
+                      </div>
+                      <h3 className="text-3xl sm:text-4xl font-black text-white leading-tight">{aud.headline}</h3>
+                      <p className="text-white/55 leading-relaxed">{aud.body}</p>
+                      <Link
+                        to={aud.href}
+                        className="inline-flex items-center gap-2 text-white font-semibold hover:gap-4 transition-all duration-300 group"
+                      >
+                        Learn more
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </Link>
                     </div>
-                    <div>
-                      <Label>Programs Offered *</Label>
-                      <div className="mt-3 space-y-3">
-                        {["Karate", "Kickboxing", "After-school", "Yoga", "Other"].map((program) => (
-                          <div key={program} className="flex items-center gap-2">
-                            <Checkbox
-                              id={program}
-                              checked={programs.includes(program)}
-                              onCheckedChange={() => handleProgramToggle(program)}
-                            />
-                            <Label htmlFor={program} className="cursor-pointer font-normal">
-                              {program}
-                            </Label>
-                          </div>
-                        ))}
+                    {/* Visual placeholder — dashboard mockup */}
+                    <div className="relative">
+                      <div className={`rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm`}>
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                          <div className="w-3 h-3 rounded-full bg-amber-500/60" />
+                          <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
+                          <div className="flex-1 h-[1px] bg-white/10 ml-2" />
+                        </div>
+                        <div className="space-y-3">
+                          {[...Array(4)].map((_, j) => (
+                            <div key={j} className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${aud.accent} opacity-60 flex-shrink-0`} />
+                              <div className="flex-1 space-y-1.5">
+                                <div className="h-2 bg-white/10 rounded-full" style={{ width: `${60 + j * 10}%` }} />
+                                <div className="h-1.5 bg-white/5 rounded-full" style={{ width: `${40 + j * 8}%` }} />
+                              </div>
+                              <div className={`text-xs font-bold bg-gradient-to-r ${aud.accent} bg-clip-text text-transparent`}>
+                                +{12 + j * 7}%
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className={`mt-5 h-1.5 rounded-full bg-gradient-to-r ${aud.accent} opacity-60`} />
+                      </div>
+                      {/* Floating badge */}
+                      <div className="absolute -top-4 -right-4 bg-[#0d0d0d] border border-white/10 rounded-xl px-4 py-2 shadow-xl">
+                        <div className="text-xs text-white/40 uppercase tracking-wider mb-0.5">This month</div>
+                        <div className={`text-lg font-black bg-gradient-to-r ${aud.accent} bg-clip-text text-transparent`}>↑ 40%</div>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                {currentStep === 4 && (
-                  <div className="space-y-4">
+        {/* ─── TESTIMONIALS ────────────────────────────────────────── */}
+        <section id="testimonials" className="py-20 sm:py-28 scroll-reveal relative overflow-hidden">
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center bottom, rgba(220,38,38,0.05) 0%, transparent 60%)' }} />
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm font-medium mb-6">
+                <Star className="w-4 h-4 fill-amber-400" />
+                Loved by Martial Arts Schools
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
+                Real results from real schools
+              </h2>
+            </div>
+
+            {/* Main testimonial carousel */}
+            <div className="max-w-4xl mx-auto">
+              <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] p-10 sm:p-14 overflow-hidden">
+                <div className="absolute top-8 left-10 opacity-10">
+                  <Quote className="w-20 h-20 text-red-500" />
+                </div>
+                <div className="relative z-10">
+                  <div className="flex gap-1 mb-8">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-xl sm:text-2xl md:text-3xl text-white/85 font-light leading-relaxed mb-10">
+                    "{testimonials[activeTestimonial].quote}"
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={testimonials[activeTestimonial].avatar}
+                      alt={testimonials[activeTestimonial].author}
+                      className="w-14 h-14 rounded-full border-2 border-red-500/30 object-cover"
+                    />
                     <div>
-                      <Label htmlFor="studentCount">Current Student Count *</Label>
+                      <div className="font-bold text-white text-lg">{testimonials[activeTestimonial].author}</div>
+                      <div className="text-white/45 text-sm">{testimonials[activeTestimonial].role}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation dots */}
+              <div className="flex justify-center gap-3 mt-8">
+                {testimonials.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveTestimonial(i)}
+                    className={`transition-all duration-300 rounded-full ${
+                      i === activeTestimonial ? 'w-8 h-2 bg-red-500' : 'w-2 h-2 bg-white/20 hover:bg-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* All 3 cards below */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-10">
+                {testimonials.map((t, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveTestimonial(i)}
+                    className={`text-left p-6 rounded-2xl border transition-all duration-300 ${
+                      i === activeTestimonial
+                        ? 'border-red-500/40 bg-red-500/5'
+                        : 'border-white/8 bg-white/[0.02] hover:border-white/15'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <img src={t.avatar} alt={t.author} className="w-9 h-9 rounded-full object-cover" />
+                      <div>
+                        <div className="text-white text-sm font-semibold">{t.author}</div>
+                        <div className="text-white/35 text-xs">{t.role}</div>
+                      </div>
+                    </div>
+                    <p className="text-white/45 text-xs leading-relaxed line-clamp-3">"{t.quote}"</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── PRICING ─────────────────────────────────────────────── */}
+        <section id="pricing" className="py-20 sm:py-28 bg-[#0d0d0d] scroll-reveal">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
+                Simple, transparent pricing
+              </h2>
+              <p className="text-white/50 text-lg mb-2">All plans include monthly AI credits. Upgrade anytime.</p>
+              <p className="text-white/30 text-sm max-w-lg mx-auto">
+                Credits are used when Kai performs actions like sending messages, analyzing data, or running workflows.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto mb-10">
+              {pricingPlans.map((plan, i) => (
+                <div
+                  key={i}
+                  className={`relative rounded-2xl border p-7 transition-all duration-300 hover:scale-[1.03] ${plan.color} ${plan.featured ? 'shadow-[0_0_40px_rgba(220,38,38,0.2)]' : ''}`}
+                >
+                  {plan.badge && (
+                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap ${
+                      plan.featured ? 'bg-red-500 text-white' : 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                    }`}>
+                      {plan.badge}
+                    </div>
+                  )}
+                  <div className="text-white/50 text-sm font-semibold mb-3">{plan.name}</div>
+                  <div className="text-4xl font-black text-white mb-1">{plan.price}</div>
+                  <div className="text-white/30 text-xs mb-5">per month</div>
+                  <div className={`text-sm font-semibold ${plan.featured ? 'text-red-400' : 'text-white/50'}`}>{plan.credits}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Link to="/pricing">
+                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 text-base px-10 h-13 rounded-xl">
+                  View Full Pricing
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── CONTACT ─────────────────────────────────────────────── */}
+        <section className="py-20 sm:py-28 scroll-reveal">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-start">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/60 text-sm font-medium">
+                  <MessageSquare className="w-4 h-4 text-red-400" />
+                  Get in Touch
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight">
+                  Ready to transform your school operations?
+                </h2>
+                <p className="text-white/50 leading-relaxed">
+                  Send us a message and our team will get back to you within 24 hours. Or talk to Kai right now for an instant demo.
+                </p>
+                <div className="space-y-4 pt-4">
+                  {[
+                    { icon: Clock, label: "Response time", value: "Under 24 hours" },
+                    { icon: Shield, label: "Data security", value: "SOC 2 compliant" },
+                    { icon: Bell, label: "Onboarding", value: "White-glove setup" }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                        <item.icon className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div>
+                        <div className="text-white/35 text-xs uppercase tracking-wider">{item.label}</div>
+                        <div className="text-white font-semibold text-sm">{item.value}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+                <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); toast.success("Message sent! We'll be in touch soon."); }}>
+                  <div>
+                    <label className="block text-white/60 text-sm font-medium mb-2">Full Name</label>
+                    <input
+                      id="contact-name"
+                      type="text"
+                      placeholder="John Smith"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 focus:bg-white/8 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/60 text-sm font-medium mb-2">Email Address</label>
+                    <input
+                      id="contact-email"
+                      type="email"
+                      placeholder="john@example.com"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 focus:bg-white/8 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/60 text-sm font-medium mb-2">Message</label>
+                    <textarea
+                      id="contact-message"
+                      rows={4}
+                      placeholder="Tell us about your school..."
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 focus:bg-white/8 transition-all resize-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+                  >
+                    Send Message
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── FINAL CTA ───────────────────────────────────────────── */}
+        <section className="relative py-28 sm:py-36 overflow-hidden scroll-reveal">
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-red-950/40 via-[#080808] to-[#080808]" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(220,38,38,0.15) 0%, transparent 60%)' }} />
+          {/* Grid */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }} />
+
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div className="max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-sm font-semibold mb-8">
+                <Sparkles className="w-4 h-4" />
+                Start Today — Free for 14 Days
+              </div>
+              <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
+                Ready to transform<br />your dojo?
+              </h2>
+              <p className="text-lg sm:text-xl text-white/50 mb-12 max-w-2xl mx-auto leading-relaxed">
+                Join hundreds of martial arts schools using DojoFlow to grow their business and focus on what matters: teaching.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+                <Link to="/auth">
+                  <button className="group inline-flex items-center justify-center gap-3 px-12 py-5 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-orange-500 text-white text-base font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_40px_rgba(220,38,38,0.4)] hover:shadow-[0_0_60px_rgba(220,38,38,0.6)] hover:scale-[1.03]">
+                    Start Free Trial
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </Link>
+                <button className="inline-flex items-center justify-center gap-3 px-12 py-5 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm text-white text-base font-bold uppercase tracking-wider transition-all duration-300 hover:bg-white/10 hover:border-white/40">
+                  Schedule Demo
+                </button>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-8 text-sm text-white/35">
+                {["14-day free trial", "No credit card required", "Cancel anytime"].map((item) => (
+                  <div key={item} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500/70" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── MODALS & OVERLAYS ───────────────────────────────────── */}
+
+        {/* Onboarding Dialog */}
+        <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">
+                {isCreating ? "Creating your DojoFlow workspace…" : "Kai Setup: Let's get a little more information"}
+              </DialogTitle>
+            </DialogHeader>
+            {isCreating ? (
+              <div className="py-12 text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-8 h-8 text-primary animate-pulse" />
+                </div>
+                <p className="text-lg text-muted-foreground">Setting up your workspace...</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Step {currentStep} of {ONBOARDING_STEPS.length}</span>
+                    <span className="text-sm font-medium text-primary">{Math.round((currentStep / ONBOARDING_STEPS.length) * 100)}%</span>
+                  </div>
+                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${(currentStep / ONBOARDING_STEPS.length) * 100}%` }} />
+                  </div>
+                </div>
+                <div className="space-y-6 min-h-[300px]">
+                  {currentStep === 1 && (
+                    <div><Label htmlFor="schoolName">School/Facility Name *</Label>
+                      <Input id="schoolName" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} placeholder="e.g., Dragon Martial Arts Academy" className="mt-2" /></div>
+                  )}
+                  {currentStep === 2 && (
+                    <div className="space-y-4">
+                      <div><Label htmlFor="ownerName">Your Name *</Label>
+                        <Input id="ownerName" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="e.g., John Smith" className="mt-2" /></div>
+                      <div><Label htmlFor="ownerEmail">Email Address *</Label>
+                        <Input id="ownerEmail" type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="e.g., john@dragonma.com" className="mt-2" /></div>
+                    </div>
+                  )}
+                  {currentStep === 3 && (
+                    <div className="space-y-4">
+                      <div><Label htmlFor="locationCount">Number of Locations *</Label>
+                        <Select value={locationCount} onValueChange={setLocationCount}>
+                          <SelectTrigger id="locationCount" className="mt-2"><SelectValue placeholder="Select..." /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 location</SelectItem>
+                            <SelectItem value="2-5">2-5 locations</SelectItem>
+                            <SelectItem value="6+">6+ locations</SelectItem>
+                          </SelectContent>
+                        </Select></div>
+                      <div><Label>Programs Offered *</Label>
+                        <div className="mt-3 space-y-3">
+                          {["Karate", "Kickboxing", "After-school", "Yoga", "Other"].map((program) => (
+                            <div key={program} className="flex items-center gap-2">
+                              <Checkbox id={program} checked={programs.includes(program)} onCheckedChange={() => handleProgramToggle(program)} />
+                              <Label htmlFor={program} className="cursor-pointer font-normal">{program}</Label>
+                            </div>
+                          ))}
+                        </div></div>
+                    </div>
+                  )}
+                  {currentStep === 4 && (
+                    <div><Label htmlFor="studentCount">Current Student Count *</Label>
                       <Select value={studentCount} onValueChange={setStudentCount}>
-                        <SelectTrigger id="studentCount" className="mt-2">
-                          <SelectValue placeholder="Select range..." />
-                        </SelectTrigger>
+                        <SelectTrigger id="studentCount" className="mt-2"><SelectValue placeholder="Select range..." /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="0-50">0-50 students</SelectItem>
                           <SelectItem value="51-100">51-100 students</SelectItem>
@@ -513,576 +917,42 @@ export default function PublicLanding() {
                           <SelectItem value="201-500">201-500 students</SelectItem>
                           <SelectItem value="500+">500+ students</SelectItem>
                         </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-              </div>
+                      </Select></div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between pt-6 border-t">
+                  <Button variant="ghost" onClick={handlePrevStep} disabled={currentStep === 1}>Back</Button>
+                  <Button onClick={handleNextStep} disabled={!canProceed()} className="min-w-[120px]">
+                    {currentStep === ONBOARDING_STEPS.length ? "Create Workspace" : "Next"}
+                  </Button>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
-              {/* Navigation Buttons */}
-              <div className="flex items-center justify-between pt-6 border-t">
-                <Button
-                  variant="ghost"
-                  onClick={handlePrevStep}
-                  disabled={currentStep === 1}
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={handleNextStep}
-                  disabled={!canProceed()}
-                  className="min-w-[120px]"
-                >
-                  {currentStep === ONBOARDING_STEPS.length ? "Create Workspace" : "Next"}
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+        {/* Cookie Notice */}
+        <CookieNotice />
 
-      {/* TesoroXP-Style Slogan Section */}
-      <section className="py-12 sm:py-16 md:py-20 scroll-reveal relative">
-        <div 
-          className="absolute inset-0 backdrop-blur-xl"
-          style={{
-            background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3))'
-          }}
+        {/* Floating Video Icon */}
+        <FloatingVideoIcon
+          videoSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4"
+          posterSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
+          heroRef={heroRef as React.RefObject<HTMLElement>}
         />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Headline - staggered animation */}
-            <h2 
-              className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.3s_forwards]"
-              style={{
-                textShadow: '0 0 30px rgba(255, 255, 255, 0.2)'
-              }}
-            >
-              Your brand. Their training.
-            </h2>
-            
-            {/* Punchline with gradient highlight - staggered animation */}
-            <p 
-              className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.6s_forwards]"
-              style={{
-                background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                filter: 'drop-shadow(0 0 20px rgba(147, 51, 234, 0.4))'
-              }}
-            >
-              Everyone wins.
-            </p>
-            
-            {/* Support line - staggered animation */}
-            <p 
-              className="text-base sm:text-lg md:text-xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed opacity-0 translate-y-8 animate-[fadeSlideUp_0.7s_ease-out_0.9s_forwards] px-4 sm:px-0"
-            >
-              DojoFlow unifies enrollment, retention, and operations with AI-assisted automation built for schools and fitness studios.
-            </p>
-          </div>
-        </div>
-      </section>
 
-      {/* How It Works Section - TesoroXP Style */}
-      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#d4f4dd] to-[#c8eed5] scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-12 md:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-              How DojoFlow Works
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-2xl mx-auto px-4 sm:px-0">
-              Four simple steps to transform your school operations
-            </p>
-          </div>
+        {/* Floating Kai Button */}
+        <FloatingKaiButton onClick={() => setShowKaiOnboarding(true)} />
 
-          {/* 4-Step Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto">
-            {/* Step 1: Connect */}
-            <div className="group">
-              <div className="bg-gradient-to-br from-[#ff6b6b] to-[#ff5252] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
-                <div className="flex-1 space-y-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
-                    <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
-                    Connect
-                  </h3>
-                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
-                    Connect your school, staff, and schedule.
-                  </p>
-                </div>
-              </div>
-            </div>
+        {/* Kai Interactive Onboarding Flow */}
+        <KaiOnboardingFlow
+          isActive={showKaiOnboarding}
+          onClose={() => setShowKaiOnboarding(false)}
+          onComplete={(data) => { setShowKaiOnboarding(false); }}
+        />
 
-            {/* Step 2: Activate */}
-            <div className="group">
-              <div className="bg-gradient-to-br from-[#ffb800] to-[#ffa500] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
-                <div className="flex-1 space-y-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
-                    <Zap className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
-                    Activate
-                  </h3>
-                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
-                    Turn on automations (calls, SMS, follow-ups, enrollment).
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3: Run */}
-            <div className="group">
-              <div className="bg-gradient-to-br from-[#00d084] to-[#00b872] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
-                <div className="flex-1 space-y-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
-                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
-                    Run
-                  </h3>
-                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
-                    Manage check-ins, attendance, leads, and retention daily.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 4: Grow */}
-            <div className="group">
-              <div className="bg-gradient-to-br from-[#00c9db] to-[#00b3c4] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[200px] sm:min-h-[280px] md:min-h-[320px] flex flex-col">
-                <div className="flex-1 space-y-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-black/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4">
-                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-black" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2 md:mb-3">
-                    Grow
-                  </h3>
-                  <p className="text-xs sm:text-sm md:text-base text-black/80 leading-relaxed">
-                    Track KPIs and revenue with dashboards and insights.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-16 sm:py-20 md:py-24 scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-xs sm:text-sm font-medium border border-primary/20 mb-4 sm:mb-6">
-              <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
-              <span>Everything You Need</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Built for martial arts schools
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4 sm:px-0">
-              Stop juggling spreadsheets, payment apps, and messaging tools. DojoFlow brings everything together in one powerful platform.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-10">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="group p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-500 relative overflow-hidden"
-                style={{
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                }}
-              >
-                {/* Soft glow on hover */}
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle at center, rgba(239, 68, 68, 0.05) 0%, transparent 70%)',
-                    filter: 'blur(20px)'
-                  }}
-                />
-                
-                <div className="relative">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center mb-4 sm:mb-5 md:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                    <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{feature.title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-3 sm:mb-4">{feature.description}</p>
-                  <div className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-primary">
-                    <Sparkles className="w-4 h-4" />
-                    {feature.highlight}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Three Audience Sections - TesoroXP Style */}
-      
-      {/* For Schools */}
-      <section id="schools" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#c8eed5] to-[#bce8cc] scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center max-w-6xl mx-auto">
-            {/* Text Content */}
-            <div className="space-y-6">
-              <div className="inline-block">
-                <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">FOR THE</span>
-                <div className="mt-2 inline-block px-4 py-2 border-2 border-gray-800 rounded-lg">
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">SCHOOL</span>
-                </div>
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                Run classes smoother. Enroll faster.
-              </h2>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff—all in one platform. Stop juggling spreadsheets and start growing.
-              </p>
-              <div className="pt-4">
-                <Link 
-                  to="/schools" 
-                  className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
-                >
-                  Learn more
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-            {/* Image */}
-            <div className="relative">
-              <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
-                <img 
-                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/XoEPWBnrzCNQjIBM.jpg" 
-                  alt="Children practicing martial arts in dojo" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* For Fitness Facilities */}
-      <section id="facilities" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#bce8cc] to-[#b0e2c2] scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center max-w-6xl mx-auto">
-            {/* Image */}
-            <div className="relative order-2 md:order-1">
-              <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
-                <img 
-                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/tcbVKpLefGBpxqma.jpg" 
-                  alt="Personal training session with battle ropes" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-            {/* Text Content */}
-            <div className="space-y-6 order-1 md:order-2">
-              <div className="inline-block">
-                <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">FOR THE</span>
-                <div className="mt-2 inline-block px-4 py-2 border-2 border-gray-800 rounded-lg">
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">FITNESS FACILITY</span>
-                </div>
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                A kiosk + automation layer for busy gyms.
-              </h2>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, automates lead follow-up, and delivers real-time reporting. Keep your members moving and your operations efficient.
-              </p>
-              <div className="pt-4">
-                <Link 
-                  to="/fitness" 
-                  className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
-                >
-                  Learn more
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* For Studios */}
-      <section id="studios" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#b0e2c2] to-[#a4dcb8] scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center max-w-6xl mx-auto">
-            {/* Text Content */}
-            <div className="space-y-6">
-              <div className="inline-block">
-                <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">FOR THE</span>
-                <div className="mt-2 inline-block px-4 py-2 border-2 border-gray-800 rounded-lg">
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">STUDIO</span>
-                </div>
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                Modern operations for yoga, dance, and boutique training.
-              </h2>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX. Focus on your craft while we handle the operations.
-              </p>
-              <div className="pt-4">
-                <Link 
-                  to="/studios" 
-                  className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:gap-4 transition-all duration-300 group"
-                >
-                  Learn more
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-            {/* Image */}
-            <div className="relative">
-              <div className="aspect-square rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl overflow-hidden">
-                <img 
-                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/wKVIbJBkIZnJgylk.jpg" 
-                  alt="Yoga class in serene studio" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Form Section - TesoroXP Style */}
-      <section id="contact" className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#a4dcb8] to-[#98d6ae] scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-8 sm:mb-10 md:mb-12">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                Get in touch
-              </h2>
-              <p className="text-base sm:text-lg text-gray-700">
-                Ready to transform your school operations? Send us a message.
-              </p>
-            </div>
-            
-            {/* Contact Form */}
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 md:p-12">
-              <form className="space-y-6">
-                <div>
-                  <Label htmlFor="contact-name" className="text-gray-900 font-medium">
-                    Full Name
-                  </Label>
-                  <Input
-                    id="contact-name"
-                    type="text"
-                    placeholder="John Smith"
-                    className="mt-2 bg-gray-50 border-gray-300 text-gray-900"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact-email" className="text-gray-900 font-medium">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="contact-email"
-                    type="email"
-                    placeholder="john@example.com"
-                    className="mt-2 bg-gray-50 border-gray-300 text-gray-900"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact-message" className="text-gray-900 font-medium">
-                    Message
-                  </Label>
-                  <textarea
-                    id="contact-message"
-                    rows={5}
-                    placeholder="Tell us about your school..."
-                    className="mt-2 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold py-6 text-lg uppercase tracking-wide rounded-xl"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toast.success("Message sent! We'll be in touch soon.");
-                  }}
-                >
-                  Send Message
-                </Button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-16 sm:py-20 md:py-24 bg-card scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent/10 text-xs sm:text-sm font-medium border border-accent/20 mb-4 sm:mb-6">
-              <Star className="w-3 h-3 sm:w-4 sm:h-4 text-accent fill-accent" />
-              <span>Loved by Martial Arts Schools</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Real results from real schools
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl bg-background border border-border hover:border-primary/50 hover:shadow-soft-lg transition-all duration-300 hover-lift"
-              >
-                <div className="flex items-center gap-1 mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-accent fill-accent" />
-                  ))}
-                </div>
-                <p className="text-base sm:text-lg leading-relaxed mb-4 sm:mb-6 text-foreground">
-                  "{testimonial.quote}"
-                </p>
-                <div className="flex items-center gap-4">
-                  <img
-                    src={testimonial.avatar}
-                    alt={testimonial.author}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div>
-                    <div className="font-semibold text-foreground">{testimonial.author}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Teaser */}
-      <section id="pricing" className="py-16 sm:py-20 md:py-24 scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-              Simple, transparent pricing
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4">
-              All plans include monthly AI credits. Upgrade anytime.
-            </p>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-8 sm:mb-10 md:mb-12 px-4 sm:px-0">
-              Credits are used when Kai performs actions like sending messages, analyzing data, or running workflows.
-            </p>
-            
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-10 md:mb-12">
-              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
-                <div className="text-sm font-semibold text-muted-foreground mb-2">Starter</div>
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$49</div>
-                <div className="text-xs text-muted-foreground mb-3">per month</div>
-                <div className="text-sm font-medium text-purple-600 dark:text-purple-400">500 credits</div>
-              </div>
-              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-primary text-primary-foreground border-2 border-primary shadow-lg scale-[1.02] hover:scale-105 transition-all">
-                <div className="text-xs font-semibold opacity-90 mb-2">Most Popular</div>
-                <div className="text-sm font-semibold mb-2">Growth</div>
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$99</div>
-                <div className="text-xs opacity-90 mb-3">per month</div>
-                <div className="text-sm font-medium">1,500 credits</div>
-              </div>
-              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
-                <div className="text-sm font-semibold text-muted-foreground mb-2">Pro</div>
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$199</div>
-                <div className="text-xs text-muted-foreground mb-3">per month</div>
-                <div className="text-sm font-medium text-purple-600 dark:text-purple-400">4,000 credits</div>
-              </div>
-              <div className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-600/10 border-2 border-amber-500/50 hover:border-amber-500 shadow-lg scale-[1.02] hover:scale-105 transition-all">
-                <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-2">Most Powerful</div>
-                <div className="text-sm font-semibold mb-2">Elite</div>
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">$499</div>
-                <div className="text-xs text-muted-foreground mb-3">per month</div>
-                <div className="text-sm font-medium text-amber-600 dark:text-amber-400">10,000 credits</div>
-              </div>
-            </div>
-
-            <Link href="/pricing">
-              <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2">
-                View Full Pricing
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 scroll-reveal">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-              Ready to transform your dojo?
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 sm:mb-10 md:mb-12 px-4 sm:px-0">
-              Join hundreds of martial arts schools using DojoFlow to grow their business and focus on what matters: teaching.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 h-14 shadow-soft-lg hover-lift font-semibold">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 h-14 border-2 hover:bg-secondary font-semibold">
-                Schedule Demo
-              </Button>
-            </div>
-
-            <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-primary" />
-                <span>14-day free trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-primary" />
-                <span>No credit card required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-primary" />
-                <span>Cancel anytime</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      
-      {/* Cookie Notice */}
-      <CookieNotice />
-      
-      {/* Floating Video Icon - appears when scrolling past hero */}
-      <FloatingVideoIcon 
-        videoSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4"
-        posterSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
-        heroRef={heroRef as React.RefObject<HTMLElement>}
-      />
-      
-      {/* Floating Kai Button - appears after user chooses "Keep exploring" */}
-      <FloatingKaiButton 
-        onClick={() => setShowKaiOnboarding(true)}
-      />
-      
-      {/* Kai Interactive Onboarding Flow */}
-      <KaiOnboardingFlow
-        isActive={showKaiOnboarding}
-        onClose={() => setShowKaiOnboarding(false)}
-        onComplete={(data) => {
-          console.log('Onboarding completed:', data);
-          setShowKaiOnboarding(false);
-        }}
-      />
-      
-      {/* Custom Floating Scroll Indicator - hides when Kai is open */}
-      <ScrollIndicator hidden={showKaiOnboarding} />
+        {/* Scroll Indicator */}
+        <ScrollIndicator hidden={showKaiOnboarding} />
       </div>
     </MainLayout>
   );
