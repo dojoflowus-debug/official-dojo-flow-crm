@@ -195,9 +195,9 @@ export default function PublicLanding() {
         </nav>
 
         {/* ── HERO ── */}
-        <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ background: "#050505" }}>
+        <section ref={heroRef} className="relative flex flex-col items-center justify-center overflow-hidden" style={{ background: "#050505", height: "100vh", minHeight: "100vh" }}>
           {/* Mosaic grid */}
-          <div className="absolute inset-0" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "repeat(3, 1fr)", gap: "3px" }}>
+          <div className="absolute inset-0" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "repeat(3, 1fr)", gap: "2px" }}>
             {MOSAIC_TILES.map((tile, i) => (
               <div key={i} className="mosaic-tile relative" style={{ gridColumn: tile.wide ? "span 2" : "span 1", filter: `brightness(${hoveredTile === i ? 0.65 : 0.32})` }} onMouseEnter={() => setHoveredTile(i)} onMouseLeave={() => setHoveredTile(null)}>
                 <img src={tile.src} alt={tile.label} className="w-full h-full object-cover" loading="lazy" />
