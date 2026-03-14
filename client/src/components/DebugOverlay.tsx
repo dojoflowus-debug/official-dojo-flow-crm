@@ -72,10 +72,12 @@ export function DebugOverlay() {
     return () => clearTimeout(timer)
   }, [location.pathname])
 
+  // Debug overlay disabled - remove for production
+  return null
   // Only render in development
-  if (import.meta.env.MODE !== 'development') {
-    return null
-  }
+  // if (import.meta.env.MODE !== 'development') {
+  //   return null
+  // }
 
   const authStatus = isLoading ? 'loading' : user ? 'authed' : 'unauthed'
   const shouldHaveNav = authStatus === 'authed' && !isFocusMode

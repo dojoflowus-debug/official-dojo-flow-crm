@@ -25,6 +25,7 @@ import { EscHintLabel } from '@/components/EscHintLabel'
 import CommandHeader from '@/components/CommandHeader'
 import { KaiBar } from '@/components/KaiBar'
 import { KaiBarProvider } from '@/contexts/KaiBarContext'
+import { EnvironmentSelectorModal } from '@/components/EnvironmentSelectorModal'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -128,18 +129,16 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
             height: 'var(--bottom-nav-height, 72px)',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             background: isCinematic 
-              ? 'rgba(5,5,8,0.85)' 
+              ? 'rgba(8,6,12,0.88)' 
               : isDark 
-                ? '#111217' 
-                : '#050608',
-            backdropFilter: isCinematic ? 'blur(20px)' : 'none',
-            WebkitBackdropFilter: isCinematic ? 'blur(20px)' : 'none',
+                ? 'oklch(0.09 0.008 25)' 
+                : 'oklch(0.08 0.008 25)',
+            backdropFilter: 'blur(24px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
             boxShadow: isCinematic 
-              ? '0 -6px 22px rgba(0,0,0,0.85), 0 0 14px rgba(255,90,60,0.18)' 
-              : isDark 
-                ? '0 -2px 10px rgba(0,0,0,0.6)' 
-                : '0 -2px 8px rgba(0,0,0,0.35)',
-            borderTop: isCinematic ? '1px solid rgba(255,255,255,0.06)' : 'none',
+              ? '0 -1px 0 rgba(255,255,255,0.06), 0 -8px 32px rgba(0,0,0,0.7), 0 0 20px rgba(229,57,53,0.12)' 
+              : '0 -1px 0 rgba(255,255,255,0.06), 0 -4px 20px rgba(0,0,0,0.5)',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <ScrollableNav 
@@ -196,23 +195,27 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
                     }}
                   >
                     {item.isCenter ? (
-                      <img 
-                        src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png" 
-                        alt="Kai" 
-                        className={`h-7 w-7 object-contain transition-all duration-200 ${active ? 'scale-110' : hoveredIndex === index ? 'opacity-100 scale-105' : 'opacity-90'}`}
-                      />
+                      <div className={`relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 ${active ? 'bg-[#E53935]/15' : ''}`}>
+                        <img 
+                          src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/IjqOFvsLMkrXFIaF.png" 
+                          alt="Kai" 
+                          className={`h-7 w-7 object-contain transition-all duration-200 ${active ? 'scale-110' : hoveredIndex === index ? 'opacity-100 scale-105' : 'opacity-90'}`}
+                        />
+                      </div>
                     ) : (
                       <>
-                        <Icon 
-                          className="transition-all duration-200 h-[22px] w-[22px] sm:h-[18px] sm:w-[18px]"
-                          style={{
-                            color: active 
-                              ? '#E53935' 
-                              : hoveredIndex === index 
-                                ? '#FFFFFF' 
-                                : 'rgba(255,255,255,0.72)'
-                          }}
-                        />
+                        <div className={`relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${active ? 'bg-[#E53935]/15' : ''}`}>
+                          <Icon 
+                            className="transition-all duration-200 h-[18px] w-[18px]"
+                            style={{
+                              color: active 
+                                ? '#E53935' 
+                                : hoveredIndex === index 
+                                  ? '#FFFFFF' 
+                                  : 'rgba(255,255,255,0.65)'
+                            }}
+                          />
+                        </div>
                         {/* Badge count */}
                         {badgeCounts && badgeCounts[item.id] && (
                           <BadgeCount 
@@ -226,13 +229,13 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
 
                   {/* Label */}
                   <span 
-                    className="text-[11px] font-medium transition-colors duration-200"
+                    className="text-[10px] font-semibold tracking-wide transition-colors duration-200"
                     style={{
                       color: active 
-                        ? '#FFFFFF' 
+                        ? '#E53935' 
                         : hoveredIndex === index 
                           ? '#FFFFFF' 
-                          : 'rgba(255,255,255,0.72)'
+                          : 'rgba(255,255,255,0.55)'
                     }}
                   >
                     {item.name}
@@ -282,6 +285,9 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
 
       {/* Global KaiBar - Fixed at app root level */}
       <KaiBar />
+
+      {/* Global Environment Selector Modal - rendered at root to avoid re-mount issues */}
+      <EnvironmentSelectorModal />
     </KaiBarProvider>
   )
 }

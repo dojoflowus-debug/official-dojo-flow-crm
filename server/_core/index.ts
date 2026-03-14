@@ -296,6 +296,59 @@ async function startServer() {
     }
   });
   
+  // One-time migration endpoint to add missing columns to classes table
+  app.post("/api/admin/migrate-classes", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+      
+      // Use raw SQL via the underlying pool
+      const pool = (db as any).session?.client;
+      if (!pool) {
+        return res.status(500).json({ error: "Cannot access raw pool" });
+      }
+      
+      const results: string[] = [];
+      const columnsToAdd = [
+        { name: 'startTime', sql: 'ALTER TABLE classes ADD COLUMN startTime VARCHAR(10) NULL' },
+        { name: 'endTime', sql: 'ALTER TABLE classes ADD COLUMN endTime VARCHAR(10) NULL' },
+        { name: 'location_id', sql: 'ALTER TABLE classes ADD COLUMN location_id INT NULL' },
+        { name: 'start_date', sql: 'ALTER TABLE classes ADD COLUMN start_date DATE NULL' },
+        { name: 'end_date', sql: 'ALTER TABLE classes ADD COLUMN end_date DATE NULL' },
+        { name: 'duration_minutes', sql: 'ALTER TABLE classes ADD COLUMN duration_minutes INT NOT NULL DEFAULT 60' },
+        { name: 'recurring_pattern', sql: "ALTER TABLE classes ADD COLUMN recurring_pattern ENUM('weekly','biweekly','monthly','one_time') DEFAULT 'weekly'" },
+        { name: 'class_notes', sql: 'ALTER TABLE classes ADD COLUMN class_notes TEXT NULL' },
+      ];
+      
+      // Check existing columns
+      const [descRows] = await pool.execute('DESCRIBE classes');
+      const existingCols = descRows.map((r: any) => r.Field);
+      
+      for (const col of columnsToAdd) {
+        if (!existingCols.includes(col.name)) {
+          try {
+            await pool.execute(col.sql);
+            results.push(`Added: ${col.name}`);
+          } catch (e: any) {
+            results.push(`Error adding ${col.name}: ${e.message}`);
+          }
+        } else {
+          results.push(`Already exists: ${col.name}`);
+        }
+      }
+      
+      // Verify final state
+      const [finalRows] = await pool.execute('DESCRIBE classes');
+      const finalCols = finalRows.map((r: any) => r.Field);
+      res.json({ success: true, results, finalColumns: finalCols });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Health check endpoint
   app.get("/api/webhook/health", (req, res) => {
     res.json({
@@ -557,7 +610,12 @@ async function startServer() {
         instructor: c.instructor,
         instructorId: c.instructorId,
         day_of_week: c.dayOfWeek,
+        dayOfWeek: c.dayOfWeek,   // camelCase for OverallSchedule component
         schedule: c.dayOfWeek,
+        startTime: c.startTime,   // 24h format for OverallSchedule grid placement
+        endTime: c.endTime,
+        start_time: c.startTime,  // snake_case alias
+        end_time: c.endTime,
         type: c.program, // Program/type of class
         program: c.program,
         level: c.level,
@@ -584,9 +642,51 @@ async function startServer() {
         return res.status(500).json({ error: "Database not available" });
       }
       
-      const { name, type, level, instructor, instructorId, schedule, time, room, capacity, ageMin, ageMax, monthlyCost, description, enrolled } = req.body;
+      const { name, type, level, instructor, instructorId, schedule, time, room, capacity, ageMin, ageMax, monthlyCost, description, enrolled, startTime, endTime } = req.body;
       
-      console.log(`[Classes API] Creating class:`, { name, type, level, instructor, schedule, time });
+      // Get organization ID from session cookie for multi-tenancy
+      let organizationId: number | null = null;
+      const cookieHeader = req.headers.cookie;
+      if (cookieHeader) {
+        const { parse: parseCookieHeader } = await import('cookie');
+        const cookies = parseCookieHeader(cookieHeader);
+        if (cookies.session) {
+          try {
+            const sessionData = JSON.parse(cookies.session);
+            organizationId = sessionData.currentOrganizationId || null;
+          } catch (e) {
+            // Invalid session data, ignore
+          }
+        }
+      }
+      
+      console.log(`[Classes API] Creating class:`, { name, type, level, instructor, schedule, time, organizationId });
+      
+      if (!organizationId) {
+        return res.status(401).json({ error: 'Organization context required' });
+      }
+      
+      // Parse startTime and endTime from the time string if not provided directly
+      let parsedStartTime = startTime || null;
+      let parsedEndTime = endTime || null;
+      if (!parsedStartTime && time) {
+        // Parse from "4:30 PM - 5:00 PM" format
+        const parseTimeTo24h = (t: string) => {
+          const match = t.trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+          if (!match) return null;
+          let h = parseInt(match[1]);
+          const m = match[2];
+          const p = match[3].toUpperCase();
+          if (p === 'PM' && h !== 12) h += 12;
+          if (p === 'AM' && h === 12) h = 0;
+          return `${h.toString().padStart(2, '0')}:${m}`;
+        };
+        const parts = time.split(' - ');
+        if (parts.length === 2) {
+          parsedStartTime = parseTimeTo24h(parts[0]);
+          parsedEndTime = parseTimeTo24h(parts[1]);
+        }
+      }
       
       const result = await db.insert(classes).values({
         name: name || 'New Class',
@@ -596,6 +696,12 @@ async function startServer() {
         instructor: instructor || null,
         instructorId: instructorId || null,
         dayOfWeek: schedule || null,
+        startTime: parsedStartTime,
+        endTime: parsedEndTime,
+        program: type || null,
+        level: level || null,
+        room: room || null,
+        organizationId: organizationId,
         isActive: 1,
       });
       

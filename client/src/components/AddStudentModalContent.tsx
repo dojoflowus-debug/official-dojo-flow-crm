@@ -30,7 +30,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
   const [error, setError] = useState<string | null>(null);
   
   const createStudentMutation = trpc.students.create.useMutation();
-  const { data: programs = [] } = trpc.programs.list.useQuery();
+  const { data: programs = [] } = trpc.kai.programs.list.useQuery({});
 
   if (!isOpen) return null;
 

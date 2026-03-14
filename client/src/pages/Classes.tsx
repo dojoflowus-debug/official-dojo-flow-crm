@@ -630,10 +630,10 @@ const ClassForm = ({
 export default function Classes({ onLogout, theme, toggleTheme }) {
   const isDarkMode = useDarkMode()
   // Fetch classes from database
-  const { data: classes = [], refetch: refetchClasses } = trpc.classes.getAll.useQuery();
+  const { data: classes = [], refetch: refetchClasses, isLoading: classesLoading } = trpc.classes.getAll.useQuery();
   
   // Fetch programs from database
-  const { data: programs = [] } = trpc.programs.list.useQuery({});
+  const { data: programs = [] } = trpc.kai.programs.list.useQuery({});
   
   // Fetch floor plans
   const { data: floorPlansData } = trpc.floorPlans.list.useQuery({});
@@ -736,10 +736,19 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
     }
   };
 
-  // Fetch classes on component mount
+  // Set loading to false once tRPC query completes (even if empty)
   useEffect(() => {
-    fetchClasses();
-  }, []);
+    if (!classesLoading) {
+      setLoading(false);
+    }
+  }, [classesLoading]);
+
+   // Recalculate stats when classes data changes (from tRPC)
+  useEffect(() => {
+    if (classes.length > 0) {
+      calculateStats(classes);
+    }
+  }, [classes]);
 
   // Fetch students and enrollments when enrollment modal opens
   useEffect(() => {
@@ -785,13 +794,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/classes`);
-      const data = await response.json();
-      
-      if (Array.isArray(data)) {
-        setClasses(data);
-        await calculateStats(data);  // Added await
-      }
+      // Refetch via tRPC so the classes list updates after create/edit/delete
+      await refetchClasses();
     } catch (error) {
       console.error('Error fetching classes:', error);
       toast.error('Failed to load classes');
@@ -923,6 +927,8 @@ export default function Classes({ onLogout, theme, toggleTheme }) {
           instructorId: formData.instructorId,
           schedule: schedule,
           time: time,
+          startTime: formData.startTime,  // 24h format for schedule grid
+          endTime: formData.endTime,
           room: formData.room,
           capacity: parseInt(formData.capacity) || 15,
           ageMin: parseInt(formData.ageMin) || null,

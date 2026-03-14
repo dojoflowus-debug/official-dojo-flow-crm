@@ -11,8 +11,7 @@ import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { useModal } from '@/contexts/ModalContext'
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus'
 import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { CinematicEnvironmentSelector } from '@/components/CinematicEnvironmentSelector'
+
 import { BrandLogo } from '@/components/BrandLogo'
 import { KaiVersionChip } from '@/components/KaiVersionChip'
 import { useLocation } from 'wouter'
@@ -35,9 +34,9 @@ interface CommandHeaderProps {
 export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps) {
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
-  const { setEnvironment } = useEnvironment()
+  const { openModal: openEnvironmentModal } = useEnvironment()
   const { openSettings } = useModal()
-  const [isEnvironmentSelectorOpen, setIsEnvironmentSelectorOpen] = useState(false)
+
   const isCinematic = theme === 'cinematic'
   
   // Get credit balance
@@ -64,12 +63,12 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
   return (
     <header 
       className={cn(
-        "h-14 border-b flex items-center px-4 flex-shrink-0",
+        "h-14 border-b flex items-center px-5 flex-shrink-0",
         isCinematic 
-          ? "bg-black/70 backdrop-blur-md border-white/10 text-white" 
+          ? "bg-black/70 backdrop-blur-xl border-white/8 text-white" 
           : isDarkMode 
-            ? "bg-[#0a0a0b] border-white/10" 
-            : "bg-white border-gray-200"
+            ? "bg-[oklch(0.10_0.006_25)] border-[oklch(0.22_0.006_25)]" 
+            : "bg-white/95 backdrop-blur-sm border-[oklch(0.91_0.003_60)]"
       )}
       style={{
         position: 'sticky',
@@ -78,6 +77,9 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
         pointerEvents: 'auto',
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
+        boxShadow: isDarkMode || isCinematic
+          ? '0 1px 0 oklch(1 1 1 / 0.04), 0 2px 8px oklch(0 0 0 / 0.3)'
+          : '0 1px 0 oklch(0 0 0 / 0.04), 0 2px 8px oklch(0 0 0 / 0.04)',
         gap: '1rem',
       }}
     >
@@ -133,30 +135,50 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
           </Button>
         </Link>
         
-        <div className={cn("flex items-center rounded-lg border p-0.5", isCinematic ? "bg-white/10 border-white/20" : isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200")}>
+        <div className={cn(
+          "flex items-center rounded-full border p-0.5 gap-0.5",
+          isCinematic ? "bg-white/8 border-white/12" 
+          : isDarkMode ? "bg-white/5 border-white/8" 
+          : "bg-gray-100/80 border-gray-200/80"
+        )}>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("h-7 px-2 text-white", theme === 'light' && (isCinematic ? "bg-white/20" : "bg-white shadow-sm text-gray-900"))} 
+            className={cn(
+              "h-6 px-2.5 rounded-full text-xs font-medium transition-all duration-150",
+              theme === 'light'
+                ? "bg-white shadow-sm text-gray-900 hover:bg-white"
+                : isDarkMode ? "text-white/50 hover:text-white hover:bg-white/8" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/60"
+            )} 
             onClick={() => setTheme('light')}
           >
-            <Sun className="h-3.5 w-3.5 mr-1" />Light
+            <Sun className="h-3 w-3 mr-1" />Light
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("h-7 px-2 text-white", theme === 'dark' && (isCinematic ? "bg-white/20" : isDarkMode ? "bg-white/10 text-white" : "bg-gray-200"))} 
+            className={cn(
+              "h-6 px-2.5 rounded-full text-xs font-medium transition-all duration-150",
+              theme === 'dark'
+                ? isCinematic ? "bg-white/20 text-white" : "bg-white/12 text-white shadow-sm"
+                : isDarkMode ? "text-white/50 hover:text-white hover:bg-white/8" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/60"
+            )} 
             onClick={() => setTheme('dark')}
           >
-            <Moon className="h-3.5 w-3.5 mr-1" />Dark
+            <Moon className="h-3 w-3 mr-1" />Night
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("h-7 px-2 text-white", theme === 'cinematic' && (isCinematic ? "bg-white/20" : isDarkMode ? "bg-white/10 text-white" : "bg-gray-200"))} 
+            className={cn(
+              "h-6 px-2.5 rounded-full text-xs font-medium transition-all duration-150",
+              theme === 'cinematic'
+                ? "bg-white/20 text-white shadow-sm"
+                : isDarkMode ? "text-white/50 hover:text-white hover:bg-white/8" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/60"
+            )} 
             onClick={() => setTheme('cinematic')}
           >
-            <Clapperboard className="h-3.5 w-3.5 mr-1" />Cinematic
+            <Clapperboard className="h-3 w-3 mr-1" />Cinema
           </Button>
         </div>
         
@@ -166,7 +188,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
             variant="ghost"
             size="sm"
             className="gap-2 text-white hover:text-white hover:bg-white/10"
-            onClick={() => setIsEnvironmentSelectorOpen(true)}
+            onClick={() => openEnvironmentModal()}
             title="Change cinematic background"
           >
             <Palette className="h-4 w-4" />Backdrop
@@ -196,31 +218,6 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
 
         <SettingsPortalModal />
         
-        {/* Cinematic Environment Selector Dialog */}
-        <Dialog open={isEnvironmentSelectorOpen} onOpenChange={setIsEnvironmentSelectorOpen}>
-          <DialogContent className="max-w-md bg-black/90 border-white/20">
-            <DialogHeader>
-              <DialogTitle className="text-white">Choose Cinematic Backdrop</DialogTitle>
-            </DialogHeader>
-            <CinematicEnvironmentSelector
-              onEnvironmentSelect={(envId, imageUrl) => {
-                // Map KIOSK_ENVIRONMENTS IDs to EnvironmentContext IDs
-                const environmentIdMap: Record<string, any> = {
-                  'martial-arts-dojo': 'samurai-red-dojo',
-                  'karate-training': 'samurai-red-dojo',
-                  'zen-studio': 'zen-bamboo-garden',
-                  'luxury-gym': 'luxury-dojo-lounge',
-                  'kickboxing-floor': 'samurai-red-dojo',
-                  'kids-dojo': 'samurai-red-dojo',
-                  'modern-studio': 'ultra-modern-white',
-                };
-                const mappedId = environmentIdMap[envId] || 'samurai-red-dojo';
-                setEnvironment(mappedId);
-                setIsEnvironmentSelectorOpen(false);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
       </div>
     </header>
   )

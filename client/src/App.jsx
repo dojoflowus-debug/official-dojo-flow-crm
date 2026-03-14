@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import StudentsNew from './pages/StudentsNew'
 import Leads from './pages/Leads'
 import Classes from './pages/Classes'
+import AppShell from './components/AppShell'
 // Attendance merged into KioskManagement
 import Billing from './pages/Billing'
 import Reports from './pages/Reports'
@@ -128,7 +129,7 @@ function AppContent({ isAuthenticated, handleLogin, handleLogout, theme, toggleT
           path="/classes"
           element={
             isAuthenticated ? (
-              <Classes onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />
+              <AppShell><Classes onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} /></AppShell>
             ) : (
               <Navigate to="/login" replace />
             )

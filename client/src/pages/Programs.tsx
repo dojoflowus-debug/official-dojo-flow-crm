@@ -290,10 +290,10 @@ export default function Programs() {
   const [formData, setFormData] = useState<ProgramFormData>(defaultFormData);
 
   // Fetch programs
-  const { data: programs, isLoading, refetch } = trpc.programs.list.useQuery();
+  const { data: programs, isLoading, refetch } = trpc.kai.programs.list.useQuery({});
 
   // Mutations
-  const createMutation = trpc.programs.create.useMutation({
+  const createMutation = trpc.kai.programs.create.useMutation({
     onSuccess: () => {
       toast.success('Program created successfully');
       setIsAddOpen(false);
@@ -305,7 +305,7 @@ export default function Programs() {
     },
   });
 
-  const updateMutation = trpc.programs.update.useMutation({
+  const updateMutation = trpc.kai.programs.update.useMutation({
     onSuccess: () => {
       toast.success('Program updated successfully');
       setIsEditOpen(false);
@@ -317,7 +317,7 @@ export default function Programs() {
     },
   });
 
-  const deleteMutation = trpc.programs.delete.useMutation({
+  const deleteMutation = trpc.kai.programs.delete.useMutation({
     onSuccess: () => {
       toast.success('Program deleted successfully');
       setIsDeleteOpen(false);

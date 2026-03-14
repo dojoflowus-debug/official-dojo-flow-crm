@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import AppShell from '@/components/AppShell';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusMode } from '@/contexts/FocusModeContext';
@@ -2573,7 +2572,7 @@ export default function KaiCommand() {
   };
 
   return (
-    <AppShell hideBottomNav={true} hideHeader={true}>
+    <>
       {/* Error Alert for API failures */}
       <KaiErrorAlert
         error={apiError}
@@ -2588,8 +2587,10 @@ export default function KaiCommand() {
       
       {/* Cinematic Mode Vignette Overlay - Now rendered inside main content area, not here */}
       
-      <div ref={containerRef} className={`kai-command-page w-full h-screen max-h-screen overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`} style={{
+      <div ref={containerRef} className={`kai-command-page w-full overflow-hidden ${getKaiCommandBgClass()} ${!isDark && !isCinematic && !isFocusMode ? 'kaiLightCommandCenter' : ''} ${isCinematic ? 'brightness-[0.85]' : ''} ${isFocusMode ? 'focus-mode fixed inset-0 z-50' : ''} transition-all duration-500 ease-in-out`} style={{
         display: 'grid',
+        height: 'calc(100vh - var(--topbar-h, 56px))',
+        maxHeight: 'calc(100vh - var(--topbar-h, 56px))',
         gridTemplateColumns: managementPanelOpen 
           ? `${isFocusMode ? 0 : commandCenterWidth}px 8px minmax(520px, 1fr) clamp(360px, 30vw, 520px)`
           : `${isFocusMode ? 0 : commandCenterWidth}px 8px 1fr`,
@@ -2819,8 +2820,8 @@ export default function KaiCommand() {
           style={{ 
             zIndex: LAYOUT_CONSTANTS.chatZIndex, 
             position: 'relative', 
-            height: isCinematic ? '100%' : 'calc(100vh - var(--topbar-h) - var(--bottomnav-h))',
-            paddingBottom: isCinematic ? '80px' : '0px'
+            height: 'calc(100vh - var(--topbar-h) - var(--bottomnav-h))',
+            paddingBottom: '0px'
           }}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -2851,8 +2852,12 @@ export default function KaiCommand() {
           {/* ENVIRONMENT LAYER - Single clean backdrop for Cinematic mode */}
           {isCinematic && (
             <div 
-              className="environment-layer absolute inset-0 pointer-events-none overflow-hidden"
-              style={{ zIndex: LAYOUT_CONSTANTS.backdropZIndex }}
+              className="environment-layer pointer-events-none overflow-hidden"
+              style={{ 
+                zIndex: LAYOUT_CONSTANTS.backdropZIndex,
+                position: isFocusMode ? 'fixed' : 'absolute',
+                inset: 0
+              }}
             >
               {/* Background Image Layer with Parallax */}
               <div 
@@ -3532,7 +3537,7 @@ export default function KaiCommand() {
               paddingRight: '16px',
               boxSizing: 'border-box',
               background: 'transparent',
-              marginBottom: isCinematic ? '64px' : '0px'
+              marginBottom: '0px'
             }}
           >
           <form
@@ -3869,7 +3874,7 @@ export default function KaiCommand() {
       />
       
 
-    </AppShell>
+    </>
   );
 }
 

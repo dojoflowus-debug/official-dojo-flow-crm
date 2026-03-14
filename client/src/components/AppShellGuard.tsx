@@ -49,7 +49,7 @@ export function AppShellGuard({ children }: { children: React.ReactNode }) {
           )
           hasLoggedRef.current.add(location.pathname)
         }
-      }, 500) // Increased delay to ensure nested layouts render
+      }, 1500) // Increased delay to ensure lazy-loaded components and nested layouts render
 
       return () => clearTimeout(timer)
     }

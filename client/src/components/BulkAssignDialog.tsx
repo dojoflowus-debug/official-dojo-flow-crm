@@ -49,7 +49,7 @@ export default function BulkAssignDialog({ open, onOpenChange, items, onSuccess 
 
   // Queries
   const { data: allStudents } = trpc.students.getAll.useQuery();
-  const { data: programs } = trpc.programs.getAll.useQuery();
+  const { data: programs } = trpc.kai.programs.list.useQuery({});
 
   // Mutation
   const bulkAssign = trpc.merchandise.bulkAssignToStudents.useMutation({

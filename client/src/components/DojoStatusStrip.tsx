@@ -1,5 +1,68 @@
 import { useMemo } from 'react'
-import { Users, Flame, AlertCircle, TrendingUp, Clock } from 'lucide-react'
+import { useTheme } from '@/contexts/ThemeContext'
+import { cn } from '@/lib/utils'
+import { TrendingUp, TrendingDown, Users, Flame, AlertCircle, Activity } from 'lucide-react'
+
+interface StatCardProps {
+  label: string
+  value: string | number
+  sub: string
+  icon: React.ElementType
+  variant: 'default' | 'success' | 'warning' | 'danger'
+  isDark: boolean
+  pulse?: boolean
+}
+
+function StatCard({ label, value, sub, icon: Icon, variant, isDark, pulse }: StatCardProps) {
+  const styles = {
+    default: {
+      card: isDark ? 'bg-[oklch(0.155_0.006_25)] border-[oklch(0.24_0.006_25)]' : 'bg-white border-gray-200/80',
+      iconWrap: isDark ? 'bg-white/8 text-white/50' : 'bg-gray-100 text-gray-500',
+      val: isDark ? 'text-white' : 'text-gray-900',
+      lbl: isDark ? 'text-white/45' : 'text-gray-500',
+      sub: isDark ? 'text-white/30' : 'text-gray-400',
+    },
+    success: {
+      card: isDark ? 'bg-[oklch(0.155_0.006_25)] border-emerald-500/20' : 'bg-white border-emerald-200/70',
+      iconWrap: isDark ? 'bg-emerald-500/12 text-emerald-400' : 'bg-emerald-50 text-emerald-600',
+      val: isDark ? 'text-emerald-400' : 'text-emerald-700',
+      lbl: isDark ? 'text-white/45' : 'text-gray-500',
+      sub: isDark ? 'text-emerald-500/55' : 'text-emerald-600/60',
+    },
+    warning: {
+      card: isDark ? 'bg-[oklch(0.155_0.006_25)] border-amber-500/20' : 'bg-white border-amber-200/70',
+      iconWrap: isDark ? 'bg-amber-500/12 text-amber-400' : 'bg-amber-50 text-amber-600',
+      val: isDark ? 'text-amber-400' : 'text-amber-700',
+      lbl: isDark ? 'text-white/45' : 'text-gray-500',
+      sub: isDark ? 'text-amber-500/55' : 'text-amber-600/60',
+    },
+    danger: {
+      card: isDark ? 'bg-[oklch(0.155_0.006_25)] border-red-500/20' : 'bg-white border-red-200/70',
+      iconWrap: isDark ? 'bg-red-500/12 text-red-400' : 'bg-red-50 text-red-600',
+      val: isDark ? 'text-red-400' : 'text-red-700',
+      lbl: isDark ? 'text-white/45' : 'text-gray-500',
+      sub: isDark ? 'text-red-500/55' : 'text-red-600/60',
+    },
+  }
+  const s = styles[variant]
+  return (
+    <div className={cn(
+      'relative flex items-center gap-3 rounded-xl border px-4 py-3.5',
+      'transition-all duration-200 hover:scale-[1.01] cursor-default',
+      isDark ? 'shadow-[0_1px_3px_oklch(0_0_0/0.4)]' : 'shadow-[0_1px_3px_oklch(0_0_0/0.06),0_1px_2px_oklch(0_0_0/0.04)]',
+      s.card
+    )}>
+      <div className={cn('flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg', s.iconWrap)}>
+        <Icon className={cn('w-4 h-4', pulse && 'animate-pulse')} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={cn('text-[10px] font-semibold uppercase tracking-widest mb-0.5', s.lbl)}>{label}</p>
+        <p className={cn('text-2xl font-bold leading-none tracking-tight', s.val)}>{value}</p>
+        <p className={cn('text-[11px] mt-1', s.sub)}>{sub}</p>
+      </div>
+    </div>
+  )
+}
 
 interface DojoStatusStripProps {
   totalStudents: number
@@ -14,87 +77,49 @@ export default function DojoStatusStrip({
   activeStudents,
   atRiskStudents,
   retentionRate,
-  averageAttendanceStreak = 0,
 }: DojoStatusStripProps) {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark' || theme === 'cinematic'
+
   const healthScore = useMemo(() => {
     if (totalStudents === 0) return 0
     const activeRatio = (activeStudents / totalStudents) * 100
     const riskRatio = (atRiskStudents / totalStudents) * 100
-    return Math.round(activeRatio - (riskRatio * 0.5))
+    return Math.round(activeRatio - riskRatio * 0.5)
   }, [totalStudents, activeStudents, atRiskStudents])
 
-  const getHealthColor = (score: number) => {
-    if (score >= 80) return 'from-green-500/30 to-emerald-500/20 border-green-500/30'
-    if (score >= 60) return 'from-yellow-500/30 to-amber-500/20 border-yellow-500/30'
-    return 'from-red-500/30 to-orange-500/20 border-red-500/30'
-  }
-
-  const getHealthText = (score: number) => {
-    if (score >= 80) return 'text-green-300'
-    if (score >= 60) return 'text-yellow-300'
-    return 'text-red-300'
-  }
+  const healthVariant = healthScore >= 80 ? 'success' : healthScore >= 60 ? 'warning' : 'danger'
+  const riskVariant = atRiskStudents === 0 ? 'success' : atRiskStudents <= 3 ? 'warning' : 'danger'
+  const retentionVariant = retentionRate >= 80 ? 'success' : retentionRate >= 60 ? 'warning' : 'danger'
 
   return (
-    <div className="bg-gradient-to-r from-white/[0.02] to-white/[0.01] backdrop-blur-lg border border-white/5 rounded-xl p-4 mb-6">
-      {/* Status indicators grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {/* Dojo Health Score */}
-        <div className={`bg-gradient-to-br ${getHealthColor(healthScore)} border rounded-lg p-3 transition-all duration-300`}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Dojo Health</span>
-            <TrendingUp className="w-3 h-3 text-slate-400" />
-          </div>
-          <div className={`text-2xl font-bold ${getHealthText(healthScore)}`}>{healthScore}%</div>
-          <div className="text-xs text-slate-500 mt-1">Overall vitality</div>
-        </div>
-
-        {/* Total Students */}
-        <div className="bg-gradient-to-br from-blue-500/20 to-blue-400/10 border border-blue-500/20 rounded-lg p-3 transition-all duration-300 hover:border-blue-500/40">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Roster</span>
-            <Users className="w-3 h-3 text-blue-400" />
-          </div>
-          <div className="text-2xl font-bold text-blue-300">{totalStudents}</div>
-          <div className="text-xs text-slate-500 mt-1">Total enrolled</div>
-        </div>
-
-        {/* Active Students */}
-        <div className="bg-gradient-to-br from-green-500/20 to-emerald-400/10 border border-green-500/20 rounded-lg p-3 transition-all duration-300 hover:border-green-500/40">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Active</span>
-            <Flame className="w-3 h-3 text-green-400 animate-pulse" />
-          </div>
-          <div className="text-2xl font-bold text-green-300">{activeStudents}</div>
-          <div className="text-xs text-slate-500 mt-1">In program</div>
-        </div>
-
-        {/* At Risk Students */}
-        <div className={`bg-gradient-to-br ${atRiskStudents > 0 ? 'from-red-500/20 to-orange-400/10 border-red-500/20' : 'from-green-500/20 to-emerald-400/10 border-green-500/20'} border rounded-lg p-3 transition-all duration-300 ${atRiskStudents > 0 ? 'hover:border-red-500/40' : 'hover:border-green-500/40'}`}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">At Risk</span>
-            <AlertCircle className={`w-3 h-3 ${atRiskStudents > 0 ? 'text-red-400' : 'text-green-400'}`} />
-          </div>
-          <div className={`text-2xl font-bold ${atRiskStudents > 0 ? 'text-red-300' : 'text-green-300'}`}>{atRiskStudents}</div>
-          <div className="text-xs text-slate-500 mt-1">Need attention</div>
-        </div>
-
-        {/* Retention Rate */}
-        <div className="bg-gradient-to-br from-purple-500/20 to-pink-400/10 border border-purple-500/20 rounded-lg p-3 transition-all duration-300 hover:border-purple-500/40">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Retention</span>
-            <Clock className="w-3 h-3 text-purple-400" />
-          </div>
-          <div className="text-2xl font-bold text-purple-300">{retentionRate}%</div>
-          <div className="text-xs text-slate-500 mt-1">Staying strong</div>
-        </div>
+    <div className={cn(
+      'rounded-2xl border p-4 mb-6',
+      isDark
+        ? 'bg-[oklch(0.10_0.006_25)] border-[oklch(0.22_0.006_25)]'
+        : 'bg-[oklch(0.985_0.002_60)] border-[oklch(0.91_0.003_60)]'
+    )}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <StatCard label="Dojo Health" value={`${healthScore}%`} sub="Overall vitality"
+          icon={healthScore >= 60 ? TrendingUp : TrendingDown} variant={healthVariant} isDark={isDark} />
+        <StatCard label="Roster" value={totalStudents} sub="Total enrolled"
+          icon={Users} variant="default" isDark={isDark} />
+        <StatCard label="Active" value={activeStudents} sub="In program"
+          icon={Flame} variant="success" isDark={isDark} pulse={activeStudents > 0} />
+        <StatCard label="At Risk" value={atRiskStudents} sub="Need attention"
+          icon={AlertCircle} variant={riskVariant} isDark={isDark} />
+        <StatCard label="Retention" value={`${retentionRate}%`} sub="Staying strong"
+          icon={Activity} variant={retentionVariant} isDark={isDark} />
       </div>
-
-      {/* Pulse indicator line */}
-      <div className="mt-4 h-1 bg-white/5 rounded-full overflow-hidden">
+      <div className={cn('mt-4 h-[3px] rounded-full overflow-hidden', isDark ? 'bg-white/5' : 'bg-black/5')}>
         <div
-          className="h-full bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 animate-pulse"
-          style={{ width: `${healthScore}%` }}
+          className={cn(
+            'h-full rounded-full transition-all duration-1000 ease-out',
+            healthScore >= 80 ? 'bg-gradient-to-r from-emerald-500 to-green-400'
+            : healthScore >= 60 ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
+            : 'bg-gradient-to-r from-red-600 to-orange-500'
+          )}
+          style={{ width: `${Math.max(healthScore, 2)}%` }}
         />
       </div>
     </div>

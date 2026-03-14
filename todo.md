@@ -8239,3 +8239,57 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Ensure class cards in grid use dark theme colors
 - [x] Test dark mode appearance matches rest of UI
 - [x] Fix CSS override to only apply white background during print, not on screen
+
+## Bug Fix Sprint - Mar 14, 2026
+
+### Fix Saturday Classes Not Appearing from Import
+- [ ] Query database for all Saturday classes with full details
+- [ ] Check if imported Saturday classes have correct dayOfWeek format
+- [ ] Verify organizationId matches for all Saturday classes
+- [ ] Fix any data issues preventing Saturday classes from displaying
+- [ ] Test with user's actual imported schedule
+
+### Fix Dropdown Not Working Issue
+- [ ] Identify which dropdown is not working (Add Program modal, Add Class modal, etc.)
+- [ ] Reproduce the issue and check browser console for errors
+- [ ] Diagnose root cause (z-index, event handlers, data loading, etc.)
+- [ ] Fix dropdown functionality
+- [ ] Test dropdown opens and closes correctly
+- [ ] Test dropdown options are selectable
+- [ ] Verify fix works across all modals and forms
+
+### Fix Class Creation Not Displaying Results
+- [ ] Check Classes page data fetching after class creation
+- [ ] Verify class creation API response and database insertion
+- [ ] Check if classes list needs manual refresh or automatic refetch
+- [ ] Test class creation end-to-end
+- [ ] Save checkpoint
+
+## Bug Fix Sprint - Mar 14, 2026 (COMPLETED)
+- [x] Saturday class display: Fixed - `fetchClasses()` now uses `refetchClasses()` (tRPC), classes grouped by day correctly handles full/short day names
+- [x] Dropdown not working: Fixed - `CustomSelect` now uses React portal rendering so dropdown is never clipped by `overflow-y-auto` parent containers
+- [x] Class creation not displaying: Fixed - `fetchClasses()` now calls `refetchClasses()` instead of nonexistent `setClasses()`; POST endpoint now saves `organizationId`, `startTime`, `endTime`, `program`, `level`, `room`; stats auto-recalculate via `useEffect` on `classes` change
+- [x] Added 12 passing vitest tests covering all three fixes
+
+## Premium Brand Upgrade - Mar 14, 2026
+- [ ] Upgrade global CSS: premium font stack (Inter/Plus Jakarta Sans), refined color tokens, enterprise shadows
+- [ ] Elevate navigation: premium sidebar with gradient logo area, refined active states, subtle animations
+- [ ] Polish dashboard: enterprise-grade stat cards with micro-charts, refined typography hierarchy
+- [ ] Upgrade buttons, inputs, and form controls to premium quality
+- [ ] Add polished loading states, skeleton screens, and empty states
+- [ ] Refine modals with premium chrome: backdrop blur, refined headers, smooth animations
+- [ ] Add subtle brand touches: wordmark treatment, premium iconography, confident spacing
+
+## Environment Switcher Fix - Mar 14, 2026
+- [ ] Fix Studio Environments switcher in Cinema mode - changing environment does not update backdrop image
+
+## Environment Modal Stuck Fix - Mar 14, 2026
+- [ ] Fix EnvironmentSelectorModal staying open after selecting an environment (should close after Preview Only / Set as Default)
+
+## Bug Fix Sprint - Mar 14, 2026 (Session 2 - COMPLETED)
+- [x] Debug overlay removed from production UI (DebugOverlay.tsx returns null)
+- [x] Classes page stuck on "Loading classes..." - Fixed: added `isLoading: classesLoading` to tRPC query and useEffect to set `loading=false` when query completes
+- [x] Classes page SQL error - Fixed: ran database migration to add missing columns (location_id, start_date, end_date, duration_minutes, recurring_pattern, class_notes, startTime, endTime) to classes table
+- [x] programs.list tRPC 404 error - Fixed: programs router is nested inside kai router; updated all client calls from `trpc.programs.*` to `trpc.kai.programs.*` in Classes.tsx, AddStudentModalContent.tsx, BulkAssignDialog.tsx, Programs.tsx
+- [x] AppShellMissingError false positive - Fixed: increased AppShellGuard delay from 500ms to 1500ms to allow lazy-loaded components to render
+- [x] AppShell missing on /classes route in App.jsx - Fixed: added AppShell wrapper to Classes route in App.jsx (note: App.tsx/appRoutes.tsx already had it)
