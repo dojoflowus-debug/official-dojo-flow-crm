@@ -178,22 +178,6 @@ export default function PublicLanding() {
 
       <div className="df-landing min-h-screen">
 
-        {/* ── NAV ── */}
-        <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-500" style={{ background: navOpaque ? "rgba(5,5,5,0.92)" : "transparent", backdropFilter: navOpaque ? "blur(20px)" : "none", borderBottom: navOpaque ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <Link to="/"><img src="/Lightdojoflow.png" alt="DojoFlow" className="h-7 w-auto" /></Link>
-            <div className="hidden md:flex items-center gap-8">
-              {["Features", "Industries", "Pricing"].map(item => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }} onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}>{item}</a>
-              ))}
-            </div>
-            <div className="flex items-center gap-3">
-              <Link to="/login" className="hidden md:block text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }} onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}>Sign in</Link>
-              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white text-sm">Get Started Free</button>
-            </div>
-          </div>
-        </nav>
-
         {/* ── HERO ── */}
         <section ref={heroRef} className="relative flex flex-col items-center justify-center overflow-hidden" style={{ background: "#050505", height: "100vh", minHeight: "100vh" }}>
           {/* Mosaic grid */}
