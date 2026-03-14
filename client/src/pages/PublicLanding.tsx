@@ -1,58 +1,112 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/MainLayout";
 import {
-  ArrowRight, CheckCircle2, Sparkles, Users, Calendar, CreditCard,
-  MessageSquare, BarChart3, Zap, Star, TrendingUp, Play, MessageCircle,
-  Shield, Clock, Bell, ChevronRight, ChevronLeft, Quote, Check, Flame
+  ArrowRight, Sparkles, Users, Calendar, CreditCard,
+  MessageSquare, BarChart3, Star, Shield, Clock, Check, Brain, Award
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { CookieNotice } from "@/components/CookieNotice";
 import { FloatingVideoIcon } from "@/components/FloatingVideoIcon";
 import { KaiOnboardingFlow } from "@/components/KaiOnboardingFlow";
 import { FloatingKaiButton } from "@/components/FloatingKaiButton";
-import { ScrollIndicator } from "@/components/ScrollIndicator";
 
-type PromptCategory = "growth" | "health" | "billing" | "retention" | "enrollments" | "at-risk" | "class-quality" | "parent-comms" | "staff-perf" | "financial";
+const MOSAIC_TILES = [
+  { src: "/industry-martial-arts.jpg", label: "Martial Arts" },
+  { src: "/industry-gymnastics.jpg", label: "Gymnastics" },
+  { src: "/industry-dance.jpg", label: "Dance", wide: true },
+  { src: "/industry-karate.jpg", label: "Karate" },
+  { src: "/industry-yoga.jpg", label: "Yoga & Pilates" },
+  { src: "/industry-fitness.jpg", label: "Fitness & HIIT", wide: true },
+  { src: "/industry-boxing.jpg", label: "Boxing & MMA" },
+  { src: "/industry-dance2.jpg", label: "Performing Arts" },
+  { src: "/martial-arts-class.jpg", label: "Group Classes" },
+];
 
-interface OnboardingStep {
-  id: number;
-  title: string;
-}
+const INDUSTRIES = [
+  {
+    id: "martial-arts", name: "Martial Arts", icon: "🥋",
+    image: "/industry-martial-arts.jpg",
+    headline: "Built for the dojo. Designed for growth.",
+    description: "From belt promotions to parent communications, DojoFlow handles every aspect of running a martial arts school — so you can focus on what you love: teaching.",
+    features: ["Belt & rank progression tracking", "Automated tuition billing", "Parent portal & communications", "Class scheduling & attendance"],
+    accent: "#e11d48",
+  },
+  {
+    id: "gymnastics", name: "Gymnastics", icon: "🤸",
+    image: "/industry-gymnastics.jpg",
+    headline: "Precision management for precision athletes.",
+    description: "Track skill progressions, manage team rosters, handle competition schedules, and keep parents in the loop — all from one platform built for gymnastics schools.",
+    features: ["Skill progression tracking", "Competition scheduling", "Team & recreational programs", "Automated billing & contracts"],
+    accent: "#7c3aed",
+  },
+  {
+    id: "dance", name: "Dance", icon: "💃",
+    image: "/industry-dance.jpg",
+    headline: "Where artistry meets effortless management.",
+    description: "Recital registrations, costume tracking, class rosters, and parent communications — DojoFlow keeps your studio running smoothly so you can focus on the performance.",
+    features: ["Recital & event management", "Costume & fee tracking", "Multi-style class scheduling", "Waitlist & enrollment management"],
+    accent: "#ec4899",
+  },
+  {
+    id: "fitness", name: "Fitness & HIIT", icon: "🏋️",
+    image: "/industry-fitness.jpg",
+    headline: "Power your studio. Fuel your members.",
+    description: "Membership management, class packs, drop-ins, and automated billing — DojoFlow gives boutique fitness studios the infrastructure to scale without the overhead.",
+    features: ["Membership & class pack management", "Drop-in & punch card billing", "Trainer scheduling & payroll", "Member retention analytics"],
+    accent: "#f97316",
+  },
+  {
+    id: "yoga", name: "Yoga & Pilates", icon: "🧘",
+    image: "/industry-yoga.jpg",
+    headline: "Find balance in your business.",
+    description: "Serene studios deserve seamless management. DojoFlow handles memberships, workshops, teacher scheduling, and client communications with calm intentionality.",
+    features: ["Workshop & retreat registration", "Teacher scheduling & substitutions", "Membership & drop-in billing", "Client wellness tracking"],
+    accent: "#14b8a6",
+  },
+  {
+    id: "boxing", name: "Boxing & MMA", icon: "🥊",
+    image: "/industry-boxing.jpg",
+    headline: "Train hard. Run smart.",
+    description: "From amateur fighters to recreational members, DojoFlow manages your gym's billing, scheduling, and communications so you can stay focused on what happens inside the ring.",
+    features: ["Fighter & member management", "Sparring & class scheduling", "Automated monthly billing", "Waiver & contract management"],
+    accent: "#eab308",
+  },
+];
 
-const ONBOARDING_STEPS: OnboardingStep[] = [
-  { id: 1, title: "School Information" },
-  { id: 2, title: "Owner Details" },
-  { id: 3, title: "School Profile" },
-  { id: 4, title: "Current Status" },
+const FEATURES = [
+  { icon: Brain, title: "Kai AI — Your 24/7 Assistant", description: "Kai answers parent questions, sends reminders, handles enrollment inquiries, and surfaces insights — all without you lifting a finger.", accent: "#e11d48" },
+  { icon: CreditCard, title: "Automated Billing", description: "Set it and forget it. Recurring tuition, class packs, drop-ins, and late fees — all collected automatically with zero manual effort.", accent: "#7c3aed" },
+  { icon: Calendar, title: "Smart Scheduling", description: "Conflict-free class scheduling with room management, instructor assignments, and real-time capacity tracking across all your locations.", accent: "#14b8a6" },
+  { icon: BarChart3, title: "Revenue Analytics", description: "Know exactly where your revenue comes from, which classes are most profitable, and which students are at risk of churning — before it happens.", accent: "#f97316" },
+  { icon: MessageSquare, title: "Multi-Channel Communications", description: "SMS, email, and in-app messaging to students and parents — all from one place, with templates, automation, and delivery tracking.", accent: "#ec4899" },
+  { icon: Award, title: "Progress & Achievement Tracking", description: "Belt ranks, skill milestones, attendance streaks, and achievement badges — keep students motivated and parents proud.", accent: "#eab308" },
+];
+
+const TESTIMONIALS = [
+  { quote: "DojoFlow transformed how we run our school. Kai handles 80% of parent questions, billing is fully automated, and our revenue is up 40%. It's the best investment we've made.", name: "Master James Chen", title: "Owner, Dragon Martial Arts Academy", industry: "Martial Arts", avatar: "JC" },
+  { quote: "We switched from three different tools to DojoFlow and cut our admin time in half. The gymnastics skill tracking alone is worth it — parents love seeing their kids' progress.", name: "Coach Sarah Williams", title: "Director, Elite Gymnastics Center", industry: "Gymnastics", avatar: "SW" },
+  { quote: "Recital season used to be a nightmare. With DojoFlow, registration, costume fees, and parent communications are all handled automatically. I actually enjoy it now.", name: "Maria Santos", title: "Owner, Santos Dance Academy", industry: "Dance", avatar: "MS" },
+  { quote: "Our membership retention went from 72% to 94% in six months. Kai identifies at-risk members before they cancel and sends personalized re-engagement messages. It's incredible.", name: "Tyler Brooks", title: "Founder, Apex Fitness Studio", industry: "Fitness", avatar: "TB" },
+];
+
+const PRICING = [
+  { name: "Starter", price: "$99", period: "/mo", description: "Perfect for studios just getting started", features: ["Up to 100 students", "Kai AI (basic)", "Automated billing", "Class scheduling", "Email communications", "Standard support"], cta: "Start Free Trial", highlight: false },
+  { name: "Growth", price: "$199", period: "/mo", description: "For growing studios ready to scale", features: ["Up to 500 students", "Kai AI (advanced)", "All billing features", "Multi-location support", "SMS + email comms", "Analytics dashboard", "Priority support"], cta: "Start Free Trial", highlight: true, badge: "Most Popular" },
+  { name: "Scale", price: "$349", period: "/mo", description: "For established multi-location operations", features: ["Unlimited students", "Kai AI (enterprise)", "Advanced analytics", "Unlimited locations", "White-label options", "API access", "Dedicated success manager"], cta: "Start Free Trial", highlight: false, badge: "Most Powerful" },
+  { name: "Enterprise", price: "Custom", period: "", description: "For franchises and large organizations", features: ["Custom student limits", "Custom AI training", "Custom integrations", "SLA guarantees", "On-site onboarding", "Legal & compliance support"], cta: "Contact Sales", highlight: false },
 ];
 
 export default function PublicLanding() {
-  const [scrollY, setScrollY] = useState(0);
+  const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<PromptCategory | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isCreating, setIsCreating] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const [showKaiOnboarding, setShowKaiOnboarding] = useState(false);
+  const [activeIndustry, setActiveIndustry] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [activeAudience, setActiveAudience] = useState(0);
-  const [countersStarted, setCountersStarted] = useState(false);
-  const statsRef = useRef<HTMLDivElement>(null);
-
-  const [schoolName, setSchoolName] = useState("");
-  const [ownerName, setOwnerName] = useState("");
-  const [ownerEmail, setOwnerEmail] = useState("");
-  const [locationCount, setLocationCount] = useState("");
-  const [programs, setPrograms] = useState<string[]>([]);
-  const [studentCount, setStudentCount] = useState("");
+  const [hoveredTile, setHoveredTile] = useState<number | null>(null);
+  const [contactForm, setContactForm] = useState({ name: "", email: "", school: "", industry: "", message: "" });
+  const [contactLoading, setContactLoading] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -62,13 +116,7 @@ export default function PublicLanding() {
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("revealed");
-          }
-        });
-      },
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("revealed"); }),
       { threshold: 0.08 }
     );
     document.querySelectorAll(".scroll-reveal").forEach((el) => observer.observe(el));
@@ -76,1137 +124,401 @@ export default function PublicLanding() {
   }, []);
 
   useEffect(() => {
-    if (!statsRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !countersStarted) setCountersStarted(true);
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(statsRef.current);
-    return () => observer.disconnect();
-  }, [countersStarted]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
+    const timer = setInterval(() => setActiveTestimonial((p) => (p + 1) % TESTIMONIALS.length), 6000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleCardClick = (category: PromptCategory) => {
-    setSelectedCategory(category);
-    setShowOnboarding(true);
-    setCurrentStep(1);
+  useEffect(() => {
+    const timer = setInterval(() => setActiveIndustry((p) => (p + 1) % INDUSTRIES.length), 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setContactLoading(true);
+    await new Promise((r) => setTimeout(r, 1200));
+    toast.success("Message received! We'll be in touch within 24 hours.");
+    setContactForm({ name: "", email: "", school: "", industry: "", message: "" });
+    setContactLoading(false);
   };
 
-  const handleNextStep = () => {
-    if (currentStep < ONBOARDING_STEPS.length) setCurrentStep(currentStep + 1);
-    else handleCreateWorkspace();
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
-
-  const navigate = useNavigate();
-  const quickSignupMutation = trpc.kaiOnboarding.quickSignup.useMutation();
-
-  const handleCreateWorkspace = async () => {
-    if (!selectedCategory) return;
-    setIsCreating(true);
-    try {
-      const result = await quickSignupMutation.mutateAsync({
-        schoolName, ownerName, ownerEmail,
-        locationCount: locationCount as "1" | "2-5" | "6+",
-        programs,
-        studentCount: studentCount as "0-50" | "51-100" | "101-200" | "201-500" | "500+",
-        category: selectedCategory,
-      });
-      if (result.success) {
-        toast.success(`Welcome to DojoFlow, ${ownerName}! Your workspace is ready.`);
-        window.location.href = `/welcome?category=${selectedCategory}`;
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.");
-      setIsCreating(false);
-    }
-  };
-
-  const getCategoryName = (category: PromptCategory): string => {
-    const names: Record<PromptCategory, string> = {
-      growth: "Growth", health: "School Health", billing: "Billing",
-      retention: "Retention", enrollments: "Enrollments", "at-risk": "At-Risk",
-      "class-quality": "Class Quality", "parent-comms": "Parent Comms",
-      "staff-perf": "Staff Performance", financial: "Financial"
-    };
-    return names[category] || category;
-  };
-
-  const handleProgramToggle = (program: string) => {
-    setPrograms(prev => prev.includes(program) ? prev.filter(p => p !== program) : [...prev, program]);
-  };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1: return schoolName.trim() !== "";
-      case 2: return ownerName.trim() !== "" && ownerEmail.trim() !== "";
-      case 3: return locationCount !== "" && programs.length > 0;
-      case 4: return studentCount !== "";
-      default: return false;
-    }
-  };
-
-  const features = [
-    {
-      icon: Sparkles,
-      title: "Kai AI Assistant",
-      description: "Your 24/7 AI sensei handles student inquiries, schedules classes, and answers questions instantly via chat, SMS, or voice.",
-      highlight: "Responds in seconds",
-    },
-    {
-      icon: Users,
-      title: "Student Management",
-      description: "Track progress, belt ranks, attendance, and achievements. Complete profiles with photos, emergency contacts, and custom notes.",
-      highlight: "All-in-one profiles",
-    },
-    {
-      icon: Calendar,
-      title: "Smart Scheduling",
-      description: "Automated class scheduling, private lesson booking, and belt testing coordination. Sync with Google Calendar seamlessly.",
-      highlight: "Zero conflicts",
-    },
-    {
-      icon: CreditCard,
-      title: "Automated Billing",
-      description: "Recurring payments, failed payment recovery, and instant invoicing. Stripe integration handles everything securely.",
-      highlight: "Get paid on time",
-    },
-    {
-      icon: MessageSquare,
-      title: "Multi-Channel Comms",
-      description: "Send announcements via SMS, email, or in-app notifications. Kai handles routine questions automatically.",
-      highlight: "Reach everyone instantly",
-    },
-    {
-      icon: BarChart3,
-      title: "Analytics & Insights",
-      description: "Track retention rates, revenue trends, attendance patterns, and student progress. Make data-driven decisions.",
-      highlight: "Know your numbers",
-    }
-  ];
-
-  const testimonials = [
-    {
-      quote: "DojoFlow transformed my school. Kai handles 80% of parent questions, and I finally have time to focus on teaching. Revenue is up 40% since we started.",
-      author: "Master Chen",
-      role: "Owner, Dragon Martial Arts",
-      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/rZjQsPKJqBelAEmG.jpg",
-      rating: 5
-    },
-    {
-      quote: "The billing automation alone saved me 10 hours per week. No more chasing payments or manual invoicing. It just works.",
-      author: "Sensei Rodriguez",
-      role: "Head Instructor, Elite Karate Academy",
-      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/nnvbmwPstsbqiBUN.jpg",
-      rating: 5
-    },
-    {
-      quote: "I was skeptical about AI, but Kai is incredible. Parents love getting instant answers at 11 PM. My phone finally stopped ringing during dinner.",
-      author: "Coach Williams",
-      role: "Founder, Williams BJJ",
-      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uDlxAPOIqFElRVKD.jpg",
-      rating: 5
-    }
-  ];
-
-  const pricingPlans = [
-    {
-      name: "Starter",
-      price: "$49",
-      period: "/mo",
-      credits: "500 credits / month",
-      features: ["Kai AI Assistant", "Up to 100 students", "Basic scheduling", "Email support"],
-      featured: false,
-      badge: null,
-    },
-    {
-      name: "Growth",
-      price: "$99",
-      period: "/mo",
-      credits: "1,500 credits / month",
-      features: ["Everything in Starter", "Up to 300 students", "Automated billing", "SMS + email comms", "Priority support"],
-      featured: true,
-      badge: "Most Popular",
-    },
-    {
-      name: "Pro",
-      price: "$199",
-      period: "/mo",
-      credits: "4,000 credits / month",
-      features: ["Everything in Growth", "Unlimited students", "Advanced analytics", "Multi-location", "White-glove onboarding"],
-      featured: false,
-      badge: null,
-    },
-    {
-      name: "Elite",
-      price: "$499",
-      period: "/mo",
-      credits: "10,000 credits / month",
-      features: ["Everything in Pro", "Dedicated AI model", "Custom integrations", "SLA guarantee", "Dedicated success manager"],
-      featured: false,
-      badge: "Most Powerful",
-    }
-  ];
-
-  const audiences = [
-    {
-      tag: "Martial Arts Schools",
-      headline: "Run classes smoother.\nEnroll faster.",
-      body: "DojoFlow gives martial arts schools the tools to manage student enrollment, track attendance, automate onboarding, boost retention, and empower staff — all in one platform.",
-      href: "/schools",
-      color: "#e11d48",
-    },
-    {
-      tag: "Fitness Facilities",
-      headline: "A kiosk + automation\nlayer for busy gyms.",
-      body: "Built for high-volume fitness facilities, DojoFlow streamlines check-in flows, manages capacity, schedules classes, and automates lead follow-up with real-time reporting.",
-      href: "/fitness",
-      color: "#2563eb",
-    },
-    {
-      tag: "Studios",
-      headline: "Modern operations for\nboutique training.",
-      body: "DojoFlow helps boutique studios manage memberships, class packs, staff scheduling, and client communication with elegant automation and a clean UX.",
-      href: "/studios",
-      color: "#7c3aed",
-    }
-  ];
+  const navOpaque = scrollY > 60;
 
   return (
     <MainLayout transparentHeader hideFooter>
       <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes floatUp {
-          0% { opacity: 0; transform: translateY(32px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes scaleIn {
-          0% { opacity: 0; transform: scale(0.94); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes glowPulse {
-          0%, 100% { box-shadow: 0 0 40px rgba(225,29,72,0.3); }
-          50% { box-shadow: 0 0 80px rgba(225,29,72,0.6); }
-        }
-        @keyframes borderFlow {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes dashboardFloat {
-          0%, 100% { transform: translateY(0px) rotate(-1deg); }
-          50% { transform: translateY(-12px) rotate(-1deg); }
-        }
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .scroll-reveal.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        .hero-animate-1 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
-        .hero-animate-2 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
-        .hero-animate-3 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
-        .hero-animate-4 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
-        .hero-animate-5 { animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both; }
-        .hero-animate-6 { animation: scaleIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
-        .dashboard-float { animation: dashboardFloat 6s ease-in-out infinite; }
-        .glow-cta { animation: glowPulse 3s ease-in-out infinite; }
-        .feature-card:hover .feature-icon { transform: scale(1.15) rotate(-5deg); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .feature-icon { transition: transform 0.3s ease; }
-        .noise-overlay {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-          background-repeat: repeat;
-          background-size: 200px 200px;
-        }
+        .df-landing { background: #050505; color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .scroll-reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+        .scroll-reveal.revealed { opacity: 1; transform: translateY(0); }
+        .sr-d1 { transition-delay: 0.1s; } .sr-d2 { transition-delay: 0.2s; } .sr-d3 { transition-delay: 0.3s; } .sr-d4 { transition-delay: 0.4s; }
+        .mosaic-tile { overflow: hidden; transition: filter 0.4s ease; }
+        .pill { display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:999px;font-size:15px;font-weight:600;letter-spacing:-0.01em;transition:all 0.25s cubic-bezier(0.16,1,0.3,1);cursor:pointer;border:none;text-decoration:none; }
+        .pill-white { background:#fff;color:#050505; } .pill-white:hover { background:#e8e8e8;transform:translateY(-1px);box-shadow:0 8px 32px rgba(255,255,255,0.15); }
+        .pill-ghost { background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.22); } .pill-ghost:hover { background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.45); }
+        .pill-red { background:#e11d48;color:#fff; } .pill-red:hover { background:#be123c;transform:translateY(-1px);box-shadow:0 8px 32px rgba(225,29,72,0.35); }
+        .ind-tab { transition:all 0.2s;border-bottom:2px solid transparent;padding:12px 20px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;background:none;border-top:none;border-left:none;border-right:none;color:rgba(255,255,255,0.4); }
+        .ind-tab.active { border-bottom-color:#e11d48;color:#fff; } .ind-tab:not(.active):hover { color:rgba(255,255,255,0.75); }
+        .feat-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;transition:all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        .feat-card:hover { background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.14);transform:translateY(-4px); }
+        .price-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px;transition:border-color 0.3s; }
+        .price-card:hover { border-color:rgba(255,255,255,0.18); }
+        .price-card.featured { background:rgba(225,29,72,0.07);border-color:rgba(225,29,72,0.4); }
+        @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+        .marquee-track { animation:marquee 30s linear infinite;display:flex;width:max-content; }
+        .marquee-track:hover { animation-play-state:paused; }
+        @keyframes scrollBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+        .scroll-bounce { animation:scrollBounce 2s ease-in-out infinite; }
+        @keyframes kaiPulse { 0%,100%{box-shadow:0 0 0 0 rgba(225,29,72,0.4)} 50%{box-shadow:0 0 0 12px rgba(225,29,72,0)} }
+        .kai-pulse { animation:kaiPulse 2.5s ease-in-out infinite; }
+        .hero-wordmark { font-size:clamp(4rem,12vw,11rem);font-weight:900;letter-spacing:-0.05em;line-height:0.9; }
+        .stat-num { font-size:clamp(2.5rem,5vw,4rem);font-weight:800;letter-spacing:-0.04em;line-height:1; }
+        .section-label { font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#e11d48;display:block; }
+        .section-title { font-weight:800;letter-spacing:-0.04em;line-height:1.05;font-size:clamp(2rem,5vw,3.5rem); }
       `}</style>
 
-      <div className="min-h-full bg-[#050505] overflow-x-hidden text-white">
+      <div className="df-landing min-h-screen">
 
-        {/* ═══════════════════════════════════════════════════════════
-            HERO
-        ═══════════════════════════════════════════════════════════ */}
-        <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+        {/* ── NAV ── */}
+        <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-500" style={{ background: navOpaque ? "rgba(5,5,5,0.92)" : "transparent", backdropFilter: navOpaque ? "blur(20px)" : "none", borderBottom: navOpaque ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <Link to="/"><img src="/Lightdojoflow.png" alt="DojoFlow" className="h-7 w-auto" /></Link>
+            <div className="hidden md:flex items-center gap-8">
+              {["Features", "Industries", "Pricing"].map(item => (
+                <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }} onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}>{item}</a>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <Link to="/login" className="hidden md:block text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }} onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}>Sign in</Link>
+              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white text-sm">Get Started Free</button>
+            </div>
+          </div>
+        </nav>
 
-          {/* Background image */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/hero-martial-arts.jpg')" }}
-          />
-
-          {/* Layered overlays for depth */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/70 via-[#050505]/50 to-[#050505]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-[#050505]/60" />
-
-          {/* Subtle red radial glow */}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(225,29,72,0.12) 0%, transparent 70%)'
-          }} />
-
-          {/* Fine grid */}
-          <div className="absolute inset-0 opacity-[0.025]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
-            backgroundSize: '80px 80px'
-          }} />
-
-          {/* Noise texture */}
-          <div className="absolute inset-0 noise-overlay opacity-30 pointer-events-none" />
+        {/* ── HERO ── */}
+        <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ background: "#050505" }}>
+          {/* Mosaic grid */}
+          <div className="absolute inset-0" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "repeat(3, 1fr)", gap: "3px" }}>
+            {MOSAIC_TILES.map((tile, i) => (
+              <div key={i} className="mosaic-tile relative" style={{ gridColumn: tile.wide ? "span 2" : "span 1", filter: `brightness(${hoveredTile === i ? 0.65 : 0.32})` }} onMouseEnter={() => setHoveredTile(i)} onMouseLeave={() => setHoveredTile(null)}>
+                <img src={tile.src} alt={tile.label} className="w-full h-full object-cover" loading="lazy" />
+                {hoveredTile === i && (
+                  <div className="absolute inset-0 flex items-end p-3">
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: "rgba(0,0,0,0.65)", color: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)" }}>{tile.label}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* Vignette */}
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 70% at 50% 50%, rgba(5,5,5,0.9) 0%, rgba(5,5,5,0.5) 60%, rgba(5,5,5,0.78) 100%)" }} />
 
           {/* Content */}
-          <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-8 pt-32 pb-20 flex flex-col items-center text-center">
-
-            {/* Eyebrow badge */}
-            <div className="hero-animate-1 inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              <span className="text-white/70 text-xs font-semibold tracking-[0.2em] uppercase">AI-Powered Dojo Management</span>
+          <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-8 tracking-widest uppercase" style={{ background: "rgba(225,29,72,0.15)", border: "1px solid rgba(225,29,72,0.35)", color: "#fb7185" }}>
+              <Sparkles size={11} /> Powered by Kai AI
             </div>
-
-            {/* Main headline */}
-            <h1 className="hero-animate-2 text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black leading-[0.92] tracking-tight mb-6 max-w-5xl">
-              <span className="text-white">The operating system</span>
-              <br />
-              <span className="text-white">for your </span>
-              <span style={{
-                background: 'linear-gradient(135deg, #e11d48 0%, #f97316 50%, #e11d48 100%)',
-                backgroundSize: '200% auto',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                animation: 'shimmer 4s linear infinite'
-              }}>dojo.</span>
-            </h1>
-
-            {/* Subheadline */}
-            <p className="hero-animate-3 text-lg sm:text-xl md:text-2xl text-white/55 font-light max-w-2xl leading-relaxed mb-10">
-              Kai is your AI operations assistant — handling student management, billing, scheduling, and parent communications so you can focus on teaching.
-            </p>
-
-            {/* CTA row */}
-            <div className="hero-animate-4 flex flex-col sm:flex-row items-center gap-4 mb-12">
-              <button
-                onClick={() => setShowKaiOnboarding(true)}
-                className="glow-cta group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold uppercase tracking-widest transition-all duration-300 hover:scale-[1.03]"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Talk to Kai
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm text-white/80 text-sm font-semibold uppercase tracking-widest transition-all duration-300 hover:bg-white/10 hover:border-white/30 hover:text-white">
-                <div className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white/40 transition-colors">
-                  <Play className="w-2.5 h-2.5 ml-0.5 fill-current" />
-                </div>
-                Watch Demo
-              </button>
+            <h1 className="hero-wordmark text-white mb-6">DojoFlow</h1>
+            <p className="text-xl md:text-2xl font-light mb-3 max-w-2xl mx-auto" style={{ color: "rgba(255,255,255,0.72)", letterSpacing: "-0.01em" }}>The operating system for every studio, gym, and school.</p>
+            <p className="text-sm md:text-base font-light mb-12" style={{ color: "rgba(255,255,255,0.36)" }}>Martial Arts · Gymnastics · Dance · Fitness · Yoga · Boxing</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white">Start Free 14-Day Trial <ArrowRight size={16} /></button>
+              <a href="#industries" className="pill pill-ghost">See All Industries</a>
             </div>
+            <p className="mt-8 text-xs" style={{ color: "rgba(255,255,255,0.26)" }}>No credit card required · Cancel anytime · Full platform access from day one</p>
+          </div>
 
-            {/* Trust row */}
-            <div className="hero-animate-5 flex flex-wrap items-center justify-center gap-6 text-white/40 text-xs font-medium tracking-wide">
-              {["14-day free trial", "No credit card required", "Cancel anytime"].map((t) => (
-                <span key={t} className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-rose-500/70" />
-                  {t}
+          {/* Scroll indicator */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 scroll-bounce">
+            <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.26)" }}>Scroll</span>
+            <div className="w-px h-8" style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.26), transparent)" }} />
+          </div>
+        </section>
+
+        {/* ── MARQUEE ── */}
+        <section className="py-5 overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="overflow-hidden">
+            <div className="marquee-track">
+              {[...Array(2)].flatMap(() => ["10,000+ Students Managed", "98% Retention Rate", "40% Revenue Growth", "6 Industries Served", "24/7 Kai AI Support", "14-Day Free Trial", "No Contracts", "White-Glove Onboarding"]).map((item, i) => (
+                <span key={i} className="flex items-center gap-6 px-8 text-sm font-medium whitespace-nowrap" style={{ color: "rgba(255,255,255,0.32)" }}>
+                  {item} <span className="w-1 h-1 rounded-full inline-block" style={{ background: "rgba(225,29,72,0.6)", flexShrink: 0 }} />
                 </span>
               ))}
             </div>
+          </div>
+        </section>
 
-            {/* Dashboard mockup */}
-            <div className="hero-animate-6 relative mt-20 w-full max-w-4xl mx-auto">
-              {/* Glow behind dashboard */}
-              <div className="absolute -inset-8 rounded-3xl opacity-30 blur-3xl" style={{
-                background: 'radial-gradient(ellipse at center, rgba(225,29,72,0.4) 0%, transparent 70%)'
-              }} />
+        {/* ── BRAND STATEMENT ── */}
+        <section className="py-32 px-6">
+          <div className="max-w-4xl mx-auto text-center scroll-reveal">
+            <h2 className="section-title font-bold mb-6">Every studio is different.<br /><span style={{ color: "rgba(255,255,255,0.3)" }}>The chaos is the same.</span></h2>
+            <p className="text-lg font-light max-w-2xl mx-auto" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.75 }}>Whether you teach karate, ballet, gymnastics, or HIIT — you're spending too much time on billing, scheduling, and parent emails. DojoFlow eliminates that overhead entirely, so you can focus on what you actually love.</p>
+          </div>
+        </section>
 
-              {/* Dashboard image */}
-              <div className="dashboard-float relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.8)]">
-                {/* Browser chrome */}
-                <div className="bg-[#111111] border-b border-white/8 px-4 py-3 flex items-center gap-3">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-                    <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-                    <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-                  </div>
-                  <div className="flex-1 mx-4">
-                    <div className="bg-[#1a1a1a] rounded-md px-3 py-1 text-[11px] text-white/30 font-mono text-center max-w-xs mx-auto">
-                      app.dojoflow.com/dashboard
-                    </div>
-                  </div>
-                </div>
-                <img
-                  src="/hero-dashboard.png"
-                  alt="DojoFlow Dashboard"
-                  className="w-full block"
-                  loading="eager"
-                />
+        {/* ── STATS ── */}
+        <section className="py-20 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+            {[{ n: "10,000+", l: "Students managed" }, { n: "98%", l: "Average retention rate" }, { n: "40%", l: "Average revenue increase" }, { n: "6+", l: "Industries supported" }].map((s, i) => (
+              <div key={i} className={`text-center scroll-reveal sr-d${i + 1}`}>
+                <div className="stat-num text-white mb-2">{s.n}</div>
+                <div className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.38)" }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── INDUSTRIES ── */}
+        <section id="industries" className="py-32 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-16 scroll-reveal">
+              <span className="section-label mb-4">Industries</span>
+              <h2 className="section-title">Built for your world.</h2>
+            </div>
+            <div className="flex gap-0 mb-12 overflow-x-auto pb-1 scroll-reveal sr-d1" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              {INDUSTRIES.map((ind, i) => (
+                <button key={ind.id} onClick={() => setActiveIndustry(i)} className={`ind-tab ${activeIndustry === i ? "active" : ""}`}>{ind.icon} {ind.name}</button>
+              ))}
+            </div>
+            <div className="grid md:grid-cols-2 gap-10 items-center scroll-reveal sr-d2">
+              <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                <img src={INDUSTRIES[activeIndustry].image} alt={INDUSTRIES[activeIndustry].name} className="w-full h-full object-cover transition-all duration-700" style={{ filter: "brightness(0.72)" }} />
+                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${INDUSTRIES[activeIndustry].accent}22 0%, transparent 60%)` }} />
+                <div className="absolute bottom-6 left-6 text-5xl">{INDUSTRIES[activeIndustry].icon}</div>
+              </div>
+              <div>
+                <h3 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.03em", lineHeight: 1.2 }}>{INDUSTRIES[activeIndustry].headline}</h3>
+                <p className="text-base font-light mb-8" style={{ color: "rgba(255,255,255,0.52)", lineHeight: 1.75 }}>{INDUSTRIES[activeIndustry].description}</p>
+                <ul className="space-y-3 mb-8">
+                  {INDUSTRIES[activeIndustry].features.map((f, fi) => (
+                    <li key={fi} className="flex items-center gap-3 text-sm font-medium" style={{ color: "rgba(255,255,255,0.8)" }}>
+                      <Check size={15} style={{ color: INDUSTRIES[activeIndustry].accent, flexShrink: 0 }} />{f}
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-red">Get Started for {INDUSTRIES[activeIndustry].name} <ArrowRight size={16} /></button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════════════════
-            LOGO BAR / SOCIAL PROOF
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="border-y border-white/[0.06] bg-[#080808] py-10">
-          <div className="max-w-6xl mx-auto px-6">
-            <p className="text-center text-white/25 text-xs font-semibold tracking-[0.25em] uppercase mb-8">
-              Trusted by martial arts schools across the country
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
-              {["Dragon Martial Arts", "Elite Karate Academy", "Williams BJJ", "Zen Dojo", "Iron Fist MMA", "Bushido Academy"].map((name) => (
-                <span key={name} className="text-white/20 text-sm font-semibold tracking-wide hover:text-white/40 transition-colors cursor-default">
-                  {name}
-                </span>
-              ))}
+        {/* ── FEATURES ── */}
+        <section id="features" className="py-32 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-16 scroll-reveal">
+              <span className="section-label mb-4">Features</span>
+              <h2 className="section-title max-w-xl">Everything you need.<br /><span style={{ color: "rgba(255,255,255,0.3)" }}>Nothing you don't.</span></h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {FEATURES.map((feat, i) => {
+                const Icon = feat.icon;
+                return (
+                  <div key={i} className={`feat-card scroll-reveal sr-d${(i % 3) + 1}`}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5" style={{ background: `${feat.accent}18`, border: `1px solid ${feat.accent}30` }}>
+                      <Icon size={20} style={{ color: feat.accent }} />
+                    </div>
+                    <h3 className="text-base font-semibold mb-2" style={{ letterSpacing: "-0.02em" }}>{feat.title}</h3>
+                    <p className="text-sm font-light leading-relaxed" style={{ color: "rgba(255,255,255,0.48)" }}>{feat.description}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════════════════
-            STATS
-        ═══════════════════════════════════════════════════════════ */}
-        <section ref={statsRef} className="py-24 bg-[#050505]">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06] rounded-2xl overflow-hidden border border-white/[0.06]">
+        {/* ── KAI SPOTLIGHT ── */}
+        <section className="py-32 px-6 relative overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 60% at 50% 50%, rgba(225,29,72,0.06) 0%, transparent 70%)" }} />
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <div className="scroll-reveal">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-8 kai-pulse" style={{ background: "rgba(225,29,72,0.15)", border: "1px solid rgba(225,29,72,0.3)" }}>
+                <Brain size={28} style={{ color: "#e11d48" }} />
+              </div>
+              <h2 className="section-title mb-6">Meet Kai.<br /><span style={{ color: "rgba(255,255,255,0.35)" }}>Your AI studio manager.</span></h2>
+              <p className="text-lg font-light mb-12 max-w-2xl mx-auto" style={{ color: "rgba(255,255,255,0.48)", lineHeight: 1.75 }}>Kai is always on. It answers parent questions at 2am, sends automated reminders, identifies students at risk of churning, and surfaces revenue opportunities — all without you being involved.</p>
+            </div>
+            <div className="rounded-2xl p-6 text-left max-w-lg mx-auto scroll-reveal sr-d1" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="flex items-center gap-3 mb-5 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center kai-pulse" style={{ background: "rgba(225,29,72,0.2)", border: "1px solid rgba(225,29,72,0.4)" }}><Brain size={14} style={{ color: "#e11d48" }} /></div>
+                <div><div className="text-sm font-semibold">Kai AI</div><div className="text-xs" style={{ color: "rgba(255,255,255,0.38)" }}>Always available</div></div>
+                <div className="ml-auto flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: "#34d399" }} /><span className="text-xs" style={{ color: "rgba(255,255,255,0.38)" }}>Online</span></div>
+              </div>
               {[
-                { value: "10,000+", label: "Students Managed", icon: Users },
-                { value: "98%", label: "Retention Rate", icon: TrendingUp },
-                { value: "24/7", label: "AI Support", icon: Sparkles },
-                { value: "40%", label: "Revenue Growth", icon: BarChart3 },
-              ].map(({ value, label, icon: Icon }, i) => (
-                <div key={i} className="scroll-reveal bg-[#050505] p-8 md:p-10 flex flex-col items-center text-center group hover:bg-[#0d0d0d] transition-colors" style={{ transitionDelay: `${i * 80}ms` }}>
-                  <Icon className="w-5 h-5 text-rose-500/60 mb-4 group-hover:text-rose-500 transition-colors" />
-                  <div className="text-4xl md:text-5xl font-black text-white mb-2 tabular-nums">{value}</div>
-                  <div className="text-white/40 text-sm font-medium tracking-wide">{label}</div>
+                { from: "parent", text: "Hi, what time is the Thursday 6pm class?" },
+                { from: "kai", text: "Hi Sarah! Thursday's 6pm Intermediate Karate runs until 7:15pm in Studio A. Jake is enrolled and his attendance has been great — 12 of the last 14 classes! 🥋" },
+                { from: "parent", text: "Perfect! Can I add him to Saturday's class too?" },
+                { from: "kai", text: "Done! Jake is now enrolled in Saturday 10am Karate. You'll receive a confirmation email shortly. Anything else I can help with?" },
+              ].map((msg, i) => (
+                <div key={i} className={`flex ${msg.from === "parent" ? "justify-end" : "justify-start"} mb-3`}>
+                  <div className="max-w-xs text-sm px-4 py-2.5 rounded-2xl" style={{ background: msg.from === "parent" ? "rgba(255,255,255,0.1)" : "rgba(225,29,72,0.15)", border: msg.from === "kai" ? "1px solid rgba(225,29,72,0.2)" : "none", color: "rgba(255,255,255,0.85)", lineHeight: 1.55 }}>{msg.text}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════════════════
-            INTRO / VALUE PROP
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-32 bg-[#080808]">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Left: text */}
-              <div className="scroll-reveal">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs font-semibold tracking-widest uppercase mb-6">
-                  <Flame className="w-3 h-3" />
-                  Why DojoFlow
-                </div>
-                <h2 className="text-4xl md:text-5xl font-black leading-[1.05] tracking-tight text-white mb-6">
-                  Your school deserves<br />
-                  <span className="text-rose-500">better tools.</span>
-                </h2>
-                <p className="text-white/50 text-lg leading-relaxed mb-8">
-                  Most martial arts schools run on spreadsheets, group texts, and manual invoicing. DojoFlow replaces all of it with a single AI-powered platform that works while you teach.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    "Kai answers parent questions at 2 AM so you don't have to",
-                    "Automated billing collects tuition without awkward conversations",
-                    "One dashboard for every student, class, and payment",
-                    "Built specifically for martial arts — not a generic gym app",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="mt-0.5 w-5 h-5 rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3 text-rose-400" />
-                      </div>
-                      <span className="text-white/65 text-sm leading-relaxed">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right: visual */}
-              <div className="scroll-reveal relative" style={{ transitionDelay: '150ms' }}>
-                <div className="relative rounded-2xl overflow-hidden border border-white/8 bg-[#0d0d0d]">
-                  <img
-                    src="/dojo-background.jpg"
-                    alt="Traditional Dojo"
-                    className="w-full h-72 object-cover opacity-60"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-white text-sm font-semibold">Kai AI</div>
-                        <div className="text-white/40 text-xs">Online now</div>
-                      </div>
-                      <div className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    </div>
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-white/70 text-sm leading-relaxed">
-                      "Hi! I'm Kai, your AI assistant. I can answer questions about class schedules, billing, and enrollment — 24/7. How can I help you today?"
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* ── TESTIMONIALS ── */}
+        <section className="py-32 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-16 scroll-reveal">
+              <span className="section-label mb-4">Testimonials</span>
+              <h2 className="section-title">Trusted by studios<br /><span style={{ color: "rgba(255,255,255,0.3)" }}>across every discipline.</span></h2>
             </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════
-            HOW IT WORKS
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-32 bg-[#050505]">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-20 scroll-reveal">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-5">
-                Simple Process
-              </div>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
-                Up and running in minutes.
-              </h2>
-            </div>
-
-            <div className="relative">
-              {/* Connector line */}
-              <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-              <div className="grid md:grid-cols-4 gap-8">
-                {[
-                  { step: "01", title: "Connect", desc: "Connect your school, staff, and schedule in minutes.", icon: Users, color: "rose" },
-                  { step: "02", title: "Activate", desc: "Turn on automations — calls, SMS, follow-ups, enrollment.", icon: Zap, color: "amber" },
-                  { step: "03", title: "Run", desc: "Manage check-ins, attendance, leads, and retention daily.", icon: Calendar, color: "emerald" },
-                  { step: "04", title: "Grow", desc: "Track KPIs and revenue with dashboards and insights.", icon: TrendingUp, color: "cyan" },
-                ].map(({ step, title, desc, icon: Icon, color }, i) => (
-                  <div key={i} className="scroll-reveal flex flex-col items-center text-center group" style={{ transitionDelay: `${i * 100}ms` }}>
-                    <div className={`relative w-20 h-20 rounded-2xl border mb-6 flex items-center justify-center transition-all duration-300 group-hover:scale-110
-                      ${color === 'rose' ? 'border-rose-500/20 bg-rose-500/5 group-hover:bg-rose-500/10 group-hover:border-rose-500/40' : ''}
-                      ${color === 'amber' ? 'border-amber-500/20 bg-amber-500/5 group-hover:bg-amber-500/10 group-hover:border-amber-500/40' : ''}
-                      ${color === 'emerald' ? 'border-emerald-500/20 bg-emerald-500/5 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/40' : ''}
-                      ${color === 'cyan' ? 'border-cyan-500/20 bg-cyan-500/5 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/40' : ''}
-                    `}>
-                      <Icon className={`w-7 h-7
-                        ${color === 'rose' ? 'text-rose-400' : ''}
-                        ${color === 'amber' ? 'text-amber-400' : ''}
-                        ${color === 'emerald' ? 'text-emerald-400' : ''}
-                        ${color === 'cyan' ? 'text-cyan-400' : ''}
-                      `} />
-                      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#050505] border border-white/10 text-white/30 text-[10px] font-bold flex items-center justify-center">
-                        {step}
-                      </span>
-                    </div>
-                    <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
-                    <p className="text-white/40 text-sm leading-relaxed">{desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════
-            FEATURES GRID
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-32 bg-[#080808]">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-20 scroll-reveal">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-5">
-                Everything You Need
-              </div>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
-                Built for martial arts schools.
-              </h2>
-              <p className="text-white/40 text-lg max-w-xl mx-auto">
-                Stop juggling spreadsheets, payment apps, and messaging tools. DojoFlow brings everything together.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {features.map(({ icon: Icon, title, description, highlight }, i) => (
-                <div
-                  key={i}
-                  className="feature-card scroll-reveal group relative rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-7 hover:border-white/15 hover:bg-[#111111] transition-all duration-300 cursor-default overflow-hidden"
-                  style={{ transitionDelay: `${i * 60}ms` }}
-                >
-                  {/* Subtle top gradient line */}
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <div className="feature-icon w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-5">
-                    <Icon className="w-5 h-5 text-rose-400" />
-                  </div>
-                  <h3 className="text-white font-bold text-base mb-2">{title}</h3>
-                  <p className="text-white/40 text-sm leading-relaxed mb-4">{description}</p>
-                  <div className="inline-flex items-center gap-1.5 text-rose-400/70 text-xs font-semibold tracking-wide">
-                    <Sparkles className="w-3 h-3" />
-                    {highlight}
-                  </div>
+            <div className="rounded-2xl p-10 mb-6 scroll-reveal sr-d1" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: "rgba(225,29,72,0.2)", color: "#fb7185" }}>{TESTIMONIALS[activeTestimonial].avatar}</div>
+                <div>
+                  <div className="font-semibold text-sm">{TESTIMONIALS[activeTestimonial].name}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.42)" }}>{TESTIMONIALS[activeTestimonial].title}</div>
+                  <div className="flex gap-0.5 mt-1.5">{Array.from({ length: 5 }).map((_, si) => <Star key={si} size={12} fill="#e11d48" style={{ color: "#e11d48" }} />)}</div>
                 </div>
+                <div className="ml-auto px-3 py-1 rounded-full text-xs font-medium" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)" }}>{TESTIMONIALS[activeTestimonial].industry}</div>
+              </div>
+              <p className="text-lg font-light leading-relaxed" style={{ color: "rgba(255,255,255,0.8)", letterSpacing: "-0.01em" }}>"{TESTIMONIALS[activeTestimonial].quote}"</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {TESTIMONIALS.map((_, ti) => (
+                <button key={ti} onClick={() => setActiveTestimonial(ti)} className="rounded-full transition-all duration-300" style={{ width: ti === activeTestimonial ? "24px" : "8px", height: "8px", background: ti === activeTestimonial ? "#e11d48" : "rgba(255,255,255,0.2)" }} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════════════════
-            AUDIENCE TABS
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-32 bg-[#050505]">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16 scroll-reveal">
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
-                Built for every type of facility.
-              </h2>
-              <p className="text-white/40 text-lg">Select your facility type to see how DojoFlow fits your needs.</p>
+        {/* ── PRICING ── */}
+        <section id="pricing" className="py-32 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-16 text-center scroll-reveal">
+              <span className="section-label mb-4">Pricing</span>
+              <h2 className="section-title mb-4">Simple, transparent pricing.</h2>
+              <p className="text-base font-light" style={{ color: "rgba(255,255,255,0.42)" }}>Start free for 14 days. No credit card required.</p>
             </div>
-
-            {/* Tab buttons */}
-            <div className="flex justify-center gap-2 mb-12 scroll-reveal">
-              {audiences.map(({ tag }, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveAudience(i)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    activeAudience === i
-                      ? "bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.3)]"
-                      : "border border-white/10 text-white/40 hover:text-white/70 hover:border-white/20"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab content */}
-            <div className="scroll-reveal">
-              {audiences.map(({ tag, headline, body, href }, i) => (
-                <div
-                  key={i}
-                  className={`transition-all duration-500 ${activeAudience === i ? 'block' : 'hidden'}`}
-                >
-                  <div className="grid lg:grid-cols-2 gap-12 items-center rounded-3xl border border-white/[0.07] bg-[#0d0d0d] p-10 md:p-14">
-                    <div>
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs font-semibold tracking-widest uppercase mb-6">
-                        {tag}
-                      </div>
-                      <h3 className="text-3xl md:text-4xl font-black text-white leading-tight mb-5 whitespace-pre-line">
-                        {headline}
-                      </h3>
-                      <p className="text-white/50 text-base leading-relaxed mb-8">{body}</p>
-                      <Link to={href} className="inline-flex items-center gap-2 text-rose-400 font-semibold text-sm hover:text-rose-300 transition-colors group">
-                        Learn more
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
-                    <div className="relative rounded-2xl overflow-hidden border border-white/8">
-                      <img
-                        src={i === 0 ? "/kids-martial-arts.jpeg" : i === 1 ? "/fitness-class.webp" : "/barre-studio.jpg"}
-                        alt={tag}
-                        className="w-full h-72 object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d]/60 to-transparent" />
-                      {/* Floating stat */}
-                      <div className="absolute bottom-4 left-4 right-4 bg-[#0d0d0d]/90 backdrop-blur-sm border border-white/10 rounded-xl p-4 flex items-center justify-between">
-                        <div>
-                          <div className="text-white/40 text-xs mb-0.5">This month</div>
-                          <div className="text-white font-bold text-sm">Revenue Growth</div>
-                        </div>
-                        <div className="text-emerald-400 font-black text-2xl">↑ 40%</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════
-            TESTIMONIALS
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-32 bg-[#080808]">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16 scroll-reveal">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs font-semibold tracking-widest uppercase mb-5">
-                <Star className="w-3 h-3 fill-current" />
-                Loved by Martial Arts Schools
-              </div>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
-                Real results from real schools.
-              </h2>
-            </div>
-
-            <div className="scroll-reveal">
-              {/* Main testimonial */}
-              <div className="relative rounded-3xl border border-white/[0.07] bg-[#0d0d0d] p-10 md:p-14 mb-6 overflow-hidden">
-                <div className="absolute top-8 right-8 opacity-5">
-                  <Quote className="w-24 h-24 text-white" />
-                </div>
-                <div className="flex gap-1 mb-6">
-                  {Array.from({ length: testimonials[activeTestimonial].rating }).map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-amber-400 fill-current" />
-                  ))}
-                </div>
-                <blockquote className="text-white text-xl md:text-2xl font-light leading-relaxed mb-8 max-w-3xl">
-                  "{testimonials[activeTestimonial].quote}"
-                </blockquote>
-                <div className="flex items-center gap-4">
-                  <img
-                    src={testimonials[activeTestimonial].avatar}
-                    alt={testimonials[activeTestimonial].author}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
-                  />
-                  <div>
-                    <div className="text-white font-semibold">{testimonials[activeTestimonial].author}</div>
-                    <div className="text-white/40 text-sm">{testimonials[activeTestimonial].role}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial navigation */}
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  {testimonials.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveTestimonial(i)}
-                      className={`h-1 rounded-full transition-all duration-300 ${
-                        activeTestimonial === i ? 'w-8 bg-rose-500' : 'w-4 bg-white/15 hover:bg-white/30'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
-                    className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setActiveTestimonial((prev) => (prev + 1) % testimonials.length)}
-                    className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════
-            PRICING
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-32 bg-[#050505]">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16 scroll-reveal">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-5">
-                Simple Pricing
-              </div>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
-                Transparent. No surprises.
-              </h2>
-              <p className="text-white/40 text-lg max-w-lg mx-auto">
-                All plans include monthly AI credits. Credits are used when Kai performs actions.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {pricingPlans.map(({ name, price, period, credits, features: planFeatures, featured, badge }, i) => (
-                <div
-                  key={i}
-                  className={`scroll-reveal relative rounded-2xl border p-7 flex flex-col transition-all duration-300 hover:scale-[1.02] ${
-                    featured
-                      ? "border-rose-500 bg-gradient-to-b from-rose-500/10 to-[#0d0d0d] shadow-[0_0_40px_rgba(225,29,72,0.15)]"
-                      : badge === "Most Powerful"
-                      ? "border-amber-500/30 bg-[#0d0d0d] hover:border-amber-500/50"
-                      : "border-white/[0.07] bg-[#0d0d0d] hover:border-white/15"
-                  }`}
-                  style={{ transitionDelay: `${i * 80}ms` }}
-                >
-                  {badge && (
-                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
-                      featured ? "bg-rose-500 text-white" : "bg-amber-500/20 border border-amber-500/40 text-amber-400"
-                    }`}>
-                      {badge}
-                    </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {PRICING.map((plan, i) => (
+                <div key={i} className={`price-card ${plan.highlight ? "featured" : ""} scroll-reveal sr-d${i + 1} relative`}>
+                  {plan.badge && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap" style={{ background: plan.highlight ? "#e11d48" : "rgba(255,255,255,0.1)", color: "#fff" }}>{plan.badge}</div>
                   )}
                   <div className="mb-6">
-                    <div className="text-white/50 text-sm font-semibold mb-3">{name}</div>
-                    <div className="flex items-end gap-1 mb-1">
-                      <span className="text-4xl font-black text-white">{price}</span>
-                      <span className="text-white/30 text-sm mb-1.5">{period}</span>
+                    <div className="text-sm font-semibold mb-1">{plan.name}</div>
+                    <div className="flex items-end gap-1 mb-2">
+                      <span className="text-4xl font-black" style={{ letterSpacing: "-0.04em" }}>{plan.price}</span>
+                      <span className="text-sm pb-1.5" style={{ color: "rgba(255,255,255,0.38)" }}>{plan.period}</span>
                     </div>
-                    <div className="text-white/30 text-xs">{credits}</div>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.38)" }}>{plan.description}</p>
                   </div>
-                  <div className="space-y-3 flex-1 mb-8">
-                    {planFeatures.map((f, j) => (
-                      <div key={j} className="flex items-start gap-2.5">
-                        <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${featured ? 'text-rose-400' : 'text-white/30'}`} />
-                        <span className="text-white/50 text-sm">{f}</span>
-                      </div>
+                  <ul className="space-y-2.5 mb-8">
+                    {plan.features.map((f, fi) => (
+                      <li key={fi} className="flex items-start gap-2.5 text-xs" style={{ color: "rgba(255,255,255,0.68)" }}>
+                        <Check size={13} className="mt-0.5 flex-shrink-0" style={{ color: plan.highlight ? "#fb7185" : "rgba(255,255,255,0.38)" }} />{f}
+                      </li>
                     ))}
-                  </div>
-                  <button
-                    onClick={() => setShowKaiOnboarding(true)}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                      featured
-                        ? "bg-rose-600 hover:bg-rose-500 text-white"
-                        : "border border-white/10 text-white/60 hover:border-white/30 hover:text-white"
-                    }`}
-                  >
-                    Get Started
-                  </button>
+                  </ul>
+                  <button onClick={() => setShowKaiOnboarding(true)} className={`w-full pill ${plan.highlight ? "pill-red" : "pill-ghost"} justify-center text-sm`}>{plan.cta}</button>
                 </div>
               ))}
-            </div>
-
-            <div className="text-center mt-8 scroll-reveal">
-              <Link to="/pricing" className="inline-flex items-center gap-2 text-white/30 text-sm hover:text-white/60 transition-colors">
-                View full pricing details
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════════════════
-            CONTACT
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-32 bg-[#080808]">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-start">
-              <div className="scroll-reveal">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/50 text-xs font-semibold tracking-widest uppercase mb-6">
-                  Get in Touch
-                </div>
-                <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-5">
-                  Ready to transform your school?
-                </h2>
-                <p className="text-white/40 text-lg leading-relaxed mb-10">
-                  Send us a message and our team will get back to you within 24 hours. Or talk to Kai right now for an instant demo.
-                </p>
-                <div className="space-y-5">
-                  {[
-                    { icon: Clock, label: "Response time", value: "Under 24 hours" },
-                    { icon: Shield, label: "Data security", value: "SOC 2 compliant" },
-                    { icon: Star, label: "Onboarding", value: "White-glove setup" },
-                  ].map(({ icon: Icon, label, value }, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl border border-white/8 bg-white/3 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-4 h-4 text-white/30" />
-                      </div>
-                      <div>
-                        <div className="text-white/30 text-xs mb-0.5">{label}</div>
-                        <div className="text-white text-sm font-semibold">{value}</div>
-                      </div>
+        {/* ── CONTACT ── */}
+        <section id="contact" className="py-32 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-start">
+            <div className="scroll-reveal">
+              <span className="section-label mb-4">Get in Touch</span>
+              <h2 className="font-bold mb-6" style={{ fontSize: "clamp(1.8rem,4vw,3rem)", letterSpacing: "-0.04em", lineHeight: 1.1 }}>Ready to transform your studio?</h2>
+              <p className="text-base font-light mb-10" style={{ color: "rgba(255,255,255,0.48)", lineHeight: 1.75 }}>Our team will personally walk you through the platform, answer every question, and make sure DojoFlow is the right fit for your business.</p>
+              <div className="space-y-4">
+                {[{ icon: Clock, label: "Response within 24 hours", sub: "We reply to every inquiry personally" }, { icon: Shield, label: "Enterprise-grade security", sub: "SOC 2 compliant, data encrypted at rest" }, { icon: Users, label: "White-glove onboarding", sub: "We migrate your data and train your team" }].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={i} className="flex items-start gap-4">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(225,29,72,0.12)", border: "1px solid rgba(225,29,72,0.2)" }}><Icon size={16} style={{ color: "#e11d48" }} /></div>
+                      <div><div className="text-sm font-semibold">{item.label}</div><div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>{item.sub}</div></div>
                     </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="rounded-2xl p-8 scroll-reveal sr-d1" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <form onSubmit={handleContactSubmit} className="space-y-4">
+                {[{ key: "name", label: "Your Name", placeholder: "Master John Smith", type: "text" }, { key: "email", label: "Email Address", placeholder: "john@yourstudio.com", type: "email" }, { key: "school", label: "Studio / School Name", placeholder: "Dragon Martial Arts Academy", type: "text" }].map(field => (
+                  <div key={field.key}>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>{field.label}</label>
+                    <input type={field.type} placeholder={field.placeholder} value={contactForm[field.key as keyof typeof contactForm]} onChange={e => setContactForm(p => ({ ...p, [field.key]: e.target.value }))} required className="w-full px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }} />
+                  </div>
+                ))}
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>Industry</label>
+                  <select value={contactForm.industry} onChange={e => setContactForm(p => ({ ...p, industry: e.target.value }))} className="w-full px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}>
+                    <option value="" style={{ background: "#111" }}>Select your industry</option>
+                    {INDUSTRIES.map(ind => <option key={ind.id} value={ind.id} style={{ background: "#111" }}>{ind.icon} {ind.name}</option>)}
+                    <option value="other" style={{ background: "#111" }}>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>Message</label>
+                  <textarea placeholder="Tell us about your studio..." value={contactForm.message} onChange={e => setContactForm(p => ({ ...p, message: e.target.value }))} rows={4} className="w-full px-4 py-3 rounded-xl text-sm resize-none" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }} />
+                </div>
+                <button type="submit" disabled={contactLoading} className="w-full pill pill-red justify-center">{contactLoading ? "Sending..." : "Send Message"}{!contactLoading && <ArrowRight size={16} />}</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FINAL CTA ── */}
+        <section className="py-40 px-6 relative overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 50% 80% at 50% 50%, rgba(225,29,72,0.07) 0%, transparent 70%)" }} />
+          <div className="max-w-3xl mx-auto text-center relative z-10 scroll-reveal">
+            <h2 className="font-bold mb-6" style={{ fontSize: "clamp(2.5rem,7vw,5rem)", letterSpacing: "-0.05em", lineHeight: 0.95 }}>Your studio.<br /><span style={{ color: "rgba(255,255,255,0.28)" }}>Fully automated.</span></h2>
+            <p className="text-lg font-light mb-12" style={{ color: "rgba(255,255,255,0.38)" }}>Join thousands of studio owners who've reclaimed their time with DojoFlow.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button onClick={() => setShowKaiOnboarding(true)} className="pill pill-white" style={{ padding: "16px 32px", fontSize: "16px" }}>Start Free 14-Day Trial <ArrowRight size={18} /></button>
+              <a href="#contact" className="pill pill-ghost" style={{ padding: "16px 32px", fontSize: "16px" }}>Talk to Sales</a>
+            </div>
+            <p className="mt-6 text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>No credit card · No contracts · Full access from day one</p>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="py-16 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="grid md:grid-cols-5 gap-10 mb-12">
+              <div className="md:col-span-2">
+                <img src="/Lightdojoflow.png" alt="DojoFlow" className="h-7 w-auto mb-4" />
+                <p className="text-sm font-light mb-6" style={{ color: "rgba(255,255,255,0.38)", lineHeight: 1.75 }}>The AI-powered operating system for martial arts schools, gymnastics studios, dance academies, fitness centers, and more.</p>
+                <div className="flex gap-3">
+                  {["Twitter", "Instagram", "LinkedIn"].map(s => (
+                    <a key={s} href="#" className="text-xs px-3 py-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)" }}>{s}</a>
                   ))}
                 </div>
               </div>
-
-              <div className="scroll-reveal" style={{ transitionDelay: '150ms' }}>
-                <ContactForm />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════
-            FINAL CTA
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="relative py-40 overflow-hidden bg-[#050505]">
-          {/* Radial glow */}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(225,29,72,0.12) 0%, transparent 70%)'
-          }} />
-          {/* Grid */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
-            backgroundSize: '60px 60px'
-          }} />
-
-          <div className="relative z-10 max-w-4xl mx-auto px-6 text-center scroll-reveal">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs font-semibold tracking-widest uppercase mb-8">
-              Start Today — Free for 14 Days
-            </div>
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white mb-6 leading-[0.95]">
-              Ready to transform<br />
-              <span className="text-rose-500">your dojo?</span>
-            </h2>
-            <p className="text-white/40 text-xl leading-relaxed mb-12 max-w-xl mx-auto">
-              Join hundreds of martial arts schools using DojoFlow to grow their business and focus on what matters: teaching.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-              <button
-                onClick={() => setShowKaiOnboarding(true)}
-                className="glow-cta group inline-flex items-center gap-3 px-10 py-5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold uppercase tracking-widest transition-all duration-300 hover:scale-[1.03]"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Start Free Trial
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="inline-flex items-center gap-2 px-10 py-5 rounded-xl border border-white/10 text-white/60 text-sm font-semibold uppercase tracking-widest hover:border-white/25 hover:text-white transition-all duration-300">
-                Schedule Demo
-              </button>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-6 text-white/25 text-xs font-medium tracking-wide">
-              {["14-day free trial", "No credit card required", "Cancel anytime"].map((t) => (
-                <span key={t} className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-rose-500/40" />
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════
-            FOOTER
-        ═══════════════════════════════════════════════════════════ */}
-        <footer className="border-t border-white/[0.06] bg-[#050505] py-16">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="grid md:grid-cols-4 gap-10 mb-12">
-              <div className="md:col-span-1">
-                <img src="/Darkdojoflow.png" alt="DojoFlow" className="h-8 mb-4" />
-                <p className="text-white/30 text-sm leading-relaxed">
-                  The AI-powered operating system for martial arts schools.
-                </p>
-              </div>
               {[
-                { heading: "Product", links: ["Schools", "Fitness Facilities", "Studios", "Pricing"] },
-                { heading: "Company", links: ["About", "Blog", "Careers", "Contact"] },
-                { heading: "Legal", links: ["Terms", "Privacy", "Cookies", "Security"] },
-              ].map(({ heading, links }) => (
-                <div key={heading}>
-                  <div className="text-white/50 text-xs font-semibold tracking-widest uppercase mb-4">{heading}</div>
+                { title: "Product", links: ["Features", "Pricing", "Integrations", "Changelog"] },
+                { title: "Industries", links: ["Martial Arts", "Gymnastics", "Dance", "Fitness", "Yoga & Pilates", "Boxing & MMA"] },
+                { title: "Company", links: ["About", "Blog", "Careers", "Privacy", "Terms"] },
+              ].map(col => (
+                <div key={col.title}>
+                  <div className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: "rgba(255,255,255,0.28)" }}>{col.title}</div>
                   <ul className="space-y-2.5">
-                    {links.map((link) => (
-                      <li key={link}>
-                        <a href="#" className="text-white/25 text-sm hover:text-white/60 transition-colors">{link}</a>
-                      </li>
+                    {col.links.map(link => (
+                      <li key={link}><a href="#" className="text-sm" style={{ color: "rgba(255,255,255,0.42)" }}>{link}</a></li>
                     ))}
                   </ul>
                 </div>
               ))}
             </div>
-            <div className="border-t border-white/[0.06] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-white/20 text-xs">© 2025 DojoFlow. All rights reserved.</div>
-              <div className="flex items-center gap-4">
-                {/* Newsletter */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="email"
-                    placeholder="Email address"
-                    className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-rose-500/50 w-44"
-                  />
-                  <button className="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors">
-                    Subscribe
-                  </button>
-                </div>
-              </div>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>© {new Date().getFullYear()} DojoFlow. All rights reserved.</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>dojo-flow.ai</p>
             </div>
           </div>
         </footer>
 
       </div>
 
-      {/* ── Overlays & Modals ── */}
       <CookieNotice />
-      <FloatingVideoIcon 
-        videoSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/xlPpAInqwgOsOCeY.mp4"
-        posterSrc="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/UKNGrFtBGFrYYUrA.jpg"
-        heroRef={heroRef as React.RefObject<HTMLElement>}
-      />
-      <FloatingKaiButton onOpen={() => setShowKaiOnboarding(true)} />
-      <ScrollIndicator />
-
-      {showKaiOnboarding && (
-        <KaiOnboardingFlow onClose={() => setShowKaiOnboarding(false)} />
-      )}
-
-      {showOnboarding && selectedCategory && (
-        <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
-          <DialogContent className="bg-[#111] border-white/10 text-white max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-white">
-                Set up your {getCategoryName(selectedCategory)} workspace
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              {/* Step indicator */}
-              <div className="flex gap-2 mb-4">
-                {ONBOARDING_STEPS.map((step) => (
-                  <div
-                    key={step.id}
-                    className={`flex-1 h-1 rounded-full transition-colors ${
-                      step.id <= currentStep ? "bg-rose-500" : "bg-white/10"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="text-white/50 text-sm">{ONBOARDING_STEPS[currentStep - 1].title}</p>
-
-              {currentStep === 1 && (
-                <div className="space-y-3">
-                  <Label className="text-white/70">School Name</Label>
-                  <Input
-                    value={schoolName}
-                    onChange={(e) => setSchoolName(e.target.value)}
-                    placeholder="Dragon Martial Arts"
-                    className="bg-white/5 border-white/10 text-white placeholder-white/20"
-                  />
-                </div>
-              )}
-              {currentStep === 2 && (
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-white/70">Your Name</Label>
-                    <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="Master Chen" className="bg-white/5 border-white/10 text-white placeholder-white/20 mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-white/70">Email Address</Label>
-                    <Input type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="master@dragonma.com" className="bg-white/5 border-white/10 text-white placeholder-white/20 mt-1" />
-                  </div>
-                </div>
-              )}
-              {currentStep === 3 && (
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-white/70">Number of Locations</Label>
-                    <Select onValueChange={setLocationCount}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white mt-1">
-                        <SelectValue placeholder="Select..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 location</SelectItem>
-                        <SelectItem value="2-5">2–5 locations</SelectItem>
-                        <SelectItem value="6+">6+ locations</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-white/70 mb-2 block">Programs Offered</Label>
-                    {["Karate", "BJJ", "Taekwondo", "MMA", "Kickboxing", "Judo"].map((p) => (
-                      <div key={p} className="flex items-center gap-2 mb-2">
-                        <Checkbox
-                          checked={programs.includes(p)}
-                          onCheckedChange={() => handleProgramToggle(p)}
-                          className="border-white/20"
-                        />
-                        <span className="text-white/60 text-sm">{p}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {currentStep === 4 && (
-                <div className="space-y-3">
-                  <Label className="text-white/70">Current Student Count</Label>
-                  <Select onValueChange={setStudentCount}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white mt-1">
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0-50">0–50 students</SelectItem>
-                      <SelectItem value="51-100">51–100 students</SelectItem>
-                      <SelectItem value="101-200">101–200 students</SelectItem>
-                      <SelectItem value="201-500">201–500 students</SelectItem>
-                      <SelectItem value="500+">500+ students</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                {currentStep > 1 && (
-                  <Button variant="outline" onClick={handlePrevStep} className="flex-1 border-white/10 text-white/60 hover:text-white">
-                    Back
-                  </Button>
-                )}
-                <Button
-                  onClick={handleNextStep}
-                  disabled={!canProceed() || isCreating}
-                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white"
-                >
-                  {isCreating ? "Creating..." : currentStep === ONBOARDING_STEPS.length ? "Create Workspace" : "Continue"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <FloatingKaiButton onClick={() => setShowKaiOnboarding(true)} />
+      <FloatingVideoIcon videoSrc="/dojo-promo.mp4" posterSrc="/hero-martial-arts.jpg" heroRef={heroRef as React.RefObject<HTMLElement>} />
+      {showKaiOnboarding && <KaiOnboardingFlow onClose={() => setShowKaiOnboarding(false)} />}
     </MainLayout>
-  );
-}
-
-// ── Contact Form Component ──────────────────────────────────────────────────
-function ContactForm() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const contactMutation = trpc.contact?.sendMessage?.useMutation?.() ?? null;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Message sent! We'll get back to you within 24 hours.");
-    setName(""); setEmail(""); setMessage("");
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-8 space-y-5">
-      <div>
-        <label className="block text-white/50 text-xs font-semibold tracking-wide uppercase mb-2">Full Name</label>
-        <input
-          id="contact-name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="John Smith"
-          className="w-full bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-rose-500/40 focus:bg-white/8 transition-all"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-white/50 text-xs font-semibold tracking-wide uppercase mb-2">Email Address</label>
-        <input
-          id="contact-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="john@example.com"
-          className="w-full bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-rose-500/40 focus:bg-white/8 transition-all"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-white/50 text-xs font-semibold tracking-wide uppercase mb-2">Message</label>
-        <textarea
-          id="contact-message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Tell us about your school..."
-          rows={4}
-          className="w-full bg-white/5 border border-white/8 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-rose-500/40 focus:bg-white/8 transition-all resize-none"
-          required
-        />
-      </div>
-      <button
-        type="submit"
-        className="w-full py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold uppercase tracking-widest transition-all duration-200 hover:scale-[1.01]"
-      >
-        Send Message
-      </button>
-    </form>
   );
 }
