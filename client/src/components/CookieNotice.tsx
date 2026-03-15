@@ -1,9 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+
+// Sets --cookie-bar-height on :root so the nav bar can offset itself
+function setCookieBarHeight(px: number) {
+  document.documentElement.style.setProperty('--cookie-bar-height', `${px}px`);
+}
 
 export function CookieNotice() {
   const [show, setShow] = useState(false);
   const [visible, setVisible] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const cookieConsent = localStorage.getItem('dojoflow-cookie-consent');
@@ -11,15 +17,32 @@ export function CookieNotice() {
       const timer = setTimeout(() => {
         setShow(true);
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => setVisible(true));
+          requestAnimationFrame(() => {
+            setVisible(true);
+            // Measure and publish height after render
+            if (barRef.current) {
+              setCookieBarHeight(barRef.current.offsetHeight);
+            }
+          });
         });
       }, 3000);
       return () => clearTimeout(timer);
     }
   }, []);
 
+  // Update height on resize
+  useEffect(() => {
+    if (!visible) return;
+    const update = () => {
+      if (barRef.current) setCookieBarHeight(barRef.current.offsetHeight);
+    };
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [visible]);
+
   const dismiss = (value: 'accepted' | 'declined') => {
     setVisible(false);
+    setCookieBarHeight(0);
     setTimeout(() => setShow(false), 600);
     localStorage.setItem('dojoflow-cookie-consent', value);
   };
@@ -28,6 +51,7 @@ export function CookieNotice() {
 
   return (
     <div
+      ref={barRef}
       style={{
         position: 'fixed',
         top: 0,
