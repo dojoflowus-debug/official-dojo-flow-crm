@@ -23,9 +23,17 @@ export async function getDb() {
     try {
       // Create mysql2 pool first
       if (!_pool) {
-        _pool = mysql.createPool(process.env.DATABASE_URL);
+        _pool = mysql.createPool({
+          uri: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false },
+          // TiDB Serverless requires namedPlaceholders=false and does not support
+          // parameterized LIMIT in prepared statements. Using execute mode (not prepare)
+          // avoids the "Incorrect arguments to LIMIT" error.
+          namedPlaceholders: false,
+        });
       }
       // Pass the pool to drizzle with schema for query API
+      // mode: 'default' uses execute() not prepare() which is compatible with TiDB
       _db = drizzle(_pool, { schema, mode: 'default' });
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
