@@ -118,9 +118,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.90.2
         version: 5.90.7(react@19.2.0)
-      '@tidbcloud/serverless':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@trpc/client':
         specifier: ^11.6.0
         version: 11.7.1(@trpc/server@11.7.1(typescript@5.9.3))(typescript@5.9.3)
@@ -7616,7 +7613,8 @@ snapshots:
       '@types/react': 19.2.2
       '@types/react-dom': 19.2.1(@types/react@19.2.2)
 
-  '@tidbcloud/serverless@0.2.0': {}
+  '@tidbcloud/serverless@0.2.0':
+    optional: true
 
   '@trpc/client@11.7.1(@trpc/server@11.7.1(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
