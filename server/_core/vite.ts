@@ -68,11 +68,31 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // Static files are now served in setupVite before Vite middlewares
-  // This function is kept for backward compatibility but is now a no-op
-  // fall through to index.html if the file doesn't exist
   const distPath = path.resolve(import.meta.dirname, "../..", "dist", "public");
-  app.use("*", (_req, res) => {
+
+  if (!fs.existsSync(distPath)) {
+    console.error(`[serveStatic] Build output not found at: ${distPath}`);
+    console.error("Run 'pnpm build' first to generate the production build.");
+    app.use("*", (_req, res) => {
+      res.status(503).send("App build not found. Please run pnpm build.");
+    });
+    return;
+  }
+
+  // Serve static assets (JS, CSS, images, etc.) from dist/public
+  app.use(express.static(distPath));
+
+  // Serve public directory assets (favicon, robots.txt, etc.)
+  const publicPath = path.resolve(import.meta.dirname, "../..", "public");
+  if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+  }
+
+  // SPA fallback — serve index.html for all non-API, non-file routes
+  app.use("*", (req, res) => {
+    if (req.path.startsWith("/api/")) {
+      return res.status(404).json({ error: "Not found" });
+    }
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
