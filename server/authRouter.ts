@@ -253,31 +253,44 @@ export const authRouter = router({
           });
         }
 
-        // Create data URL from base64 data
         // Use image/jpeg for HEIC/HEIF since the frontend converts them to JPEG
         const effectiveMimeType = input.mimeType.includes('heic') || input.mimeType.includes('heif') 
           ? 'image/jpeg' 
           : input.mimeType;
-        const dataUrl = `data:${effectiveMimeType};base64,${base64Data}`;
 
-        // Update user record with data URL
+        // Convert base64 to Buffer and upload to S3 storage
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        const ext = effectiveMimeType.split('/')[1] || 'jpg';
+        const storageKey = `profile-photos/${ctx.user.id}-${Date.now()}.${ext}`;
+
+        let photoUrl: string;
+        try {
+          const uploadResult = await storagePut(storageKey, imageBuffer, effectiveMimeType);
+          photoUrl = uploadResult.url;
+          console.log(`[Profile Photo Upload] User ${ctx.user.id}: Photo uploaded to S3 at ${photoUrl} (${Math.round(estimatedSize / 1024)}KB)`);
+        } catch (storageError) {
+          console.error('[Profile Photo Upload] S3 upload failed, falling back to data URL:', storageError);
+          // Fallback: store as data URL (may fail for large images on varchar(500) columns)
+          photoUrl = `data:${effectiveMimeType};base64,${base64Data}`;
+        }
+
+        // Update user record with the photo URL (S3 URL is short; data URL fallback may be large)
         await db
           .update(users)
           .set({
-            photoUrl: dataUrl,
-            photoUrlSmall: dataUrl, // For now, use same URL for both
+            photoUrl: photoUrl,
+            photoUrlSmall: photoUrl,
             updatedAt: new Date().toISOString(),
           })
           .where(eq(users.id, ctx.user.id));
 
-        console.log(`[Profile Photo Upload] User ${ctx.user.id}: Photo saved as data URL (${Math.round(estimatedSize / 1024)}KB)`);
-
         return {
           success: true,
-          photoUrl: dataUrl,
+          photoUrl,
         };
       } catch (error) {
         console.error("Error uploading profile picture:", error);
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to upload profile picture",

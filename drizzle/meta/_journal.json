@@ -526,6 +526,13 @@
       "when": 1769699965800,
       "tag": "0074_certain_silver_sable",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "5",
+      "when": 1771900000000,
+      "tag": "0075_fix_photo_url_mediumtext",
+      "breakpoints": true
     }
   ]
 }

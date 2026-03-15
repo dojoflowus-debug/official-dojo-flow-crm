@@ -39,12 +39,55 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+/**
+ * Run one-time startup migrations that can't be handled by drizzle-kit
+ * (e.g. column type changes that were missed in migration files)
+ */
+async function runStartupMigrations() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+  try {
+    const mysql = await import('mysql2/promise');
+    const parsed = new URL(dbUrl);
+    const conn = await (mysql as any).createConnection({
+      host: parsed.hostname,
+      port: parseInt(parsed.port) || 3306,
+      user: parsed.username,
+      password: parsed.password,
+      database: parsed.pathname.replace('/', ''),
+      ssl: { rejectUnauthorized: false },
+    });
+
+    // Check current column type for photoUrl in users table
+    const [cols] = await conn.execute(
+      `SHOW COLUMNS FROM \`users\` WHERE Field IN ('photoUrl', 'photoUrlSmall')`
+    ) as any;
+
+    for (const col of cols) {
+      if (col.Type?.startsWith('varchar')) {
+        console.log(`[Migration] Altering users.${col.Field} from ${col.Type} to mediumtext...`);
+        await conn.execute(`ALTER TABLE \`users\` MODIFY COLUMN \`${col.Field}\` mediumtext`);
+        console.log(`[Migration] \u2713 users.${col.Field} is now mediumtext`);
+      } else {
+        console.log(`[Migration] users.${col.Field} is already ${col.Type}, no change needed`);
+      }
+    }
+
+    await conn.end();
+  } catch (err: any) {
+    console.warn('[Migration] Startup migration warning (non-fatal):', err.message);
+  }
+}
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
   // Trust reverse proxy (Manus sandbox proxy, Railway, etc.) so x-forwarded-proto is respected.
   // Without this, req.protocol is always 'http' and cookies never get Secure=true.
   app.set('trust proxy', 1);
+
+  // Run startup migrations (alter column types if needed)
+  await runStartupMigrations();
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

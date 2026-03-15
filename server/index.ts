@@ -15,9 +15,52 @@ import { createContext } from "./_core/context";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ * Run one-time startup migrations that can't be handled by drizzle-kit
+ * (e.g. column type changes that were missed in migration files)
+ */
+async function runStartupMigrations() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+  try {
+    const mysql = await import('mysql2/promise');
+    const parsed = new URL(dbUrl);
+    const conn = await mysql.createConnection({
+      host: parsed.hostname,
+      port: parseInt(parsed.port) || 3306,
+      user: parsed.username,
+      password: parsed.password,
+      database: parsed.pathname.replace('/', ''),
+      ssl: { rejectUnauthorized: false },
+    });
+
+    // Check current column type for photoUrl in users table
+    const [cols] = await conn.execute(
+      `SHOW COLUMNS FROM \`users\` WHERE Field IN ('photoUrl', 'photoUrlSmall')`
+    ) as any;
+
+    for (const col of cols) {
+      if (col.Type === 'varchar(500)' || col.Type?.startsWith('varchar')) {
+        console.log(`[Migration] Altering users.${col.Field} from ${col.Type} to mediumtext...`);
+        await conn.execute(`ALTER TABLE \`users\` MODIFY COLUMN \`${col.Field}\` mediumtext`);
+        console.log(`[Migration] ✓ users.${col.Field} is now mediumtext`);
+      } else {
+        console.log(`[Migration] users.${col.Field} is already ${col.Type}, no change needed`);
+      }
+    }
+
+    await conn.end();
+  } catch (err: any) {
+    console.warn('[Migration] Startup migration warning (non-fatal):', err.message);
+  }
+}
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Run startup migrations (alter column types if needed)
+  await runStartupMigrations();
 
   // Body parsing middleware
   app.use(express.json());

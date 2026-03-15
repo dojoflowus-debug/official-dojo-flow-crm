@@ -8338,3 +8338,11 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Environment Card Image Fix - Mar 14, 2026
 - [x] Fix environment card preview images not showing (all black) - CSS background conflict (fixed style object merging issue)
+
+## Cookie Consent Restyle - Mar 15, 2026
+- [x] White background, black text, black accept button, no emoji, no red/blue colors
+- [x] Position above menu (z-index 9999, overlaps sidebar and all UI)
+
+## Production Bug Fix: Profile Photo Upload
+
+- [ ] Fix photo upload: production DB photoUrl/photoUrlSmall columns are varchar(500) but need mediumtext - switch to S3 upload and store URL only
