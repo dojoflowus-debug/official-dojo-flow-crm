@@ -31,25 +31,25 @@ export function CookieNotice() {
     <div
       className="fixed left-0 right-0 z-[9999]"
       style={{
-        top: '64px', // sits directly below the 64px (h-16) toolbar
+        top: 0,
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(-8px)',
-        transition: 'opacity 600ms ease, transform 600ms ease',
+        transform: visible ? 'translateY(0)' : 'translateY(-6px)',
+        transition: 'opacity 700ms ease, transform 700ms ease',
         pointerEvents: visible ? 'auto' : 'none',
       }}
       role="dialog"
       aria-labelledby="cookie-notice-title"
       aria-describedby="cookie-notice-description"
     >
-      <div className="bg-black/80 backdrop-blur-xl border-b border-white/10 shadow-2xl">
+      <div className="bg-white border-b border-gray-200 shadow-lg">
         <div className="container mx-auto px-6 py-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <p id="cookie-notice-description" className="text-sm text-white/80 leading-relaxed flex-1">
-              <span id="cookie-notice-title" className="font-semibold text-white">We use cookies</span>
+            <p id="cookie-notice-description" className="text-sm text-gray-700 leading-relaxed flex-1">
+              <span id="cookie-notice-title" className="font-semibold text-black">We use cookies</span>
               {' '}to enhance your experience, analyze traffic, and personalize content.{' '}
               <a
                 href="/cookies"
-                className="text-white/60 underline hover:text-white transition-colors"
+                className="text-black underline hover:text-gray-600 transition-colors"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -60,19 +60,19 @@ export function CookieNotice() {
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => dismiss('declined')}
-                className="px-3 py-1.5 text-xs font-medium text-white/60 border border-white/20 rounded hover:bg-white/10 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
               >
                 Decline
               </button>
               <button
                 onClick={() => dismiss('accepted')}
-                className="px-4 py-1.5 text-xs font-semibold text-black bg-white rounded hover:bg-white/90 transition-colors"
+                className="px-4 py-1.5 text-xs font-semibold text-white bg-black rounded hover:bg-gray-800 transition-colors"
               >
                 Accept
               </button>
               <button
                 onClick={() => dismiss('declined')}
-                className="p-1 text-white/40 hover:text-white transition-colors"
+                className="p-1 text-gray-400 hover:text-black transition-colors"
                 aria-label="Close cookie notice"
               >
                 <X className="w-4 h-4" />
