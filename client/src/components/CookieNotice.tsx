@@ -8,7 +8,6 @@ export function CookieNotice() {
   useEffect(() => {
     const cookieConsent = localStorage.getItem('dojoflow-cookie-consent');
     if (!cookieConsent) {
-      // Wait 3 seconds then fade in
       const timer = setTimeout(() => {
         setShow(true);
         requestAnimationFrame(() => {
@@ -21,7 +20,7 @@ export function CookieNotice() {
 
   const dismiss = (value: 'accepted' | 'declined') => {
     setVisible(false);
-    setTimeout(() => setShow(false), 500);
+    setTimeout(() => setShow(false), 600);
     localStorage.setItem('dojoflow-cookie-consent', value);
   };
 
@@ -29,56 +28,58 @@ export function CookieNotice() {
 
   return (
     <div
-      className="fixed left-0 right-0 z-[9999]"
       style={{
+        position: 'fixed',
         top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 99999,
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(-6px)',
+        transform: visible ? 'translateY(0)' : 'translateY(-4px)',
         transition: 'opacity 700ms ease, transform 700ms ease',
         pointerEvents: visible ? 'auto' : 'none',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e5e7eb',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
       }}
       role="dialog"
       aria-labelledby="cookie-notice-title"
       aria-describedby="cookie-notice-description"
     >
-      <div className="bg-white border-b border-gray-200 shadow-lg">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <p id="cookie-notice-description" className="text-sm text-gray-700 leading-relaxed flex-1">
-              <span id="cookie-notice-title" className="font-semibold text-black">We use cookies</span>
-              {' '}to enhance your experience, analyze traffic, and personalize content.{' '}
-              <a
-                href="/cookies"
-                className="text-black underline hover:text-gray-600 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Learn more
-              </a>
-            </p>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <p id="cookie-notice-description" style={{ margin: 0, fontSize: '13px', color: '#374151', flex: 1, minWidth: '200px' }}>
+          <span id="cookie-notice-title" style={{ fontWeight: 600, color: '#000000' }}>We use cookies</span>
+          {' '}to enhance your experience, analyze traffic, and personalize content.{' '}
+          <a
+            href="/cookies"
+            style={{ color: '#000000', textDecoration: 'underline' }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn more
+          </a>
+        </p>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => dismiss('declined')}
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-              >
-                Decline
-              </button>
-              <button
-                onClick={() => dismiss('accepted')}
-                className="px-4 py-1.5 text-xs font-semibold text-white bg-black rounded hover:bg-gray-800 transition-colors"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => dismiss('declined')}
-                className="p-1 text-gray-400 hover:text-black transition-colors"
-                aria-label="Close cookie notice"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <button
+            onClick={() => dismiss('declined')}
+            style={{ padding: '5px 12px', fontSize: '12px', fontWeight: 500, color: '#4b5563', background: 'transparent', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Decline
+          </button>
+          <button
+            onClick={() => dismiss('accepted')}
+            style={{ padding: '5px 14px', fontSize: '12px', fontWeight: 600, color: '#ffffff', background: '#000000', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Accept
+          </button>
+          <button
+            onClick={() => dismiss('declined')}
+            style={{ padding: '4px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center' }}
+            aria-label="Close cookie notice"
+          >
+            <X size={15} />
+          </button>
         </div>
       </div>
     </div>
