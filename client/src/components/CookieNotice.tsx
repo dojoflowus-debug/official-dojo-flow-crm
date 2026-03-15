@@ -2,46 +2,54 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 export function CookieNotice() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [show, setShow] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const cookieConsent = localStorage.getItem('dojoflow-cookie-consent');
     if (!cookieConsent) {
+      // Wait 3 seconds then fade in
       const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 1000);
+        setShow(true);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setVisible(true));
+        });
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const handleAccept = () => {
-    localStorage.setItem('dojoflow-cookie-consent', 'accepted');
-    setIsVisible(false);
+  const dismiss = (value: 'accepted' | 'declined') => {
+    setVisible(false);
+    setTimeout(() => setShow(false), 500);
+    localStorage.setItem('dojoflow-cookie-consent', value);
   };
 
-  const handleDecline = () => {
-    localStorage.setItem('dojoflow-cookie-consent', 'declined');
-    setIsVisible(false);
-  };
-
-  if (!isVisible) return null;
+  if (!show) return null;
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[9999] animate-in slide-in-from-top duration-500"
+      className="fixed left-0 right-0 z-[9999]"
+      style={{
+        top: '64px', // sits directly below the 64px (h-16) toolbar
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(-8px)',
+        transition: 'opacity 600ms ease, transform 600ms ease',
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
       role="dialog"
       aria-labelledby="cookie-notice-title"
       aria-describedby="cookie-notice-description"
     >
-      <div className="bg-white border-b border-gray-200 shadow-md">
-        <div className="container mx-auto px-6 py-2.5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-            <p id="cookie-notice-description" className="text-sm text-gray-700 leading-relaxed flex-1">
-              <span id="cookie-notice-title" className="font-semibold text-black">We use cookies</span>
-              {' '}to enhance your browsing experience, analyze site traffic, and personalize content.{' '}
+      <div className="bg-black/80 backdrop-blur-xl border-b border-white/10 shadow-2xl">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p id="cookie-notice-description" className="text-sm text-white/80 leading-relaxed flex-1">
+              <span id="cookie-notice-title" className="font-semibold text-white">We use cookies</span>
+              {' '}to enhance your experience, analyze traffic, and personalize content.{' '}
               <a
                 href="/cookies"
-                className="text-black underline hover:text-gray-600 transition-colors"
+                className="text-white/60 underline hover:text-white transition-colors"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -51,20 +59,20 @@ export function CookieNotice() {
 
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
-                onClick={handleDecline}
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                onClick={() => dismiss('declined')}
+                className="px-3 py-1.5 text-xs font-medium text-white/60 border border-white/20 rounded hover:bg-white/10 transition-colors"
               >
                 Decline
               </button>
               <button
-                onClick={handleAccept}
-                className="px-4 py-1.5 text-xs font-semibold text-white bg-black rounded hover:bg-gray-800 transition-colors"
+                onClick={() => dismiss('accepted')}
+                className="px-4 py-1.5 text-xs font-semibold text-black bg-white rounded hover:bg-white/90 transition-colors"
               >
                 Accept
               </button>
               <button
-                onClick={handleDecline}
-                className="p-1 text-gray-400 hover:text-black transition-colors"
+                onClick={() => dismiss('declined')}
+                className="p-1 text-white/40 hover:text-white transition-colors"
                 aria-label="Close cookie notice"
               >
                 <X className="w-4 h-4" />
