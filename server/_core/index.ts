@@ -356,8 +356,9 @@ async function startServer() {
   app.get("/api/webhook/health", (req, res) => {
     res.json({
       status: "ok",
-      timestamp:new Date().toISOString(),
+      timestamp: new Date().toISOString(),
       service: "DojoFlow Webhook API",
+      version: "9d00f08-tidb-fix",
     });
   });
   
