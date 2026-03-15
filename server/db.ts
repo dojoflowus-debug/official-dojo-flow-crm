@@ -1,6 +1,5 @@
 import mysql from "mysql2/promise";
 import { eq, desc } from "drizzle-orm";
-import { drizzle as drizzleTiDB } from "drizzle-orm/tidb-serverless";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, staffPins, InsertStaffPin, studentMessages, studentMessageAttachments, InsertStudentMessage, students } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -15,32 +14,38 @@ function getDefaultKioskSettings() {
 // Type alias for compatibility
 type KioskSettings = typeof DEFAULT_KIOSK_CONFIG;
 
-let _db: ReturnType<typeof drizzle> | ReturnType<typeof drizzleTiDB> | null = null;
+let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: mysql.Pool | null = null;
+
+// TiDB Serverless rejects parameterized LIMIT ("Incorrect arguments to LIMIT").
+// Wrapping the pool so that execute() delegates to query() (text protocol)
+// sends LIMIT as a literal number in the SQL string, which TiDB accepts.
+function createTiDBCompatiblePool(url: string): mysql.Pool {
+  const pool = mysql.createPool({
+    uri: url,
+    ssl: { rejectUnauthorized: false },
+  }) as any;
+  // Proxy execute() → query() so Drizzle never sends prepared statements
+  const originalExecute = pool.execute.bind(pool);
+  pool.execute = function(sql: string, values?: any[], ...rest: any[]) {
+    return pool.query(sql, values, ...rest);
+  };
+  return pool as mysql.Pool;
+}
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      // Use the TiDB Serverless Drizzle driver which handles LIMIT ? correctly
-      // (avoids "Incorrect arguments to LIMIT" on TiDB Serverless / PlanetScale)
-      _db = drizzleTiDB(process.env.DATABASE_URL, { schema });
-    } catch (error) {
-      console.warn("[Database] Failed to connect with TiDB driver, falling back to mysql2:", error);
-      // Fallback to mysql2 for local development
-      try {
-        if (!_pool) {
-          _pool = mysql.createPool({
-            uri: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false },
-          });
-        }
-        _db = drizzle(_pool, { schema, mode: 'default' });
-      } catch (err2) {
-        console.warn("[Database] Failed to connect:", err2);
-        _db = null;
-        _pool = null;
+      if (!_pool) {
+        _pool = createTiDBCompatiblePool(process.env.DATABASE_URL);
       }
+      // mode: 'default' is required for mysql2 driver
+      _db = drizzle(_pool, { schema, mode: 'default' });
+    } catch (error) {
+      console.warn("[Database] Failed to connect:", error);
+      _db = null;
+      _pool = null;
     }
   }
   return _db;
