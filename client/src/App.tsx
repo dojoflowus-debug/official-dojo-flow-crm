@@ -16,6 +16,7 @@ import { BillingReturnHandler } from "./components/BillingReturnHandler";
 import { ModalProvider } from "./contexts/ModalContext";
 import { appRoutes } from "./routes/appRoutes";
 import { IndustryEnvironmentInitializer } from "./components/IndustryEnvironmentInitializer";
+import { CookieNotice } from "./components/CookieNotice";
 
 // Full-page loader component for Suspense fallback
 function FullPageLoader() {
@@ -70,6 +71,7 @@ function App() {
                     <AppShellGuard>
                       <Router />
                     </AppShellGuard>
+                    <CookieNotice />
                   </BrowserRouter>
                 </TooltipProvider>
               </ModalProvider>

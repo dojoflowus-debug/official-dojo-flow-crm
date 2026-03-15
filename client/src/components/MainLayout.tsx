@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Menu, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CookieNotice } from '@/components/CookieNotice';
 import { BrandLogo } from '@/components/BrandLogo';
 
 interface MainLayoutProps {
@@ -297,8 +296,6 @@ export default function MainLayout({
         </footer>
       )}
       
-      {/* Cookie Notice */}
-      <CookieNotice />
     </div>
   );
 }

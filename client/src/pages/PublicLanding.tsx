@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { CookieNotice } from "@/components/CookieNotice";
 import { FloatingVideoIcon } from "@/components/FloatingVideoIcon";
 import { KaiOnboardingFlow } from "@/components/KaiOnboardingFlow";
 import { FloatingKaiButton } from "@/components/FloatingKaiButton";
@@ -499,7 +498,6 @@ export default function PublicLanding() {
 
       </div>
 
-      <CookieNotice />
       <FloatingKaiButton onClick={() => setShowKaiOnboarding(true)} />
       <FloatingVideoIcon videoSrc="/dojo-promo.mp4" posterSrc="/hero-martial-arts.jpg" heroRef={heroRef as React.RefObject<HTMLElement>} />
       {showKaiOnboarding && <KaiOnboardingFlow onClose={() => setShowKaiOnboarding(false)} />}
