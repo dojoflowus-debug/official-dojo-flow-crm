@@ -19,7 +19,20 @@ export default function MainLayout({
 }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [cookieBarHeight, setCookieBarHeight] = useState(0);
   const location = useLocation();
+
+  // Listen for cookie banner height changes
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setCookieBarHeight((e as CustomEvent<number>).detail);
+    };
+    window.addEventListener('cookie-bar-height', handler);
+    // Also read the CSS variable in case banner already rendered
+    const existing = getComputedStyle(document.documentElement).getPropertyValue('--cookie-bar-height');
+    if (existing) setCookieBarHeight(parseInt(existing) || 0);
+    return () => window.removeEventListener('cookie-bar-height', handler);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,7 +83,7 @@ export default function MainLayout({
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Navigation */}
       <nav 
-        style={{ top: 'var(--cookie-bar-height, 0px)', transition: 'top 600ms ease' }}
+        style={{ top: `${cookieBarHeight}px`, transition: 'top 600ms ease' }}
         className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled || !transparentHeader
             ? 'bg-black/90 backdrop-blur-xl border-b border-white/10 h-16' 

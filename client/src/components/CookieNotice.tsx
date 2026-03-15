@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
-// Sets --cookie-bar-height on :root so the nav bar can offset itself
-function setCookieBarHeight(px: number) {
+function publishHeight(px: number) {
+  // Set CSS variable for any listener
   document.documentElement.style.setProperty('--cookie-bar-height', `${px}px`);
+  // Also dispatch a custom event for components that listen
+  window.dispatchEvent(new CustomEvent('cookie-bar-height', { detail: px }));
 }
 
 export function CookieNotice() {
@@ -16,25 +18,30 @@ export function CookieNotice() {
     if (!cookieConsent) {
       const timer = setTimeout(() => {
         setShow(true);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            setVisible(true);
-            // Measure and publish height after render
-            if (barRef.current) {
-              setCookieBarHeight(barRef.current.offsetHeight);
-            }
-          });
-        });
       }, 3000);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  // Update height on resize
+  // Once shown, measure height and publish, then trigger fade-in
+  useEffect(() => {
+    if (!show) return;
+    // Give DOM a frame to render before measuring
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const h = barRef.current?.offsetHeight ?? 42;
+        publishHeight(h);
+        setVisible(true);
+      });
+    });
+  }, [show]);
+
+  // Update on resize
   useEffect(() => {
     if (!visible) return;
     const update = () => {
-      if (barRef.current) setCookieBarHeight(barRef.current.offsetHeight);
+      const h = barRef.current?.offsetHeight ?? 42;
+      publishHeight(h);
     };
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
@@ -42,7 +49,7 @@ export function CookieNotice() {
 
   const dismiss = (value: 'accepted' | 'declined') => {
     setVisible(false);
-    setCookieBarHeight(0);
+    publishHeight(0);
     setTimeout(() => setShow(false), 600);
     localStorage.setItem('dojoflow-cookie-consent', value);
   };
