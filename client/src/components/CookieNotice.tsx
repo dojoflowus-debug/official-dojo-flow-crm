@@ -28,48 +28,43 @@ export function CookieNotice() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[9999] animate-in slide-in-from-bottom duration-500"
+      className="fixed top-0 left-0 right-0 z-[9999] animate-in slide-in-from-top duration-500"
       role="dialog"
       aria-labelledby="cookie-notice-title"
       aria-describedby="cookie-notice-description"
     >
-      <div className="bg-white border-t border-gray-200 shadow-2xl">
-        <div className="container mx-auto px-6 py-5">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h3 id="cookie-notice-title" className="text-base font-semibold text-black mb-1">
-                We use cookies
-              </h3>
-              <p id="cookie-notice-description" className="text-sm text-gray-700 leading-relaxed">
-                We use cookies to enhance your browsing experience, analyze site traffic, and personalize content.
-                By clicking "Accept", you consent to our use of cookies.{' '}
-                <a
-                  href="/cookies"
-                  className="text-black underline hover:text-gray-600 transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Learn more
-                </a>
-              </p>
-            </div>
+      <div className="bg-white border-b border-gray-200 shadow-md">
+        <div className="container mx-auto px-6 py-2.5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <p id="cookie-notice-description" className="text-sm text-gray-700 leading-relaxed flex-1">
+              <span id="cookie-notice-title" className="font-semibold text-black">We use cookies</span>
+              {' '}to enhance your browsing experience, analyze site traffic, and personalize content.{' '}
+              <a
+                href="/cookies"
+                className="text-black underline hover:text-gray-600 transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Learn more
+              </a>
+            </p>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={handleDecline}
-                className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
               >
                 Decline
               </button>
               <button
                 onClick={handleAccept}
-                className="px-5 py-2 text-sm font-semibold text-white bg-black rounded hover:bg-gray-800 transition-colors"
+                className="px-4 py-1.5 text-xs font-semibold text-white bg-black rounded hover:bg-gray-800 transition-colors"
               >
-                Accept Cookies
+                Accept
               </button>
               <button
                 onClick={handleDecline}
-                className="p-1.5 text-gray-400 hover:text-black transition-colors"
+                className="p-1 text-gray-400 hover:text-black transition-colors"
                 aria-label="Close cookie notice"
               >
                 <X className="w-4 h-4" />
