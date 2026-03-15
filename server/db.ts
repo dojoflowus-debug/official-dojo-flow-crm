@@ -17,19 +17,28 @@ type KioskSettings = typeof DEFAULT_KIOSK_CONFIG;
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: mysql.Pool | null = null;
 
-// TiDB Serverless rejects parameterized LIMIT ("Incorrect arguments to LIMIT").
-// Wrapping the pool so that execute() delegates to query() (text protocol)
-// sends LIMIT as a literal number in the SQL string, which TiDB accepts.
+// TiDB Serverless (and some Railway MySQL versions) reject parameterized LIMIT
+// ("Incorrect arguments to LIMIT"). Proxying execute() -> query() on both the
+// pool AND each connection forces the text protocol, which sends LIMIT as a
+// literal number rather than a prepared-statement placeholder.
 function createTiDBCompatiblePool(url: string): mysql.Pool {
   const pool = mysql.createPool({
     uri: url,
     ssl: { rejectUnauthorized: false },
   }) as any;
-  // Proxy execute() → query() so Drizzle never sends prepared statements
-  const originalExecute = pool.execute.bind(pool);
-  pool.execute = function(sql: string, values?: any[], ...rest: any[]) {
-    return pool.query(sql, values, ...rest);
+
+  // Patch pool-level execute -> query
+  pool.execute = pool.query.bind(pool);
+
+  // Patch every connection obtained from the pool so Drizzle's
+  // per-connection execute() calls are also routed through query()
+  const origGetConnection = pool.getConnection.bind(pool);
+  pool.getConnection = async function () {
+    const conn = await origGetConnection();
+    (conn as any).execute = (conn as any).query.bind(conn);
+    return conn;
   };
+
   return pool as mysql.Pool;
 }
 
