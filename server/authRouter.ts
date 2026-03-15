@@ -243,13 +243,13 @@ export const authRouter = router({
         // Remove data URL prefix if present
         const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
 
-        // Validate base64 data size (max 2MB for profile photos)
-        const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+        // Validate base64 data size (max 5MB for profile photos)
+        const maxSizeBytes = 5 * 1024 * 1024; // 5MB
         const estimatedSize = Math.ceil(base64Data.length * 0.75); // base64 is ~33% larger than binary
         if (estimatedSize > maxSizeBytes) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Photo is too large. Maximum size is 2MB. Please use a smaller image or reduce quality.",
+            message: "Photo is too large. Maximum size is 5MB. Please use a smaller image or reduce quality.",
           });
         }
 

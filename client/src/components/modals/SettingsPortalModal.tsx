@@ -475,8 +475,9 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                                   } else {
                                     setUploadError(result.message || 'Failed to upload photo');
                                   }
-                                } catch (error) {
-                                  setUploadError('Failed to upload photo');
+                                } catch (error: any) {
+                                  const msg = error?.message || error?.data?.message || 'Failed to upload photo';
+                                  setUploadError(msg);
                                   console.error('Upload error:', error);
                                   // Still try to refresh in case of partial update
                                   try {
