@@ -8293,3 +8293,48 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] programs.list tRPC 404 error - Fixed: programs router is nested inside kai router; updated all client calls from `trpc.programs.*` to `trpc.kai.programs.*` in Classes.tsx, AddStudentModalContent.tsx, BulkAssignDialog.tsx, Programs.tsx
 - [x] AppShellMissingError false positive - Fixed: increased AppShellGuard delay from 500ms to 1500ms to allow lazy-loaded components to render
 - [x] AppShell missing on /classes route in App.jsx - Fixed: added AppShell wrapper to Classes route in App.jsx (note: App.tsx/appRoutes.tsx already had it)
+
+## Industry Environments Feature - Mar 14, 2026 (COMPLETED)
+- [x] Add 5 new industry-specific cinematic environments with AI-generated backdrops
+  - [x] MMA Training Facility (tags: MMA, Martial Arts, Kickboxing)
+  - [x] Dance Studio (tags: Dance, Yoga & Dance)
+  - [x] Boxing Gym (tags: Boxing, Fitness, Martial Arts)
+  - [x] Yoga & Wellness Studio (tags: Yoga, Yoga & Dance, Wellness)
+  - [x] Muay Thai Gym (tags: Kickboxing, MMA, Martial Arts)
+- [x] Add industry tags to all 10 environments (existing 5 + new 5)
+- [x] Add filter pills to EnvironmentSelectorModal for filtering by industry tag
+- [x] Show "New" badge on newly added environments
+- [x] Show industry tag badges on each environment card and confirmation screen
+- [x] Add IndustryEnvironmentInitializer component to auto-set default environment based on dojo's configured industry (first-time only, respects user's manual choice)
+- [x] Add getDefaultEnvironmentForIndustry() utility function with partial-match support
+
+## Multiple Environments Per Industry - Mar 14, 2026
+- [ ] Generate 3 environments per industry (Martial Arts x3, MMA x3, Boxing x3, Kickboxing x3, Dance x3, Yoga/Wellness x3, Fitness x3, Personal Training x3)
+- [ ] Register all new environments in studioEnvironments config with industry tags
+- [ ] Verify environment selector modal renders all environments correctly with filters
+
+## Multiple Environments Per Industry - Mar 14, 2026
+
+- [x] Generate 19 new cinematic backdrop images using nano banana (all 8 industries)
+- [x] Register all 24 new environments in EnvironmentContext with CDN URLs and industry tags
+- [x] Update EnvironmentType union to include all 29 environment IDs
+- [x] Update INDUSTRY_DEFAULT_ENVIRONMENT map to use new featured environments per industry
+- [x] Rewrite EnvironmentSelectorModal with grouped industry sections and section headers
+- [x] Add "New" badges to newly added environments
+- [x] Add count badges to filter pills (e.g. "🥋 Martial Arts 10")
+- [x] Add emoji icons to industry section headers
+- [x] Show "X environments" count per section
+- [x] Maintain flat grid view when a specific industry filter is active
+- [x] Verify all 29 environments render correctly in the modal
+
+### Environment Fixes - Mar 14, 2026
+- [x] Fix Championship Arena broken image (CDN URL not resolving) - regenerated with nano banana
+- [x] Fix Kickboxing Power Gym broken image (CDN URL not resolving) - regenerated with nano banana
+- [x] Fix Fight Night Arena broken image (if also broken) - confirmed working
+- [x] Audit and correct all mismatched environment backdrops
+- [x] Add custom image upload environment feature (drag-and-drop, file picker, URL input)
+- [x] Allow users to upload their own backdrop image - stored in localStorage, deletable
+- [x] Add custom environment management (My Uploads tab, delete button on hover)
+
+## Environment Card Image Fix - Mar 14, 2026
+- [x] Fix environment card preview images not showing (all black) - CSS background conflict (fixed style object merging issue)

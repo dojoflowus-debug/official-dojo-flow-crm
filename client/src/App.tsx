@@ -15,6 +15,7 @@ import { CreditsRefreshOnReturn } from "./components/CreditsRefreshOnReturn";
 import { BillingReturnHandler } from "./components/BillingReturnHandler";
 import { ModalProvider } from "./contexts/ModalContext";
 import { appRoutes } from "./routes/appRoutes";
+import { IndustryEnvironmentInitializer } from "./components/IndustryEnvironmentInitializer";
 
 // Full-page loader component for Suspense fallback
 function FullPageLoader() {
@@ -62,6 +63,7 @@ function App() {
                 <TooltipProvider>
                   <Toaster />
                   <BrowserRouter>
+                    <IndustryEnvironmentInitializer />
                     <DebugOverlay />
                     <CreditsRefreshOnReturn />
                     <BillingReturnHandler />
