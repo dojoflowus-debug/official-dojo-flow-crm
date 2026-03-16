@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from '@/_core/hooks/useAuth'
 import { useEnvironment } from '@/contexts/EnvironmentContext'
 import { useModal } from '@/contexts/ModalContext'
-import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus'
+import { trpc } from '@/lib/trpc'
 import { Coins, Sun, Moon, Clapperboard, LogOut, Settings, User, Palette } from 'lucide-react'
 
 import { BrandLogo } from '@/components/BrandLogo'
@@ -39,8 +39,14 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
 
   const isCinematic = theme === 'cinematic'
   
-  // Get credit balance
-  const { subscriptionInfo } = useSubscriptionStatus(user?.activeOrgId)
+  // Get real Manus credit balance
+  const { data: manusCredits } = trpc.credits.getManusBalance.useQuery(
+    undefined,
+    { enabled: !!user?.activeOrgId, refetchInterval: 60_000 }
+  )
+  const displayCredits = manusCredits?.available
+    ? manusCredits.totalAvailable
+    : 0
   
   const handleOpenProfile = () => {
     openSettings({ initialTab: 'profile' })
@@ -122,18 +128,17 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
       
       {/* Right section: Controls and user menu */}
       <div className="flex items-center gap-2 justify-end">
-        <Link to="/billing/credits">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={cn("gap-2", isCinematic ? "text-white hover:text-white" : isDarkMode ? "text-white/60 hover:text-white" : "text-gray-600 hover:text-gray-900")} 
-            title="View credit dashboard"
-          >
-            <Coins className="h-4 w-4" />
-            <span className="font-semibold">{subscriptionInfo?.creditBalance?.toLocaleString() || '0'}</span>
-            <span className="text-xs opacity-70">Credits</span>
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={cn("gap-2", isCinematic ? "text-white hover:text-white" : isDarkMode ? "text-white/60 hover:text-white" : "text-gray-600 hover:text-gray-900")} 
+          title="View credit balance"
+          onClick={() => openSettings({ initialTab: 'account' })}
+        >
+          <Coins className="h-4 w-4" />
+          <span className="font-semibold">{displayCredits.toLocaleString()}</span>
+          <span className="text-xs opacity-70">Credits</span>
+        </Button>
         
         <div className={cn(
           "flex items-center rounded-full border p-0.5 gap-0.5",

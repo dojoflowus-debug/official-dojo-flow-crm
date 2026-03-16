@@ -15,6 +15,7 @@ import PaymentsSettingsTab from '@/components/settings/PaymentsSettingsTab'
 import { SchoolProfileSettingsTab } from '@/components/settings/SchoolProfileSettingsTab'
 import PCBankCardOnboarding from '@/components/settings/PCBankCardOnboarding';
 import { DojoFlowMessagingTab } from '@/components/settings/DojoFlowMessagingTab';
+import { CreditsCard } from '@/components/settings/CreditsCard';
 // Removed - mutations should be called inside component
 
 interface SettingsPortalModalProps {
@@ -71,6 +72,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
   const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation()
   const deleteProfilePictureMutation = trpc.auth.deleteProfilePicture.useMutation()
   const billingPortalMutation = trpc.subscription.createBillingPortalSession.useMutation()
+  const trpcUtils = trpc.useUtils()
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -497,7 +499,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                                     // Refresh user data and invalidate tRPC cache
                                     await refresh();
                                     // Invalidate auth.me query to update all components using useAuth()
-                                    await trpc.auth.me.invalidate();
+                                    await trpcUtils.auth.me.invalidate();
                                   } else {
                                     setUploadError(result.message || 'Failed to upload photo');
                                   }
@@ -508,7 +510,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                                   // Still try to refresh in case of partial update
                                   try {
                                     await refresh();
-                                    await trpc.auth.me.invalidate();
+                                    await trpcUtils.auth.me.invalidate();
                                   } catch (e) {
                                     // Silently fail
                                   }
@@ -711,37 +713,8 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                   </div>
                 </div>
 
-                {/* Credits Card */}
-                <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <CreditCard size={18} color="white" />
-                    Credits
-                  </div>
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Free credits</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>87,893</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Monthly credits</span>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>87,700 / 110,000</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Daily refresh credits</span>
-                        <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>0</span>
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '8px' }}>
-                        Refresh to 200 at 23:00 every day
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* Credits Card - Real Manus Credits */}
+                <CreditsCard />
               </div>
             )}
 

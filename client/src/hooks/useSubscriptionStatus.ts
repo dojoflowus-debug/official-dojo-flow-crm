@@ -9,6 +9,18 @@ export interface SubscriptionInfo {
   currentPeriodEnd?: string;
   creditBalance: number;
   isExempt: boolean;
+  // Manus platform credits (real)
+  manusCredits?: {
+    freeCredits: number;
+    monthlyCredits: number;
+    monthlyCreditsUsed: number;
+    monthlyCreditsTotal: number;
+    dailyRefreshCredits: number;
+    dailyRefreshLimit: number;
+    totalAvailable: number;
+    addCreditsUrl: string;
+    available: boolean;
+  };
 }
 
 /**
@@ -26,10 +38,16 @@ export const useSubscriptionStatus = (organizationId?: number) => {
     { enabled: !!organizationId }
   );
 
-  // Fetch credit balance
+  // Fetch credit balance (internal DojoFlow credits)
   const { data: creditData } = trpc.credits.getBalance.useQuery(
-    { organizationId: organizationId || 0 },
+    undefined,
     { enabled: !!organizationId }
+  );
+
+  // Fetch real Manus platform credits
+  const { data: manusCreditsData } = trpc.credits.getManusBalance.useQuery(
+    undefined,
+    { enabled: !!organizationId, refetchInterval: 60000 }
   );
 
   useEffect(() => {
@@ -38,19 +56,20 @@ export const useSubscriptionStatus = (organizationId?: number) => {
       return;
     }
 
-    if (subscription && creditData) {
+    if (subscription || creditData || manusCreditsData) {
       const status: SubscriptionStatus = subscription?.billingStatus || 'no_subscription';
       
       setSubscriptionInfo({
         status: status as SubscriptionStatus,
         trialEndsAt: subscription?.trialEndsAt,
         currentPeriodEnd: subscription?.currentPeriodEnd,
-        creditBalance: creditData.creditsRemaining || 0,
+        creditBalance: manusCreditsData?.totalAvailable ?? creditData?.creditsRemaining ?? 0,
         isExempt: subscription?.billingExempt || false,
+        manusCredits: manusCreditsData ?? undefined,
       });
       setIsLoading(false);
     }
-  }, [subscription, creditData, organizationId]);
+  }, [subscription, creditData, manusCreditsData, organizationId]);
 
   /**
    * Check if user can access a paid feature

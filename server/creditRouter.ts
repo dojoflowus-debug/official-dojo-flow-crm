@@ -15,8 +15,27 @@ import {
   CREDIT_THRESHOLDS,
 } from "./creditConsumption";
 import { getCreditTransactions } from "./subscriptionDb";
+import { getManusCredits, getManusAddCreditsUrl } from "./_core/manusCredits";
 
 export const creditRouter = router({
+  /**
+   * Get real Manus platform credit balance from the Forge API
+   */
+  getManusBalance: protectedProcedure.query(async () => {
+    const balance = await getManusCredits();
+    return {
+      available: balance !== null,
+      freeCredits: balance?.freeCredits ?? 0,
+      monthlyCredits: balance?.monthlyCredits ?? 0,
+      monthlyCreditsUsed: balance?.monthlyCreditsUsed ?? 0,
+      monthlyCreditsTotal: balance?.monthlyCreditsTotal ?? 0,
+      dailyRefreshCredits: balance?.dailyRefreshCredits ?? 0,
+      dailyRefreshLimit: balance?.dailyRefreshLimit ?? 200,
+      totalAvailable: balance?.totalAvailable ?? 0,
+      addCreditsUrl: getManusAddCreditsUrl(),
+    };
+  }),
+
   /**
    * Get current credit balance for the organization
    */

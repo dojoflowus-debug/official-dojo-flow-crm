@@ -1,7 +1,12 @@
 # DojoFlow TODO
 
 ## Current Task
-- [ ] Add default placeholder image to profile photo in Settings when no photo is present
+- [x] Add default placeholder image to profile photo in Settings when no photo is present
+- [ ] Fix t[u] is not a function error in profile photo section
+- [ ] Integrate real Manus credit API - display live credits (free, monthly, daily) from Manus
+- [ ] Allow users to add credits via Manus billing flow (Add Credits button)
+- [ ] Remove all mock/hardcoded credit data and replace with real API data
+- [ ] Display credits in header (0 Credits button) using real Manus data
 
 ## Phase 1: Design Foundation & Navigation (COMPLETED)
 - [x] Bottom navigation bar component (kiosk-friendly, mobile-first)
