@@ -487,7 +487,7 @@ const CreditTransactions = () => {
                     <div className="flex-1">
                       <h2 className="text-3xl font-bold text-white mb-2">Start Your Free Trial</h2>
                       <p className="text-red-100 text-lg mb-4">
-                        Get 7 days of unlimited access to all premium features. No credit card required to start.
+                        Get 7 days of full access. Just $1 today to verify your card — then $49.99/month after your trial.
                       </p>
                       <ul className="space-y-2 text-red-50 text-sm mb-6">
                         <li className="flex items-center gap-2">
@@ -507,7 +507,7 @@ const CreditTransactions = () => {
                           <span>Full feature access</span>
                         </li>
                       </ul>
-                      <p className="text-xs text-red-100">After your trial, you'll be charged monthly. Cancel anytime.</p>
+                      <p className="text-xs text-red-100">$1 card verification today. $49.99/month after your 7-day trial. Cancel anytime.</p>
                     </div>
                     
                     {/* CTA Button */}

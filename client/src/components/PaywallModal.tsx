@@ -38,7 +38,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
       case 'canceled':
         return `Your subscription has been canceled. Reactivate your subscription to access ${featureName}.`;
       default:
-        return `Get 7 days free access to ${featureName} and all premium features. No credit card required to start.`;
+        return `Get 7 days free access to ${featureName} and all premium features. Just $1 today to verify your card — then $49.99/month after your trial. Cancel anytime.`;
     }
   };
 
@@ -158,7 +158,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             {/* Trial Info */}
             {subscriptionStatus === 'no_subscription' && (
               <div className="text-xs text-gray-500 text-center font-light leading-snug">
-                After your trial, you'll be charged monthly. Cancel anytime.
+                $1 card verification today. $49.99/month after your 7-day trial. Cancel anytime.
               </div>
             )}
           </div>

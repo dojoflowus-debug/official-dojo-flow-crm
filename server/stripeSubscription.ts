@@ -127,7 +127,7 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   const isTrial = trialType === 'trial_7day';
   
   let planIdToUse = planId ? parseInt(planId) : 1; // Default to plan 1 if not provided
-  let creditsToAllocate = 100; // Default trial credits
+  let creditsToAllocate = 15; // 15 starter credits for 7-day trial
 
   // If not a trial, get plan details for credit allocation
   if (!isTrial && planId) {
@@ -533,13 +533,13 @@ export async function createTrialCheckout(params: {
         price_data: {
           currency: 'usd',
           product_data: {
-            name: 'DojoFlow 7-Day Trial',
-            description: 'Start your 7-day free trial with 100 AI credits',
+            name: 'DojoFlow Pro — 7-Day Trial',
+            description: '$1 verification today. $49.99/month after your 7-day free trial. Cancel anytime.',
           },
           recurring: {
             interval: 'month',
           },
-          unit_amount: 2999, // $29.99/month after trial
+          unit_amount: 4999, // $49.99/month after trial
         },
         quantity: 1,
       },
@@ -548,7 +548,27 @@ export async function createTrialCheckout(params: {
     cancel_url: cancelUrl,
     subscription_data: {
       trial_period_days: 7,
+      trial_settings: {
+        end_behavior: {
+          missing_payment_method: 'cancel',
+        },
+      },
+      // Charge $1 immediately as card verification fee
+      add_invoice_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Card Verification Fee',
+              description: 'One-time $1 card verification. Credited toward your first month.',
+            },
+            unit_amount: 100, // $1.00
+          },
+          quantity: 1,
+        },
+      ],
     },
+    payment_method_collection: 'always',
     metadata: {
       organizationId: organizationId.toString(),
       trialType: 'trial_7day',
