@@ -546,6 +546,20 @@ export async function createTrialCheckout(params: {
     ],
     success_url: successUrl,
     cancel_url: cancelUrl,
+    // Charge $1 immediately as card verification fee (top-level, not inside subscription_data)
+    add_invoice_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Card Verification Fee',
+            description: 'One-time $1 card verification. Credited toward your first month.',
+          },
+          unit_amount: 100, // $1.00
+        },
+        quantity: 1,
+      },
+    ],
     subscription_data: {
       trial_period_days: 7,
       trial_settings: {
@@ -553,20 +567,6 @@ export async function createTrialCheckout(params: {
           missing_payment_method: 'cancel',
         },
       },
-      // Charge $1 immediately as card verification fee
-      add_invoice_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Card Verification Fee',
-              description: 'One-time $1 card verification. Credited toward your first month.',
-            },
-            unit_amount: 100, // $1.00
-          },
-          quantity: 1,
-        },
-      ],
     },
     payment_method_collection: 'always',
     metadata: {

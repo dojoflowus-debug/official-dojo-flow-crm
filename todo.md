@@ -8376,7 +8376,10 @@ Transform kiosk from admin dashboard to premium location experience
   - Overdue Payments and Active Members show contextual notes based on processor status
 
 ## Remove Payment Processing Setup Page (Mar 16, 2026)
-- [ ] Delete /billing/setup page (Payment Processing Setup with Stripe / PC Bancard)
-- [ ] Remove all route definitions for /billing/setup
-- [ ] Remove all navigation links pointing to /billing/setup
-- [ ] Remove Setup Now / View Status buttons that link to /billing/setup from Billing page
+- [x] Delete /billing/setup page (Payment Processing Setup with Stripe / PC Bancard)
+- [x] Remove all route definitions for /billing/setup
+- [x] Remove all navigation links pointing to /billing/setup
+- [x] Remove Setup Now / View Status buttons that link to /billing/setup from Billing page
+
+## Fix Stripe Subscription Checkout Error (Mar 16, 2026)
+- [ ] Fix "Received unknown parameter: subscription_data[add_invoice_items]" error when activating subscription
