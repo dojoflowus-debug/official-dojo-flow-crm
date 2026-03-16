@@ -8363,3 +8363,20 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Verify Stripe trial start, billing portal, and credit top-up flows work on production
 - [x] Build out complete Billing section in Settings with real subscription data, plan status, next billing date, payment history, and management actions
 - [ ] Clean up Billing & Payments page - replace all hardcoded fake data (fake students, fake revenue) with real DB data and proper empty states
+
+## Billing & Payments Page Cleanup (Mar 16, 2026)
+- [x] Remove all fake/hardcoded data from Billing & Payments page (/billing route)
+  - Removed fake student names (Sarah Johnson, Michael Chen, Emily Rodriguez, etc.)
+  - Removed fake revenue numbers ($21,000, $18,500)
+  - Removed fake payment records and transaction history
+  - Replaced with real data from billing.getActivePaymentMethod and billing.getApplications
+  - Added proper empty states when no payment processor is connected
+  - Added "Connect Payment Processor" CTA for empty state
+  - Summary stats now show real data or "—" placeholders
+  - Overdue Payments and Active Members show contextual notes based on processor status
+
+## Remove Payment Processing Setup Page (Mar 16, 2026)
+- [ ] Delete /billing/setup page (Payment Processing Setup with Stripe / PC Bancard)
+- [ ] Remove all route definitions for /billing/setup
+- [ ] Remove all navigation links pointing to /billing/setup
+- [ ] Remove Setup Now / View Status buttons that link to /billing/setup from Billing page

@@ -57,7 +57,7 @@ export default function BillingApplications() {
             View and manage your payment processor applications
           </p>
         </div>
-        <Button onClick={() => navigate("/billing/setup")}>
+        <Button onClick={() => navigate("/billing")}>
           <Plus className="mr-2 h-4 w-4" />
           New Application
         </Button>
@@ -125,7 +125,7 @@ export default function BillingApplications() {
               <p className="text-muted-foreground mb-4">
                 Get started by applying for a payment processor
               </p>
-              <Button onClick={() => navigate("/billing/setup")}>
+              <Button onClick={() => navigate("/billing")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Application
               </Button>

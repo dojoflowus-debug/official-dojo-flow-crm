@@ -58,7 +58,6 @@ const Programs = lazy(() => import("../pages/Programs"));
 const Staff = lazy(() => import("../pages/Staff"));
 const Billing = lazy(() => import("../pages/Billing"));
 const BillingStructure = lazy(() => import("../pages/BillingStructure"));
-const BillingSetup = lazy(() => import("../pages/BillingSetup"));
 const PCBancardApplication = lazy(() => import("../pages/PCBancardApplication"));
 const StripeSetup = lazy(() => import("../pages/StripeSetup"));
 const BillingApplications = lazy(() => import("../pages/BillingApplications"));
@@ -269,7 +268,6 @@ export const appRoutes: RouteConfig[] = [
   { path: "/dmca", element: <DMCAPolicy />, label: "DMCA Policy" },
   
   { path: "/billing/structure", element: <BillingStructure />, label: "Billing Structure" },
-  { path: "/billing/setup", element: <BillingSetup />, label: "Billing Setup" },
   { path: "/billing/pcbancard-application", element: <PCBancardApplication />, label: "PCBancard Application" },
   { path: "/billing/stripe-setup", element: <StripeSetup />, label: "Stripe Setup" },
   { path: "/billing/applications", element: <BillingApplications />, label: "Billing Applications" },

@@ -156,7 +156,7 @@ export default function StripeSetup() {
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={() => navigate("/billing/setup")}
+            onClick={() => navigate("/billing")}
           >
             Back to Payment Options
           </Button>
