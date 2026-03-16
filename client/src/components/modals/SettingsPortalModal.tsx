@@ -875,7 +875,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
             )}
 
             {/* Placeholder for other tabs */}
-            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && activeTab !== 'school' && activeTab !== 'pc-bank-card' && (
+            {activeTab !== 'account' && activeTab !== 'usage' && activeTab !== 'billing' && activeTab !== 'personalization' && activeTab !== 'connectors' && activeTab !== 'payments' && activeTab !== 'school' && activeTab !== 'pc-bank-card' && activeTab !== 'mail' && (
               <div style={{
                 padding: '48px',
                 textAlign: 'center',

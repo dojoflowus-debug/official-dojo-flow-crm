@@ -21,6 +21,9 @@ export function ModalProvider({ children }: { children: ReactNode }) {
       setActiveTab(tabOrOptions);
     } else if (tabOrOptions?.initialTab) {
       setActiveTab(tabOrOptions.initialTab);
+    } else {
+      // Always reset to account tab when opening without a specific tab
+      setActiveTab('account');
     }
     setSettingsOpen(true);
   };

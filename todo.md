@@ -8355,4 +8355,5 @@ Transform kiosk from admin dashboard to premium location experience
 ## Production Bug Fix: Profile Photo Upload
 
 - [ ] Fix photo upload: production DB photoUrl/photoUrlSmall columns are varchar(500) but need mediumtext - switch to S3 upload and store URL only
-- [ ] Update credit packages to business-sustainable pricing starting at $49
+- [x] Update credit packages to business-sustainable pricing starting at $49
+- [ ] Fix Settings modal to default to Account tab instead of blank "settings coming soon" state
