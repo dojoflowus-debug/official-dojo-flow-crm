@@ -406,6 +406,11 @@ export const BillingTab: React.FC = () => {
             refetchSnapshot();
             refetchBalance();
           }}
+          onSuccess={() => {
+            setShowAddCredits(false);
+            refetchSnapshot();
+            refetchBalance();
+          }}
         />
       )}
     </div>

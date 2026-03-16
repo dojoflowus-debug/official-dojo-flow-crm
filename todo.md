@@ -8382,4 +8382,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove Setup Now / View Status buttons that link to /billing/setup from Billing page
 
 ## Fix Stripe Subscription Checkout Error (Mar 16, 2026)
-- [ ] Fix "Received unknown parameter: subscription_data[add_invoice_items]" error when activating subscription
+- [x] Fix "Received unknown parameter: subscription_data[add_invoice_items]" error when activating subscription
+
+## Fix All Financial Interfaces (Mar 16, 2026)
+- [ ] Fix Add Credits modal showing duplicate package cards
+- [ ] Fix credit purchase Stripe checkout (add_invoice_items error in credit flow)
+- [ ] Fix Add Card button in Settings Billing tab
+- [ ] Fix Activate Subscription flow end-to-end
+- [ ] Fix Manage Billing button

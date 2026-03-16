@@ -619,67 +619,39 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                   </div>
                 </div>
 
-                {/* Plan Card */}
-                <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Plan</div>
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-                      <div>
-                        <div style={{ fontSize: '18px', fontWeight: '600', color: 'white', marginBottom: '4px' }}>
-                          DojoFlow Pro
-                        </div>
-                        <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                          Renewal date: Feb 12, 2026
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <button
-                          onClick={() => setActiveTab('billing')}
-                          style={{
-                            padding: '10px 20px',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            backgroundColor: 'transparent',
-                            color: 'white',
-                            fontSize: '14px',
-                            cursor: 'pointer',
-                            transition: 'all 200ms ease',
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                        >
-                          Manage
-                        </button>
-                        <button 
-                          onClick={() => setAddCreditOpen(true)}
-                          style={{
-                          padding: '10px 20px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          backgroundColor: 'white',
-                          color: 'black',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          transition: 'all 200ms ease',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                        >
-                          Add credit
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                {/* Billing quick-links */}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => setActiveTab('billing')}
+                    style={{
+                      padding: '9px 18px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      backgroundColor: 'transparent',
+                      color: 'white',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Manage Billing
+                  </button>
+                  <button
+                    onClick={() => setAddCreditOpen(true)}
+                    style={{
+                      padding: '9px 18px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: 'rgba(225,29,72,0.85)',
+                      color: 'white',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Add Credits
+                  </button>
                 </div>
-
-                {/* Credits Card - Real Manus Credits */}
-                <CreditsCard />
               </div>
             )}
 

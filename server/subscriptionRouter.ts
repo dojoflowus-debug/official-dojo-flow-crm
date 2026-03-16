@@ -288,16 +288,22 @@ export const subscriptionRouter = router({
   createCreditTopUpCheckout: protectedProcedure
     .input(z.object({
       organizationId: z.number(),
-      credits: z.number().min(100).max(10000),
+      credits: z.number().min(100).max(25000),
       customerEmail: z.string().email().optional()
     }))
     .mutation(async ({ input, ctx }) => {
       const { createCreditTopUpCheckout } = await import('./stripeSubscription');
       const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:3000';
       
-      // Calculate price: $10 per 100 credits
-      const pricePerCredit = 10; // cents
-      const amountInCents = input.credits * pricePerCredit;
+      // Package-based pricing (matches AddCreditsModal packages)
+      const packagePrices: Record<number, number> = {
+        1000: 4900,   // $49
+        3000: 9900,   // $99
+        7500: 19900,  // $199
+        20000: 44900, // $449
+      };
+      // Fall back to $0.049/credit for custom amounts
+      const amountInCents = packagePrices[input.credits] ?? Math.round(input.credits * 4.9);
       
       const result = await createCreditTopUpCheckout({
         organizationId: input.organizationId,

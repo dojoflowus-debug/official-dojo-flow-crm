@@ -529,43 +529,34 @@ export async function createTrialCheckout(params: {
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [
+      // Recurring subscription: $49.99/month (charged after 7-day trial)
       {
         price_data: {
           currency: 'usd',
           product_data: {
-            name: 'DojoFlow Pro — 7-Day Trial',
-            description: '$1 verification today. $49.99/month after your 7-day free trial. Cancel anytime.',
+            name: 'DojoFlow Pro — Monthly',
+            description: '$49.99/month after your 7-day free trial. Cancel anytime.',
           },
           recurring: {
             interval: 'month',
           },
-          unit_amount: 4999, // $49.99/month after trial
+          unit_amount: 4999, // $49.99/month
         },
         quantity: 1,
       },
     ],
     success_url: successUrl,
     cancel_url: cancelUrl,
-    // Charge $1 immediately as card verification fee (top-level, not inside subscription_data)
-    add_invoice_items: [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: 'Card Verification Fee',
-            description: 'One-time $1 card verification. Credited toward your first month.',
-          },
-          unit_amount: 100, // $1.00
-        },
-        quantity: 1,
-      },
-    ],
     subscription_data: {
       trial_period_days: 7,
       trial_settings: {
         end_behavior: {
           missing_payment_method: 'cancel',
         },
+      },
+      metadata: {
+        organizationId: organizationId.toString(),
+        trialType: 'trial_7day',
       },
     },
     payment_method_collection: 'always',

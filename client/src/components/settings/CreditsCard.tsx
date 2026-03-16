@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react'
-import { CreditCard, RefreshCw, Zap, Plus, Check, X } from 'lucide-react'
+import { CreditCard, RefreshCw, Zap, Plus, X } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 import { useAuth } from '@/_core/hooks/useAuth'
 import { toast } from 'sonner'
@@ -28,34 +28,29 @@ function ProgressBar({ used, total }: { used: number; total: number }) {
 
 export function AddCreditsModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [selected, setSelected] = useState<string | null>('growth')
-  const [confirming, setConfirming] = useState(false)
+  const { user } = useAuth()
 
-  const utils = trpc.useUtils()
-  const addCreditsMutation = trpc.credits.adminAddCredits.useMutation({
+  const checkoutMutation = trpc.subscription.createCreditTopUpCheckout.useMutation({
     onSuccess: (data) => {
-      toast.success(`${data.amountAdded.toLocaleString()} credits added! New balance: ${data.newBalance.toLocaleString()}`)
-      utils.credits.getBalance.invalidate()
-      onSuccess()
-      onClose()
+      if (data?.url) {
+        window.location.href = data.url
+      } else {
+        toast.error('Could not start checkout. Please try again.')
+      }
     },
     onError: (err) => {
-      toast.error(`Failed to add credits: ${err.message}`)
-      setConfirming(false)
+      toast.error(`Checkout failed: ${err.message}`)
     },
   })
 
   const selectedPkg = CREDIT_PACKAGES.find(p => p.id === selected)
 
   const handlePurchase = () => {
-    if (!selectedPkg) return
-    if (!confirming) {
-      setConfirming(true)
-      return
-    }
-    addCreditsMutation.mutate({
-      amount: selectedPkg.credits,
-      source: 'top_up',
-      description: `Credit package: ${selectedPkg.label} (${selectedPkg.credits.toLocaleString()} credits)`,
+    if (!selectedPkg || !user?.activeOrgId) return
+    checkoutMutation.mutate({
+      organizationId: user.activeOrgId,
+      credits: selectedPkg.credits,
+      customerEmail: user.email ?? undefined,
     })
   }
 
@@ -134,17 +129,17 @@ export function AddCreditsModal({ onClose, onSuccess }: { onClose: () => void; o
         {/* Purchase button */}
         <button
           onClick={handlePurchase}
-          disabled={!selectedPkg || addCreditsMutation.isPending}
+          disabled={!selectedPkg || checkoutMutation.isPending}
           style={{
             width: '100%',
             padding: '14px',
             borderRadius: '10px',
             border: 'none',
-            backgroundColor: confirming ? 'rgba(34,197,94,0.8)' : 'rgba(239,68,68,0.8)',
+            backgroundColor: 'rgba(239,68,68,0.8)',
             color: 'white',
             fontSize: '15px',
             fontWeight: '700',
-            cursor: selectedPkg && !addCreditsMutation.isPending ? 'pointer' : 'not-allowed',
+            cursor: selectedPkg && !checkoutMutation.isPending ? 'pointer' : 'not-allowed',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -153,19 +148,12 @@ export function AddCreditsModal({ onClose, onSuccess }: { onClose: () => void; o
             opacity: !selectedPkg ? 0.5 : 1,
           }}
         >
-          {addCreditsMutation.isPending ? (
-            <><RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing…</>
-          ) : confirming ? (
-            <><Check size={16} /> Confirm — Add {selectedPkg?.credits.toLocaleString()} credits for {selectedPkg?.price}</>
+          {checkoutMutation.isPending ? (
+            <><RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Redirecting to checkout…</>
           ) : (
-            <><Plus size={16} /> Add {selectedPkg?.credits.toLocaleString()} credits for {selectedPkg?.price}</>
+            <><Plus size={16} /> Purchase {selectedPkg?.credits.toLocaleString()} credits for {selectedPkg?.price}</>
           )}
         </button>
-        {confirming && (
-          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: '8px' }}>
-            Click again to confirm the purchase
-          </p>
-        )}
       </div>
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
