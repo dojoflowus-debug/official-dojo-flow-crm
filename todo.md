@@ -1,5 +1,8 @@
 # DojoFlow TODO
 
+## Current Task
+- [ ] Add default placeholder image to profile photo in Settings when no photo is present
+
 ## Phase 1: Design Foundation & Navigation (COMPLETED)
 - [x] Bottom navigation bar component (kiosk-friendly, mobile-first)
 - [x] Enforce navigation lock - no sidebars allowed

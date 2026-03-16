@@ -393,8 +393,8 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                             width: '96px',
                             height: '96px',
                             borderRadius: '50%',
-                            backgroundColor: previewUrl || user?.photoUrl ? 'transparent' : 'rgba(239, 68, 68, 0.2)',
-                            border: '2px solid rgba(239, 68, 68, 0.5)',
+                            backgroundColor: previewUrl || user?.photoUrl ? 'transparent' : 'rgba(255, 255, 255, 0.06)',
+                            border: previewUrl || user?.photoUrl ? '2px solid rgba(239, 68, 68, 0.5)' : '2px dashed rgba(255, 255, 255, 0.25)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -408,17 +408,43 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                             transition: 'all 200ms ease',
                           }}
                           onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLButtonElement).style.opacity = '0.8';
+                            const btn = e.currentTarget as HTMLButtonElement;
+                            btn.style.opacity = '0.85';
+                            if (!previewUrl && !user?.photoUrl) {
+                              btn.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                              btn.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                            }
                           }}
                           onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLButtonElement).style.opacity = '1';
+                            const btn = e.currentTarget as HTMLButtonElement;
+                            btn.style.opacity = '1';
+                            if (!previewUrl && !user?.photoUrl) {
+                              btn.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                              btn.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                            }
                           }}
-                          title="Click to change photo"
+                          title="Click to upload a profile photo"
                         >
-                          {!previewUrl && !user?.photoUrl && (user?.name?.charAt(0).toUpperCase() || 'U')}
+                          {!previewUrl && !user?.photoUrl && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                              <svg
+                                width="28"
+                                height="28"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="rgba(255,255,255,0.45)"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                <circle cx="12" cy="13" r="4" />
+                              </svg>
+                            </div>
+                          )}
                         </button>
-                        <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center' }}>
-                          Click to change
+                        <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.45)', textAlign: 'center' }}>
+                          {previewUrl || user?.photoUrl ? 'Click to change' : 'Add photo'}
                         </div>
                       </div>
 
