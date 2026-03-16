@@ -26,7 +26,7 @@ function ProgressBar({ used, total }: { used: number; total: number }) {
   )
 }
 
-function AddCreditsModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+export function AddCreditsModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [selected, setSelected] = useState<string | null>('growth')
   const [confirming, setConfirming] = useState(false)
 

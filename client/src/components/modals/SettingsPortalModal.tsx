@@ -10,12 +10,11 @@ import {
   Cloud, Palette, Zap, HelpCircle, LogOut, X, ExternalLink, Banknote, Building2, ChevronDown
 } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
-import AddCreditModal from '@/components/modals/AddCreditModal'
 import PaymentsSettingsTab from '@/components/settings/PaymentsSettingsTab'
 import { SchoolProfileSettingsTab } from '@/components/settings/SchoolProfileSettingsTab'
 import PCBankCardOnboarding from '@/components/settings/PCBankCardOnboarding';
 import { DojoFlowMessagingTab } from '@/components/settings/DojoFlowMessagingTab';
-import { CreditsCard } from '@/components/settings/CreditsCard';
+import { CreditsCard, AddCreditsModal } from '@/components/settings/CreditsCard';
 // Removed - mutations should be called inside component
 
 interface SettingsPortalModalProps {
@@ -639,41 +638,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                       </div>
                       <div style={{ display: 'flex', gap: '12px' }}>
                         <button
-                          onClick={async () => {
-                            setPortalLoading(true)
-                            try {
-                              const orgId = user?.activeOrgId
-                              if (!orgId) {
-                                toast.error('Organization not found')
-                                setPortalLoading(false)
-                                return
-                              }
-                              console.log('[Manage Button] Opening billing portal for org:', orgId)
-                              const result = await billingPortalMutation.mutateAsync({ organizationId: orgId })
-                              console.log('[Manage Button] Portal session created:', result)
-                              if (result?.url) {
-                                console.log('[Manage Button] Redirecting to:', result.url)
-                                window.location.href = result.url
-                              } else {
-                                toast.error('Failed to get billing portal URL')
-                                setPortalLoading(false)
-                              }
-                            } catch (error: any) {
-                              console.error('[Manage Button] Full error object:', error)
-                              const errorMessage = error?.message ?? error?.data?.zodError ?? "Couldn't open billing portal"
-                              console.error('[Manage Button] Error message:', errorMessage)
-                              
-                              // In development, append Stripe error message
-                              let toastMessage = "Couldn't open billing portal. Please try again."
-                              if (process.env.NODE_ENV === 'development' && errorMessage) {
-                                toastMessage = `${toastMessage} (${errorMessage})`
-                              }
-                              
-                              toast.error(toastMessage)
-                              setPortalLoading(false)
-                            }
-                          }}
-                          disabled={portalLoading}
+                          onClick={() => setActiveTab('billing')}
                           style={{
                             padding: '10px 20px',
                             borderRadius: '8px',
@@ -681,14 +646,13 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
                             backgroundColor: 'transparent',
                             color: 'white',
                             fontSize: '14px',
-                            cursor: portalLoading ? 'not-allowed' : 'pointer',
-                            opacity: portalLoading ? 0.6 : 1,
+                            cursor: 'pointer',
                             transition: 'all 200ms ease',
                           }}
-                          onMouseEnter={(e) => !portalLoading && (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
-                          onMouseLeave={(e) => !portalLoading && (e.currentTarget.style.backgroundColor = 'transparent')}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                         >
-                          {portalLoading ? 'Opening...' : 'Manage'}
+                          Manage
                         </button>
                         <button 
                           onClick={() => setAddCreditOpen(true)}
@@ -896,7 +860,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
   return (
     <>
       {createPortal(modalContent, document.body)}
-      <AddCreditModal isOpen={addCreditOpen} onClose={() => setAddCreditOpen(false)} />
+      {addCreditOpen && <AddCreditsModal onClose={() => setAddCreditOpen(false)} onSuccess={() => setAddCreditOpen(false)} />}
     </>
   )
 }
