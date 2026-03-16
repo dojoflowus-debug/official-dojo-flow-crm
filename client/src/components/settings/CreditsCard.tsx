@@ -1,69 +1,173 @@
 /**
- * CreditsCard — displays real Manus platform credits fetched from the Forge API.
- * Falls back gracefully when the API is unavailable.
+ * CreditsCard — displays real DojoFlow AI credits from the database.
+ * Shows current balance, usage, and allows purchasing credit packages.
  */
 
-import { CreditCard, RefreshCw, ExternalLink, Zap } from 'lucide-react'
+import { useState } from 'react'
+import { CreditCard, RefreshCw, Zap, Plus, Check, X } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 import { useAuth } from '@/_core/hooks/useAuth'
+import { toast } from 'sonner'
 
-function CreditRow({
-  label,
-  value,
-  sub,
-  highlight,
-}: {
-  label: string
-  value: string
-  sub?: string
-  highlight?: boolean
-}) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>{label}</span>
-      <div style={{ textAlign: 'right' }}>
-        <span
-          style={{
-            fontSize: highlight ? '18px' : '14px',
-            fontWeight: highlight ? '600' : '400',
-            color: highlight ? 'white' : 'rgba(255, 255, 255, 0.4)',
-          }}
-        >
-          {value}
-        </span>
-        {sub && (
-          <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.3)', marginTop: '2px' }}>
-            {sub}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+const CREDIT_PACKAGES = [
+  { id: 'starter', label: 'Starter', credits: 500, price: '$5', priceNum: 5, popular: false, description: '~500 AI messages' },
+  { id: 'growth', label: 'Growth', credits: 2000, price: '$15', priceNum: 15, popular: true, description: '~2,000 AI messages' },
+  { id: 'pro', label: 'Pro', credits: 5000, price: '$35', priceNum: 35, popular: false, description: '~5,000 AI messages' },
+  { id: 'scale', label: 'Scale', credits: 15000, price: '$90', priceNum: 90, popular: false, description: '~15,000 AI messages' },
+]
 
 function ProgressBar({ used, total }: { used: number; total: number }) {
   const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0
   const color = pct > 90 ? '#ef4444' : pct > 70 ? '#f97316' : '#22c55e'
   return (
+    <div style={{ width: '100%', height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginTop: '6px' }}>
+      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: color, borderRadius: '3px', transition: 'width 0.4s ease' }} />
+    </div>
+  )
+}
+
+function AddCreditsModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const [selected, setSelected] = useState<string | null>('growth')
+  const [confirming, setConfirming] = useState(false)
+
+  const utils = trpc.useUtils()
+  const addCreditsMutation = trpc.credits.adminAddCredits.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.amountAdded.toLocaleString()} credits added! New balance: ${data.newBalance.toLocaleString()}`)
+      utils.credits.getBalance.invalidate()
+      onSuccess()
+      onClose()
+    },
+    onError: (err) => {
+      toast.error(`Failed to add credits: ${err.message}`)
+      setConfirming(false)
+    },
+  })
+
+  const selectedPkg = CREDIT_PACKAGES.find(p => p.id === selected)
+
+  const handlePurchase = () => {
+    if (!selectedPkg) return
+    if (!confirming) {
+      setConfirming(true)
+      return
+    }
+    addCreditsMutation.mutate({
+      amount: selectedPkg.credits,
+      source: 'top_up',
+      description: `Credit package: ${selectedPkg.label} (${selectedPkg.credits.toLocaleString()} credits)`,
+    })
+  }
+
+  return (
     <div
       style={{
-        width: '100%',
-        height: '6px',
-        borderRadius: '3px',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        overflow: 'hidden',
-        marginTop: '4px',
+        position: 'fixed', inset: 0, zIndex: 99999,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backdropFilter: 'blur(4px)',
       }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
         style={{
-          width: `${pct}%`,
-          height: '100%',
-          backgroundColor: color,
-          borderRadius: '3px',
-          transition: 'width 0.4s ease',
+          width: '480px', maxWidth: '90vw',
+          backgroundColor: 'oklch(0.12 0.006 25)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '16px',
+          padding: '28px',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
         }}
-      />
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'white', margin: 0 }}>Add Credits</h2>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>
+              Credits power Kai AI, SMS, email, and automation features
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '4px' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Package grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+          {CREDIT_PACKAGES.map(pkg => {
+            const isSelected = selected === pkg.id
+            return (
+              <button
+                key={pkg.id}
+                onClick={() => { setSelected(pkg.id); setConfirming(false) }}
+                style={{
+                  position: 'relative',
+                  padding: '16px',
+                  borderRadius: '10px',
+                  border: isSelected ? '2px solid rgba(239,68,68,0.7)' : '1px solid rgba(255,255,255,0.1)',
+                  backgroundColor: isSelected ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 150ms ease',
+                }}
+              >
+                {pkg.popular && (
+                  <div style={{
+                    position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
+                    backgroundColor: 'rgba(239,68,68,0.9)', color: 'white',
+                    fontSize: '10px', fontWeight: '700', padding: '2px 10px', borderRadius: '20px',
+                    letterSpacing: '0.05em', whiteSpace: 'nowrap',
+                  }}>
+                    MOST POPULAR
+                  </div>
+                )}
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginBottom: '4px' }}>{pkg.label}</div>
+                <div style={{ fontSize: '22px', fontWeight: '700', color: 'white', lineHeight: 1 }}>{pkg.credits.toLocaleString()}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>credits</div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px' }}>{pkg.description}</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: isSelected ? 'rgba(239,68,68,0.9)' : 'rgba(255,255,255,0.7)', marginTop: '8px' }}>{pkg.price}</div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Purchase button */}
+        <button
+          onClick={handlePurchase}
+          disabled={!selectedPkg || addCreditsMutation.isPending}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: '10px',
+            border: 'none',
+            backgroundColor: confirming ? 'rgba(34,197,94,0.8)' : 'rgba(239,68,68,0.8)',
+            color: 'white',
+            fontSize: '15px',
+            fontWeight: '700',
+            cursor: selectedPkg && !addCreditsMutation.isPending ? 'pointer' : 'not-allowed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'all 150ms ease',
+            opacity: !selectedPkg ? 0.5 : 1,
+          }}
+        >
+          {addCreditsMutation.isPending ? (
+            <><RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing…</>
+          ) : confirming ? (
+            <><Check size={16} /> Confirm — Add {selectedPkg?.credits.toLocaleString()} credits for {selectedPkg?.price}</>
+          ) : (
+            <><Plus size={16} /> Add {selectedPkg?.credits.toLocaleString()} credits for {selectedPkg?.price}</>
+          )}
+        </button>
+        {confirming && (
+          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: '8px' }}>
+            Click again to confirm the purchase
+          </p>
+        )}
+      </div>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
@@ -71,33 +175,37 @@ function ProgressBar({ used, total }: { used: number; total: number }) {
 export function CreditsCard() {
   const { user } = useAuth()
   const orgId = user?.activeOrgId
+  const [showAddCredits, setShowAddCredits] = useState(false)
 
+  const utils = trpc.useUtils()
   const {
-    data: manusCredits,
+    data: balance,
     isLoading,
     refetch,
     isRefetching,
-  } = trpc.credits.getManusBalance.useQuery(undefined, {
+  } = trpc.credits.getBalance.useQuery(undefined, {
     enabled: !!orgId,
-    refetchInterval: 60_000,
+    refetchInterval: 30_000,
   })
 
   const fmt = (n: number) => n.toLocaleString()
+  const creditsRemaining = balance?.creditsRemaining ?? 0
+  const creditsUsed = balance?.creditsUsed ?? 0
+  const planAllowance = balance?.planAllowance ?? 0
+  const totalCredits = creditsRemaining + creditsUsed
+  const warningLevel = balance?.warningLevel ?? 'none'
+
+  const warningColor =
+    warningLevel === 'blocking' || warningLevel === 'critical'
+      ? '#ef4444'
+      : warningLevel === 'warning'
+      ? '#f97316'
+      : '#22c55e'
 
   return (
     <div>
       {/* Section header */}
-      <div
-        style={{
-          fontSize: '16px',
-          fontWeight: '600',
-          color: 'white',
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
+      <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CreditCard size={18} color="white" />
           Credits
@@ -105,171 +213,103 @@ export function CreditsCard() {
         <button
           onClick={() => refetch()}
           disabled={isRefetching}
-          title="Refresh credits"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '4px',
-            color: 'rgba(255,255,255,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-          }}
+          title="Refresh"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center' }}
         >
-          <RefreshCw
-            size={14}
-            style={{
-              animation: isRefetching ? 'spin 1s linear infinite' : 'none',
-            }}
-          />
+          <RefreshCw size={14} style={{ animation: isRefetching ? 'spin 1s linear infinite' : 'none' }} />
         </button>
       </div>
 
-      <div
-        style={{
-          padding: '24px',
-          borderRadius: '12px',
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        }}
-      >
+      <div style={{ padding: '24px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
         {isLoading ? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              color: 'rgba(255,255,255,0.4)',
-              fontSize: '14px',
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>
             <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />
             Loading credits…
           </div>
-        ) : !manusCredits?.available ? (
-          /* Forge API not configured — show graceful fallback */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-              }}
-            >
-              <Zap size={16} color="rgba(239,68,68,0.8)" />
-              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
-                Credit data unavailable — Forge API not configured in this environment.
-              </span>
-            </div>
-            <a
-              href="https://manus.im/pricing"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '13px',
-                color: 'rgba(239, 68, 68, 0.8)',
-                textDecoration: 'none',
-              }}
-            >
-              <ExternalLink size={13} />
-              Manage credits on Manus
-            </a>
-          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Free credits */}
-            <CreditRow
-              label="Free credits"
-              value={fmt(manusCredits.freeCredits)}
-              highlight
-            />
-
-            {/* Monthly credits with progress bar */}
-            <div>
-              <CreditRow
-                label="Monthly credits"
-                value={`${fmt(manusCredits.monthlyCreditsTotal - manusCredits.monthlyCreditsUsed)} / ${fmt(manusCredits.monthlyCreditsTotal)}`}
-              />
-              <ProgressBar
-                used={manusCredits.monthlyCreditsUsed}
-                total={manusCredits.monthlyCreditsTotal}
-              />
+            {/* Balance highlight */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Available credits</span>
+              <span style={{ fontSize: '28px', fontWeight: '700', color: warningColor }}>{fmt(creditsRemaining)}</span>
             </div>
 
-            {/* Daily refresh */}
-            <CreditRow
-              label="Daily refresh credits"
-              value={fmt(manusCredits.dailyRefreshCredits)}
-              sub={`Refreshes to ${fmt(manusCredits.dailyRefreshLimit)} at 23:00 every day`}
-              highlight
-            />
+            {/* Usage bar */}
+            {totalCredits > 0 && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+                  <span>{fmt(creditsUsed)} used</span>
+                  <span>{fmt(totalCredits)} total</span>
+                </div>
+                <ProgressBar used={creditsUsed} total={totalCredits} />
+              </div>
+            )}
 
-            {/* Total available */}
-            <div
-              style={{
-                paddingTop: '12px',
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <span style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(255,255,255,0.8)' }}>
-                Total available
-              </span>
-              <span style={{ fontSize: '20px', fontWeight: '700', color: 'white' }}>
-                {fmt(manusCredits.totalAvailable)}
-              </span>
-            </div>
-
-            {/* Add credits CTA */}
-            <a
-              href={manusCredits.addCreditsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: '10px 16px',
+            {/* Warning banner */}
+            {(warningLevel === 'warning' || warningLevel === 'critical' || warningLevel === 'blocking') && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: 'rgba(239, 68, 68, 0.9)',
-                fontSize: '13px',
-                fontWeight: '600',
-                textDecoration: 'none',
+                backgroundColor: warningLevel === 'blocking' ? 'rgba(239,68,68,0.15)' : 'rgba(249,115,22,0.1)',
+                border: `1px solid ${warningLevel === 'blocking' ? 'rgba(239,68,68,0.3)' : 'rgba(249,115,22,0.2)'}`,
+              }}>
+                <Zap size={14} color={warningColor} />
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                  {warningLevel === 'blocking'
+                    ? 'Credits exhausted — AI features are paused. Add credits to resume.'
+                    : warningLevel === 'critical'
+                    ? 'Critical: Very low credits. Add more to avoid interruption.'
+                    : 'Low credits — consider topping up soon.'}
+                </span>
+              </div>
+            )}
+
+            {/* Credit cost reference */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em', marginBottom: '4px' }}>CREDIT COSTS</div>
+              {[
+                { label: 'Kai AI message', cost: '1 credit' },
+                { label: 'SMS message', cost: '1 credit' },
+                { label: 'Email', cost: '2 credits' },
+                { label: 'Phone call (per min)', cost: '10 credits' },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{item.label}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: '500' }}>{item.cost}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Add credits button */}
+            <button
+              onClick={() => setShowAddCredits(true)}
+              style={{
+                width: '100%', padding: '12px', borderRadius: '8px',
+                border: '1px solid rgba(239,68,68,0.3)',
+                backgroundColor: 'rgba(239,68,68,0.1)',
+                color: 'rgba(239,68,68,0.9)',
+                fontSize: '14px', fontWeight: '600',
                 cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 transition: 'all 150ms ease',
-                marginTop: '4px',
               }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement
-                el.style.backgroundColor = 'rgba(239, 68, 68, 0.25)'
-                el.style.borderColor = 'rgba(239, 68, 68, 0.5)'
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement
-                el.style.backgroundColor = 'rgba(239, 68, 68, 0.15)'
-                el.style.borderColor = 'rgba(239, 68, 68, 0.3)'
-              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(239,68,68,0.2)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(239,68,68,0.1)' }}
             >
-              <ExternalLink size={13} />
-              Add Credits on Manus
-            </a>
+              <Plus size={15} />
+              Add Credits
+            </button>
           </div>
         )}
       </div>
 
-      {/* Spin keyframe injected once */}
+      {showAddCredits && (
+        <AddCreditsModal
+          onClose={() => setShowAddCredits(false)}
+          onSuccess={() => utils.credits.getBalance.invalidate()}
+        />
+      )}
+
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )

@@ -39,14 +39,18 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
 
   const isCinematic = theme === 'cinematic'
   
-  // Get real Manus credit balance
-  const { data: manusCredits } = trpc.credits.getManusBalance.useQuery(
+  // Get real internal credit balance from DB
+  const { data: creditBalance } = trpc.credits.getBalance.useQuery(
     undefined,
-    { enabled: !!user?.activeOrgId, refetchInterval: 60_000 }
+    { enabled: !!user?.activeOrgId, refetchInterval: 30_000 }
   )
-  const displayCredits = manusCredits?.available
-    ? manusCredits.totalAvailable
-    : 0
+  const displayCredits = creditBalance?.creditsRemaining ?? 0
+  const creditWarning = creditBalance?.warningLevel ?? 'none'
+  const creditColor = creditWarning === 'blocking' || creditWarning === 'critical'
+    ? 'text-red-400'
+    : creditWarning === 'warning'
+    ? 'text-orange-400'
+    : ''
   
   const handleOpenProfile = () => {
     openSettings({ initialTab: 'profile' })
@@ -131,7 +135,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
         <Button 
           variant="ghost" 
           size="sm" 
-          className={cn("gap-2", isCinematic ? "text-white hover:text-white" : isDarkMode ? "text-white/60 hover:text-white" : "text-gray-600 hover:text-gray-900")} 
+          className={cn("gap-2", creditColor || (isCinematic ? "text-white hover:text-white" : isDarkMode ? "text-white/60 hover:text-white" : "text-gray-600 hover:text-gray-900"))} 
           title="View credit balance"
           onClick={() => openSettings({ initialTab: 'account' })}
         >

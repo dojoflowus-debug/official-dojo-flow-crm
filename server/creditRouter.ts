@@ -142,6 +142,32 @@ export const creditRouter = router({
     }),
 
   /**
+   * Admin: Add credits to the current organization (for seeding/manual top-up)
+   */
+  adminAddCredits: protectedProcedure
+    .input(z.object({
+      amount: z.number().min(1).max(1000000),
+      source: z.enum(['subscription', 'top_up', 'refund', 'bonus']).default('top_up'),
+      description: z.string().default('Manual credit top-up'),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const organizationId = ctx.currentOrganizationId;
+      if (!organizationId) {
+        throw new Error('No organization found.');
+      }
+      const result = await addCredits({
+        organizationId,
+        amount: input.amount,
+        source: input.source,
+        description: input.description,
+      });
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to add credits');
+      }
+      return { success: true, newBalance: result.newBalance, amountAdded: input.amount };
+    }),
+
+  /**
    * Get credit costs for different operations
    */
   getCosts: protectedProcedure.query(() => {

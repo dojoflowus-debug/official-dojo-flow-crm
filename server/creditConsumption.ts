@@ -313,18 +313,41 @@ export async function getCreditBalance(organizationId: number): Promise<{
     .limit(1);
 
   if (!balance || balance.length === 0) {
-    return {
-      creditsRemaining: 0,
-      creditsUsed: 0,
-      planAllowance: 0,
-      renewalDate: null,
-    };
+    // Auto-initialize with 1,000 starter credits for new organizations
+    try {
+      const now = new Date().toISOString();
+      const nextReset = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      await db.insert(aiCreditBalance).values({
+        organizationId,
+        balance: 1000,
+        periodAllowance: 1000,
+        periodUsed: 0,
+        totalPurchased: 0,
+        totalUsed: 0,
+        lowCreditThreshold: 50,
+        lowCreditAlertSent: 0,
+        lastResetAt: now,
+        nextResetAt: nextReset,
+        createdAt: now,
+        updatedAt: now,
+      });
+      console.log(`[Credits] Auto-initialized 1,000 starter credits for org ${organizationId}`);
+      return {
+        creditsRemaining: 1000,
+        creditsUsed: 0,
+        planAllowance: 1000,
+        renewalDate: new Date(nextReset),
+      };
+    } catch (initError) {
+      console.error('[Credits] Failed to auto-initialize credits:', initError);
+      return { creditsRemaining: 0, creditsUsed: 0, planAllowance: 0, renewalDate: null };
+    }
   }
 
   return {
     creditsRemaining: balance[0].balance,
     creditsUsed: balance[0].periodUsed,
     planAllowance: balance[0].periodAllowance,
-    renewalDate: balance[0].nextResetAt,
+    renewalDate: balance[0].nextResetAt ? new Date(balance[0].nextResetAt) : null,
   };
 }
