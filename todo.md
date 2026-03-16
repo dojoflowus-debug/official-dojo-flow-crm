@@ -2,7 +2,7 @@
 
 ## Current Task
 - [x] Add default placeholder image to profile photo in Settings when no photo is present
-- [ ] Update trial: $1 upfront verification, $49.99/month post-trial, 15 starter credits on trial start
+- [x] Update trial: $1 upfront verification, $49.99/month post-trial, 15 starter credits on trial start
 - [x] Fix t[u] is not a function error in profile photo section
 - [x] Integrate real credit system - display live credits from internal DojoFlow DB
 - [x] Allow users to add credits via Add Credits modal with packages (500/2000/5000/15000)
@@ -8361,3 +8361,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix Add Credits and Manage buttons in Settings - replaced broken AddCreditModal with working AddCreditsModal, Manage navigates to Billing tab
 - [ ] Connect Stripe API keys to Railway environment variables (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET)
 - [ ] Verify Stripe trial start, billing portal, and credit top-up flows work on production
+- [ ] Build out complete Billing section in Settings with real subscription data, plan status, next billing date, payment history, and management actions

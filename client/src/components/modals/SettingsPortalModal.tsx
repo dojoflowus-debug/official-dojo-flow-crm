@@ -15,6 +15,7 @@ import { SchoolProfileSettingsTab } from '@/components/settings/SchoolProfileSet
 import PCBankCardOnboarding from '@/components/settings/PCBankCardOnboarding';
 import { DojoFlowMessagingTab } from '@/components/settings/DojoFlowMessagingTab';
 import { CreditsCard, AddCreditsModal } from '@/components/settings/CreditsCard';
+import { BillingTab } from '@/components/settings/BillingTab';
 // Removed - mutations should be called inside component
 
 interface SettingsPortalModalProps {
@@ -731,34 +732,7 @@ export function SettingsPortalModal({ isOpen: propIsOpen, onClose: propOnClose }
             )}
 
             {/* Billing Tab */}
-            {activeTab === 'billing' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>Billing Overview</div>
-                  <div style={{
-                    padding: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Current plan</span>
-                        <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>DojoFlow Pro</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Billing cycle</span>
-                        <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Monthly</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>Next billing date</span>
-                        <span style={{ fontSize: '16px', fontWeight: '600', color: 'white' }}>Feb 12, 2026</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {activeTab === 'billing' && <BillingTab />}
 
             {/* Dojo Flow Messaging Tab */}
             {activeTab === 'mail' && <DojoFlowMessagingTab />}
