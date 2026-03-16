@@ -8361,4 +8361,5 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix Add Credits and Manage buttons in Settings - replaced broken AddCreditModal with working AddCreditsModal, Manage navigates to Billing tab
 - [ ] Connect Stripe API keys to Railway environment variables (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET)
 - [ ] Verify Stripe trial start, billing portal, and credit top-up flows work on production
-- [ ] Build out complete Billing section in Settings with real subscription data, plan status, next billing date, payment history, and management actions
+- [x] Build out complete Billing section in Settings with real subscription data, plan status, next billing date, payment history, and management actions
+- [ ] Clean up Billing & Payments page - replace all hardcoded fake data (fake students, fake revenue) with real DB data and proper empty states
