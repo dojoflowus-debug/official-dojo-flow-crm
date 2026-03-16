@@ -10,10 +10,10 @@ import { useAuth } from '@/_core/hooks/useAuth'
 import { toast } from 'sonner'
 
 const CREDIT_PACKAGES = [
-  { id: 'starter', label: 'Starter', credits: 500, price: '$5', priceNum: 5, popular: false, description: '~500 AI messages' },
-  { id: 'growth', label: 'Growth', credits: 2000, price: '$15', priceNum: 15, popular: true, description: '~2,000 AI messages' },
-  { id: 'pro', label: 'Pro', credits: 5000, price: '$35', priceNum: 35, popular: false, description: '~5,000 AI messages' },
-  { id: 'scale', label: 'Scale', credits: 15000, price: '$90', priceNum: 90, popular: false, description: '~15,000 AI messages' },
+  { id: 'starter', label: 'Starter', credits: 1000, price: '$49', priceNum: 49, popular: false, description: '~1,000 AI messages' },
+  { id: 'growth', label: 'Growth', credits: 3000, price: '$99', priceNum: 99, popular: true, description: '~3,000 AI messages' },
+  { id: 'pro', label: 'Pro', credits: 7500, price: '$199', priceNum: 199, popular: false, description: '~7,500 AI messages' },
+  { id: 'scale', label: 'Scale', credits: 20000, price: '$449', priceNum: 449, popular: false, description: '~20,000 AI messages' },
 ]
 
 function ProgressBar({ used, total }: { used: number; total: number }) {

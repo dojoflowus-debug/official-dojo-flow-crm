@@ -2,11 +2,12 @@
 
 ## Current Task
 - [x] Add default placeholder image to profile photo in Settings when no photo is present
-- [ ] Fix t[u] is not a function error in profile photo section
-- [ ] Integrate real Manus credit API - display live credits (free, monthly, daily) from Manus
-- [ ] Allow users to add credits via Manus billing flow (Add Credits button)
-- [ ] Remove all mock/hardcoded credit data and replace with real API data
-- [ ] Display credits in header (0 Credits button) using real Manus data
+- [x] Fix t[u] is not a function error in profile photo section
+- [x] Integrate real credit system - display live credits from internal DojoFlow DB
+- [x] Allow users to add credits via Add Credits modal with packages (500/2000/5000/15000)
+- [x] Remove all mock/hardcoded credit data and replace with real DB data
+- [x] Display credits in header using real DB data with warning color states
+- [x] Auto-initialize 1,000 starter credits for new organizations
 
 ## Phase 1: Design Foundation & Navigation (COMPLETED)
 - [x] Bottom navigation bar component (kiosk-friendly, mobile-first)
@@ -8354,3 +8355,4 @@ Transform kiosk from admin dashboard to premium location experience
 ## Production Bug Fix: Profile Photo Upload
 
 - [ ] Fix photo upload: production DB photoUrl/photoUrlSmall columns are varchar(500) but need mediumtext - switch to S3 upload and store URL only
+- [ ] Update credit packages to business-sustainable pricing starting at $49
