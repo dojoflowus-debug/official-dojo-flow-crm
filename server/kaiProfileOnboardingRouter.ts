@@ -24,35 +24,54 @@ export const kaiProfileOnboardingRouter = router({
 
       const orgId = ctx.currentOrganizationId;
 
-      // Get school profile
-      const [profile] = await db
-        .select()
-        .from(schoolProfiles)
-        .where(eq(schoolProfiles.organizationId, orgId))
-        .limit(1);
+      // Get school profile (table may not exist yet in older deployments)
+      let profile: { schoolName: string; displayName: string | null; logoLightUrl: string | null; logoDarkUrl: string | null; logoIconLightUrl: string | null; logoIconDarkUrl: string | null } | null = null;
+      try {
+        const [row] = await db
+          .select()
+          .from(schoolProfiles)
+          .where(eq(schoolProfiles.organizationId, orgId))
+          .limit(1);
+        profile = row || null;
+      } catch (e) {
+        // school_profiles table doesn't exist yet — treat as no profile
+        console.warn('[KAI Onboarding] school_profiles table not found, treating as empty');
+      }
 
       // Get dojo settings (for operatorName / AI name)
-      const [settings] = await db
-        .select({
-          operatorName: dojoSettings.operatorName,
-          schoolName: dojoSettings.schoolName,
-          setupCompleted: dojoSettings.setupCompleted,
-          organizationId: dojoSettings.organizationId,
-        })
-        .from(dojoSettings)
-        .where(eq(dojoSettings.organizationId, orgId))
-        .limit(1);
+      let settings: { operatorName: string | null; schoolName: string | null; setupCompleted: number | null; organizationId: number | null } | null = null;
+      try {
+        const [row] = await db
+          .select({
+            operatorName: dojoSettings.operatorName,
+            schoolName: dojoSettings.schoolName,
+            setupCompleted: dojoSettings.setupCompleted,
+            organizationId: dojoSettings.organizationId,
+          })
+          .from(dojoSettings)
+          .where(eq(dojoSettings.organizationId, orgId))
+          .limit(1);
+        settings = row || null;
+      } catch (e) {
+        console.warn('[KAI Onboarding] dojoSettings query failed:', e);
+      }
 
       // Get organization onboarding status
-      const [org] = await db
-        .select({
-          onboardingStatus: organizations.onboardingStatus,
-          onboardingStep: organizations.onboardingStep,
-          name: organizations.name,
-        })
-        .from(organizations)
-        .where(eq(organizations.id, orgId))
-        .limit(1);
+      let org: { onboardingStatus: string | null; onboardingStep: number | null; name: string | null } | null = null;
+      try {
+        const [row] = await db
+          .select({
+            onboardingStatus: organizations.onboardingStatus,
+            onboardingStep: organizations.onboardingStep,
+            name: organizations.name,
+          })
+          .from(organizations)
+          .where(eq(organizations.id, orgId))
+          .limit(1);
+        org = row || null;
+      } catch (e) {
+        console.warn('[KAI Onboarding] organizations query failed:', e);
+      }
 
       // Determine which fields are missing
       const hasOwnerName = !!(settings?.operatorName && settings.operatorName.trim().length > 0);
@@ -73,9 +92,15 @@ export const kaiProfileOnboardingRouter = router({
       if (!hasLogoLight) missingSteps.push("logo_light");
       if (!hasLogoDark) missingSteps.push("logo_dark");
 
+      // needsOnboarding is true if:
+      // 1. Onboarding was never completed AND there are missing steps, OR
+      // 2. Critical branding fields (logos) are still missing even after completion
+      const hasCriticalMissing = !hasLogoLight || !hasLogoDark;
+      const needsOnboarding = (!isCompleted && missingSteps.length > 0) || (isCompleted && hasCriticalMissing);
+
       return {
         isCompleted,
-        needsOnboarding: !isCompleted && missingSteps.length > 0,
+        needsOnboarding,
         missingSteps,
         currentStep: org?.onboardingStep || 1,
         profile: profile ? {

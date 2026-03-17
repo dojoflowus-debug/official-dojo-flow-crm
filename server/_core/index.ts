@@ -73,6 +73,62 @@ async function runStartupMigrations() {
       }
     }
 
+    // Ensure school_profiles table exists
+    try {
+      await conn.execute(`CREATE TABLE IF NOT EXISTS \`school_profiles\` (
+        \`id\` int NOT NULL AUTO_INCREMENT,
+        \`organization_id\` int NOT NULL,
+        \`school_name\` varchar(255) NOT NULL DEFAULT 'My Dojo',
+        \`display_name\` varchar(255) DEFAULT NULL,
+        \`tagline\` varchar(500) DEFAULT NULL,
+        \`phone\` varchar(50) DEFAULT NULL,
+        \`email\` varchar(255) DEFAULT NULL,
+        \`website\` varchar(500) DEFAULT NULL,
+        \`address_street\` varchar(255) DEFAULT NULL,
+        \`address_city\` varchar(100) DEFAULT NULL,
+        \`address_state\` varchar(100) DEFAULT NULL,
+        \`address_postal\` varchar(20) DEFAULT NULL,
+        \`address_country\` varchar(100) DEFAULT NULL,
+        \`logo_light_url\` varchar(1000) DEFAULT NULL,
+        \`logo_dark_url\` varchar(1000) DEFAULT NULL,
+        \`logo_icon_light_url\` varchar(1000) DEFAULT NULL,
+        \`logo_icon_dark_url\` varchar(1000) DEFAULT NULL,
+        \`brand_color_primary\` varchar(7) DEFAULT NULL,
+        \`brand_color_secondary\` varchar(7) DEFAULT NULL,
+        \`brand_color_tertiary\` varchar(7) DEFAULT NULL,
+        \`timezone\` varchar(100) DEFAULT NULL,
+        \`currency\` varchar(10) DEFAULT NULL,
+        \`chat_use_full_logo\` tinyint(1) DEFAULT 0,
+        \`chat_welcome_message\` text DEFAULT NULL,
+        \`created_at\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        \`updated_at\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (\`id\`),
+        UNIQUE KEY \`school_profiles_org_unique\` (\`organization_id\`),
+        KEY \`idx_school_profile_org\` (\`organization_id\`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      console.log('[Migration] ✓ school_profiles table ensured');
+    } catch (e: any) {
+      console.warn('[Migration] school_profiles table creation warning:', e.message);
+    }
+
+    // Ensure organizations has onboarding_status and onboarding_step columns
+    try {
+      const [orgCols] = await conn.execute(
+        `SHOW COLUMNS FROM \`organizations\` WHERE Field IN ('onboarding_status', 'onboarding_step')`
+      ) as any;
+      const existingCols = (orgCols as any[]).map((c: any) => c.Field);
+      if (!existingCols.includes('onboarding_status')) {
+        await conn.execute(`ALTER TABLE \`organizations\` ADD COLUMN \`onboarding_status\` varchar(50) DEFAULT NULL`);
+        console.log('[Migration] ✓ Added organizations.onboarding_status column');
+      }
+      if (!existingCols.includes('onboarding_step')) {
+        await conn.execute(`ALTER TABLE \`organizations\` ADD COLUMN \`onboarding_step\` int DEFAULT 1`);
+        console.log('[Migration] ✓ Added organizations.onboarding_step column');
+      }
+    } catch (e: any) {
+      console.warn('[Migration] organizations onboarding columns warning:', e.message);
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);
