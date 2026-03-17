@@ -1,4 +1,4 @@
-import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal, boolean, date } from "drizzle-orm/mysql-core"
+import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, uniqueIndex, int, mysqlEnum, text, mediumtext, timestamp, varchar, datetime, json, tinyint, decimal, boolean, date } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
 export const accountFlags = mysqlTable("account_flags", {
@@ -1414,7 +1414,7 @@ export const users = mysqlTable("users", {
 		welcomeMessageSeen: int().default(0).notNull(),
 	},
 	(table) => [
-		index("idx_users_openId").on(table.openId),
+		uniqueIndex("idx_users_openId").on(table.openId),
 		index("idx_users_googleSub").on(table.googleSub),
 		index("idx_users_email").on(table.email),
 	]);
