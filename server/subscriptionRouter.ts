@@ -526,9 +526,9 @@ export const subscriptionRouter = router({
   verifyCheckoutSession: protectedProcedure
     .input(z.object({
       sessionId: z.string(),
-      organizationId: z.number()
+      organizationId: z.number().optional() // optional — we prefer metadata from Stripe
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         // Retrieve the session from Stripe to verify it's paid
         const session = await stripe.checkout.sessions.retrieve(input.sessionId);
@@ -536,7 +536,6 @@ export const subscriptionRouter = router({
         if (!session) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Checkout session not found" });
         }
-
         // Accept paid sessions AND no_payment_required (trial subscriptions)
         // Trial checkouts have payment_status = 'no_payment_required' during the trial period
         const isValid = session.status === 'complete' || 
@@ -545,19 +544,31 @@ export const subscriptionRouter = router({
         if (!isValid) {
           throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Payment not completed" });
         }
-
+        // Get org ID from session metadata (most reliable source)
+        // Fall back to client-supplied orgId, then context org
+        const metadataOrgId = session.metadata?.organizationId 
+          ? parseInt(session.metadata.organizationId) 
+          : null;
+        const orgId = metadataOrgId ?? input.organizationId ?? ctx.currentOrganizationId;
+        
+        if (!orgId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot determine organization for this checkout session" });
+        }
         // Check if subscription already activated (idempotent)
-        const existing = await getOrganizationSubscription(input.organizationId);
+        const existing = await getOrganizationSubscription(orgId);
         if (existing && (existing.status === 'active' || existing.status === 'trialing') && existing.stripeSubscriptionId) {
           // Already activated — return success without re-processing
           return { success: true, alreadyActivated: true };
         }
-
         // Activate the subscription by processing the checkout session
         if (session.mode === 'subscription') {
-          await handleCheckoutComplete(session as any);
+          // Override the session metadata orgId with the verified one
+          const sessionWithOrgId = {
+            ...session,
+            metadata: { ...session.metadata, organizationId: orgId.toString() }
+          };
+          await handleCheckoutComplete(sessionWithOrgId as any);
         }
-
         return { success: true, alreadyActivated: false };
       } catch (error: any) {
         console.error('[verifyCheckoutSession] Error:', error);

@@ -20,7 +20,8 @@ export function BillingSuccess() {
   const isTrialParam = searchParams.get('trial') === 'true';
   const [isTrial] = useState(isTrialParam);
 
-  const organizationId = (user as any)?.organizationId;
+  // auth.me returns { ...fullUser, activeOrgId } — use activeOrgId, not organizationId
+  const organizationId = (user as any)?.activeOrgId ?? (user as any)?.organizationId;
 
   const verifyMutation = trpc.subscription.verifyCheckoutSession.useMutation({
     onSuccess: (data) => {
