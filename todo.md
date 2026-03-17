@@ -8385,8 +8385,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix "Received unknown parameter: subscription_data[add_invoice_items]" error when activating subscription
 
 ## Fix All Financial Interfaces (Mar 16, 2026)
-- [ ] Fix Add Credits modal showing duplicate package cards
-- [ ] Fix credit purchase Stripe checkout (add_invoice_items error in credit flow)
-- [ ] Fix Add Card button in Settings Billing tab
-- [ ] Fix Activate Subscription flow end-to-end
-- [ ] Fix Manage Billing button
+- [x] Fix Add Credits modal showing duplicate package cards
+- [x] Fix credit purchase Stripe checkout (add_invoice_items error in credit flow)
+- [x] Fix Add Card button in Settings Billing tab
+- [x] Fix Activate Subscription flow end-to-end
+- [x] Fix Manage Billing button
+
+## Switch to DojoFlow Live Stripe Account (Mar 17, 2026)
+- [ ] Update STRIPE_SECRET_KEY to DojoFlow live sk_live key
+- [ ] Update VITE_STRIPE_PUBLISHABLE_KEY to DojoFlow live pk_live key

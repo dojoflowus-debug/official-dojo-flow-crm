@@ -1,10 +1,10 @@
 import Stripe from 'stripe';
 
-// Initialize Stripe with the secret key from environment
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+// Prefer DojoFlow's own Stripe key; fall back to platform-provided key
+const stripeSecretKey = process.env.DOJO_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 
 if (!stripeSecretKey) {
-  console.warn('STRIPE_SECRET_KEY not found in environment variables');
+  console.warn('No Stripe secret key found in environment variables (DOJO_STRIPE_SECRET_KEY or STRIPE_SECRET_KEY)');
 }
 
 export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
