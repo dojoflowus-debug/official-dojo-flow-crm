@@ -8392,5 +8392,5 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix Manage Billing button
 
 ## Switch to DojoFlow Live Stripe Account (Mar 17, 2026)
-- [ ] Update STRIPE_SECRET_KEY to DojoFlow live sk_live key
-- [ ] Update VITE_STRIPE_PUBLISHABLE_KEY to DojoFlow live pk_live key
+- [x] Update STRIPE_SECRET_KEY to DojoFlow live sk_live key (via DOJO_STRIPE_SECRET_KEY env var)
+- [x] Update VITE_STRIPE_PUBLISHABLE_KEY to DojoFlow live pk_live key (via VITE_DOJO_STRIPE_PUBLISHABLE_KEY env var)

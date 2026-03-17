@@ -18,7 +18,8 @@ import { getDb } from '../db';
 import { creditTopUps } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+// Use live webhook secret when available (live mode), fall back to test webhook secret
+const webhookSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || '';
 
 /**
  * Handle Stripe webhook events

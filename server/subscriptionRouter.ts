@@ -17,7 +17,7 @@ import {
   resetMonthlyCredits
 } from "./subscriptionDb";
 import { deductCredits } from "./creditConsumption";
-import { createSubscriptionCheckout, createTrialCheckout } from "./stripeSubscription";
+import { createSubscriptionCheckout, createTrialCheckout, handleCheckoutComplete } from "./stripeSubscription";
 import { stripe } from "./stripe";
 
 export const subscriptionRouter = router({
@@ -516,6 +516,49 @@ export const subscriptionRouter = router({
         }
         
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create billing portal" });
+      }
+    }),
+
+  /**
+   * Verify a completed Stripe checkout session and activate subscription
+   * Called from BillingSuccess page as a fallback when webhook hasn't fired yet
+   */
+  verifyCheckoutSession: protectedProcedure
+    .input(z.object({
+      sessionId: z.string(),
+      organizationId: z.number()
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        // Retrieve the session from Stripe to verify it's paid
+        const session = await stripe.checkout.sessions.retrieve(input.sessionId);
+        
+        if (!session) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Checkout session not found" });
+        }
+
+        // Only process completed/paid sessions
+        if (session.payment_status !== 'paid' && session.status !== 'complete') {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Payment not completed" });
+        }
+
+        // Check if subscription already activated (idempotent)
+        const existing = await getOrganizationSubscription(input.organizationId);
+        if (existing && (existing.status === 'active' || existing.status === 'trialing') && existing.stripeSubscriptionId) {
+          // Already activated — return success without re-processing
+          return { success: true, alreadyActivated: true };
+        }
+
+        // Activate the subscription by processing the checkout session
+        if (session.mode === 'subscription') {
+          await handleCheckoutComplete(session as any);
+        }
+
+        return { success: true, alreadyActivated: false };
+      } catch (error: any) {
+        console.error('[verifyCheckoutSession] Error:', error);
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to verify checkout" });
       }
     })
 });
