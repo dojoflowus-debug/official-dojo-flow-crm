@@ -9,13 +9,13 @@ import { getDb } from './db';
 import { organizationSubscriptions, aiCreditBalance, subscriptionPlans, creditTopUps, aiCreditTransactions } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 
-// Always use DojoFlow's own Stripe key — never fall back to the platform-injected key
+// Use STRIPE_SECRET_KEY (set to DojoFlow live key in Railway)
 let _stripeInstance: Stripe | null = null;
 function getStripeInstance(): Stripe {
   if (!_stripeInstance) {
-    const key = process.env.DOJO_STRIPE_SECRET_KEY || '';
+    const key = process.env.STRIPE_SECRET_KEY || '';
     if (!key) {
-      throw new Error('DOJO_STRIPE_SECRET_KEY is not configured');
+      throw new Error('STRIPE_SECRET_KEY is not configured');
     }
     _stripeInstance = new Stripe(key, { apiVersion: '2025-11-17.clover' as any });
   }
@@ -514,10 +514,6 @@ export async function createTrialCheckout(params: {
   customerEmail?: string;
 }) {
   const { organizationId, successUrl, cancelUrl, customerEmail } = params;
-
-  // Debug: confirm which Stripe key is active at runtime
-  const _activeKey = process.env.DOJO_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || 'NONE';
-  console.log('[createTrialCheckout] Active key prefix:', _activeKey.substring(0, 14));
 
   const db = await getDb();
   if (!db) throw new Error('Database not available');
