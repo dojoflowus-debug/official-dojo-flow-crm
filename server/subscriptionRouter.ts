@@ -556,7 +556,7 @@ export const subscriptionRouter = router({
         }
         // Check if subscription already activated (idempotent)
         const existing = await getOrganizationSubscription(orgId);
-        if (existing && (existing.status === 'active' || existing.status === 'trialing') && existing.stripeSubscriptionId) {
+        if (existing && (existing.status === 'active' || existing.status === 'trial') && existing.stripeSubscriptionId) {
           // Already activated — return success without re-processing
           return { success: true, alreadyActivated: true };
         }

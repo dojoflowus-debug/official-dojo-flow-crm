@@ -163,7 +163,7 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     await db.update(organizationSubscriptions)
       .set({
         planId: planIdToUse,
-        status: isTrial ? 'trialing' : 'active',
+        status: isTrial ? 'trial' : 'active',
         stripeSubscriptionId: subscriptionId,
         stripeCustomerId: customerId,
         currentPeriodStart: new Date().toISOString(),
@@ -177,7 +177,7 @@ export async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     await db.insert(organizationSubscriptions).values({
       organizationId: orgId,
       planId: planIdToUse,
-      status: isTrial ? 'trialing' : 'active',
+      status: isTrial ? 'trial' : 'active',
       stripeSubscriptionId: subscriptionId,
       stripeCustomerId: customerId,
       currentPeriodStart: new Date().toISOString(),

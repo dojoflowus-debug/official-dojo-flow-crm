@@ -189,7 +189,7 @@ export default function KaiCommand() {
   const { user } = useAuth();
   
   // Get subscription status - use 0 as fallback to ensure hook is always called with a number
-  const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining } = useSubscriptionStatus(user?.activeOrgId || 0);
+  const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining, isLoading: subscriptionStatusLoading } = useSubscriptionStatus(user?.activeOrgId || 0);
   // Memoize the organizationId to prevent unnecessary re-renders
   const memoizedOrgId = user?.activeOrgId || 0;
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -2006,7 +2006,8 @@ export default function KaiCommand() {
     });
     
     // Check subscription status before sending message
-    if (shouldShowPaywall()) {
+    // Don't show paywall while subscription status is still loading
+    if (!subscriptionStatusLoading && shouldShowPaywall()) {
       setPaywallFeatureName('chat messages');
       setShowPaywall(true);
       return;

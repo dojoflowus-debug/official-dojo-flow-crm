@@ -33,19 +33,19 @@ export const useSubscriptionStatus = (organizationId?: number) => {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch subscription status
-  const { data: subscription } = trpc.subscription.getCurrentSubscription.useQuery(
+  const { data: subscription, isLoading: subscriptionLoading } = trpc.subscription.getCurrentSubscription.useQuery(
     { organizationId: organizationId || 0 },
     { enabled: !!organizationId }
   );
 
   // Fetch credit balance (internal DojoFlow credits)
-  const { data: creditData } = trpc.credits.getBalance.useQuery(
+  const { data: creditData, isLoading: creditLoading } = trpc.credits.getBalance.useQuery(
     undefined,
     { enabled: !!organizationId }
   );
 
   // Fetch real Manus platform credits
-  const { data: manusCreditsData } = trpc.credits.getManusBalance.useQuery(
+  const { data: manusCreditsData, isLoading: manusLoading } = trpc.credits.getManusBalance.useQuery(
     undefined,
     { enabled: !!organizationId, refetchInterval: 60000 }
   );
@@ -56,20 +56,40 @@ export const useSubscriptionStatus = (organizationId?: number) => {
       return;
     }
 
-    if (subscription || creditData || manusCreditsData) {
-      const status: SubscriptionStatus = subscription?.billingStatus || 'no_subscription';
+    // Wait until at least the credit balance query has settled (loaded or errored)
+    // subscription can be null (no subscription) or an object
+    // creditData can be undefined (loading) or an object
+    const subscriptionSettled = !subscriptionLoading;
+    const creditSettled = !creditLoading;
+
+    if (subscriptionSettled && creditSettled) {
+      // organizationSubscriptions uses 'status' field (not 'billingStatus')
+      // Map 'trial' -> 'trialing' for the SubscriptionStatus type
+      const rawStatus = subscription?.status;
+      const status: SubscriptionStatus = rawStatus === 'trial' ? 'trialing'
+        : rawStatus === 'active' ? 'active'
+        : rawStatus === 'past_due' ? 'past_due'
+        : rawStatus === 'cancelled' ? 'canceled'
+        : 'no_subscription';
       
+      // Only use Manus platform credits if the Forge API is available and returns credits.
+      // If Forge API is unavailable (available: false), fall back to DojoFlow's own credit balance.
+      const manusCreditsAvailable = manusCreditsData?.available === true && (manusCreditsData?.totalAvailable ?? 0) > 0;
+      const creditBalance = manusCreditsAvailable
+        ? (manusCreditsData?.totalAvailable ?? 0)
+        : (creditData?.creditsRemaining ?? 0);
+
       setSubscriptionInfo({
         status: status as SubscriptionStatus,
         trialEndsAt: subscription?.trialEndsAt,
         currentPeriodEnd: subscription?.currentPeriodEnd,
-        creditBalance: manusCreditsData?.totalAvailable ?? creditData?.creditsRemaining ?? 0,
-        isExempt: subscription?.billingExempt || false,
+        creditBalance,
+        isExempt: false, // billingExempt is not in organizationSubscriptions; default to false
         manusCredits: manusCreditsData ?? undefined,
       });
       setIsLoading(false);
     }
-  }, [subscription, creditData, manusCreditsData, organizationId]);
+  }, [subscription, creditData, manusCreditsData, organizationId, subscriptionLoading, creditLoading, manusLoading]);
 
   /**
    * Check if user can access a paid feature
