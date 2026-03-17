@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/_core/trpc";
+import { trpc } from "@/lib/trpc";
 
 export function BillingSuccess() {
   const location = useLocation();
