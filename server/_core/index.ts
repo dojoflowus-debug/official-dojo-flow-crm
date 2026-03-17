@@ -129,6 +129,21 @@ async function runStartupMigrations() {
       console.warn('[Migration] organizations onboarding columns warning:', e.message);
     }
 
+    // Ensure school_profiles has logo_light_data and logo_dark_data columns for inline storage
+    try {
+      await conn.execute(
+        `ALTER TABLE \`school_profiles\` ADD COLUMN IF NOT EXISTS \`logo_light_data\` MEDIUMTEXT NULL`
+      );
+      await conn.execute(
+        `ALTER TABLE \`school_profiles\` ADD COLUMN IF NOT EXISTS \`logo_dark_data\` MEDIUMTEXT NULL`
+      );
+      console.log('[Migration] ✓ school_profiles logo data columns ensured');
+    } catch (logoErr: any) {
+      if (!logoErr.message?.includes('Duplicate column') && !logoErr.message?.includes("doesn't exist")) {
+        console.warn('[Migration] school_profiles logo columns warning:', logoErr.message);
+      }
+    }
+
     await conn.end();
   } catch (err: any) {
     console.warn('[Migration] Startup migration warning (non-fatal):', err.message);

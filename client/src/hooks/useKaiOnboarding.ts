@@ -258,19 +258,16 @@ export function useKaiOnboarding({
 
   /**
    * Handle logo upload completion during onboarding.
+   * Called after uploadLogo mutation has already saved the data to the DB.
    * Returns true if consumed by onboarding.
    */
   const handleLogoUpload = useCallback(
-    async (type: "light" | "dark", url: string): Promise<boolean> => {
+    async (type: "light" | "dark", _url: string): Promise<boolean> => {
       if (!isActive) return false;
       if (type === "light" && currentStep !== "logo_light") return false;
       if (type === "dark" && currentStep !== "logo_dark") return false;
-
-      try {
-        await saveLogoMutation.mutateAsync({ type, url });
-      } catch (e) {
-        console.error("[KaiOnboarding] Failed to save logo:", e);
-      }
+      // Note: uploadLogo mutation already saved the logo to the DB,
+      // so we don't need to call saveLogo again here.
 
       const completedStep: OnboardingStep = type === "light" ? "logo_light" : "logo_dark";
       const remaining = pendingSteps.filter((s) => s !== completedStep);

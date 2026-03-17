@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { getDb } from "./db";
 import { dojoSettings, organizations, schoolProfiles } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { getSchoolProfile, upsertSchoolProfile } from "./schoolProfileDb";
+import { upsertSchoolProfile } from "./schoolProfileDb";
 
 /**
  * KAI Profile Onboarding Router
@@ -25,7 +25,16 @@ export const kaiProfileOnboardingRouter = router({
       const orgId = ctx.currentOrganizationId;
 
       // Get school profile (table may not exist yet in older deployments)
-      let profile: { schoolName: string; displayName: string | null; logoLightUrl: string | null; logoDarkUrl: string | null; logoIconLightUrl: string | null; logoIconDarkUrl: string | null } | null = null;
+      let profile: {
+        schoolName: string;
+        displayName: string | null;
+        logoLightUrl: string | null;
+        logoDarkUrl: string | null;
+        logoLightData: string | null;
+        logoDarkData: string | null;
+        logoIconLightUrl: string | null;
+        logoIconDarkUrl: string | null;
+      } | null = null;
       try {
         const [row] = await db
           .select()
@@ -79,8 +88,15 @@ export const kaiProfileOnboardingRouter = router({
         (profile?.schoolName && profile.schoolName !== "My Dojo" && profile.schoolName.trim().length > 0) ||
         (settings?.schoolName && settings.schoolName.trim().length > 0)
       );
-      const hasLogoLight = !!(profile?.logoLightUrl && profile.logoLightUrl.trim().length > 0);
-      const hasLogoDark = !!(profile?.logoDarkUrl && profile.logoDarkUrl.trim().length > 0);
+      // Logo is present if we have either a URL or inline data
+      const hasLogoLight = !!(
+        (profile?.logoLightUrl && profile.logoLightUrl.trim().length > 0) ||
+        (profile?.logoLightData && profile.logoLightData.trim().length > 0)
+      );
+      const hasLogoDark = !!(
+        (profile?.logoDarkUrl && profile.logoDarkUrl.trim().length > 0) ||
+        (profile?.logoDarkData && profile.logoDarkData.trim().length > 0)
+      );
 
       // Check if onboarding is already completed/skipped
       const isCompleted = org?.onboardingStatus === "completed" || org?.onboardingStatus === "skipped";
@@ -106,8 +122,8 @@ export const kaiProfileOnboardingRouter = router({
         profile: profile ? {
           schoolName: profile.schoolName,
           displayName: profile.displayName,
-          logoLightUrl: profile.logoLightUrl,
-          logoDarkUrl: profile.logoDarkUrl,
+          logoLightUrl: profile.logoLightUrl || profile.logoLightData || null,
+          logoDarkUrl: profile.logoDarkUrl || profile.logoDarkData || null,
         } : null,
         settings: settings ? {
           operatorName: settings.operatorName,
@@ -216,12 +232,15 @@ export const kaiProfileOnboardingRouter = router({
     }),
 
   /**
-   * Save logo URL (step 3 & 4)
+   * Upload a logo by storing the base64 data directly in the database.
+   * This approach requires no external storage service (no AWS S3, no Forge API).
+   * The base64 data URL is stored in logo_light_data / logo_dark_data columns.
    */
-  saveLogo: orgScopedProcedure
+  uploadLogo: orgScopedProcedure
     .input(z.object({
       type: z.enum(["light", "dark"]),
-      url: z.string().url().max(1000),
+      fileData: z.string(), // base64 data URL (e.g. "data:image/png;base64,...")
+      mimeType: z.string().default("image/png"),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -229,10 +248,88 @@ export const kaiProfileOnboardingRouter = router({
 
       const orgId = ctx.currentOrganizationId;
 
-      // Update school profile logo
+      // Ensure the data URL has the proper prefix
+      let dataUrl = input.fileData;
+      if (!dataUrl.startsWith('data:')) {
+        dataUrl = `data:${input.mimeType};base64,${dataUrl}`;
+      }
+
+      // Validate size (base64 of 2MB = ~2.7MB string)
+      const maxBytes = 3 * 1024 * 1024; // 3MB string limit
+      if (dataUrl.length > maxBytes) {
+        throw new TRPCError({
+          code: "PAYLOAD_TOO_LARGE",
+          message: "Logo file is too large. Please use an image under 2MB.",
+        });
+      }
+
+      // Determine which column to update
       const updateData = input.type === "light"
-        ? { logoLightUrl: input.url, logoIconLightUrl: input.url }
-        : { logoDarkUrl: input.url, logoIconDarkUrl: input.url };
+        ? { logoLightData: dataUrl }
+        : { logoDarkData: dataUrl };
+
+      // Upsert school profile with logo data
+      const [existing] = await db
+        .select({ id: schoolProfiles.id })
+        .from(schoolProfiles)
+        .where(eq(schoolProfiles.organizationId, orgId))
+        .limit(1);
+
+      if (existing) {
+        await db.update(schoolProfiles)
+          .set({ ...updateData, updatedAt: new Date().toISOString() })
+          .where(eq(schoolProfiles.organizationId, orgId));
+      } else {
+        await db.insert(schoolProfiles).values({
+          organizationId: orgId,
+          schoolName: "My Dojo",
+          ...updateData,
+        });
+      }
+
+      // Update onboarding step
+      if (input.type === "light") {
+        await db.update(organizations)
+          .set({ onboardingStep: 4 })
+          .where(eq(organizations.id, orgId));
+      } else {
+        await db.update(organizations)
+          .set({ onboardingStep: 5 })
+          .where(eq(organizations.id, orgId));
+      }
+
+      // Return the data URL as the "url" so the frontend can display it immediately
+      return { success: true, url: dataUrl };
+    }),
+
+  /**
+   * Save logo URL (step 3 & 4) — used when a URL is already available
+   */
+  saveLogo: orgScopedProcedure
+    .input(z.object({
+      type: z.enum(["light", "dark"]),
+      url: z.string().max(2000),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      const orgId = ctx.currentOrganizationId;
+
+      // Determine if this is a data URL or a regular URL
+      const isDataUrl = input.url.startsWith('data:');
+
+      // Update school profile logo
+      let updateData: Record<string, string>;
+      if (isDataUrl) {
+        updateData = input.type === "light"
+          ? { logoLightData: input.url }
+          : { logoDarkData: input.url };
+      } else {
+        updateData = input.type === "light"
+          ? { logoLightUrl: input.url, logoIconLightUrl: input.url }
+          : { logoDarkUrl: input.url, logoIconDarkUrl: input.url };
+      }
 
       const [existing] = await db
         .select({ id: schoolProfiles.id })
@@ -252,15 +349,17 @@ export const kaiProfileOnboardingRouter = router({
         });
       }
 
-      // Also update organizations.logoUrl for backward compat
-      if (input.type === "light") {
-        await db.update(organizations)
-          .set({ logoUrl: input.url, onboardingStep: 4 })
-          .where(eq(organizations.id, orgId));
-      } else {
-        await db.update(organizations)
-          .set({ onboardingStep: 5 })
-          .where(eq(organizations.id, orgId));
+      // Also update organizations.logoUrl for backward compat (only for real URLs)
+      if (!isDataUrl) {
+        if (input.type === "light") {
+          await db.update(organizations)
+            .set({ logoUrl: input.url, onboardingStep: 4 })
+            .where(eq(organizations.id, orgId));
+        } else {
+          await db.update(organizations)
+            .set({ onboardingStep: 5 })
+            .where(eq(organizations.id, orgId));
+        }
       }
 
       return { success: true };

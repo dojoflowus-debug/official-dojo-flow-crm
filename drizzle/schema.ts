@@ -1664,6 +1664,9 @@ export const schoolProfiles = mysqlTable("school_profiles", {
 	// Full logos (horizontal, for headers and wide spaces)
 	logoLightUrl: varchar("logo_light_url", { length: 1000 }),
 	logoDarkUrl: varchar("logo_dark_url", { length: 1000 }),
+	// Inline logo data (base64 data URLs, used when no external storage is available)
+	logoLightData: mediumtext("logo_light_data"),
+	logoDarkData: mediumtext("logo_dark_data"),
 	// Icon logos (square, for avatars and compact spaces)
 	logoIconLightUrl: varchar("logo_icon_light_url", { length: 1000 }),
 	logoIconDarkUrl: varchar("logo_icon_dark_url", { length: 1000 }),

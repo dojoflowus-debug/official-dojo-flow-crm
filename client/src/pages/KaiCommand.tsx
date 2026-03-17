@@ -1462,6 +1462,8 @@ export default function KaiCommand() {
 
   // Upload mutation
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();
+  // Onboarding logo upload mutation (stores base64 directly in DB, no external storage needed)
+  const uploadLogoMutation = trpc.kaiProfileOnboarding.uploadLogo.useMutation();
   
   // Schedule extraction mutations
   const extractScheduleMutation = trpc.kai.scheduleExtractor.extractSchedule.useMutation();
@@ -3523,17 +3525,16 @@ export default function KaiCommand() {
                                   onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (!file || !onboardingUploadType) return;
-                                    // Read and upload the logo
+                                    // Read file as base64 and store directly in DB (no external storage needed)
                                     const reader = new FileReader();
                                     reader.onload = async (ev) => {
                                       try {
                                         const base64Data = ev.target?.result as string;
-                                        const result = await uploadMutation.mutateAsync({
-                                          fileName: file.name,
+                                        // Use the dedicated uploadLogo mutation which stores base64 in the database
+                                        const result = await uploadLogoMutation.mutateAsync({
+                                          type: onboardingUploadType,
                                           fileData: base64Data,
-                                          fileType: file.type,
-                                          fileSize: file.size,
-                                          context: 'general',
+                                          mimeType: file.type || 'image/png',
                                         });
                                         // Show user message with logo preview
                                         setMessages(prev => [...prev, {
