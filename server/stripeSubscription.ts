@@ -9,13 +9,13 @@ import { getDb } from './db';
 import { organizationSubscriptions, aiCreditBalance, subscriptionPlans, creditTopUps, aiCreditTransactions } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 
-// Lazy Stripe initialization — prefers DojoFlow's own key over platform-provided key
+// Always use DojoFlow's own Stripe key — never fall back to the platform-injected key
 let _stripeInstance: Stripe | null = null;
 function getStripeInstance(): Stripe {
   if (!_stripeInstance) {
-    const key = process.env.DOJO_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
+    const key = process.env.DOJO_STRIPE_SECRET_KEY || '';
     if (!key) {
-      throw new Error('No Stripe secret key configured (DOJO_STRIPE_SECRET_KEY or STRIPE_SECRET_KEY)');
+      throw new Error('DOJO_STRIPE_SECRET_KEY is not configured');
     }
     _stripeInstance = new Stripe(key, { apiVersion: '2025-11-17.clover' as any });
   }
