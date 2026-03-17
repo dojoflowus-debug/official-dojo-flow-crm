@@ -537,8 +537,12 @@ export const subscriptionRouter = router({
           throw new TRPCError({ code: "NOT_FOUND", message: "Checkout session not found" });
         }
 
-        // Only process completed/paid sessions
-        if (session.payment_status !== 'paid' && session.status !== 'complete') {
+        // Accept paid sessions AND no_payment_required (trial subscriptions)
+        // Trial checkouts have payment_status = 'no_payment_required' during the trial period
+        const isValid = session.status === 'complete' || 
+                        session.payment_status === 'paid' || 
+                        session.payment_status === 'no_payment_required';
+        if (!isValid) {
           throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Payment not completed" });
         }
 

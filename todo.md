@@ -8394,3 +8394,8 @@ Transform kiosk from admin dashboard to premium location experience
 ## Switch to DojoFlow Live Stripe Account (Mar 17, 2026)
 - [x] Update STRIPE_SECRET_KEY to DojoFlow live sk_live key (via DOJO_STRIPE_SECRET_KEY env var)
 - [x] Update VITE_STRIPE_PUBLISHABLE_KEY to DojoFlow live pk_live key (via VITE_DOJO_STRIPE_PUBLISHABLE_KEY env var)
+
+## Fix Post-Checkout Issues (Mar 17, 2026)
+- [x] Fix /dashboard 404 after checkout — all redirects now go to /kai
+- [x] Fix subscription not activating after checkout — added verifyCheckoutSession endpoint that directly activates from session_id
+- [x] Fix webhook handler to use STRIPE_LIVE_WEBHOOK_SECRET when available
