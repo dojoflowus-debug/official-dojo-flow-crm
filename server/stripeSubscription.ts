@@ -515,6 +515,10 @@ export async function createTrialCheckout(params: {
 }) {
   const { organizationId, successUrl, cancelUrl, customerEmail } = params;
 
+  // Debug: confirm which Stripe key is active at runtime
+  const _activeKey = process.env.DOJO_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || 'NONE';
+  console.log('[createTrialCheckout] Active key prefix:', _activeKey.substring(0, 14));
+
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   
