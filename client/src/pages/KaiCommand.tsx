@@ -3533,7 +3533,7 @@ export default function KaiCommand() {
                                           fileData: base64Data,
                                           fileType: file.type,
                                           fileSize: file.size,
-                                          context: 'school-logo',
+                                          context: 'general',
                                         });
                                         // Show user message with logo preview
                                         setMessages(prev => [...prev, {
