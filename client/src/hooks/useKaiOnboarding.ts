@@ -5,6 +5,12 @@ export type OnboardingStep =
   | "idle"
   | "owner_name"
   | "school_name"
+  | "martial_arts_style"
+  | "address"
+  | "city_state_zip"
+  | "phone"
+  | "email"
+  | "website"
   | "logo_light"
   | "logo_dark"
   | "complete";
@@ -19,6 +25,8 @@ export interface OnboardingMessage {
   expectsFileUpload?: boolean;
   /** If true, show a skip button */
   showSkip?: boolean;
+  /** The onboarding step this message belongs to (for file input ref) */
+  onboardingStep?: OnboardingStep;
 }
 
 interface UseKaiOnboardingOptions {
@@ -37,23 +45,23 @@ export function useKaiOnboarding({
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("idle");
   const [isActive, setIsActive] = useState(false);
   const [ownerName, setOwnerName] = useState<string>("");
-  // Track which steps still need to be done (managed locally to avoid stale query data)
   const [pendingSteps, setPendingSteps] = useState<OnboardingStep[]>([]);
   const hasInitialized = useRef(false);
 
   const utils = trpc.useUtils();
 
-  // Query onboarding status
+  // Query onboarding status — always fetch fresh on mount (staleTime: 0)
   const statusQuery = trpc.kaiProfileOnboarding.getStatus.useQuery(undefined, {
     enabled: organizationId > 0,
     retry: false,
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Mutations
   const saveOwnerNameMutation = trpc.kaiProfileOnboarding.saveOwnerName.useMutation();
   const saveSchoolNameMutation = trpc.kaiProfileOnboarding.saveSchoolName.useMutation();
-  const saveLogoMutation = trpc.kaiProfileOnboarding.saveLogo.useMutation();
+  const saveProfileFieldMutation = trpc.kaiProfileOnboarding.saveProfileField.useMutation();
   const completeOnboardingMutation = trpc.kaiProfileOnboarding.completeOnboarding.useMutation();
 
   // Generate a unique message ID
@@ -62,13 +70,21 @@ export function useKaiOnboarding({
   // Initialize onboarding when status loads
   useEffect(() => {
     if (hasInitialized.current) return;
+    if (statusQuery.isLoading) return;
     if (!statusQuery.data) return;
-    if (!statusQuery.data.needsOnboarding) return;
     if (organizationId <= 0) return;
+
+    // If onboarding is already completed and nothing critical is missing, don't show
+    if (!statusQuery.data.needsOnboarding) {
+      hasInitialized.current = true;
+      return;
+    }
 
     hasInitialized.current = true;
 
     const missingSteps = statusQuery.data.missingSteps as OnboardingStep[];
+    if (missingSteps.length === 0) return;
+
     setPendingSteps(missingSteps);
     setIsActive(true);
 
@@ -80,7 +96,7 @@ export function useKaiOnboarding({
         id: msgId("greeting"),
         role: "assistant",
         content:
-          "👋 **Welcome to DojoFlow!** I'm KAI, your AI-powered dojo command center.\n\nBefore you dive in, let me help you set up your school profile in just a few quick steps. This helps personalize your dashboard and gets everything ready for your students and staff.\n\n*(You can skip this and set it up later in Settings if you prefer.)*",
+          "👋 **Welcome to DojoFlow!** I'm KAI, your AI-powered dojo command center.\n\nBefore you dive in, let me help you set up your school profile — it only takes a minute, and you can update everything later in **Settings → School Profile**.\n\n*(You can skip this and set it up later if you prefer.)*",
         isOnboarding: true,
         step: "idle",
         showSkip: true,
@@ -90,7 +106,7 @@ export function useKaiOnboarding({
 
     onInjectMessages(messages);
     setCurrentStep(firstStep);
-  }, [statusQuery.data, organizationId]);
+  }, [statusQuery.data, statusQuery.isLoading, organizationId]);
 
   /** Build the KAI question message for a given step */
   function buildQuestionMessage(step: OnboardingStep): OnboardingMessage {
@@ -111,6 +127,66 @@ export function useKaiOnboarding({
           isOnboarding: true,
           step: "school_name",
         };
+      case "martial_arts_style":
+        return {
+          id: msgId("q-style"),
+          role: "assistant",
+          content:
+            "What **martial arts style(s)** do you teach? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, MMA, Judo — or type your own)*",
+          isOnboarding: true,
+          step: "martial_arts_style",
+          showSkip: true,
+        };
+      case "address":
+        return {
+          id: msgId("q-address"),
+          role: "assistant",
+          content:
+            "What's your **school's street address?** *(e.g., 123 Main Street)*",
+          isOnboarding: true,
+          step: "address",
+          showSkip: true,
+        };
+      case "city_state_zip":
+        return {
+          id: msgId("q-city-state-zip"),
+          role: "assistant",
+          content:
+            "What's your **city, state, and ZIP code?** *(e.g., Miami, FL 33101)*",
+          isOnboarding: true,
+          step: "city_state_zip",
+          showSkip: true,
+        };
+      case "phone":
+        return {
+          id: msgId("q-phone"),
+          role: "assistant",
+          content:
+            "What's your **school's phone number?** *(e.g., (305) 555-1234)*",
+          isOnboarding: true,
+          step: "phone",
+          showSkip: true,
+        };
+      case "email":
+        return {
+          id: msgId("q-email"),
+          role: "assistant",
+          content:
+            "What's your **school's contact email?** *(e.g., info@mydojo.com)*",
+          isOnboarding: true,
+          step: "email",
+          showSkip: true,
+        };
+      case "website":
+        return {
+          id: msgId("q-website"),
+          role: "assistant",
+          content:
+            "Do you have a **website**? *(e.g., https://mydojo.com — or skip if you don't have one yet)*",
+          isOnboarding: true,
+          step: "website",
+          showSkip: true,
+        };
       case "logo_light":
         return {
           id: msgId("q-logo-light"),
@@ -119,6 +195,7 @@ export function useKaiOnboarding({
             "Now let's brand your dashboard. Upload your **Day Mode logo** (used on light backgrounds). PNG or SVG works best.",
           isOnboarding: true,
           step: "logo_light",
+          onboardingStep: "logo_light",
           expectsFileUpload: true,
           showSkip: true,
         };
@@ -130,6 +207,7 @@ export function useKaiOnboarding({
             "Almost done! Upload your **Dark Mode logo** (usually a white or light version of your logo, used on dark backgrounds).",
           isOnboarding: true,
           step: "logo_dark",
+          onboardingStep: "logo_dark",
           expectsFileUpload: true,
           showSkip: true,
         };
@@ -146,7 +224,7 @@ export function useKaiOnboarding({
 
   /** Advance to the next pending step, or finish if none remain */
   const advanceToNextStep = useCallback(
-    async (completedStep: OnboardingStep, currentOwnerName: string) => {
+    async (completedStep: OnboardingStep, currentOwnerName: string, ackMessage?: string) => {
       const remaining = pendingSteps.filter((s) => s !== completedStep);
       setPendingSteps(remaining);
 
@@ -155,7 +233,18 @@ export function useKaiOnboarding({
       } else {
         const nextStep = remaining[0];
         setCurrentStep(nextStep);
-        onInjectMessages([buildQuestionMessage(nextStep)]);
+        const msgs: OnboardingMessage[] = [];
+        if (ackMessage) {
+          msgs.push({
+            id: msgId("ack"),
+            role: "assistant",
+            content: ackMessage,
+            isOnboarding: true,
+            step: nextStep,
+          });
+        }
+        msgs.push(buildQuestionMessage(nextStep));
+        onInjectMessages(msgs);
       }
     },
     [pendingSteps, onInjectMessages]
@@ -181,28 +270,7 @@ export function useKaiOnboarding({
         } catch (e) {
           console.error("[KaiOnboarding] Failed to save owner name:", e);
         }
-
-        // Acknowledge and advance
-        const remaining = pendingSteps.filter((s) => s !== "owner_name");
-        setPendingSteps(remaining);
-
-        if (remaining.length === 0) {
-          await finishOnboarding(trimmed);
-        } else {
-          const nextStep = remaining[0];
-          setCurrentStep(nextStep);
-          onInjectMessages([
-            {
-              id: msgId("ack-name"),
-              role: "assistant",
-              content: `Nice to meet you, **${trimmed}**! 🥋`,
-              isOnboarding: true,
-              step: nextStep,
-            },
-            buildQuestionMessage(nextStep),
-          ]);
-        }
-
+        await advanceToNextStep("owner_name", trimmed, `Nice to meet you, **${trimmed}**! 🥋`);
         return true;
       }
 
@@ -212,27 +280,75 @@ export function useKaiOnboarding({
         } catch (e) {
           console.error("[KaiOnboarding] Failed to save school name:", e);
         }
+        await advanceToNextStep("school_name", ownerName, `**${trimmed}** — great name! 🏆`);
+        return true;
+      }
 
-        const remaining = pendingSteps.filter((s) => s !== "school_name");
-        setPendingSteps(remaining);
-
-        if (remaining.length === 0) {
-          await finishOnboarding(ownerName);
-        } else {
-          const nextStep = remaining[0];
-          setCurrentStep(nextStep);
-          onInjectMessages([
-            {
-              id: msgId("ack-school"),
-              role: "assistant",
-              content: `**${trimmed}** — great name! 🏆`,
-              isOnboarding: true,
-              step: nextStep,
-            },
-            buildQuestionMessage(nextStep),
-          ]);
+      if (currentStep === "martial_arts_style") {
+        try {
+          await saveProfileFieldMutation.mutateAsync({ field: "martialArtsStyle", value: trimmed });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save martial arts style:", e);
         }
+        await advanceToNextStep("martial_arts_style", ownerName, `Got it — **${trimmed}**. 🥊`);
+        return true;
+      }
 
+      if (currentStep === "address") {
+        try {
+          await saveProfileFieldMutation.mutateAsync({ field: "addressStreet", value: trimmed });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save address:", e);
+        }
+        await advanceToNextStep("address", ownerName, `📍 Address saved.`);
+        return true;
+      }
+
+      if (currentStep === "city_state_zip") {
+        // Parse "Miami, FL 33101" format
+        try {
+          const parts = trimmed.split(",").map((s) => s.trim());
+          const city = parts[0] || trimmed;
+          const stateZip = (parts[1] || "").trim().split(/\s+/);
+          const state = stateZip[0] || "";
+          const zip = stateZip[1] || "";
+          await saveProfileFieldMutation.mutateAsync({ field: "cityStateZip", value: JSON.stringify({ city, state, zip }) });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save city/state/zip:", e);
+        }
+        await advanceToNextStep("city_state_zip", ownerName, `📍 Location saved.`);
+        return true;
+      }
+
+      if (currentStep === "phone") {
+        try {
+          await saveProfileFieldMutation.mutateAsync({ field: "phone", value: trimmed });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save phone:", e);
+        }
+        await advanceToNextStep("phone", ownerName, `📞 Phone saved.`);
+        return true;
+      }
+
+      if (currentStep === "email") {
+        try {
+          await saveProfileFieldMutation.mutateAsync({ field: "email", value: trimmed });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save email:", e);
+        }
+        await advanceToNextStep("email", ownerName, `📧 Email saved.`);
+        return true;
+      }
+
+      if (currentStep === "website") {
+        try {
+          let url = trimmed;
+          if (url && !url.startsWith("http")) url = "https://" + url;
+          await saveProfileFieldMutation.mutateAsync({ field: "website", value: url });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save website:", e);
+        }
+        await advanceToNextStep("website", ownerName, `🌐 Website saved.`);
         return true;
       }
 
@@ -253,7 +369,7 @@ export function useKaiOnboarding({
 
       return false;
     },
-    [isActive, currentStep, pendingSteps, ownerName, onInjectMessages, saveOwnerNameMutation, saveSchoolNameMutation]
+    [isActive, currentStep, pendingSteps, ownerName, onInjectMessages, saveOwnerNameMutation, saveSchoolNameMutation, saveProfileFieldMutation, advanceToNextStep]
   );
 
   /**
@@ -266,37 +382,17 @@ export function useKaiOnboarding({
       if (!isActive) return false;
       if (type === "light" && currentStep !== "logo_light") return false;
       if (type === "dark" && currentStep !== "logo_dark") return false;
-      // Note: uploadLogo mutation already saved the logo to the DB,
-      // so we don't need to call saveLogo again here.
+      // Note: uploadLogo mutation already saved the logo to the DB
 
       const completedStep: OnboardingStep = type === "light" ? "logo_light" : "logo_dark";
-      const remaining = pendingSteps.filter((s) => s !== completedStep);
-      setPendingSteps(remaining);
-
-      if (remaining.length === 0) {
-        await finishOnboarding(ownerName);
-      } else {
-        const nextStep = remaining[0];
-        setCurrentStep(nextStep);
-        onInjectMessages([
-          {
-            id: msgId("ack-logo"),
-            role: "assistant",
-            content: `✅ Logo saved!`,
-            isOnboarding: true,
-            step: nextStep,
-          },
-          buildQuestionMessage(nextStep),
-        ]);
-      }
-
+      await advanceToNextStep(completedStep, ownerName, `✅ Logo saved!`);
       return true;
     },
-    [isActive, currentStep, pendingSteps, ownerName, onInjectMessages, saveLogoMutation]
+    [isActive, currentStep, pendingSteps, ownerName, advanceToNextStep]
   );
 
   /**
-   * Skip the current logo step.
+   * Skip the current step (for optional steps).
    */
   const skipLogoStep = useCallback(async () => {
     const completedStep = currentStep as OnboardingStep;
@@ -310,10 +406,10 @@ export function useKaiOnboarding({
       setCurrentStep(nextStep);
       onInjectMessages([
         {
-          id: msgId("skip-logo"),
+          id: msgId("skip"),
           role: "assistant",
           content:
-            "No problem! You can add your logo anytime in **Settings → School Profile**.",
+            "No problem! You can add this anytime in **Settings → School Profile**.",
           isOnboarding: true,
           step: nextStep,
         },

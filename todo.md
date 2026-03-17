@@ -8409,3 +8409,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Show progress indicator during onboarding conversation
 - [ ] Allow users to skip/complete later with a "Skip for now" option
 - [ ] After onboarding complete, KAI transitions to normal command mode
+
+## KAI Onboarding & Context Retention Fixes (Mar 17, 2026)
+- [ ] Fix KAI onboarding re-showing after completion (stale cache / hasInitialized bug)
+- [ ] Expand KAI onboarding to collect full school profile: address, city, state, zip, phone, email, website, martial arts style, instructor name
+- [ ] Fix KAI conversation context retention (KAI not remembering previous conversations)

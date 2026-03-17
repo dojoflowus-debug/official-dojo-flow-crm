@@ -412,7 +412,7 @@ export const dojoSettings = mysqlTable("dojo_settings", {
 	instructorTitle: varchar({ length: 50 }),
 	instructorFirstName: varchar({ length: 255 }),
 	instructorLastName: varchar({ length: 255 }),
-	martialArtsStyle: varchar({ length: 100 }),
+	martialArtsStyle: varchar("martialArtsStyle", { length: 100 }),
 	addressLine1: varchar({ length: 255 }),
 	addressLine2: varchar({ length: 255 }),
 	city: varchar({ length: 100 }),

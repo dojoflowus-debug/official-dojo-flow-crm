@@ -2253,9 +2253,18 @@ export default function KaiCommand() {
     if (shouldKaiRespond) {
       try {
         const stats = statsQuery.data;
+        // Build conversation history for context (last 20 messages, excluding onboarding)
+        const historyMessages = messages
+          .filter(m => !(m as any).isOnboarding)
+          .slice(-20)
+          .map(m => ({
+            role: m.role as 'user' | 'assistant' | 'system',
+            content: typeof m.content === 'string' ? m.content : String(m.content),
+          }));
         const payload = {
           message: currentInput,
           organizationId: 1, // TODO: Get from user context when multi-org is implemented
+          conversationHistory: historyMessages,
           context: stats ? {
             totalStudents: stats.totalStudents,
             activeStudents: stats.activeStudents,

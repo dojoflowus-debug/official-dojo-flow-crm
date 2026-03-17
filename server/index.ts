@@ -49,19 +49,36 @@ async function runStartupMigrations() {
       }
     }
 
-    // Ensure school_profiles has logo_light_data and logo_dark_data columns
+    // Ensure school_profiles has all required columns
+    const spColsToAdd = [
+      ['logo_light_data', 'MEDIUMTEXT NULL'],
+      ['logo_dark_data', 'MEDIUMTEXT NULL'],
+      ['phone', 'VARCHAR(50) NULL'],
+      ['email', 'VARCHAR(255) NULL'],
+      ['website', 'VARCHAR(500) NULL'],
+      ['tagline', 'VARCHAR(500) NULL'],
+      ['display_name', 'VARCHAR(255) NULL'],
+      ['address_street', 'VARCHAR(255) NULL'],
+      ['address_city', 'VARCHAR(100) NULL'],
+      ['address_state', 'VARCHAR(100) NULL'],
+      ['address_postal', 'VARCHAR(20) NULL'],
+      ['address_country', 'VARCHAR(100) NULL'],
+      ['logo_icon_light_url', 'VARCHAR(1000) NULL'],
+      ['logo_icon_dark_url', 'VARCHAR(1000) NULL'],
+      ['brand_color_primary', 'VARCHAR(7) NULL'],
+      ['brand_color_secondary', 'VARCHAR(7) NULL'],
+      ['brand_color_tertiary', 'VARCHAR(7) NULL'],
+      ['chat_use_full_logo', 'TINYINT(1) DEFAULT 0'],
+      ['chat_welcome_message', 'TEXT NULL'],
+    ];
     try {
-      await conn.execute(
-        `ALTER TABLE \`school_profiles\` ADD COLUMN IF NOT EXISTS \`logo_light_data\` MEDIUMTEXT NULL`
-      );
-      await conn.execute(
-        `ALTER TABLE \`school_profiles\` ADD COLUMN IF NOT EXISTS \`logo_dark_data\` MEDIUMTEXT NULL`
-      );
-      console.log('[Migration] ✓ school_profiles logo data columns ensured');
-    } catch (logoErr: any) {
-      // Ignore if columns already exist or table doesn't exist yet
-      if (!logoErr.message?.includes('Duplicate column') && !logoErr.message?.includes("doesn't exist")) {
-        console.warn('[Migration] school_profiles logo columns warning:', logoErr.message);
+      for (const [col, def] of spColsToAdd) {
+        await conn.execute(`ALTER TABLE \`school_profiles\` ADD COLUMN IF NOT EXISTS \`${col}\` ${def}`);
+      }
+      console.log('[Migration] ✓ school_profiles columns ensured');
+    } catch (spErr: any) {
+      if (!spErr.message?.includes('Duplicate column') && !spErr.message?.includes("doesn't exist")) {
+        console.warn('[Migration] school_profiles columns warning:', spErr.message);
       }
     }
 
