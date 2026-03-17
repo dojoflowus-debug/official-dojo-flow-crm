@@ -214,9 +214,10 @@ export default function KaiCommand() {
   } = useKaiOnboarding({
     organizationId: memoizedOrgId,
     onInjectMessages: (onboardingMsgs) => {
-      setMessages(prev => [
-        ...prev,
-        ...onboardingMsgs.map(m => ({
+      setMessages(prev => {
+        // Keep only existing onboarding messages (not regular conversation messages)
+        const existingOnboarding = prev.filter(m => (m as any).isOnboarding);
+        const newMsgs = onboardingMsgs.map(m => ({
           id: m.id,
           role: m.role,
           content: m.content,
@@ -225,11 +226,17 @@ export default function KaiCommand() {
           onboardingStep: m.step,
           expectsFileUpload: m.expectsFileUpload,
           showSkip: m.showSkip,
-        } as Message)),
-      ]);
+        } as Message));
+        // If this is the first injection (greeting), start fresh with only onboarding messages
+        if (newMsgs.some(m => (m as any).onboardingStep === 'idle')) {
+          return newMsgs;
+        }
+        return [...existingOnboarding, ...newMsgs];
+      });
     },
     onComplete: () => {
-      // Onboarding done — nothing special needed, chat continues normally
+      // Onboarding done — auto-select first conversation if available
+      // The isOnboardingActive will become false, triggering the auto-select useEffect
     },
   });
 
@@ -1346,12 +1353,13 @@ export default function KaiCommand() {
   }, [messages]);
 
   // Auto-select first conversation on initial load
+  // Don't auto-select if onboarding is active — onboarding runs in a clean state without existing messages
   useEffect(() => {
-    if (!selectedConversationId && conversations.length > 0) {
+    if (!selectedConversationId && conversations.length > 0 && !isOnboardingActive) {
       console.log('[KaiCommand] Auto-selecting first conversation:', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
-  }, [conversations, selectedConversationId]);
+  }, [conversations, selectedConversationId, isOnboardingActive]);
 
   // Parallax scroll effect for cinematic backgrounds
   useEffect(() => {
@@ -3490,6 +3498,20 @@ export default function KaiCommand() {
                               return null;
                             })()}
                             
+                            {/* Onboarding: Skip entire setup button (for greeting message) */}
+                            {message.isOnboarding && message.showSkip && !message.expectsFileUpload && (
+                              <div className="mt-3">
+                                <button
+                                  onClick={() => skipOnboarding()}
+                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                    isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  Skip setup for now
+                                </button>
+                              </div>
+                            )}
+
                             {/* Onboarding: File upload button + skip button for logo steps */}
                             {message.isOnboarding && message.expectsFileUpload && (
                               <div className="mt-3 flex flex-wrap gap-2">

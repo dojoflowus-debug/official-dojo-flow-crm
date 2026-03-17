@@ -80,9 +80,10 @@ export function useKaiOnboarding({
         id: msgId("greeting"),
         role: "assistant",
         content:
-          "👋 Welcome to **DojoFlow**! I'm KAI, your AI assistant.\n\nBefore we get started, let me help you set up your school profile — it only takes a minute, and you can update everything later in Settings.",
+          "👋 **Welcome to DojoFlow!** I'm KAI, your AI-powered dojo command center.\n\nBefore you dive in, let me help you set up your school profile in just a few quick steps. This helps personalize your dashboard and gets everything ready for your students and staff.\n\n*(You can skip this and set it up later in Settings if you prefer.)*",
         isOnboarding: true,
         step: "idle",
+        showSkip: true,
       },
       buildQuestionMessage(firstStep),
     ];
