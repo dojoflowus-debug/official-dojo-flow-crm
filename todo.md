@@ -8399,3 +8399,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix /dashboard 404 after checkout — all redirects now go to /kai
 - [x] Fix subscription not activating after checkout — added verifyCheckoutSession endpoint that directly activates from session_id
 - [x] Fix webhook handler to use STRIPE_LIVE_WEBHOOK_SECRET when available
+
+## KAI Onboarding Flow (First-Time User Setup)
+- [ ] Detect first-time users (incomplete profile/org setup) on KAI page load
+- [ ] KAI greets new users with a welcome message and starts onboarding sequence
+- [ ] KAI asks for: owner/user name, school/dojo name, logo (day + dark mode), AI avatar name, voice preference
+- [ ] KAI detects partially completed profiles and only asks for missing fields
+- [ ] Save each answer to the DB as user responds (org name, logo URLs, settings)
+- [ ] Show progress indicator during onboarding conversation
+- [ ] Allow users to skip/complete later with a "Skip for now" option
+- [ ] After onboarding complete, KAI transitions to normal command mode

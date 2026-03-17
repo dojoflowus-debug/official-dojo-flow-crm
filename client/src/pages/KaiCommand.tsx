@@ -31,6 +31,7 @@ import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
+import { useKaiOnboarding } from '@/hooks/useKaiOnboarding';
 import { UserAvatar } from '@/components/UserAvatar';
 import '@/styles/kai-light-command-center.css';
 
@@ -115,6 +116,11 @@ interface Message {
   attachments?: Attachment[];
   audioUrl?: string; // TTS audio URL
   audioDuration?: number; // Audio duration in milliseconds
+  /** Onboarding flow metadata */
+  isOnboarding?: boolean;
+  onboardingStep?: string;
+  expectsFileUpload?: boolean;
+  showSkip?: boolean;
   ui_blocks?: Array<{
     type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
     studentId?: number;
@@ -192,6 +198,41 @@ export default function KaiCommand() {
   const { canAccessFeature, shouldShowPaywall, getTrialDaysRemaining, isLoading: subscriptionStatusLoading } = useSubscriptionStatus(user?.activeOrgId || 0);
   // Memoize the organizationId to prevent unnecessary re-renders
   const memoizedOrgId = user?.activeOrgId || 0;
+
+  // KAI onboarding file input ref (for logo upload during onboarding)
+  const onboardingFileInputRef = useRef<HTMLInputElement>(null);
+  const [onboardingUploadType, setOnboardingUploadType] = useState<'light' | 'dark' | null>(null);
+
+  // KAI onboarding hook - guides first-time users through profile setup
+  const {
+    isActive: isOnboardingActive,
+    currentStep: onboardingCurrentStep,
+    handleUserReply: handleOnboardingReply,
+    handleLogoUpload: handleOnboardingLogoUpload,
+    skipLogoStep,
+    skipOnboarding,
+  } = useKaiOnboarding({
+    organizationId: memoizedOrgId,
+    onInjectMessages: (onboardingMsgs) => {
+      setMessages(prev => [
+        ...prev,
+        ...onboardingMsgs.map(m => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: new Date(),
+          isOnboarding: true,
+          onboardingStep: m.step,
+          expectsFileUpload: m.expectsFileUpload,
+          showSkip: m.showSkip,
+        } as Message)),
+      ]);
+    },
+    onComplete: () => {
+      // Onboarding done — nothing special needed, chat continues normally
+    },
+  });
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -2012,7 +2053,28 @@ export default function KaiCommand() {
       setShowPaywall(true);
       return;
     }
-    
+
+    // --- KAI ONBOARDING INTERCEPTION ---
+    // If onboarding is active, route the user's reply through the onboarding flow
+    // instead of sending it to the AI. The hook will inject KAI's next question.
+    if (isOnboardingActive && inputText.trim()) {
+      // Show the user's message in the chat immediately
+      const userMsg: Message = {
+        id: `onboarding-user-${Date.now()}`,
+        role: 'user',
+        content: inputText.trim(),
+        timestamp: new Date(),
+        isOnboarding: true,
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setMessageInput('');
+      setAttachments([]);
+      // Let the hook process the reply and inject the next question
+      await handleOnboardingReply(inputText.trim());
+      return;
+    }
+    // --- END ONBOARDING INTERCEPTION ---
+
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
       console.warn('[SEND] blocked by lock', { source, ts: Date.now() });
@@ -3418,6 +3480,71 @@ export default function KaiCommand() {
                               return null;
                             })()}
                             
+                            {/* Onboarding: File upload button + skip button for logo steps */}
+                            {message.isOnboarding && message.expectsFileUpload && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <input
+                                  type="file"
+                                  accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                                  className="hidden"
+                                  ref={onboardingFileInputRef}
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file || !onboardingUploadType) return;
+                                    // Read and upload the logo
+                                    const reader = new FileReader();
+                                    reader.onload = async (ev) => {
+                                      try {
+                                        const base64Data = ev.target?.result as string;
+                                        const result = await uploadMutation.mutateAsync({
+                                          fileName: file.name,
+                                          fileData: base64Data,
+                                          fileType: file.type,
+                                          fileSize: file.size,
+                                          context: 'school-logo',
+                                        });
+                                        // Show user message with logo preview
+                                        setMessages(prev => [...prev, {
+                                          id: `onboarding-user-logo-${Date.now()}`,
+                                          role: 'user',
+                                          content: `📎 Uploaded: ${file.name}`,
+                                          timestamp: new Date(),
+                                          isOnboarding: true,
+                                        } as Message]);
+                                        await handleOnboardingLogoUpload(onboardingUploadType, result.url);
+                                        toast.success('Logo uploaded!');
+                                      } catch (err: any) {
+                                        toast.error('Logo upload failed: ' + (err?.message || 'Unknown error'));
+                                      }
+                                    };
+                                    reader.readAsDataURL(file);
+                                    e.target.value = '';
+                                  }}
+                                />
+                                <button
+                                  onClick={() => {
+                                    const step = message.onboardingStep as 'logo_light' | 'logo_dark';
+                                    setOnboardingUploadType(step === 'logo_dark' ? 'dark' : 'light');
+                                    onboardingFileInputRef.current?.click();
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-lg font-medium text-sm transition-colors"
+                                >
+                                  <Upload className="w-4 h-4" />
+                                  Upload Logo
+                                </button>
+                                {message.showSkip && (
+                                  <button
+                                    onClick={() => skipLogoStep()}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                      isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    Skip for now
+                                  </button>
+                                )}
+                              </div>
+                            )}
+
                             {/* Render UI blocks (student cards, lists, etc.) */}
                             {message.ui_blocks && message.ui_blocks.length > 0 && (
                               <>
