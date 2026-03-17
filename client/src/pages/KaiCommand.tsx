@@ -1121,7 +1121,12 @@ export default function KaiCommand() {
   useEffect(() => {
     if (selectedConversationId?.startsWith('new-')) {
       console.log('[KaiCommand] Switching to new conversation, clearing messages');
-      setMessages([]);
+      // Preserve onboarding messages if onboarding is active
+      setMessages(prev => {
+        const hasOnboardingMessages = prev.some(m => (m as any).isOnboarding);
+        if (hasOnboardingMessages) return prev;
+        return [];
+      });
     }
   }, [selectedConversationId]);
 
@@ -1194,7 +1199,12 @@ export default function KaiCommand() {
       });
     } else if (messagesQuery.data && messagesQuery.data.length === 0) {
       console.log('[KaiCommand] No messages for this conversation');
-      setMessages([]);
+      // Don't clear messages if onboarding is active — onboarding messages live in local state only
+      setMessages(prev => {
+        const hasOnboardingMessages = prev.some(m => (m as any).isOnboarding);
+        if (hasOnboardingMessages) return prev;
+        return [];
+      });
     }
   }, [messagesQuery.data]);
 
