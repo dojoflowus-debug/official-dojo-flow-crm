@@ -63,8 +63,8 @@ async function runStartupMigrations() {
       ['address_state', 'VARCHAR(100) NULL'],
       ['address_postal', 'VARCHAR(20) NULL'],
       ['address_country', 'VARCHAR(100) NULL'],
-      ['logo_icon_light_url', 'VARCHAR(1000) NULL'],
-      ['logo_icon_dark_url', 'VARCHAR(1000) NULL'],
+      ['logo_icon_light_url', 'MEDIUMTEXT NULL'],
+      ['logo_icon_dark_url', 'MEDIUMTEXT NULL'],
       ['brand_color_primary', 'VARCHAR(7) NULL'],
       ['brand_color_secondary', 'VARCHAR(7) NULL'],
       ['brand_color_tertiary', 'VARCHAR(7) NULL'],
@@ -80,6 +80,22 @@ async function runStartupMigrations() {
       if (!spErr.message?.includes('Duplicate column') && !spErr.message?.includes("doesn't exist")) {
         console.warn('[Migration] school_profiles columns warning:', spErr.message);
       }
+    }
+
+    // Upgrade logo URL columns from varchar to mediumtext to support base64 data URLs
+    const logoUrlCols = ['logo_light_url', 'logo_dark_url', 'logo_icon_light_url', 'logo_icon_dark_url'];
+    try {
+      const [logoCols] = await conn.execute(
+        `SHOW COLUMNS FROM \`school_profiles\` WHERE Field IN ('logo_light_url','logo_dark_url','logo_icon_light_url','logo_icon_dark_url')`
+      ) as any;
+      for (const col of logoCols) {
+        if (col.Type?.toLowerCase().startsWith('varchar')) {
+          await conn.execute(`ALTER TABLE \`school_profiles\` MODIFY COLUMN \`${col.Field}\` MEDIUMTEXT NULL`);
+          console.log(`[Migration] ✓ school_profiles.${col.Field} upgraded to MEDIUMTEXT`);
+        }
+      }
+    } catch (logoErr: any) {
+      console.warn('[Migration] Logo URL column upgrade warning:', logoErr.message);
     }
 
     await conn.end();

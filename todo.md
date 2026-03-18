@@ -8411,6 +8411,6 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] After onboarding complete, KAI transitions to normal command mode
 
 ## KAI Onboarding & Context Retention Fixes (Mar 17, 2026)
-- [ ] Fix KAI onboarding re-showing after completion (stale cache / hasInitialized bug)
-- [ ] Expand KAI onboarding to collect full school profile: address, city, state, zip, phone, email, website, martial arts style, instructor name
-- [ ] Fix KAI conversation context retention (KAI not remembering previous conversations)
+- [x] Fix KAI onboarding re-showing after completion (stale cache / hasInitialized bug)
+- [x] Expand KAI onboarding to collect full school profile: address, city, state, zip, phone, email, website, martial arts style, instructor name
+- [x] Fix KAI conversation context retention (KAI not remembering previous conversations)

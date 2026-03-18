@@ -1662,14 +1662,15 @@ export const schoolProfiles = mysqlTable("school_profiles", {
 	addressCountry: varchar("address_country", { length: 100 }),
 	// Branding
 	// Full logos (horizontal, for headers and wide spaces)
-	logoLightUrl: varchar("logo_light_url", { length: 1000 }),
-	logoDarkUrl: varchar("logo_dark_url", { length: 1000 }),
+	// Using mediumtext to support both regular URLs and base64 data URLs
+	logoLightUrl: mediumtext("logo_light_url"),
+	logoDarkUrl: mediumtext("logo_dark_url"),
 	// Inline logo data (base64 data URLs, used when no external storage is available)
 	logoLightData: mediumtext("logo_light_data"),
 	logoDarkData: mediumtext("logo_dark_data"),
 	// Icon logos (square, for avatars and compact spaces)
-	logoIconLightUrl: varchar("logo_icon_light_url", { length: 1000 }),
-	logoIconDarkUrl: varchar("logo_icon_dark_url", { length: 1000 }),
+	logoIconLightUrl: mediumtext("logo_icon_light_url"),
+	logoIconDarkUrl: mediumtext("logo_icon_dark_url"),
 	brandColorPrimary: varchar("brand_color_primary", { length: 7 }), // Main brand color
 	brandColorSecondary: varchar("brand_color_secondary", { length: 7 }), // Accent color
 	brandColorTertiary: varchar("brand_color_tertiary", { length: 7 }), // Additional accent

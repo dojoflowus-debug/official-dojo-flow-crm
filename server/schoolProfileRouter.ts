@@ -16,10 +16,10 @@ const schoolProfileSchema = z.object({
   addressState: z.string().max(100).optional().nullable(),
   addressPostal: z.string().max(20).optional().nullable(),
   addressCountry: z.string().max(100).optional().nullable(),
-  logoLightUrl: z.string().max(1000).optional().nullable(),
-  logoDarkUrl: z.string().max(1000).optional().nullable(),
-  logoIconLightUrl: z.string().max(1000).optional().nullable(),
-  logoIconDarkUrl: z.string().max(1000).optional().nullable(),
+  logoLightUrl: z.string().optional().nullable(),
+  logoDarkUrl: z.string().optional().nullable(),
+  logoIconLightUrl: z.string().optional().nullable(),
+  logoIconDarkUrl: z.string().optional().nullable(),
   brandColorPrimary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().nullable(),
   brandColorSecondary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().nullable(),
   brandColorTertiary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color").optional().nullable(),
@@ -77,7 +77,7 @@ export const schoolProfileRouter = router({
   updateLogo: orgScopedProcedure
     .input(z.object({
       type: z.enum(["light", "dark", "icon-light", "icon-dark"]),
-      url: z.string().max(1000).nullable(),
+      url: z.string().nullable(),
     }))
     .mutation(async ({ ctx, input }) => {
       try {

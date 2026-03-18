@@ -321,10 +321,11 @@ export const kaiProfileOnboardingRouter = router({
         });
       }
 
+      // Write to both data column (for large base64) AND url column (for Settings page display)
       const updateData =
         input.type === "light"
-          ? { logoLightData: dataUrl }
-          : { logoDarkData: dataUrl };
+          ? { logoLightData: dataUrl, logoLightUrl: dataUrl, logoIconLightUrl: dataUrl }
+          : { logoDarkData: dataUrl, logoDarkUrl: dataUrl, logoIconDarkUrl: dataUrl };
 
       const [existing] = await db
         .select({ id: schoolProfiles.id })

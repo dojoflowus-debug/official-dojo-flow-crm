@@ -542,7 +542,7 @@ export function SchoolProfileSettingsTab() {
     }
   };
   
-  // Logo upload handler
+  // Logo upload handler — reads file as base64 data URL and saves directly to DB
   const handleLogoUpload = async (file: File, type: 'light' | 'dark' | 'icon-light' | 'icon-dark') => {
     if (file.size > 5 * 1024 * 1024) {
       toast.error('File size must be less than 5MB');
@@ -563,37 +563,27 @@ export function SchoolProfileSettingsTab() {
     
     setUploading(true);
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const fileData = reader.result as string;
-          const result = await uploadMutation.mutateAsync({
-            fileName: file.name,
-            fileData: fileData,
-            fileType: file.type,
-            fileSize: file.size,
-            context: 'general' as const,
-          });
-          
-          // Update logo URL
-          await updateLogoMutation.mutateAsync({
-            type,
-            url: result.url,
-          });
-          
-          setUrl(result.url);
-          toast.success(`${type === 'light' ? 'Light' : 'Dark'} logo uploaded`);
-          profileQuery.refetch();
-        } catch (error: any) {
-          toast.error(error.message || 'Failed to upload logo');
-        } finally {
-          setUploading(false);
-        }
-      };
-      reader.readAsDataURL(file);
+      // Read file as base64 data URL and save directly to DB (no external storage needed)
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      // Save base64 data URL directly via updateLogo mutation
+      await updateLogoMutation.mutateAsync({
+        type,
+        url: dataUrl,
+      });
+      
+      setUrl(dataUrl);
+      const typeLabel = type === 'light' ? 'Light background' : type === 'dark' ? 'Dark background' : type === 'icon-light' ? 'Light icon' : 'Dark icon';
+      toast.success(`${typeLabel} logo uploaded`);
+      profileQuery.refetch();
     } catch (error: any) {
-      toast.error('Failed to read file');
+      toast.error(error.message || 'Failed to upload logo');
+    } finally {
       setUploading(false);
     }
   };
