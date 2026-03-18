@@ -921,12 +921,8 @@ export const kaiOnboardingStateMachineRouter = router({
 
     const state = await loadOnboardingState(orgId);
 
-    // Determine if onboarding is needed
-    const needsOnboarding = !isCompleted && (
-      !state.profile.name ||
-      !state.profile.title ||
-      state.profile.programs.length === 0
-    );
+    // Onboarding is needed whenever status is not completed/skipped
+    const needsOnboarding = true;
 
     return {
       needsOnboarding,
