@@ -51,7 +51,7 @@ export const kaiProfileOnboardingRouter = router({
     }
 
     // Get dojo settings
-    let settings: { operatorName: string | null; schoolName: string | null; setupCompleted: number | null; martialArtsStyle: string | null } | null = null;
+    let settings: { operatorName: string | null; schoolName: string | null; setupCompleted: number | null; martialArtsStyle: string | null; instructorTitle: string | null; ownerRank: string | null; programsTaught: string | null } | null = null;
     try {
       const [row] = await db
         .select({
@@ -59,6 +59,9 @@ export const kaiProfileOnboardingRouter = router({
           schoolName: dojoSettings.schoolName,
           setupCompleted: dojoSettings.setupCompleted,
           martialArtsStyle: dojoSettings.martialArtsStyle,
+          instructorTitle: dojoSettings.instructorTitle,
+          ownerRank: dojoSettings.ownerRank,
+          programsTaught: dojoSettings.programsTaught,
         })
         .from(dojoSettings)
         .where(eq(dojoSettings.organizationId, orgId))
@@ -87,6 +90,9 @@ export const kaiProfileOnboardingRouter = router({
 
     // Determine which fields are present
     const hasOwnerName = !!(settings?.operatorName && settings.operatorName.trim().length > 0);
+    const hasOwnerTitle = !!(settings?.instructorTitle && settings.instructorTitle.trim().length > 0);
+    const hasProgramsTaught = !!(settings?.programsTaught && settings.programsTaught.trim().length > 0);
+    // ownerRank is only required if programsTaught mentions martial arts — handled dynamically in the hook
     const hasSchoolName = !!(
       (profile?.schoolName && profile.schoolName !== "My Dojo" && profile.schoolName.trim().length > 0) ||
       (settings?.schoolName && settings.schoolName.trim().length > 0)
@@ -112,6 +118,8 @@ export const kaiProfileOnboardingRouter = router({
     // Determine missing steps (only required ones block completion)
     const missingSteps: string[] = [];
     if (!hasOwnerName) missingSteps.push("owner_name");
+    if (!hasOwnerTitle) missingSteps.push("owner_title");
+    if (!hasProgramsTaught) missingSteps.push("programs_taught");
     if (!hasSchoolName) missingSteps.push("school_name");
     if (!hasMartialArtsStyle) missingSteps.push("martial_arts_style");
     if (!hasAddress) missingSteps.push("address");
@@ -226,6 +234,9 @@ export const kaiProfileOnboardingRouter = router({
     .input(
       z.object({
         field: z.enum([
+          "ownerTitle",
+          "ownerRank",
+          "programsTaught",
           "martialArtsStyle",
           "addressStreet",
           "cityStateZip",
@@ -233,7 +244,7 @@ export const kaiProfileOnboardingRouter = router({
           "email",
           "website",
         ]),
-        value: z.string().max(500),
+        value: z.string().max(2000),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -242,18 +253,32 @@ export const kaiProfileOnboardingRouter = router({
 
       const orgId = ctx.currentOrganizationId;
 
-      if (input.field === "martialArtsStyle") {
-        // Save to dojo_settings.martialArtsStyle
+      // Fields that go to dojo_settings
+      if (input.field === "ownerTitle" || input.field === "ownerRank" || input.field === "programsTaught" || input.field === "martialArtsStyle") {
         const [existing] = await db
           .select({ id: dojoSettings.id })
           .from(dojoSettings)
           .where(eq(dojoSettings.organizationId, orgId))
           .limit(1);
 
+        const setData: Record<string, string> = { updatedAt: new Date().toISOString() };
+        if (input.field === "ownerTitle") setData["instructorTitle"] = input.value;
+        else if (input.field === "ownerRank") setData["ownerRank"] = input.value;
+        else if (input.field === "programsTaught") setData["programsTaught"] = input.value;
+        else if (input.field === "martialArtsStyle") setData["martialArtsStyle"] = input.value;
+
         if (existing) {
           await db.update(dojoSettings)
-            .set({ martialArtsStyle: input.value, updatedAt: new Date().toISOString() })
+            .set(setData as any)
             .where(eq(dojoSettings.organizationId, orgId));
+        } else {
+          // Create settings row if missing
+          const insertData: any = { organizationId: orgId, setupCompleted: 0 };
+          if (input.field === "ownerTitle") insertData.instructorTitle = input.value;
+          else if (input.field === "ownerRank") insertData.ownerRank = input.value;
+          else if (input.field === "programsTaught") insertData.programsTaught = input.value;
+          else if (input.field === "martialArtsStyle") insertData.martialArtsStyle = input.value;
+          await db.insert(dojoSettings).values(insertData);
         }
         return { success: true };
       }

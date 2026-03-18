@@ -4,6 +4,9 @@ import { trpc } from "@/lib/trpc";
 export type OnboardingStep =
   | "idle"
   | "owner_name"
+  | "owner_title"
+  | "programs_taught"
+  | "owner_rank"
   | "school_name"
   | "martial_arts_style"
   | "address"
@@ -45,6 +48,8 @@ export function useKaiOnboarding({
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("idle");
   const [isActive, setIsActive] = useState(false);
   const [ownerName, setOwnerName] = useState<string>("");
+  const [ownerTitle, setOwnerTitle] = useState<string>("");
+  const [programsTaught, setProgramsTaught] = useState<string>("");
   const [pendingSteps, setPendingSteps] = useState<OnboardingStep[]>([]);
   const hasInitialized = useRef(false);
 
@@ -118,6 +123,36 @@ export function useKaiOnboarding({
           content: "First, **what's your name?** (This is how I'll address you.)",
           isOnboarding: true,
           step: "owner_name",
+        };
+      case "owner_title":
+        return {
+          id: msgId("q-owner-title"),
+          role: "assistant",
+          content:
+            "What's your **title**? *(e.g., Sensei, Sifu, Coach, Professor, Master, Instructor — or type your own)*",
+          isOnboarding: true,
+          step: "owner_title",
+          showSkip: true,
+        };
+      case "programs_taught":
+        return {
+          id: msgId("q-programs"),
+          role: "assistant",
+          content:
+            "What **programs do you teach**? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, MMA, Gymnastics, Yoga — list as many as you like)*",
+          isOnboarding: true,
+          step: "programs_taught",
+          showSkip: true,
+        };
+      case "owner_rank":
+        return {
+          id: msgId("q-rank"),
+          role: "assistant",
+          content:
+            "What is your **current rank or belt**? *(e.g., Black Belt 3rd Degree, Purple Belt, 10th Dan — or skip if not applicable)*",
+          isOnboarding: true,
+          step: "owner_rank",
+          showSkip: true,
         };
       case "school_name":
         return {
@@ -274,6 +309,73 @@ export function useKaiOnboarding({
         return true;
       }
 
+      if (currentStep === "owner_title") {
+        setOwnerTitle(trimmed);
+        try {
+          await saveProfileFieldMutation.mutateAsync({ field: "ownerTitle", value: trimmed });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save owner title:", e);
+        }
+        const titleName = ownerName ? `${trimmed} ${ownerName}` : trimmed;
+        await advanceToNextStep("owner_title", ownerName, `Got it — I'll address you as **${titleName}**. 🎖️`);
+        return true;
+      }
+
+      if (currentStep === "programs_taught") {
+        setProgramsTaught(trimmed);
+        try {
+          await saveProfileFieldMutation.mutateAsync({ field: "programsTaught", value: trimmed });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save programs:", e);
+        }
+
+        // Check if any martial arts program was mentioned — if so, insert owner_rank step next
+        const martialArtsKeywords = [
+          "jiu-jitsu", "jiujitsu", "bjj", "muay thai", "karate", "mma", "judo",
+          "taekwondo", "kung fu", "boxing", "kickboxing", "wrestling", "hapkido",
+          "aikido", "krav maga", "capoeira", "sambo", "wushu", "ninjutsu",
+          "martial art", "combat", "self-defense", "self defense",
+        ];
+        const lowerText = trimmed.toLowerCase();
+        const hasMartialArts = martialArtsKeywords.some((kw) => lowerText.includes(kw));
+
+        if (hasMartialArts) {
+          // Insert owner_rank step right after programs_taught
+          const remaining = pendingSteps.filter((s) => s !== "programs_taught");
+          const rankAlreadyPending = remaining.includes("owner_rank");
+          const newPending = rankAlreadyPending
+            ? remaining
+            : ["owner_rank" as OnboardingStep, ...remaining];
+          setPendingSteps(newPending);
+
+          const nextStep = newPending[0];
+          setCurrentStep(nextStep);
+          onInjectMessages([
+            {
+              id: msgId("ack-programs"),
+              role: "assistant",
+              content: `Great programs! 🥊 Since you teach martial arts, one more question:`,
+              isOnboarding: true,
+              step: nextStep,
+            },
+            buildQuestionMessage(nextStep),
+          ]);
+        } else {
+          await advanceToNextStep("programs_taught", ownerName, `Awesome! 🏆 Those are great programs.`);
+        }
+        return true;
+      }
+
+      if (currentStep === "owner_rank") {
+        try {
+          await saveProfileFieldMutation.mutateAsync({ field: "ownerRank", value: trimmed });
+        } catch (e) {
+          console.error("[KaiOnboarding] Failed to save owner rank:", e);
+        }
+        await advanceToNextStep("owner_rank", ownerName, `Impressive — **${trimmed}**! 🏅`);
+        return true;
+      }
+
       if (currentStep === "school_name") {
         try {
           await saveSchoolNameMutation.mutateAsync({ schoolName: trimmed });
@@ -307,12 +409,15 @@ export function useKaiOnboarding({
       if (currentStep === "city_state_zip") {
         // Parse "Miami, FL 33101" format
         try {
-          const parts = trimmed.split(",").map((s) => s.trim());
-          const city = parts[0] || trimmed;
+          const parts = trimmed.split(",");
+          const city = parts[0]?.trim() || trimmed;
           const stateZip = (parts[1] || "").trim().split(/\s+/);
           const state = stateZip[0] || "";
           const zip = stateZip[1] || "";
-          await saveProfileFieldMutation.mutateAsync({ field: "cityStateZip", value: JSON.stringify({ city, state, zip }) });
+          await saveProfileFieldMutation.mutateAsync({
+            field: "cityStateZip",
+            value: JSON.stringify({ city, state, zip }),
+          });
         } catch (e) {
           console.error("[KaiOnboarding] Failed to save city/state/zip:", e);
         }
@@ -369,7 +474,7 @@ export function useKaiOnboarding({
 
       return false;
     },
-    [isActive, currentStep, pendingSteps, ownerName, onInjectMessages, saveOwnerNameMutation, saveSchoolNameMutation, saveProfileFieldMutation, advanceToNextStep]
+    [isActive, currentStep, pendingSteps, ownerName, ownerTitle, programsTaught, onInjectMessages, saveOwnerNameMutation, saveSchoolNameMutation, saveProfileFieldMutation, advanceToNextStep]
   );
 
   /**
@@ -382,7 +487,6 @@ export function useKaiOnboarding({
       if (!isActive) return false;
       if (type === "light" && currentStep !== "logo_light") return false;
       if (type === "dark" && currentStep !== "logo_dark") return false;
-      // Note: uploadLogo mutation already saved the logo to the DB
 
       const completedStep: OnboardingStep = type === "light" ? "logo_light" : "logo_dark";
       await advanceToNextStep(completedStep, ownerName, `✅ Logo saved!`);
@@ -429,7 +533,10 @@ export function useKaiOnboarding({
         console.error("[KaiOnboarding] Failed to complete onboarding:", e);
       }
 
-      const displayName = name || "there";
+      // Build personalized closing message using title if available
+      const titleStr = ownerTitle ? `${ownerTitle} ` : "";
+      const displayName = name ? `${titleStr}${name}` : "there";
+
       onInjectMessages([
         {
           id: msgId("complete"),
@@ -449,7 +556,7 @@ export function useKaiOnboarding({
 
       onComplete();
     },
-    [onInjectMessages, onComplete, utils, completeOnboardingMutation]
+    [onInjectMessages, onComplete, utils, completeOnboardingMutation, ownerTitle]
   );
 
   /**

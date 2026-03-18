@@ -82,6 +82,22 @@ async function runStartupMigrations() {
       }
     }
 
+    // Ensure dojo_settings has owner profile columns
+    const dsColsToAdd = [
+      ['ownerRank', 'VARCHAR(100) NULL'],
+      ['programsTaught', 'TEXT NULL'],
+    ];
+    try {
+      for (const [col, def] of dsColsToAdd) {
+        await conn.execute(`ALTER TABLE \`dojo_settings\` ADD COLUMN IF NOT EXISTS \`${col}\` ${def}`);
+      }
+      console.log('[Migration] ✓ dojo_settings owner profile columns ensured');
+    } catch (dsErr: any) {
+      if (!dsErr.message?.includes('Duplicate column') && !dsErr.message?.includes("doesn't exist")) {
+        console.warn('[Migration] dojo_settings columns warning:', dsErr.message);
+      }
+    }
+
     // Upgrade logo URL columns from varchar to mediumtext to support base64 data URLs
     const logoUrlCols = ['logo_light_url', 'logo_dark_url', 'logo_icon_light_url', 'logo_icon_dark_url'];
     try {
