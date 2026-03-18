@@ -8422,3 +8422,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update kaiProfileOnboardingRouter getStatus to check new fields
 - [x] Update kaiProfileOnboardingRouter saveOwnerName/saveProfileField to save new fields
 - [x] KAI should address owner by title (e.g., "Sensei Smith") in all responses
+
+## KAI Onboarding State Machine Rebuild
+- [ ] Implement server-side onboarding state machine (processStep mutation)
+- [ ] Add validation, correction detection, and confirmation logic on server
+- [ ] Rebuild useKaiOnboarding hook as pure state machine consumer
+- [ ] Update KaiCommand.tsx to use new hook interface
+- [ ] Test full flow: name → title → programs → rank (conditional) → school → address → logos

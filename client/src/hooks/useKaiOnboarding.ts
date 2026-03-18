@@ -1,109 +1,109 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { trpc } from "@/lib/trpc";
+/**
+ * useKaiOnboarding — Pure state machine consumer.
+ *
+ * All validation, correction detection, and step logic lives on the server
+ * (kaiOnboardingStateMachine.ts). This hook is responsible only for:
+ *   1. Fetching initial onboarding status
+ *   2. Injecting the greeting + first question into the chat
+ *   3. Routing user text replies to the server's processStep mutation
+ *   4. Routing file uploads to the server's uploadLogo mutation
+ *   5. Rendering the server's kaiMessage response back into the chat
+ *   6. Signalling completion to the parent component
+ */
 
-export type OnboardingStep =
-  | "idle"
-  | "owner_name"
-  | "owner_title"
-  | "programs_taught"
-  | "owner_rank"
-  | "school_name"
-  | "martial_arts_style"
-  | "address"
-  | "city_state_zip"
-  | "phone"
-  | "email"
-  | "website"
-  | "logo_light"
-  | "logo_dark"
-  | "complete";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { trpc } from "../lib/trpc";
+import type { OnboardingStep, OnboardingProfile } from "../../../server/kaiOnboardingStateMachine";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface OnboardingMessage {
   id: string;
-  role: "assistant" | "user";
+  role: "user" | "assistant";
   content: string;
-  isOnboarding: true;
-  step?: OnboardingStep;
-  /** If true, show a file upload button instead of text input */
-  expectsFileUpload?: boolean;
-  /** If true, show a skip button */
+  isOnboarding: boolean;
+  step: OnboardingStep | "idle";
   showSkip?: boolean;
-  /** The onboarding step this message belongs to (for file input ref) */
-  onboardingStep?: OnboardingStep;
+  showLogoUpload?: boolean;
+  logoUploadType?: "light" | "dark";
 }
 
 interface UseKaiOnboardingOptions {
   organizationId: number;
-  /** Called when KAI should inject messages into the chat */
   onInjectMessages: (messages: OnboardingMessage[]) => void;
-  /** Called when onboarding is done (complete or skipped) */
   onComplete: () => void;
 }
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useKaiOnboarding({
   organizationId,
   onInjectMessages,
   onComplete,
 }: UseKaiOnboardingOptions) {
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>("idle");
   const [isActive, setIsActive] = useState(false);
-  const [ownerName, setOwnerName] = useState<string>("");
-  const [ownerTitle, setOwnerTitle] = useState<string>("");
-  const [programsTaught, setProgramsTaught] = useState<string>("");
-  const [pendingSteps, setPendingSteps] = useState<OnboardingStep[]>([]);
-  const pendingStepsRef = useRef<OnboardingStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>("name");
+  const [profile, setProfile] = useState<OnboardingProfile>({
+    name: null,
+    title: null,
+    programs: [],
+    styles: [],
+    schoolName: null,
+    addressStreet: null,
+    addressCity: null,
+    addressState: null,
+    addressPostal: null,
+    phone: null,
+    email: null,
+    website: null,
+    logoLightUrl: null,
+    logoDarkUrl: null,
+  });
+  const [hasMartialArts, setHasMartialArts] = useState(false);
   const hasInitialized = useRef(false);
+  let msgCounter = useRef(0);
 
-  // Keep ref in sync with state so callbacks always have fresh value
-  useEffect(() => {
-    pendingStepsRef.current = pendingSteps;
-  }, [pendingSteps]);
+  const msgId = (suffix: string) => `onboarding-${++msgCounter.current}-${suffix}`;
 
-  const utils = trpc.useUtils();
-
-  // Query onboarding status — always fetch fresh on mount (staleTime: 0)
-  const statusQuery = trpc.kaiProfileOnboarding.getStatus.useQuery(undefined, {
+  // ── Status query ────────────────────────────────────────────────────────────
+  const statusQuery = trpc.kaiOnboardingSM.getStatus.useQuery(undefined, {
     enabled: organizationId > 0,
-    retry: false,
     staleTime: 0,
     refetchOnMount: true,
   });
 
-  // Mutations
-  const saveOwnerNameMutation = trpc.kaiProfileOnboarding.saveOwnerName.useMutation();
-  const saveSchoolNameMutation = trpc.kaiProfileOnboarding.saveSchoolName.useMutation();
-  const saveProfileFieldMutation = trpc.kaiProfileOnboarding.saveProfileField.useMutation();
-  const completeOnboardingMutation = trpc.kaiProfileOnboarding.completeOnboarding.useMutation();
+  // ── Mutations ───────────────────────────────────────────────────────────────
+  const processStepMutation = trpc.kaiOnboardingSM.processStep.useMutation();
+  const uploadLogoMutation = trpc.kaiOnboardingSM.uploadLogo.useMutation();
+  const skipOnboardingMutation = trpc.kaiOnboardingSM.skipOnboarding.useMutation();
 
-  // Generate a unique message ID
-  const msgId = (suffix: string) => `onboarding-${suffix}-${Date.now()}`;
-
-  // Initialize onboarding when status loads
+  // ── Initialize onboarding on first load ────────────────────────────────────
   useEffect(() => {
     if (hasInitialized.current) return;
-    if (statusQuery.isLoading) return;
-    if (!statusQuery.data) return;
+    if (statusQuery.isLoading || !statusQuery.data) return;
     if (organizationId <= 0) return;
 
-    // If onboarding is already completed and nothing critical is missing, don't show
-    if (!statusQuery.data.needsOnboarding) {
+    const data = statusQuery.data;
+
+    if (!data.needsOnboarding) {
       hasInitialized.current = true;
       return;
     }
 
     hasInitialized.current = true;
-
-    const missingSteps = statusQuery.data.missingSteps as OnboardingStep[];
-    if (missingSteps.length === 0) return;
-
-    setPendingSteps(missingSteps);
-    pendingStepsRef.current = missingSteps;
     setIsActive(true);
 
-    const firstStep = missingSteps[0];
+    const initialStep = (data.step as OnboardingStep) || "name";
+    const initialProfile = (data.profile as OnboardingProfile) || profile;
+    const initialHasMartialArts = data.hasMartialArts || false;
 
-    // Build greeting + first question
-    const messages: OnboardingMessage[] = [
+    setCurrentStep(initialStep);
+    setProfile(initialProfile);
+    setHasMartialArts(initialHasMartialArts);
+
+    // Build the greeting + first question
+    const firstQuestion = getFirstQuestion(initialStep, initialProfile);
+    onInjectMessages([
       {
         id: msgId("greeting"),
         role: "assistant",
@@ -113,496 +113,195 @@ export function useKaiOnboarding({
         step: "idle",
         showSkip: true,
       },
-      buildQuestionMessage(firstStep),
-    ];
-
-    onInjectMessages(messages);
-    setCurrentStep(firstStep);
+      {
+        id: msgId(`q-${initialStep}`),
+        role: "assistant",
+        content: firstQuestion,
+        isOnboarding: true,
+        step: initialStep,
+        showSkip: initialStep !== "name" && initialStep !== "programs",
+        showLogoUpload: initialStep === "logo_light" || initialStep === "logo_dark",
+        logoUploadType: initialStep === "logo_light" ? "light" : initialStep === "logo_dark" ? "dark" : undefined,
+      },
+    ]);
   }, [statusQuery.data, statusQuery.isLoading, organizationId]);
 
-  /** Build the KAI question message for a given step */
-  function buildQuestionMessage(step: OnboardingStep): OnboardingMessage {
-    switch (step) {
-      case "owner_name":
-        return {
-          id: msgId("q-owner-name"),
-          role: "assistant",
-          content: "First, **what's your name?** (This is how I'll address you.)",
-          isOnboarding: true,
-          step: "owner_name",
-        };
-      case "owner_title":
-        return {
-          id: msgId("q-owner-title"),
-          role: "assistant",
-          content:
-            "What's your **title**? *(e.g., Sensei, Sifu, Coach, Professor, Master, Instructor — or type your own)*",
-          isOnboarding: true,
-          step: "owner_title",
-          showSkip: true,
-        };
-      case "programs_taught":
-        return {
-          id: msgId("q-programs"),
-          role: "assistant",
-          content:
-            "What **programs do you teach**? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, MMA, Gymnastics, Yoga — list as many as you like)*",
-          isOnboarding: true,
-          step: "programs_taught",
-          showSkip: true,
-        };
-      case "owner_rank":
-        return {
-          id: msgId("q-rank"),
-          role: "assistant",
-          content:
-            "What is your **current rank or belt**? *(e.g., Black Belt 3rd Degree, Purple Belt, 10th Dan — or skip if not applicable)*",
-          isOnboarding: true,
-          step: "owner_rank",
-          showSkip: true,
-        };
-      case "school_name":
-        return {
-          id: msgId("q-school-name"),
-          role: "assistant",
-          content: "What's the **name of your school or dojo?**",
-          isOnboarding: true,
-          step: "school_name",
-        };
-      case "martial_arts_style":
-        return {
-          id: msgId("q-style"),
-          role: "assistant",
-          content:
-            "What **martial arts style(s)** do you teach? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, MMA, Judo — or type your own)*",
-          isOnboarding: true,
-          step: "martial_arts_style",
-          showSkip: true,
-        };
-      case "address":
-        return {
-          id: msgId("q-address"),
-          role: "assistant",
-          content:
-            "What's your **school's street address?** *(e.g., 123 Main Street)*",
-          isOnboarding: true,
-          step: "address",
-          showSkip: true,
-        };
-      case "city_state_zip":
-        return {
-          id: msgId("q-city-state-zip"),
-          role: "assistant",
-          content:
-            "What's your **city, state, and ZIP code?** *(e.g., Miami, FL 33101)*",
-          isOnboarding: true,
-          step: "city_state_zip",
-          showSkip: true,
-        };
-      case "phone":
-        return {
-          id: msgId("q-phone"),
-          role: "assistant",
-          content:
-            "What's your **school's phone number?** *(e.g., (305) 555-1234)*",
-          isOnboarding: true,
-          step: "phone",
-          showSkip: true,
-        };
-      case "email":
-        return {
-          id: msgId("q-email"),
-          role: "assistant",
-          content:
-            "What's your **school's contact email?** *(e.g., info@mydojo.com)*",
-          isOnboarding: true,
-          step: "email",
-          showSkip: true,
-        };
-      case "website":
-        return {
-          id: msgId("q-website"),
-          role: "assistant",
-          content:
-            "Do you have a **website**? *(e.g., https://mydojo.com — or skip if you don't have one yet)*",
-          isOnboarding: true,
-          step: "website",
-          showSkip: true,
-        };
-      case "logo_light":
-        return {
-          id: msgId("q-logo-light"),
-          role: "assistant",
-          content:
-            "Now let's brand your dashboard. Upload your **Day Mode logo** (used on light backgrounds). PNG or SVG works best.",
-          isOnboarding: true,
-          step: "logo_light",
-          onboardingStep: "logo_light",
-          expectsFileUpload: true,
-          showSkip: true,
-        };
-      case "logo_dark":
-        return {
-          id: msgId("q-logo-dark"),
-          role: "assistant",
-          content:
-            "Almost done! Upload your **Dark Mode logo** (usually a white or light version of your logo, used on dark backgrounds).",
-          isOnboarding: true,
-          step: "logo_dark",
-          onboardingStep: "logo_dark",
-          expectsFileUpload: true,
-          showSkip: true,
-        };
-      default:
-        return {
-          id: msgId("q-unknown"),
-          role: "assistant",
-          content: "What would you like to set up next?",
-          isOnboarding: true,
-          step: "idle",
-        };
-    }
-  }
-
-  /** Advance to the next pending step, or finish if none remain */
-  const advanceToNextStep = useCallback(
-    async (completedStep: OnboardingStep, currentOwnerName: string, ackMessage?: string) => {
-      // Use ref to avoid stale closure — always get the latest pendingSteps
-      const remaining = pendingStepsRef.current.filter((s) => s !== completedStep);
-      setPendingSteps(remaining);
-      pendingStepsRef.current = remaining;
-
-      if (remaining.length === 0) {
-        await finishOnboarding(currentOwnerName);
-      } else {
-        const nextStep = remaining[0];
-        setCurrentStep(nextStep);
-        const msgs: OnboardingMessage[] = [];
-        if (ackMessage) {
-          msgs.push({
-            id: msgId("ack"),
-            role: "assistant",
-            content: ackMessage,
-            isOnboarding: true,
-            step: nextStep,
-          });
-        }
-        msgs.push(buildQuestionMessage(nextStep));
-        onInjectMessages(msgs);
-      }
-    },
-    [onInjectMessages]
-  );
-
-  /**
-   * Process a user's text reply during onboarding.
-   * Returns true if the message was consumed by onboarding (don't send to AI).
-   */
+  // ── Handle user text reply ──────────────────────────────────────────────────
   const handleUserReply = useCallback(
-    async (text: string): Promise<boolean> => {
-      if (!isActive || currentStep === "idle" || currentStep === "complete") {
-        return false;
-      }
+    async (userText: string): Promise<boolean> => {
+      if (!isActive) return false;
+      if (currentStep === "complete") return false;
 
-      const trimmed = text.trim();
-      if (!trimmed) return false;
-
-      if (currentStep === "owner_name") {
-        setOwnerName(trimmed);
-        try {
-          await saveOwnerNameMutation.mutateAsync({ name: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save owner name:", e);
-        }
-        await advanceToNextStep("owner_name", trimmed, `Nice to meet you, **${trimmed}**! 🥋`);
-        return true;
-      }
-
-      if (currentStep === "owner_title") {
-        setOwnerTitle(trimmed);
-        try {
-          await saveProfileFieldMutation.mutateAsync({ field: "ownerTitle", value: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save owner title:", e);
-        }
-        const titleName = ownerName ? `${trimmed} ${ownerName}` : trimmed;
-        await advanceToNextStep("owner_title", ownerName, `Got it — I'll address you as **${titleName}** from now on. 🎖️`);
-        return true;
-      }
-
-      if (currentStep === "programs_taught") {
-        setProgramsTaught(trimmed);
-        try {
-          await saveProfileFieldMutation.mutateAsync({ field: "programsTaught", value: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save programs:", e);
-        }
-
-        // Check if any martial arts program was mentioned — if so, insert owner_rank step next
-        const martialArtsKeywords = [
-          "jiu-jitsu", "jiujitsu", "bjj", "muay thai", "karate", "mma", "judo",
-          "taekwondo", "kung fu", "boxing", "kickboxing", "wrestling", "hapkido",
-          "aikido", "krav maga", "capoeira", "sambo", "wushu", "ninjutsu",
-          "martial art", "combat", "self-defense", "self defense",
-        ];
-        const lowerText = trimmed.toLowerCase();
-        const hasMartialArts = martialArtsKeywords.some((kw) => lowerText.includes(kw));
-
-        if (hasMartialArts) {
-          // Insert owner_rank step right after programs_taught (use ref for fresh value)
-          const remaining = pendingStepsRef.current.filter((s) => s !== "programs_taught");
-          const rankAlreadyPending = remaining.includes("owner_rank");
-          const newPending = rankAlreadyPending
-            ? remaining
-            : ["owner_rank" as OnboardingStep, ...remaining];
-          setPendingSteps(newPending);
-          pendingStepsRef.current = newPending;
-
-          const nextStep = newPending[0];
-          setCurrentStep(nextStep);
-          onInjectMessages([
-            {
-              id: msgId("ack-programs"),
-              role: "assistant",
-              content: `Great programs! 🥊 Since you teach martial arts, one more question:`,
-              isOnboarding: true,
-              step: nextStep,
-            },
-            buildQuestionMessage(nextStep),
-          ]);
-        } else {
-          await advanceToNextStep("programs_taught", ownerName, `Awesome! 🏆 Those are great programs.`);
-        }
-        return true;
-      }
-
-      if (currentStep === "owner_rank") {
-        try {
-          await saveProfileFieldMutation.mutateAsync({ field: "ownerRank", value: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save owner rank:", e);
-        }
-        await advanceToNextStep("owner_rank", ownerName, `Impressive — **${trimmed}**! 🏅`);
-        return true;
-      }
-
-      if (currentStep === "school_name") {
-        try {
-          await saveSchoolNameMutation.mutateAsync({ schoolName: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save school name:", e);
-        }
-        await advanceToNextStep("school_name", ownerName, `**${trimmed}** — great name! 🏆`);
-        return true;
-      }
-
-      if (currentStep === "martial_arts_style") {
-        try {
-          await saveProfileFieldMutation.mutateAsync({ field: "martialArtsStyle", value: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save martial arts style:", e);
-        }
-        await advanceToNextStep("martial_arts_style", ownerName, `Got it — **${trimmed}**. 🥊`);
-        return true;
-      }
-
-      if (currentStep === "address") {
-        try {
-          await saveProfileFieldMutation.mutateAsync({ field: "addressStreet", value: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save address:", e);
-        }
-        await advanceToNextStep("address", ownerName, `📍 Address saved.`);
-        return true;
-      }
-
-      if (currentStep === "city_state_zip") {
-        // Parse "Miami, FL 33101" format
-        try {
-          const parts = trimmed.split(",");
-          const city = parts[0]?.trim() || trimmed;
-          const stateZip = (parts[1] || "").trim().split(/\s+/);
-          const state = stateZip[0] || "";
-          const zip = stateZip[1] || "";
-          await saveProfileFieldMutation.mutateAsync({
-            field: "cityStateZip",
-            value: JSON.stringify({ city, state, zip }),
-          });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save city/state/zip:", e);
-        }
-        await advanceToNextStep("city_state_zip", ownerName, `📍 Location saved.`);
-        return true;
-      }
-
-      if (currentStep === "phone") {
-        try {
-          await saveProfileFieldMutation.mutateAsync({ field: "phone", value: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save phone:", e);
-        }
-        await advanceToNextStep("phone", ownerName, `📞 Phone saved.`);
-        return true;
-      }
-
-      if (currentStep === "email") {
-        try {
-          await saveProfileFieldMutation.mutateAsync({ field: "email", value: trimmed });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save email:", e);
-        }
-        await advanceToNextStep("email", ownerName, `📧 Email saved.`);
-        return true;
-      }
-
-      if (currentStep === "website") {
-        try {
-          let url = trimmed;
-          if (url && !url.startsWith("http")) url = "https://" + url;
-          await saveProfileFieldMutation.mutateAsync({ field: "website", value: url });
-        } catch (e) {
-          console.error("[KaiOnboarding] Failed to save website:", e);
-        }
-        await advanceToNextStep("website", ownerName, `🌐 Website saved.`);
-        return true;
-      }
-
-      // For logo steps, text replies are ignored (they need to use the upload button)
+      // Logo steps require file upload — redirect text input
       if (currentStep === "logo_light" || currentStep === "logo_dark") {
         onInjectMessages([
           {
-            id: msgId("logo-hint"),
+            id: msgId("logo-text-redirect"),
             role: "assistant",
-            content:
-              "Please use the **Upload Logo** button above to upload your logo image, or click **Skip for now** to continue.",
+            content: "Please use the **Upload Logo** button below to upload your logo file.",
             isOnboarding: true,
             step: currentStep,
+            showLogoUpload: true,
+            logoUploadType: currentStep === "logo_light" ? "light" : "dark",
+            showSkip: true,
           },
         ]);
         return true;
       }
 
-      return false;
-    },
-    [isActive, currentStep, pendingSteps, ownerName, ownerTitle, programsTaught, onInjectMessages, saveOwnerNameMutation, saveSchoolNameMutation, saveProfileFieldMutation, advanceToNextStep]
-  );
-
-  /**
-   * Handle logo upload completion during onboarding.
-   * Called after uploadLogo mutation has already saved the data to the DB.
-   * Returns true if consumed by onboarding.
-   */
-  const handleLogoUpload = useCallback(
-    async (type: "light" | "dark", _url: string): Promise<boolean> => {
-      if (!isActive) return false;
-      if (type === "light" && currentStep !== "logo_light") return false;
-      if (type === "dark" && currentStep !== "logo_dark") return false;
-
-      const completedStep: OnboardingStep = type === "light" ? "logo_light" : "logo_dark";
-      await advanceToNextStep(completedStep, ownerName, `✅ Logo saved!`);
-      return true;
-    },
-    [isActive, currentStep, pendingSteps, ownerName, advanceToNextStep]
-  );
-
-  /**
-   * Skip the current step (for optional steps).
-   */
-  const skipLogoStep = useCallback(async () => {
-    const completedStep = currentStep as OnboardingStep;
-    const remaining = pendingSteps.filter((s) => s !== completedStep);
-    setPendingSteps(remaining);
-
-    if (remaining.length === 0) {
-      await finishOnboarding(ownerName);
-    } else {
-      const nextStep = remaining[0];
-      setCurrentStep(nextStep);
-      onInjectMessages([
-        {
-          id: msgId("skip"),
-          role: "assistant",
-          content:
-            "No problem! You can add this anytime in **Settings → School Profile**.",
-          isOnboarding: true,
-          step: nextStep,
-        },
-        buildQuestionMessage(nextStep),
-      ]);
-    }
-  }, [currentStep, pendingSteps, ownerName, onInjectMessages]);
-
-  /**
-   * Finish the onboarding flow.
-   */
-  const finishOnboarding = useCallback(
-    async (name: string) => {
       try {
-        await completeOnboardingMutation.mutateAsync({ skipped: false });
-      } catch (e) {
-        console.error("[KaiOnboarding] Failed to complete onboarding:", e);
+        const result = await processStepMutation.mutateAsync({
+          currentStep,
+          userInput: userText,
+          currentProfile: profile,
+          hasMartialArts,
+        });
+
+        // Update local state
+        setProfile(result.profile);
+        setCurrentStep(result.nextStep);
+        if (result.hasMartialArts !== undefined) {
+          setHasMartialArts(result.hasMartialArts);
+        }
+
+        // Inject KAI's response
+        const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
+        onInjectMessages([
+          {
+            id: msgId(`resp-${result.nextStep}`),
+            role: "assistant",
+            content: result.kaiMessage,
+            isOnboarding: true,
+            step: result.nextStep,
+            showSkip: result.showSkip,
+            showLogoUpload: isLogoStep,
+            logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+          },
+        ]);
+
+        if (result.isComplete) {
+          setIsActive(false);
+          onComplete();
+        }
+
+        return true;
+      } catch (err) {
+        console.error("[KaiOnboarding] processStep error:", err);
+        onInjectMessages([
+          {
+            id: msgId("error"),
+            role: "assistant",
+            content: "I ran into a brief issue saving that. Could you try again?",
+            isOnboarding: true,
+            step: currentStep,
+            showSkip: false,
+          },
+        ]);
+        return true;
       }
-
-      // Build personalized closing message using title if available
-      const titleStr = ownerTitle ? `${ownerTitle} ` : "";
-      const displayName = name ? `${titleStr}${name}` : "there";
-
-      onInjectMessages([
-        {
-          id: msgId("complete"),
-          role: "assistant",
-          content: `🎉 You're all set, **${displayName}**!\n\nYour school profile is configured. I'm ready to help you manage your dojo — students, leads, attendance, and more.\n\n**What would you like to do first?**`,
-          isOnboarding: true,
-          step: "complete",
-        },
-      ]);
-
-      setCurrentStep("complete");
-      setIsActive(false);
-
-      // Invalidate queries so the UI reflects the new profile
-      utils.kaiProfileOnboarding.getStatus.invalidate();
-      utils.schoolProfile.get.invalidate();
-
-      onComplete();
     },
-    [onInjectMessages, onComplete, utils, completeOnboardingMutation, ownerTitle]
+    [isActive, currentStep, profile, hasMartialArts, processStepMutation, onInjectMessages, onComplete]
   );
 
-  /**
-   * Skip the entire onboarding flow.
-   */
+  // ── Handle logo file upload ─────────────────────────────────────────────────
+  const handleLogoUpload = useCallback(
+    async (file: File, type: "light" | "dark") => {
+      if (!isActive) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+        if (!dataUrl) return;
+
+        try {
+          const result = await uploadLogoMutation.mutateAsync({
+            type,
+            dataUrl,
+            fileName: file.name,
+            currentProfile: profile,
+            hasMartialArts,
+          });
+
+          setProfile(result.profile);
+          setCurrentStep(result.nextStep);
+
+          const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
+          onInjectMessages([
+            {
+              id: msgId(`logo-${type}-done`),
+              role: "assistant",
+              content: result.kaiMessage,
+              isOnboarding: true,
+              step: result.nextStep,
+              showSkip: result.showSkip,
+              showLogoUpload: isLogoStep,
+              logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+            },
+          ]);
+
+          if (result.isComplete) {
+            setIsActive(false);
+            onComplete();
+          }
+        } catch (err) {
+          console.error("[KaiOnboarding] uploadLogo error:", err);
+          onInjectMessages([
+            {
+              id: msgId("logo-error"),
+              role: "assistant",
+              content: "I had trouble saving that logo. Please try again.",
+              isOnboarding: true,
+              step: currentStep,
+              showLogoUpload: true,
+              logoUploadType: type,
+              showSkip: true,
+            },
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+    [isActive, currentStep, profile, hasMartialArts, uploadLogoMutation, onInjectMessages, onComplete]
+  );
+
+  // ── Skip entire onboarding ──────────────────────────────────────────────────
   const skipOnboarding = useCallback(async () => {
     try {
-      await completeOnboardingMutation.mutateAsync({ skipped: true });
-    } catch (e) {
-      console.error("[KaiOnboarding] Failed to skip onboarding:", e);
-    }
-
-    onInjectMessages([
-      {
-        id: msgId("skipped"),
-        role: "assistant",
-        content:
-          "No worries! You can set up your school profile anytime in **Settings → School Profile**.\n\nI'm ready to help. What would you like to do?",
-        isOnboarding: true,
-        step: "complete",
-      },
-    ]);
-
-    setCurrentStep("complete");
+      await skipOnboardingMutation.mutateAsync();
+    } catch {}
     setIsActive(false);
-    utils.kaiProfileOnboarding.getStatus.invalidate();
     onComplete();
-  }, [onInjectMessages, onComplete, utils, completeOnboardingMutation]);
+  }, [skipOnboardingMutation, onComplete]);
 
   return {
     isActive,
     currentStep,
-    isLoading: statusQuery.isLoading,
+    profile,
+    hasMartialArts,
     handleUserReply,
     handleLogoUpload,
-    skipLogoStep,
     skipOnboarding,
+    isProcessing: processStepMutation.isPending || uploadLogoMutation.isPending,
   };
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getFirstQuestion(step: OnboardingStep, profile: OnboardingProfile): string {
+  switch (step) {
+    case "name": return "First, **what's your name?**";
+    case "title": return `What's your **title**, ${profile.name || ""}? *(e.g., Sensei, Sifu, Coach, Professor, Master, Instructor)*`;
+    case "programs": return "What **programs** do you teach? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga — list as many as you like)*";
+    case "rank": return "What is your current **rank or belt**?";
+    case "school_name": return "What's the **name of your school or dojo**?";
+    case "martial_style": return "What **martial arts style(s)** do you primarily teach?";
+    case "address": return "What's your **street address**?";
+    case "city_state_zip": return "What's your **city, state, and ZIP code**?";
+    case "phone": return "What's your **school phone number**?";
+    case "email": return "What's your **school email address**?";
+    case "website": return "What's your **school website**?";
+    case "logo_light": return "Now let's brand your dashboard. Upload your **Day Mode logo** — used on light backgrounds. PNG or SVG works best.";
+    case "logo_dark": return "Upload your **Dark Mode logo** — usually a white or light version of your logo, used on dark backgrounds.";
+    default: return "What's your **name**?";
+  }
 }
