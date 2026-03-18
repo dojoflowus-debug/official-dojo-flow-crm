@@ -51,7 +51,13 @@ export function useKaiOnboarding({
   const [ownerTitle, setOwnerTitle] = useState<string>("");
   const [programsTaught, setProgramsTaught] = useState<string>("");
   const [pendingSteps, setPendingSteps] = useState<OnboardingStep[]>([]);
+  const pendingStepsRef = useRef<OnboardingStep[]>([]);
   const hasInitialized = useRef(false);
+
+  // Keep ref in sync with state so callbacks always have fresh value
+  useEffect(() => {
+    pendingStepsRef.current = pendingSteps;
+  }, [pendingSteps]);
 
   const utils = trpc.useUtils();
 
@@ -91,6 +97,7 @@ export function useKaiOnboarding({
     if (missingSteps.length === 0) return;
 
     setPendingSteps(missingSteps);
+    pendingStepsRef.current = missingSteps;
     setIsActive(true);
 
     const firstStep = missingSteps[0];
@@ -260,8 +267,10 @@ export function useKaiOnboarding({
   /** Advance to the next pending step, or finish if none remain */
   const advanceToNextStep = useCallback(
     async (completedStep: OnboardingStep, currentOwnerName: string, ackMessage?: string) => {
-      const remaining = pendingSteps.filter((s) => s !== completedStep);
+      // Use ref to avoid stale closure — always get the latest pendingSteps
+      const remaining = pendingStepsRef.current.filter((s) => s !== completedStep);
       setPendingSteps(remaining);
+      pendingStepsRef.current = remaining;
 
       if (remaining.length === 0) {
         await finishOnboarding(currentOwnerName);
@@ -282,7 +291,7 @@ export function useKaiOnboarding({
         onInjectMessages(msgs);
       }
     },
-    [pendingSteps, onInjectMessages]
+    [onInjectMessages]
   );
 
   /**
@@ -317,7 +326,7 @@ export function useKaiOnboarding({
           console.error("[KaiOnboarding] Failed to save owner title:", e);
         }
         const titleName = ownerName ? `${trimmed} ${ownerName}` : trimmed;
-        await advanceToNextStep("owner_title", ownerName, `Got it — I'll address you as **${titleName}**. 🎖️`);
+        await advanceToNextStep("owner_title", ownerName, `Got it — I'll address you as **${titleName}** from now on. 🎖️`);
         return true;
       }
 
@@ -340,13 +349,14 @@ export function useKaiOnboarding({
         const hasMartialArts = martialArtsKeywords.some((kw) => lowerText.includes(kw));
 
         if (hasMartialArts) {
-          // Insert owner_rank step right after programs_taught
-          const remaining = pendingSteps.filter((s) => s !== "programs_taught");
+          // Insert owner_rank step right after programs_taught (use ref for fresh value)
+          const remaining = pendingStepsRef.current.filter((s) => s !== "programs_taught");
           const rankAlreadyPending = remaining.includes("owner_rank");
           const newPending = rankAlreadyPending
             ? remaining
             : ["owner_rank" as OnboardingStep, ...remaining];
           setPendingSteps(newPending);
+          pendingStepsRef.current = newPending;
 
           const nextStep = newPending[0];
           setCurrentStep(nextStep);

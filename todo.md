@@ -8416,9 +8416,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix KAI conversation context retention (KAI not remembering previous conversations)
 
 ## Owner Profile Onboarding Expansion
-- [ ] Add ownerTitle, ownerRank, programsTaught columns to dojo_settings schema
-- [ ] Add startup migration for new owner profile columns
-- [ ] Add owner_title, owner_rank, programs_taught steps to KAI onboarding hook
-- [ ] Update kaiProfileOnboardingRouter getStatus to check new fields
-- [ ] Update kaiProfileOnboardingRouter saveOwnerName/saveProfileField to save new fields
-- [ ] KAI should address owner by title (e.g., "Sensei Smith") in all responses
+- [x] Add ownerTitle, ownerRank, programsTaught columns to dojo_settings schema
+- [x] Add startup migration for new owner profile columns
+- [x] Add owner_title, owner_rank, programs_taught steps to KAI onboarding hook
+- [x] Update kaiProfileOnboardingRouter getStatus to check new fields
+- [x] Update kaiProfileOnboardingRouter saveOwnerName/saveProfileField to save new fields
+- [x] KAI should address owner by title (e.g., "Sensei Smith") in all responses
