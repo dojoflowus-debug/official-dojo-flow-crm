@@ -9,6 +9,7 @@ import "./index.css";
 import "./styles/dojo-animations.css";
 import "./radix-z-index-fix.css";
 
+// DojoFlow v2 — onboarding overlay active
 console.log('DojoFlow Kiosk - main.tsx loaded');
 
 const queryClient = new QueryClient();
