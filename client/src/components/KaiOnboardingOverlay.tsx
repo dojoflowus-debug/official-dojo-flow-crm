@@ -360,15 +360,17 @@ export function KaiOnboardingOverlay({
                 </div>
 
                 {/* Headline */}
-                <h1 className="text-2xl font-bold text-white mb-2 leading-tight">
-                  Welcome to<br />
-                  <span style={{ background: "linear-gradient(135deg, #FF4C4C, #FF8C8C)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                    Kai Command
-                  </span>
+                <h1 className="text-2xl font-bold text-white mb-1 leading-tight">
+                  Welcome to
+                  <span style={{ background: "linear-gradient(135deg, #FF4C4C, #FF8C8C)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}> DojoFlow</span>
                 </h1>
 
-                <p className="text-sm text-white/50 mb-8 leading-relaxed">
-                  Your dojo command center is ready. Start guided activation to personalize your system, or explore first and set up later.
+                <p className="text-base font-semibold text-white/70 mb-3">
+                  You're inside <span className="text-white">KAI Command</span> — your AI-powered dojo operations center.
+                </p>
+
+                <p className="text-sm text-white/45 mb-8 leading-relaxed">
+                  KAI manages your students, leads, attendance, billing, and staff — all from one intelligent command center. Let's personalize it for your school in about 2 minutes.
                 </p>
 
                 {/* CTA buttons */}
