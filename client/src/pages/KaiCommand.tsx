@@ -3827,15 +3827,8 @@ export default function KaiCommand() {
         onClose={() => setInfoPanelOpen(false)}
       />
       
-      {/* Floating Focus Mode Toggle Button - Auto-hides when idle */}
-      <div 
-        className={`fixed z-[60] flex flex-col gap-3 ${autoHideTransition} right-6 ${
-          isFocusMode && isUIHidden ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
-        }`}
-        style={{
-          bottom: isFocusMode ? 'calc(24px + 48px)' : 'calc(96px + 48px)'
-        }}
-      >
+      {/* Floating Focus Mode Toggle Button - removed (Focus Mode accessible from top toolbar) */}
+      {false && <div>
         {/* Presentation Mode Button (only shown in Focus Mode with Cinematic) */}
         {isFocusMode && isCinematic && (
           <button
@@ -3938,7 +3931,7 @@ export default function KaiCommand() {
             {isFocusMode ? 'Exit Focus Mode (Esc)' : 'Focus Mode'}
           </div>
         </button>
-      </div>
+      </div>}
       
       {/* Results Panel - Right Side Drawer */}
       <ResultsPanel 
