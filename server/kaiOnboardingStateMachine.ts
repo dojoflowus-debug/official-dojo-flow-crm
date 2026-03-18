@@ -230,15 +230,36 @@ async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
   if (!db) throw new Error("Database not available");
 
   // Load from organizations (step tracking) and dojo_settings + school_profiles (profile data)
-  const [org] = await db
-    .select({
-      onboardingStatus: organizations.onboardingStatus,
-      onboardingStep: organizations.onboardingStep,
-      onboardingProfile: organizations.onboardingProfile,
-    })
-    .from(organizations)
-    .where(eq(organizations.id, orgId))
-    .limit(1);
+  // Use raw SQL to avoid errors if onboarding_profile column doesn't exist yet
+  let org: { onboardingStatus: string | null; onboardingStep: number | null; onboardingProfile: string | null } | null = null;
+  try {
+    const [row] = await db
+      .select({
+        onboardingStatus: organizations.onboardingStatus,
+        onboardingStep: organizations.onboardingStep,
+        onboardingProfile: organizations.onboardingProfile,
+      })
+      .from(organizations)
+      .where(eq(organizations.id, orgId))
+      .limit(1);
+    org = row ?? null;
+  } catch (e: any) {
+    // If onboarding_profile column doesn't exist, select without it
+    if (e?.message?.includes('onboarding_profile') || e?.message?.includes('Unknown column')) {
+      const [row] = await db
+        .select({
+          onboardingStatus: organizations.onboardingStatus,
+          onboardingStep: organizations.onboardingStep,
+        })
+        .from(organizations)
+        .where(eq(organizations.id, orgId))
+        .limit(1)
+        .catch(() => [null]);
+      org = row ? { ...row, onboardingProfile: null } : null;
+    } else {
+      throw e;
+    }
+  }
 
   const [settings] = await db
     .select({
@@ -317,13 +338,30 @@ async function saveOnboardingState(
   const db = await getDb();
   if (!db) return;
 
-  // Save profile JSON to organizations table
+  // Try saving with onboarding_profile column first
+  try {
+    await db
+      .update(organizations)
+      .set({
+        onboardingStatus: state.step === "complete" ? "completed" : "in_progress",
+        onboardingStep: stepNumber,
+        onboardingProfile: JSON.stringify(state.profile),
+      } as any)
+      .where(eq(organizations.id, orgId));
+    return;
+  } catch (e: any) {
+    // If column doesn't exist yet, fall back to saving without it
+    const isColumnMissing = e?.message?.includes('onboarding_profile') || e?.message?.includes('Unknown column');
+    if (!isColumnMissing) throw e;
+    console.warn('[OnboardingSM] onboarding_profile column missing, saving without it');
+  }
+
+  // Fallback: save just the step/status (profile stored in dojo_settings instead)
   await db
     .update(organizations)
     .set({
       onboardingStatus: state.step === "complete" ? "completed" : "in_progress",
       onboardingStep: stepNumber,
-      onboardingProfile: JSON.stringify(state.profile),
     } as any)
     .where(eq(organizations.id, orgId));
 }
@@ -903,15 +941,34 @@ export const kaiOnboardingStateMachineRouter = router({
 
     const orgId = ctx.currentOrganizationId;
 
-    const [org] = await db
-      .select({
-        onboardingStatus: organizations.onboardingStatus,
-        onboardingStep: organizations.onboardingStep,
-        onboardingProfile: organizations.onboardingProfile,
-      })
-      .from(organizations)
-      .where(eq(organizations.id, orgId))
-      .limit(1);
+    let org: { onboardingStatus: string | null; onboardingStep: number | null; onboardingProfile?: string | null } | null = null;
+    try {
+      const [row] = await db
+        .select({
+          onboardingStatus: organizations.onboardingStatus,
+          onboardingStep: organizations.onboardingStep,
+          onboardingProfile: organizations.onboardingProfile,
+        })
+        .from(organizations)
+        .where(eq(organizations.id, orgId))
+        .limit(1);
+      org = row ?? null;
+    } catch (e: any) {
+      if (e?.message?.includes('onboarding_profile') || e?.message?.includes('Unknown column')) {
+        const [row] = await db
+          .select({
+            onboardingStatus: organizations.onboardingStatus,
+            onboardingStep: organizations.onboardingStep,
+          })
+          .from(organizations)
+          .where(eq(organizations.id, orgId))
+          .limit(1)
+          .catch(() => [null]);
+        org = row ? { ...row, onboardingProfile: null } : null;
+      } else {
+        throw e;
+      }
+    }
 
     const isCompleted = org?.onboardingStatus === "completed" || org?.onboardingStatus === "skipped";
 
@@ -977,21 +1034,29 @@ export const kaiOnboardingStateMachineRouter = router({
         ? result.profile.programs.some((p) => detectsMartialArts(p))
         : input.hasMartialArts;
 
-      // Save state to DB
+      // Save state to DB (non-fatal — profile is also saved per-field in processOnboardingStep)
       const stepNumber = STEP_NUMBERS[result.nextStep] || 1;
-      await saveOnboardingState(
-        orgId,
-        { step: result.nextStep, profile: result.profile, completedSteps: [], hasMartialArts: newHasMartialArts },
-        stepNumber
-      );
+      try {
+        await saveOnboardingState(
+          orgId,
+          { step: result.nextStep, profile: result.profile, completedSteps: [], hasMartialArts: newHasMartialArts },
+          stepNumber
+        );
+      } catch (saveErr) {
+        console.error('[OnboardingSM] saveOnboardingState failed (non-fatal):', saveErr);
+      }
 
       if (result.isComplete) {
         // Mark onboarding as completed
-        const db = await getDb();
-        if (db) {
-          await db.update(dojoSettings)
-            .set({ setupCompleted: 1, updatedAt: new Date().toISOString() } as any)
-            .where(eq(dojoSettings.organizationId, orgId));
+        try {
+          const db = await getDb();
+          if (db) {
+            await db.update(dojoSettings)
+              .set({ setupCompleted: 1, updatedAt: new Date().toISOString() } as any)
+              .where(eq(dojoSettings.organizationId, orgId));
+          }
+        } catch (completeErr) {
+          console.error('[OnboardingSM] Failed to mark setup completed:', completeErr);
         }
       }
 
