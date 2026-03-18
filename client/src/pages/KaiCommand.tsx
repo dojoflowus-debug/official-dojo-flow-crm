@@ -1378,13 +1378,13 @@ export default function KaiCommand() {
   }, [messages]);
 
   // Auto-select first conversation on initial load
-  // Don't auto-select if onboarding is active — onboarding runs in a clean state without existing messages
+  // Don't auto-select if onboarding overlay is visible — let user finish onboarding first
   useEffect(() => {
-    if (!selectedConversationId && conversations.length > 0 && !isOnboardingActive) {
+    if (!selectedConversationId && conversations.length > 0 && !showOnboardingOverlay) {
       console.log('[KaiCommand] Auto-selecting first conversation:', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
-  }, [conversations, selectedConversationId, isOnboardingActive]);
+  }, [conversations, selectedConversationId, showOnboardingOverlay]);
 
   // Parallax scroll effect for cinematic backgrounds
   useEffect(() => {
@@ -2096,27 +2096,6 @@ export default function KaiCommand() {
       setShowPaywall(true);
       return;
     }
-
-    // --- KAI ONBOARDING INTERCEPTION ---
-    // If onboarding is active, route the user's reply through the onboarding flow
-    // instead of sending it to the AI. The hook will inject KAI's next question.
-    if (isOnboardingActive && inputText.trim()) {
-      // Show the user's message in the chat immediately
-      const userMsg: Message = {
-        id: `onboarding-user-${Date.now()}`,
-        role: 'user',
-        content: inputText.trim(),
-        timestamp: new Date(),
-        isOnboarding: true,
-      };
-      setMessages(prev => [...prev, userMsg]);
-      setMessageInput('');
-      setAttachments([]);
-      // Let the hook process the reply and inject the next question
-      await handleOnboardingReply(inputText.trim());
-      return;
-    }
-    // --- END ONBOARDING INTERCEPTION ---
 
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {

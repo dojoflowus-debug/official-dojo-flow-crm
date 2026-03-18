@@ -320,7 +320,7 @@ export function KaiOnboardingOverlay({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.4 }}
-        className="absolute inset-0 z-50 flex items-center justify-center"
+        className="fixed inset-0 z-[200] flex items-center justify-center"
         style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)" }}
       >
         {/* ── Welcome Card ── */}
