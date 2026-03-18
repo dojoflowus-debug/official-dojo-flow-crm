@@ -850,7 +850,7 @@ export const organizations = mysqlTable("organizations", {
 	settings: text(),
 	onboardingStatus: mysqlEnum(['not_started','in_progress','completed','skipped']).default('not_started').notNull(),
 	onboardingStep: int().default(1).notNull(),
-	onboardingProfile: text(),
+	onboardingProfile: text("onboarding_profile"),
 	bagsOnHand: int().default(0).notNull(),
 });
 

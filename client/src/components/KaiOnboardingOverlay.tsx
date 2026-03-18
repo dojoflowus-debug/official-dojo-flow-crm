@@ -108,8 +108,16 @@ export function KaiOnboardingOverlay({
   // ── Load initial state ──────────────────────────────────────────────────────
   useEffect(() => {
     if (hasLoaded.current) return;
-    if (statusQuery.isLoading || !statusQuery.data) return;
     if (organizationId <= 0) return;
+
+    // Handle query error — show welcome card as safe fallback
+    if (statusQuery.error) {
+      hasLoaded.current = true;
+      setMode("welcome");
+      return;
+    }
+
+    if (statusQuery.isLoading || !statusQuery.data) return;
 
     const data = statusQuery.data;
     if (!data.needsOnboarding) {
@@ -125,7 +133,7 @@ export function KaiOnboardingOverlay({
     setProfile(savedProfile);
     setHasMartialArts(data.hasMartialArts || false);
     setMode("welcome");
-  }, [statusQuery.data, statusQuery.isLoading, organizationId]);
+  }, [statusQuery.data, statusQuery.isLoading, statusQuery.error, organizationId]);
 
   // ── Auto-scroll messages ────────────────────────────────────────────────────
   useEffect(() => {

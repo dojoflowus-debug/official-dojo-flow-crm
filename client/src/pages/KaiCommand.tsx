@@ -212,12 +212,16 @@ export default function KaiCommand() {
     staleTime: 0,
     refetchOnWindowFocus: false,
   });
-  // Show overlay only when status confirms onboarding is needed
+  // Show overlay when status confirms onboarding is needed OR when query errors (safe fallback)
   useEffect(() => {
     if (onboardingStatusQuery.data?.needsOnboarding === true) {
       setShowOnboardingOverlay(true);
     }
-  }, [onboardingStatusQuery.data]);
+    // If query errored and org is loaded, show overlay as safe fallback
+    if (onboardingStatusQuery.error && memoizedOrgId > 0) {
+      setShowOnboardingOverlay(true);
+    }
+  }, [onboardingStatusQuery.data, onboardingStatusQuery.error, memoizedOrgId]);
 
   // KAI onboarding hook - guides first-time users through profile setup
   const {

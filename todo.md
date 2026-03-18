@@ -8424,13 +8424,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] KAI should address owner by title (e.g., "Sensei Smith") in all responses
 
 ## KAI Onboarding State Machine Rebuild
-- [ ] Implement server-side onboarding state machine (processStep mutation)
-- [ ] Add validation, correction detection, and confirmation logic on server
-- [ ] Rebuild useKaiOnboarding hook as pure state machine consumer
-- [ ] Update KaiCommand.tsx to use new hook interface
+- [x] Implement server-side onboarding state machine (processStep mutation)
+- [x] Add validation, correction detection, and confirmation logic on server
+- [x] Rebuild useKaiOnboarding hook as pure state machine consumer
+- [x] Update KaiCommand.tsx to use new hook interface
 - [ ] Test full flow: name → title → programs → rank (conditional) → school → address → logos
-- [ ] Build KaiOnboardingOverlay component (welcome card + guided activation panel)
-- [ ] Build KaiOnboardingWelcomeCard (dim backdrop, headline, Start/Explore buttons)
-- [ ] Build KaiOnboardingPanel (progress bar, step counter, one-step chat inside overlay)
-- [ ] Build KaiSetupResumeBanner (persistent chip for Explore First users)
-- [ ] Wire overlay into KaiCommand.tsx (replace old inline onboarding messages)
+- [x] Build KaiOnboardingOverlay component (welcome card + guided activation panel)
+- [x] Build KaiOnboardingWelcomeCard (dim backdrop, headline, Start/Explore buttons)
+- [x] Build KaiOnboardingPanel (progress bar, step counter, one-step chat inside overlay)
+- [x] Build KaiSetupResumeBanner (persistent chip for Explore First users)
+- [x] Wire overlay into KaiCommand.tsx (replace old inline onboarding messages)
