@@ -32,6 +32,8 @@ import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { useKaiOnboarding } from '@/hooks/useKaiOnboarding';
+import { KaiOnboardingOverlay } from '@/components/KaiOnboardingOverlay';
+import { KaiSetupResumeBanner } from '@/components/KaiSetupResumeBanner';
 import { UserAvatar } from '@/components/UserAvatar';
 import '@/styles/kai-light-command-center.css';
 
@@ -204,6 +206,19 @@ export default function KaiCommand() {
   // KAI onboarding file input ref (for logo upload during onboarding)
   const onboardingFileInputRef = useRef<HTMLInputElement>(null);
 
+  // Check if user needs onboarding — controls overlay visibility
+  const onboardingStatusQuery = trpc.kaiOnboardingSM.getStatus.useQuery(undefined, {
+    enabled: memoizedOrgId > 0,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
+  // Show overlay only when status confirms onboarding is needed
+  useEffect(() => {
+    if (onboardingStatusQuery.data?.needsOnboarding === true) {
+      setShowOnboardingOverlay(true);
+    }
+  }, [onboardingStatusQuery.data]);
+
   // KAI onboarding hook - guides first-time users through profile setup
   const {
     isActive: isOnboardingActive,
@@ -257,6 +272,10 @@ export default function KaiCommand() {
   
   // Beta Notice modal state
   const [showBetaNotice, setShowBetaNotice] = useState(false);
+  // Onboarding overlay state — starts false, set to true only if user needs onboarding
+  const [showOnboardingOverlay, setShowOnboardingOverlay] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [onboardingCompletedSteps, setOnboardingCompletedSteps] = useState(0);
   
   // Paywall modal state
   const [showPaywall, setShowPaywall] = useState(false);
@@ -3983,6 +4002,37 @@ export default function KaiCommand() {
         </AlertDialogContent>
       </AlertDialog>
       
+      {/* KAI Onboarding Overlay */}
+      {showOnboardingOverlay && (
+        <KaiOnboardingOverlay
+          organizationId={memoizedOrgId}
+          onExploreFirst={() => {
+            setShowOnboardingOverlay(false);
+            setShowResumeBanner(true);
+          }}
+          onComplete={() => {
+            setShowOnboardingOverlay(false);
+            setShowResumeBanner(false);
+          }}
+          onStepComplete={(completedCount) => {
+            setOnboardingCompletedSteps(completedCount);
+          }}
+        />
+      )}
+
+      {/* Resume Setup Banner (Explore First) */}
+      {!showOnboardingOverlay && showResumeBanner && (
+        <KaiSetupResumeBanner
+          completedSteps={onboardingCompletedSteps}
+          totalSteps={13}
+          onResume={() => {
+            setShowResumeBanner(false);
+            setShowOnboardingOverlay(true);
+          }}
+          onDismiss={() => setShowResumeBanner(false)}
+        />
+      )}
+
       {/* Beta Notice Modal */}
       {showBetaNotice && (
         <BetaNoticeModal

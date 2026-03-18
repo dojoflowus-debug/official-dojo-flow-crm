@@ -8429,3 +8429,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Rebuild useKaiOnboarding hook as pure state machine consumer
 - [ ] Update KaiCommand.tsx to use new hook interface
 - [ ] Test full flow: name → title → programs → rank (conditional) → school → address → logos
+- [ ] Build KaiOnboardingOverlay component (welcome card + guided activation panel)
+- [ ] Build KaiOnboardingWelcomeCard (dim backdrop, headline, Start/Explore buttons)
+- [ ] Build KaiOnboardingPanel (progress bar, step counter, one-step chat inside overlay)
+- [ ] Build KaiSetupResumeBanner (persistent chip for Explore First users)
+- [ ] Wire overlay into KaiCommand.tsx (replace old inline onboarding messages)
