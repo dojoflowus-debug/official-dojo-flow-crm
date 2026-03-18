@@ -78,17 +78,54 @@ export function useKaiOnboarding({
   const skipOnboardingMutation = trpc.kaiOnboardingSM.skipOnboarding.useMutation();
 
   // ── Initialize onboarding on first load ────────────────────────────────────
-  // NOTE: This hook is DISABLED — the new KaiOnboardingOverlay component handles
-  // all onboarding UI. This hook is kept for legacy compatibility but does NOT
-  // inject messages into the chat anymore.
+  // Onboarding happens inside the KAI chat — KAI asks questions conversationally
+  // in the main chat feed and the user replies via the normal composer.
   useEffect(() => {
     if (hasInitialized.current) return;
     if (statusQuery.isLoading || !statusQuery.data) return;
     if (organizationId <= 0) return;
 
+    const data = statusQuery.data;
+
+    if (!data.needsOnboarding) {
+      hasInitialized.current = true;
+      return;
+    }
+
     hasInitialized.current = true;
-    // Do NOT set isActive = true — the overlay handles everything
-    // Do NOT inject messages — the overlay handles everything
+    setIsActive(true);
+
+    const initialStep = (data.step as OnboardingStep) || "name";
+    const initialProfile = (data.profile as OnboardingProfile) || profile;
+    const initialHasMartialArts = data.hasMartialArts || false;
+
+    setCurrentStep(initialStep);
+    setProfile(initialProfile);
+    setHasMartialArts(initialHasMartialArts);
+
+    // Build the greeting + first question
+    const firstQuestion = getFirstQuestion(initialStep, initialProfile);
+    onInjectMessages([
+      {
+        id: msgId("greeting"),
+        role: "assistant",
+        content:
+          "👋 **Welcome to DojoFlow!** I'm KAI, your AI-powered dojo command center.\n\nBefore you dive in, let me help you set up your school profile — it only takes a minute, and you can update everything later in **Settings → School Profile**.\n\n*(You can skip this and set it up later if you prefer.)*",
+        isOnboarding: true,
+        step: "idle",
+        showSkip: true,
+      },
+      {
+        id: msgId(`q-${initialStep}`),
+        role: "assistant",
+        content: firstQuestion,
+        isOnboarding: true,
+        step: initialStep,
+        showSkip: initialStep !== "name" && initialStep !== "programs",
+        showLogoUpload: initialStep === "logo_light" || initialStep === "logo_dark",
+        logoUploadType: initialStep === "logo_light" ? "light" : initialStep === "logo_dark" ? "dark" : undefined,
+      },
+    ]);
   }, [statusQuery.data, statusQuery.isLoading, organizationId]);
 
   // ── Handle user text reply ──────────────────────────────────────────────────

@@ -32,8 +32,7 @@ import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { useKaiOnboarding } from '@/hooks/useKaiOnboarding';
-import { KaiOnboardingOverlay } from '@/components/KaiOnboardingOverlay';
-import { KaiSetupResumeBanner } from '@/components/KaiSetupResumeBanner';
+// KaiOnboardingOverlay removed — onboarding is handled in-chat via useKaiOnboarding
 import { UserAvatar } from '@/components/UserAvatar';
 import '@/styles/kai-light-command-center.css';
 
@@ -206,24 +205,8 @@ export default function KaiCommand() {
   // KAI onboarding file input ref (for logo upload during onboarding)
   const onboardingFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if user needs onboarding — controls overlay visibility
-  const onboardingStatusQuery = trpc.kaiOnboardingSM.getStatus.useQuery(undefined, {
-    enabled: memoizedOrgId > 0,
-    staleTime: 0,
-    refetchOnWindowFocus: false,
-  });
-  // Show overlay when status confirms onboarding is needed OR when query errors (safe fallback)
-  useEffect(() => {
-    if (onboardingStatusQuery.data?.needsOnboarding === true) {
-      setShowOnboardingOverlay(true);
-    }
-    // If query errored and org is loaded, show overlay as safe fallback
-    if (onboardingStatusQuery.error && memoizedOrgId > 0) {
-      setShowOnboardingOverlay(true);
-    }
-  }, [onboardingStatusQuery.data, onboardingStatusQuery.error, memoizedOrgId]);
-
   // KAI onboarding hook - guides first-time users through profile setup
+  // Onboarding happens inside the KAI chat — no overlay, no side panel.
   const {
     isActive: isOnboardingActive,
     currentStep: onboardingCurrentStep,
@@ -276,10 +259,7 @@ export default function KaiCommand() {
   
   // Beta Notice modal state
   const [showBetaNotice, setShowBetaNotice] = useState(false);
-  // Onboarding overlay state — starts false, set to true only if user needs onboarding
-  const [showOnboardingOverlay, setShowOnboardingOverlay] = useState(false);
-  const [showResumeBanner, setShowResumeBanner] = useState(false);
-  const [onboardingCompletedSteps, setOnboardingCompletedSteps] = useState(0);
+  // Onboarding is handled in-chat (no overlay state needed)
   
   // Paywall modal state
   const [showPaywall, setShowPaywall] = useState(false);
@@ -1378,13 +1358,13 @@ export default function KaiCommand() {
   }, [messages]);
 
   // Auto-select first conversation on initial load
-  // Don't auto-select if onboarding overlay is visible — let user finish onboarding first
+  // Don't auto-select if onboarding is active — onboarding runs in a clean state without existing messages
   useEffect(() => {
-    if (!selectedConversationId && conversations.length > 0 && !showOnboardingOverlay) {
+    if (!selectedConversationId && conversations.length > 0 && !isOnboardingActive) {
       console.log('[KaiCommand] Auto-selecting first conversation:', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
-  }, [conversations, selectedConversationId, showOnboardingOverlay]);
+  }, [conversations, selectedConversationId, isOnboardingActive]);
 
   // Parallax scroll effect for cinematic backgrounds
   useEffect(() => {
@@ -2096,6 +2076,27 @@ export default function KaiCommand() {
       setShowPaywall(true);
       return;
     }
+
+    // --- KAI ONBOARDING INTERCEPTION ---
+    // If onboarding is active, route the user's reply through the onboarding flow
+    // instead of sending it to the AI. The hook will inject KAI's next question.
+    if (isOnboardingActive && inputText.trim()) {
+      // Show the user's message in the chat immediately
+      const userMsg: Message = {
+        id: `onboarding-user-${Date.now()}`,
+        role: 'user',
+        content: inputText.trim(),
+        timestamp: new Date(),
+        isOnboarding: true,
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setMessageInput('');
+      setAttachments([]);
+      // Let the hook process the reply and inject the next question
+      await handleOnboardingReply(inputText.trim());
+      return;
+    }
+    // --- END ONBOARDING INTERCEPTION ---
 
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
@@ -3985,36 +3986,7 @@ export default function KaiCommand() {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* KAI Onboarding Overlay */}
-      {showOnboardingOverlay && (
-        <KaiOnboardingOverlay
-          organizationId={memoizedOrgId}
-          onExploreFirst={() => {
-            setShowOnboardingOverlay(false);
-            setShowResumeBanner(true);
-          }}
-          onComplete={() => {
-            setShowOnboardingOverlay(false);
-            setShowResumeBanner(false);
-          }}
-          onStepComplete={(completedCount) => {
-            setOnboardingCompletedSteps(completedCount);
-          }}
-        />
-      )}
-
-      {/* Resume Setup Banner (Explore First) */}
-      {!showOnboardingOverlay && showResumeBanner && (
-        <KaiSetupResumeBanner
-          completedSteps={onboardingCompletedSteps}
-          totalSteps={13}
-          onResume={() => {
-            setShowResumeBanner(false);
-            setShowOnboardingOverlay(true);
-          }}
-          onDismiss={() => setShowResumeBanner(false)}
-        />
-      )}
+      {/* Onboarding is handled in-chat via useKaiOnboarding hook */}
 
       {/* Beta Notice Modal */}
       {showBetaNotice && (
