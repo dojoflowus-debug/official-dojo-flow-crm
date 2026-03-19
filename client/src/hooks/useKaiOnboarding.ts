@@ -243,7 +243,7 @@ export function useKaiOnboarding({
   const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation();
 
   // ── Resize image to max 800x800 before upload ──────────────────────────────
-  const resizeImage = (dataUrl: string, maxSize = 800): Promise<string> =>
+  const resizeImage = (dataUrl: string, maxSize = 800): Promise<{ dataUrl: string; mimeType: string }> =>
     new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -252,10 +252,14 @@ export function useKaiOnboarding({
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         const ctx = canvas.getContext('2d')!;
+        // Fill white background so transparent PNGs don't become black in JPEG
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+        const resized = canvas.toDataURL('image/jpeg', 0.85);
+        resolve({ dataUrl: resized, mimeType: 'image/jpeg' });
       };
-      img.onerror = () => resolve(dataUrl); // fallback: use original
+      img.onerror = () => resolve({ dataUrl, mimeType: 'image/jpeg' }); // fallback
       img.src = dataUrl;
     });
 
@@ -270,12 +274,11 @@ export function useKaiOnboarding({
         if (!rawDataUrl) return;
 
         // Resize to max 800x800 and compress to JPEG to stay under 5MB
-        const dataUrl = await resizeImage(rawDataUrl, 800);
+        const { dataUrl, mimeType } = await resizeImage(rawDataUrl, 800);
 
         try {
           // Upload via auth.uploadProfilePicture (existing endpoint)
           const base64Data = dataUrl.split(',')[1] || dataUrl;
-          const mimeType = 'image/jpeg'; // always JPEG after resize
           const result = await uploadProfilePictureMutation.mutateAsync({ imageData: base64Data, mimeType });
           const photoUrl = result?.photoUrl || dataUrl;          // Submit the URL to the state machine as the answer
           const smResult = await processStepMutation.mutateAsync({
