@@ -242,6 +242,23 @@ export function useKaiOnboarding({
   // ── Upload profile picture mutation ───────────────────────────────────────
   const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation();
 
+  // ── Resize image to max 800x800 before upload ──────────────────────────────
+  const resizeImage = (dataUrl: string, maxSize = 800): Promise<string> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => resolve(dataUrl); // fallback: use original
+      img.src = dataUrl;
+    });
+
   // ── Handle profile photo upload ─────────────────────────────────────────────────────
   const handleProfilePhotoUpload = useCallback(
     async (file: File) => {
@@ -249,13 +266,16 @@ export function useKaiOnboarding({
 
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const dataUrl = e.target?.result as string;
-        if (!dataUrl) return;
+        const rawDataUrl = e.target?.result as string;
+        if (!rawDataUrl) return;
+
+        // Resize to max 800x800 and compress to JPEG to stay under 5MB
+        const dataUrl = await resizeImage(rawDataUrl, 800);
 
         try {
           // Upload via auth.uploadProfilePicture (existing endpoint)
           const base64Data = dataUrl.split(',')[1] || dataUrl;
-          const mimeType = file.type || 'image/jpeg';
+          const mimeType = 'image/jpeg'; // always JPEG after resize
           const result = await uploadProfilePictureMutation.mutateAsync({ imageData: base64Data, mimeType });
           const photoUrl = result?.photoUrl || dataUrl;          // Submit the URL to the state machine as the answer
           const smResult = await processStepMutation.mutateAsync({
