@@ -6,9 +6,10 @@
  *   1. Fetching initial onboarding status
  *   2. Injecting the greeting + first question into the chat
  *   3. Routing user text replies to the server's processStep mutation
- *   4. Routing file uploads to the server's uploadLogo mutation
+ *   4. Routing file uploads to the server's uploadLogo / uploadProfilePhoto mutations
  *   5. Rendering the server's kaiMessage response back into the chat
  *   6. Signalling completion to the parent component
+ *   7. Invalidating auth.me after name/title steps so the header updates
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -26,6 +27,7 @@ export interface OnboardingMessage {
   showSkip?: boolean;
   showLogoUpload?: boolean;
   logoUploadType?: "light" | "dark";
+  showPhotoUpload?: boolean;
 }
 
 interface UseKaiOnboardingOptions {
@@ -46,6 +48,7 @@ export function useKaiOnboarding({
   const [profile, setProfile] = useState<OnboardingProfile>({
     name: null,
     title: null,
+    profilePhotoUrl: null,
     programs: [],
     styles: [],
     schoolName: null,
@@ -64,6 +67,9 @@ export function useKaiOnboarding({
   let msgCounter = useRef(0);
 
   const msgId = (suffix: string) => `onboarding-${++msgCounter.current}-${suffix}`;
+
+  // ── tRPC utils for cache invalidation ──────────────────────────────────────
+  const utils = trpc.useUtils();
 
   // ── Status query ────────────────────────────────────────────────────────────
   const statusQuery = trpc.kaiOnboardingSM.getStatus.useQuery(undefined, {
@@ -105,6 +111,7 @@ export function useKaiOnboarding({
 
     // Build the greeting + first question
     const firstQuestion = getFirstQuestion(initialStep, initialProfile);
+    const isPhotoStep = initialStep === "profile_photo";
     onInjectMessages([
       {
         id: msgId("greeting"),
@@ -124,6 +131,7 @@ export function useKaiOnboarding({
         showSkip: initialStep !== "name" && initialStep !== "programs",
         showLogoUpload: initialStep === "logo_light" || initialStep === "logo_dark",
         logoUploadType: initialStep === "logo_light" ? "light" : initialStep === "logo_dark" ? "dark" : undefined,
+        showPhotoUpload: isPhotoStep,
       },
     ]);
   }, [statusQuery.data, statusQuery.isLoading, organizationId]);
@@ -151,6 +159,22 @@ export function useKaiOnboarding({
         return true;
       }
 
+      // Profile photo step — redirect text to skip/upload flow
+      if (currentStep === "profile_photo") {
+        onInjectMessages([
+          {
+            id: msgId("photo-text-redirect"),
+            role: "assistant",
+            content: "Use the **Upload Photo** button below to add your profile picture, or click **Skip** to continue.",
+            isOnboarding: true,
+            step: currentStep,
+            showPhotoUpload: true,
+            showSkip: true,
+          },
+        ]);
+        return true;
+      }
+
       try {
         const result = await processStepMutation.mutateAsync({
           currentStep,
@@ -166,8 +190,16 @@ export function useKaiOnboarding({
           setHasMartialArts(result.hasMartialArts);
         }
 
+        // After name or title step, invalidate auth.me so the header updates
+        if (currentStep === "name" || currentStep === "title") {
+          try {
+            await utils.auth.me.invalidate();
+          } catch {}
+        }
+
         // Inject KAI's response
         const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
+        const isPhotoStep = result.nextStep === "profile_photo";
         onInjectMessages([
           {
             id: msgId(`resp-${result.nextStep}`),
@@ -178,6 +210,7 @@ export function useKaiOnboarding({
             showSkip: result.showSkip,
             showLogoUpload: isLogoStep,
             logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+            showPhotoUpload: isPhotoStep,
           },
         ]);
 
@@ -202,8 +235,110 @@ export function useKaiOnboarding({
         return true;
       }
     },
-    [isActive, currentStep, profile, hasMartialArts, processStepMutation, onInjectMessages, onComplete]
+    [isActive, currentStep, profile, hasMartialArts, processStepMutation, onInjectMessages, onComplete, utils]
   );
+
+  // ── Upload profile picture mutation ───────────────────────────────────────
+  const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation();
+
+  // ── Handle profile photo upload ─────────────────────────────────────────────────────
+  const handleProfilePhotoUpload = useCallback(
+    async (file: File) => {
+      if (!isActive) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+        if (!dataUrl) return;
+
+        try {
+          // Upload via auth.uploadProfilePicture (existing endpoint)
+          const base64Data = dataUrl.split(',')[1] || dataUrl;
+          const mimeType = file.type || 'image/jpeg';
+          const result = await uploadProfilePictureMutation.mutateAsync({ imageData: base64Data, mimeType });
+          const photoUrl = result?.photoUrl || dataUrl;          // Submit the URL to the state machine as the answer
+          const smResult = await processStepMutation.mutateAsync({
+            currentStep: "profile_photo",
+            userInput: photoUrl,
+            currentProfile: { ...profile, profilePhotoUrl: photoUrl },
+            hasMartialArts,
+          });
+
+          setProfile(smResult.profile);
+          setCurrentStep(smResult.nextStep);
+
+          // Invalidate auth.me so avatar updates
+          try { await utils.auth.me.invalidate(); } catch {}
+
+          const isLogoStep = smResult.nextStep === "logo_light" || smResult.nextStep === "logo_dark";
+          onInjectMessages([
+            {
+              id: msgId("photo-done"),
+              role: "assistant",
+              content: smResult.kaiMessage,
+              isOnboarding: true,
+              step: smResult.nextStep,
+              showSkip: smResult.showSkip,
+              showLogoUpload: isLogoStep,
+              logoUploadType: smResult.nextStep === "logo_light" ? "light" : smResult.nextStep === "logo_dark" ? "dark" : undefined,
+            },
+          ]);
+
+          if (smResult.isComplete) {
+            setIsActive(false);
+            onComplete();
+          }
+        } catch (err) {
+          console.error("[KaiOnboarding] profilePhoto upload error:", err);
+          onInjectMessages([
+            {
+              id: msgId("photo-error"),
+              role: "assistant",
+              content: "I had trouble saving that photo. Please try again or skip for now.",
+              isOnboarding: true,
+              step: "profile_photo",
+              showPhotoUpload: true,
+              showSkip: true,
+            },
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+    [isActive, profile, hasMartialArts, processStepMutation, uploadProfilePictureMutation, onInjectMessages, onComplete, utils]
+  );
+
+  // ── Skip profile photo ──────────────────────────────────────────────────────
+  const skipProfilePhoto = useCallback(async () => {
+    if (!isActive) return;
+    try {
+      const result = await processStepMutation.mutateAsync({
+        currentStep: "profile_photo",
+        userInput: "skip",
+        currentProfile: profile,
+        hasMartialArts,
+      });
+      setProfile(result.profile);
+      setCurrentStep(result.nextStep);
+      const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
+      onInjectMessages([
+        {
+          id: msgId("photo-skip"),
+          role: "assistant",
+          content: result.kaiMessage,
+          isOnboarding: true,
+          step: result.nextStep,
+          showSkip: result.showSkip,
+          showLogoUpload: isLogoStep,
+          logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+        },
+      ]);
+      if (result.isComplete) {
+        setIsActive(false);
+        onComplete();
+      }
+    } catch {}
+  }, [isActive, profile, hasMartialArts, processStepMutation, onInjectMessages, onComplete]);
 
   // ── Handle logo file upload ─────────────────────────────────────────────────
   const handleLogoUpload = useCallback(
@@ -282,6 +417,8 @@ export function useKaiOnboarding({
     hasMartialArts,
     handleUserReply,
     handleLogoUpload,
+    handleProfilePhotoUpload,
+    skipProfilePhoto,
     skipOnboarding,
     isProcessing: processStepMutation.isPending || uploadLogoMutation.isPending,
   };
@@ -293,6 +430,12 @@ function getFirstQuestion(step: OnboardingStep, profile: OnboardingProfile): str
   switch (step) {
     case "name": return "First, **what's your name?**";
     case "title": return `What's your **title**, ${profile.name || ""}? *(e.g., Sensei, Sifu, Coach, Professor, Master, Instructor)*`;
+    case "profile_photo": {
+      const titleName = profile.title && profile.name
+        ? `${profile.title} ${profile.name}`
+        : profile.name || "there";
+      return `Great to meet you, **${titleName}**! 📸 Would you like to upload a **profile photo**? It'll appear next to your messages in KAI. *(You can skip this and add one later in Settings)*`;
+    }
     case "programs": return "What **programs** do you teach? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga — list as many as you like)*";
     case "rank": return "What is your current **rank or belt**?";
     case "school_name": return "What's the **name of your school or dojo**?";

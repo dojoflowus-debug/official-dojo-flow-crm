@@ -2,7 +2,7 @@ import { z } from "zod";
 import { router, orgScopedProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "./db";
-import { dojoSettings, organizations, schoolProfiles } from "../drizzle/schema";
+import { dojoSettings, organizations, schoolProfiles, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { upsertSchoolProfile } from "./schoolProfileDb";
 
@@ -11,6 +11,7 @@ import { upsertSchoolProfile } from "./schoolProfileDb";
 export const ONBOARDING_STEPS = [
   "name",
   "title",
+  "profile_photo",  // new — upload profile picture after name/title
   "programs",
   "rank",          // conditional — only if programs includes martial arts
   "school_name",
@@ -30,6 +31,7 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 export interface OnboardingProfile {
   name: string | null;
   title: string | null;
+  profilePhotoUrl: string | null;
   programs: string[];
   styles: string[];
   schoolName: string | null;
@@ -168,6 +170,12 @@ export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile
       return "What's your **school email address**?";
     case "website":
       return "What's your **school website**? *(e.g., https://mydojo.com)*";
+    case "profile_photo": {
+      const titleName = profile.title && profile.name
+        ? `${profile.title} ${profile.name}`
+        : profile.name || "there";
+      return `Great to meet you, **${titleName}**! 📸 Would you like to upload a **profile photo**? It'll appear next to your messages in KAI. *(You can skip this and add one later in Settings)*`;
+    }
     case "logo_light":
       return "Now let's brand your dashboard. Upload your **Day Mode logo** — used on light backgrounds. PNG or SVG works best.";
     case "logo_dark":
@@ -206,6 +214,7 @@ function getNextStep(
   const flow: OnboardingStep[] = [
     "name",
     "title",
+    "profile_photo",
     "programs",
     ...(hasMartialArts ? ["rank" as OnboardingStep] : []),
     "school_name",
@@ -440,15 +449,16 @@ async function persistProfileField(
 
 // Step number map for DB storage
 const STEP_NUMBERS: Record<OnboardingStep, number> = {
-  name: 1, title: 2, programs: 3, rank: 4, school_name: 5,
-  martial_style: 6, address: 7, city_state_zip: 8, phone: 9,
-  email: 10, website: 11, logo_light: 12, logo_dark: 13, complete: 99,
+  name: 1, title: 2, profile_photo: 3, programs: 4, rank: 5, school_name: 6,
+  martial_style: 7, address: 8, city_state_zip: 9, phone: 10,
+  email: 11, website: 12, logo_light: 13, logo_dark: 14, complete: 99,
 };
 
 // ─── Main state machine processor ────────────────────────────────────────────
 
 export async function processOnboardingStep(
   orgId: number,
+  userId: number,
   currentStep: OnboardingStep,
   userInput: string,
   currentProfile: OnboardingProfile,
@@ -544,6 +554,15 @@ export async function processOnboardingStep(
       const name = input;
       const updatedProfile = { ...currentProfile, name };
       await persistProfileField(orgId, "name", name);
+      // Also update users.name so the chat header reflects the new name immediately
+      try {
+        const db = await getDb();
+        if (db) {
+          await db.update(users).set({ name, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
+        }
+      } catch (e) {
+        console.error('[OnboardingSM] Failed to update users.name:', e);
+      }
       const next = getNextStep("name", updatedProfile, hasMartialArts);
       return {
         kaiMessage: `Got it — **${name}**.\n\n${getStepQuestion(next, updatedProfile)}`,
@@ -590,6 +609,57 @@ export async function processOnboardingStep(
         kaiMessage: `Perfect — I'll address you as **${titleName}** from here on.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
+        showSkip: false,
+      };
+    }
+
+    case "profile_photo": {
+      // This step expects a file upload — if user sends text it's either a skip or an uploaded URL
+      if (isSkip(input) || input.toLowerCase() === 'skip' || input.toLowerCase() === 'no' || input.toLowerCase() === 'later') {
+        const next = getNextStep("profile_photo", currentProfile, hasMartialArts);
+        return {
+          kaiMessage: `No problem — you can add a photo anytime in **Settings → Profile**. Let's continue!\n\n${getStepQuestion(next, currentProfile)}`,
+          nextStep: next,
+          profile: currentProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: false,
+        };
+      }
+      // If input looks like a URL (uploaded photo), save it
+      const isUrl = input.startsWith('http://') || input.startsWith('https://');
+      if (isUrl) {
+        const updatedProfile = { ...currentProfile, profilePhotoUrl: input };
+        // Update users.photoUrl so the avatar updates immediately
+        try {
+          const db = await getDb();
+          if (db) {
+            await db.update(users).set({ photoUrl: input, photoUrlSmall: input, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
+          }
+        } catch (e) {
+          console.error('[OnboardingSM] Failed to update users.photoUrl:', e);
+        }
+        const next = getNextStep("profile_photo", updatedProfile, hasMartialArts);
+        return {
+          kaiMessage: `Looking great! 📸 Photo saved.\n\n${getStepQuestion(next, updatedProfile)}`,
+          nextStep: next,
+          profile: updatedProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: false,
+        };
+      }
+      // Otherwise prompt them to upload or skip
+      const next = getNextStep("profile_photo", currentProfile, hasMartialArts);
+      return {
+        kaiMessage: `No problem — you can add a photo anytime in **Settings → Profile**. Let's continue!\n\n${getStepQuestion(next, currentProfile)}`,
+        nextStep: next,
+        profile: currentProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
@@ -1059,6 +1129,7 @@ export const kaiOnboardingStateMachineRouter = router({
 
       const result = await processOnboardingStep(
         orgId,
+        ctx.user.id,
         input.currentStep,
         input.userInput,
         input.currentProfile,

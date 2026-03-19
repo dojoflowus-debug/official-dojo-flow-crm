@@ -124,6 +124,7 @@ interface Message {
   showSkip?: boolean;
   showLogoUpload?: boolean;
   logoUploadType?: 'light' | 'dark';
+  showPhotoUpload?: boolean;
   ui_blocks?: Array<{
     type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
     studentId?: number;
@@ -207,11 +208,15 @@ export default function KaiCommand() {
 
   // KAI onboarding hook - guides first-time users through profile setup
   // Onboarding happens inside the KAI chat — no overlay, no side panel.
+  const onboardingPhotoInputRef = useRef<HTMLInputElement>(null);
+
   const {
     isActive: isOnboardingActive,
     currentStep: onboardingCurrentStep,
     handleUserReply: handleOnboardingReply,
     handleLogoUpload: handleOnboardingLogoUpload,
+    handleProfilePhotoUpload: handleOnboardingPhotoUpload,
+    skipProfilePhoto: skipOnboardingPhoto,
     skipOnboarding,
   } = useKaiOnboarding({
     organizationId: memoizedOrgId,
@@ -230,6 +235,7 @@ export default function KaiCommand() {
           showSkip: m.showSkip,
           showLogoUpload: m.showLogoUpload,
           logoUploadType: m.logoUploadType,
+          showPhotoUpload: m.showPhotoUpload,
         } as Message));
         // If this is the first injection (greeting), start fresh with only onboarding messages
         if (newMsgs.some(m => (m as any).onboardingStep === 'idle')) {
@@ -3569,6 +3575,46 @@ export default function KaiCommand() {
                                     Skip for now
                                   </button>
                                 )}
+                              </div>
+                            )}
+
+                            {/* Onboarding: Profile photo upload button */}
+                            {message.isOnboarding && message.showPhotoUpload && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <input
+                                  type="file"
+                                  accept="image/png,image/jpeg,image/webp,image/gif"
+                                  className="hidden"
+                                  ref={onboardingPhotoInputRef}
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setMessages(prev => [...prev, {
+                                      id: `onboarding-user-photo-${Date.now()}`,
+                                      role: 'user',
+                                      content: `📎 Uploading photo: ${file.name}`,
+                                      timestamp: new Date(),
+                                      isOnboarding: true,
+                                    } as Message]);
+                                    await handleOnboardingPhotoUpload(file);
+                                    e.target.value = '';
+                                  }}
+                                />
+                                <button
+                                  onClick={() => onboardingPhotoInputRef.current?.click()}
+                                  className="flex items-center gap-2 px-4 py-2 bg-[#FF4C4C] hover:bg-[#FF5E5E] text-white rounded-lg font-medium text-sm transition-colors"
+                                >
+                                  <Upload className="w-4 h-4" />
+                                  Upload Photo
+                                </button>
+                                <button
+                                  onClick={() => skipOnboardingPhoto()}
+                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                    isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  Skip for now
+                                </button>
                               </div>
                             )}
 
