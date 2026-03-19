@@ -73,6 +73,8 @@ const CORRECTION_PATTERNS = [
   /\b(i\s+meant|i\s+mean|actually|correction|correct\s+that|change\s+that)/i,
   /\b(go\s+back|redo|undo|start\s+over|reset)/i,
   /\b(wrong\s+(name|title|rank|school|answer))/i,
+  // Natural language name/title change requests
+  /\b(address\s+me\s+as|call\s+me|refer\s+to\s+me\s+as|known\s+as|can\s+you\s+call|please\s+call)/i,
 ];
 
 function isCorrection(text: string): boolean {
@@ -462,13 +464,47 @@ export async function processOnboardingStep(
     // Determine which step to correct based on keywords
     let correctionStep: OnboardingStep = currentStep;
     const lower = input.toLowerCase();
+    // Check 'address me as' / 'call me' / 'refer to me as' FIRST — these mean name/title correction, not street address
+    const titleCorrectionMatch = input.match(/\b(?:address\s+me\s+as|call\s+me|refer\s+to\s+me\s+as|known\s+as)\s+([A-Z][a-zA-Z\s\.]+?)(?:\s+instead|\s+please|\s*[?!.,]|$)/i);
+    if (titleCorrectionMatch) {
+      // Extract the new title/name from the pattern and apply it directly
+      const newTitleName = titleCorrectionMatch[1].trim();
+      // Try to split into title + name (e.g. "Master Holmes" -> title="Master", name="Holmes")
+      const titleWords = ["Sensei", "Sifu", "Coach", "Professor", "Master", "Instructor", "Dr", "Mr", "Mrs", "Ms"];
+      const parts = newTitleName.split(/\s+/);
+      const firstWord = parts[0];
+      const isTitle = titleWords.some(t => t.toLowerCase() === firstWord.toLowerCase());
+      let updatedProfile = { ...currentProfile };
+      if (isTitle && parts.length > 1) {
+        updatedProfile.title = firstWord;
+        updatedProfile.name = parts.slice(1).join(" ");
+        await persistProfileField(orgId, "title", firstWord);
+        await persistProfileField(orgId, "name", updatedProfile.name);
+      } else {
+        // Treat whole thing as a name/title preference
+        updatedProfile.title = newTitleName;
+        await persistProfileField(orgId, "title", newTitleName);
+      }
+      const next = getNextStep(currentStep, updatedProfile, hasMartialArts);
+      return {
+        kaiMessage: `Of course — I'll address you as **${newTitleName}** from here on.\n\n${getStepQuestion(next, updatedProfile)}`,
+        nextStep: next,
+        profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
+        showSkip: false,
+        correctionStep: currentStep,
+      };
+    }
+    correctionStep = currentStep;
     if (lower.includes("name")) correctionStep = "name";
     else if (lower.includes("title")) correctionStep = "title";
     else if (lower.includes("program") || lower.includes("teach")) correctionStep = "programs";
     else if (lower.includes("rank") || lower.includes("belt")) correctionStep = "rank";
     else if (lower.includes("school") || lower.includes("dojo")) correctionStep = "school_name";
     else if (lower.includes("style") || lower.includes("martial")) correctionStep = "martial_style";
-    else if (lower.includes("address") || lower.includes("street")) correctionStep = "address";
+    else if (/\b(street|my address|home address|business address)\b/i.test(input)) correctionStep = "address";
     else if (lower.includes("city") || lower.includes("state") || lower.includes("zip")) correctionStep = "city_state_zip";
     else if (lower.includes("phone")) correctionStep = "phone";
     else if (lower.includes("email")) correctionStep = "email";
