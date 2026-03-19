@@ -608,6 +608,15 @@ export async function processOnboardingStep(
       const updatedProfile = { ...currentProfile, title };
       await persistProfileField(orgId, "title", title);
       const titleName = `${title} ${currentProfile.name || ""}`.trim();
+      // Update users.name to full title+name so the chat header and avatar show the right name
+      try {
+        const db = await getDb();
+        if (db) {
+          await db.update(users).set({ name: titleName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
+        }
+      } catch (e) {
+        console.error('[OnboardingSM] Failed to update users.name with title:', e);
+      }
       const next = getNextStep("title", updatedProfile, hasMartialArts);
       return {
         kaiMessage: `Perfect — I'll address you as **${titleName}** from here on.\n\n${getStepQuestion(next, updatedProfile)}`,
