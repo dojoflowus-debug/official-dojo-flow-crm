@@ -77,6 +77,7 @@ const CORRECTION_PATTERNS = [
   /\b(wrong\s+(name|title|rank|school|answer))/i,
   // Natural language name/title change requests
   /\b(address\s+me\s+as|call\s+me|refer\s+to\s+me\s+as|known\s+as|can\s+you\s+call|please\s+call)/i,
+  /\b(would\s+like\s+to\s+be\s+called|want\s+to\s+be\s+called|like\s+to\s+be\s+called|should\s+call\s+me|my\s+name\s+is|i\s+go\s+by)/i,
 ];
 
 function isCorrection(text: string): boolean {
@@ -320,15 +321,16 @@ async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
     website: storedProfile.website ?? profile?.website ?? null,
     logoLightUrl: storedProfile.logoLightUrl ?? profile?.logoLightUrl ?? null,
     logoDarkUrl: storedProfile.logoDarkUrl ?? profile?.logoDarkUrl ?? null,
+    profilePhotoUrl: storedProfile.profilePhotoUrl ?? null,
   };
 
   // Determine current step from stored state or infer from what's missing
   let currentStep: OnboardingStep = "name";
   if (org?.onboardingStep && org.onboardingStep > 0) {
     const stepMap: Record<number, OnboardingStep> = {
-      1: "name", 2: "title", 3: "programs", 4: "rank", 5: "school_name",
-      6: "martial_style", 7: "address", 8: "city_state_zip", 9: "phone",
-      10: "email", 11: "website", 12: "logo_light", 13: "logo_dark", 99: "complete",
+      1: "name", 2: "title", 3: "profile_photo", 4: "programs", 5: "rank",
+      6: "school_name", 7: "martial_style", 8: "address", 9: "city_state_zip",
+      10: "phone", 11: "email", 12: "website", 13: "logo_light", 14: "logo_dark", 99: "complete",
     };
     currentStep = stepMap[org.onboardingStep] || "name";
   }
@@ -475,10 +477,12 @@ export async function processOnboardingStep(
     let correctionStep: OnboardingStep = currentStep;
     const lower = input.toLowerCase();
     // Check 'address me as' / 'call me' / 'refer to me as' FIRST — these mean name/title correction, not street address
-    const titleCorrectionMatch = input.match(/\b(?:address\s+me\s+as|call\s+me|refer\s+to\s+me\s+as|known\s+as)\s+([A-Z][a-zA-Z\s\.]+?)(?:\s+instead|\s+please|\s*[?!.,]|$)/i);
+    const titleCorrectionMatch = input.match(/\b(?:address\s+me\s+as|call\s+me|refer\s+to\s+me\s+as|known\s+as|would\s+like\s+to\s+be\s+called|want\s+to\s+be\s+called|like\s+to\s+be\s+called|should\s+call\s+me|i\s+go\s+by|my\s+name\s+is)\s+([a-zA-Z][a-zA-Z\s\.]+?)(?:\s+instead|\s+please|\s*[?!.,]|$)/i);
     if (titleCorrectionMatch) {
       // Extract the new title/name from the pattern and apply it directly
-      const newTitleName = titleCorrectionMatch[1].trim();
+      // Convert to Title Case (e.g. "master holmes" -> "Master Holmes")
+      const toTitleCase = (s: string) => s.replace(/\b\w/g, c => c.toUpperCase());
+      const newTitleName = toTitleCase(titleCorrectionMatch[1].trim());
       // Try to split into title + name (e.g. "Master Holmes" -> title="Master", name="Holmes")
       const titleWords = ["Sensei", "Sifu", "Coach", "Professor", "Master", "Instructor", "Dr", "Mr", "Mrs", "Ms"];
       const parts = newTitleName.split(/\s+/);
@@ -1271,4 +1275,35 @@ export const kaiOnboardingStateMachineRouter = router({
         showSkip: true,
       };
     }),
+
+  /**
+   * Reset onboarding so the user can start fresh from step 1.
+   */
+  resetOnboarding: orgScopedProcedure.mutation(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+    const orgId = ctx.currentOrganizationId;
+
+    // Reset onboarding state in organizations table
+    try {
+      await db.update(organizations)
+        .set({ onboardingStatus: "pending", onboardingStep: 0, onboardingProfile: null } as any)
+        .where(eq(organizations.id, orgId));
+    } catch (e: any) {
+      // Fallback if onboarding_profile column missing
+      await db.update(organizations)
+        .set({ onboardingStatus: "pending", onboardingStep: 0 } as any)
+        .where(eq(organizations.id, orgId));
+    }
+
+    // Reset dojo_settings setup flag
+    try {
+      await db.update(dojoSettings)
+        .set({ setupCompleted: 0, updatedAt: new Date().toISOString() } as any)
+        .where(eq(dojoSettings.organizationId, orgId));
+    } catch {}
+
+    return { success: true };
+  }),
 });

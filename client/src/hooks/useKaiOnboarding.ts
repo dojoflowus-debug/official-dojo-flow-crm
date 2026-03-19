@@ -82,6 +82,7 @@ export function useKaiOnboarding({
   const processStepMutation = trpc.kaiOnboardingSM.processStep.useMutation();
   const uploadLogoMutation = trpc.kaiOnboardingSM.uploadLogo.useMutation();
   const skipOnboardingMutation = trpc.kaiOnboardingSM.skipOnboarding.useMutation();
+  const resetOnboardingMutation = trpc.kaiOnboardingSM.resetOnboarding.useMutation();
 
   // ── Initialize onboarding on first load ────────────────────────────────────
   // Onboarding happens inside the KAI chat — KAI asks questions conversationally
@@ -401,7 +402,7 @@ export function useKaiOnboarding({
     [isActive, currentStep, profile, hasMartialArts, uploadLogoMutation, onInjectMessages, onComplete]
   );
 
-  // ── Skip entire onboarding ──────────────────────────────────────────────────
+    // ── Skip entire onboarding ───────────────────────────────────────────────
   const skipOnboarding = useCallback(async () => {
     try {
       await skipOnboardingMutation.mutateAsync();
@@ -409,6 +410,44 @@ export function useKaiOnboarding({
     setIsActive(false);
     onComplete();
   }, [skipOnboardingMutation, onComplete]);
+
+  // ── Restart onboarding from scratch ──────────────────────────────────
+  const restartOnboarding = useCallback(async () => {
+    try {
+      await resetOnboardingMutation.mutateAsync();
+    } catch {}
+    // Reset local state
+    const emptyProfile: OnboardingProfile = {
+      name: null, title: null, profilePhotoUrl: null, programs: [], styles: [],
+      schoolName: null, addressStreet: null, addressCity: null, addressState: null,
+      addressPostal: null, phone: null, email: null, website: null,
+      logoLightUrl: null, logoDarkUrl: null,
+    };
+    setCurrentStep("name");
+    setProfile(emptyProfile);
+    setHasMartialArts(false);
+    setIsActive(true);
+    hasInitialized.current = false;
+    // Re-inject greeting
+    onInjectMessages([
+      {
+        id: msgId("restart-greeting"),
+        role: "assistant",
+        content: "👋 **Welcome back!** Let's start your setup from the beginning.\n\n*(You can skip this and set it up later if you prefer.)*",
+        isOnboarding: true,
+        step: "idle",
+        showSkip: true,
+      },
+      {
+        id: msgId("restart-q-name"),
+        role: "assistant",
+        content: "First, **what's your name?**",
+        isOnboarding: true,
+        step: "name",
+        showSkip: false,
+      },
+    ]);
+  }, [resetOnboardingMutation, onInjectMessages]);;
 
   return {
     isActive,
@@ -420,6 +459,7 @@ export function useKaiOnboarding({
     handleProfilePhotoUpload,
     skipProfilePhoto,
     skipOnboarding,
+    restartOnboarding,
     isProcessing: processStepMutation.isPending || uploadLogoMutation.isPending,
   };
 }

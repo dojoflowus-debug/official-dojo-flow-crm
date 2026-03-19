@@ -218,6 +218,7 @@ export default function KaiCommand() {
     handleProfilePhotoUpload: handleOnboardingPhotoUpload,
     skipProfilePhoto: skipOnboardingPhoto,
     skipOnboarding,
+    restartOnboarding: restartKaiOnboarding,
   } = useKaiOnboarding({
     organizationId: memoizedOrgId,
     onInjectMessages: (onboardingMsgs) => {
@@ -3520,7 +3521,7 @@ export default function KaiCommand() {
                             
                             {/* Onboarding: Skip entire setup button (for greeting message) */}
                             {message.isOnboarding && message.showSkip && !message.expectsFileUpload && (
-                              <div className="mt-3">
+                              <div className="mt-3 flex flex-wrap gap-2">
                                 <button
                                   onClick={() => skipOnboarding()}
                                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
@@ -3529,6 +3530,14 @@ export default function KaiCommand() {
                                 >
                                   Skip setup for now
                                 </button>
+                                {message.onboardingStep === 'idle' && (
+                                  <button
+                                    onClick={() => restartKaiOnboarding()}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border border-[#FF4C4C]/40 text-[#FF4C4C] hover:bg-[#FF4C4C]/10`}
+                                  >
+                                    Restart Setup
+                                  </button>
+                                )}
                               </div>
                             )}
 
