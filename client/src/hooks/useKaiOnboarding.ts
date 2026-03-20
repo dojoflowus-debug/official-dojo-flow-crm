@@ -10,11 +10,14 @@
  *   5. Rendering the server's kaiMessage response back into the chat
  *   6. Signalling completion to the parent component
  *   7. Invalidating auth.me after name/title steps so the header updates
+ *   8. Providing goBack() for back navigation
+ *   9. Exposing stepNumber/totalSteps for progress bar
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { trpc } from "../lib/trpc";
 import type { OnboardingStep, OnboardingProfile } from "../../../server/kaiOnboardingStateMachine";
+import { getStepQuestion } from "../../../server/kaiOnboardingStateMachine";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +28,7 @@ export interface OnboardingMessage {
   isOnboarding: boolean;
   step: OnboardingStep | "idle";
   showSkip?: boolean;
+  showBack?: boolean;
   showLogoUpload?: boolean;
   logoUploadType?: "light" | "dark";
   showPhotoUpload?: boolean;
@@ -45,6 +49,8 @@ export function useKaiOnboarding({
 }: UseKaiOnboardingOptions) {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("name");
+  const [stepNumber, setStepNumber] = useState(1);
+  const [totalSteps, setTotalSteps] = useState(14);
   const [profile, setProfile] = useState<OnboardingProfile>({
     name: null,
     title: null,
@@ -83,10 +89,9 @@ export function useKaiOnboarding({
   const uploadLogoMutation = trpc.kaiOnboardingSM.uploadLogo.useMutation();
   const skipOnboardingMutation = trpc.kaiOnboardingSM.skipOnboarding.useMutation();
   const resetOnboardingMutation = trpc.kaiOnboardingSM.resetOnboarding.useMutation();
+  const goBackMutation = trpc.kaiOnboardingSM.goBack.useMutation();
 
   // ── Initialize onboarding on first load ────────────────────────────────────
-  // Onboarding happens inside the KAI chat — KAI asks questions conversationally
-  // in the main chat feed and the user replies via the normal composer.
   useEffect(() => {
     if (hasInitialized.current) return;
     if (statusQuery.isLoading || !statusQuery.data) return;
@@ -105,23 +110,35 @@ export function useKaiOnboarding({
     const initialStep = (data.step as OnboardingStep) || "name";
     const initialProfile = (data.profile as OnboardingProfile) || profile;
     const initialHasMartialArts = data.hasMartialArts || false;
+    const initStepNumber = data.stepNumber ?? 1;
+    const initTotalSteps = data.totalSteps ?? 14;
 
     setCurrentStep(initialStep);
     setProfile(initialProfile);
     setHasMartialArts(initialHasMartialArts);
+    setStepNumber(initStepNumber);
+    setTotalSteps(initTotalSteps);
+
+    const isPhotoStep = initialStep === "profile_photo";
+    const isLogoStep = initialStep === "logo_light" || initialStep === "logo_dark";
+    const isFirstStep = initialStep === "name";
 
     // Build the greeting + first question
-    const firstQuestion = getFirstQuestion(initialStep, initialProfile);
-    const isPhotoStep = initialStep === "profile_photo";
+    const greeting = isFirstStep
+      ? `**System initializing...**\n\nI'm **KAI** — your dojo's command and intelligence system. I'm here to run operations, surface insights, and keep your school moving.\n\nBefore I can activate your environment, I need to configure your profile. This takes about 2 minutes.\n\n*(You can skip this and configure later in Settings if you prefer.)*`
+      : `**Resuming activation** — picking up where we left off.\n\n*(You can skip this and configure later in Settings if you prefer.)*`;
+
+    const firstQuestion = getStepQuestion(initialStep, initialProfile);
+
     onInjectMessages([
       {
         id: msgId("greeting"),
         role: "assistant",
-        content:
-          "👋 **Welcome to DojoFlow!** I'm KAI, your AI-powered dojo command center.\n\nBefore you dive in, let me help you set up your school profile — it only takes a minute, and you can update everything later in **Settings → School Profile**.\n\n*(You can skip this and set it up later if you prefer.)*",
+        content: greeting,
         isOnboarding: true,
         step: "idle",
         showSkip: true,
+        showBack: false,
       },
       {
         id: msgId(`q-${initialStep}`),
@@ -130,7 +147,8 @@ export function useKaiOnboarding({
         isOnboarding: true,
         step: initialStep,
         showSkip: initialStep !== "name" && initialStep !== "programs",
-        showLogoUpload: initialStep === "logo_light" || initialStep === "logo_dark",
+        showBack: !isFirstStep,
+        showLogoUpload: isLogoStep,
         logoUploadType: initialStep === "logo_light" ? "light" : initialStep === "logo_dark" ? "dark" : undefined,
         showPhotoUpload: isPhotoStep,
       },
@@ -149,12 +167,13 @@ export function useKaiOnboarding({
           {
             id: msgId("logo-text-redirect"),
             role: "assistant",
-            content: "Please use the **Upload Logo** button below to upload your logo file.",
+            content: "Use the **Upload Logo** button below to upload your logo file.",
             isOnboarding: true,
             step: currentStep,
             showLogoUpload: true,
             logoUploadType: currentStep === "logo_light" ? "light" : "dark",
             showSkip: true,
+            showBack: true,
           },
         ]);
         return true;
@@ -171,6 +190,7 @@ export function useKaiOnboarding({
             step: currentStep,
             showPhotoUpload: true,
             showSkip: true,
+            showBack: true,
           },
         ]);
         return true;
@@ -190,6 +210,8 @@ export function useKaiOnboarding({
         if (result.hasMartialArts !== undefined) {
           setHasMartialArts(result.hasMartialArts);
         }
+        if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
+        if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
 
         // After name or title step, invalidate auth.me so the header updates
         if (currentStep === "name" || currentStep === "title") {
@@ -209,6 +231,7 @@ export function useKaiOnboarding({
             isOnboarding: true,
             step: result.nextStep,
             showSkip: result.showSkip,
+            showBack: result.showBack,
             showLogoUpload: isLogoStep,
             logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
             showPhotoUpload: isPhotoStep,
@@ -227,10 +250,11 @@ export function useKaiOnboarding({
           {
             id: msgId("error"),
             role: "assistant",
-            content: "I ran into a brief issue saving that. Could you try again?",
+            content: "I encountered a brief system error. Please try again.",
             isOnboarding: true,
             step: currentStep,
             showSkip: false,
+            showBack: false,
           },
         ]);
         return true;
@@ -238,6 +262,41 @@ export function useKaiOnboarding({
     },
     [isActive, currentStep, profile, hasMartialArts, processStepMutation, onInjectMessages, onComplete, utils]
   );
+
+  // ── Go back to previous step ─────────────────────────────────────────────────
+  const handleGoBack = useCallback(async () => {
+    if (!isActive) return;
+    try {
+      const result = await goBackMutation.mutateAsync({
+        currentStep,
+        currentProfile: profile,
+        hasMartialArts,
+      });
+
+      setCurrentStep(result.nextStep);
+      setProfile(result.profile);
+      if (result.hasMartialArts !== undefined) setHasMartialArts(result.hasMartialArts);
+      if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
+      if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
+
+      onInjectMessages([
+        {
+          id: msgId(`back-${result.nextStep}`),
+          role: "assistant",
+          content: result.kaiMessage,
+          isOnboarding: true,
+          step: result.nextStep,
+          showSkip: result.showSkip,
+          showBack: result.showBack,
+          showLogoUpload: result.nextStep === "logo_light" || result.nextStep === "logo_dark",
+          logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+          showPhotoUpload: result.nextStep === "profile_photo",
+        },
+      ]);
+    } catch (err) {
+      console.error("[KaiOnboarding] goBack error:", err);
+    }
+  }, [isActive, currentStep, profile, hasMartialArts, goBackMutation, onInjectMessages]);
 
   // ── Upload profile picture mutation ───────────────────────────────────────
   const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation();
@@ -252,18 +311,17 @@ export function useKaiOnboarding({
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         const ctx = canvas.getContext('2d')!;
-        // Fill white background so transparent PNGs don't become black in JPEG
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         const resized = canvas.toDataURL('image/jpeg', 0.85);
         resolve({ dataUrl: resized, mimeType: 'image/jpeg' });
       };
-      img.onerror = () => resolve({ dataUrl, mimeType: 'image/jpeg' }); // fallback
+      img.onerror = () => resolve({ dataUrl, mimeType: 'image/jpeg' });
       img.src = dataUrl;
     });
 
-  // ── Handle profile photo upload ─────────────────────────────────────────────────────
+  // ── Handle profile photo upload ─────────────────────────────────────────────
   const handleProfilePhotoUpload = useCallback(
     async (file: File) => {
       if (!isActive) return;
@@ -273,14 +331,13 @@ export function useKaiOnboarding({
         const rawDataUrl = e.target?.result as string;
         if (!rawDataUrl) return;
 
-        // Resize to max 800x800 and compress to JPEG to stay under 5MB
         const { dataUrl, mimeType } = await resizeImage(rawDataUrl, 800);
 
         try {
-          // Upload via auth.uploadProfilePicture (existing endpoint)
           const base64Data = dataUrl.split(',')[1] || dataUrl;
           const result = await uploadProfilePictureMutation.mutateAsync({ imageData: base64Data, mimeType });
-          const photoUrl = result?.photoUrl || dataUrl;          // Submit the URL to the state machine as the answer
+          const photoUrl = result?.photoUrl || dataUrl;
+
           const smResult = await processStepMutation.mutateAsync({
             currentStep: "profile_photo",
             userInput: photoUrl,
@@ -290,8 +347,9 @@ export function useKaiOnboarding({
 
           setProfile(smResult.profile);
           setCurrentStep(smResult.nextStep);
+          if (smResult.stepNumber !== undefined) setStepNumber(smResult.stepNumber);
+          if (smResult.totalSteps !== undefined) setTotalSteps(smResult.totalSteps);
 
-          // Invalidate auth.me so avatar updates
           try { await utils.auth.me.invalidate(); } catch {}
 
           const isLogoStep = smResult.nextStep === "logo_light" || smResult.nextStep === "logo_dark";
@@ -303,6 +361,7 @@ export function useKaiOnboarding({
               isOnboarding: true,
               step: smResult.nextStep,
               showSkip: smResult.showSkip,
+              showBack: smResult.showBack,
               showLogoUpload: isLogoStep,
               logoUploadType: smResult.nextStep === "logo_light" ? "light" : smResult.nextStep === "logo_dark" ? "dark" : undefined,
             },
@@ -318,11 +377,12 @@ export function useKaiOnboarding({
             {
               id: msgId("photo-error"),
               role: "assistant",
-              content: "I had trouble saving that photo. Please try again or skip for now.",
+              content: "Photo upload failed. Please try again or skip for now.",
               isOnboarding: true,
               step: "profile_photo",
               showPhotoUpload: true,
               showSkip: true,
+              showBack: true,
             },
           ]);
         }
@@ -344,6 +404,9 @@ export function useKaiOnboarding({
       });
       setProfile(result.profile);
       setCurrentStep(result.nextStep);
+      if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
+      if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
+
       const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
       onInjectMessages([
         {
@@ -353,6 +416,7 @@ export function useKaiOnboarding({
           isOnboarding: true,
           step: result.nextStep,
           showSkip: result.showSkip,
+          showBack: result.showBack,
           showLogoUpload: isLogoStep,
           logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
         },
@@ -385,6 +449,8 @@ export function useKaiOnboarding({
 
           setProfile(result.profile);
           setCurrentStep(result.nextStep);
+          if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
+          if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
 
           const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
           onInjectMessages([
@@ -395,6 +461,7 @@ export function useKaiOnboarding({
               isOnboarding: true,
               step: result.nextStep,
               showSkip: result.showSkip,
+              showBack: result.showBack,
               showLogoUpload: isLogoStep,
               logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
             },
@@ -410,12 +477,13 @@ export function useKaiOnboarding({
             {
               id: msgId("logo-error"),
               role: "assistant",
-              content: "I had trouble saving that logo. Please try again.",
+              content: "Logo upload failed. Please try again.",
               isOnboarding: true,
               step: currentStep,
               showLogoUpload: true,
               logoUploadType: type,
               showSkip: true,
+              showBack: true,
             },
           ]);
         }
@@ -425,7 +493,7 @@ export function useKaiOnboarding({
     [isActive, currentStep, profile, hasMartialArts, uploadLogoMutation, onInjectMessages, onComplete]
   );
 
-    // ── Skip entire onboarding ───────────────────────────────────────────────
+  // ── Skip entire onboarding ───────────────────────────────────────────────
   const skipOnboarding = useCallback(async () => {
     try {
       await skipOnboardingMutation.mutateAsync();
@@ -434,12 +502,11 @@ export function useKaiOnboarding({
     onComplete();
   }, [skipOnboardingMutation, onComplete]);
 
-  // ── Restart onboarding from scratch ──────────────────────────────────
+  // ── Restart onboarding from scratch ──────────────────────────────
   const restartOnboarding = useCallback(async () => {
     try {
       await resetOnboardingMutation.mutateAsync();
     } catch {}
-    // Reset local state
     const emptyProfile: OnboardingProfile = {
       name: null, title: null, profilePhotoUrl: null, programs: [], styles: [],
       schoolName: null, addressStreet: null, addressCity: null, addressState: null,
@@ -449,32 +516,36 @@ export function useKaiOnboarding({
     setCurrentStep("name");
     setProfile(emptyProfile);
     setHasMartialArts(false);
+    setStepNumber(1);
     setIsActive(true);
     hasInitialized.current = false;
-    // Re-inject greeting
     onInjectMessages([
       {
         id: msgId("restart-greeting"),
         role: "assistant",
-        content: "👋 **Welcome back!** Let's start your setup from the beginning.\n\n*(You can skip this and set it up later if you prefer.)*",
+        content: `**Resetting activation sequence.**\n\nLet's configure your profile from the beginning.\n\n*(You can skip this and configure later in Settings if you prefer.)*`,
         isOnboarding: true,
         step: "idle",
         showSkip: true,
+        showBack: false,
       },
       {
         id: msgId("restart-q-name"),
         role: "assistant",
-        content: "First, **what's your name?**",
+        content: `**Activation sequence initiated.**\n\nI'm KAI — your dojo's command system. Before I can configure your environment, I need to know who I'm working with.\n\n**What's your name?**`,
         isOnboarding: true,
         step: "name",
         showSkip: false,
+        showBack: false,
       },
     ]);
-  }, [resetOnboardingMutation, onInjectMessages]);;
+  }, [resetOnboardingMutation, onInjectMessages]);
 
   return {
     isActive,
     currentStep,
+    stepNumber,
+    totalSteps,
     profile,
     hasMartialArts,
     handleUserReply,
@@ -483,33 +554,7 @@ export function useKaiOnboarding({
     skipProfilePhoto,
     skipOnboarding,
     restartOnboarding,
-    isProcessing: processStepMutation.isPending || uploadLogoMutation.isPending,
+    handleGoBack,
+    isProcessing: processStepMutation.isPending || uploadLogoMutation.isPending || goBackMutation.isPending,
   };
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getFirstQuestion(step: OnboardingStep, profile: OnboardingProfile): string {
-  switch (step) {
-    case "name": return "First, **what's your name?**";
-    case "title": return `What's your **title**, ${profile.name || ""}? *(e.g., Sensei, Sifu, Coach, Professor, Master, Instructor)*`;
-    case "profile_photo": {
-      const titleName = profile.title && profile.name
-        ? `${profile.title} ${profile.name}`
-        : profile.name || "there";
-      return `Great to meet you, **${titleName}**! 📸 Would you like to upload a **profile photo**? It'll appear next to your messages in KAI. *(You can skip this and add one later in Settings)*`;
-    }
-    case "programs": return "What **programs** do you teach? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga — list as many as you like)*";
-    case "rank": return "What is your current **rank or belt**?";
-    case "school_name": return "What's the **name of your school or dojo**?";
-    case "martial_style": return "What **martial arts style(s)** do you primarily teach?";
-    case "address": return "What's your **street address**?";
-    case "city_state_zip": return "What's your **city, state, and ZIP code**?";
-    case "phone": return "What's your **school phone number**?";
-    case "email": return "What's your **school email address**?";
-    case "website": return "What's your **school website**?";
-    case "logo_light": return "Now let's brand your dashboard. Upload your **Day Mode logo** — used on light backgrounds. PNG or SVG works best.";
-    case "logo_dark": return "Upload your **Dark Mode logo** — usually a white or light version of your logo, used on dark backgrounds.";
-    default: return "What's your **name**?";
-  }
 }

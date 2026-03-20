@@ -8434,3 +8434,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Build KaiOnboardingPanel (progress bar, step counter, one-step chat inside overlay)
 - [x] Build KaiSetupResumeBanner (persistent chip for Explore First users)
 - [x] Wire overlay into KaiCommand.tsx (replace old inline onboarding messages)
+
+## KAI Onboarding Intelligence & UX Upgrade (Mar 20, 2026)
+
+- [ ] Add progress bar + step indicator to KAI chat panel header (dynamic, updates per step)
+- [ ] Rewrite all step questions with directive/activation tone and memory reinforcement
+- [ ] Add Back button support to onboarding steps
+- [ ] Add Continue/Skip/Back controls to each step message
+- [ ] Reframe all language: "activate", "configure", "lock in" instead of "setup", "fill out"
+- [ ] Add memory reinforcement: KAI references stored user data naturally throughout flow

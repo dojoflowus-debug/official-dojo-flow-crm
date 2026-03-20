@@ -122,6 +122,7 @@ interface Message {
   onboardingStep?: string;
   expectsFileUpload?: boolean;
   showSkip?: boolean;
+  showBack?: boolean;
   showLogoUpload?: boolean;
   logoUploadType?: 'light' | 'dark';
   showPhotoUpload?: boolean;
@@ -213,12 +214,15 @@ export default function KaiCommand() {
   const {
     isActive: isOnboardingActive,
     currentStep: onboardingCurrentStep,
+    stepNumber: onboardingStepNumber,
+    totalSteps: onboardingTotalSteps,
     handleUserReply: handleOnboardingReply,
     handleLogoUpload: handleOnboardingLogoUpload,
     handleProfilePhotoUpload: handleOnboardingPhotoUpload,
     skipProfilePhoto: skipOnboardingPhoto,
     skipOnboarding,
     restartOnboarding: restartKaiOnboarding,
+    handleGoBack: handleOnboardingGoBack,
   } = useKaiOnboarding({
     organizationId: memoizedOrgId,
     onInjectMessages: (onboardingMsgs) => {
@@ -234,6 +238,7 @@ export default function KaiCommand() {
           onboardingStep: m.step,
           expectsFileUpload: m.showLogoUpload,
           showSkip: m.showSkip,
+          showBack: m.showBack,
           showLogoUpload: m.showLogoUpload,
           logoUploadType: m.logoUploadType,
           showPhotoUpload: m.showPhotoUpload,
@@ -3154,6 +3159,34 @@ export default function KaiCommand() {
           </div>
           )}
 
+          {/* KAI Onboarding Progress Bar — shown only during active onboarding */}
+          {isOnboardingActive && onboardingTotalSteps > 0 && (
+            <div className={`px-4 py-2 border-b ${
+              isCinematic ? 'border-white/10 bg-black/30' : isDark ? 'border-white/10 bg-black/20' : 'border-slate-200 bg-slate-50'
+            }`}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className={`text-xs font-semibold tracking-widest uppercase ${
+                  isCinematic || isDark ? 'text-[#FF4C4C]' : 'text-[#FF4C4C]'
+                }`}>
+                  Activation Sequence
+                </span>
+                <span className={`text-xs font-mono ${
+                  isCinematic || isDark ? 'text-white/50' : 'text-slate-400'
+                }`}>
+                  Step {onboardingStepNumber} of {onboardingTotalSteps}
+                </span>
+              </div>
+              <div className={`h-1 rounded-full overflow-hidden ${
+                isCinematic || isDark ? 'bg-white/10' : 'bg-slate-200'
+              }`}>
+                <div
+                  className="h-full rounded-full bg-[#FF4C4C] transition-all duration-500 ease-out"
+                  style={{ width: `${Math.round((onboardingStepNumber / onboardingTotalSteps) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* CONTENT LAYER - Messages Area (Row 2 of 3-row layout) */}
           {/* This is the scrollable middle zone - flex-1 takes remaining space */}
           {/* Composer is now a separate flex item below, so we don't need excessive bottom padding */}
@@ -3519,24 +3552,49 @@ export default function KaiCommand() {
                               return null;
                             })()}
                             
-                            {/* Onboarding: Skip entire setup button (for greeting message) */}
-                            {message.isOnboarding && message.showSkip && !message.expectsFileUpload && (
+                            {/* Onboarding: Action buttons — Back / Skip / Restart */}
+                            {message.isOnboarding && (message.showSkip || message.showBack) && !message.expectsFileUpload && !message.showLogoUpload && !message.showPhotoUpload && (
                               <div className="mt-3 flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => skipOnboarding()}
-                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
-                                    isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  Skip setup for now
-                                </button>
-                                {message.onboardingStep === 'idle' && (
+                                {/* Back button */}
+                                {message.showBack && (
                                   <button
-                                    onClick={() => restartKaiOnboarding()}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border border-[#FF4C4C]/40 text-[#FF4C4C] hover:bg-[#FF4C4C]/10`}
+                                    onClick={() => handleOnboardingGoBack()}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                      isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
                                   >
-                                    Restart Setup
+                                    ← Back
                                   </button>
+                                )}
+                                {/* Skip current step */}
+                                {message.showSkip && message.onboardingStep !== 'idle' && (
+                                  <button
+                                    onClick={() => handleOnboardingReply('skip')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                      isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    Skip
+                                  </button>
+                                )}
+                                {/* Skip entire onboarding (greeting message only) */}
+                                {message.onboardingStep === 'idle' && (
+                                  <>
+                                    <button
+                                      onClick={() => skipOnboarding()}
+                                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                        isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                      }`}
+                                    >
+                                      Skip activation for now
+                                    </button>
+                                    <button
+                                      onClick={() => restartKaiOnboarding()}
+                                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border border-[#FF4C4C]/40 text-[#FF4C4C] hover:bg-[#FF4C4C]/10"
+                                    >
+                                      Restart Activation
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             )}
@@ -3581,7 +3639,17 @@ export default function KaiCommand() {
                                       isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                                     }`}
                                   >
-                                    Skip for now
+                                    Skip
+                                  </button>
+                                )}
+                                {message.showBack && (
+                                  <button
+                                    onClick={() => handleOnboardingGoBack()}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                      isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    ← Back
                                   </button>
                                 )}
                               </div>
@@ -3622,8 +3690,18 @@ export default function KaiCommand() {
                                     isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                                   }`}
                                 >
-                                  Skip for now
+                                  Skip
                                 </button>
+                                {message.showBack && (
+                                  <button
+                                    onClick={() => handleOnboardingGoBack()}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                                      isDark ? 'border-white/20 text-white/60 hover:text-white/90 hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    ← Back
+                                  </button>
+                                )}
                               </div>
                             )}
 

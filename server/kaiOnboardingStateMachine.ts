@@ -11,11 +11,11 @@ import { upsertSchoolProfile } from "./schoolProfileDb";
 export const ONBOARDING_STEPS = [
   "name",
   "title",
-  "profile_photo",  // new — upload profile picture after name/title
+  "profile_photo",  // upload profile picture after name/title
   "programs",
-  "rank",          // conditional — only if programs includes martial arts
+  "rank",           // conditional — only if programs includes martial arts
   "school_name",
-  "martial_style", // conditional — only if programs includes martial arts
+  "martial_style",  // conditional — only if programs includes martial arts
   "address",
   "city_state_zip",
   "phone",
@@ -68,14 +68,13 @@ function detectsMartialArts(text: string): boolean {
   return MARTIAL_ARTS_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-// Detect correction intent: "that's wrong", "not my name", "actually", "I meant", etc.
+// Detect correction intent
 const CORRECTION_PATTERNS = [
   /\b(that'?s?\s*(not|wrong|incorrect))/i,
   /\b(not\s+my\s+(name|title|rank|school))/i,
   /\b(i\s+meant|i\s+mean|actually|correction|correct\s+that|change\s+that)/i,
   /\b(go\s+back|redo|undo|start\s+over|reset)/i,
   /\b(wrong\s+(name|title|rank|school|answer))/i,
-  // Natural language name/title change requests
   /\b(address\s+me\s+as|call\s+me|refer\s+to\s+me\s+as|known\s+as|can\s+you\s+call|please\s+call)/i,
   /\b(would\s+like\s+to\s+be\s+called|want\s+to\s+be\s+called|like\s+to\s+be\s+called|should\s+call\s+me|my\s+name\s+is|i\s+go\s+by)/i,
 ];
@@ -84,7 +83,6 @@ function isCorrection(text: string): boolean {
   return CORRECTION_PATTERNS.some((p) => p.test(text));
 }
 
-// Detect if input looks like a greeting rather than a real answer
 const GREETING_PATTERNS = [
   /^(hi|hello|hey|howdy|greetings|good\s+(morning|afternoon|evening|day))[!.,\s]*$/i,
   /^(what'?s?\s+up|sup|yo)[!.,\s]*$/i,
@@ -94,7 +92,6 @@ function isGreeting(text: string): boolean {
   return GREETING_PATTERNS.some((p) => p.test(text.trim()));
 }
 
-// Detect skip intent
 const SKIP_PATTERNS = [
   /^(skip|pass|later|not\s+now|no\s+thanks|n\/a|none|skip\s+for\s+now)[!.,\s]*$/i,
 ];
@@ -103,7 +100,7 @@ function isSkip(text: string): boolean {
   return SKIP_PATTERNS.some((p) => p.test(text.trim()));
 }
 
-// Validate name: must be at least 2 chars, not a greeting
+// Validate name
 function validateName(text: string): { valid: boolean; error?: string } {
   const t = text.trim();
   if (isGreeting(t)) return { valid: false, error: "greeting" };
@@ -113,7 +110,7 @@ function validateName(text: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-// Validate title: must be at least 2 chars
+// Validate title
 function validateTitle(text: string): { valid: boolean; error?: string } {
   const t = text.trim();
   if (t.length < 2) return { valid: false, error: "too_short" };
@@ -121,7 +118,7 @@ function validateTitle(text: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-// Validate programs: must mention at least one recognizable program or be a reasonable string
+// Validate programs
 function validatePrograms(text: string): { valid: boolean; error?: string } {
   const t = text.trim();
   if (isGreeting(t)) return { valid: false, error: "greeting" };
@@ -145,74 +142,73 @@ function parsePrograms(text: string): string[] {
     .filter((s) => s.length > 0);
 }
 
-// ─── Question messages for each step ─────────────────────────────────────────
+// ─── Step question messages — directive, mission-driven tone ─────────────────
 
 export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile): string {
+  const titleName = profile.title && profile.name
+    ? `${profile.title} ${profile.name}`
+    : profile.name || null;
+
   switch (step) {
     case "name":
-      return "First, **what's your name?**";
+      return `**Activation sequence initiated.**\n\nI'm KAI — your dojo's command system. Before I can configure your environment, I need to know who I'm working with.\n\n**What's your name?**`;
+
     case "title":
-      return `What's your **title**, ${profile.name}? *(e.g., Sensei, Sifu, Coach, Professor, Master, Instructor)*`;
-    case "programs":
-      return "What **programs** do you teach? *(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga — list as many as you like)*";
-    case "rank":
-      return "What is your current **rank or belt**? *(e.g., Black Belt 3rd Degree, Brown Belt, Head Instructor)*";
-    case "school_name":
-      return "What's the **name of your school or dojo**?";
-    case "martial_style":
-      return "What **martial arts style(s)** do you primarily teach? *(e.g., Brazilian Jiu-Jitsu, Shotokan Karate)*";
-    case "address":
-      return "What's your **street address**?";
-    case "city_state_zip":
-      return "What's your **city, state, and ZIP code**? *(e.g., Austin, TX 78701)*";
-    case "phone":
-      return "What's your **school phone number**?";
-    case "email":
-      return "What's your **school email address**?";
-    case "website":
-      return "What's your **school website**? *(e.g., https://mydojo.com)*";
+      return `**${profile.name}** — locked in.\n\nNow, how should I address you? *(Sensei, Sifu, Coach, Professor, Master, Instructor — or whatever you go by)*`;
+
     case "profile_photo": {
-      const titleName = profile.title && profile.name
-        ? `${profile.title} ${profile.name}`
-        : profile.name || "there";
-      return `Great to meet you, **${titleName}**! 📸 Would you like to upload a **profile photo**? It'll appear next to your messages in KAI. *(You can skip this and add one later in Settings)*`;
+      const displayName = titleName || profile.name || "there";
+      return `**${displayName}** — identity confirmed.\n\nLet's put a face to the command. Upload your **profile photo** — it'll appear across your dashboard and in KAI conversations.\n\n*(You can skip this and add one later in Settings)*`;
     }
+
+    case "programs":
+      return `Now let's configure your **program roster**.\n\nWhat disciplines do you teach? List everything — I'll use this to tailor your system.\n\n*(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga)*`;
+
+    case "rank":
+      return `One more thing before we move on — what is your **current rank or belt**?\n\n*(e.g., Black Belt 3rd Degree, Brown Belt, Head Instructor)*`;
+
+    case "school_name": {
+      const programList = profile.programs.length > 0
+        ? profile.programs.join(", ")
+        : null;
+      return programList
+        ? `**${programList}** — program roster locked in.\n\nNow let's identify your operation. What is the **official name of your school or dojo**?`
+        : `Program roster locked in.\n\nNow let's identify your operation. What is the **official name of your school or dojo**?`;
+    }
+
+    case "martial_style":
+      return `What **martial arts style(s)** do you primarily teach at **${profile.schoolName || "your school"}**?\n\n*(e.g., Brazilian Jiu-Jitsu, Shotokan Karate, Muay Thai)*`;
+
+    case "address":
+      return `Let's lock in your location. What is your **school's street address**?`;
+
+    case "city_state_zip":
+      return `And the **city, state, and ZIP code**?\n\n*(e.g., Austin, TX 78701)*`;
+
+    case "phone":
+      return `What's the **direct phone number** for **${profile.schoolName || "your school"}**?`;
+
+    case "email":
+      return `What **email address** should students and leads use to reach you?\n\n*(e.g., info@${profile.schoolName ? profile.schoolName.toLowerCase().replace(/\s+/g, '') + '.com' : 'yourdojo.com'})*`;
+
+    case "website":
+      return `Does **${profile.schoolName || "your school"}** have a website? Drop the URL here.\n\n*(e.g., https://yourdojo.com — or skip if you don't have one yet)*`;
+
     case "logo_light":
-      return "Now let's brand your dashboard. Upload your **Day Mode logo** — used on light backgrounds. PNG or SVG works best.";
+      return `Let's brand your command center. Upload your **Day Mode logo** — displayed on light backgrounds.\n\n*PNG or SVG works best. This will appear in your dashboard header.*`;
+
     case "logo_dark":
-      return "Upload your **Dark Mode logo** — usually a white or light version of your logo, used on dark backgrounds.";
+      return `Now upload your **Dark Mode logo** — typically a white or light version of your logo for dark backgrounds.\n\n*This is what students and staff will see in dark theme.*`;
+
     default:
-      return "What would you like to set up next?";
+      return "Ready for the next configuration step.";
   }
 }
 
-// ─── State machine transition ─────────────────────────────────────────────────
+// ─── Ordered flow builder ─────────────────────────────────────────────────────
 
-export interface ProcessStepResult {
-  /** The KAI response message to show the user */
-  kaiMessage: string;
-  /** The next step to transition to */
-  nextStep: OnboardingStep;
-  /** Updated profile */
-  profile: OnboardingProfile;
-  /** Whether the step was completed (vs re-asked due to validation failure) */
-  stepCompleted: boolean;
-  /** Whether onboarding is now complete */
-  isComplete: boolean;
-  /** Whether this step expects a file upload */
-  expectsFileUpload: boolean;
-  /** Whether to show a skip button */
-  showSkip: boolean;
-  /** Whether a correction was detected and which step to return to */
-  correctionStep?: OnboardingStep;
-}
-
-function getNextStep(
-  current: OnboardingStep,
-  profile: OnboardingProfile,
-  hasMartialArts: boolean
-): OnboardingStep {
-  const flow: OnboardingStep[] = [
+function buildFlow(hasMartialArts: boolean): OnboardingStep[] {
+  return [
     "name",
     "title",
     "profile_photo",
@@ -229,10 +225,40 @@ function getNextStep(
     "logo_dark",
     "complete",
   ];
+}
 
+function getNextStep(
+  current: OnboardingStep,
+  profile: OnboardingProfile,
+  hasMartialArts: boolean
+): OnboardingStep {
+  const flow = buildFlow(hasMartialArts);
   const idx = flow.indexOf(current);
   if (idx === -1 || idx >= flow.length - 1) return "complete";
   return flow[idx + 1];
+}
+
+function getPrevStep(
+  current: OnboardingStep,
+  hasMartialArts: boolean
+): OnboardingStep | null {
+  const flow = buildFlow(hasMartialArts);
+  const idx = flow.indexOf(current);
+  if (idx <= 0) return null;
+  return flow[idx - 1];
+}
+
+/** Returns 1-based step number and total steps (excluding "complete") */
+export function getStepProgress(
+  step: OnboardingStep,
+  hasMartialArts: boolean
+): { stepNumber: number; totalSteps: number } {
+  const flow = buildFlow(hasMartialArts).filter((s) => s !== "complete");
+  const idx = flow.indexOf(step);
+  return {
+    stepNumber: idx === -1 ? flow.length : idx + 1,
+    totalSteps: flow.length,
+  };
 }
 
 // ─── DB helpers ───────────────────────────────────────────────────────────────
@@ -241,8 +267,6 @@ async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Load from organizations (step tracking) and dojo_settings + school_profiles (profile data)
-  // Use raw SQL to avoid errors if onboarding_profile column doesn't exist yet
   let org: { onboardingStatus: string | null; onboardingStep: number | null; onboardingProfile: string | null } | null = null;
   try {
     const [row] = await db
@@ -256,7 +280,6 @@ async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
       .limit(1);
     org = row ?? null;
   } catch (e: any) {
-    // If onboarding_profile column doesn't exist, select without it
     if (e?.message?.includes('onboarding_profile') || e?.message?.includes('Unknown column')) {
       const [row] = await db
         .select({
@@ -294,7 +317,6 @@ async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
     .limit(1)
     .catch(() => [null]);
 
-  // Parse stored JSON profile if available
   let storedProfile: Partial<OnboardingProfile> = {};
   if (org?.onboardingProfile) {
     try {
@@ -324,7 +346,6 @@ async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
     profilePhotoUrl: storedProfile.profilePhotoUrl ?? null,
   };
 
-  // Determine current step from stored state or infer from what's missing
   let currentStep: OnboardingStep = "name";
   if (org?.onboardingStep && org.onboardingStep > 0) {
     const stepMap: Record<number, OnboardingStep> = {
@@ -351,7 +372,6 @@ async function saveOnboardingState(
   const db = await getDb();
   if (!db) return;
 
-  // Try saving with onboarding_profile column first
   try {
     await db
       .update(organizations)
@@ -363,13 +383,11 @@ async function saveOnboardingState(
       .where(eq(organizations.id, orgId));
     return;
   } catch (e: any) {
-    // If column doesn't exist yet, fall back to saving without it
     const isColumnMissing = e?.message?.includes('onboarding_profile') || e?.message?.includes('Unknown column');
     if (!isColumnMissing) throw e;
     console.warn('[OnboardingSM] onboarding_profile column missing, saving without it');
   }
 
-  // Fallback: save just the step/status (profile stored in dojo_settings instead)
   await db
     .update(organizations)
     .set({
@@ -432,7 +450,6 @@ async function persistProfileField(
       case "addressCity":
       case "addressState":
       case "addressPostal":
-        // These are handled together in city_state_zip step
         break;
       case "phone":
         await upsertSchoolProfile(orgId, { phone: stringValue });
@@ -456,6 +473,20 @@ const STEP_NUMBERS: Record<OnboardingStep, number> = {
   email: 11, website: 12, logo_light: 13, logo_dark: 14, complete: 99,
 };
 
+// ─── Result type ──────────────────────────────────────────────────────────────
+
+export interface ProcessStepResult {
+  kaiMessage: string;
+  nextStep: OnboardingStep;
+  profile: OnboardingProfile;
+  stepCompleted: boolean;
+  isComplete: boolean;
+  expectsFileUpload: boolean;
+  showSkip: boolean;
+  showBack: boolean;
+  correctionStep?: OnboardingStep;
+}
+
 // ─── Main state machine processor ────────────────────────────────────────────
 
 export async function processOnboardingStep(
@@ -466,25 +497,22 @@ export async function processOnboardingStep(
   currentProfile: OnboardingProfile,
   hasMartialArts: boolean
 ): Promise<ProcessStepResult> {
-  // Strip leading non-alphanumeric characters (e.g. accidental backslash, slash, punctuation)
   const input = userInput.trim().replace(/^[^a-zA-Z0-9]+/, '');
   const titleName = currentProfile.title && currentProfile.name
     ? `${currentProfile.title} ${currentProfile.name}`
     : currentProfile.name || "there";
 
+  const hasPrev = getPrevStep(currentStep, hasMartialArts) !== null;
+
   // ── Correction detection ──────────────────────────────────────────────────
   if (isCorrection(input)) {
-    // Determine which step to correct based on keywords
     let correctionStep: OnboardingStep = currentStep;
     const lower = input.toLowerCase();
-    // Check 'address me as' / 'call me' / 'refer to me as' FIRST — these mean name/title correction, not street address
+
     const titleCorrectionMatch = input.match(/\b(?:address\s+me\s+as|call\s+me|refer\s+to\s+me\s+as|known\s+as|would\s+like\s+to\s+be\s+called|want\s+to\s+be\s+called|like\s+to\s+be\s+called|should\s+call\s+me|i\s+go\s+by|my\s+name\s+is)\s+([a-zA-Z][a-zA-Z\s\.]+?)(?:\s+instead|\s+please|\s*[?!.,]|$)/i);
     if (titleCorrectionMatch) {
-      // Extract the new title/name from the pattern and apply it directly
-      // Convert to Title Case (e.g. "master holmes" -> "Master Holmes")
       const toTitleCase = (s: string) => s.replace(/\b\w/g, c => c.toUpperCase());
       const newTitleName = toTitleCase(titleCorrectionMatch[1].trim());
-      // Try to split into title + name (e.g. "Master Holmes" -> title="Master", name="Holmes")
       const titleWords = ["Sensei", "Sifu", "Coach", "Professor", "Master", "Instructor", "Dr", "Mr", "Mrs", "Ms"];
       const parts = newTitleName.split(/\s+/);
       const firstWord = parts[0];
@@ -496,22 +524,23 @@ export async function processOnboardingStep(
         await persistProfileField(orgId, "title", firstWord);
         await persistProfileField(orgId, "name", updatedProfile.name);
       } else {
-        // Treat whole thing as a name/title preference
         updatedProfile.title = newTitleName;
         await persistProfileField(orgId, "title", newTitleName);
       }
       const next = getNextStep(currentStep, updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Of course — I'll address you as **${newTitleName}** from here on.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `Understood — I'll address you as **${newTitleName}** from this point forward.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: hasPrev,
         correctionStep: currentStep,
       };
     }
+
     correctionStep = currentStep;
     if (lower.includes("name")) correctionStep = "name";
     else if (lower.includes("title")) correctionStep = "title";
@@ -526,13 +555,14 @@ export async function processOnboardingStep(
     else if (lower.includes("website") || lower.includes("url")) correctionStep = "website";
 
     return {
-      kaiMessage: `No problem — let's correct that. ${getStepQuestion(correctionStep, currentProfile)}`,
+      kaiMessage: `Understood — let's reconfigure that.\n\n${getStepQuestion(correctionStep, currentProfile)}`,
       nextStep: correctionStep,
       profile: currentProfile,
       stepCompleted: false,
       isComplete: false,
       expectsFileUpload: correctionStep === "logo_light" || correctionStep === "logo_dark",
       showSkip: correctionStep !== "name" && correctionStep !== "title" && correctionStep !== "programs",
+      showBack: false,
       correctionStep,
     };
   }
@@ -544,8 +574,8 @@ export async function processOnboardingStep(
       if (!validation.valid) {
         const errorMsg =
           validation.error === "greeting"
-            ? `I appreciate the greeting! But I need your **actual name** to get started. What should I call you?`
-            : `That doesn't look like a name. What's your **full name or first name**?`;
+            ? `I appreciate the greeting — but I need your **actual name** to initialize your profile. What should I call you?`
+            : `That doesn't register as a name. Give me your **first name** — or the name you go by.`;
         return {
           kaiMessage: errorMsg,
           nextStep: "name",
@@ -554,12 +584,12 @@ export async function processOnboardingStep(
           isComplete: false,
           expectsFileUpload: false,
           showSkip: false,
+          showBack: false,
         };
       }
       const name = input;
       const updatedProfile = { ...currentProfile, name };
       await persistProfileField(orgId, "name", name);
-      // Also update users.name so the chat header reflects the new name immediately
       try {
         const db = await getDb();
         if (db) {
@@ -570,13 +600,14 @@ export async function processOnboardingStep(
       }
       const next = getNextStep("name", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${name}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${name}** — identity registered.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: false,
       };
     }
 
@@ -584,73 +615,72 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("title", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `No problem — you can set your title later in Settings.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `No title configured — you can set one anytime in **Settings → Profile**.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       const validation = validateTitle(input);
       if (!validation.valid) {
         return {
-          kaiMessage: `I need a title to address you properly — for example: Sensei, Sifu, Coach, Professor, or Master. What's yours?`,
+          kaiMessage: `I need a title to address you properly throughout your system — for example: **Sensei, Sifu, Coach, Professor, or Master**. What's yours?`,
           nextStep: "title",
           profile: currentProfile,
           stepCompleted: false,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
-      // Normalize to title-case (e.g. "MAster" → "Master", "SENSEI" → "Sensei")
       const toTitleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
       const title = toTitleCase(input);
       const updatedProfile = { ...currentProfile, title };
       await persistProfileField(orgId, "title", title);
-      const titleName = `${title} ${currentProfile.name || ""}`.trim();
-      // Update users.name to full title+name so the chat header and avatar show the right name
+      const fullTitleName = `${title} ${currentProfile.name || ""}`.trim();
       try {
         const db = await getDb();
         if (db) {
-          await db.update(users).set({ name: titleName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
+          await db.update(users).set({ name: fullTitleName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
         }
       } catch (e) {
         console.error('[OnboardingSM] Failed to update users.name with title:', e);
       }
       const next = getNextStep("title", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Perfect — I'll address you as **${titleName}** from here on.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${fullTitleName}** — designation confirmed. I'll address you this way throughout your system.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: true,
       };
     }
 
     case "profile_photo": {
-      // This step expects a file upload — if user sends text it's either a skip or an uploaded URL
       if (isSkip(input) || input.toLowerCase() === 'skip' || input.toLowerCase() === 'no' || input.toLowerCase() === 'later') {
         const next = getNextStep("profile_photo", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `No problem — you can add a photo anytime in **Settings → Profile**. Let's continue!\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Photo skipped — you can configure this anytime in **Settings → Profile**. Moving forward.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: false,
+          showBack: true,
         };
       }
-      // If input looks like a URL (uploaded photo), save it
       const isUrl = input.startsWith('http://') || input.startsWith('https://');
       if (isUrl) {
         const updatedProfile = { ...currentProfile, profilePhotoUrl: input };
-        // Update users.photoUrl so the avatar updates immediately
         try {
           const db = await getDb();
           if (db) {
@@ -661,30 +691,30 @@ export async function processOnboardingStep(
         }
         const next = getNextStep("profile_photo", updatedProfile, hasMartialArts);
         return {
-          kaiMessage: `Looking great! 📸 Photo saved.\n\n${getStepQuestion(next, updatedProfile)}`,
+          kaiMessage: `Profile photo activated. 📸\n\n${getStepQuestion(next, updatedProfile)}`,
           nextStep: next,
           profile: updatedProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: false,
+          showBack: true,
         };
       }
-      // Otherwise — user typed something that isn't a URL or skip word
-      // Treat any text response as "I'll do it later" and move on gracefully
       const next = getNextStep("profile_photo", currentProfile, hasMartialArts);
       const skipPhrases = /\b(later|not now|no thanks|maybe later|i'll do it|skip|next|continue|move on|pass)\b/i;
-      const friendlySkipMsg = skipPhrases.test(input)
-        ? `Got it — you can always add a photo later in **Settings \u2192 Profile**. Let's keep going!\n\n${getStepQuestion(next, currentProfile)}`
-        : `No worries — you can add a profile photo anytime from **Settings \u2192 Profile**. Moving on!\n\n${getStepQuestion(next, currentProfile)}`;
+      const msg = skipPhrases.test(input)
+        ? `Photo deferred — you can activate this anytime in **Settings → Profile**.\n\n${getStepQuestion(next, currentProfile)}`
+        : `No photo detected — you can configure this anytime in **Settings → Profile**. Continuing activation.\n\n${getStepQuestion(next, currentProfile)}`;
       return {
-        kaiMessage: friendlySkipMsg,
+        kaiMessage: msg,
         nextStep: next,
         profile: currentProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: true,
       };
     }
 
@@ -692,13 +722,14 @@ export async function processOnboardingStep(
       const validation = validatePrograms(input);
       if (!validation.valid) {
         return {
-          kaiMessage: `I need to know what programs you teach to set up your profile correctly. Please list your programs — for example: *Brazilian Jiu-Jitsu, Muay Thai, Gymnastics*.`,
+          kaiMessage: `I need your program list to configure your system correctly. What disciplines do you teach?\n\n*(e.g., Brazilian Jiu-Jitsu, Muay Thai, Gymnastics, Yoga)*`,
           nextStep: "programs",
           profile: currentProfile,
           stepCompleted: false,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: false,
+          showBack: true,
         };
       }
       const programs = parsePrograms(input);
@@ -708,17 +739,17 @@ export async function processOnboardingStep(
       const next = getNextStep("programs", updatedProfile, newHasMartialArts);
       const programList = programs.join(", ");
       const martialArtsNote = newHasMartialArts
-        ? " Since you teach martial arts, I have one more question for you."
+        ? " Since you teach martial arts, I have one additional field to configure."
         : "";
       return {
-        kaiMessage: `Perfect — **${programList}**.${martialArtsNote}\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${programList}** — program roster activated.${martialArtsNote}\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
-        // Pass hasMartialArts update via profile (caller updates state)
+        showBack: true,
       };
     }
 
@@ -726,28 +757,29 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("rank", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `Understood — you can add your rank later.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Rank skipped — you can configure this in Settings.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       if (input.length < 2) {
         return {
-          kaiMessage: `Please enter your rank or belt — for example: *Black Belt 2nd Degree*, *Brown Belt*, or *Head Instructor*.`,
+          kaiMessage: `Enter your rank or belt — for example: *Black Belt 2nd Degree*, *Brown Belt*, or *Head Instructor*.`,
           nextStep: "rank",
           profile: currentProfile,
           stepCompleted: false,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       await persistProfileField(orgId, "title", currentProfile.title || "");
-      // Save rank to ownerRank column
       const db = await getDb();
       if (db) {
         await db.update(dojoSettings)
@@ -756,13 +788,14 @@ export async function processOnboardingStep(
       }
       const next = getNextStep("rank", currentProfile, hasMartialArts);
       return {
-        kaiMessage: `Impressive — **${input}**. 🏅\n\n${getStepQuestion(next, currentProfile)}`,
+        kaiMessage: `**${input}** — rank confirmed. 🏅\n\n${getStepQuestion(next, currentProfile)}`,
         nextStep: next,
         profile: currentProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: true,
       };
     }
 
@@ -770,13 +803,14 @@ export async function processOnboardingStep(
       const validation = validateSchoolName(input);
       if (!validation.valid) {
         return {
-          kaiMessage: `I need a name for your school or dojo. What should we call it?`,
+          kaiMessage: `I need your school's official name to configure your system. What should I call it?`,
           nextStep: "school_name",
           profile: currentProfile,
           stepCompleted: false,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: false,
+          showBack: true,
         };
       }
       const schoolName = input;
@@ -784,13 +818,14 @@ export async function processOnboardingStep(
       await persistProfileField(orgId, "schoolName", schoolName);
       const next = getNextStep("school_name", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `**${schoolName}** — great name. 🏆\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${schoolName}** — school identity locked in. 🏆\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: true,
       };
     }
 
@@ -798,13 +833,14 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("martial_style", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `No problem — you can add your style in Settings later.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Style skipped — you can configure this in Settings.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       const styles = parsePrograms(input);
@@ -812,13 +848,14 @@ export async function processOnboardingStep(
       await persistProfileField(orgId, "styles", styles);
       const next = getNextStep("martial_style", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${styles.join(", ")}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${styles.join(", ")}** — style configuration locked in.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: true,
+        showBack: true,
       };
     }
 
@@ -826,37 +863,40 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("address", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `Skipped — you can add your address in Settings.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Address skipped — configure this in **Settings → School Profile** when ready.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       if (input.length < 3) {
         return {
-          kaiMessage: `Please enter your full street address — for example: *123 Main Street*.`,
+          kaiMessage: `Enter your full street address — for example: *123 Main Street*.`,
           nextStep: "address",
           profile: currentProfile,
           stepCompleted: false,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       const updatedProfile = { ...currentProfile, addressStreet: input };
       await upsertSchoolProfile(orgId, { addressStreet: input });
       const next = getNextStep("address", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${input}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${input}** — street address locked in.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: true,
+        showBack: true,
       };
     }
 
@@ -864,16 +904,16 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("city_state_zip", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `Skipped — add your city/state/ZIP in Settings later.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Location skipped — configure this in **Settings → School Profile** when ready.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
-      // Parse "City, State ZIP" or "City, State, ZIP"
       const parts = input.split(/[,\s]+/);
       let city = "", state = "", postal = "";
       if (parts.length >= 3) {
@@ -891,13 +931,14 @@ export async function processOnboardingStep(
       const next = getNextStep("city_state_zip", updatedProfile, hasMartialArts);
       const location = [city, state, postal].filter(Boolean).join(", ");
       return {
-        kaiMessage: `Got it — **${location}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${location}** — location locked in.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: true,
+        showBack: true,
       };
     }
 
@@ -905,26 +946,28 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("phone", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `Skipped — add your phone number in Settings later.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Phone skipped — configure this in **Settings → School Profile** when ready.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       const updatedProfile = { ...currentProfile, phone: input };
       await upsertSchoolProfile(orgId, { phone: input });
       const next = getNextStep("phone", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${input}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${input}** — contact line activated.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: true,
+        showBack: true,
       };
     }
 
@@ -932,38 +975,40 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("email", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `Skipped — add your email in Settings later.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Email skipped — configure this in **Settings → School Profile** when ready.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
-      // Basic email validation
       if (!input.includes("@") || !input.includes(".")) {
         return {
-          kaiMessage: `That doesn't look like a valid email address. Please enter a valid email — for example: *info@mydojo.com*.`,
+          kaiMessage: `That doesn't register as a valid email. Enter a valid address — for example: *info@${profile.schoolName ? profile.schoolName.toLowerCase().replace(/\s+/g, '') + '.com' : 'yourdojo.com'}*.`,
           nextStep: "email",
           profile: currentProfile,
           stepCompleted: false,
           isComplete: false,
           expectsFileUpload: false,
           showSkip: true,
+          showBack: true,
         };
       }
       const updatedProfile = { ...currentProfile, email: input };
       await upsertSchoolProfile(orgId, { email: input });
       const next = getNextStep("email", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${input}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${input}** — email channel configured.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: true,
+        showBack: true,
       };
     }
 
@@ -971,13 +1016,14 @@ export async function processOnboardingStep(
       if (isSkip(input)) {
         const next = getNextStep("website", currentProfile, hasMartialArts);
         return {
-          kaiMessage: `No problem — add your website in Settings later.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Website skipped — configure this in **Settings → School Profile** when ready.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: next === "logo_light",
           showSkip: true,
+          showBack: true,
         };
       }
       const website = input.startsWith("http") ? input : `https://${input}`;
@@ -985,20 +1031,19 @@ export async function processOnboardingStep(
       await upsertSchoolProfile(orgId, { website });
       const next = getNextStep("website", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${website}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `**${website}** — web presence linked.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
         expectsFileUpload: next === "logo_light",
         showSkip: true,
+        showBack: true,
       };
     }
 
     case "logo_light":
     case "logo_dark": {
-      // Logo steps are handled by the uploadLogo mutation — not text input
-      // If user types text here, ask them to use the upload button
       if (isSkip(input)) {
         const next = getNextStep(currentStep, currentProfile, hasMartialArts);
         if (next === "complete") {
@@ -1010,38 +1055,42 @@ export async function processOnboardingStep(
             isComplete: true,
             expectsFileUpload: false,
             showSkip: false,
+            showBack: false,
           };
         }
         return {
-          kaiMessage: `Skipped — you can upload your logo in Settings → School Profile later.\n\n${getStepQuestion(next, currentProfile)}`,
+          kaiMessage: `Logo skipped — you can upload this anytime in **Settings → School Profile**.\n\n${getStepQuestion(next, currentProfile)}`,
           nextStep: next,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: next === "logo_dark",
           showSkip: true,
+          showBack: true,
         };
       }
       return {
-        kaiMessage: `Please use the **Upload Logo** button below to upload your logo file.`,
+        kaiMessage: `Use the **Upload Logo** button below to upload your logo file.`,
         nextStep: currentStep,
         profile: currentProfile,
         stepCompleted: false,
         isComplete: false,
         expectsFileUpload: true,
         showSkip: true,
+        showBack: true,
       };
     }
 
     default:
       return {
-        kaiMessage: "I'm not sure what step we're on. Let's start fresh — what's your name?",
+        kaiMessage: "System state unclear. Let's restart activation — what's your name?",
         nextStep: "name",
         profile: currentProfile,
         stepCompleted: false,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: false,
       };
   }
 }
@@ -1051,8 +1100,9 @@ function buildCompletionMessage(profile: OnboardingProfile, hasMartialArts: bool
     ? `${profile.title} ${profile.name}`
     : profile.name || "there";
   const schoolName = profile.schoolName || "your school";
+  const programList = profile.programs.length > 0 ? profile.programs.join(", ") : null;
 
-  return `🎉 You're all set, **${titleName}**!\n\n**${schoolName}** is now configured and ready to go. I'm here to help you manage your students, leads, attendance, and more.\n\n**What would you like to do first?**`;
+  return `**System activation complete.** ✅\n\n**${titleName}**, your command center is fully configured and operational.\n\n**${schoolName}** is now live in DojoFlow${programList ? ` — running **${programList}**` : ""}.\n\nI'm online and ready to help you manage students, leads, attendance, and more. **What would you like to do first?**`;
 }
 
 // ─── tRPC Router ──────────────────────────────────────────────────────────────
@@ -1060,7 +1110,6 @@ function buildCompletionMessage(profile: OnboardingProfile, hasMartialArts: bool
 export const kaiOnboardingStateMachineRouter = router({
   /**
    * Get the current onboarding status and profile.
-   * Returns whether onboarding is needed and the current state.
    */
   getStatus: orgScopedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
@@ -1100,26 +1149,25 @@ export const kaiOnboardingStateMachineRouter = router({
     const isCompleted = org?.onboardingStatus === "completed" || org?.onboardingStatus === "skipped";
 
     if (isCompleted) {
-      return { needsOnboarding: false, isCompleted: true, step: "complete" as OnboardingStep, profile: null };
+      return { needsOnboarding: false, isCompleted: true, step: "complete" as OnboardingStep, profile: null, stepNumber: null, totalSteps: null };
     }
 
     const state = await loadOnboardingState(orgId);
-
-    // Onboarding is needed whenever status is not completed/skipped
-    const needsOnboarding = true;
+    const progress = getStepProgress(state.step, state.hasMartialArts);
 
     return {
-      needsOnboarding,
+      needsOnboarding: true,
       isCompleted,
       step: state.step,
       profile: state.profile,
       hasMartialArts: state.hasMartialArts,
+      stepNumber: progress.stepNumber,
+      totalSteps: progress.totalSteps,
     };
   }),
 
   /**
    * Process a single onboarding step.
-   * Validates input, updates profile, and returns the next step + KAI response.
    */
   processStep: orgScopedProcedure
     .input(
@@ -1157,12 +1205,10 @@ export const kaiOnboardingStateMachineRouter = router({
         input.hasMartialArts
       );
 
-      // Determine hasMartialArts for the new state
       const newHasMartialArts = input.currentStep === "programs"
         ? result.profile.programs.some((p) => detectsMartialArts(p))
         : input.hasMartialArts;
 
-      // Save state to DB (non-fatal — profile is also saved per-field in processOnboardingStep)
       const stepNumber = STEP_NUMBERS[result.nextStep] || 1;
       try {
         await saveOnboardingState(
@@ -1175,7 +1221,6 @@ export const kaiOnboardingStateMachineRouter = router({
       }
 
       if (result.isComplete) {
-        // Mark onboarding as completed
         try {
           const db = await getDb();
           if (db) {
@@ -1188,9 +1233,83 @@ export const kaiOnboardingStateMachineRouter = router({
         }
       }
 
+      const progress = getStepProgress(result.nextStep, newHasMartialArts);
+
       return {
         ...result,
         hasMartialArts: newHasMartialArts,
+        stepNumber: progress.stepNumber,
+        totalSteps: progress.totalSteps,
+      };
+    }),
+
+  /**
+   * Go back to the previous onboarding step.
+   */
+  goBack: orgScopedProcedure
+    .input(
+      z.object({
+        currentStep: z.enum(ONBOARDING_STEPS),
+        currentProfile: z.object({
+          name: z.string().nullable(),
+          title: z.string().nullable(),
+          programs: z.array(z.string()),
+          styles: z.array(z.string()),
+          schoolName: z.string().nullable(),
+          addressStreet: z.string().nullable(),
+          addressCity: z.string().nullable(),
+          addressState: z.string().nullable(),
+          addressPostal: z.string().nullable(),
+          phone: z.string().nullable(),
+          email: z.string().nullable(),
+          website: z.string().nullable(),
+          logoLightUrl: z.string().nullable(),
+          logoDarkUrl: z.string().nullable(),
+        }),
+        hasMartialArts: z.boolean(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId;
+      const prevStep = getPrevStep(input.currentStep, input.hasMartialArts);
+
+      if (!prevStep) {
+        const progress = getStepProgress(input.currentStep, input.hasMartialArts);
+        return {
+          kaiMessage: `You're already at the beginning of the activation sequence.\n\n${getStepQuestion(input.currentStep, input.currentProfile)}`,
+          nextStep: input.currentStep,
+          profile: input.currentProfile,
+          hasMartialArts: input.hasMartialArts,
+          stepNumber: progress.stepNumber,
+          totalSteps: progress.totalSteps,
+          showBack: false,
+          showSkip: input.currentStep !== "name" && input.currentStep !== "title" && input.currentStep !== "programs",
+        };
+      }
+
+      const stepNumber = STEP_NUMBERS[prevStep] || 1;
+      try {
+        await saveOnboardingState(
+          orgId,
+          { step: prevStep, profile: input.currentProfile, completedSteps: [], hasMartialArts: input.hasMartialArts },
+          stepNumber
+        );
+      } catch (e) {
+        console.error('[OnboardingSM] goBack saveOnboardingState failed (non-fatal):', e);
+      }
+
+      const progress = getStepProgress(prevStep, input.hasMartialArts);
+      const hasPrev = getPrevStep(prevStep, input.hasMartialArts) !== null;
+
+      return {
+        kaiMessage: `Going back.\n\n${getStepQuestion(prevStep, input.currentProfile)}`,
+        nextStep: prevStep,
+        profile: input.currentProfile,
+        hasMartialArts: input.hasMartialArts,
+        stepNumber: progress.stepNumber,
+        totalSteps: progress.totalSteps,
+        showBack: hasPrev,
+        showSkip: prevStep !== "name" && prevStep !== "title" && prevStep !== "programs",
       };
     }),
 
@@ -1210,7 +1329,6 @@ export const kaiOnboardingStateMachineRouter = router({
 
   /**
    * Upload a logo (base64) during onboarding.
-   * Saves to school_profiles.logo_light_url or logo_dark_url.
    */
   uploadLogo: orgScopedProcedure
     .input(
@@ -1257,7 +1375,6 @@ export const kaiOnboardingStateMachineRouter = router({
       const completedStep: OnboardingStep = isLight ? "logo_light" : "logo_dark";
       const nextStep = getNextStep(completedStep, updatedProfile, input.hasMartialArts);
 
-      // Save state
       const stepNumber = STEP_NUMBERS[nextStep] || 1;
       await saveOnboardingState(
         orgId,
@@ -1271,7 +1388,6 @@ export const kaiOnboardingStateMachineRouter = router({
       if (nextStep === "complete") {
         kaiMessage = buildCompletionMessage(updatedProfile, input.hasMartialArts);
         isComplete = true;
-        // Mark complete
         await db.update(dojoSettings)
           .set({ setupCompleted: 1, updatedAt: new Date().toISOString() } as any)
           .where(eq(dojoSettings.organizationId, orgId));
@@ -1280,8 +1396,10 @@ export const kaiOnboardingStateMachineRouter = router({
           .where(eq(organizations.id, orgId));
       } else {
         const fileName = input.fileName || (isLight ? "Day Mode logo" : "Dark Mode logo");
-        kaiMessage = `✅ **${fileName}** saved.\n\n${getStepQuestion(nextStep, updatedProfile)}`;
+        kaiMessage = `✅ **${fileName}** activated.\n\n${getStepQuestion(nextStep, updatedProfile)}`;
       }
+
+      const progress = getStepProgress(nextStep, input.hasMartialArts);
 
       return {
         kaiMessage,
@@ -1290,6 +1408,9 @@ export const kaiOnboardingStateMachineRouter = router({
         isComplete,
         expectsFileUpload: nextStep === "logo_dark",
         showSkip: true,
+        showBack: !isComplete,
+        stepNumber: progress.stepNumber,
+        totalSteps: progress.totalSteps,
       };
     }),
 
@@ -1302,19 +1423,16 @@ export const kaiOnboardingStateMachineRouter = router({
 
     const orgId = ctx.currentOrganizationId;
 
-    // Reset onboarding state in organizations table
     try {
       await db.update(organizations)
         .set({ onboardingStatus: "pending", onboardingStep: 0, onboardingProfile: null } as any)
         .where(eq(organizations.id, orgId));
     } catch (e: any) {
-      // Fallback if onboarding_profile column missing
       await db.update(organizations)
         .set({ onboardingStatus: "pending", onboardingStep: 0 } as any)
         .where(eq(organizations.id, orgId));
     }
 
-    // Reset dojo_settings setup flag
     try {
       await db.update(dojoSettings)
         .set({ setupCompleted: 0, updatedAt: new Date().toISOString() } as any)
