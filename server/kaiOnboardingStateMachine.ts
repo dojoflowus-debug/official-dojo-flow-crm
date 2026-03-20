@@ -10,7 +10,20 @@ import { upsertSchoolProfile } from "./schoolProfileDb";
 export { ONBOARDING_STEPS, getStepQuestion } from "../shared/onboarding";
 export type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shared/onboarding";
 import type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shared/onboarding";
-import { ONBOARDING_STEPS, getStepQuestion, detectIntent, buildCorrectionAck, buildObjectionResponse, parseAddress, microAck, buildSaveConfirmation } from "../shared/onboarding";
+import {
+  ONBOARDING_STEPS,
+  getStepQuestion,
+  detectIntent,
+  buildCorrectionAck,
+  buildObjectionResponse,
+  parseAddress,
+  microAck,
+  buildSaveConfirmation,
+  isValidHexColor,
+  normalizeHexColor,
+  normalizeTimezone,
+  normalizeCurrency,
+} from "../shared/onboarding";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -27,7 +40,6 @@ function detectsMartialArts(text: string): boolean {
   return MARTIAL_ARTS_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-// Detect correction intent
 const CORRECTION_PATTERNS = [
   /\b(that'?s?\s*(not|wrong|incorrect))/i,
   /\b(not\s+my\s+(name|title|rank|school))/i,
@@ -59,7 +71,6 @@ function isSkip(text: string): boolean {
   return SKIP_PATTERNS.some((p) => p.test(text.trim()));
 }
 
-// Validate name
 function validateName(text: string): { valid: boolean; error?: string } {
   const t = text.trim();
   if (isGreeting(t)) return { valid: false, error: "greeting" };
@@ -69,7 +80,6 @@ function validateName(text: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-// Validate title
 function validateTitle(text: string): { valid: boolean; error?: string } {
   const t = text.trim();
   if (t.length < 2) return { valid: false, error: "too_short" };
@@ -77,7 +87,6 @@ function validateTitle(text: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-// Validate programs
 function validatePrograms(text: string): { valid: boolean; error?: string } {
   const t = text.trim();
   if (isGreeting(t)) return { valid: false, error: "greeting" };
@@ -85,7 +94,6 @@ function validatePrograms(text: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-// Validate school name
 function validateSchoolName(text: string): { valid: boolean; error?: string } {
   const t = text.trim();
   if (isGreeting(t)) return { valid: false, error: "greeting" };
@@ -93,7 +101,6 @@ function validateSchoolName(text: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-// Parse programs string into array
 function parsePrograms(text: string): string[] {
   return text
     .split(/[,;&\/\n]+/)
@@ -111,14 +118,22 @@ function buildFlow(hasMartialArts: boolean): OnboardingStep[] {
     "programs",
     ...(hasMartialArts ? ["rank" as OnboardingStep] : []),
     "school_name",
+    "display_name",
+    "tagline",
     ...(hasMartialArts ? ["martial_style" as OnboardingStep] : []),
     "address",
     "city_state_zip",
+    "country",
     "phone",
     "email",
     "website",
     "logo_light",
     "logo_dark",
+    "icon_logo_light",
+    "icon_logo_dark",
+    "brand_colors",
+    "timezone",
+    "currency",
     "complete",
   ];
 }
@@ -150,7 +165,7 @@ export function getStepProgress(
   hasMartialArts: boolean
 ): { stepNumber: number; totalSteps: number } {
   const flow = buildFlow(hasMartialArts).filter((s) => s !== "complete");
-  const idx = flow.indexOf(step);
+  const idx = flow.indexOf(step as Exclude<OnboardingStep, "complete">);
   return {
     stepNumber: idx === -1 ? flow.length : idx + 1,
     totalSteps: flow.length,
@@ -219,7 +234,6 @@ async function loadOnboardingState(orgId: number, userId?: number): Promise<Onbo
       storedProfile = JSON.parse(org.onboardingProfile as string);
     } catch {}
   }
-  // Load persisted completedSteps from the stored profile JSON
   const loadedCompletedSteps: OnboardingStep[] = Array.isArray(storedProfile.completedSteps)
     ? storedProfile.completedSteps
     : [];
@@ -234,15 +248,25 @@ async function loadOnboardingState(orgId: number, userId?: number): Promise<Onbo
     programs,
     styles: storedProfile.styles ?? (settings?.martialArtsStyle ? [settings.martialArtsStyle] : []),
     schoolName: storedProfile.schoolName ?? profile?.schoolName ?? settings?.schoolName ?? null,
+    displayName: storedProfile.displayName ?? profile?.displayName ?? null,
+    tagline: storedProfile.tagline ?? profile?.tagline ?? null,
     addressStreet: storedProfile.addressStreet ?? profile?.addressStreet ?? null,
     addressCity: storedProfile.addressCity ?? profile?.addressCity ?? null,
     addressState: storedProfile.addressState ?? profile?.addressState ?? null,
     addressPostal: storedProfile.addressPostal ?? profile?.addressPostal ?? null,
+    addressCountry: storedProfile.addressCountry ?? profile?.addressCountry ?? null,
     phone: storedProfile.phone ?? profile?.phone ?? null,
     email: storedProfile.email ?? profile?.email ?? null,
     website: storedProfile.website ?? profile?.website ?? null,
     logoLightUrl: storedProfile.logoLightUrl ?? profile?.logoLightUrl ?? null,
     logoDarkUrl: storedProfile.logoDarkUrl ?? profile?.logoDarkUrl ?? null,
+    logoIconLightUrl: storedProfile.logoIconLightUrl ?? profile?.logoIconLightUrl ?? null,
+    logoIconDarkUrl: storedProfile.logoIconDarkUrl ?? profile?.logoIconDarkUrl ?? null,
+    brandColorPrimary: storedProfile.brandColorPrimary ?? profile?.brandColorPrimary ?? null,
+    brandColorSecondary: storedProfile.brandColorSecondary ?? profile?.brandColorSecondary ?? null,
+    brandColorTertiary: storedProfile.brandColorTertiary ?? profile?.brandColorTertiary ?? null,
+    timezone: storedProfile.timezone ?? profile?.timezone ?? null,
+    currency: storedProfile.currency ?? profile?.currency ?? null,
     profilePhotoUrl: storedProfile.profilePhotoUrl ?? null,
   };
 
@@ -257,7 +281,6 @@ async function loadOnboardingState(orgId: number, userId?: number): Promise<Onbo
       if (userRow?.photoUrl) {
         onboardingProfile.profilePhotoUrl = userRow.photoUrl;
       }
-      // Also pre-populate name from users table if not already set
       if (!onboardingProfile.name && userRow?.name) {
         onboardingProfile.name = userRow.name;
       }
@@ -266,22 +289,19 @@ async function loadOnboardingState(orgId: number, userId?: number): Promise<Onbo
     }
   }
 
-  // Reality Check: use computeFirstIncompleteStep to find the true starting point
-  // This prevents Kai from asking for data that already exists in the DB
-  // Also pass completedSteps so locked steps are skipped
   const realityCheckedStep = computeFirstIncompleteStep(onboardingProfile, hasMartialArts, loadedCompletedSteps);
 
-  // Use the stored step only if it's further ahead than the reality-checked step
-  // (i.e., user has explicitly progressed past a step even if data is missing)
   let currentStep: OnboardingStep = realityCheckedStep;
   if (org?.onboardingStep && org.onboardingStep > 0) {
     const stepMap: Record<number, OnboardingStep> = {
       1: "name", 2: "title", 3: "profile_photo", 4: "programs", 5: "rank",
-      6: "school_name", 7: "martial_style", 8: "address", 9: "city_state_zip",
-      10: "phone", 11: "email", 12: "website", 13: "logo_light", 14: "logo_dark", 99: "complete",
+      6: "school_name", 7: "display_name", 8: "tagline", 9: "martial_style",
+      10: "address", 11: "city_state_zip", 12: "country", 13: "phone",
+      14: "email", 15: "website", 16: "logo_light", 17: "logo_dark",
+      18: "icon_logo_light", 19: "icon_logo_dark", 20: "brand_colors",
+      21: "timezone", 22: "currency", 99: "complete",
     };
     const storedStep = stepMap[org.onboardingStep] || "name";
-    // Use whichever is further in the flow (stored step takes priority if user has progressed)
     const flow = buildFlow(hasMartialArts);
     const storedIdx = flow.indexOf(storedStep);
     const realityIdx = flow.indexOf(realityCheckedStep);
@@ -304,7 +324,6 @@ async function saveOnboardingState(
   const db = await getDb();
   if (!db) return;
 
-  // Persist completedSteps inside the profile JSON blob (no schema change needed)
   const profileWithLocks = { ...state.profile, completedSteps: state.completedSteps || [] };
 
   try {
@@ -379,12 +398,21 @@ async function persistProfileField(
           .set({ name: stringValue } as any)
           .where(eq(organizations.id, orgId));
         break;
+      case "displayName":
+        await upsertSchoolProfile(orgId, { displayName: stringValue });
+        break;
+      case "tagline":
+        await upsertSchoolProfile(orgId, { tagline: stringValue });
+        break;
       case "addressStreet":
         await upsertSchoolProfile(orgId, { addressStreet: stringValue });
         break;
       case "addressCity":
       case "addressState":
       case "addressPostal":
+        break;
+      case "addressCountry":
+        await upsertSchoolProfile(orgId, { addressCountry: stringValue });
         break;
       case "phone":
         await upsertSchoolProfile(orgId, { phone: stringValue });
@@ -395,6 +423,12 @@ async function persistProfileField(
       case "website":
         await upsertSchoolProfile(orgId, { website: stringValue });
         break;
+      case "timezone":
+        await upsertSchoolProfile(orgId, { timezone: stringValue });
+        break;
+      case "currency":
+        await upsertSchoolProfile(orgId, { currency: stringValue });
+        break;
     }
   } catch (e) {
     console.error(`[OnboardingSM] Failed to persist field ${field}:`, e);
@@ -403,9 +437,12 @@ async function persistProfileField(
 
 // Step number map for DB storage
 const STEP_NUMBERS: Record<OnboardingStep, number> = {
-  name: 1, title: 2, profile_photo: 3, programs: 4, rank: 5, school_name: 6,
-  martial_style: 7, address: 8, city_state_zip: 9, phone: 10,
-  email: 11, website: 12, logo_light: 13, logo_dark: 14, complete: 99,
+  name: 1, title: 2, profile_photo: 3, programs: 4, rank: 5,
+  school_name: 6, display_name: 7, tagline: 8, martial_style: 9,
+  address: 10, city_state_zip: 11, country: 12, phone: 13,
+  email: 14, website: 15, logo_light: 16, logo_dark: 17,
+  icon_logo_light: 18, icon_logo_dark: 19, brand_colors: 20,
+  timezone: 21, currency: 22, complete: 99,
 };
 
 // ─── Reality Check: compute first step where data is actually missing ──────────
@@ -417,7 +454,6 @@ function computeFirstIncompleteStep(
 ): OnboardingStep {
   const flow = buildFlow(hasMartialArts).filter((s) => s !== "complete");
   for (const step of flow) {
-    // ── QUESTION LOCK: skip steps that have been explicitly completed ──
     if (completedSteps.includes(step)) continue;
     switch (step) {
       case "name":
@@ -433,10 +469,16 @@ function computeFirstIncompleteStep(
         if (!profile.programs || profile.programs.length === 0) return step;
         break;
       case "rank":
-        // rank is optional — skip if we've passed it
+        // optional — skip if we've passed it
         break;
       case "school_name":
         if (!profile.schoolName?.trim()) return step;
+        break;
+      case "display_name":
+        // optional — skip if not set
+        break;
+      case "tagline":
+        // optional — skip if not set
         break;
       case "martial_style":
         // optional — skip if not set
@@ -447,6 +489,9 @@ function computeFirstIncompleteStep(
       case "city_state_zip":
         if (!profile.addressCity?.trim() && !profile.addressPostal?.trim()) return step;
         break;
+      case "country":
+        // optional — skip if not set
+        break;
       case "phone":
         if (!profile.phone?.trim()) return step;
         break;
@@ -454,20 +499,35 @@ function computeFirstIncompleteStep(
         if (!profile.email?.trim()) return step;
         break;
       case "website":
-        if (!profile.website?.trim()) return step;
+        // optional — skip if not set
         break;
       case "logo_light":
         if (!profile.logoLightUrl?.trim()) return step;
         break;
       case "logo_dark":
-        if (!profile.logoDarkUrl?.trim()) return step;
+        // optional — skip if not set
+        break;
+      case "icon_logo_light":
+        // optional — skip if not set
+        break;
+      case "icon_logo_dark":
+        // optional — skip if not set
+        break;
+      case "brand_colors":
+        // optional — skip if not set
+        break;
+      case "timezone":
+        // optional — skip if not set
+        break;
+      case "currency":
+        // optional — skip if not set
         break;
     }
   }
   return "complete";
 }
 
-// ─── Truth Handling: evaluate user claims against actual profile data ─────────
+// ─── Truth Handling ───────────────────────────────────────────────────────────
 
 type ClaimVerdict = "true" | "false" | "unknown";
 
@@ -501,7 +561,6 @@ function evaluateUserClaim(
     ? `${profile.title} ${profile.name}`
     : profile.name || "there";
 
-  // Determine which field the claim is about
   let targetStep: OnboardingStep | null = null;
 
   if (/\b(?:photo|picture|image|headshot|avatar|profile\s+(?:photo|picture|image))\b/i.test(text)) {
@@ -514,22 +573,34 @@ function evaluateUserClaim(
     targetStep = "programs";
   } else if (/\b(?:school|dojo|academy|gym|studio)\b/i.test(text)) {
     targetStep = "school_name";
+  } else if (/\b(?:display\s+name|short\s+name)\b/i.test(text)) {
+    targetStep = "display_name";
+  } else if (/\b(?:tagline|motto|slogan)\b/i.test(text)) {
+    targetStep = "tagline";
   } else if (/\b(?:address|location|street)\b/i.test(text)) {
     targetStep = "address";
+  } else if (/\b(?:country)\b/i.test(text)) {
+    targetStep = "country";
   } else if (/\b(?:phone|number|contact)\b/i.test(text)) {
     targetStep = "phone";
   } else if (/\b(?:email|e-mail)\b/i.test(text)) {
     targetStep = "email";
   } else if (/\b(?:website|url|site|web\s+address)\b/i.test(text)) {
     targetStep = "website";
+  } else if (/\b(?:icon|square\s+logo)\b/i.test(text)) {
+    targetStep = t.includes("dark") ? "icon_logo_dark" : "icon_logo_light";
   } else if (/\b(?:logo)\b/i.test(text)) {
     targetStep = t.includes("dark") ? "logo_dark" : "logo_light";
+  } else if (/\b(?:color|colour|brand)\b/i.test(text)) {
+    targetStep = "brand_colors";
+  } else if (/\b(?:timezone|time\s+zone)\b/i.test(text)) {
+    targetStep = "timezone";
+  } else if (/\b(?:currency|billing|payment)\b/i.test(text)) {
+    targetStep = "currency";
   } else {
-    // Claim is about the current step
     targetStep = step;
   }
 
-  // Check if the data actually exists in the profile
   let dataExists = false;
   switch (targetStep) {
     case "name": dataExists = !!profile.name?.trim(); break;
@@ -537,13 +608,21 @@ function evaluateUserClaim(
     case "profile_photo": dataExists = !!profile.profilePhotoUrl?.trim(); break;
     case "programs": dataExists = profile.programs.length > 0; break;
     case "school_name": dataExists = !!profile.schoolName?.trim(); break;
+    case "display_name": dataExists = !!profile.displayName?.trim(); break;
+    case "tagline": dataExists = !!profile.tagline?.trim(); break;
     case "address": dataExists = !!profile.addressStreet?.trim(); break;
     case "city_state_zip": dataExists = !!profile.addressCity?.trim() || !!profile.addressPostal?.trim(); break;
+    case "country": dataExists = !!profile.addressCountry?.trim(); break;
     case "phone": dataExists = !!profile.phone?.trim(); break;
     case "email": dataExists = !!profile.email?.trim(); break;
     case "website": dataExists = !!profile.website?.trim(); break;
     case "logo_light": dataExists = !!profile.logoLightUrl?.trim(); break;
     case "logo_dark": dataExists = !!profile.logoDarkUrl?.trim(); break;
+    case "icon_logo_light": dataExists = !!profile.logoIconLightUrl?.trim(); break;
+    case "icon_logo_dark": dataExists = !!profile.logoIconDarkUrl?.trim(); break;
+    case "brand_colors": dataExists = !!profile.brandColorPrimary?.trim(); break;
+    case "timezone": dataExists = !!profile.timezone?.trim(); break;
+    case "currency": dataExists = !!profile.currency?.trim(); break;
     default: return { verdict: "unknown", field: targetStep };
   }
 
@@ -554,12 +633,20 @@ function evaluateUserClaim(
       title: `Noted — your title is already set to **${profile.title}**.`,
       programs: `You're right — your programs are already set: **${profile.programs.join(", ")}**.`,
       school_name: `Correct — **${profile.schoolName}** is already in your profile.`,
+      display_name: `Got it — your display name is already set to **${profile.displayName}**.`,
+      tagline: `Correct — your tagline is already saved: *"${profile.tagline}"*.`,
       address: `Got it — your address is already set to **${profile.addressStreet}**.`,
+      country: `Correct — your country is already set to **${profile.addressCountry}**.`,
       phone: `Correct — your phone number is already on file: **${profile.phone}**.`,
       email: `You're right — your email is already set to **${profile.email}**.`,
       website: `Got it — your website is already linked: **${profile.website}**.`,
       logo_light: `You're right — your day mode logo is already uploaded.`,
       logo_dark: `Correct — your dark mode logo is already uploaded.`,
+      icon_logo_light: `You're right — your light icon logo is already uploaded.`,
+      icon_logo_dark: `Correct — your dark icon logo is already uploaded.`,
+      brand_colors: `Got it — your brand colors are already set.`,
+      timezone: `Correct — your timezone is already set to **${profile.timezone}**.`,
+      currency: `Got it — your currency is already set to **${profile.currency}**.`,
     };
     return {
       verdict: "true",
@@ -573,12 +660,20 @@ function evaluateUserClaim(
       title: `I don't have a title set for you yet. How should I address you?`,
       programs: `I don't see any programs listed yet. What do you teach?`,
       school_name: `I don't have a school name on file yet. What's the official name of your school?`,
+      display_name: `I don't have a display name set yet. What should I use as the short name?`,
+      tagline: `I don't have a tagline on file yet. What's your school's motto or tagline?`,
       address: `I don't have an address on file yet. What's your school's street address?`,
+      country: `I don't have a country on file yet. What country is your school in?`,
       phone: `I don't see a phone number on file yet. What's the best number for your school?`,
       email: `I don't have an email address on file yet. What email should students use to reach you?`,
       website: `I don't have a website on file yet. Do you have a school website?`,
       logo_light: `I don't see a day mode logo uploaded yet. Use the Upload button below to add one.`,
       logo_dark: `I don't see a dark mode logo uploaded yet. Use the Upload button below to add one.`,
+      icon_logo_light: `I don't see a light icon logo uploaded yet. Use the Upload button below to add one.`,
+      icon_logo_dark: `I don't see a dark icon logo uploaded yet. Use the Upload button below to add one.`,
+      brand_colors: `I don't have brand colors on file yet. What's your primary brand color?`,
+      timezone: `I don't have a timezone set yet. What timezone is your school in?`,
+      currency: `I don't have a currency set yet. What currency does your school use?`,
     };
     return {
       verdict: "false",
@@ -600,6 +695,21 @@ export interface ProcessStepResult {
   showSkip: boolean;
   showBack: boolean;
   correctionStep?: OnboardingStep;
+  _completedStepsToAdd?: OnboardingStep[];
+}
+
+// ─── Helper: is this step a logo/file upload step? ────────────────────────────
+
+function isUploadStep(step: OnboardingStep): boolean {
+  return step === "logo_light" || step === "logo_dark" || step === "icon_logo_light" || step === "icon_logo_dark";
+}
+
+function getLogoUploadType(step: OnboardingStep): "light" | "dark" | "icon-light" | "icon-dark" | undefined {
+  if (step === "logo_light") return "light";
+  if (step === "logo_dark") return "dark";
+  if (step === "icon_logo_light") return "icon-light";
+  if (step === "icon_logo_dark") return "icon-dark";
+  return undefined;
 }
 
 // ─── Main state machine processor ────────────────────────────────────────────
@@ -612,18 +722,17 @@ export async function processOnboardingStep(
   currentProfile: OnboardingProfile,
   hasMartialArts: boolean
 ): Promise<ProcessStepResult> {
-  const input = userInput.trim().replace(/^[^a-zA-Z0-9]+/, '');
+  const input = userInput.trim().replace(/^[^a-zA-Z0-9#]+/, '');
   const titleName = currentProfile.title && currentProfile.name
     ? `${currentProfile.title} ${currentProfile.name}`
     : currentProfile.name || "there";
 
   const hasPrev = getPrevStep(currentStep, hasMartialArts) !== null;
 
-  // ── NLU: Run intent detection FIRST on every input ────────────────────────────────────
+  // ── NLU: Run intent detection FIRST ──────────────────────────────────────────
   const nlu = detectIntent(input, currentStep);
 
-  // ── Truth Handling: evaluate "I already did X" claims BEFORE step logic ───────
-  // Only evaluate if the intent is not already a known navigation/correction intent
+  // ── Truth Handling ────────────────────────────────────────────────────────────
   if (
     nlu.intent === "unknown" ||
     nlu.intent === "confirmation" ||
@@ -632,7 +741,6 @@ export async function processOnboardingStep(
     const claim = evaluateUserClaim(input, currentStep, currentProfile);
 
     if (claim.verdict === "true" && claim.field) {
-      // Data confirmed to exist — acknowledge and advance to next step
       const next = getNextStep(currentStep, currentProfile, hasMartialArts);
       const nextQuestion = next !== "complete" ? `\n\n${getStepQuestion(next, currentProfile)}` : "";
       return {
@@ -641,30 +749,27 @@ export async function processOnboardingStep(
         profile: currentProfile,
         stepCompleted: true,
         isComplete: next === "complete",
-        expectsFileUpload: next === "logo_light" || next === "logo_dark",
+        expectsFileUpload: isUploadStep(next),
         showSkip: next !== "name" && next !== "programs" && next !== "complete",
         showBack: hasPrev,
       };
     }
 
     if (claim.verdict === "false" && claim.field) {
-      // Data does NOT exist — gently correct and re-ask
       return {
         kaiMessage: claim.falseResponse!,
         nextStep: currentStep,
         profile: currentProfile,
         stepCompleted: false,
         isComplete: false,
-        expectsFileUpload: currentStep === "logo_light" || currentStep === "logo_dark" || currentStep === "profile_photo",
+        expectsFileUpload: isUploadStep(currentStep) || currentStep === "profile_photo",
         showSkip: currentStep !== "name" && currentStep !== "programs",
         showBack: hasPrev,
       };
     }
-
-    // verdict === "unknown" with no field match — fall through to normal step logic
   }
 
-  // ── NLU Priority 1: Back intent ──────────────────────────────────────────────
+  // ── NLU Priority 1: Back ──────────────────────────────────────────────────────
   if (nlu.intent === "back") {
     const prevStep = getPrevStep(currentStep, hasMartialArts);
     if (!prevStep) {
@@ -685,13 +790,13 @@ export async function processOnboardingStep(
       profile: currentProfile,
       stepCompleted: false,
       isComplete: false,
-      expectsFileUpload: prevStep === "logo_light" || prevStep === "logo_dark",
+      expectsFileUpload: isUploadStep(prevStep),
       showSkip: prevStep !== "name" && prevStep !== "programs",
       showBack: getPrevStep(prevStep, hasMartialArts) !== null,
     };
   }
 
-  // ── NLU Priority 2: Identity/title/name update (mid-flow correction) ───────────
+  // ── NLU Priority 2: Identity/title/name update ────────────────────────────────
   if (
     nlu.intent === "identity_update" ||
     nlu.intent === "title_update" ||
@@ -699,7 +804,6 @@ export async function processOnboardingStep(
   ) {
     let updatedProfile = { ...currentProfile };
 
-    // Apply the extracted entities
     if (nlu.entities.title) {
       const toTitleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
       updatedProfile.title = toTitleCase(nlu.entities.title);
@@ -709,7 +813,6 @@ export async function processOnboardingStep(
       const toTitleCase = (s: string) => s.replace(/\b\w/g, c => c.toUpperCase());
       updatedProfile.name = toTitleCase(nlu.entities.fullName);
       await persistProfileField(orgId, "name", updatedProfile.name);
-      // Also update users.name
       try {
         const db = await getDb();
         const fullDisplayName = updatedProfile.title
@@ -719,7 +822,6 @@ export async function processOnboardingStep(
       } catch (e) { console.error('[OnboardingSM] NLU: Failed to update users.name:', e); }
     }
 
-    // If we're currently on name or title step, this IS the answer — advance
     if (currentStep === "name" || currentStep === "title") {
       const next = getNextStep(currentStep, updatedProfile, hasMartialArts);
       const displayName = updatedProfile.title && updatedProfile.name
@@ -737,7 +839,6 @@ export async function processOnboardingStep(
       };
     }
 
-    // Mid-flow: acknowledge correction, stay on current step
     const ackMessage = buildCorrectionAck(nlu, currentStep, updatedProfile);
     return {
       kaiMessage: ackMessage,
@@ -745,13 +846,12 @@ export async function processOnboardingStep(
       profile: updatedProfile,
       stepCompleted: false,
       isComplete: false,
-      expectsFileUpload: currentStep === "logo_light" || currentStep === "logo_dark",
-      showSkip: currentStep !== "name" && currentStep !== "programs",
+      expectsFileUpload: isUploadStep(currentStep),
+      showSkip: true,
       showBack: hasPrev,
     };
   }
-
-  // ── NLU Priority 3: Correction (field-targeted, no entity extracted) ────────
+  // ── NLU Priority 3: Correction ────────────────────────────────────────────────
   if (nlu.intent === "correction") {
     const lower = input.toLowerCase();
     let correctionStep: OnboardingStep = currentStep;
@@ -760,26 +860,32 @@ export async function processOnboardingStep(
     else if (lower.includes("program") || lower.includes("teach")) correctionStep = "programs";
     else if (lower.includes("rank") || lower.includes("belt")) correctionStep = "rank";
     else if (lower.includes("school") || lower.includes("dojo")) correctionStep = "school_name";
+    else if (lower.includes("display")) correctionStep = "display_name";
+    else if (lower.includes("tagline") || lower.includes("motto")) correctionStep = "tagline";
     else if (lower.includes("style") || lower.includes("martial")) correctionStep = "martial_style";
     else if (/\b(street|my address|home address|business address)\b/i.test(input)) correctionStep = "address";
     else if (lower.includes("city") || lower.includes("state") || lower.includes("zip")) correctionStep = "city_state_zip";
+    else if (lower.includes("country")) correctionStep = "country";
     else if (lower.includes("phone")) correctionStep = "phone";
     else if (lower.includes("email")) correctionStep = "email";
     else if (lower.includes("website") || lower.includes("url")) correctionStep = "website";
+    else if (lower.includes("color") || lower.includes("colour")) correctionStep = "brand_colors";
+    else if (lower.includes("timezone") || lower.includes("time zone")) correctionStep = "timezone";
+    else if (lower.includes("currency")) correctionStep = "currency";
     return {
       kaiMessage: `No problem — let's go back to that.\n\n${getStepQuestion(correctionStep, currentProfile)}`,
       nextStep: correctionStep,
       profile: currentProfile,
       stepCompleted: false,
       isComplete: false,
-      expectsFileUpload: correctionStep === "logo_light" || correctionStep === "logo_dark",
+      expectsFileUpload: isUploadStep(correctionStep),
       showSkip: correctionStep !== "name" && correctionStep !== "title" && correctionStep !== "programs",
       showBack: false,
       correctionStep,
     };
   }
 
-  // ── NLU Priority 4: Objection / question ──────────────────────────────────
+  // ── NLU Priority 4: Objection / question ──────────────────────────────────────
   if (nlu.intent === "objection" || (nlu.intent === "question" && currentStep !== "name" && currentStep !== "programs")) {
     return {
       kaiMessage: buildObjectionResponse(currentStep, currentProfile),
@@ -787,16 +893,16 @@ export async function processOnboardingStep(
       profile: currentProfile,
       stepCompleted: false,
       isComplete: false,
-      expectsFileUpload: currentStep === "logo_light" || currentStep === "logo_dark",
+      expectsFileUpload: isUploadStep(currentStep),
       showSkip: currentStep !== "name" && currentStep !== "programs",
       showBack: hasPrev,
     };
   }
 
-  // ── NLU Priority 5: Skip intent (free text) ───────────────────────────────
-  // (Handled per-step below, but we normalise the input to "skip" so step logic picks it up)
+  // ── NLU Priority 5: Skip ──────────────────────────────────────────────────────
   const normalisedInput = nlu.intent === "skip" ? "skip" : input;
-  // ── Process each step ──────────────────────────────────────────────────────
+
+  // ── Process each step ──────────────────────────────────────────────────────────
   switch (currentStep) {
     case "name": {
       const validation = validateName(normalisedInput);
@@ -827,12 +933,9 @@ export async function processOnboardingStep(
       } catch (e) {
         console.error('[OnboardingSM] Failed to update users.name:', e);
       }
-      // ── STEP LOCK: step complete → move to next step immediately ──
       const next = getNextStep("name", updatedProfile, hasMartialArts);
       return {
-           kaiMessage: `${microAck(name)}, **${name}**.
-
-${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `${microAck(name)}, **${name}**.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -871,37 +974,34 @@ ${getStepQuestion(next, updatedProfile)}`,
         };
       }
       const toTitleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-      const title = toTitleCase(normalisedInput);
+      const title = toTitleCase(normalisedInput.trim());
       const updatedProfile = { ...currentProfile, title };
       await persistProfileField(orgId, "title", title);
-      const fullTitleName = `${title} ${currentProfile.name || ""}`.trim();
       try {
         const db = await getDb();
         if (db) {
-          await db.update(users).set({ name: fullTitleName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
+          const fullName = updatedProfile.name ? `${title} ${updatedProfile.name}` : title;
+          await db.update(users).set({ name: fullName, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
         }
       } catch (e) {
         console.error('[OnboardingSM] Failed to update users.name with title:', e);
       }
       const next = getNextStep("title", updatedProfile, hasMartialArts);
+      const displayName = updatedProfile.name ? `${title} ${updatedProfile.name}` : title;
       return {
-         kaiMessage: `${microAck(fullTitleName)} — I'll call you **${fullTitleName}** throughout your system.
-
-${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `${displayName} — I like it.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
-        expectsFileUpload: false,
-        showSkip: false,
+        expectsFileUpload: next === "profile_photo",
+        showSkip: true,
         showBack: true,
       };
     }
 
     case "profile_photo": {
-      // Skip if NLU detected skip intent or explicit skip phrases
-      const photoNormInput = normalisedInput;
-      if (isSkip(photoNormInput) || /^(no|later|not now|no thanks|maybe later|pass|next|continue|move on)$/i.test(photoNormInput)) {
+      if (isSkip(normalisedInput)) {
         const next = getNextStep("profile_photo", currentProfile, hasMartialArts);
         return {
           kaiMessage: `No problem — you can add a photo anytime in **Settings → Profile**.\n\n${getStepQuestion(next, currentProfile)}`,
@@ -910,56 +1010,44 @@ ${getStepQuestion(next, updatedProfile)}`,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
-          showSkip: false,
+          showSkip: true,
           showBack: true,
         };
       }
-      const isUrl = photoNormInput.startsWith('http://') || photoNormInput.startsWith('https://');
-      if (isUrl) {
-        const updatedProfile = { ...currentProfile, profilePhotoUrl: photoNormInput };
-        try {
-          const db = await getDb();
-          if (db) {
-            await db.update(users).set({ photoUrl: photoNormInput, photoUrlSmall: photoNormInput, updatedAt: new Date().toISOString() }).where(eq(users.id, userId));
-          }
-        } catch (e) {
-          console.error('[OnboardingSM] Failed to update users.photoUrl:', e);
-        }
+      // If a URL was passed (from upload handler), treat as the photo URL
+      if (normalisedInput.startsWith("http") || normalisedInput.startsWith("data:")) {
+        const updatedProfile = { ...currentProfile, profilePhotoUrl: normalisedInput };
         const next = getNextStep("profile_photo", updatedProfile, hasMartialArts);
         return {
-          kaiMessage: `Photo added — looking good. 📸\n\n${getStepQuestion(next, updatedProfile)}`,
+          kaiMessage: `Photo saved. ✅\n\n${getStepQuestion(next, updatedProfile)}`,
           nextStep: next,
           profile: updatedProfile,
           stepCompleted: true,
           isComplete: false,
           expectsFileUpload: false,
-          showSkip: false,
+          showSkip: true,
           showBack: true,
         };
       }
-      // Free text on photo step — interpret it intelligently instead of ignoring
-      // If it looks like they're asking something or expressing intent, respond contextually
-      const next = getNextStep("profile_photo", currentProfile, hasMartialArts);
-      const displayName = currentProfile.title && currentProfile.name
-        ? `${currentProfile.title} ${currentProfile.name}`
-        : currentProfile.name || "there";
+      const displayName = titleName;
       return {
-        kaiMessage: `Use the **Upload Photo** button below, ${displayName} — or tap **Skip** if you'd rather do it later.`,
+        kaiMessage: `Use the **Upload Photo** button below to add your photo, ${displayName} — or tap **Skip** to continue without one.`,
         nextStep: "profile_photo",
         profile: currentProfile,
         stepCompleted: false,
         isComplete: false,
-        expectsFileUpload: true,
+        expectsFileUpload: false,
         showSkip: true,
         showBack: true,
-      };
+        showPhotoUpload: true,
+      } as any;
     }
 
     case "programs": {
       const validation = validatePrograms(normalisedInput);
       if (!validation.valid) {
         return {
-          kaiMessage: `What do you teach? List your programs and I'll get your system set up.\n\n*(e.g., Brazilian Jiu-Jitsu, Muay Thai, Gymnastics, Yoga)*`,
+          kaiMessage: `Tell me what you teach — even just one program to start. *(e.g., BJJ, Karate, Kickboxing)*`,
           nextStep: "programs",
           profile: currentProfile,
           stepCompleted: false,
@@ -970,33 +1058,11 @@ ${getStepQuestion(next, updatedProfile)}`,
         };
       }
       const programs = parsePrograms(normalisedInput);
-      const newHasMartialArts = programs.some((p) => detectsMartialArts(p));
-
-      // ── ANSWER COVERAGE: extract styles from programs answer ──────────────────
-      // If the programs list already contains martial arts style info (e.g., "BJJ, Muay Thai"),
-      // extract them as styles and lock the martial_style step so it is never re-asked.
-      const extractedStyles = newHasMartialArts
-        ? programs.filter((p) => detectsMartialArts(p))
-        : [];
-      const updatedProfile = {
-        ...currentProfile,
-        programs,
-        // Pre-fill styles from programs if not already set
-        styles: currentProfile.styles?.length ? currentProfile.styles : extractedStyles,
-      };
+      const hasMartialArtsNow = programs.some((p) => detectsMartialArts(p));
+      const updatedProfile = { ...currentProfile, programs };
       await persistProfileField(orgId, "programs", programs);
-      if (extractedStyles.length > 0 && !currentProfile.styles?.length) {
-        await persistProfileField(orgId, "styles", extractedStyles);
-      }
-
-      // ── STEP LOCK: step complete → move to next step immediately, no branching ──
-      // If styles were extracted from programs, also lock martial_style so it is skipped
       const newCompletedSteps: OnboardingStep[] = ["programs"];
-      if (extractedStyles.length > 0) {
-        newCompletedSteps.push("martial_style");
-      }
-
-      const next = getNextStep("programs", updatedProfile, newHasMartialArts);
+      const next = getNextStep("programs", updatedProfile, hasMartialArtsNow);
       const programList = programs.join(", ");
       return {
         kaiMessage: `Great — **${programList}** added to your roster.\n\n${getStepQuestion(next, updatedProfile)}`,
@@ -1007,7 +1073,6 @@ ${getStepQuestion(next, updatedProfile)}`,
         expectsFileUpload: false,
         showSkip: false,
         showBack: true,
-        // Pass newCompletedSteps so the router can merge them into the state
         _completedStepsToAdd: newCompletedSteps,
       } as any;
     }
@@ -1038,7 +1103,6 @@ ${getStepQuestion(next, updatedProfile)}`,
           showBack: true,
         };
       }
-      await persistProfileField(orgId, "title", currentProfile.title || "");
       const db = await getDb();
       if (db) {
         await db.update(dojoSettings)
@@ -1084,6 +1148,90 @@ ${getStepQuestion(next, updatedProfile)}`,
         isComplete: false,
         expectsFileUpload: false,
         showSkip: false,
+        showBack: true,
+      };
+    }
+
+    case "display_name": {
+      if (isSkip(normalisedInput)) {
+        const next = getNextStep("display_name", currentProfile, hasMartialArts);
+        return {
+          kaiMessage: `No problem — I'll use **${currentProfile.schoolName || "your full school name"}** everywhere.\n\n${getStepQuestion(next, currentProfile)}`,
+          nextStep: next,
+          profile: currentProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+      if (normalisedInput.length < 2) {
+        return {
+          kaiMessage: `What should I use as the short display name for your school?`,
+          nextStep: "display_name",
+          profile: currentProfile,
+          stepCompleted: false,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+      const displayName = normalisedInput;
+      const updatedProfile = { ...currentProfile, displayName };
+      await persistProfileField(orgId, "displayName", displayName);
+      const next = getNextStep("display_name", updatedProfile, hasMartialArts);
+      return {
+        kaiMessage: `${microAck(displayName)} — **${displayName}** it is.\n\n${getStepQuestion(next, updatedProfile)}`,
+        nextStep: next,
+        profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
+        showSkip: true,
+        showBack: true,
+      };
+    }
+
+    case "tagline": {
+      if (isSkip(normalisedInput)) {
+        const next = getNextStep("tagline", currentProfile, hasMartialArts);
+        return {
+          kaiMessage: `No problem — you can add a tagline anytime in **Settings → School Profile**.\n\n${getStepQuestion(next, currentProfile)}`,
+          nextStep: next,
+          profile: currentProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+      if (normalisedInput.length < 3) {
+        return {
+          kaiMessage: `What's your school's tagline or motto? *(e.g., "Train Hard. Fight Smart.")* — or skip.`,
+          nextStep: "tagline",
+          profile: currentProfile,
+          stepCompleted: false,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+      const tagline = normalisedInput;
+      const updatedProfile = { ...currentProfile, tagline };
+      await persistProfileField(orgId, "tagline", tagline);
+      const next = getNextStep("tagline", updatedProfile, hasMartialArts);
+      return {
+        kaiMessage: `*"${tagline}"* — locked in.\n\n${getStepQuestion(next, updatedProfile)}`,
+        nextStep: next,
+        profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
+        showSkip: true,
         showBack: true,
       };
     }
@@ -1145,13 +1293,9 @@ ${getStepQuestion(next, updatedProfile)}`,
         };
       }
 
-      // ── Structured address extraction ──────────────────────────────────────
-      // If the user provides a full address in one message, extract all components
-      // and skip the city_state_zip step entirely.
       const parsed = parseAddress(normalisedInput);
 
       if (parsed.isComplete && parsed.street && parsed.city && parsed.state && parsed.zip) {
-        // Full address provided — save all components and skip city_state_zip
         const updatedProfile = {
           ...currentProfile,
           addressStreet: parsed.street,
@@ -1165,7 +1309,6 @@ ${getStepQuestion(next, updatedProfile)}`,
           addressState: parsed.state,
           addressPostal: parsed.zip,
         });
-        // Skip city_state_zip — jump directly to the step after it
         const nextAfterCityZip = getNextStep("city_state_zip", updatedProfile, hasMartialArts);
         const fullAddress = `${parsed.street}, ${parsed.city}, ${parsed.state} ${parsed.zip}`;
         return {
@@ -1181,7 +1324,6 @@ ${getStepQuestion(next, updatedProfile)}`,
         };
       }
 
-      // Partial address — just street, ask for city/state/zip next
       const street = parsed.street || normalisedInput;
       const updatedProfile = { ...currentProfile, addressStreet: street };
       await upsertSchoolProfile(orgId, { addressStreet: street });
@@ -1213,17 +1355,12 @@ ${getStepQuestion(next, updatedProfile)}`,
         };
       }
 
-      // ── Use parseAddress for structured extraction ──────────────────────────────
-      // Handles: "Austin, TX 78701", "Austin TX 78701", "Austin, Texas 78701"
-      // Also handles full address re-entry: "123 Main St, Austin, TX 78701"
       const parsedCsz = parseAddress(normalisedInput);
 
       let city = parsedCsz.city || "";
       let state = parsedCsz.state || "";
       let postal = parsedCsz.zip || "";
 
-      // If parseAddress didn't extract city (e.g., just "TX 78701"), fall back to
-      // the old split logic so we don't lose data
       if (!city) {
         const parts = normalisedInput.split(/[,\s]+/);
         if (parts.length >= 3) {
@@ -1238,7 +1375,6 @@ ${getStepQuestion(next, updatedProfile)}`,
         }
       }
 
-      // If user provided a full address again (street included), also save the street
       const streetUpdate = parsedCsz.isComplete && parsedCsz.street && !currentProfile.addressStreet
         ? { addressStreet: parsedCsz.street }
         : {};
@@ -1248,9 +1384,49 @@ ${getStepQuestion(next, updatedProfile)}`,
       const next = getNextStep("city_state_zip", updatedProfile, hasMartialArts);
       const location = [city, state, postal].filter(Boolean).join(", ");
       return {
-        kaiMessage: `Got it — **${location}**.
+        kaiMessage: `Got it — **${location}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        nextStep: next,
+        profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
+        showSkip: true,
+        showBack: true,
+      };
+    }
 
-${getStepQuestion(next, updatedProfile)}`,
+    case "country": {
+      if (isSkip(normalisedInput)) {
+        const next = getNextStep("country", currentProfile, hasMartialArts);
+        return {
+          kaiMessage: `Got it — defaulting to United States.\n\n${getStepQuestion(next, currentProfile)}`,
+          nextStep: next,
+          profile: currentProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+      if (normalisedInput.length < 2) {
+        return {
+          kaiMessage: `What country is your school in? *(e.g., United States, Canada, United Kingdom)*`,
+          nextStep: "country",
+          profile: currentProfile,
+          stepCompleted: false,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+      const country = normalisedInput;
+      const updatedProfile = { ...currentProfile, addressCountry: country };
+      await upsertSchoolProfile(orgId, { addressCountry: country });
+      const next = getNextStep("country", updatedProfile, hasMartialArts);
+      return {
+        kaiMessage: `${microAck(country)} — **${country}** saved.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1279,9 +1455,7 @@ ${getStepQuestion(next, updatedProfile)}`,
       await upsertSchoolProfile(orgId, { phone: normalisedInput });
       const next = getNextStep("phone", updatedProfile, hasMartialArts);
       return {
-         kaiMessage: `${buildSaveConfirmation("phone", normalisedInput, updatedProfile) ?? `${microAck(normalisedInput)} — **${normalisedInput}** saved.`}
-
-${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `${buildSaveConfirmation("phone", normalisedInput, updatedProfile) ?? `${microAck(normalisedInput)} — **${normalisedInput}** saved.`}\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1306,9 +1480,9 @@ ${getStepQuestion(next, updatedProfile)}`,
           showBack: true,
         };
       }
-      if (!normalisedInput.includes("@") || !input.includes(".")) {
+      if (!normalisedInput.includes("@") || !normalisedInput.includes(".")) {
         return {
-          kaiMessage: `That doesn't look like a valid email. Try something like *info@${profile.schoolName ? profile.schoolName.toLowerCase().replace(/\s+/g, '') + '.com' : 'yourdojo.com'}*.`,
+          kaiMessage: `That doesn't look like a valid email. Try something like *info@${currentProfile.schoolName ? currentProfile.schoolName.toLowerCase().replace(/\s+/g, '') + '.com' : 'yourdojo.com'}*.`,
           nextStep: "email",
           profile: currentProfile,
           stepCompleted: false,
@@ -1322,9 +1496,7 @@ ${getStepQuestion(next, updatedProfile)}`,
       await upsertSchoolProfile(orgId, { email: normalisedInput });
       const next = getNextStep("email", updatedProfile, hasMartialArts);
       return {
-          kaiMessage: `${buildSaveConfirmation("email", normalisedInput, updatedProfile) ?? `${microAck(normalisedInput)} — **${normalisedInput}** saved.`}
-
-${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `${buildSaveConfirmation("email", normalisedInput, updatedProfile) ?? `${microAck(normalisedInput)} — **${normalisedInput}** saved.`}\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1344,7 +1516,7 @@ ${getStepQuestion(next, updatedProfile)}`,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
-          expectsFileUpload: next === "logo_light",
+          expectsFileUpload: isUploadStep(next),
           showSkip: true,
           showBack: true,
         };
@@ -1354,21 +1526,21 @@ ${getStepQuestion(next, updatedProfile)}`,
       await upsertSchoolProfile(orgId, { website });
       const next = getNextStep("website", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `${buildSaveConfirmation("website", website, updatedProfile) ?? `${microAck(website)} — **${website}** connected.`}
-
-${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `${buildSaveConfirmation("website", website, updatedProfile) ?? `${microAck(website)} — **${website}** connected.`}\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
         isComplete: false,
-        expectsFileUpload: next === "logo_light",
+        expectsFileUpload: isUploadStep(next),
         showSkip: true,
         showBack: true,
       };
     }
 
     case "logo_light":
-    case "logo_dark": {
+    case "logo_dark":
+    case "icon_logo_light":
+    case "icon_logo_dark": {
       if (isSkip(normalisedInput)) {
         const next = getNextStep(currentStep, currentProfile, hasMartialArts);
         if (next === "complete") {
@@ -1389,23 +1561,184 @@ ${getStepQuestion(next, updatedProfile)}`,
           profile: currentProfile,
           stepCompleted: true,
           isComplete: false,
-          expectsFileUpload: next === "logo_dark",
+          expectsFileUpload: isUploadStep(next),
           showSkip: true,
           showBack: true,
         };
       }
-      // Free text on logo step — respond contextually
-      const logoDisplayName = currentProfile.title && currentProfile.name
-        ? `${currentProfile.title} ${currentProfile.name}`
-        : currentProfile.name || "there";
-      const logoVariant = currentStep === "logo_light" ? "light mode" : "dark mode";
+      const logoVariant =
+        currentStep === "logo_light" ? "Day Mode logo" :
+        currentStep === "logo_dark" ? "Dark Mode logo" :
+        currentStep === "icon_logo_light" ? "light icon logo" :
+        "dark icon logo";
       return {
-        kaiMessage: `Use the **Upload Logo** button below to upload your ${logoVariant} logo, ${logoDisplayName} — or tap **Skip** to continue without one.`,
+        kaiMessage: `Use the **Upload Logo** button below to upload your ${logoVariant} — or tap **Skip** to continue without one.`,
         nextStep: currentStep,
         profile: currentProfile,
         stepCompleted: false,
         isComplete: false,
         expectsFileUpload: true,
+        showSkip: true,
+        showBack: true,
+      };
+    }
+
+    case "brand_colors": {
+      if (isSkip(normalisedInput)) {
+        const next = getNextStep("brand_colors", currentProfile, hasMartialArts);
+        return {
+          kaiMessage: `No problem — I'll use the default DojoFlow palette.\n\n${getStepQuestion(next, currentProfile)}`,
+          nextStep: next,
+          profile: currentProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+
+      // Parse hex color from input
+      const normalized = normalizeHexColor(normalisedInput);
+      if (!normalized) {
+        return {
+          kaiMessage: `That doesn't look like a valid hex color. Try something like **#FF0000** for red or **#1A1A2E** for dark navy.\n\nWhat's your primary brand color?`,
+          nextStep: "brand_colors",
+          profile: currentProfile,
+          stepCompleted: false,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+
+      const updatedProfile = { ...currentProfile, brandColorPrimary: normalized };
+      await upsertSchoolProfile(orgId, { brandColorPrimary: normalized });
+      const next = getNextStep("brand_colors", updatedProfile, hasMartialArts);
+      return {
+        kaiMessage: `**${normalized}** — your primary brand color is set. 🎨\n\n${getStepQuestion(next, updatedProfile)}`,
+        nextStep: next,
+        profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
+        showSkip: true,
+        showBack: true,
+      };
+    }
+
+    case "timezone": {
+      if (isSkip(normalisedInput)) {
+        const next = getNextStep("timezone", currentProfile, hasMartialArts);
+        return {
+          kaiMessage: `Got it — defaulting to Eastern Time.\n\n${getStepQuestion(next, currentProfile)}`,
+          nextStep: next,
+          profile: { ...currentProfile, timezone: "America/New_York" },
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+
+      const tz = normalizeTimezone(normalisedInput);
+      if (!tz) {
+        return {
+          kaiMessage: `I didn't recognize that timezone. Try something like **Eastern**, **Central**, **Pacific**, or a full IANA name like **America/New_York**.\n\nWhat timezone is your school in?`,
+          nextStep: "timezone",
+          profile: currentProfile,
+          stepCompleted: false,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+
+      const updatedProfile = { ...currentProfile, timezone: tz };
+      await upsertSchoolProfile(orgId, { timezone: tz });
+      const next = getNextStep("timezone", updatedProfile, hasMartialArts);
+      return {
+        kaiMessage: `${microAck(tz)} — **${tz}** set as your timezone.\n\n${getStepQuestion(next, updatedProfile)}`,
+        nextStep: next,
+        profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
+        showSkip: true,
+        showBack: true,
+      };
+    }
+
+    case "currency": {
+      if (isSkip(normalisedInput)) {
+        const next = getNextStep("currency", currentProfile, hasMartialArts);
+        const updatedProfile = { ...currentProfile, currency: "USD" };
+        await upsertSchoolProfile(orgId, { currency: "USD" });
+        if (next === "complete") {
+          return {
+            kaiMessage: buildCompletionMessage(updatedProfile, hasMartialArts),
+            nextStep: "complete",
+            profile: updatedProfile,
+            stepCompleted: true,
+            isComplete: true,
+            expectsFileUpload: false,
+            showSkip: false,
+            showBack: false,
+          };
+        }
+        return {
+          kaiMessage: `Got it — defaulting to USD.\n\n${getStepQuestion(next, updatedProfile)}`,
+          nextStep: next,
+          profile: updatedProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+
+      const currency = normalizeCurrency(normalisedInput);
+      if (!currency) {
+        return {
+          kaiMessage: `I didn't recognize that currency. Try a 3-letter code like **USD**, **CAD**, **GBP**, or **AUD**.\n\nWhat currency does your school use?`,
+          nextStep: "currency",
+          profile: currentProfile,
+          stepCompleted: false,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+        };
+      }
+
+      const updatedProfile = { ...currentProfile, currency };
+      await upsertSchoolProfile(orgId, { currency });
+      const next = getNextStep("currency", updatedProfile, hasMartialArts);
+
+      if (next === "complete") {
+        return {
+          kaiMessage: buildCompletionMessage(updatedProfile, hasMartialArts),
+          nextStep: "complete",
+          profile: updatedProfile,
+          stepCompleted: true,
+          isComplete: true,
+          expectsFileUpload: false,
+          showSkip: false,
+          showBack: false,
+        };
+      }
+
+      return {
+        kaiMessage: `${microAck(currency)} — **${currency}** set as your currency.\n\n${getStepQuestion(next, updatedProfile)}`,
+        nextStep: next,
+        profile: updatedProfile,
+        stepCompleted: true,
+        isComplete: false,
+        expectsFileUpload: false,
         showSkip: true,
         showBack: true,
       };
@@ -1436,6 +1769,35 @@ function buildCompletionMessage(profile: OnboardingProfile, hasMartialArts: bool
 }
 
 // ─── tRPC Router ──────────────────────────────────────────────────────────────
+
+// Shared profile schema for tRPC input validation
+const profileSchema = z.object({
+  name: z.string().nullable(),
+  title: z.string().nullable(),
+  profilePhotoUrl: z.string().nullable().optional(),
+  programs: z.array(z.string()),
+  styles: z.array(z.string()),
+  schoolName: z.string().nullable(),
+  displayName: z.string().nullable().optional(),
+  tagline: z.string().nullable().optional(),
+  addressStreet: z.string().nullable(),
+  addressCity: z.string().nullable(),
+  addressState: z.string().nullable(),
+  addressPostal: z.string().nullable(),
+  addressCountry: z.string().nullable().optional(),
+  phone: z.string().nullable(),
+  email: z.string().nullable(),
+  website: z.string().nullable(),
+  logoLightUrl: z.string().nullable(),
+  logoDarkUrl: z.string().nullable(),
+  logoIconLightUrl: z.string().nullable().optional(),
+  logoIconDarkUrl: z.string().nullable().optional(),
+  brandColorPrimary: z.string().nullable().optional(),
+  brandColorSecondary: z.string().nullable().optional(),
+  brandColorTertiary: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
+  currency: z.string().nullable().optional(),
+});
 
 export const kaiOnboardingStateMachineRouter = router({
   /**
@@ -1505,22 +1867,7 @@ export const kaiOnboardingStateMachineRouter = router({
       z.object({
         currentStep: z.enum(ONBOARDING_STEPS),
         userInput: z.string().min(1).max(2000),
-        currentProfile: z.object({
-          name: z.string().nullable(),
-          title: z.string().nullable(),
-          programs: z.array(z.string()),
-          styles: z.array(z.string()),
-          schoolName: z.string().nullable(),
-          addressStreet: z.string().nullable(),
-          addressCity: z.string().nullable(),
-          addressState: z.string().nullable(),
-          addressPostal: z.string().nullable(),
-          phone: z.string().nullable(),
-          email: z.string().nullable(),
-          website: z.string().nullable(),
-          logoLightUrl: z.string().nullable(),
-          logoDarkUrl: z.string().nullable(),
-        }),
+        currentProfile: profileSchema,
         hasMartialArts: z.boolean(),
         completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
       })
@@ -1528,12 +1875,27 @@ export const kaiOnboardingStateMachineRouter = router({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId;
 
+      // Normalize optional fields to null if undefined
+      const normalizedProfile: OnboardingProfile = {
+        ...input.currentProfile,
+        displayName: input.currentProfile.displayName ?? null,
+        tagline: input.currentProfile.tagline ?? null,
+        addressCountry: input.currentProfile.addressCountry ?? null,
+        logoIconLightUrl: input.currentProfile.logoIconLightUrl ?? null,
+        logoIconDarkUrl: input.currentProfile.logoIconDarkUrl ?? null,
+        brandColorPrimary: input.currentProfile.brandColorPrimary ?? null,
+        brandColorSecondary: input.currentProfile.brandColorSecondary ?? null,
+        brandColorTertiary: input.currentProfile.brandColorTertiary ?? null,
+        timezone: input.currentProfile.timezone ?? null,
+        currency: input.currentProfile.currency ?? null,
+      };
+
       const result = await processOnboardingStep(
         orgId,
         ctx.user.id,
         input.currentStep,
         input.userInput,
-        input.currentProfile,
+        normalizedProfile,
         input.hasMartialArts
       );
 
@@ -1541,12 +1903,10 @@ export const kaiOnboardingStateMachineRouter = router({
         ? result.profile.programs.some((p) => detectsMartialArts(p))
         : input.hasMartialArts;
 
-      // ── QUESTION LOCK: merge newly completed steps into the persisted set ──
       const existingCompleted: OnboardingStep[] = input.completedSteps || [];
       const toAdd: OnboardingStep[] = (result as any)._completedStepsToAdd || [];
-      const mergedCompletedSteps: OnboardingStep[] = [
-        ...new Set([...existingCompleted, ...toAdd]),
-      ];
+      const mergedSet = new Set([...existingCompleted, ...toAdd]);
+      const mergedCompletedSteps: OnboardingStep[] = Array.from(mergedSet);
 
       const stepNumber = STEP_NUMBERS[result.nextStep] || 1;
       try {
@@ -1566,6 +1926,9 @@ export const kaiOnboardingStateMachineRouter = router({
             await db.update(dojoSettings)
               .set({ setupCompleted: 1, updatedAt: new Date().toISOString() } as any)
               .where(eq(dojoSettings.organizationId, orgId));
+            await db.update(organizations)
+              .set({ onboardingStatus: "completed", onboardingStep: 99 } as any)
+              .where(eq(organizations.id, orgId));
           }
         } catch (completeErr) {
           console.error('[OnboardingSM] Failed to mark setup completed:', completeErr);
@@ -1589,35 +1952,35 @@ export const kaiOnboardingStateMachineRouter = router({
     .input(
       z.object({
         currentStep: z.enum(ONBOARDING_STEPS),
-        currentProfile: z.object({
-          name: z.string().nullable(),
-          title: z.string().nullable(),
-          programs: z.array(z.string()),
-          styles: z.array(z.string()),
-          schoolName: z.string().nullable(),
-          addressStreet: z.string().nullable(),
-          addressCity: z.string().nullable(),
-          addressState: z.string().nullable(),
-          addressPostal: z.string().nullable(),
-          phone: z.string().nullable(),
-          email: z.string().nullable(),
-          website: z.string().nullable(),
-          logoLightUrl: z.string().nullable(),
-          logoDarkUrl: z.string().nullable(),
-        }),
+        currentProfile: profileSchema,
         hasMartialArts: z.boolean(),
+        completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId;
       const prevStep = getPrevStep(input.currentStep, input.hasMartialArts);
 
+      const normalizedProfile: OnboardingProfile = {
+        ...input.currentProfile,
+        displayName: input.currentProfile.displayName ?? null,
+        tagline: input.currentProfile.tagline ?? null,
+        addressCountry: input.currentProfile.addressCountry ?? null,
+        logoIconLightUrl: input.currentProfile.logoIconLightUrl ?? null,
+        logoIconDarkUrl: input.currentProfile.logoIconDarkUrl ?? null,
+        brandColorPrimary: input.currentProfile.brandColorPrimary ?? null,
+        brandColorSecondary: input.currentProfile.brandColorSecondary ?? null,
+        brandColorTertiary: input.currentProfile.brandColorTertiary ?? null,
+        timezone: input.currentProfile.timezone ?? null,
+        currency: input.currentProfile.currency ?? null,
+      };
+
       if (!prevStep) {
         const progress = getStepProgress(input.currentStep, input.hasMartialArts);
         return {
-          kaiMessage: getStepQuestion(input.currentStep, input.currentProfile),
+          kaiMessage: getStepQuestion(input.currentStep, normalizedProfile),
           nextStep: input.currentStep,
-          profile: input.currentProfile,
+          profile: normalizedProfile,
           hasMartialArts: input.hasMartialArts,
           stepNumber: progress.stepNumber,
           totalSteps: progress.totalSteps,
@@ -1630,7 +1993,7 @@ export const kaiOnboardingStateMachineRouter = router({
       try {
         await saveOnboardingState(
           orgId,
-          { step: prevStep, profile: input.currentProfile, completedSteps: (input as any).completedSteps || [], hasMartialArts: input.hasMartialArts },
+          { step: prevStep, profile: normalizedProfile, completedSteps: input.completedSteps || [], hasMartialArts: input.hasMartialArts },
           stepNumber
         );
       } catch (e) {
@@ -1641,9 +2004,9 @@ export const kaiOnboardingStateMachineRouter = router({
       const hasPrev = getPrevStep(prevStep, input.hasMartialArts) !== null;
 
       return {
-        kaiMessage: getStepQuestion(prevStep, input.currentProfile),
+        kaiMessage: getStepQuestion(prevStep, normalizedProfile),
         nextStep: prevStep,
-        profile: input.currentProfile,
+        profile: normalizedProfile,
         hasMartialArts: input.hasMartialArts,
         stepNumber: progress.stepNumber,
         totalSteps: progress.totalSteps,
@@ -1672,26 +2035,12 @@ export const kaiOnboardingStateMachineRouter = router({
   uploadLogo: orgScopedProcedure
     .input(
       z.object({
-        type: z.enum(["light", "dark"]),
+        type: z.enum(["light", "dark", "icon-light", "icon-dark"]),
         dataUrl: z.string().min(10),
         fileName: z.string().optional(),
-        currentProfile: z.object({
-          name: z.string().nullable(),
-          title: z.string().nullable(),
-          programs: z.array(z.string()),
-          styles: z.array(z.string()),
-          schoolName: z.string().nullable(),
-          addressStreet: z.string().nullable(),
-          addressCity: z.string().nullable(),
-          addressState: z.string().nullable(),
-          addressPostal: z.string().nullable(),
-          phone: z.string().nullable(),
-          email: z.string().nullable(),
-          website: z.string().nullable(),
-          logoLightUrl: z.string().nullable(),
-          logoDarkUrl: z.string().nullable(),
-        }),
+        currentProfile: profileSchema,
         hasMartialArts: z.boolean(),
+        completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1699,25 +2048,50 @@ export const kaiOnboardingStateMachineRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
 
-      const isLight = input.type === "light";
-      const updateData = isLight
-        ? { logoLightUrl: input.dataUrl, logoLightData: input.dataUrl }
-        : { logoDarkUrl: input.dataUrl, logoDarkData: input.dataUrl };
+      const normalizedProfile: OnboardingProfile = {
+        ...input.currentProfile,
+        displayName: input.currentProfile.displayName ?? null,
+        tagline: input.currentProfile.tagline ?? null,
+        addressCountry: input.currentProfile.addressCountry ?? null,
+        logoIconLightUrl: input.currentProfile.logoIconLightUrl ?? null,
+        logoIconDarkUrl: input.currentProfile.logoIconDarkUrl ?? null,
+        brandColorPrimary: input.currentProfile.brandColorPrimary ?? null,
+        brandColorSecondary: input.currentProfile.brandColorSecondary ?? null,
+        brandColorTertiary: input.currentProfile.brandColorTertiary ?? null,
+        timezone: input.currentProfile.timezone ?? null,
+        currency: input.currentProfile.currency ?? null,
+      };
+
+      // Save logo to DB
+      const updateData =
+        input.type === "light" ? { logoLightUrl: input.dataUrl, logoLightData: input.dataUrl } :
+        input.type === "dark" ? { logoDarkUrl: input.dataUrl, logoDarkData: input.dataUrl } :
+        input.type === "icon-light" ? { logoIconLightUrl: input.dataUrl } :
+        { logoIconDarkUrl: input.dataUrl };
 
       await upsertSchoolProfile(orgId, updateData);
 
+      // Update local profile
       const updatedProfile: OnboardingProfile = {
-        ...input.currentProfile,
-        ...(isLight ? { logoLightUrl: input.dataUrl } : { logoDarkUrl: input.dataUrl }),
+        ...normalizedProfile,
+        ...(input.type === "light" ? { logoLightUrl: input.dataUrl } :
+            input.type === "dark" ? { logoDarkUrl: input.dataUrl } :
+            input.type === "icon-light" ? { logoIconLightUrl: input.dataUrl } :
+            { logoIconDarkUrl: input.dataUrl }),
       };
 
-      const completedStep: OnboardingStep = isLight ? "logo_light" : "logo_dark";
+      const completedStep: OnboardingStep =
+        input.type === "light" ? "logo_light" :
+        input.type === "dark" ? "logo_dark" :
+        input.type === "icon-light" ? "icon_logo_light" :
+        "icon_logo_dark";
+
       const nextStep = getNextStep(completedStep, updatedProfile, input.hasMartialArts);
 
       const stepNumber = STEP_NUMBERS[nextStep] || 1;
       await saveOnboardingState(
         orgId,
-        { step: nextStep, profile: updatedProfile, completedSteps: (input as any).completedSteps || [], hasMartialArts: input.hasMartialArts },
+        { step: nextStep, profile: updatedProfile, completedSteps: input.completedSteps || [], hasMartialArts: input.hasMartialArts },
         stepNumber
       );
 
@@ -1734,8 +2108,12 @@ export const kaiOnboardingStateMachineRouter = router({
           .set({ onboardingStatus: "completed", onboardingStep: 99 } as any)
           .where(eq(organizations.id, orgId));
       } else {
-        const fileName = input.fileName || (isLight ? "Day Mode logo" : "Dark Mode logo");
-        kaiMessage = `✅ **${fileName}** activated.\n\n${getStepQuestion(nextStep, updatedProfile)}`;
+        const logoLabel =
+          input.type === "light" ? "Day Mode logo" :
+          input.type === "dark" ? "Dark Mode logo" :
+          input.type === "icon-light" ? "Light icon logo" :
+          "Dark icon logo";
+        kaiMessage = `✅ **${input.fileName || logoLabel}** activated.\n\n${getStepQuestion(nextStep, updatedProfile)}`;
       }
 
       const progress = getStepProgress(nextStep, input.hasMartialArts);
@@ -1745,7 +2123,7 @@ export const kaiOnboardingStateMachineRouter = router({
         nextStep,
         profile: updatedProfile,
         isComplete,
-        expectsFileUpload: nextStep === "logo_dark",
+        expectsFileUpload: isUploadStep(nextStep),
         showSkip: true,
         showBack: !isComplete,
         stepNumber: progress.stepNumber,

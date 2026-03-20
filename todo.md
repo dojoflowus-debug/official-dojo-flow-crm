@@ -8521,3 +8521,20 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Conversation Awareness: reference previous inputs in responses
 - [x] Proactive completion message: offer leads/classes/dashboard options
 - [x] Micro-behaviors: subtle variation, "Nice.", "Perfect.", "Locked in."
+
+## Kai Full Config Awareness (Phase — Kai Scope Expansion)
+
+- [x] Schema-driven onboarding — all fields from schoolProfiles mapped to steps
+- [x] Break address fields properly: street / city / state / postal / country (separate steps)
+- [x] New steps: display_name, tagline, country, brand_colors, timezone, currency
+- [x] New logo steps: icon_logo_light, icon_logo_dark (square icon logos)
+- [x] Section-based progress bar: Identity / School / Location / Contact / Branding / Preferences
+- [x] Progress bar shows section label + percentage + step number
+- [x] Smart skip + fill — DB two-way sync via loadOnboardingState reality check
+- [x] Timezone normalization (common aliases → IANA format)
+- [x] Currency normalization (common names/symbols → ISO codes)
+- [x] Hex color validation and normalization for brand_colors step
+- [x] profilePhotoUrl added to tRPC profileSchema
+- [x] logoUploadType extended to include icon-light and icon-dark variants
+- [x] _completedStepsToAdd added to ProcessStepResult interface
+- [x] TypeScript errors resolved in state machine and client hook

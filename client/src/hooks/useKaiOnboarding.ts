@@ -30,7 +30,7 @@ export interface OnboardingMessage {
   showSkip?: boolean;
   showBack?: boolean;
   showLogoUpload?: boolean;
-  logoUploadType?: "light" | "dark";
+  logoUploadType?: "light" | "dark" | "icon-light" | "icon-dark";
   showPhotoUpload?: boolean;
 }
 
@@ -38,6 +38,52 @@ interface UseKaiOnboardingOptions {
   organizationId: number;
   onInjectMessages: (messages: OnboardingMessage[]) => void;
   onComplete: () => void;
+}
+
+// ─── Empty profile factory ────────────────────────────────────────────────────
+
+function emptyProfile(): OnboardingProfile {
+  return {
+    name: null,
+    title: null,
+    profilePhotoUrl: null,
+    programs: [],
+    styles: [],
+    schoolName: null,
+    displayName: null,
+    tagline: null,
+    addressStreet: null,
+    addressCity: null,
+    addressState: null,
+    addressPostal: null,
+    addressCountry: null,
+    phone: null,
+    email: null,
+    website: null,
+    logoLightUrl: null,
+    logoDarkUrl: null,
+    logoIconLightUrl: null,
+    logoIconDarkUrl: null,
+    brandColorPrimary: null,
+    brandColorSecondary: null,
+    brandColorTertiary: null,
+    timezone: null,
+    currency: null,
+  };
+}
+
+// ─── Helper: is this step a logo/file upload step? ────────────────────────────
+
+function isLogoUploadStep(step: OnboardingStep): boolean {
+  return step === "logo_light" || step === "logo_dark" || step === "icon_logo_light" || step === "icon_logo_dark";
+}
+
+function getLogoUploadType(step: OnboardingStep): "light" | "dark" | "icon-light" | "icon-dark" | undefined {
+  if (step === "logo_light") return "light";
+  if (step === "logo_dark") return "dark";
+  if (step === "icon_logo_light") return "icon-light";
+  if (step === "icon_logo_dark") return "icon-dark";
+  return undefined;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -50,24 +96,8 @@ export function useKaiOnboarding({
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("name");
   const [stepNumber, setStepNumber] = useState(1);
-  const [totalSteps, setTotalSteps] = useState(14);
-  const [profile, setProfile] = useState<OnboardingProfile>({
-    name: null,
-    title: null,
-    profilePhotoUrl: null,
-    programs: [],
-    styles: [],
-    schoolName: null,
-    addressStreet: null,
-    addressCity: null,
-    addressState: null,
-    addressPostal: null,
-    phone: null,
-    email: null,
-    website: null,
-    logoLightUrl: null,
-    logoDarkUrl: null,
-  });
+  const [totalSteps, setTotalSteps] = useState(22);
+  const [profile, setProfile] = useState<OnboardingProfile>(emptyProfile());
   const [hasMartialArts, setHasMartialArts] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<OnboardingStep[]>([]);
   const hasInitialized = useRef(false);
@@ -110,10 +140,14 @@ export function useKaiOnboarding({
     setIsActive(true);
 
     const initialStep = (data.step as OnboardingStep) || "name";
-    const initialProfile = (data.profile as OnboardingProfile) || profile;
+    const serverProfile = data.profile as Partial<OnboardingProfile> | null;
+    const initialProfile: OnboardingProfile = {
+      ...emptyProfile(),
+      ...(serverProfile || {}),
+    };
     const initialHasMartialArts = data.hasMartialArts || false;
     const initStepNumber = data.stepNumber ?? 1;
-    const initTotalSteps = data.totalSteps ?? 14;
+    const initTotalSteps = data.totalSteps ?? 22;
 
     setCurrentStep(initialStep);
     setProfile(initialProfile);
@@ -123,10 +157,9 @@ export function useKaiOnboarding({
     if (data.completedSteps) setCompletedSteps(data.completedSteps as OnboardingStep[]);
 
     const isPhotoStep = initialStep === "profile_photo";
-    const isLogoStep = initialStep === "logo_light" || initialStep === "logo_dark";
+    const isLogoStep = isLogoUploadStep(initialStep);
     const isFirstStep = initialStep === "name";
 
-    // Build a single combined message: intro + first question
     const firstQuestion = getStepQuestion(initialStep, initialProfile);
 
     const combinedContent = isFirstStep
@@ -143,7 +176,7 @@ export function useKaiOnboarding({
         showSkip: true,
         showBack: !isFirstStep,
         showLogoUpload: isLogoStep,
-        logoUploadType: initialStep === "logo_light" ? "light" : initialStep === "logo_dark" ? "dark" : undefined,
+        logoUploadType: getLogoUploadType(initialStep),
         showPhotoUpload: isPhotoStep,
       },
     ]);
@@ -154,10 +187,6 @@ export function useKaiOnboarding({
     async (userText: string): Promise<boolean> => {
       if (!isActive) return false;
       if (currentStep === "complete") return false;
-
-      // Note: logo and photo steps are handled by the server NLU layer.
-      // Free text on those steps is interpreted intelligently (skip phrases, questions, corrections)
-      // rather than being redirected client-side. The server returns the appropriate response.
 
       try {
         const result = await processStepMutation.mutateAsync({
@@ -174,9 +203,8 @@ export function useKaiOnboarding({
         if (result.hasMartialArts !== undefined) {
           setHasMartialArts(result.hasMartialArts);
         }
-        // Merge newly completed steps into the local lock set
         if ((result as any)._completedStepsToAdd?.length) {
-          setCompletedSteps(prev => [...new Set([...prev, ...(result as any)._completedStepsToAdd])]);
+          setCompletedSteps(prev => Array.from(new Set([...prev, ...(result as any)._completedStepsToAdd])));
         }
         if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
         if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
@@ -188,21 +216,18 @@ export function useKaiOnboarding({
           } catch {}
         }
 
-        // ── DUPLICATE QUESTION PREVENTION: track last asked step ────────────
         lastAskedStep.current = result.nextStep;
 
-        // Inject KAI's response
-        // Use both nextStep and expectsFileUpload to determine upload button visibility
-        // (handles mid-flow corrections where nextStep stays on current step)
-        const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark" ||
-          (result.expectsFileUpload && (currentStep === "logo_light" || currentStep === "logo_dark"));
-        const isPhotoStep = result.nextStep === "profile_photo" ||
-          (result.expectsFileUpload && currentStep === "profile_photo");
-        const logoType = result.nextStep === "logo_light" ? "light"
-          : result.nextStep === "logo_dark" ? "dark"
-          : currentStep === "logo_light" ? "light"
-          : currentStep === "logo_dark" ? "dark"
-          : undefined;
+        const nextIsLogoStep = isLogoUploadStep(result.nextStep);
+        const nextIsPhotoStep = result.nextStep === "profile_photo";
+        const currentIsLogoStep = isLogoUploadStep(currentStep);
+        const currentIsPhotoStep = currentStep === "profile_photo";
+
+        const showLogoUpload = nextIsLogoStep || (result.expectsFileUpload && currentIsLogoStep);
+        const showPhotoUpload = nextIsPhotoStep || (result.expectsFileUpload && currentIsPhotoStep);
+
+        const logoType = getLogoUploadType(result.nextStep) || getLogoUploadType(currentStep);
+
         onInjectMessages([
           {
             id: msgId(`resp-${result.nextStep}`),
@@ -212,9 +237,9 @@ export function useKaiOnboarding({
             step: result.nextStep,
             showSkip: result.showSkip,
             showBack: result.showBack,
-            showLogoUpload: isLogoStep,
+            showLogoUpload,
             logoUploadType: logoType,
-            showPhotoUpload: isPhotoStep,
+            showPhotoUpload,
           },
         ]);
 
@@ -240,7 +265,7 @@ export function useKaiOnboarding({
         return true;
       }
     },
-    [isActive, currentStep, profile, hasMartialArts, processStepMutation, onInjectMessages, onComplete, utils]
+    [isActive, currentStep, profile, hasMartialArts, completedSteps, processStepMutation, onInjectMessages, onComplete, utils]
   );
 
   // ── Go back to previous step ─────────────────────────────────────────────────
@@ -261,6 +286,9 @@ export function useKaiOnboarding({
       if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
       lastAskedStep.current = result.nextStep;
 
+      const isLogoStep = isLogoUploadStep(result.nextStep);
+      const isPhotoStep = result.nextStep === "profile_photo";
+
       onInjectMessages([
         {
           id: msgId(`back-${result.nextStep}`),
@@ -270,15 +298,15 @@ export function useKaiOnboarding({
           step: result.nextStep,
           showSkip: result.showSkip,
           showBack: result.showBack,
-          showLogoUpload: result.nextStep === "logo_light" || result.nextStep === "logo_dark",
-          logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
-          showPhotoUpload: result.nextStep === "profile_photo",
+          showLogoUpload: isLogoStep,
+          logoUploadType: getLogoUploadType(result.nextStep),
+          showPhotoUpload: isPhotoStep,
         },
       ]);
     } catch (err) {
       console.error("[KaiOnboarding] goBack error:", err);
     }
-  }, [isActive, currentStep, profile, hasMartialArts, goBackMutation, onInjectMessages]);
+  }, [isActive, currentStep, profile, hasMartialArts, completedSteps, goBackMutation, onInjectMessages]);
 
   // ── Upload profile picture mutation ───────────────────────────────────────
   const uploadProfilePictureMutation = trpc.auth.uploadProfilePicture.useMutation();
@@ -325,6 +353,7 @@ export function useKaiOnboarding({
             userInput: photoUrl,
             currentProfile: { ...profile, profilePhotoUrl: photoUrl },
             hasMartialArts,
+            completedSteps,
           });
 
           setProfile(smResult.profile);
@@ -334,7 +363,7 @@ export function useKaiOnboarding({
 
           try { await utils.auth.me.invalidate(); } catch {}
 
-          const isLogoStep = smResult.nextStep === "logo_light" || smResult.nextStep === "logo_dark";
+          const isLogoStep = isLogoUploadStep(smResult.nextStep);
           onInjectMessages([
             {
               id: msgId("photo-done"),
@@ -345,7 +374,7 @@ export function useKaiOnboarding({
               showSkip: smResult.showSkip,
               showBack: smResult.showBack,
               showLogoUpload: isLogoStep,
-              logoUploadType: smResult.nextStep === "logo_light" ? "light" : smResult.nextStep === "logo_dark" ? "dark" : undefined,
+              logoUploadType: getLogoUploadType(smResult.nextStep),
             },
           ]);
 
@@ -371,7 +400,7 @@ export function useKaiOnboarding({
       };
       reader.readAsDataURL(file);
     },
-    [isActive, profile, hasMartialArts, processStepMutation, uploadProfilePictureMutation, onInjectMessages, onComplete, utils]
+    [isActive, profile, hasMartialArts, completedSteps, processStepMutation, uploadProfilePictureMutation, onInjectMessages, onComplete, utils]
   );
 
   // ── Skip profile photo ──────────────────────────────────────────────────────
@@ -383,13 +412,14 @@ export function useKaiOnboarding({
         userInput: "skip",
         currentProfile: profile,
         hasMartialArts,
+        completedSteps,
       });
       setProfile(result.profile);
       setCurrentStep(result.nextStep);
       if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
       if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
 
-      const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
+      const isLogoStep = isLogoUploadStep(result.nextStep);
       onInjectMessages([
         {
           id: msgId("photo-skip"),
@@ -400,7 +430,7 @@ export function useKaiOnboarding({
           showSkip: result.showSkip,
           showBack: result.showBack,
           showLogoUpload: isLogoStep,
-          logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+          logoUploadType: getLogoUploadType(result.nextStep),
         },
       ]);
       if (result.isComplete) {
@@ -408,11 +438,11 @@ export function useKaiOnboarding({
         onComplete();
       }
     } catch {}
-  }, [isActive, profile, hasMartialArts, processStepMutation, onInjectMessages, onComplete]);
+  }, [isActive, profile, hasMartialArts, completedSteps, processStepMutation, onInjectMessages, onComplete]);
 
   // ── Handle logo file upload ─────────────────────────────────────────────────
   const handleLogoUpload = useCallback(
-    async (file: File, type: "light" | "dark") => {
+    async (file: File, type: "light" | "dark" | "icon-light" | "icon-dark") => {
       if (!isActive) return;
 
       const reader = new FileReader();
@@ -427,6 +457,7 @@ export function useKaiOnboarding({
             fileName: file.name,
             currentProfile: profile,
             hasMartialArts,
+            completedSteps,
           });
 
           setProfile(result.profile);
@@ -434,7 +465,7 @@ export function useKaiOnboarding({
           if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
           if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
 
-          const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
+          const isLogoStep = isLogoUploadStep(result.nextStep);
           onInjectMessages([
             {
               id: msgId(`logo-${type}-done`),
@@ -445,7 +476,7 @@ export function useKaiOnboarding({
               showSkip: result.showSkip,
               showBack: result.showBack,
               showLogoUpload: isLogoStep,
-              logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+              logoUploadType: getLogoUploadType(result.nextStep),
             },
           ]);
 
@@ -472,7 +503,7 @@ export function useKaiOnboarding({
       };
       reader.readAsDataURL(file);
     },
-    [isActive, currentStep, profile, hasMartialArts, uploadLogoMutation, onInjectMessages, onComplete]
+    [isActive, currentStep, profile, hasMartialArts, completedSteps, uploadLogoMutation, onInjectMessages, onComplete]
   );
 
   // ── Skip entire onboarding ───────────────────────────────────────────────
@@ -489,16 +520,13 @@ export function useKaiOnboarding({
     try {
       await resetOnboardingMutation.mutateAsync();
     } catch {}
-    const emptyProfile: OnboardingProfile = {
-      name: null, title: null, profilePhotoUrl: null, programs: [], styles: [],
-      schoolName: null, addressStreet: null, addressCity: null, addressState: null,
-      addressPostal: null, phone: null, email: null, website: null,
-      logoLightUrl: null, logoDarkUrl: null,
-    };
+    const fresh = emptyProfile();
     setCurrentStep("name");
-    setProfile(emptyProfile);
+    setProfile(fresh);
     setHasMartialArts(false);
     setStepNumber(1);
+    setTotalSteps(22);
+    setCompletedSteps([]);
     setIsActive(true);
     hasInitialized.current = false;
     onInjectMessages([

@@ -124,7 +124,7 @@ interface Message {
   showSkip?: boolean;
   showBack?: boolean;
   showLogoUpload?: boolean;
-  logoUploadType?: 'light' | 'dark';
+  logoUploadType?: 'light' | 'dark' | 'icon-light' | 'icon-dark';
   showPhotoUpload?: boolean;
   ui_blocks?: Array<{
     type: 'student_card' | 'student_list' | 'lead_card' | 'lead_list';
@@ -3160,32 +3160,47 @@ export default function KaiCommand() {
           )}
 
           {/* KAI Onboarding Progress Bar — shown only during active onboarding */}
-          {isOnboardingActive && onboardingTotalSteps > 0 && (
-            <div className={`px-4 py-2 border-b ${
-              isCinematic ? 'border-white/10 bg-black/30' : isDark ? 'border-white/10 bg-black/20' : 'border-slate-200 bg-slate-50'
-            }`}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className={`text-xs font-semibold tracking-widest uppercase ${
-                  isCinematic || isDark ? 'text-[#FF4C4C]' : 'text-[#FF4C4C]'
-                }`}>
-                  Activation Sequence
-                </span>
-                <span className={`text-xs font-mono ${
-                  isCinematic || isDark ? 'text-white/50' : 'text-slate-400'
-                }`}>
-                  Step {onboardingStepNumber} of {onboardingTotalSteps}
-                </span>
-              </div>
-              <div className={`h-1 rounded-full overflow-hidden ${
-                isCinematic || isDark ? 'bg-white/10' : 'bg-slate-200'
+          {isOnboardingActive && onboardingTotalSteps > 0 && (() => {
+            const pct = Math.round((onboardingStepNumber / onboardingTotalSteps) * 100);
+            const sectionLabels: Record<string, string> = {
+              name: '🥋 Identity Setup', title: '🥋 Identity Setup', profile_photo: '🥋 Identity Setup',
+              programs: '🏫 School Setup', rank: '🏫 School Setup', school_name: '🏫 School Setup',
+              display_name: '🏫 School Setup', tagline: '🏫 School Setup', martial_style: '🏫 School Setup',
+              address: '📍 Location Setup', city_state_zip: '📍 Location Setup', country: '📍 Location Setup',
+              phone: '📞 Contact Setup', email: '📞 Contact Setup', website: '📞 Contact Setup',
+              logo_light: '🎨 Branding Setup', logo_dark: '🎨 Branding Setup',
+              icon_logo_light: '🎨 Branding Setup', icon_logo_dark: '🎨 Branding Setup',
+              brand_colors: '🎨 Branding Setup',
+              timezone: '⚙️ Preferences', currency: '⚙️ Preferences',
+            };
+            const sectionLabel = sectionLabels[onboardingCurrentStep] || 'Activation Sequence';
+            return (
+              <div className={`px-4 py-2 border-b ${
+                isCinematic ? 'border-white/10 bg-black/30' : isDark ? 'border-white/10 bg-black/20' : 'border-slate-200 bg-slate-50'
               }`}>
-                <div
-                  className="h-full rounded-full bg-[#FF4C4C] transition-all duration-500 ease-out"
-                  style={{ width: `${Math.round((onboardingStepNumber / onboardingTotalSteps) * 100)}%` }}
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={`text-xs font-semibold ${
+                    isCinematic || isDark ? 'text-[#FF4C4C]' : 'text-[#FF4C4C]'
+                  }`}>
+                    {sectionLabel}
+                  </span>
+                  <span className={`text-xs font-mono ${
+                    isCinematic || isDark ? 'text-white/50' : 'text-slate-400'
+                  }`}>
+                    {pct}% — Step {onboardingStepNumber} of {onboardingTotalSteps}
+                  </span>
+                </div>
+                <div className={`h-1 rounded-full overflow-hidden ${
+                  isCinematic || isDark ? 'bg-white/10' : 'bg-slate-200'
+                }`}>
+                  <div
+                    className="h-full rounded-full bg-[#FF4C4C] transition-all duration-500 ease-out"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* CONTENT LAYER - Messages Area (Row 2 of 3-row layout) */}
           {/* This is the scrollable middle zone - flex-1 takes remaining space */}
@@ -3610,7 +3625,12 @@ export default function KaiCommand() {
                                   onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
-                                    const uploadType = message.logoUploadType || (message.onboardingStep === 'logo_dark' ? 'dark' : 'light');
+                                    const uploadType = message.logoUploadType || (
+                                      message.onboardingStep === 'logo_dark' ? 'dark' :
+                                      message.onboardingStep === 'icon_logo_light' ? 'icon-light' :
+                                      message.onboardingStep === 'icon_logo_dark' ? 'icon-dark' :
+                                      'light'
+                                    );
                                     // Show user message with filename
                                     setMessages(prev => [...prev, {
                                       id: `onboarding-user-logo-${Date.now()}`,

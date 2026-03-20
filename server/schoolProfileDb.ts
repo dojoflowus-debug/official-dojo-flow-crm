@@ -18,6 +18,8 @@ export interface SchoolProfileData {
   logoDarkUrl?: string | null;
   logoIconLightUrl?: string | null;
   logoIconDarkUrl?: string | null;
+  logoLightData?: string | null;
+  logoDarkData?: string | null;
   brandColorPrimary?: string | null;
   brandColorSecondary?: string | null;
   brandColorTertiary?: string | null;
@@ -105,6 +107,8 @@ export async function upsertSchoolProfile(
     if (data.logoDarkUrl !== undefined) updateFields.logoDarkUrl = data.logoDarkUrl;
     if (data.logoIconLightUrl !== undefined) updateFields.logoIconLightUrl = data.logoIconLightUrl;
     if (data.logoIconDarkUrl !== undefined) updateFields.logoIconDarkUrl = data.logoIconDarkUrl;
+    if (data.logoLightData !== undefined) updateFields.logoLightData = data.logoLightData;
+    if (data.logoDarkData !== undefined) updateFields.logoDarkData = data.logoDarkData;
     if (data.brandColorPrimary !== undefined) updateFields.brandColorPrimary = data.brandColorPrimary;
     if (data.brandColorSecondary !== undefined) updateFields.brandColorSecondary = data.brandColorSecondary;
     if (data.brandColorTertiary !== undefined) updateFields.brandColorTertiary = data.brandColorTertiary;
@@ -147,6 +151,8 @@ export async function upsertSchoolProfile(
         logoDarkUrl: data.logoDarkUrl,
         logoIconLightUrl: data.logoIconLightUrl,
         logoIconDarkUrl: data.logoIconDarkUrl,
+        logoLightData: data.logoLightData,
+        logoDarkData: data.logoDarkData,
         brandColorPrimary: data.brandColorPrimary,
         brandColorSecondary: data.brandColorSecondary,
         brandColorTertiary: data.brandColorTertiary,

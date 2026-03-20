@@ -15,18 +15,71 @@ export const ONBOARDING_STEPS = [
   "programs",
   "rank",
   "school_name",
+  "display_name",
+  "tagline",
   "martial_style",
   "address",
   "city_state_zip",
+  "country",
   "phone",
   "email",
   "website",
   "logo_light",
   "logo_dark",
+  "icon_logo_light",
+  "icon_logo_dark",
+  "brand_colors",
+  "timezone",
+  "currency",
   "complete",
 ] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+// ─── Section grouping ─────────────────────────────────────────────────────────
+
+export type OnboardingSection =
+  | "identity"
+  | "school"
+  | "location"
+  | "contact"
+  | "branding"
+  | "preferences";
+
+export const STEP_SECTIONS: Record<OnboardingStep, OnboardingSection | null> = {
+  name: "identity",
+  title: "identity",
+  profile_photo: "identity",
+  programs: "school",
+  rank: "school",
+  school_name: "school",
+  display_name: "school",
+  tagline: "school",
+  martial_style: "school",
+  address: "location",
+  city_state_zip: "location",
+  country: "location",
+  phone: "contact",
+  email: "contact",
+  website: "contact",
+  logo_light: "branding",
+  logo_dark: "branding",
+  icon_logo_light: "branding",
+  icon_logo_dark: "branding",
+  brand_colors: "branding",
+  timezone: "preferences",
+  currency: "preferences",
+  complete: null,
+};
+
+export const SECTION_LABELS: Record<OnboardingSection, string> = {
+  identity: "Identity Setup",
+  school: "School Setup",
+  location: "Location Setup",
+  contact: "Contact Setup",
+  branding: "Branding Setup",
+  preferences: "Preferences",
+};
 
 export interface OnboardingProfile {
   name: string | null;
@@ -35,15 +88,25 @@ export interface OnboardingProfile {
   programs: string[];
   styles: string[];
   schoolName: string | null;
+  displayName: string | null;
+  tagline: string | null;
   addressStreet: string | null;
   addressCity: string | null;
   addressState: string | null;
   addressPostal: string | null;
+  addressCountry: string | null;
   phone: string | null;
   email: string | null;
   website: string | null;
   logoLightUrl: string | null;
   logoDarkUrl: string | null;
+  logoIconLightUrl: string | null;
+  logoIconDarkUrl: string | null;
+  brandColorPrimary: string | null;
+  brandColorSecondary: string | null;
+  brandColorTertiary: string | null;
+  timezone: string | null;
+  currency: string | null;
 }
 
 export interface OnboardingState {
@@ -75,6 +138,10 @@ export interface NLUResult {
     title?: string;
     schoolName?: string;
     programs?: string[];
+    color?: string;
+    timezone?: string;
+    currency?: string;
+    country?: string;
   };
   raw: string;
 }
@@ -226,7 +293,6 @@ const MICRO_ACKS = ["Got it.", "Perfect.", "Nice.", "Locked in.", "Done.", "Note
 
 /** Returns a subtle, varied acknowledgement — never the same one twice in a row. */
 export function microAck(seed?: string): string {
-  // Use seed string to pick deterministically (avoids hydration mismatch)
   const idx = seed
     ? seed.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % MICRO_ACKS.length
     : Math.floor(Math.random() * MICRO_ACKS.length);
@@ -287,12 +353,20 @@ export function buildObjectionResponse(
     programs: `It's how I tailor your system — class types, scheduling, and student tracking all adapt to what you teach.`,
     rank: `It shows up on your profile for staff and students to see. You can skip it if you'd rather not share.`,
     school_name: `It's how your dojo appears throughout the system — on student records, reports, and the kiosk.`,
+    display_name: `It's the short name shown in the app header and notifications. Skip it and I'll use your full school name.`,
+    tagline: `It shows up on your public profile and kiosk welcome screen. Totally optional — skip if you don't have one.`,
     address: `It's used for your school profile and can appear on your public-facing pages. Skip it for now if you want.`,
+    country: `It's used for your school profile and regional settings. Skip it if you're in the US.`,
     phone: `It shows up on your school profile and can be used for student communications. Easy to add later.`,
     email: `It's the primary contact for leads and student inquiries coming through DojoFlow.`,
     website: `Totally optional — it just shows up on your public school profile if you have one.`,
-    logo_light: `It shows up in the dashboard header and on student-facing screens. Skip it and upload later in Settings.`,
+    logo_light: `It shows up in the dashboard header on light theme. Skip it if you don't have one ready.`,
     logo_dark: `It appears when your team uses dark theme. Skip it if you don't have one ready.`,
+    icon_logo_light: `It's the square version of your logo — used for avatars, app icons, and compact spaces. Skip it if you don't have one.`,
+    icon_logo_dark: `It's the dark version of your square icon logo. Skip it if you don't have one ready.`,
+    brand_colors: `Your brand colors are used throughout the dashboard to match your school's identity. Skip it and I'll use the default DojoFlow palette.`,
+    timezone: `It's used for scheduling, class times, and notifications. Skip it and I'll default to Eastern Time.`,
+    currency: `It's used for billing, memberships, and payment tracking. Skip it and I'll default to USD.`,
   };
 
   const context = stepContext[currentStep] || `It helps me set up your profile accurately. You can skip it if you'd prefer.`;
@@ -300,8 +374,6 @@ export function buildObjectionResponse(
 }
 
 // ─── Step questions — confident, smooth, human-assistant tone ─────────────────
-// Each question follows the 3-part structure: acknowledge → direct → prompt.
-// Context-aware: references school name, location, programs where available.
 
 export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile): string {
   const titleName = profile.title && profile.name
@@ -336,6 +408,16 @@ export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile
         : `What's the **official name of your school or dojo**?`;
     }
 
+    case "display_name": {
+      const schoolRef = school || "your school";
+      return `What should I call **${schoolRef}** in short form?\n\nThis is the name shown in the app header and notifications — usually a shorter version.\n\n*(e.g., "Tiger Dojo" instead of "Tiger Martial Arts Academy" — or skip to use the full name)*`;
+    }
+
+    case "tagline": {
+      const schoolRef = school || "your school";
+      return `Does **${schoolRef}** have a tagline or motto?\n\nIt shows up on your public profile and kiosk welcome screen.\n\n*(e.g., "Train Hard. Fight Smart." — or skip if you don't have one)*`;
+    }
+
     case "martial_style":
       return `What **martial arts style(s)** do you primarily teach at **${school || "your school"}**?\n\n*(e.g., Brazilian Jiu-Jitsu, Shotokan Karate, Muay Thai)*`;
 
@@ -344,6 +426,14 @@ export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile
 
     case "city_state_zip":
       return `And the **city, state, and ZIP**?\n\n*(e.g., Austin, TX 78701)*`;
+
+    case "country": {
+      const hasUS = profile.addressState?.trim();
+      if (hasUS) {
+        return `What **country** is **${locationRef}** in?\n\n*(Type the country name — or skip if you're in the United States)*`;
+      }
+      return `What **country** is **${locationRef}** in?\n\n*(e.g., United States, Canada, United Kingdom — or skip)*`;
+    }
 
     case "phone": {
       const schoolRef = school || "your school";
@@ -362,19 +452,36 @@ export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile
     }
 
     case "logo_light":
-      return `Almost there — let's get your branding in place.\n\nUpload your **Day Mode logo** *(for light backgrounds)*.\n\n*PNG or SVG works best. This shows up in your dashboard header.*`;
+      return `Let's get your branding in place.\n\nUpload your **Day Mode logo** *(for light backgrounds)*.\n\n*PNG or SVG works best. This shows up in your dashboard header.*`;
 
     case "logo_dark":
-      return `One more — upload your **Dark Mode logo**, usually a white or light version of your logo.\n\n*This is what your team sees in dark theme. Skip if you don't have one ready.*`;
+      return `Upload your **Dark Mode logo** — usually a white or light version of your logo.\n\n*This is what your team sees in dark theme. Skip if you don't have one ready.*`;
+
+    case "icon_logo_light":
+      return `Now let's add your **square icon logo** *(for light backgrounds)*.\n\nThis is used for avatars, app icons, and compact spaces — typically just your symbol or emblem.\n\n*Skip if you only have a horizontal logo.*`;
+
+    case "icon_logo_dark":
+      return `And the **dark version of your icon logo** — the square emblem for dark backgrounds.\n\n*Skip if you don't have a separate dark version.*`;
+
+    case "brand_colors": {
+      const schoolRef = school || "your school";
+      return `What are **${schoolRef}'s brand colors**?\n\nEnter your primary color as a hex code — I'll apply it throughout your dashboard.\n\n*(e.g., #FF0000 for red, #1A1A2E for dark navy — or skip to use the default DojoFlow palette)*`;
+    }
+
+    case "timezone": {
+      const cityRef = city || "your school";
+      return `What **timezone** is **${cityRef}** in?\n\n*(e.g., America/New_York, America/Chicago, America/Los_Angeles — or skip to default to Eastern Time)*`;
+    }
+
+    case "currency":
+      return `What **currency** does your school use for billing and memberships?\n\n*(e.g., USD, CAD, GBP, AUD — or skip to default to USD)*`;
 
     default:
       return "What's next?";
   }
 }
 
-// ─── Context-aware save confirmations (reduced noise) ────────────────────────
-// Used instead of "Got it — [value]" for a cleaner feel.
-// Only called for critical fields; minor fields skip confirmation entirely.
+// ─── Context-aware save confirmations ────────────────────────────────────────
 
 export function buildSaveConfirmation(
   step: OnboardingStep,
@@ -382,17 +489,18 @@ export function buildSaveConfirmation(
   profile: OnboardingProfile
 ): string | null {
   const school = profile.schoolName || "your school";
-  const titleName = profile.title && profile.name
-    ? `${profile.title} ${profile.name}`
-    : profile.name || null;
 
   switch (step) {
     case "name":
-      return null; // handled inline in state machine with memory reinforcement
+      return null;
     case "title":
-      return null; // handled inline
+      return null;
     case "school_name":
       return `**${value}** — locked in. 🏆`;
+    case "display_name":
+      return null;
+    case "tagline":
+      return null;
     case "phone":
       return `Perfect. I've got **${school}'s** number saved.`;
     case "email":
@@ -400,11 +508,19 @@ export function buildSaveConfirmation(
     case "website":
       return `${school} is connected online.`;
     case "address":
-      return null; // inline
+      return null;
     case "city_state_zip":
-      return null; // inline
+      return null;
+    case "country":
+      return null;
+    case "brand_colors":
+      return null;
+    case "timezone":
+      return null;
+    case "currency":
+      return null;
     default:
-      return null; // skip confirmation for minor fields
+      return null;
   }
 }
 
@@ -505,4 +621,94 @@ function extractStateZip(raw: string): { state: string | null; zip: string | nul
   const zip = match[2] || null;
   const state = statePart ? (US_STATES[statePart] || null) : null;
   return { state, zip };
+}
+
+// ─── Color validation ─────────────────────────────────────────────────────────
+
+export function isValidHexColor(value: string): boolean {
+  return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(value.trim());
+}
+
+export function normalizeHexColor(value: string): string | null {
+  const trimmed = value.trim();
+  // Add # if missing
+  const withHash = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  if (isValidHexColor(withHash)) return withHash.toUpperCase();
+  return null;
+}
+
+// ─── Common timezones ─────────────────────────────────────────────────────────
+
+export const COMMON_TIMEZONES: Record<string, string> = {
+  "eastern": "America/New_York",
+  "central": "America/Chicago",
+  "mountain": "America/Denver",
+  "pacific": "America/Los_Angeles",
+  "alaska": "America/Anchorage",
+  "hawaii": "Pacific/Honolulu",
+  "est": "America/New_York",
+  "cst": "America/Chicago",
+  "mst": "America/Denver",
+  "pst": "America/Los_Angeles",
+  "et": "America/New_York",
+  "ct": "America/Chicago",
+  "mt": "America/Denver",
+  "pt": "America/Los_Angeles",
+  "utc": "UTC",
+  "gmt": "UTC",
+  "london": "Europe/London",
+  "paris": "Europe/Paris",
+  "berlin": "Europe/Berlin",
+  "toronto": "America/Toronto",
+  "vancouver": "America/Vancouver",
+  "sydney": "Australia/Sydney",
+  "melbourne": "Australia/Melbourne",
+  "auckland": "Pacific/Auckland",
+  "dubai": "Asia/Dubai",
+  "singapore": "Asia/Singapore",
+  "tokyo": "Asia/Tokyo",
+};
+
+export function normalizeTimezone(input: string): string | null {
+  const lower = input.trim().toLowerCase();
+  // Check common aliases
+  if (COMMON_TIMEZONES[lower]) return COMMON_TIMEZONES[lower];
+  // Check if it looks like a valid IANA timezone
+  if (/^[A-Za-z]+\/[A-Za-z_]+$/.test(input.trim())) return input.trim();
+  // Check for partial match
+  for (const [key, tz] of Object.entries(COMMON_TIMEZONES)) {
+    if (lower.includes(key)) return tz;
+  }
+  return null;
+}
+
+// ─── Common currencies ────────────────────────────────────────────────────────
+
+export const COMMON_CURRENCIES: Record<string, string> = {
+  "usd": "USD", "dollar": "USD", "us dollar": "USD", "$": "USD",
+  "cad": "CAD", "canadian": "CAD", "canadian dollar": "CAD",
+  "gbp": "GBP", "pound": "GBP", "british pound": "GBP", "£": "GBP",
+  "eur": "EUR", "euro": "EUR", "€": "EUR",
+  "aud": "AUD", "australian": "AUD", "australian dollar": "AUD",
+  "nzd": "NZD", "new zealand": "NZD",
+  "jpy": "JPY", "yen": "JPY", "¥": "JPY",
+  "mxn": "MXN", "peso": "MXN", "mexican peso": "MXN",
+  "brl": "BRL", "real": "BRL", "brazilian real": "BRL",
+  "sgd": "SGD", "singapore dollar": "SGD",
+  "hkd": "HKD", "hong kong dollar": "HKD",
+  "chf": "CHF", "franc": "CHF", "swiss franc": "CHF",
+  "inr": "INR", "rupee": "INR", "indian rupee": "INR",
+  "zar": "ZAR", "rand": "ZAR", "south african rand": "ZAR",
+};
+
+export function normalizeCurrency(input: string): string | null {
+  const lower = input.trim().toLowerCase();
+  if (COMMON_CURRENCIES[lower]) return COMMON_CURRENCIES[lower];
+  // Check 3-letter ISO code
+  if (/^[A-Za-z]{3}$/.test(input.trim())) return input.trim().toUpperCase();
+  // Partial match
+  for (const [key, code] of Object.entries(COMMON_CURRENCIES)) {
+    if (lower.includes(key)) return code;
+  }
+  return null;
 }
