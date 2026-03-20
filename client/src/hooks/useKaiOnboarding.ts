@@ -16,8 +16,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { trpc } from "../lib/trpc";
-import type { OnboardingStep, OnboardingProfile } from "../../../server/kaiOnboardingStateMachine";
-import { getStepQuestion } from "../../../server/kaiOnboardingStateMachine";
+import type { OnboardingStep, OnboardingProfile } from "@shared/onboarding";
+import { getStepQuestion } from "@shared/onboarding";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
