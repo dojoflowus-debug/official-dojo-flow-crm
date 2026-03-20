@@ -8489,6 +8489,6 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add step lock: if stepCompleted, always call getNextStep() immediately
 
 ## Splash Loader (Mar 20, 2026)
-- [ ] Add branded splash loader with DojoFlow logo shown during initial app load
-- [ ] Smooth fade-out transition once app is ready
-- [ ] Works for both initial page load and route transitions
+- [x] Add branded splash loader with DojoFlow logo shown during initial app load
+- [x] Smooth fade-out transition once app is ready
+- [x] Works for both initial page load and route transitions
