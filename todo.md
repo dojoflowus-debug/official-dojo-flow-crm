@@ -8494,4 +8494,4 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Works for both initial page load and route transitions
 
 ## Splash Loader Fix (Mar 20, 2026)
-- [ ] Hide top toolbar during splash so entire screen is black
+- [x] Hide top toolbar during splash so entire screen is black
