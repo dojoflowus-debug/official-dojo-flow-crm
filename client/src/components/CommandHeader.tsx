@@ -33,7 +33,7 @@ interface CommandHeaderProps {
 
 export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps) {
   const { theme, setTheme } = useTheme()
-  const { user, logout } = useAuth()
+  const { user, logout, loading: authLoading } = useAuth()
   const { openModal: openEnvironmentModal } = useEnvironment()
   const { openSettings } = useModal()
 
@@ -210,7 +210,7 @@ export default function CommandHeader({ title, isDarkMode }: CommandHeaderProps)
               <Avatar className="h-7 w-7">
                 <AvatarImage src={user?.photoUrl} />
                 <AvatarFallback className={cn("text-xs", isDarkMode ? "bg-white/10 text-white" : "bg-gray-100 text-gray-600")}>
-                  {user?.name ? getInitials(user.name) : 'U'}
+                  {authLoading ? '' : (user?.name ? getInitials(user.name) : '')}
                 </AvatarFallback>
               </Avatar>
             </Button>

@@ -67,8 +67,9 @@ export default function DashboardLayout({
 
   // Get user initials for avatar
   const getUserInitials = () => {
+    if (loading) return '';
     const displayName = user?.name || user?.email?.split('@')[0];
-    if (!displayName) return 'U';
+    if (!displayName) return '';
     return displayName.charAt(0).toUpperCase();
   };
 
