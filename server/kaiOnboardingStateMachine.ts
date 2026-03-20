@@ -816,6 +816,7 @@ export async function processOnboardingStep(
       } catch (e) {
         console.error('[OnboardingSM] Failed to update users.name:', e);
       }
+      // ── STEP LOCK: step complete → move to next step immediately ──
       const next = getNextStep("name", updatedProfile, hasMartialArts);
       return {
           kaiMessage: `Got it, **${name}**.\n\n${getStepQuestion(next, updatedProfile)}`,
@@ -957,13 +958,11 @@ export async function processOnboardingStep(
       const newHasMartialArts = programs.some((p) => detectsMartialArts(p));
       const updatedProfile = { ...currentProfile, programs };
       await persistProfileField(orgId, "programs", programs);
+      // ── STEP LOCK: step complete → move to next step immediately, no branching ──
       const next = getNextStep("programs", updatedProfile, newHasMartialArts);
       const programList = programs.join(", ");
-      const martialArtsNote = newHasMartialArts
-        ? " Since you teach martial arts, I have one additional field to configure."
-        : "";
       return {
-        kaiMessage: `Great — **${programList}** added to your roster.${martialArtsNote}\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `Great — **${programList}** added to your roster.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
