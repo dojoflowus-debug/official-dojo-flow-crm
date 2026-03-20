@@ -10,7 +10,7 @@ import { upsertSchoolProfile } from "./schoolProfileDb";
 export { ONBOARDING_STEPS, getStepQuestion } from "../shared/onboarding";
 export type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shared/onboarding";
 import type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shared/onboarding";
-import { ONBOARDING_STEPS, getStepQuestion, detectIntent, buildCorrectionAck, buildObjectionResponse, parseAddress } from "../shared/onboarding";
+import { ONBOARDING_STEPS, getStepQuestion, detectIntent, buildCorrectionAck, buildObjectionResponse, parseAddress, microAck, buildSaveConfirmation } from "../shared/onboarding";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -830,7 +830,9 @@ export async function processOnboardingStep(
       // ── STEP LOCK: step complete → move to next step immediately ──
       const next = getNextStep("name", updatedProfile, hasMartialArts);
       return {
-          kaiMessage: `Got it, **${name}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+           kaiMessage: `${microAck(name)}, **${name}**.
+
+${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -883,7 +885,9 @@ export async function processOnboardingStep(
       }
       const next = getNextStep("title", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — I'll call you **${fullTitleName}** throughout your system.\n\n${getStepQuestion(next, updatedProfile)}`,
+         kaiMessage: `${microAck(fullTitleName)} — I'll call you **${fullTitleName}** throughout your system.
+
+${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1275,7 +1279,9 @@ ${getStepQuestion(next, updatedProfile)}`,
       await upsertSchoolProfile(orgId, { phone: normalisedInput });
       const next = getNextStep("phone", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${normalisedInput}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+         kaiMessage: `${buildSaveConfirmation("phone", normalisedInput, updatedProfile) ?? `${microAck(normalisedInput)} — **${normalisedInput}** saved.`}
+
+${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1316,7 +1322,9 @@ ${getStepQuestion(next, updatedProfile)}`,
       await upsertSchoolProfile(orgId, { email: normalisedInput });
       const next = getNextStep("email", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${normalisedInput}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+          kaiMessage: `${buildSaveConfirmation("email", normalisedInput, updatedProfile) ?? `${microAck(normalisedInput)} — **${normalisedInput}** saved.`}
+
+${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1346,7 +1354,9 @@ ${getStepQuestion(next, updatedProfile)}`,
       await upsertSchoolProfile(orgId, { website });
       const next = getNextStep("website", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${website}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `${buildSaveConfirmation("website", website, updatedProfile) ?? `${microAck(website)} — **${website}** connected.`}
+
+${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1620,7 +1630,7 @@ export const kaiOnboardingStateMachineRouter = router({
       try {
         await saveOnboardingState(
           orgId,
-          { step: prevStep, profile: input.currentProfile, completedSteps: [], hasMartialArts: input.hasMartialArts },
+          { step: prevStep, profile: input.currentProfile, completedSteps: (input as any).completedSteps || [], hasMartialArts: input.hasMartialArts },
           stepNumber
         );
       } catch (e) {
@@ -1707,7 +1717,7 @@ export const kaiOnboardingStateMachineRouter = router({
       const stepNumber = STEP_NUMBERS[nextStep] || 1;
       await saveOnboardingState(
         orgId,
-        { step: nextStep, profile: updatedProfile, completedSteps: [], hasMartialArts: input.hasMartialArts },
+        { step: nextStep, profile: updatedProfile, completedSteps: (input as any).completedSteps || [], hasMartialArts: input.hasMartialArts },
         stepNumber
       );
 

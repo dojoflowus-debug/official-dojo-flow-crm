@@ -8509,3 +8509,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] address case: if full address detected, save all components and skip city_state_zip step
 - [ ] city_state_zip case: if already populated by address step, skip immediately
 - [ ] Partial address: only ask for missing components
+
+## Kai Intelligence Upgrade — Digital Operator (Mar 20, 2026)
+- [ ] State Memory System: check DB before asking any question, skip if data exists
+- [ ] Answer Lock System: save → confirm → lock field, never re-ask
+- [ ] Smart Confirmation: reduce noise, skip confirmation unless critical
+- [ ] Context-Aware Flow Engine: firstMissingField() replaces linear script
+- [ ] Duplicate Question Prevention: lastAsked tracking
+- [ ] Personality Layer: confident + smooth + human tone on all questions
+- [ ] Intelligent Skip Logic: if logo/website exists, skip asking
+- [ ] Conversation Awareness: reference previous inputs in responses
+- [ ] Proactive completion message: offer leads/classes/dashboard options
+- [ ] Micro-behaviors: subtle variation, "Nice.", "Perfect.", "Locked in."

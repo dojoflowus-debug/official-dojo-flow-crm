@@ -81,7 +81,6 @@ export interface NLUResult {
 
 // ─── NLU: Pattern banks ───────────────────────────────────────────────────────
 
-// Titles we recognise
 const KNOWN_TITLES = [
   "master", "sensei", "sifu", "coach", "professor", "prof",
   "instructor", "grandmaster", "grand master", "shihan", "renshi",
@@ -89,7 +88,6 @@ const KNOWN_TITLES = [
   "dr", "dr.", "mr", "mr.", "ms", "ms.", "mrs", "mrs.",
 ];
 
-// Patterns that signal a name/title preference
 const CALL_ME_PATTERNS = [
   /\b(?:call|address|refer to)\s+me\s+(?:as\s+)?(.+)/i,
   /\b(?:my\s+name\s+is|i(?:'m| am)|i\s+go\s+by|known\s+as|please\s+use)\s+(.+)/i,
@@ -98,7 +96,6 @@ const CALL_ME_PATTERNS = [
   /\bactually[,\s]+(?:it'?s?|i(?:'m| am)|my\s+name\s+is)?\s*(.+)/i,
 ];
 
-// Patterns that signal a correction
 const CORRECTION_PATTERNS = [
   /\b(?:that'?s?\s*(?:not|wrong|incorrect)|not\s+my\s+(?:name|title|rank|school))/i,
   /\b(?:i\s+meant|i\s+mean|correction|correct\s+that|change\s+that|update\s+that)/i,
@@ -107,24 +104,20 @@ const CORRECTION_PATTERNS = [
   /\b(?:that(?:'s|\s+is)\s+(?:not\s+)?(?:right|correct|accurate))/i,
 ];
 
-// Patterns that signal skip
 const SKIP_PATTERNS = [
   /^(?:skip|pass|later|not\s+now|no\s+thanks|n\/a|none|skip\s+(?:this|for\s+now)|next)[!.,\s]*$/i,
   /\b(?:don'?t\s+(?:want|need)|leave\s+(?:it|this)\s+blank|skip\s+this\s+(?:step|one|for\s+now))/i,
 ];
 
-// Patterns that signal going back
 const BACK_PATTERNS = [
   /^(?:back|go\s+back|previous|prev|undo|last\s+step)[!.,\s]*$/i,
   /\b(?:take\s+me\s+back|return\s+to\s+previous|go\s+to\s+previous)/i,
 ];
 
-// Patterns that signal confirmation
 const CONFIRMATION_PATTERNS = [
   /^(?:yes|yeah|yep|yup|correct|right|sure|ok|okay|sounds\s+good|confirmed|confirm|that'?s?\s+right|perfect|exactly|absolutely)[!.,\s]*$/i,
 ];
 
-// Patterns that signal an objection/question
 const OBJECTION_PATTERNS = [
   /\b(?:why\s+(?:do\s+you\s+need|are\s+you\s+asking)|what\s+(?:is\s+this\s+for|do\s+you\s+need\s+this\s+for)|i\s+don'?t\s+(?:want\s+to|have\s+to))/i,
 ];
@@ -136,37 +129,21 @@ const QUESTION_PATTERNS = [
 
 // ─── NLU: Entity extraction ───────────────────────────────────────────────────
 
-/**
- * Try to extract a title + name from a raw string.
- * Returns { title, name } where either may be undefined.
- */
 function extractTitleAndName(raw: string): { title?: string; name?: string } {
   const cleaned = raw.trim().replace(/[.,!?]+$/, "").trim();
   const words = cleaned.split(/\s+/);
-
-  // Check if first word is a known title
   const firstWordLower = words[0]?.toLowerCase().replace(/\.$/, "");
   const isTitle = KNOWN_TITLES.includes(firstWordLower);
 
   if (isTitle && words.length >= 2) {
-    return {
-      title: words[0].replace(/\.$/, ""),
-      name: words.slice(1).join(" "),
-    };
+    return { title: words[0].replace(/\.$/, ""), name: words.slice(1).join(" ") };
   }
-
   if (isTitle && words.length === 1) {
     return { title: words[0].replace(/\.$/, "") };
   }
-
-  // No title detected — treat whole thing as name
   return { name: cleaned };
 }
 
-/**
- * Try to extract a school name from a raw string.
- * Strips common prefixes like "it's called", "we are", "the school is".
- */
 function extractSchoolName(raw: string): string | undefined {
   const cleaned = raw.trim()
     .replace(/^(?:it'?s?\s+(?:called|named)|(?:the\s+)?school\s+(?:is|name\s+is)|we\s+(?:are|go\s+by)|our\s+(?:school|dojo)\s+(?:is|name\s+is))\s*/i, "")
@@ -175,9 +152,6 @@ function extractSchoolName(raw: string): string | undefined {
   return cleaned.length >= 2 ? cleaned : undefined;
 }
 
-/**
- * Try to extract program names from a raw string.
- */
 function extractPrograms(raw: string): string[] {
   return raw
     .split(/[,;&\/\n]+/)
@@ -187,93 +161,57 @@ function extractPrograms(raw: string): string[] {
 
 // ─── NLU: Main intent + entity detector ──────────────────────────────────────
 
-/**
- * Analyse a user's free-text input and return intent + extracted entities.
- * This is pure logic — no DB access, no side effects.
- */
 export function detectIntent(text: string, currentStep: OnboardingStep): NLUResult {
   const t = text.trim();
 
-  // ── Back ──────────────────────────────────────────────────────────────────
   if (BACK_PATTERNS.some((p) => p.test(t))) {
     return { intent: "back", entities: {}, raw: t };
   }
-
-  // ── Skip ──────────────────────────────────────────────────────────────────
   if (SKIP_PATTERNS.some((p) => p.test(t))) {
     return { intent: "skip", entities: {}, raw: t };
   }
-
-  // ── Confirmation ──────────────────────────────────────────────────────────
   if (CONFIRMATION_PATTERNS.some((p) => p.test(t))) {
     return { intent: "confirmation", entities: {}, raw: t };
   }
-
-  // ── Objection ─────────────────────────────────────────────────────────────
   if (OBJECTION_PATTERNS.some((p) => p.test(t))) {
     return { intent: "objection", entities: {}, raw: t };
   }
 
-  // ── Explicit correction phrases ───────────────────────────────────────────
   const isExplicitCorrection = CORRECTION_PATTERNS.some((p) => p.test(t));
 
-  // ── "Call me / My name is / Use …" — identity preference ─────────────────
   for (const pattern of CALL_ME_PATTERNS) {
     const match = t.match(pattern);
     if (match) {
       const extracted = match[1]?.trim().replace(/[.,!?]+$/, "").trim();
       if (!extracted || extracted.length < 2) continue;
-
       const { title, name } = extractTitleAndName(extracted);
-
-      // Determine whether this is a title-only, name-only, or combined update
       if (title && name) {
-        return {
-          intent: "identity_update",
-          entities: { title, fullName: name, preferredName: `${title} ${name}` },
-          raw: t,
-        };
+        return { intent: "identity_update", entities: { title, fullName: name, preferredName: `${title} ${name}` }, raw: t };
       }
       if (title && !name) {
-        return {
-          intent: "title_update",
-          entities: { title },
-          raw: t,
-        };
+        return { intent: "title_update", entities: { title }, raw: t };
       }
-      return {
-        intent: "name_update",
-        entities: { fullName: name, preferredName: name },
-        raw: t,
-      };
+      return { intent: "name_update", entities: { fullName: name, preferredName: name }, raw: t };
     }
   }
 
-  // ── Correction with no specific "call me" phrasing ───────────────────────
   if (isExplicitCorrection) {
     return { intent: "correction", entities: {}, raw: t };
   }
-
-  // ── Question ──────────────────────────────────────────────────────────────
   if (QUESTION_PATTERNS.some((p) => p.test(t))) {
     return { intent: "question", entities: {}, raw: t };
   }
 
-  // ── Step-aware entity extraction (for normal step answers) ────────────────
-  // Even for "unknown" intent we try to extract useful entities
   const entities: NLUResult["entities"] = {};
-
   if (currentStep === "name" || currentStep === "title") {
     const { title, name } = extractTitleAndName(t);
     if (title) entities.title = title;
     if (name) entities.fullName = name;
   }
-
   if (currentStep === "school_name") {
     const schoolName = extractSchoolName(t);
     if (schoolName) entities.schoolName = schoolName;
   }
-
   if (currentStep === "programs") {
     const programs = extractPrograms(t);
     if (programs.length > 0) entities.programs = programs;
@@ -282,10 +220,21 @@ export function detectIntent(text: string, currentStep: OnboardingStep): NLUResu
   return { intent: "unknown", entities, raw: t };
 }
 
-/**
- * Build a contextual acknowledgement message when Kai handles a mid-flow identity correction.
- * Returns the acknowledgement text + the step question to re-ask.
- */
+// ─── Micro-behavior: subtle acknowledgement variants ─────────────────────────
+
+const MICRO_ACKS = ["Got it.", "Perfect.", "Nice.", "Locked in.", "Done.", "Noted."];
+
+/** Returns a subtle, varied acknowledgement — never the same one twice in a row. */
+export function microAck(seed?: string): string {
+  // Use seed string to pick deterministically (avoids hydration mismatch)
+  const idx = seed
+    ? seed.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % MICRO_ACKS.length
+    : Math.floor(Math.random() * MICRO_ACKS.length);
+  return MICRO_ACKS[idx];
+}
+
+// ─── Correction acknowledgement ──────────────────────────────────────────────
+
 export function buildCorrectionAck(
   nlu: NLUResult,
   currentStep: OnboardingStep,
@@ -294,7 +243,6 @@ export function buildCorrectionAck(
   const { entities } = nlu;
   const intent = nlu.intent;
 
-  // Build the new display name
   const newTitle = entities.title || profile.title;
   const newName = entities.fullName || profile.name;
   const displayName = newTitle && newName
@@ -302,7 +250,6 @@ export function buildCorrectionAck(
     : newName || newTitle || "you";
 
   let ack = "";
-
   if (intent === "identity_update") {
     ack = `Got it — I'll call you **${displayName}** from here on.`;
   } else if (intent === "title_update") {
@@ -313,7 +260,6 @@ export function buildCorrectionAck(
     ack = `No problem — let me know what you'd like to change.`;
   }
 
-  // Re-ask the current step if it's still relevant
   if (currentStep !== "name" && currentStep !== "title" && currentStep !== "complete") {
     const stepQuestion = getStepQuestion(currentStep, {
       ...profile,
@@ -326,9 +272,8 @@ export function buildCorrectionAck(
   return ack;
 }
 
-/**
- * Build a contextual response for objections/questions during onboarding.
- */
+// ─── Objection response ───────────────────────────────────────────────────────
+
 export function buildObjectionResponse(
   currentStep: OnboardingStep,
   profile: OnboardingProfile
@@ -338,84 +283,140 @@ export function buildObjectionResponse(
     : profile.name || "there";
 
   const stepContext: Partial<Record<OnboardingStep, string>> = {
-    profile_photo: `It's just so your team and students can recognise you across the dashboard. Totally optional — you can always add it later in Settings.`,
-    programs: `It helps me tailor your system — class types, scheduling, and student tracking all adapt to what you teach.`,
-    rank: `It helps me display your profile correctly to staff and students. You can skip it if you prefer.`,
+    profile_photo: `It just helps your team and students recognise you across the dashboard. Totally optional — add it later in Settings if you prefer.`,
+    programs: `It's how I tailor your system — class types, scheduling, and student tracking all adapt to what you teach.`,
+    rank: `It shows up on your profile for staff and students to see. You can skip it if you'd rather not share.`,
     school_name: `It's how your dojo appears throughout the system — on student records, reports, and the kiosk.`,
-    address: `It's used for your school profile and can show up on your public-facing pages. You can skip it for now.`,
-    phone: `It appears on your school profile and can be used for student communications. You can always add it later.`,
+    address: `It's used for your school profile and can appear on your public-facing pages. Skip it for now if you want.`,
+    phone: `It shows up on your school profile and can be used for student communications. Easy to add later.`,
     email: `It's the primary contact for leads and student inquiries coming through DojoFlow.`,
-    website: `It's optional — it just shows up on your public school profile if you have one.`,
-    logo_light: `It shows up in the dashboard header and on student-facing screens. You can skip this and upload it later in Settings.`,
-    logo_dark: `It appears when your team uses dark theme. Totally optional — skip if you don't have one ready.`,
+    website: `Totally optional — it just shows up on your public school profile if you have one.`,
+    logo_light: `It shows up in the dashboard header and on student-facing screens. Skip it and upload later in Settings.`,
+    logo_dark: `It appears when your team uses dark theme. Skip it if you don't have one ready.`,
   };
 
   const context = stepContext[currentStep] || `It helps me set up your profile accurately. You can skip it if you'd prefer.`;
-
-  return `Good question, ${displayName}. ${context}\n\nWant to continue, or would you rather skip this step?`;
+  return `Fair question, ${displayName}. ${context}\n\nWant to continue, or skip this step?`;
 }
 
-// ─── Step question messages — calm, confident, human-assistant tone ───────────
+// ─── Step questions — confident, smooth, human-assistant tone ─────────────────
+// Each question follows the 3-part structure: acknowledge → direct → prompt.
+// Context-aware: references school name, location, programs where available.
 
 export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile): string {
+  const titleName = profile.title && profile.name
+    ? `${profile.title} ${profile.name}`
+    : profile.name || null;
+  const school = profile.schoolName || null;
+  const city = profile.addressCity || null;
+  const locationRef = city && school ? `${school} in ${city}` : school || "your school";
+
+  switch (step) {
+    case "name":
+      return `Hi — I'm **KAI**, your dojo's command system.\n\nI'll be running your operations, tracking your students, and keeping everything in order.\n\n**What's your name?**`;
+
+    case "title":
+      return `Good to meet you, **${profile.name}**.\n\nHow should I address you? *(Sensei, Sifu, Coach, Master, Instructor — whatever you go by)*`;
+
+    case "profile_photo": {
+      const displayName = titleName || profile.name || "there";
+      return `Nice to meet you, **${displayName}**.\n\nLet's add your photo — it'll show up across your dashboard and in conversations with your team.\n\n*Optional — you can always add one later in Settings.*`;
+    }
+
+    case "programs":
+      return `Let's build your **program roster**.\n\nWhat do you teach? List everything — I'll use this to tailor your entire system.\n\n*(e.g., BJJ, Muay Thai, Karate, Gymnastics, Yoga)*`;
+
+    case "rank":
+      return `What's your **current rank or belt**?\n\n*(e.g., Black Belt 3rd Degree, Brown Belt, Head Instructor — or skip if you prefer)*`;
+
+    case "school_name": {
+      const programList = profile.programs.length > 0 ? profile.programs.join(", ") : null;
+      return programList
+        ? `${programList} — solid roster.\n\nWhat's the **official name of your school or dojo**?`
+        : `What's the **official name of your school or dojo**?`;
+    }
+
+    case "martial_style":
+      return `What **martial arts style(s)** do you primarily teach at **${school || "your school"}**?\n\n*(e.g., Brazilian Jiu-Jitsu, Shotokan Karate, Muay Thai)*`;
+
+    case "address":
+      return `Let's get your location set up.\n\nWhat's **${locationRef}'s street address**? *(You can paste the full address and I'll handle the rest)*`;
+
+    case "city_state_zip":
+      return `And the **city, state, and ZIP**?\n\n*(e.g., Austin, TX 78701)*`;
+
+    case "phone": {
+      const schoolRef = school || "your school";
+      return `Got your ${city ? `${city} location` : "location"} locked in.\n\nWhat's the **best phone number** for **${schoolRef}**?`;
+    }
+
+    case "email": {
+      const schoolRef = school || "your school";
+      const domain = school ? school.toLowerCase().replace(/[^a-z0-9]/g, "") + ".com" : "yourdojo.com";
+      return `What's the **best email** for students and leads to reach **${schoolRef}**?\n\n*(e.g., info@${domain})*`;
+    }
+
+    case "website": {
+      const schoolRef = school || "your school";
+      return `Got a website for **${schoolRef}**? Drop the URL here and I'll connect everything.\n\n*(e.g., https://yourdojo.com — or skip if you don't have one yet)*`;
+    }
+
+    case "logo_light":
+      return `Almost there — let's get your branding in place.\n\nUpload your **Day Mode logo** *(for light backgrounds)*.\n\n*PNG or SVG works best. This shows up in your dashboard header.*`;
+
+    case "logo_dark":
+      return `One more — upload your **Dark Mode logo**, usually a white or light version of your logo.\n\n*This is what your team sees in dark theme. Skip if you don't have one ready.*`;
+
+    default:
+      return "What's next?";
+  }
+}
+
+// ─── Context-aware save confirmations (reduced noise) ────────────────────────
+// Used instead of "Got it — [value]" for a cleaner feel.
+// Only called for critical fields; minor fields skip confirmation entirely.
+
+export function buildSaveConfirmation(
+  step: OnboardingStep,
+  value: string,
+  profile: OnboardingProfile
+): string | null {
+  const school = profile.schoolName || "your school";
   const titleName = profile.title && profile.name
     ? `${profile.title} ${profile.name}`
     : profile.name || null;
 
   switch (step) {
     case "name":
-      return `Hi, I'm **KAI** — I'll be running your dojo's operations and keeping everything in order.\n\nBefore we get started, I'd like to get to know you a little.\n\n**What's your name?**`;
-
+      return null; // handled inline in state machine with memory reinforcement
     case "title":
-      return `Got it, **${profile.name}**. Good to meet you.\n\nHow should I address you? *(Sensei, Sifu, Coach, Master, Instructor — whatever you go by)*`;
-
-    case "profile_photo": {
-      const displayName = titleName || profile.name || "there";
-      return `Nice to meet you, **${displayName}**.\n\nNext, let's add your photo — it'll show up across your dashboard and in conversations with your team.\n\n*(Totally optional — you can skip this and add one later in Settings)*`;
-    }
-
-    case "programs":
-      return `Now let's set up your **program roster**.\n\nWhat do you teach? You can list everything — I'll use this to tailor your system to your school.\n\n*(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga)*`;
-
-    case "rank":
-      return `One more thing — what's your **current rank or belt**?\n\n*(e.g., Black Belt 3rd Degree, Brown Belt, Head Instructor)*`;
-
-    case "school_name": {
-      const programList = profile.programs.length > 0
-        ? profile.programs.join(", ")
-        : null;
-      return programList
-        ? `Great — **${programList}** added to your roster.\n\nWhat's the **official name of your school or dojo**?`
-        : `Programs noted.\n\nWhat's the **official name of your school or dojo**?`;
-    }
-
-    case "martial_style":
-      return `What **martial arts style(s)** do you primarily teach at **${profile.schoolName || "your school"}**?\n\n*(e.g., Brazilian Jiu-Jitsu, Shotokan Karate, Muay Thai)*`;
-
-    case "address":
-      return `Let's get your location set up. What's your **school's street address**?`;
-
-    case "city_state_zip":
-      return `And the **city, state, and ZIP code**?\n\n*(e.g., Austin, TX 78701)*`;
-
+      return null; // handled inline
+    case "school_name":
+      return `**${value}** — locked in. 🏆`;
     case "phone":
-      return `What's the **best phone number** for **${profile.schoolName || "your school"}**?`;
-
+      return `Perfect. I've got **${school}'s** number saved.`;
     case "email":
-      return `What **email address** should students and leads use to reach you?\n\n*(e.g., info@${profile.schoolName ? profile.schoolName.toLowerCase().replace(/\s+/g, '') + '.com' : 'yourdojo.com'})*`;
-
+      return `Perfect. I've got your contact email saved.`;
     case "website":
-      return `Does **${profile.schoolName || "your school"}** have a website? Drop the URL here — or skip if you don't have one yet.\n\n*(e.g., https://yourdojo.com)*`;
-
-    case "logo_light":
-      return `Almost done — let's get your branding in place. Upload your **Day Mode logo** for light backgrounds.\n\n*PNG or SVG works best. This will appear in your dashboard header.*`;
-
-    case "logo_dark":
-      return `One more — upload your **Dark Mode logo**, usually a white or light version of your logo.\n\n*This is what your team will see when using dark theme. You can skip this if you don't have one yet.*`;
-
+      return `${school} is connected online.`;
+    case "address":
+      return null; // inline
+    case "city_state_zip":
+      return null; // inline
     default:
-      return "Let's keep going — what's next?";
+      return null; // skip confirmation for minor fields
   }
+}
+
+// ─── Proactive completion message ────────────────────────────────────────────
+
+export function buildCompletionMessage(profile: OnboardingProfile): string {
+  const displayName = profile.title && profile.name
+    ? `${profile.title} ${profile.name}`
+    : profile.name || "there";
+  const school = profile.schoolName || "your school";
+
+  return `You're all set, **${displayName}**. ✅\n\n**${school}** is live in DojoFlow.\n\nWhat do you want to tackle first?\n\n- **Bring in leads** — activate your pipeline\n- **Set up your class schedule** — get your roster ready\n- **Build your student dashboard** — see everyone in one place\n\nJust say the word and I'll get it started.`;
 }
 
 // ─── Structured Address Parser ────────────────────────────────────────────────
@@ -425,13 +426,9 @@ export interface ParsedAddress {
   city: string | null;
   state: string | null;
   zip: string | null;
-  /** True when all four components were successfully extracted */
   isComplete: boolean;
 }
 
-/**
- * US state abbreviations for detection.
- */
 const US_STATES: Record<string, string> = {
   AL: "AL", AK: "AK", AZ: "AZ", AR: "AR", CA: "CA", CO: "CO", CT: "CT",
   DE: "DE", FL: "FL", GA: "GA", HI: "HI", ID: "ID", IL: "IL", IN: "IN",
@@ -441,7 +438,6 @@ const US_STATES: Record<string, string> = {
   OK: "OK", OR: "OR", PA: "PA", RI: "RI", SC: "SC", SD: "SD", TN: "TN",
   TX: "TX", UT: "UT", VT: "VT", VA: "VA", WA: "WA", WV: "WV", WI: "WI",
   WY: "WY", DC: "DC",
-  // Full names → abbreviations
   ALABAMA: "AL", ALASKA: "AK", ARIZONA: "AZ", ARKANSAS: "AR",
   CALIFORNIA: "CA", COLORADO: "CO", CONNECTICUT: "CT", DELAWARE: "DE",
   FLORIDA: "FL", GEORGIA: "GA", HAWAII: "HI", IDAHO: "ID", ILLINOIS: "IL",
@@ -457,36 +453,20 @@ const US_STATES: Record<string, string> = {
   WISCONSIN: "WI", WYOMING: "WY",
 };
 
-/**
- * Attempt to parse a full or partial address from free text.
- *
- * Handles formats like:
- *   "11721 Spring Cypress Rd, Tomball, TX 77377"
- *   "123 Main St, Austin TX 78701"
- *   "456 Oak Ave Suite 2, Dallas, Texas, 75201"
- *   "789 Elm Street" (partial — street only)
- */
 export function parseAddress(input: string): ParsedAddress {
   const text = input.trim();
 
-  // ── Strategy 1: comma-delimited full address ──────────────────────────────
-  // Matches: "street, city, state zip" or "street, city, state, zip"
   const commaParts = text.split(",").map((p) => p.trim()).filter(Boolean);
-
   if (commaParts.length >= 3) {
     const street = commaParts[0];
     const city = commaParts[1];
-    // Last part(s) contain state + zip
     const stateZipRaw = commaParts.slice(2).join(" ").trim();
     const { state, zip } = extractStateZip(stateZipRaw);
-
     if (street && city && state) {
       return { street, city, state, zip, isComplete: !!(street && city && state && zip) };
     }
   }
 
-  // ── Strategy 2: no commas — try to detect state+zip at end ───────────────
-  // e.g., "123 Main St Austin TX 78701"
   const stateZipMatch = text.match(
     /^(.+?)\s+([A-Za-z\s]+)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
   );
@@ -500,13 +480,11 @@ export function parseAddress(input: string): ParsedAddress {
     }
   }
 
-  // ── Strategy 3: partial — just a street address (starts with a number) ───
   const looksLikeStreet = /^\d+\s+\w/.test(text) && !text.match(/,/);
   if (looksLikeStreet) {
     return { street: text, city: null, state: null, zip: null, isComplete: false };
   }
 
-  // ── Strategy 4: city, state zip (no street) ───────────────────────────────
   const cityStateZip = text.match(/^([A-Za-z\s]+),?\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i);
   if (cityStateZip) {
     const city = cityStateZip[1].trim();
@@ -517,18 +495,14 @@ export function parseAddress(input: string): ParsedAddress {
     }
   }
 
-  // ── Fallback: treat entire input as street ────────────────────────────────
   return { street: text, city: null, state: null, zip: null, isComplete: false };
 }
 
 function extractStateZip(raw: string): { state: string | null; zip: string | null } {
-  // Match "TX 77377" or "Texas 77377" or "TX" or "77377"
   const match = raw.match(/^([A-Za-z\s]+?)\s*(\d{5}(?:-\d{4})?)?$/);
   if (!match) return { state: null, zip: null };
-
   const statePart = match[1]?.trim().toUpperCase() || null;
   const zip = match[2] || null;
   const state = statePart ? (US_STATES[statePart] || null) : null;
-
   return { state, zip };
 }
