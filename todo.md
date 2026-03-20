@@ -8437,9 +8437,9 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## KAI Onboarding Intelligence & UX Upgrade (Mar 20, 2026)
 
-- [ ] Add progress bar + step indicator to KAI chat panel header (dynamic, updates per step)
-- [ ] Rewrite all step questions with directive/activation tone and memory reinforcement
-- [ ] Add Back button support to onboarding steps
-- [ ] Add Continue/Skip/Back controls to each step message
-- [ ] Reframe all language: "activate", "configure", "lock in" instead of "setup", "fill out"
-- [ ] Add memory reinforcement: KAI references stored user data naturally throughout flow
+- [x] Add progress bar + step indicator to KAI chat panel header (dynamic, updates per step)
+- [x] Rewrite all step questions with directive/activation tone and memory reinforcement
+- [x] Add Back button support to onboarding steps
+- [x] Add Continue/Skip/Back controls to each step message
+- [x] Reframe all language: "activate", "configure", "lock in" instead of "setup", "fill out"
+- [x] Add memory reinforcement: KAI references stored user data naturally throughout flow
