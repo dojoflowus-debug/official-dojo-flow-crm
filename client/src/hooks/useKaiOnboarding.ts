@@ -71,6 +71,7 @@ export function useKaiOnboarding({
   const [hasMartialArts, setHasMartialArts] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<OnboardingStep[]>([]);
   const hasInitialized = useRef(false);
+  const lastAskedStep = useRef<OnboardingStep | null>(null);
   let msgCounter = useRef(0);
 
   const msgId = (suffix: string) => `onboarding-${++msgCounter.current}-${suffix}`;
@@ -187,6 +188,9 @@ export function useKaiOnboarding({
           } catch {}
         }
 
+        // ── DUPLICATE QUESTION PREVENTION: track last asked step ────────────
+        lastAskedStep.current = result.nextStep;
+
         // Inject KAI's response
         // Use both nextStep and expectsFileUpload to determine upload button visibility
         // (handles mid-flow corrections where nextStep stays on current step)
@@ -247,6 +251,7 @@ export function useKaiOnboarding({
         currentStep,
         currentProfile: profile,
         hasMartialArts,
+        completedSteps,
       });
 
       setCurrentStep(result.nextStep);
@@ -254,6 +259,7 @@ export function useKaiOnboarding({
       if (result.hasMartialArts !== undefined) setHasMartialArts(result.hasMartialArts);
       if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
       if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);
+      lastAskedStep.current = result.nextStep;
 
       onInjectMessages([
         {
