@@ -304,13 +304,13 @@ export function buildCorrectionAck(
   let ack = "";
 
   if (intent === "identity_update") {
-    ack = `Understood. I'll address you as **${displayName}** from here on — identity updated.`;
+    ack = `Got it — I'll call you **${displayName}** from here on.`;
   } else if (intent === "title_update") {
-    ack = `Got it — your title has been updated to **${newTitle}**. I'll use that going forward.`;
+    ack = `Noted — I'll use **${newTitle}** going forward.`;
   } else if (intent === "name_update") {
-    ack = `Noted — I'll refer to you as **${newName}** from now on.`;
+    ack = `Got it — I'll refer to you as **${newName}** from now on.`;
   } else if (intent === "correction") {
-    ack = `Correction noted. Let me know what you'd like to change.`;
+    ack = `No problem — let me know what you'd like to change.`;
   }
 
   // Re-ask the current step if it's still relevant
@@ -338,24 +338,24 @@ export function buildObjectionResponse(
     : profile.name || "there";
 
   const stepContext: Partial<Record<OnboardingStep, string>> = {
-    profile_photo: `Your profile photo helps your team and students recognise you across the dashboard. It's completely optional — you can skip it and add one later in Settings.`,
-    programs: `Your program roster lets me tailor your system — class types, scheduling, and student tracking all adapt to what you teach.`,
-    rank: `Your rank helps me contextualise your profile and display it correctly to staff and students.`,
-    school_name: `Your school name is how your dojo appears throughout the system — on student records, reports, and the kiosk.`,
-    address: `Your address is used for your school profile and can be displayed on your public-facing pages.`,
-    phone: `Your contact number appears on your school profile and can be used for student communications.`,
-    email: `This email is your primary contact for leads and student inquiries routed through DojoFlow.`,
-    website: `Your website link is optional — it appears on your public school profile if you have one.`,
-    logo_light: `Your logo is displayed in the dashboard header and on student-facing screens. You can skip this and upload it later in Settings.`,
-    logo_dark: `Your dark mode logo appears when students or staff use dark theme. Totally optional — skip if you don't have one yet.`,
+    profile_photo: `It's just so your team and students can recognise you across the dashboard. Totally optional — you can always add it later in Settings.`,
+    programs: `It helps me tailor your system — class types, scheduling, and student tracking all adapt to what you teach.`,
+    rank: `It helps me display your profile correctly to staff and students. You can skip it if you prefer.`,
+    school_name: `It's how your dojo appears throughout the system — on student records, reports, and the kiosk.`,
+    address: `It's used for your school profile and can show up on your public-facing pages. You can skip it for now.`,
+    phone: `It appears on your school profile and can be used for student communications. You can always add it later.`,
+    email: `It's the primary contact for leads and student inquiries coming through DojoFlow.`,
+    website: `It's optional — it just shows up on your public school profile if you have one.`,
+    logo_light: `It shows up in the dashboard header and on student-facing screens. You can skip this and upload it later in Settings.`,
+    logo_dark: `It appears when your team uses dark theme. Totally optional — skip if you don't have one ready.`,
   };
 
-  const context = stepContext[currentStep] || `This information helps me configure your dojo's command profile accurately.`;
+  const context = stepContext[currentStep] || `It helps me set up your profile accurately. You can skip it if you'd prefer.`;
 
-  return `Good question, ${displayName}. ${context}\n\nWant to continue, or would you prefer to skip this step?`;
+  return `Good question, ${displayName}. ${context}\n\nWant to continue, or would you rather skip this step?`;
 }
 
-// ─── Step question messages — directive, mission-driven tone ─────────────────
+// ─── Step question messages — calm, confident, human-assistant tone ───────────
 
 export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile): string {
   const titleName = profile.title && profile.name
@@ -364,56 +364,56 @@ export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile
 
   switch (step) {
     case "name":
-      return `**Activation sequence initiated.**\n\nI'm KAI — your dojo's command system. Before I can configure your environment, I need to know who I'm working with.\n\n**What's your name?**`;
+      return `Hi, I'm **KAI** — I'll be running your dojo's operations and keeping everything in order.\n\nBefore we get started, I'd like to get to know you a little.\n\n**What's your name?**`;
 
     case "title":
-      return `**${profile.name}** — locked in.\n\nNow, how should I address you? *(Sensei, Sifu, Coach, Professor, Master, Instructor — or whatever you go by)*`;
+      return `Got it, **${profile.name}**. Good to meet you.\n\nHow should I address you? *(Sensei, Sifu, Coach, Master, Instructor — whatever you go by)*`;
 
     case "profile_photo": {
       const displayName = titleName || profile.name || "there";
-      return `**${displayName}** — identity confirmed.\n\nLet's put a face to the command. Upload your **profile photo** — it'll appear across your dashboard and in KAI conversations.\n\n*(You can skip this and add one later in Settings)*`;
+      return `Nice to meet you, **${displayName}**.\n\nNext, let's add your photo — it'll show up across your dashboard and in conversations with your team.\n\n*(Totally optional — you can skip this and add one later in Settings)*`;
     }
 
     case "programs":
-      return `Now let's configure your **program roster**.\n\nWhat disciplines do you teach? List everything — I'll use this to tailor your system.\n\n*(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga)*`;
+      return `Now let's set up your **program roster**.\n\nWhat do you teach? You can list everything — I'll use this to tailor your system to your school.\n\n*(e.g., Brazilian Jiu-Jitsu, Muay Thai, Karate, Gymnastics, Yoga)*`;
 
     case "rank":
-      return `One more thing before we move on — what is your **current rank or belt**?\n\n*(e.g., Black Belt 3rd Degree, Brown Belt, Head Instructor)*`;
+      return `One more thing — what's your **current rank or belt**?\n\n*(e.g., Black Belt 3rd Degree, Brown Belt, Head Instructor)*`;
 
     case "school_name": {
       const programList = profile.programs.length > 0
         ? profile.programs.join(", ")
         : null;
       return programList
-        ? `**${programList}** — program roster locked in.\n\nNow let's identify your operation. What is the **official name of your school or dojo**?`
-        : `Program roster locked in.\n\nNow let's identify your operation. What is the **official name of your school or dojo**?`;
+        ? `Great — **${programList}** added to your roster.\n\nWhat's the **official name of your school or dojo**?`
+        : `Programs noted.\n\nWhat's the **official name of your school or dojo**?`;
     }
 
     case "martial_style":
       return `What **martial arts style(s)** do you primarily teach at **${profile.schoolName || "your school"}**?\n\n*(e.g., Brazilian Jiu-Jitsu, Shotokan Karate, Muay Thai)*`;
 
     case "address":
-      return `Let's lock in your location. What is your **school's street address**?`;
+      return `Let's get your location set up. What's your **school's street address**?`;
 
     case "city_state_zip":
       return `And the **city, state, and ZIP code**?\n\n*(e.g., Austin, TX 78701)*`;
 
     case "phone":
-      return `What's the **direct phone number** for **${profile.schoolName || "your school"}**?`;
+      return `What's the **best phone number** for **${profile.schoolName || "your school"}**?`;
 
     case "email":
       return `What **email address** should students and leads use to reach you?\n\n*(e.g., info@${profile.schoolName ? profile.schoolName.toLowerCase().replace(/\s+/g, '') + '.com' : 'yourdojo.com'})*`;
 
     case "website":
-      return `Does **${profile.schoolName || "your school"}** have a website? Drop the URL here.\n\n*(e.g., https://yourdojo.com — or skip if you don't have one yet)*`;
+      return `Does **${profile.schoolName || "your school"}** have a website? Drop the URL here — or skip if you don't have one yet.\n\n*(e.g., https://yourdojo.com)*`;
 
     case "logo_light":
-      return `Let's brand your command center. Upload your **Day Mode logo** — displayed on light backgrounds.\n\n*PNG or SVG works best. This will appear in your dashboard header.*`;
+      return `Almost done — let's get your branding in place. Upload your **Day Mode logo** for light backgrounds.\n\n*PNG or SVG works best. This will appear in your dashboard header.*`;
 
     case "logo_dark":
-      return `Now upload your **Dark Mode logo** — typically a white or light version of your logo for dark backgrounds.\n\n*This is what students and staff will see in dark theme.*`;
+      return `One more — upload your **Dark Mode logo**, usually a white or light version of your logo.\n\n*This is what your team will see when using dark theme. You can skip this if you don't have one yet.*`;
 
     default:
-      return "Ready for the next configuration step.";
+      return "Let's keep going — what's next?";
   }
 }

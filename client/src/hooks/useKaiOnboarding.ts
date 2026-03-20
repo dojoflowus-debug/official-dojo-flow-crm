@@ -127,8 +127,8 @@ export function useKaiOnboarding({
     const firstQuestion = getStepQuestion(initialStep, initialProfile);
 
     const combinedContent = isFirstStep
-      ? `I'm **KAI** — your dojo's command and intelligence system.\n\nBefore I can activate your environment, I need to configure your profile. This takes about 2 minutes.\n\n${firstQuestion}`
-      : `**Activation resumed** — picking up where we left off.\n\n${firstQuestion}`;
+      ? firstQuestion
+      : `Welcome back — let's pick up where we left off.\n\n${firstQuestion}`;
 
     onInjectMessages([
       {
@@ -492,7 +492,7 @@ export function useKaiOnboarding({
       {
         id: msgId("restart-q-name"),
         role: "assistant",
-        content: `**Activation restarted. Let's begin.**\n\nBefore I can configure your environment, I need to know who I'm working with.\n\n**What's your name?**`,
+        content: `No problem — let's start fresh.\n\n**What's your name?**`,
         isOnboarding: true,
         step: "name",
         showSkip: false,

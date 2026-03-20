@@ -8451,3 +8451,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove rigid text-redirect for photo/logo steps — always interpret free text first
 - [x] Add common-language phrase understanding (call me, my name is, that's not right, actually, go back, skip this)
 - [x] Kai acknowledges correction, saves update, confirms, then returns to current step
+
+## KAI Personality & Tone Upgrade (Mar 20, 2026)
+- [ ] Remove system-log language (Activation resumed, Identity confirmed, Sequence initiated, Processing)
+- [ ] Rewrite all kaiMessage strings with 3-part structure: acknowledge / direct / next step
+- [ ] Add natural human phrasing (Got it, Let's do this, Next step, We'll take care of that)
+- [ ] Rewrite hook initial/resume/restart messages with human tone
+- [ ] Rewrite NLU correction/acknowledgement messages with human tone
+- [ ] Rewrite skip/back/error messages with human tone
