@@ -39,6 +39,8 @@ export function SplashLoader({ ready }: SplashLoaderProps) {
   useEffect(() => {
     if (!ready) return;
     setProgress(100);
+    // Show the app shell as soon as we start fading
+    document.documentElement.removeAttribute('data-splash');
     const fadeTimer = setTimeout(() => setFading(true), 150);
     const unmountTimer = setTimeout(() => setUnmounted(true), 600);
     return () => {

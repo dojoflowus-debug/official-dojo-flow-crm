@@ -8492,3 +8492,6 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add branded splash loader with DojoFlow logo shown during initial app load
 - [x] Smooth fade-out transition once app is ready
 - [x] Works for both initial page load and route transitions
+
+## Splash Loader Fix (Mar 20, 2026)
+- [ ] Hide top toolbar during splash so entire screen is black

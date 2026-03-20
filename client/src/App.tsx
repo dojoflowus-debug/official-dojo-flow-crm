@@ -41,6 +41,7 @@ function AppWithSplash() {
   return (
     <>
       <SplashLoader ready={appReady} />
+      <div id="app-shell">
       <BrowserRouter>
         <IndustryEnvironmentInitializer />
         <DebugOverlay />
@@ -57,6 +58,7 @@ function AppWithSplash() {
         </AppShellGuard>
         <CookieNotice />
       </BrowserRouter>
+      </div>
     </>
   );
 }
