@@ -161,40 +161,9 @@ export function useKaiOnboarding({
       if (!isActive) return false;
       if (currentStep === "complete") return false;
 
-      // Logo steps require file upload — redirect text input
-      if (currentStep === "logo_light" || currentStep === "logo_dark") {
-        onInjectMessages([
-          {
-            id: msgId("logo-text-redirect"),
-            role: "assistant",
-            content: "Use the **Upload Logo** button below to upload your logo file.",
-            isOnboarding: true,
-            step: currentStep,
-            showLogoUpload: true,
-            logoUploadType: currentStep === "logo_light" ? "light" : "dark",
-            showSkip: true,
-            showBack: true,
-          },
-        ]);
-        return true;
-      }
-
-      // Profile photo step — redirect text to skip/upload flow
-      if (currentStep === "profile_photo") {
-        onInjectMessages([
-          {
-            id: msgId("photo-text-redirect"),
-            role: "assistant",
-            content: "Use the **Upload Photo** button below to add your profile picture, or click **Skip** to continue.",
-            isOnboarding: true,
-            step: currentStep,
-            showPhotoUpload: true,
-            showSkip: true,
-            showBack: true,
-          },
-        ]);
-        return true;
-      }
+      // Note: logo and photo steps are handled by the server NLU layer.
+      // Free text on those steps is interpreted intelligently (skip phrases, questions, corrections)
+      // rather than being redirected client-side. The server returns the appropriate response.
 
       try {
         const result = await processStepMutation.mutateAsync({
@@ -221,8 +190,17 @@ export function useKaiOnboarding({
         }
 
         // Inject KAI's response
-        const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark";
-        const isPhotoStep = result.nextStep === "profile_photo";
+        // Use both nextStep and expectsFileUpload to determine upload button visibility
+        // (handles mid-flow corrections where nextStep stays on current step)
+        const isLogoStep = result.nextStep === "logo_light" || result.nextStep === "logo_dark" ||
+          (result.expectsFileUpload && (currentStep === "logo_light" || currentStep === "logo_dark"));
+        const isPhotoStep = result.nextStep === "profile_photo" ||
+          (result.expectsFileUpload && currentStep === "profile_photo");
+        const logoType = result.nextStep === "logo_light" ? "light"
+          : result.nextStep === "logo_dark" ? "dark"
+          : currentStep === "logo_light" ? "light"
+          : currentStep === "logo_dark" ? "dark"
+          : undefined;
         onInjectMessages([
           {
             id: msgId(`resp-${result.nextStep}`),
@@ -233,7 +211,7 @@ export function useKaiOnboarding({
             showSkip: result.showSkip,
             showBack: result.showBack,
             showLogoUpload: isLogoStep,
-            logoUploadType: result.nextStep === "logo_light" ? "light" : result.nextStep === "logo_dark" ? "dark" : undefined,
+            logoUploadType: logoType,
             showPhotoUpload: isPhotoStep,
           },
         ]);
