@@ -123,30 +123,21 @@ export function useKaiOnboarding({
     const isLogoStep = initialStep === "logo_light" || initialStep === "logo_dark";
     const isFirstStep = initialStep === "name";
 
-    // Build the greeting + first question
-    const greeting = isFirstStep
-      ? `**System initializing...**\n\nI'm **KAI** — your dojo's command and intelligence system. I'm here to run operations, surface insights, and keep your school moving.\n\nBefore I can activate your environment, I need to configure your profile. This takes about 2 minutes.\n\n*(You can skip this and configure later in Settings if you prefer.)*`
-      : `**Resuming activation** — picking up where we left off.\n\n*(You can skip this and configure later in Settings if you prefer.)*`;
-
+    // Build a single combined message: intro + first question
     const firstQuestion = getStepQuestion(initialStep, initialProfile);
+
+    const combinedContent = isFirstStep
+      ? `I'm **KAI** — your dojo's command and intelligence system.\n\nBefore I can activate your environment, I need to configure your profile. This takes about 2 minutes.\n\n${firstQuestion}`
+      : `**Activation resumed** — picking up where we left off.\n\n${firstQuestion}`;
 
     onInjectMessages([
       {
-        id: msgId("greeting"),
-        role: "assistant",
-        content: greeting,
-        isOnboarding: true,
-        step: "idle",
-        showSkip: true,
-        showBack: false,
-      },
-      {
         id: msgId(`q-${initialStep}`),
         role: "assistant",
-        content: firstQuestion,
+        content: combinedContent,
         isOnboarding: true,
         step: initialStep,
-        showSkip: initialStep !== "name" && initialStep !== "programs",
+        showSkip: true,
         showBack: !isFirstStep,
         showLogoUpload: isLogoStep,
         logoUploadType: initialStep === "logo_light" ? "light" : initialStep === "logo_dark" ? "dark" : undefined,
@@ -499,18 +490,9 @@ export function useKaiOnboarding({
     hasInitialized.current = false;
     onInjectMessages([
       {
-        id: msgId("restart-greeting"),
-        role: "assistant",
-        content: `**Resetting activation sequence.**\n\nLet's configure your profile from the beginning.\n\n*(You can skip this and configure later in Settings if you prefer.)*`,
-        isOnboarding: true,
-        step: "idle",
-        showSkip: true,
-        showBack: false,
-      },
-      {
         id: msgId("restart-q-name"),
         role: "assistant",
-        content: `**Activation sequence initiated.**\n\nI'm KAI — your dojo's command system. Before I can configure your environment, I need to know who I'm working with.\n\n**What's your name?**`,
+        content: `**Activation restarted. Let's begin.**\n\nBefore I can configure your environment, I need to know who I'm working with.\n\n**What's your name?**`,
         isOnboarding: true,
         step: "name",
         showSkip: false,

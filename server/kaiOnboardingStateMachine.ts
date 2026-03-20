@@ -419,7 +419,7 @@ export async function processOnboardingStep(
       };
     }
     return {
-      kaiMessage: `Going back.\n\n${getStepQuestion(prevStep, currentProfile)}`,
+      kaiMessage: getStepQuestion(prevStep, currentProfile),
       nextStep: prevStep,
       profile: currentProfile,
       stepCompleted: false,
@@ -1040,8 +1040,13 @@ export async function processOnboardingStep(
           showBack: true,
         };
       }
+      // Free text on logo step — respond contextually
+      const logoDisplayName = currentProfile.title && currentProfile.name
+        ? `${currentProfile.title} ${currentProfile.name}`
+        : currentProfile.name || "there";
+      const logoVariant = currentStep === "logo_light" ? "light mode" : "dark mode";
       return {
-        kaiMessage: `Use the **Upload Logo** button below to upload your logo file.`,
+        kaiMessage: `Use the **Upload Logo** button below to upload your ${logoVariant} logo, ${logoDisplayName} — or tap **Skip** to continue without one.`,
         nextStep: currentStep,
         profile: currentProfile,
         stepCompleted: false,
@@ -1054,7 +1059,7 @@ export async function processOnboardingStep(
 
     default:
       return {
-        kaiMessage: "System state unclear. Let's restart activation — what's your name?",
+        kaiMessage: getStepQuestion("name", currentProfile),
         nextStep: "name",
         profile: currentProfile,
         stepCompleted: false,
@@ -1247,7 +1252,7 @@ export const kaiOnboardingStateMachineRouter = router({
       if (!prevStep) {
         const progress = getStepProgress(input.currentStep, input.hasMartialArts);
         return {
-          kaiMessage: `You're already at the beginning of the activation sequence.\n\n${getStepQuestion(input.currentStep, input.currentProfile)}`,
+          kaiMessage: getStepQuestion(input.currentStep, input.currentProfile),
           nextStep: input.currentStep,
           profile: input.currentProfile,
           hasMartialArts: input.hasMartialArts,
@@ -1273,7 +1278,7 @@ export const kaiOnboardingStateMachineRouter = router({
       const hasPrev = getPrevStep(prevStep, input.hasMartialArts) !== null;
 
       return {
-        kaiMessage: `Going back.\n\n${getStepQuestion(prevStep, input.currentProfile)}`,
+        kaiMessage: getStepQuestion(prevStep, input.currentProfile),
         nextStep: prevStep,
         profile: input.currentProfile,
         hasMartialArts: input.hasMartialArts,
