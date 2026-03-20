@@ -8445,9 +8445,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Add memory reinforcement: KAI references stored user data naturally throughout flow
 
 ## KAI Onboarding NLU Layer (Mar 20, 2026)
-- [ ] Add intent detection (correction, identity_update, title_update, confirmation, skip, back, objection, question, unknown) to shared/onboarding
-- [ ] Add entity extraction (preferred name, full name, title, school name, programs) to shared/onboarding
-- [ ] Integrate NLU into server processStep — handle corrections/identity updates mid-flow with response priority
-- [ ] Remove rigid text-redirect for photo/logo steps — always interpret free text first
-- [ ] Add common-language phrase understanding (call me, my name is, that's not right, actually, go back, skip this)
-- [ ] Kai acknowledges correction, saves update, confirms, then returns to current step
+- [x] Add intent detection (correction, identity_update, title_update, confirmation, skip, back, objection, question, unknown) to shared/onboarding
+- [x] Add entity extraction (preferred name, full name, title, school name, programs) to shared/onboarding
+- [x] Integrate NLU into server processStep — handle corrections/identity updates mid-flow with response priority
+- [x] Remove rigid text-redirect for photo/logo steps — always interpret free text first
+- [x] Add common-language phrase understanding (call me, my name is, that's not right, actually, go back, skip this)
+- [x] Kai acknowledges correction, saves update, confirms, then returns to current step
