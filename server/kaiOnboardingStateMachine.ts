@@ -466,7 +466,8 @@ export async function processOnboardingStep(
   currentProfile: OnboardingProfile,
   hasMartialArts: boolean
 ): Promise<ProcessStepResult> {
-  const input = userInput.trim();
+  // Strip leading non-alphanumeric characters (e.g. accidental backslash, slash, punctuation)
+  const input = userInput.trim().replace(/^[^a-zA-Z0-9]+/, '');
   const titleName = currentProfile.title && currentProfile.name
     ? `${currentProfile.title} ${currentProfile.name}`
     : currentProfile.name || "there";
@@ -604,7 +605,9 @@ export async function processOnboardingStep(
           showSkip: true,
         };
       }
-      const title = input;
+      // Normalize to title-case (e.g. "MAster" → "Master", "SENSEI" → "Sensei")
+      const toTitleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+      const title = toTitleCase(input);
       const updatedProfile = { ...currentProfile, title };
       await persistProfileField(orgId, "title", title);
       const titleName = `${title} ${currentProfile.name || ""}`.trim();
@@ -667,10 +670,15 @@ export async function processOnboardingStep(
           showSkip: false,
         };
       }
-      // Otherwise prompt them to upload or skip
+      // Otherwise — user typed something that isn't a URL or skip word
+      // Treat any text response as "I'll do it later" and move on gracefully
       const next = getNextStep("profile_photo", currentProfile, hasMartialArts);
+      const skipPhrases = /\b(later|not now|no thanks|maybe later|i'll do it|skip|next|continue|move on|pass)\b/i;
+      const friendlySkipMsg = skipPhrases.test(input)
+        ? `Got it — you can always add a photo later in **Settings \u2192 Profile**. Let's keep going!\n\n${getStepQuestion(next, currentProfile)}`
+        : `No worries — you can add a profile photo anytime from **Settings \u2192 Profile**. Moving on!\n\n${getStepQuestion(next, currentProfile)}`;
       return {
-        kaiMessage: `No problem — you can add a photo anytime in **Settings → Profile**. Let's continue!\n\n${getStepQuestion(next, currentProfile)}`,
+        kaiMessage: friendlySkipMsg,
         nextStep: next,
         profile: currentProfile,
         stepCompleted: true,
