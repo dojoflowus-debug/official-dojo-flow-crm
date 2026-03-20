@@ -8479,11 +8479,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Update client hook to start from computeFirstIncompleteStep on initial load
 
 ## KAI Onboarding Hard Step Boundaries (Mar 20, 2026)
-- [ ] Audit all switch cases for branching/follow-up questions inside a step
-- [ ] Remove all "Since you teach X, one more thing..." branching patterns
-- [ ] Enforce: validate → save → mark complete → move to next step (no exceptions)
-- [ ] Each step returns exactly one kaiMessage + one nextStep (no conditional sub-questions)
-- [ ] Remove martial_style branching from programs step
-- [ ] Ensure city_state_zip is a single step (no split into city/state/zip sub-questions)
-- [ ] Ensure address is a single step (no sub-questions about street/unit/etc.)
-- [ ] Add step lock: if stepCompleted, always call getNextStep() immediately
+- [x] Audit all switch cases for branching/follow-up questions inside a step
+- [x] Remove all "Since you teach X, one more thing..." branching patterns
+- [x] Enforce: validate → save → mark complete → move to next step (no exceptions)
+- [x] Each step returns exactly one kaiMessage + one nextStep (no conditional sub-questions)
+- [x] Remove martial_style branching from programs step
+- [x] Ensure city_state_zip is a single step (no split into city/state/zip sub-questions)
+- [x] Ensure address is a single step (no sub-questions about street/unit/etc.)
+- [x] Add step lock: if stepCompleted, always call getNextStep() immediately
