@@ -8503,3 +8503,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Update computeFirstIncompleteStep to skip locked steps
 - [ ] Update processOnboardingStep to mark steps complete and advance past locked steps
 - [ ] Detect style/discipline keywords in programs answer and auto-fill martial_style step
+
+## Structured Data Extraction Layer (Mar 20, 2026)
+- [ ] Add parseAddress() to shared/onboarding.ts — extract street, city, state, zip from one input
+- [ ] address case: if full address detected, save all components and skip city_state_zip step
+- [ ] city_state_zip case: if already populated by address step, skip immediately
+- [ ] Partial address: only ask for missing components

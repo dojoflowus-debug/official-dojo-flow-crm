@@ -417,3 +417,118 @@ export function getStepQuestion(step: OnboardingStep, profile: OnboardingProfile
       return "Let's keep going — what's next?";
   }
 }
+
+// ─── Structured Address Parser ────────────────────────────────────────────────
+
+export interface ParsedAddress {
+  street: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  /** True when all four components were successfully extracted */
+  isComplete: boolean;
+}
+
+/**
+ * US state abbreviations for detection.
+ */
+const US_STATES: Record<string, string> = {
+  AL: "AL", AK: "AK", AZ: "AZ", AR: "AR", CA: "CA", CO: "CO", CT: "CT",
+  DE: "DE", FL: "FL", GA: "GA", HI: "HI", ID: "ID", IL: "IL", IN: "IN",
+  IA: "IA", KS: "KS", KY: "KY", LA: "LA", ME: "ME", MD: "MD", MA: "MA",
+  MI: "MI", MN: "MN", MS: "MS", MO: "MO", MT: "MT", NE: "NE", NV: "NV",
+  NH: "NH", NJ: "NJ", NM: "NM", NY: "NY", NC: "NC", ND: "ND", OH: "OH",
+  OK: "OK", OR: "OR", PA: "PA", RI: "RI", SC: "SC", SD: "SD", TN: "TN",
+  TX: "TX", UT: "UT", VT: "VT", VA: "VA", WA: "WA", WV: "WV", WI: "WI",
+  WY: "WY", DC: "DC",
+  // Full names → abbreviations
+  ALABAMA: "AL", ALASKA: "AK", ARIZONA: "AZ", ARKANSAS: "AR",
+  CALIFORNIA: "CA", COLORADO: "CO", CONNECTICUT: "CT", DELAWARE: "DE",
+  FLORIDA: "FL", GEORGIA: "GA", HAWAII: "HI", IDAHO: "ID", ILLINOIS: "IL",
+  INDIANA: "IN", IOWA: "IA", KANSAS: "KS", KENTUCKY: "KY", LOUISIANA: "LA",
+  MAINE: "ME", MARYLAND: "MD", MASSACHUSETTS: "MA", MICHIGAN: "MI",
+  MINNESOTA: "MN", MISSISSIPPI: "MS", MISSOURI: "MO", MONTANA: "MT",
+  NEBRASKA: "NE", NEVADA: "NV", "NEW HAMPSHIRE": "NH", "NEW JERSEY": "NJ",
+  "NEW MEXICO": "NM", "NEW YORK": "NY", "NORTH CAROLINA": "NC",
+  "NORTH DAKOTA": "ND", OHIO: "OH", OKLAHOMA: "OK", OREGON: "OR",
+  PENNSYLVANIA: "PA", "RHODE ISLAND": "RI", "SOUTH CAROLINA": "SC",
+  "SOUTH DAKOTA": "SD", TENNESSEE: "TN", TEXAS: "TX", UTAH: "UT",
+  VERMONT: "VT", VIRGINIA: "VA", WASHINGTON: "WA", "WEST VIRGINIA": "WV",
+  WISCONSIN: "WI", WYOMING: "WY",
+};
+
+/**
+ * Attempt to parse a full or partial address from free text.
+ *
+ * Handles formats like:
+ *   "11721 Spring Cypress Rd, Tomball, TX 77377"
+ *   "123 Main St, Austin TX 78701"
+ *   "456 Oak Ave Suite 2, Dallas, Texas, 75201"
+ *   "789 Elm Street" (partial — street only)
+ */
+export function parseAddress(input: string): ParsedAddress {
+  const text = input.trim();
+
+  // ── Strategy 1: comma-delimited full address ──────────────────────────────
+  // Matches: "street, city, state zip" or "street, city, state, zip"
+  const commaParts = text.split(",").map((p) => p.trim()).filter(Boolean);
+
+  if (commaParts.length >= 3) {
+    const street = commaParts[0];
+    const city = commaParts[1];
+    // Last part(s) contain state + zip
+    const stateZipRaw = commaParts.slice(2).join(" ").trim();
+    const { state, zip } = extractStateZip(stateZipRaw);
+
+    if (street && city && state) {
+      return { street, city, state, zip, isComplete: !!(street && city && state && zip) };
+    }
+  }
+
+  // ── Strategy 2: no commas — try to detect state+zip at end ───────────────
+  // e.g., "123 Main St Austin TX 78701"
+  const stateZipMatch = text.match(
+    /^(.+?)\s+([A-Za-z\s]+)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
+  );
+  if (stateZipMatch) {
+    const street = stateZipMatch[1].trim();
+    const city = stateZipMatch[2].trim();
+    const state = stateZipMatch[3].toUpperCase();
+    const zip = stateZipMatch[4];
+    if (US_STATES[state]) {
+      return { street, city, state: US_STATES[state], zip, isComplete: true };
+    }
+  }
+
+  // ── Strategy 3: partial — just a street address (starts with a number) ───
+  const looksLikeStreet = /^\d+\s+\w/.test(text) && !text.match(/,/);
+  if (looksLikeStreet) {
+    return { street: text, city: null, state: null, zip: null, isComplete: false };
+  }
+
+  // ── Strategy 4: city, state zip (no street) ───────────────────────────────
+  const cityStateZip = text.match(/^([A-Za-z\s]+),?\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i);
+  if (cityStateZip) {
+    const city = cityStateZip[1].trim();
+    const state = cityStateZip[2].toUpperCase();
+    const zip = cityStateZip[3];
+    if (US_STATES[state]) {
+      return { street: null, city, state: US_STATES[state], zip, isComplete: false };
+    }
+  }
+
+  // ── Fallback: treat entire input as street ────────────────────────────────
+  return { street: text, city: null, state: null, zip: null, isComplete: false };
+}
+
+function extractStateZip(raw: string): { state: string | null; zip: string | null } {
+  // Match "TX 77377" or "Texas 77377" or "TX" or "77377"
+  const match = raw.match(/^([A-Za-z\s]+?)\s*(\d{5}(?:-\d{4})?)?$/);
+  if (!match) return { state: null, zip: null };
+
+  const statePart = match[1]?.trim().toUpperCase() || null;
+  const zip = match[2] || null;
+  const state = statePart ? (US_STATES[statePart] || null) : null;
+
+  return { state, zip };
+}

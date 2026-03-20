@@ -10,7 +10,7 @@ import { upsertSchoolProfile } from "./schoolProfileDb";
 export { ONBOARDING_STEPS, getStepQuestion } from "../shared/onboarding";
 export type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shared/onboarding";
 import type { OnboardingStep, OnboardingProfile, OnboardingState } from "../shared/onboarding";
-import { ONBOARDING_STEPS, getStepQuestion, detectIntent, buildCorrectionAck, buildObjectionResponse } from "../shared/onboarding";
+import { ONBOARDING_STEPS, getStepQuestion, detectIntent, buildCorrectionAck, buildObjectionResponse, parseAddress } from "../shared/onboarding";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1140,11 +1140,50 @@ export async function processOnboardingStep(
           showBack: true,
         };
       }
-      const updatedProfile = { ...currentProfile, addressStreet: normalisedInput };
-      await upsertSchoolProfile(orgId, { addressStreet: normalisedInput });
+
+      // ── Structured address extraction ──────────────────────────────────────
+      // If the user provides a full address in one message, extract all components
+      // and skip the city_state_zip step entirely.
+      const parsed = parseAddress(normalisedInput);
+
+      if (parsed.isComplete && parsed.street && parsed.city && parsed.state && parsed.zip) {
+        // Full address provided — save all components and skip city_state_zip
+        const updatedProfile = {
+          ...currentProfile,
+          addressStreet: parsed.street,
+          addressCity: parsed.city,
+          addressState: parsed.state,
+          addressPostal: parsed.zip,
+        };
+        await upsertSchoolProfile(orgId, {
+          addressStreet: parsed.street,
+          addressCity: parsed.city,
+          addressState: parsed.state,
+          addressPostal: parsed.zip,
+        });
+        // Skip city_state_zip — jump directly to the step after it
+        const nextAfterCityZip = getNextStep("city_state_zip", updatedProfile, hasMartialArts);
+        const fullAddress = `${parsed.street}, ${parsed.city}, ${parsed.state} ${parsed.zip}`;
+        return {
+          kaiMessage: `Got it — **${fullAddress}**.\n\n${getStepQuestion(nextAfterCityZip, updatedProfile)}`,
+          nextStep: nextAfterCityZip,
+          profile: updatedProfile,
+          stepCompleted: true,
+          isComplete: false,
+          expectsFileUpload: false,
+          showSkip: true,
+          showBack: true,
+          _completedStepsToAdd: ["address", "city_state_zip"] as OnboardingStep[],
+        };
+      }
+
+      // Partial address — just street, ask for city/state/zip next
+      const street = parsed.street || normalisedInput;
+      const updatedProfile = { ...currentProfile, addressStreet: street };
+      await upsertSchoolProfile(orgId, { addressStreet: street });
       const next = getNextStep("address", updatedProfile, hasMartialArts);
       return {
-        kaiMessage: `Got it — **${normalisedInput}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `Got it — **${street}**.\n\n${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
@@ -1169,24 +1208,45 @@ export async function processOnboardingStep(
           showBack: true,
         };
       }
-      const parts = normalisedInput.split(/[,\s]+/);
-      let city = "", state = "", postal = "";
-      if (parts.length >= 3) {
-        postal = parts[parts.length - 1];
-        state = parts[parts.length - 2];
-        city = parts.slice(0, parts.length - 2).join(" ");
-      } else if (parts.length === 2) {
-        state = parts[1];
-        city = parts[0];
-      } else {
-        city = normalisedInput;
+
+      // ── Use parseAddress for structured extraction ──────────────────────────────
+      // Handles: "Austin, TX 78701", "Austin TX 78701", "Austin, Texas 78701"
+      // Also handles full address re-entry: "123 Main St, Austin, TX 78701"
+      const parsedCsz = parseAddress(normalisedInput);
+
+      let city = parsedCsz.city || "";
+      let state = parsedCsz.state || "";
+      let postal = parsedCsz.zip || "";
+
+      // If parseAddress didn't extract city (e.g., just "TX 78701"), fall back to
+      // the old split logic so we don't lose data
+      if (!city) {
+        const parts = normalisedInput.split(/[,\s]+/);
+        if (parts.length >= 3) {
+          postal = parts[parts.length - 1];
+          state = parts[parts.length - 2];
+          city = parts.slice(0, parts.length - 2).join(" ");
+        } else if (parts.length === 2) {
+          state = parts[1];
+          city = parts[0];
+        } else {
+          city = normalisedInput;
+        }
       }
-      const updatedProfile = { ...currentProfile, addressCity: city, addressState: state, addressPostal: postal };
-      await upsertSchoolProfile(orgId, { addressCity: city, addressState: state, addressPostal: postal });
+
+      // If user provided a full address again (street included), also save the street
+      const streetUpdate = parsedCsz.isComplete && parsedCsz.street && !currentProfile.addressStreet
+        ? { addressStreet: parsedCsz.street }
+        : {};
+
+      const updatedProfile = { ...currentProfile, ...streetUpdate, addressCity: city, addressState: state, addressPostal: postal };
+      await upsertSchoolProfile(orgId, { ...streetUpdate, addressCity: city, addressState: state, addressPostal: postal });
       const next = getNextStep("city_state_zip", updatedProfile, hasMartialArts);
       const location = [city, state, postal].filter(Boolean).join(", ");
       return {
-        kaiMessage: `Got it — **${location}**.\n\n${getStepQuestion(next, updatedProfile)}`,
+        kaiMessage: `Got it — **${location}**.
+
+${getStepQuestion(next, updatedProfile)}`,
         nextStep: next,
         profile: updatedProfile,
         stepCompleted: true,
