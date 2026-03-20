@@ -8495,3 +8495,11 @@ Transform kiosk from admin dashboard to premium location experience
 
 ## Splash Loader Fix (Mar 20, 2026)
 - [x] Hide top toolbar during splash so entire screen is black
+
+## Question Lock + Answer Coverage System (Mar 20, 2026)
+- [ ] Add completedSteps Set to onboarding state — persisted in DB
+- [ ] Lock completed steps so they are never re-asked
+- [ ] Detect multi-step coverage: if user answer satisfies programs + martial_style in one response, mark both complete
+- [ ] Update computeFirstIncompleteStep to skip locked steps
+- [ ] Update processOnboardingStep to mark steps complete and advance past locked steps
+- [ ] Detect style/discipline keywords in programs answer and auto-fill martial_style step

@@ -69,6 +69,7 @@ export function useKaiOnboarding({
     logoDarkUrl: null,
   });
   const [hasMartialArts, setHasMartialArts] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<OnboardingStep[]>([]);
   const hasInitialized = useRef(false);
   let msgCounter = useRef(0);
 
@@ -118,6 +119,7 @@ export function useKaiOnboarding({
     setHasMartialArts(initialHasMartialArts);
     setStepNumber(initStepNumber);
     setTotalSteps(initTotalSteps);
+    if (data.completedSteps) setCompletedSteps(data.completedSteps as OnboardingStep[]);
 
     const isPhotoStep = initialStep === "profile_photo";
     const isLogoStep = initialStep === "logo_light" || initialStep === "logo_dark";
@@ -162,6 +164,7 @@ export function useKaiOnboarding({
           userInput: userText,
           currentProfile: profile,
           hasMartialArts,
+          completedSteps,
         });
 
         // Update local state
@@ -169,6 +172,10 @@ export function useKaiOnboarding({
         setCurrentStep(result.nextStep);
         if (result.hasMartialArts !== undefined) {
           setHasMartialArts(result.hasMartialArts);
+        }
+        // Merge newly completed steps into the local lock set
+        if ((result as any)._completedStepsToAdd?.length) {
+          setCompletedSteps(prev => [...new Set([...prev, ...(result as any)._completedStepsToAdd])]);
         }
         if (result.stepNumber !== undefined) setStepNumber(result.stepNumber);
         if (result.totalSteps !== undefined) setTotalSteps(result.totalSteps);

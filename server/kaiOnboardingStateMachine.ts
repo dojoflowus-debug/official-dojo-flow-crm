@@ -213,12 +213,16 @@ async function loadOnboardingState(orgId: number, userId?: number): Promise<Onbo
     .limit(1)
     .catch(() => [null]);
 
-  let storedProfile: Partial<OnboardingProfile> = {};
+  let storedProfile: Partial<OnboardingProfile> & { completedSteps?: OnboardingStep[] } = {};
   if (org?.onboardingProfile) {
     try {
       storedProfile = JSON.parse(org.onboardingProfile as string);
     } catch {}
   }
+  // Load persisted completedSteps from the stored profile JSON
+  const loadedCompletedSteps: OnboardingStep[] = Array.isArray(storedProfile.completedSteps)
+    ? storedProfile.completedSteps
+    : [];
 
   const programs = storedProfile.programs ||
     (settings?.programsTaught ? parsePrograms(settings.programsTaught) : []);
@@ -264,7 +268,8 @@ async function loadOnboardingState(orgId: number, userId?: number): Promise<Onbo
 
   // Reality Check: use computeFirstIncompleteStep to find the true starting point
   // This prevents Kai from asking for data that already exists in the DB
-  const realityCheckedStep = computeFirstIncompleteStep(onboardingProfile, hasMartialArts);
+  // Also pass completedSteps so locked steps are skipped
+  const realityCheckedStep = computeFirstIncompleteStep(onboardingProfile, hasMartialArts, loadedCompletedSteps);
 
   // Use the stored step only if it's further ahead than the reality-checked step
   // (i.e., user has explicitly progressed past a step even if data is missing)
@@ -286,7 +291,7 @@ async function loadOnboardingState(orgId: number, userId?: number): Promise<Onbo
   return {
     step: currentStep,
     profile: onboardingProfile,
-    completedSteps: [],
+    completedSteps: loadedCompletedSteps,
     hasMartialArts,
   };
 }
@@ -299,13 +304,16 @@ async function saveOnboardingState(
   const db = await getDb();
   if (!db) return;
 
+  // Persist completedSteps inside the profile JSON blob (no schema change needed)
+  const profileWithLocks = { ...state.profile, completedSteps: state.completedSteps || [] };
+
   try {
     await db
       .update(organizations)
       .set({
         onboardingStatus: state.step === "complete" ? "completed" : "in_progress",
         onboardingStep: stepNumber,
-        onboardingProfile: JSON.stringify(state.profile),
+        onboardingProfile: JSON.stringify(profileWithLocks),
       } as any)
       .where(eq(organizations.id, orgId));
     return;
@@ -404,10 +412,13 @@ const STEP_NUMBERS: Record<OnboardingStep, number> = {
 
 function computeFirstIncompleteStep(
   profile: OnboardingProfile,
-  hasMartialArts: boolean
+  hasMartialArts: boolean,
+  completedSteps: OnboardingStep[] = []
 ): OnboardingStep {
   const flow = buildFlow(hasMartialArts).filter((s) => s !== "complete");
   for (const step of flow) {
+    // ── QUESTION LOCK: skip steps that have been explicitly completed ──
+    if (completedSteps.includes(step)) continue;
     switch (step) {
       case "name":
         if (!profile.name?.trim()) return step;
@@ -956,9 +967,31 @@ export async function processOnboardingStep(
       }
       const programs = parsePrograms(normalisedInput);
       const newHasMartialArts = programs.some((p) => detectsMartialArts(p));
-      const updatedProfile = { ...currentProfile, programs };
+
+      // ── ANSWER COVERAGE: extract styles from programs answer ──────────────────
+      // If the programs list already contains martial arts style info (e.g., "BJJ, Muay Thai"),
+      // extract them as styles and lock the martial_style step so it is never re-asked.
+      const extractedStyles = newHasMartialArts
+        ? programs.filter((p) => detectsMartialArts(p))
+        : [];
+      const updatedProfile = {
+        ...currentProfile,
+        programs,
+        // Pre-fill styles from programs if not already set
+        styles: currentProfile.styles?.length ? currentProfile.styles : extractedStyles,
+      };
       await persistProfileField(orgId, "programs", programs);
+      if (extractedStyles.length > 0 && !currentProfile.styles?.length) {
+        await persistProfileField(orgId, "styles", extractedStyles);
+      }
+
       // ── STEP LOCK: step complete → move to next step immediately, no branching ──
+      // If styles were extracted from programs, also lock martial_style so it is skipped
+      const newCompletedSteps: OnboardingStep[] = ["programs"];
+      if (extractedStyles.length > 0) {
+        newCompletedSteps.push("martial_style");
+      }
+
       const next = getNextStep("programs", updatedProfile, newHasMartialArts);
       const programList = programs.join(", ");
       return {
@@ -970,7 +1003,9 @@ export async function processOnboardingStep(
         expectsFileUpload: false,
         showSkip: false,
         showBack: true,
-      };
+        // Pass newCompletedSteps so the router can merge them into the state
+        _completedStepsToAdd: newCompletedSteps,
+      } as any;
     }
 
     case "rank": {
@@ -1386,6 +1421,7 @@ export const kaiOnboardingStateMachineRouter = router({
       step: state.step,
       profile: state.profile,
       hasMartialArts: state.hasMartialArts,
+      completedSteps: state.completedSteps,
       stepNumber: progress.stepNumber,
       totalSteps: progress.totalSteps,
     };
@@ -1416,6 +1452,7 @@ export const kaiOnboardingStateMachineRouter = router({
           logoDarkUrl: z.string().nullable(),
         }),
         hasMartialArts: z.boolean(),
+        completedSteps: z.array(z.enum(ONBOARDING_STEPS)).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1434,11 +1471,18 @@ export const kaiOnboardingStateMachineRouter = router({
         ? result.profile.programs.some((p) => detectsMartialArts(p))
         : input.hasMartialArts;
 
+      // ── QUESTION LOCK: merge newly completed steps into the persisted set ──
+      const existingCompleted: OnboardingStep[] = input.completedSteps || [];
+      const toAdd: OnboardingStep[] = (result as any)._completedStepsToAdd || [];
+      const mergedCompletedSteps: OnboardingStep[] = [
+        ...new Set([...existingCompleted, ...toAdd]),
+      ];
+
       const stepNumber = STEP_NUMBERS[result.nextStep] || 1;
       try {
         await saveOnboardingState(
           orgId,
-          { step: result.nextStep, profile: result.profile, completedSteps: [], hasMartialArts: newHasMartialArts },
+          { step: result.nextStep, profile: result.profile, completedSteps: mergedCompletedSteps, hasMartialArts: newHasMartialArts },
           stepNumber
         );
       } catch (saveErr) {
