@@ -159,7 +159,7 @@ export function getStepProgress(
 
 // ─── DB helpers ───────────────────────────────────────────────────────────────
 
-async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
+async function loadOnboardingState(orgId: number, userId?: number): Promise<OnboardingState> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -242,14 +242,45 @@ async function loadOnboardingState(orgId: number): Promise<OnboardingState> {
     profilePhotoUrl: storedProfile.profilePhotoUrl ?? null,
   };
 
-  let currentStep: OnboardingStep = "name";
+  // Reality Check: load user's actual photo from users table
+  if (userId && !onboardingProfile.profilePhotoUrl) {
+    try {
+      const [userRow] = await db
+        .select({ photoUrl: users.photoUrl, name: users.name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      if (userRow?.photoUrl) {
+        onboardingProfile.profilePhotoUrl = userRow.photoUrl;
+      }
+      // Also pre-populate name from users table if not already set
+      if (!onboardingProfile.name && userRow?.name) {
+        onboardingProfile.name = userRow.name;
+      }
+    } catch (e) {
+      console.error('[OnboardingSM] Failed to load user data for reality check:', e);
+    }
+  }
+
+  // Reality Check: use computeFirstIncompleteStep to find the true starting point
+  // This prevents Kai from asking for data that already exists in the DB
+  const realityCheckedStep = computeFirstIncompleteStep(onboardingProfile, hasMartialArts);
+
+  // Use the stored step only if it's further ahead than the reality-checked step
+  // (i.e., user has explicitly progressed past a step even if data is missing)
+  let currentStep: OnboardingStep = realityCheckedStep;
   if (org?.onboardingStep && org.onboardingStep > 0) {
     const stepMap: Record<number, OnboardingStep> = {
       1: "name", 2: "title", 3: "profile_photo", 4: "programs", 5: "rank",
       6: "school_name", 7: "martial_style", 8: "address", 9: "city_state_zip",
       10: "phone", 11: "email", 12: "website", 13: "logo_light", 14: "logo_dark", 99: "complete",
     };
-    currentStep = stepMap[org.onboardingStep] || "name";
+    const storedStep = stepMap[org.onboardingStep] || "name";
+    // Use whichever is further in the flow (stored step takes priority if user has progressed)
+    const flow = buildFlow(hasMartialArts);
+    const storedIdx = flow.indexOf(storedStep);
+    const realityIdx = flow.indexOf(realityCheckedStep);
+    currentStep = storedIdx >= realityIdx ? storedStep : realityCheckedStep;
   }
 
   return {
@@ -369,6 +400,183 @@ const STEP_NUMBERS: Record<OnboardingStep, number> = {
   email: 11, website: 12, logo_light: 13, logo_dark: 14, complete: 99,
 };
 
+// ─── Reality Check: compute first step where data is actually missing ──────────
+
+function computeFirstIncompleteStep(
+  profile: OnboardingProfile,
+  hasMartialArts: boolean
+): OnboardingStep {
+  const flow = buildFlow(hasMartialArts).filter((s) => s !== "complete");
+  for (const step of flow) {
+    switch (step) {
+      case "name":
+        if (!profile.name?.trim()) return step;
+        break;
+      case "title":
+        if (!profile.title?.trim()) return step;
+        break;
+      case "profile_photo":
+        if (!profile.profilePhotoUrl?.trim()) return step;
+        break;
+      case "programs":
+        if (!profile.programs || profile.programs.length === 0) return step;
+        break;
+      case "rank":
+        // rank is optional — skip if we've passed it
+        break;
+      case "school_name":
+        if (!profile.schoolName?.trim()) return step;
+        break;
+      case "martial_style":
+        // optional — skip if not set
+        break;
+      case "address":
+        if (!profile.addressStreet?.trim()) return step;
+        break;
+      case "city_state_zip":
+        if (!profile.addressCity?.trim() && !profile.addressPostal?.trim()) return step;
+        break;
+      case "phone":
+        if (!profile.phone?.trim()) return step;
+        break;
+      case "email":
+        if (!profile.email?.trim()) return step;
+        break;
+      case "website":
+        if (!profile.website?.trim()) return step;
+        break;
+      case "logo_light":
+        if (!profile.logoLightUrl?.trim()) return step;
+        break;
+      case "logo_dark":
+        if (!profile.logoDarkUrl?.trim()) return step;
+        break;
+    }
+  }
+  return "complete";
+}
+
+// ─── Truth Handling: evaluate user claims against actual profile data ─────────
+
+type ClaimVerdict = "true" | "false" | "unknown";
+
+interface ClaimEvaluation {
+  verdict: ClaimVerdict;
+  field: OnboardingStep | null;
+  trueResponse?: string;
+  falseResponse?: string;
+}
+
+const ALREADY_DONE_PATTERNS = [
+  /\b(?:already|i(?:'ve| have)|done|uploaded|set|added|filled|completed|provided|entered|saved)\b/i,
+  /\b(?:i did|that'?s\s+done|it'?s\s+(?:already\s+)?(?:set|done|there|uploaded|saved))\b/i,
+  /\b(?:you\s+(?:already\s+)?have|you\s+(?:can\s+)?see|it\s+should\s+(?:be|show))\b/i,
+  /\b(?:i\s+(?:just|already)\s+(?:did|uploaded|added|set|entered))\b/i,
+];
+
+function evaluateUserClaim(
+  text: string,
+  step: OnboardingStep,
+  profile: OnboardingProfile
+): ClaimEvaluation {
+  const t = text.toLowerCase();
+  const isAlreadyDoneClaim = ALREADY_DONE_PATTERNS.some((p) => p.test(text));
+
+  if (!isAlreadyDoneClaim) {
+    return { verdict: "unknown", field: null };
+  }
+
+  const displayName = profile.title && profile.name
+    ? `${profile.title} ${profile.name}`
+    : profile.name || "there";
+
+  // Determine which field the claim is about
+  let targetStep: OnboardingStep | null = null;
+
+  if (/\b(?:photo|picture|image|headshot|avatar|profile\s+(?:photo|picture|image))\b/i.test(text)) {
+    targetStep = "profile_photo";
+  } else if (/\b(?:name|called|known\s+as)\b/i.test(text)) {
+    targetStep = "name";
+  } else if (/\b(?:title|sensei|sifu|coach|master|instructor|professor)\b/i.test(text)) {
+    targetStep = "title";
+  } else if (/\b(?:program|class|teach|discipline|course)\b/i.test(text)) {
+    targetStep = "programs";
+  } else if (/\b(?:school|dojo|academy|gym|studio)\b/i.test(text)) {
+    targetStep = "school_name";
+  } else if (/\b(?:address|location|street)\b/i.test(text)) {
+    targetStep = "address";
+  } else if (/\b(?:phone|number|contact)\b/i.test(text)) {
+    targetStep = "phone";
+  } else if (/\b(?:email|e-mail)\b/i.test(text)) {
+    targetStep = "email";
+  } else if (/\b(?:website|url|site|web\s+address)\b/i.test(text)) {
+    targetStep = "website";
+  } else if (/\b(?:logo)\b/i.test(text)) {
+    targetStep = t.includes("dark") ? "logo_dark" : "logo_light";
+  } else {
+    // Claim is about the current step
+    targetStep = step;
+  }
+
+  // Check if the data actually exists in the profile
+  let dataExists = false;
+  switch (targetStep) {
+    case "name": dataExists = !!profile.name?.trim(); break;
+    case "title": dataExists = !!profile.title?.trim(); break;
+    case "profile_photo": dataExists = !!profile.profilePhotoUrl?.trim(); break;
+    case "programs": dataExists = profile.programs.length > 0; break;
+    case "school_name": dataExists = !!profile.schoolName?.trim(); break;
+    case "address": dataExists = !!profile.addressStreet?.trim(); break;
+    case "city_state_zip": dataExists = !!profile.addressCity?.trim() || !!profile.addressPostal?.trim(); break;
+    case "phone": dataExists = !!profile.phone?.trim(); break;
+    case "email": dataExists = !!profile.email?.trim(); break;
+    case "website": dataExists = !!profile.website?.trim(); break;
+    case "logo_light": dataExists = !!profile.logoLightUrl?.trim(); break;
+    case "logo_dark": dataExists = !!profile.logoDarkUrl?.trim(); break;
+    default: return { verdict: "unknown", field: targetStep };
+  }
+
+  if (dataExists) {
+    const trueResponses: Partial<Record<OnboardingStep, string>> = {
+      profile_photo: `You're right — I can see your photo is already set, ${displayName}. You're all set there.`,
+      name: `Got it — your name is already on file as **${profile.name}**.`,
+      title: `Noted — your title is already set to **${profile.title}**.`,
+      programs: `You're right — your programs are already set: **${profile.programs.join(", ")}**.`,
+      school_name: `Correct — **${profile.schoolName}** is already in your profile.`,
+      address: `Got it — your address is already set to **${profile.addressStreet}**.`,
+      phone: `Correct — your phone number is already on file: **${profile.phone}**.`,
+      email: `You're right — your email is already set to **${profile.email}**.`,
+      website: `Got it — your website is already linked: **${profile.website}**.`,
+      logo_light: `You're right — your day mode logo is already uploaded.`,
+      logo_dark: `Correct — your dark mode logo is already uploaded.`,
+    };
+    return {
+      verdict: "true",
+      field: targetStep,
+      trueResponse: trueResponses[targetStep] || `You're all set there, ${displayName}.`,
+    };
+  } else {
+    const falseResponses: Partial<Record<OnboardingStep, string>> = {
+      profile_photo: `I don't see a profile photo on file yet, ${displayName}. Go ahead and upload one using the button below — or skip if you'd prefer to do it later.`,
+      name: `I don't have a name on file yet. What should I call you?`,
+      title: `I don't have a title set for you yet. How should I address you?`,
+      programs: `I don't see any programs listed yet. What do you teach?`,
+      school_name: `I don't have a school name on file yet. What's the official name of your school?`,
+      address: `I don't have an address on file yet. What's your school's street address?`,
+      phone: `I don't see a phone number on file yet. What's the best number for your school?`,
+      email: `I don't have an email address on file yet. What email should students use to reach you?`,
+      website: `I don't have a website on file yet. Do you have a school website?`,
+      logo_light: `I don't see a day mode logo uploaded yet. Use the Upload button below to add one.`,
+      logo_dark: `I don't see a dark mode logo uploaded yet. Use the Upload button below to add one.`,
+    };
+    return {
+      verdict: "false",
+      field: targetStep,
+      falseResponse: falseResponses[targetStep] || `I don't see that information on file yet. Let's take care of it now.`,
+    };
+  }
+}
+
 // ─── Result type ──────────────────────────────────────────────────────────────
 
 export interface ProcessStepResult {
@@ -400,8 +608,50 @@ export async function processOnboardingStep(
 
   const hasPrev = getPrevStep(currentStep, hasMartialArts) !== null;
 
-  // ── NLU: Run intent detection FIRST on every input ────────────────────────────
+  // ── NLU: Run intent detection FIRST on every input ────────────────────────────────────
   const nlu = detectIntent(input, currentStep);
+
+  // ── Truth Handling: evaluate "I already did X" claims BEFORE step logic ───────
+  // Only evaluate if the intent is not already a known navigation/correction intent
+  if (
+    nlu.intent === "unknown" ||
+    nlu.intent === "confirmation" ||
+    nlu.intent === "question"
+  ) {
+    const claim = evaluateUserClaim(input, currentStep, currentProfile);
+
+    if (claim.verdict === "true" && claim.field) {
+      // Data confirmed to exist — acknowledge and advance to next step
+      const next = getNextStep(currentStep, currentProfile, hasMartialArts);
+      const nextQuestion = next !== "complete" ? `\n\n${getStepQuestion(next, currentProfile)}` : "";
+      return {
+        kaiMessage: `${claim.trueResponse}${nextQuestion}`,
+        nextStep: next,
+        profile: currentProfile,
+        stepCompleted: true,
+        isComplete: next === "complete",
+        expectsFileUpload: next === "logo_light" || next === "logo_dark",
+        showSkip: next !== "name" && next !== "programs" && next !== "complete",
+        showBack: hasPrev,
+      };
+    }
+
+    if (claim.verdict === "false" && claim.field) {
+      // Data does NOT exist — gently correct and re-ask
+      return {
+        kaiMessage: claim.falseResponse!,
+        nextStep: currentStep,
+        profile: currentProfile,
+        stepCompleted: false,
+        isComplete: false,
+        expectsFileUpload: currentStep === "logo_light" || currentStep === "logo_dark" || currentStep === "profile_photo",
+        showSkip: currentStep !== "name" && currentStep !== "programs",
+        showBack: hasPrev,
+      };
+    }
+
+    // verdict === "unknown" with no field match — fall through to normal step logic
+  }
 
   // ── NLU Priority 1: Back intent ──────────────────────────────────────────────
   if (nlu.intent === "back") {
@@ -1128,7 +1378,7 @@ export const kaiOnboardingStateMachineRouter = router({
       return { needsOnboarding: false, isCompleted: true, step: "complete" as OnboardingStep, profile: null, stepNumber: null, totalSteps: null };
     }
 
-    const state = await loadOnboardingState(orgId);
+    const state = await loadOnboardingState(orgId, ctx.user.id);
     const progress = getStepProgress(state.step, state.hasMartialArts);
 
     return {

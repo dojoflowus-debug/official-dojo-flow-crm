@@ -8459,3 +8459,21 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Rewrite hook initial/resume/restart messages with human tone
 - [ ] Rewrite NLU correction/acknowledgement messages with human tone
 - [ ] Rewrite skip/back/error messages with human tone
+
+## KAI Onboarding Reality Check Layer (Mar 20, 2026)
+- [ ] Pre-load existing user/org data from DB in getStatus (name, title, photo, programs, rank, school, address, phone, email, website, logos)
+- [ ] Auto-advance past steps where data already exists (skip silently or with brief acknowledgment)
+- [ ] Acknowledge partial data naturally before asking for missing info
+- [ ] Prevent duplicate step questions — never re-ask a completed step
+- [ ] Update client hook to initialize with pre-populated profile and correct starting step
+
+## KAI Onboarding Truth Handling Layer (Mar 20, 2026)
+- [ ] Add computeFirstIncompleteStep() — walk step flow, return first step where data is missing
+- [ ] Load users.name, users.photoUrl in loadOnboardingState to populate profilePhotoUrl
+- [ ] Add evaluateUserClaim() — detect "I already did X" statements, check DB, return TRUE/FALSE/UNKNOWN
+- [ ] Integrate Truth Handling into processOnboardingStep before step logic
+- [ ] TRUE: acknowledge + auto-advance to next step
+- [ ] FALSE: gently correct + re-ask current step
+- [ ] UNKNOWN: "Let me check that" + verify before continuing
+- [ ] Never ignore user statements — user input takes priority over step flow
+- [ ] Update client hook to start from computeFirstIncompleteStep on initial load
