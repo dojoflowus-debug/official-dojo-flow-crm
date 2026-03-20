@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import './App.css';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,37 +10,54 @@ import { EnvironmentProvider } from "./contexts/EnvironmentContext";
 import { KioskProvider } from "./contexts/KioskContext";
 import { AppShellGuard } from "./components/AppShellGuard";
 import { DebugOverlay } from "./components/DebugOverlay";
-import { DevVerificationHooks } from "./components/DevVerificationHooks";
 import { CreditsRefreshOnReturn } from "./components/CreditsRefreshOnReturn";
 import { BillingReturnHandler } from "./components/BillingReturnHandler";
 import { ModalProvider } from "./contexts/ModalContext";
 import { appRoutes } from "./routes/appRoutes";
 import { IndustryEnvironmentInitializer } from "./components/IndustryEnvironmentInitializer";
 import { CookieNotice } from "./components/CookieNotice";
+import { SplashLoader } from "./components/SplashLoader";
+import { trpc } from "@/lib/trpc";
 
-// Full-page loader component for Suspense fallback
-function FullPageLoader() {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      </div>
-    </div>
-  );
-}
+// ─── Splash-aware root component ─────────────────────────────────────────────
+// Sits inside the tRPC provider so it can call trpc.auth.me directly.
+function AppWithSplash() {
+  // Use the auth.me query to determine when the app is truly ready.
+  // We set staleTime to 0 so it always fires on first mount.
+  const { isLoading: authLoading } = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
-function Router() {
+  // Give the splash a minimum display time of 800 ms so it never flashes.
+  const [minTimePassed, setMinTimePassed] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMinTimePassed(true), 800);
+    return () => clearTimeout(t);
+  }, []);
+
+  const appReady = !authLoading && minTimePassed;
+
   return (
-    <ErrorBoundary>
-      <Suspense fallback={<FullPageLoader />}>
-        <Routes>
-          {appRoutes.map((route, index) => (
-            <Route key={route.path || index} path={route.path} element={route.element} />
-          ))}
-        </Routes>
-      </Suspense>
-    </ErrorBoundary>
+    <>
+      <SplashLoader ready={appReady} />
+      <BrowserRouter>
+        <IndustryEnvironmentInitializer />
+        <DebugOverlay />
+        <CreditsRefreshOnReturn />
+        <BillingReturnHandler />
+        <AppShellGuard>
+          <Suspense fallback={null}>
+            <Routes>
+              {appRoutes.map((route, index) => (
+                <Route key={route.path || index} path={route.path} element={route.element} />
+              ))}
+            </Routes>
+          </Suspense>
+        </AppShellGuard>
+        <CookieNotice />
+      </BrowserRouter>
+    </>
   );
 }
 
@@ -63,16 +80,7 @@ function App() {
               <ModalProvider>
                 <TooltipProvider>
                   <Toaster />
-                  <BrowserRouter>
-                    <IndustryEnvironmentInitializer />
-                    <DebugOverlay />
-                    <CreditsRefreshOnReturn />
-                    <BillingReturnHandler />
-                    <AppShellGuard>
-                      <Router />
-                    </AppShellGuard>
-                    <CookieNotice />
-                  </BrowserRouter>
+                  <AppWithSplash />
                 </TooltipProvider>
               </ModalProvider>
             </FocusModeProvider>
