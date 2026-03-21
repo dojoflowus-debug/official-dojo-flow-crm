@@ -99,7 +99,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" data-tutorial-id="student-form">
             <div>
               <label className="text-sm font-medium">First Name *</label>
               <Input 
@@ -109,6 +109,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 required
                 disabled={isLoading}
+                data-tutorial-id="student-name-field"
               />
             </div>
             <div>
@@ -142,6 +143,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 disabled={isLoading}
+                data-tutorial-id="student-contact-field"
               />
             </div>
             <div>
@@ -185,6 +187,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
                 type="submit"
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                 disabled={isLoading}
+                data-tutorial-id="student-save-btn"
               >
                 {isLoading ? 'Creating...' : 'Create Student'}
               </Button>

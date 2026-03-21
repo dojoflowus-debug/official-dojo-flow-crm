@@ -277,6 +277,7 @@ function StudentsDashboard() {
             <Button 
               className="gap-2 w-full md:w-auto bg-red-600 hover:bg-red-700 text-white"
               onClick={() => setShowAddStudentModal(true)}
+              data-tutorial-id="add-student-btn"
             >
               <UserPlus className="w-4 h-4" />
               Add Student

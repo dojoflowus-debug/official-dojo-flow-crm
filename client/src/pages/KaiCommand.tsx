@@ -33,6 +33,7 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { useKaiOnboarding } from '@/hooks/useKaiOnboarding';
 // KaiOnboardingOverlay removed — onboarding is handled in-chat via useKaiOnboarding
+import { useKaiTutorial } from '@/contexts/KaiTutorialContext';
 import { UserAvatar } from '@/components/UserAvatar';
 import '@/styles/kai-light-command-center.css';
 
@@ -251,10 +252,30 @@ export default function KaiCommand() {
       });
     },
     onComplete: () => {
-      // Onboarding done — auto-select first conversation if available
+       // Onboarding done — auto-select first conversation if available
       // The isOnboardingActive will become false, triggering the auto-select useEffect
     },
   });
+
+  // ── Kai Tutorial System ──────────────────────────────────────────────────────
+  const {
+    pendingKaiMessage: tutorialPendingMessage,
+    consumeKaiMessage: consumeTutorialMessage,
+    handleToolbarCommand: handleTutorialCommand,
+  } = useKaiTutorial();
+
+  // Inject tutorial messages into the chat when they arrive
+  useEffect(() => {
+    if (!tutorialPendingMessage) return;
+    const tutMsg: Message = {
+      id: `tutorial-kai-${Date.now()}`,
+      role: 'assistant',
+      content: tutorialPendingMessage,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, tutMsg]);
+    consumeTutorialMessage();
+  }, [tutorialPendingMessage, consumeTutorialMessage]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -2108,7 +2129,16 @@ export default function KaiCommand() {
       await handleOnboardingReply(inputText.trim());
       return;
     }
-    // --- END ONBOARDING INTERCEPTION ---
+     // --- END ONBOARDING INTERCEPTION ---
+
+    // --- KAI TUTORIAL COMMAND INTERCEPT ---
+    // If the input matches a smart command (e.g. "add student"), start the tutorial
+    if (inputText.trim() && handleTutorialCommand(inputText.trim())) {
+      setMessageInput('');
+      setAttachments([]);
+      return;
+    }
+    // --- END TUTORIAL COMMAND INTERCEPT ---
 
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {

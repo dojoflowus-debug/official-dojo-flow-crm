@@ -8538,3 +8538,17 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] logoUploadType extended to include icon-light and icon-dark variants
 - [x] _completedStepsToAdd added to ProcessStepResult interface
 - [x] TypeScript errors resolved in state machine and client hook
+
+## Kai Contextual Training System
+
+- [x] KaiTutorialContext — route detection, active module awareness, tutorial state
+- [x] Tutorial registry — per-module step definitions (Students, Leads, Classes, Billing, Kiosk)
+- [x] Tutorial completion tracking — stored in organizations.settings JSON
+- [x] SpotlightOverlay component — pulsing highlight + arrow tooltip + backdrop
+- [x] useTutorial hook — step navigation, auto-launch on first visit, completion callbacks
+- [x] Smart toolbar command parser — "Add student" → executeAction("create_student")
+- [x] Ghost mode — hesitation detection (idle >8s on a page) → Kai proactive offer
+- [x] Per-module tutorial flows: Students, Leads, Classes, Billing, Kiosk
+- [x] Kai personality responses during tutorials (warm, brief, encouraging)
+- [x] Tutorial completion feedback message from Kai
+- [x] tRPC router for tutorial state (get/set completion per module)

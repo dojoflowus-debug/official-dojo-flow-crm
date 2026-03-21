@@ -250,6 +250,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                 <Button 
                   onClick={() => setShowAddModal(true)} 
                   className="bg-[#E53935] hover:bg-[#C62828] text-white"
+                  data-tutorial-id="add-lead-btn"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Lead
@@ -460,6 +461,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                       onChange={(e) => setNewLead({ ...newLead, first_name: e.target.value })}
                       placeholder="John"
                       className={isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}
+                      data-tutorial-id="lead-name-field"
                     />
                   </div>
                   <div>
@@ -498,6 +500,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                     onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
                     placeholder="(555) 123-4567"
                     className={isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}
+                    data-tutorial-id="lead-source-field"
                   />
                 </div>
 
@@ -538,6 +541,7 @@ export default function Leads({ onLogout, theme, toggleTheme }: { onLogout: () =
                   onClick={handleAddLead}
                   disabled={!newLead.first_name || !newLead.last_name}
                   className="flex-1 bg-[#E53935] hover:bg-[#C62828] text-white"
+                  data-tutorial-id="lead-save-btn"
                 >
                   Add Lead
                 </Button>

@@ -26,6 +26,10 @@ import CommandHeader from '@/components/CommandHeader'
 import { KaiBar } from '@/components/KaiBar'
 import { KaiBarProvider } from '@/contexts/KaiBarContext'
 import { EnvironmentSelectorModal } from '@/components/EnvironmentSelectorModal'
+import { KaiTutorialProvider } from '@/contexts/KaiTutorialContext'
+import { SpotlightOverlay } from '@/components/SpotlightOverlay'
+import { GhostModeOffer } from '@/components/GhostModeOffer'
+import { TutorialLayer } from '@/components/TutorialLayer'
 
 // Navigation items for bottom bar
 const NAVIGATION = [
@@ -101,6 +105,7 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
   const showBottomNav = !hideBottomNav && !isFocusMode
 
   return (
+    <KaiTutorialProvider>
     <KaiBarProvider>
       <div className="app-shell min-h-screen flex flex-col">
         {/* Universal Top Header */}
@@ -288,6 +293,10 @@ export default function AppShell({ children, hideBottomNav = false, hideHeader =
 
       {/* Global Environment Selector Modal - rendered at root to avoid re-mount issues */}
       <EnvironmentSelectorModal />
+
+      {/* Kai Tutorial System — Spotlight + Ghost Mode */}
+      <TutorialLayer />
     </KaiBarProvider>
+    </KaiTutorialProvider>
   )
 }
