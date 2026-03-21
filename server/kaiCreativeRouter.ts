@@ -27,6 +27,7 @@ import {
   type ImageSize,
   type BrandContext,
 } from "./geminiImageService";
+import { parseStyleFromText, type StylePreset } from "./kaiPromptEngine";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
@@ -37,6 +38,15 @@ const imageSizeSchema = z.enum([
   "flyer",
   "website_banner",
 ]);
+
+const stylePresetSchema = z.enum([
+  "energetic",
+  "premium",
+  "luxury",
+  "kids_playful",
+  "high_converting_ad",
+  "auto",
+]).default("auto");
 
 // ── Brand data helper ─────────────────────────────────────────────────────────
 
@@ -106,6 +116,7 @@ export const kaiCreativeRouter = router({
         size: imageSizeSchema.default("instagram_post"),
         useBrandColors: z.boolean().default(true),
         assetName: z.string().optional(),
+        style: stylePresetSchema,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -115,7 +126,8 @@ export const kaiCreativeRouter = router({
       const result = await generateImage(
         input.prompt,
         input.size as ImageSize,
-        brand ?? undefined
+        brand ?? undefined,
+        input.style as StylePreset
       );
 
       const { url: s3Url, key } = await saveImageToS3(
@@ -168,6 +180,7 @@ export const kaiCreativeRouter = router({
         size: imageSizeSchema.default("instagram_post"),
         useBrandColors: z.boolean().default(true),
         assetName: z.string().optional(),
+        style: stylePresetSchema,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -179,7 +192,8 @@ export const kaiCreativeRouter = router({
         input.logoBase64,
         input.logoMimeType,
         input.size as ImageSize,
-        brand ?? undefined
+        brand ?? undefined,
+        input.style as StylePreset
       );
 
       const { url: s3Url, key } = await saveImageToS3(
@@ -231,6 +245,7 @@ export const kaiCreativeRouter = router({
         size: imageSizeSchema.default("instagram_post"),
         useBrandColors: z.boolean().default(true),
         assetName: z.string().optional(),
+        style: stylePresetSchema,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -242,7 +257,8 @@ export const kaiCreativeRouter = router({
         input.sourceImageBase64,
         input.sourceMimeType,
         input.size as ImageSize,
-        brand ?? undefined
+        brand ?? undefined,
+        input.style as StylePreset
       );
 
       const { url: s3Url, key } = await saveImageToS3(
@@ -424,11 +440,18 @@ export const kaiCreativeRouter = router({
         // Optional source image for edit mode (uploaded from chat)
         sourceImageBase64: z.string().optional(),
         sourceMimeType: z.string().optional(),
+        // Style preset — auto-detected from prompt if not provided
+        style: stylePresetSchema,
       })
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
       const brand = await getBrandDataForOrg(orgId);
+
+      // Auto-detect style from prompt if not explicitly set
+      const resolvedStyle = (input.style === "auto" || !input.style)
+        ? parseStyleFromText(input.prompt)
+        : input.style as StylePreset;
 
       let result: { imageBase64: string; mimeType: string };
 
@@ -439,14 +462,16 @@ export const kaiCreativeRouter = router({
           input.sourceImageBase64,
           input.sourceMimeType ?? "image/png",
           input.size as ImageSize,
-          brand
+          brand,
+          resolvedStyle
         );
       } else {
         // Generate mode — text prompt only
         result = await generateImage(
           input.prompt,
           input.size as ImageSize,
-          brand
+          brand,
+          resolvedStyle
         );
       }
 

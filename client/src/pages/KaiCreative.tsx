@@ -140,6 +140,7 @@ export default function KaiCreative() {
   const [size, setSize] = useState<ImageSize>("instagram_post");
   const [useBrandColors, setUseBrandColors] = useState(true);
   const [showSizeDropdown, setShowSizeDropdown] = useState(false);
+  const [stylePreset, setStylePreset] = useState<"energetic" | "premium" | "luxury" | "kids_playful" | "high_converting_ad" | "auto">("auto");
 
   // Logo upload (logo mode)
   const [logoBase64, setLogoBase64] = useState<string | null>(null);
@@ -291,15 +292,15 @@ export default function KaiCreative() {
     setError(null);
 
     if (mode === "create") {
-      generateMutation.mutate({ prompt: prompt.trim(), size, useBrandColors });
+      generateMutation.mutate({ prompt: prompt.trim(), size, useBrandColors, style: stylePreset });
     } else if (mode === "logo") {
       if (!logoBase64) { setError("Please upload a logo first."); return; }
-      generateWithLogoMutation.mutate({ prompt: prompt.trim(), logoBase64, logoMimeType, size, useBrandColors });
+      generateWithLogoMutation.mutate({ prompt: prompt.trim(), logoBase64, logoMimeType, size, useBrandColors, style: stylePreset });
     } else {
       if (!sourceBase64) { setError("Please upload an image to edit first."); return; }
-      editMutation.mutate({ prompt: prompt.trim(), sourceImageBase64: sourceBase64, sourceMimeType, size, useBrandColors });
+      editMutation.mutate({ prompt: prompt.trim(), sourceImageBase64: sourceBase64, sourceMimeType, size, useBrandColors, style: stylePreset });
     }
-  }, [mode, prompt, size, useBrandColors, logoBase64, logoMimeType, sourceBase64, sourceMimeType,
+  }, [mode, prompt, size, useBrandColors, stylePreset, logoBase64, logoMimeType, sourceBase64, sourceMimeType,
       generateMutation, generateWithLogoMutation, editMutation]);
 
   const isLoading = generateMutation.isPending || generateWithLogoMutation.isPending || editMutation.isPending || isOverlaying;
@@ -568,6 +569,35 @@ export default function KaiCreative() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Style preset chips */}
+          <div className="space-y-2">
+            <label className={`text-xs font-medium ${muted} uppercase tracking-wide`}>Style</label>
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { id: "auto",             label: "Auto",            emoji: "✨" },
+                { id: "energetic",        label: "Energetic",       emoji: "⚡" },
+                { id: "premium",          label: "Premium",         emoji: "💎" },
+                { id: "luxury",           label: "Luxury",          emoji: "🏆" },
+                { id: "kids_playful",     label: "Kids Playful",    emoji: "🎉" },
+                { id: "high_converting_ad", label: "High-Converting", emoji: "🔥" },
+              ] as const).map(({ id, label, emoji }) => (
+                <button
+                  key={id}
+                  onClick={() => setStylePreset(id)}
+                  className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                    stylePreset === id
+                      ? "bg-red-600 border-red-600 text-white shadow-sm"
+                      : isDark
+                        ? "border-white/10 text-white/60 hover:border-red-500/40 hover:text-white/80"
+                        : "border-slate-200 text-slate-500 hover:border-red-400/40 hover:text-slate-700"
+                  }`}
+                >
+                  {emoji} {label}
+                </button>
+              ))}
             </div>
           </div>
 

@@ -2,12 +2,17 @@
  * Gemini Image Generation Service
  * Uses @google/genai SDK with imagen-4.0-generate-001 for all operations.
  *
+ * All prompts are transformed through kaiPromptEngine.enhancePrompt() before
+ * being sent to Gemini — adding layout rules, style presets, program awareness,
+ * and brand context injection.
+ *
  * NOTE: ai.models.editImage() is Vertex AI only and NOT available via the
  * standard Gemini API key. All three modes (generate, logo branding, edit)
  * use generateImages() with prompt-based context injection instead.
  */
 
 import { GoogleGenAI } from "@google/genai";
+import { enhancePrompt, detectStylePreset, type StylePreset } from "./kaiPromptEngine";
 
 // ── Client ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +39,7 @@ const SIZE_TO_ASPECT: Record<ImageSize, string> = {
   website_banner: "16:9",
 };
 
-// ── Brand context builder ─────────────────────────────────────────────────────
+// ── Brand context ─────────────────────────────────────────────────────────────
 
 export interface BrandContext {
   schoolName?: string | null;
@@ -43,27 +48,6 @@ export interface BrandContext {
   website?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
-}
-
-function buildBrandedPrompt(userPrompt: string, brand?: BrandContext): string {
-  if (!brand) return userPrompt;
-
-  const brandLines: string[] = [];
-
-  if (brand.schoolName) brandLines.push(`School name: "${brand.schoolName}"`);
-  if (brand.tagline) brandLines.push(`Tagline: "${brand.tagline}"`);
-  if (brand.phone) brandLines.push(`Phone: ${brand.phone}`);
-  if (brand.website) brandLines.push(`Website: ${brand.website}`);
-  if (brand.primaryColor) brandLines.push(`Primary brand color: ${brand.primaryColor}`);
-  if (brand.secondaryColor) brandLines.push(`Secondary brand color: ${brand.secondaryColor}`);
-  if (brandLines.length === 0) return userPrompt;
-
-  return `${userPrompt}
-
-Brand details to incorporate:
-${brandLines.join("\n")}
-
-Style: Professional martial arts marketing. Bold, energetic, clean layout. High contrast. No watermarks.`;
 }
 
 // ── Core generateImages call ──────────────────────────────────────────────────
@@ -104,13 +88,30 @@ export interface GenerateImageResult {
 export async function generateImage(
   prompt: string,
   size: ImageSize = "instagram_post",
-  brand?: BrandContext
+  brand?: BrandContext,
+  style?: StylePreset
 ): Promise<GenerateImageResult> {
   const aspectRatio = SIZE_TO_ASPECT[size];
-  const finalPrompt = buildBrandedPrompt(prompt, brand);
+
+  // Run through the Kai Prompt Engine
+  const enhancedPrompt = enhancePrompt({
+    userPrompt: prompt,
+    style: style ?? "auto",
+    brand: brand
+      ? {
+          schoolName: brand.schoolName ?? undefined,
+          primaryColor: brand.primaryColor ?? undefined,
+          secondaryColor: brand.secondaryColor ?? undefined,
+          phone: brand.phone ?? undefined,
+          website: brand.website ?? undefined,
+          tagline: brand.tagline ?? undefined,
+        }
+      : undefined,
+    size,
+  });
 
   try {
-    return await callGenerateImages(finalPrompt, aspectRatio);
+    return await callGenerateImages(enhancedPrompt, aspectRatio);
   } catch (err: any) {
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini image generation failed: ${msg}`);
@@ -131,19 +132,34 @@ export async function editImage(
   _sourceImageBase64: string,
   _sourceMimeType: string = "image/png",
   size: ImageSize = "instagram_post",
-  brand?: BrandContext
+  brand?: BrandContext,
+  style?: StylePreset
 ): Promise<EditImageResult> {
   const aspectRatio = SIZE_TO_ASPECT[size];
-  // Since editImage (Vertex AI) is unavailable, generate a new image from the
-  // edit prompt. The source image context is described via the prompt.
-  const editPrompt = `${prompt}
 
-Create a new high-quality marketing image based on the above description. Apply any requested changes or style adjustments.`;
+  // Wrap the edit request in the prompt engine for consistent quality
+  const editUserPrompt = `${prompt}
 
-  const finalPrompt = buildBrandedPrompt(editPrompt, brand);
+Apply the requested changes or style adjustments. Create a new high-quality marketing image.`;
+
+  const enhancedPrompt = enhancePrompt({
+    userPrompt: editUserPrompt,
+    style: style ?? "auto",
+    brand: brand
+      ? {
+          schoolName: brand.schoolName ?? undefined,
+          primaryColor: brand.primaryColor ?? undefined,
+          secondaryColor: brand.secondaryColor ?? undefined,
+          phone: brand.phone ?? undefined,
+          website: brand.website ?? undefined,
+          tagline: brand.tagline ?? undefined,
+        }
+      : undefined,
+    size,
+  });
 
   try {
-    return await callGenerateImages(finalPrompt, aspectRatio);
+    return await callGenerateImages(enhancedPrompt, aspectRatio);
   } catch (err: any) {
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini image edit failed: ${msg}`);
@@ -160,29 +176,37 @@ export async function generateWithLogo(
   _logoBase64: string,
   _logoMimeType: string = "image/png",
   size: ImageSize = "instagram_post",
-  brand?: BrandContext
+  brand?: BrandContext,
+  style?: StylePreset
 ): Promise<EditImageResult> {
   const aspectRatio = SIZE_TO_ASPECT[size];
 
-  // Build a logo-aware prompt. Since we can't pass the image bytes to
-  // generateImages(), we describe the brand identity in text.
   const schoolName = brand?.schoolName ?? "the martial arts school";
-  const primaryColor = brand?.primaryColor ?? "red and black";
 
-  const logoPrompt = `${prompt}
+  // Logo branding: describe the school identity in the prompt since we can't
+  // pass image bytes to generateImages()
+  const logoUserPrompt = `${prompt}
 
-Design requirements:
-- This is a branded marketing image for ${schoolName}
-- Include a prominent logo placeholder or emblem in the design representing the school
-- Use ${primaryColor} as the primary color scheme
-- The design should look professional and suitable for martial arts marketing
-- Include space for the school logo/emblem as a key visual element
-- Bold, energetic, high-impact design`;
+This is a branded marketing design for ${schoolName}. Include a prominent logo emblem or badge representing the school as a key visual element. The logo/emblem should be clearly visible and professionally integrated into the design.`;
 
-  const finalPrompt = buildBrandedPrompt(logoPrompt, brand);
+  const enhancedPrompt = enhancePrompt({
+    userPrompt: logoUserPrompt,
+    style: style ?? "premium",
+    brand: brand
+      ? {
+          schoolName: brand.schoolName ?? undefined,
+          primaryColor: brand.primaryColor ?? undefined,
+          secondaryColor: brand.secondaryColor ?? undefined,
+          phone: brand.phone ?? undefined,
+          website: brand.website ?? undefined,
+          tagline: brand.tagline ?? undefined,
+        }
+      : undefined,
+    size,
+  });
 
   try {
-    return await callGenerateImages(finalPrompt, aspectRatio);
+    return await callGenerateImages(enhancedPrompt, aspectRatio);
   } catch (err: any) {
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini logo branding failed: ${msg}`);

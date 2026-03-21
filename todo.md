@@ -8626,3 +8626,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Fix all generate/generateWithLogo mutations to do same
 - [ ] Fix "Open in Creative" to pass image via router state and pre-load Edit tab
 - [ ] KaiCreative.tsx reads location.state to pre-load image in Edit Image tab
+
+## Kai Creative Prompt Engine (Mar 21, 2026)
+- [ ] Build kaiPromptEngine.ts with enhancePrompt(), style presets, program awareness
+- [ ] Style presets: energetic, premium, luxury, kids_playful, high_converting_ad
+- [ ] Program awareness: Little Ninjas, Adult Karate, Self Defense, Belt Test, etc.
+- [ ] Layout rules enforced in every prompt (headline, CTA, spacing, readability)
+- [ ] Integrate prompt engine into kaiCreativeRouter all generation paths
+- [ ] Add style preset selector UI to KaiCreative.tsx Studio tab
+- [ ] Add style preset detection to generateFromChat (parsed from user message)
