@@ -448,25 +448,35 @@ export const kaiCreativeRouter = router({
 
       const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
 
-      // Auto-save to Creative Library
+      // Auto-save to Creative Library ONLY when S3 upload succeeded.
+      // If s3Url is null (e.g. Railway without Manus proxy), skip the DB insert
+      // to avoid writing a massive base64 string into the url column.
       let assetId: number | null = null;
-      const db = await getDb();
-      if (db) {
-        const inserted = await db
-          .insert(creativeAssets)
-          .values({
-            orgId,
-            assetType: "generated",
-            name: `Chat — ${input.prompt.slice(0, 60)}`,
-            url: imageUrl,
-            storageKey: key,
-            prompt: input.prompt,
-            outputSize: input.size,
-            mimeType: result.mimeType,
-            createdBy: ctx.user?.id ?? null,
-          })
-          .$returningId();
-        assetId = (inserted as any)?.[0]?.id ?? null;
+      let savedToLibrary = false;
+      if (s3Url && key) {
+        const db = await getDb();
+        if (db) {
+          try {
+            const inserted = await db
+              .insert(creativeAssets)
+              .values({
+                orgId,
+                assetType: "generated",
+                name: `Chat — ${input.prompt.slice(0, 60)}`,
+                url: s3Url,          // always a real URL, never base64
+                storageKey: key,
+                prompt: input.prompt,
+                outputSize: input.size,
+                mimeType: result.mimeType,
+                createdBy: ctx.user?.id ?? null,
+              })
+              .$returningId();
+            assetId = (inserted as any)?.[0]?.id ?? null;
+            savedToLibrary = true;
+          } catch (dbErr: any) {
+            console.warn("[KaiCreative] DB insert skipped:", dbErr?.message ?? dbErr);
+          }
+        }
       }
 
       return {
@@ -476,7 +486,7 @@ export const kaiCreativeRouter = router({
         prompt: input.prompt,
         size: input.size,
         assetId,
-        savedToLibrary: db !== null,
+        savedToLibrary,
       };
     }),
 });

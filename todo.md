@@ -8607,3 +8607,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Map rack_card/4x9/postcard/4x6/brochure → flyer
 - [x] Update ack message: "Got it — I'm creating a rack card style flyer now."
 - [x] Preserve original user intent in prompt string passed to API
+
+## generateFromChat DB Insert Fix (Mar 21, 2026)
+- [x] Guard DB insert with s3Url && key check — skip when S3 unavailable
+- [x] Never write base64 data URL into url column
+- [x] Wrap DB insert in try/catch to prevent crash from propagating
+- [x] savedToLibrary now reflects actual DB save success
