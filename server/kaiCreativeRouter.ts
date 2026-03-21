@@ -71,19 +71,26 @@ async function getBrandDataForOrg(orgId: number): Promise<
   }
 }
 
-// ── Helper: save generated image bytes to S3 ─────────────────────────────────
+// ── Helper: save generated image bytes to S3 (optional — skipped if credentials missing) ─────
 
 async function saveImageToS3(
   imageBase64: string,
   mimeType: string,
   orgId: number,
   label: string
-): Promise<{ url: string; key: string }> {
+): Promise<{ url: string | null; key: string | null }> {
   const ext = mimeType.includes("jpeg") ? "jpg" : "png";
   const key = `creative/${orgId}/${Date.now()}-${label}.${ext}`;
   const buffer = Buffer.from(imageBase64, "base64");
-  const { url } = await storagePut(key, buffer, mimeType);
-  return { url, key };
+  try {
+    const { url } = await storagePut(key, buffer, mimeType);
+    return { url, key };
+  } catch (err: any) {
+    // Storage not available (e.g. Railway deployment without Manus proxy)
+    // Return null URL — the caller will use base64 data URL instead
+    console.warn("[KaiCreative] S3 upload skipped:", err?.message ?? err);
+    return { url: null, key: null };
+  }
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────
@@ -110,31 +117,36 @@ export const kaiCreativeRouter = router({
         brand ?? undefined
       );
 
-      const { url, key } = await saveImageToS3(
+      const { url: s3Url, key } = await saveImageToS3(
         result.imageBase64,
         result.mimeType,
         orgId,
         "gen"
       );
 
-      // Auto-save to asset library
-      const db = await getDb();
-      if (db) {
-        await db.insert(creativeAssets).values({
-          orgId,
-          assetType: "generated",
-          name: input.assetName ?? `Generated — ${new Date().toLocaleDateString()}`,
-          url,
-          storageKey: key,
-          prompt: input.prompt,
-          outputSize: input.size,
-          mimeType: result.mimeType,
-          createdBy: ctx.user?.id ?? null,
-        });
+      // Use S3 URL if available, otherwise fall back to base64 data URL
+      const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+
+      // Auto-save to asset library (only if S3 upload succeeded)
+      if (s3Url && key) {
+        const db = await getDb();
+        if (db) {
+          await db.insert(creativeAssets).values({
+            orgId,
+            assetType: "generated",
+            name: input.assetName ?? `Generated — ${new Date().toLocaleDateString()}`,
+            url: s3Url,
+            storageKey: key,
+            prompt: input.prompt,
+            outputSize: input.size,
+            mimeType: result.mimeType,
+            createdBy: ctx.user?.id ?? null,
+          });
+        }
       }
 
       return {
-        imageUrl: url,
+        imageUrl,
         imageBase64: result.imageBase64,
         mimeType: result.mimeType,
         prompt: input.prompt,
@@ -166,30 +178,34 @@ export const kaiCreativeRouter = router({
         brand ?? undefined
       );
 
-      const { url, key } = await saveImageToS3(
+      const { url: s3Url, key } = await saveImageToS3(
         result.imageBase64,
         result.mimeType,
         orgId,
         "logo-gen"
       );
 
-      const db = await getDb();
-      if (db) {
-        await db.insert(creativeAssets).values({
-          orgId,
-          assetType: "generated",
-          name: input.assetName ?? `Logo Design — ${new Date().toLocaleDateString()}`,
-          url,
-          storageKey: key,
-          prompt: input.prompt,
-          outputSize: input.size,
-          mimeType: result.mimeType,
-          createdBy: ctx.user?.id ?? null,
-        });
+      const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+
+      if (s3Url && key) {
+        const db = await getDb();
+        if (db) {
+          await db.insert(creativeAssets).values({
+            orgId,
+            assetType: "generated",
+            name: input.assetName ?? `Logo Design — ${new Date().toLocaleDateString()}`,
+            url: s3Url,
+            storageKey: key,
+            prompt: input.prompt,
+            outputSize: input.size,
+            mimeType: result.mimeType,
+            createdBy: ctx.user?.id ?? null,
+          });
+        }
       }
 
       return {
-        imageUrl: url,
+        imageUrl,
         imageBase64: result.imageBase64,
         mimeType: result.mimeType,
         prompt: input.prompt,
@@ -221,30 +237,34 @@ export const kaiCreativeRouter = router({
         brand ?? undefined
       );
 
-      const { url, key } = await saveImageToS3(
+      const { url: s3Url, key } = await saveImageToS3(
         result.imageBase64,
         result.mimeType,
         orgId,
         "edit"
       );
 
-      const db = await getDb();
-      if (db) {
-        await db.insert(creativeAssets).values({
-          orgId,
-          assetType: "generated",
-          name: input.assetName ?? `Edited — ${new Date().toLocaleDateString()}`,
-          url,
-          storageKey: key,
-          prompt: input.prompt,
-          outputSize: input.size,
-          mimeType: result.mimeType,
-          createdBy: ctx.user?.id ?? null,
-        });
+      const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+
+      if (s3Url && key) {
+        const db = await getDb();
+        if (db) {
+          await db.insert(creativeAssets).values({
+            orgId,
+            assetType: "generated",
+            name: input.assetName ?? `Edited — ${new Date().toLocaleDateString()}`,
+            url: s3Url,
+            storageKey: key,
+            prompt: input.prompt,
+            outputSize: input.size,
+            mimeType: result.mimeType,
+            createdBy: ctx.user?.id ?? null,
+          });
+        }
       }
 
       return {
-        imageUrl: url,
+        imageUrl,
         imageBase64: result.imageBase64,
         mimeType: result.mimeType,
         prompt: input.prompt,
@@ -269,7 +289,17 @@ export const kaiCreativeRouter = router({
       const buffer = Buffer.from(input.base64Data, "base64");
       const ext = input.mimeType.split("/")[1] ?? "png";
       const key = `creative/${orgId}/${input.assetType}/${Date.now()}.${ext}`;
-      const { url } = await storagePut(key, buffer, input.mimeType);
+
+      let uploadUrl: string;
+      let uploadKey: string | null = null;
+      try {
+        const result = await storagePut(key, buffer, input.mimeType);
+        uploadUrl = result.url;
+        uploadKey = result.key;
+      } catch {
+        // No storage proxy available — use base64 data URL
+        uploadUrl = `data:${input.mimeType};base64,${input.base64Data}`;
+      }
 
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -278,15 +308,15 @@ export const kaiCreativeRouter = router({
         orgId,
         assetType: input.assetType,
         name: input.name,
-        url,
-        storageKey: key,
+        url: uploadUrl,
+        storageKey: uploadKey,
         mimeType: input.mimeType,
         fileSizeBytes: buffer.length,
         tags: input.tags ? JSON.stringify(input.tags) : null,
         createdBy: ctx.user?.id ?? null,
       });
 
-      return { url, key };
+      return { url: uploadUrl, key: uploadKey ?? key };
     }),
 
   // ── List assets ────────────────────────────────────────────────────────────
