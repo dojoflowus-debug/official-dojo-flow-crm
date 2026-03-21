@@ -1915,7 +1915,7 @@ export const creativeAssets = mysqlTable("creative_assets", {
   orgId: int("org_id").notNull(),
   assetType: varchar("asset_type", { length: 50 }).notNull(), // "generated" | "uploaded_logo" | "uploaded_photo" | "uploaded_other"
   name: varchar({ length: 255 }).notNull(),
-  url: text().notNull(),
+  url: mediumtext().notNull(), // supports both regular URLs and base64 data URLs (up to 16MB)
   storageKey: varchar("storage_key", { length: 500 }),
   prompt: text(),
   templateId: varchar("template_id", { length: 100 }),

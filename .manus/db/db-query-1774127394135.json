@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `creative_assets` (\n  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,\n  `org_id` int NOT NULL,\n  `asset_type` varchar(50) NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `url` mediumtext NOT NULL,\n  `storage_key` varchar(500),\n  `prompt` text,\n  `template_id` varchar(100),\n  `output_size` varchar(50),\n  `mime_type` varchar(100) DEFAULT 'image/png',\n  `file_size_bytes` int,\n  `is_favorited` int NOT NULL DEFAULT 0,\n  `tags` text,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  `created_by` int,\n  INDEX `idx_creative_assets_org` (`org_id`),\n  INDEX `idx_creative_assets_type` (`org_id`, `asset_type`),\n  INDEX `idx_creative_assets_created` (`org_id`, `created_at`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute CREATE TABLE IF NOT EXISTS `creative_assets` (\n  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,\n  `org_id` int NOT NULL,\n  `asset_type` varchar(50) NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `url` mediumtext NOT NULL,\n  `storage_key` varchar(500),\n  `prompt` text,\n  `template_id` varchar(100),\n  `output_size` varchar(50),\n  `mime_type` varchar(100) DEFAULT 'image/png',\n  `file_size_bytes` int,\n  `is_favorited` int NOT NULL DEFAULT 0,\n  `tags` text,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  `created_by` int,\n  INDEX `idx_creative_assets_org` (`org_id`),\n  INDEX `idx_creative_assets_type` (`org_id`, `asset_type`),\n  INDEX `idx_creative_assets_created` (`org_id`, `created_at`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 118
+}

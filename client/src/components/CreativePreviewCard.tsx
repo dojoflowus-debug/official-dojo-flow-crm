@@ -51,15 +51,36 @@ export function CreativePreviewCard({ data, onRetry, onEdit }: CreativePreviewCa
   };
 
   const handleOpenInCreative = () => {
-    navigate("/kai/creative");
+    navigate("/kai/creative", {
+      state: {
+        preloadImage: {
+          imageUrl: data.imageUrl,
+          imageBase64: data.imageBase64,
+          mimeType: data.mimeType,
+          prompt: data.prompt,
+          size: data.size,
+          tab: "create",
+        },
+      },
+    });
   };
 
   const handleEdit = () => {
     if (onEdit) {
       onEdit(data);
     } else {
-      // Navigate to Creative with edit state encoded in URL
-      navigate("/kai/creative");
+      navigate("/kai/creative", {
+        state: {
+          preloadImage: {
+            imageUrl: data.imageUrl,
+            imageBase64: data.imageBase64,
+            mimeType: data.mimeType,
+            prompt: data.prompt,
+            size: data.size,
+            tab: "edit",
+          },
+        },
+      });
     }
   };
 

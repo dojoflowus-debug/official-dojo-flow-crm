@@ -9,7 +9,8 @@
  * Plus an Asset Library tab for saved images.
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -159,6 +160,43 @@ export default function KaiCreative() {
 
   // Tabs
   const [activeTab, setActiveTab] = useState<"studio" | "library">("studio");
+
+  // Router state — pre-load image from Kai chat "Open in Creative" / "Edit"
+  const location = useLocation();
+  useEffect(() => {
+    const state = location.state as {
+      preloadImage?: {
+        imageUrl: string;
+        imageBase64: string;
+        mimeType: string;
+        prompt: string;
+        size: ImageSize;
+        tab: "create" | "edit";
+      };
+    } | null;
+    if (!state?.preloadImage) return;
+    const img = state.preloadImage;
+    setPrompt(img.prompt ?? "");
+    setSize(img.size ?? "instagram_post");
+    setResult({
+      imageUrl: img.imageUrl,
+      imageBase64: img.imageBase64,
+      mimeType: img.mimeType,
+      prompt: img.prompt,
+      size: img.size,
+    });
+    if (img.tab === "edit") {
+      setMode("edit");
+      setSourceBase64(img.imageBase64);
+      setSourceMimeType(img.mimeType);
+      setSourcePreview(img.imageUrl);
+    } else {
+      setMode("create");
+    }
+    setActiveTab("studio");
+    // Clear state so refreshing doesn't re-trigger
+    window.history.replaceState({}, "");
+  }, [location.state]);
 
   // ── tRPC mutations ──────────────────────────────────────────────────────────
 

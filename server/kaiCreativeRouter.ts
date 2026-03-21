@@ -128,21 +128,24 @@ export const kaiCreativeRouter = router({
       // Use S3 URL if available, otherwise fall back to base64 data URL
       const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
 
-      // Auto-save to asset library (only if S3 upload succeeded)
-      if (s3Url && key) {
-        const db = await getDb();
-        if (db) {
-          await db.insert(creativeAssets).values({
+      // Always save to Creative Library (base64 fallback when S3 unavailable)
+      const _genUrlToStore = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+      const _genDb = await getDb();
+      if (_genDb) {
+        try {
+          await _genDb.insert(creativeAssets).values({
             orgId,
             assetType: "generated",
             name: input.assetName ?? `Generated — ${new Date().toLocaleDateString()}`,
-            url: s3Url,
-            storageKey: key,
+            url: _genUrlToStore,
+            storageKey: key ?? null,
             prompt: input.prompt,
             outputSize: input.size,
             mimeType: result.mimeType,
             createdBy: ctx.user?.id ?? null,
           });
+        } catch (e: any) {
+          console.warn("[KaiCreative] generate DB insert failed:", e?.message);
         }
       }
 
@@ -188,20 +191,24 @@ export const kaiCreativeRouter = router({
 
       const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
 
-      if (s3Url && key) {
-        const db = await getDb();
-        if (db) {
-          await db.insert(creativeAssets).values({
+      // Always save to Creative Library (base64 fallback when S3 unavailable)
+      const _logoUrlToStore = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+      const _logoDb = await getDb();
+      if (_logoDb) {
+        try {
+          await _logoDb.insert(creativeAssets).values({
             orgId,
             assetType: "generated",
             name: input.assetName ?? `Logo Design — ${new Date().toLocaleDateString()}`,
-            url: s3Url,
-            storageKey: key,
+            url: _logoUrlToStore,
+            storageKey: key ?? null,
             prompt: input.prompt,
             outputSize: input.size,
             mimeType: result.mimeType,
             createdBy: ctx.user?.id ?? null,
           });
+        } catch (e: any) {
+          console.warn("[KaiCreative] generateWithLogo DB insert failed:", e?.message);
         }
       }
 
@@ -247,20 +254,24 @@ export const kaiCreativeRouter = router({
 
       const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
 
-      if (s3Url && key) {
-        const db = await getDb();
-        if (db) {
-          await db.insert(creativeAssets).values({
+      // Always save to Creative Library (base64 fallback when S3 unavailable)
+      const _editUrlToStore = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+      const _editDb = await getDb();
+      if (_editDb) {
+        try {
+          await _editDb.insert(creativeAssets).values({
             orgId,
             assetType: "generated",
             name: input.assetName ?? `Edited — ${new Date().toLocaleDateString()}`,
-            url: s3Url,
-            storageKey: key,
+            url: _editUrlToStore,
+            storageKey: key ?? null,
             prompt: input.prompt,
             outputSize: input.size,
             mimeType: result.mimeType,
             createdBy: ctx.user?.id ?? null,
           });
+        } catch (e: any) {
+          console.warn("[KaiCreative] edit DB insert failed:", e?.message);
         }
       }
 
@@ -448,34 +459,33 @@ export const kaiCreativeRouter = router({
 
       const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
 
-      // Auto-save to Creative Library ONLY when S3 upload succeeded.
-      // If s3Url is null (e.g. Railway without Manus proxy), skip the DB insert
-      // to avoid writing a massive base64 string into the url column.
+      // Always save to Creative Library.
+      // If S3 is available, store the CDN URL. Otherwise store the base64 data URL
+      // (url column is MEDIUMTEXT, supports up to 16MB).
+      const urlToStore = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
       let assetId: number | null = null;
       let savedToLibrary = false;
-      if (s3Url && key) {
-        const db = await getDb();
-        if (db) {
-          try {
-            const inserted = await db
-              .insert(creativeAssets)
-              .values({
-                orgId,
-                assetType: "generated",
-                name: `Chat — ${input.prompt.slice(0, 60)}`,
-                url: s3Url,          // always a real URL, never base64
-                storageKey: key,
-                prompt: input.prompt,
-                outputSize: input.size,
-                mimeType: result.mimeType,
-                createdBy: ctx.user?.id ?? null,
-              })
-              .$returningId();
-            assetId = (inserted as any)?.[0]?.id ?? null;
-            savedToLibrary = true;
-          } catch (dbErr: any) {
-            console.warn("[KaiCreative] DB insert skipped:", dbErr?.message ?? dbErr);
-          }
+      const dbConn = await getDb();
+      if (dbConn) {
+        try {
+          const inserted = await dbConn
+            .insert(creativeAssets)
+            .values({
+              orgId,
+              assetType: "generated",
+              name: `Chat — ${input.prompt.slice(0, 60)}`,
+              url: urlToStore,
+              storageKey: key ?? null,
+              prompt: input.prompt,
+              outputSize: input.size,
+              mimeType: result.mimeType,
+              createdBy: ctx.user?.id ?? null,
+            })
+            .$returningId();
+          assetId = (inserted as any)?.[0]?.id ?? null;
+          savedToLibrary = true;
+        } catch (dbErr: any) {
+          console.warn("[KaiCreative] DB insert failed:", dbErr?.message ?? dbErr);
         }
       }
 

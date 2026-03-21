@@ -682,12 +682,34 @@ function CreativeImagePanel({ image, onClose }: { image: CreativeImagePanelData;
 
   const handleOpenInCreative = () => {
     onClose();
-    navigate("/kai/creative");
+    navigate("/kai/creative", {
+      state: {
+        preloadImage: {
+          imageUrl: image.imageUrl,
+          imageBase64: image.imageBase64,
+          mimeType: image.mimeType,
+          prompt: image.prompt,
+          size: image.size,
+          tab: "create",
+        },
+      },
+    });
   };
 
   const handleEdit = () => {
     onClose();
-    navigate("/kai/creative");
+    navigate("/kai/creative", {
+      state: {
+        preloadImage: {
+          imageUrl: image.imageUrl,
+          imageBase64: image.imageBase64,
+          mimeType: image.mimeType,
+          prompt: image.prompt,
+          size: image.size,
+          tab: "edit",
+        },
+      },
+    });
   };
 
   return (

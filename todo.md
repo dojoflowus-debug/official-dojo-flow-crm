@@ -8619,3 +8619,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wire click on chat CreativePreviewCard to open third panel
 - [x] Render full CreativePreviewCard in third panel with Download/Edit/Retry/Open in Creative
 - [x] Third panel shows image full-size with action buttons
+
+## Creative Library + Open in Creative Fix (Mar 21, 2026)
+- [ ] Save generated images to DB as base64 when S3 unavailable (Railway fallback)
+- [ ] Fix generateFromChat to always insert into creative_assets DB (with base64 url column)
+- [ ] Fix all generate/generateWithLogo mutations to do same
+- [ ] Fix "Open in Creative" to pass image via router state and pre-load Edit tab
+- [ ] KaiCreative.tsx reads location.state to pre-load image in Edit Image tab
