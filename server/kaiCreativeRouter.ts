@@ -10,6 +10,7 @@
  *  deleteAsset      — delete an asset
  *  toggleFavorite   — favorite/unfavorite an asset
  *  getBrandData     — get brand data for UI display
+ *  generateFromChat  — called from Kai chat; detects intent, generates, auto-saves, returns preview card payload
  */
 
 import { z } from "zod";
@@ -399,4 +400,83 @@ export const kaiCreativeRouter = router({
   getBrandData: orgScopedProcedure.query(async ({ ctx }) => {
     return getBrandDataForOrg(ctx.currentOrganizationId as number);
   }),
+
+  // ── generateFromChat: unified pipeline called from Kai chat ───────────────
+  // Accepts a text prompt (and optional uploaded source image for edit mode),
+  // generates via Gemini, auto-saves to Creative Library, and returns a
+  // preview card payload the chat UI renders as a CreativePreviewCard.
+  generateFromChat: orgScopedProcedure
+    .input(
+      z.object({
+        prompt: z.string().min(3).max(2000),
+        size: imageSizeSchema.default("instagram_post"),
+        // Optional source image for edit mode (uploaded from chat)
+        sourceImageBase64: z.string().optional(),
+        sourceMimeType: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const brand = await getBrandDataForOrg(orgId);
+
+      let result: { imageBase64: string; mimeType: string };
+
+      if (input.sourceImageBase64) {
+        // Edit mode — source image was uploaded in chat
+        result = await editImage(
+          input.prompt,
+          input.sourceImageBase64,
+          input.sourceMimeType ?? "image/png",
+          input.size as ImageSize,
+          brand
+        );
+      } else {
+        // Generate mode — text prompt only
+        result = await generateImage(
+          input.prompt,
+          input.size as ImageSize,
+          brand
+        );
+      }
+
+      const { url: s3Url, key } = await saveImageToS3(
+        result.imageBase64,
+        result.mimeType,
+        orgId,
+        "chat-gen"
+      );
+
+      const imageUrl = s3Url ?? `data:${result.mimeType};base64,${result.imageBase64}`;
+
+      // Auto-save to Creative Library
+      let assetId: number | null = null;
+      const db = await getDb();
+      if (db) {
+        const inserted = await db
+          .insert(creativeAssets)
+          .values({
+            orgId,
+            assetType: "generated",
+            name: `Chat — ${input.prompt.slice(0, 60)}`,
+            url: imageUrl,
+            storageKey: key,
+            prompt: input.prompt,
+            outputSize: input.size,
+            mimeType: result.mimeType,
+            createdBy: ctx.user?.id ?? null,
+          })
+          .$returningId();
+        assetId = (inserted as any)?.[0]?.id ?? null;
+      }
+
+      return {
+        imageUrl,
+        imageBase64: result.imageBase64,
+        mimeType: result.mimeType,
+        prompt: input.prompt,
+        size: input.size,
+        assetId,
+        savedToLibrary: db !== null,
+      };
+    }),
 });

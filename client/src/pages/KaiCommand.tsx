@@ -29,6 +29,7 @@ import VoicePacedMessage from '@/components/VoicePacedMessage';
 import { KaiErrorAlert } from '@/components/KaiErrorAlert';
 import { BetaNoticeModal } from '@/components/BetaNoticeModal';
 import { KaiLoadingAnimation } from '@/components/KaiLoadingAnimation';
+import { CreativePreviewCard, type CreativePreviewCardData } from '@/components/CreativePreviewCard';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { useKaiOnboarding } from '@/hooks/useKaiOnboarding';
@@ -136,6 +137,8 @@ interface Message {
     student?: any; // Full student data for inline rendering
     label: string;
   }>;
+  /** Creative image card — rendered when Kai generates an image from chat */
+  creativeImage?: CreativePreviewCardData;
 }
 
 // Attachment type
@@ -1500,6 +1503,9 @@ export default function KaiCommand() {
 
   // Upload mutation
   const uploadMutation = trpc.upload.uploadAttachment.useMutation();
+
+  // Kai Creative — generate image from chat
+  const generateFromChatMutation = trpc.kaiCreative.generateFromChat.useMutation();
   
   // Schedule extraction mutations
   const extractScheduleMutation = trpc.kai.scheduleExtractor.extractSchedule.useMutation();
@@ -2139,6 +2145,163 @@ export default function KaiCommand() {
       return;
     }
     // --- END TUTORIAL COMMAND INTERCEPT ---
+
+    // --- KAI CREATIVE IMAGE INTENT INTERCEPT ---
+    // Detect image-generation prompts and route them to Kai Creative pipeline
+    const imageKeywords = [
+      /\b(create|generate|make|design|draw|build|produce)\b.*\b(image|photo|picture|flyer|poster|banner|graphic|ad|advertisement|logo|visual|artwork|illustration)\b/i,
+      /\b(image|photo|picture|flyer|poster|banner|graphic|ad|advertisement|visual|artwork|illustration)\b.*\b(create|generate|make|design|draw|build|produce|for|of|about)\b/i,
+      /\b(instagram|facebook|social media)\b.*\b(post|story|ad|banner|image|graphic)\b/i,
+      /\b(marketing|promotional|promo)\b.*\b(image|flyer|poster|banner|graphic|ad)\b/i,
+    ];
+    const isImageRequest = inputText.trim().length > 5 && imageKeywords.some(rx => rx.test(inputText.trim()));
+
+    // --- UPLOADED IMAGE → CREATIVE EDIT ROUTE ---
+    // If user uploaded an image and provided a text prompt, route to Creative edit pipeline
+    const imageAttachments = inputAttachments.filter(att => att.fileType?.startsWith('image/') && att.url && !att.uploading && !att.error);
+    if (imageAttachments.length > 0 && inputText.trim().length > 2) {
+      const firstImage = imageAttachments[0];
+      // Convert image URL to base64 for the API
+      const fetchBase64 = async (url: string): Promise<string> => {
+        if (url.startsWith('data:')) {
+          return url.split(',')[1];
+        }
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      const userMsg: Message = {
+        id: (messageIdCounterRef.current++).toString(),
+        role: 'user',
+        content: inputText.trim(),
+        timestamp: new Date(),
+        attachments: [...inputAttachments],
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setMessageInput('');
+      setAttachments([]);
+      setIsLoading(true);
+
+      const ackMsg: Message = {
+        id: (messageIdCounterRef.current++).toString(),
+        role: 'assistant',
+        content: `Got your image! Editing it now — this takes about 10–15 seconds.`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, ackMsg]);
+
+      try {
+        const base64 = await fetchBase64(firstImage.url);
+        const result = await generateFromChatMutation.mutateAsync({
+          prompt: inputText.trim(),
+          size: 'instagram_post',
+          sourceImageBase64: base64,
+          sourceMimeType: firstImage.fileType || 'image/png',
+        });
+
+        const cardData: CreativePreviewCardData = {
+          imageUrl: result.imageUrl,
+          imageBase64: result.imageBase64,
+          mimeType: result.mimeType,
+          prompt: result.prompt,
+          size: result.size,
+          assetId: result.assetId,
+          savedToLibrary: result.savedToLibrary,
+        };
+
+        const creativeMsg: Message = {
+          id: (messageIdCounterRef.current++).toString(),
+          role: 'assistant',
+          content: result.savedToLibrary
+            ? `Here's your edited image! Saved to Creative Library.`
+            : `Here's your edited image!`,
+          timestamp: new Date(),
+          creativeImage: cardData,
+        };
+        setMessages(prev => [...prev, creativeMsg]);
+      } catch (err: any) {
+        const errMsg: Message = {
+          id: (messageIdCounterRef.current++).toString(),
+          role: 'assistant',
+          content: `Sorry, I couldn't edit that image: ${err?.message ?? 'Unknown error'}. You can also try the Edit Image tab in Kai Creative.`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errMsg]);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+    // --- END UPLOADED IMAGE ROUTE ---
+
+    if (isImageRequest && inputAttachments.length === 0) {
+      // Add user message to chat immediately
+      const userMsg: Message = {
+        id: (messageIdCounterRef.current++).toString(),
+        role: 'user',
+        content: inputText.trim(),
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setMessageInput('');
+      setAttachments([]);
+      setIsLoading(true);
+
+      // Add Kai acknowledgment message
+      const ackMsg: Message = {
+        id: (messageIdCounterRef.current++).toString(),
+        role: 'assistant',
+        content: `On it! Creating your image now — this takes about 10–15 seconds. I'll auto-save it to your Creative Library.`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, ackMsg]);
+
+      try {
+        const result = await generateFromChatMutation.mutateAsync({
+          prompt: inputText.trim(),
+          size: 'instagram_post',
+        });
+
+        const cardData: CreativePreviewCardData = {
+          imageUrl: result.imageUrl,
+          imageBase64: result.imageBase64,
+          mimeType: result.mimeType,
+          prompt: result.prompt,
+          size: result.size,
+          assetId: result.assetId,
+          savedToLibrary: result.savedToLibrary,
+        };
+
+        const creativeMsg: Message = {
+          id: (messageIdCounterRef.current++).toString(),
+          role: 'assistant',
+          content: result.savedToLibrary
+            ? `Here's your image! It's been saved to your Creative Library.`
+            : `Here's your image! Tap Download to save it.`,
+          timestamp: new Date(),
+          creativeImage: cardData,
+        };
+        setMessages(prev => [...prev, creativeMsg]);
+      } catch (err: any) {
+        const errMsg: Message = {
+          id: (messageIdCounterRef.current++).toString(),
+          role: 'assistant',
+          content: `Sorry, I couldn't generate that image: ${err?.message ?? 'Unknown error'}. Try rephrasing or visit Kai Creative directly.`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errMsg]);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+    // --- END IMAGE INTENT INTERCEPT ---
 
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
@@ -3752,6 +3915,23 @@ export default function KaiCommand() {
                                     ← Back
                                   </button>
                                 )}
+                              </div>
+                            )}
+
+                            {/* Render Creative Image Card */}
+                            {message.creativeImage && (
+                              <div className="mt-3">
+                                <CreativePreviewCard
+                                  data={message.creativeImage}
+                                  onRetry={() => {
+                                    // Re-trigger generation with same prompt
+                                    handleSendMessage(message.creativeImage!.prompt, 'retry');
+                                  }}
+                                  onEdit={(data) => {
+                                    // Navigate to Creative with edit pre-loaded
+                                    navigate('/kai/creative');
+                                  }}
+                                />
                               </div>
                             )}
 

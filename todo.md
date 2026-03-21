@@ -8591,3 +8591,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Rebuild KaiCreative.tsx — text prompt, size selector, logo upload, image upload for edits
 - [ ] Wire brand assets auto-injection (logo, colors, school name, phone, website)
 - [ ] Export sizes: Instagram Post (1:1), Story (9:16), Facebook Ad (4:5), Flyer (16:9), Banner (16:9)
+
+## Kai Chat → Creative Pipeline (Mar 21, 2026)
+- [x] Add `generateFromChat` tRPC endpoint to kaiCreativeRouter — image intent + generate + auto-save to library
+- [x] Build `CreativePreviewCard` component — preview image, Open in Creative, Edit, Retry, Download buttons
+- [x] Add `creative_image` block type to UIBlockRenderer
+- [x] Add image intent detection in KaiCommand.tsx handleSendMessage — intercept before AI call
+- [x] Wire generateFromChat mutation in KaiCommand.tsx
+- [x] Handle uploaded images from chat → route into Creative edit mode
+- [x] Add shared image pipeline utility (detectImageIntent helper)
