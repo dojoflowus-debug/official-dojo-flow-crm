@@ -2177,44 +2177,51 @@ export default function KaiCommand() {
       return 'unknown';
     };
 
-    // Parse format/size from the prompt — maps natural language to Creative export presets
-    const parseFormatFromPrompt = (text: string): string => {
+    // Parse format/size from the prompt.
+    // IMPORTANT: Only return values the backend enum accepts:
+    //   instagram_post | instagram_story | facebook_ad | flyer | website_banner
+    // Natural-language formats like "rack card", "postcard", "brochure" all map to "flyer".
+    const parseSize = (text: string): string => {
       const t = text.toLowerCase();
-      if (t.includes('4x9') || t.includes('rack card')) return 'rack_card_4x9';
-      if (t.includes('4x6') || t.includes('postcard')) return 'postcard_4x6';
-      if (t.includes('instagram story') || t.includes('story')) return 'instagram_story';
-      if (t.includes('instagram post') || t.includes('instagram')) return 'instagram_post';
-      if (t.includes('facebook ad') || t.includes('facebook')) return 'facebook_ad';
-      if (t.includes('website banner') || t.includes('web banner')) return 'website_banner';
-      if (t.includes('flyer') || t.includes('poster')) return 'flyer';
-      if (t.includes('banner')) return 'banner';
-      if (t.includes('brochure')) return 'brochure';
-      return 'instagram_post'; // sensible default
+      // Rack card / postcard / brochure / general print → flyer
+      if (
+        t.includes('4x9') || t.includes('rack card') ||
+        t.includes('4x6') || t.includes('postcard') ||
+        t.includes('brochure') || t.includes('flyer') ||
+        t.includes('poster') || t.includes('print')
+      ) return 'flyer';
+      if (t.includes('instagram story') || t.includes('ig story')) return 'instagram_story';
+      if (t.includes('instagram post') || t.includes('ig post') || t.includes('instagram')) return 'instagram_post';
+      if (t.includes('facebook ad') || t.includes('fb ad') || t.includes('facebook')) return 'facebook_ad';
+      if (t.includes('website banner') || t.includes('web banner') || t.includes('banner')) return 'website_banner';
+      return 'flyer'; // safe default — never pass raw user text
     };
+    // Keep backward-compat alias used in the generation block below
+    const parseFormatFromPrompt = parseSize;
 
-    // Build a contextual ack message: "Got it. I'm creating a 4x9 rack card for Little Ninjas now."
+    // Build a human-friendly ack message based on what the user asked for.
+    // Uses the *original* user text to detect intent labels (e.g. "rack card style flyer")
+    // while parseSize() handles the actual enum mapping separately.
     const buildCreativeAck = (text: string): string => {
-      const formatLabels: Record<string, string> = {
-        rack_card_4x9: '4x9 rack card',
-        postcard_4x6: '4x6 postcard',
-        instagram_story: 'Instagram Story',
-        instagram_post: 'Instagram Post',
-        facebook_ad: 'Facebook Ad',
-        website_banner: 'website banner',
-        flyer: 'flyer',
-        banner: 'banner',
-        brochure: 'brochure',
-      };
-      const fmt = parseFormatFromPrompt(text);
-      const label = formatLabels[fmt] ?? 'image';
       const t = text.toLowerCase();
-      const programMatch = t.match(/for\s+([a-z][a-z\s]{1,38}?)(?:\s+(?:program|class|camp|students|kids|adults|class))?(?:[.,]|$)/i);
+      // Derive a human label from the *original* text, not the enum value
+      let humanLabel = 'image';
+      if (t.includes('4x9') || t.includes('rack card')) humanLabel = 'rack card style flyer';
+      else if (t.includes('4x6') || t.includes('postcard')) humanLabel = 'postcard style flyer';
+      else if (t.includes('brochure')) humanLabel = 'brochure style flyer';
+      else if (t.includes('instagram story') || t.includes('ig story')) humanLabel = 'Instagram Story';
+      else if (t.includes('instagram post') || t.includes('ig post') || t.includes('instagram')) humanLabel = 'Instagram Post';
+      else if (t.includes('facebook ad') || t.includes('fb ad') || t.includes('facebook')) humanLabel = 'Facebook Ad';
+      else if (t.includes('website banner') || t.includes('web banner') || t.includes('banner')) humanLabel = 'website banner';
+      else if (t.includes('flyer') || t.includes('poster')) humanLabel = 'flyer';
+      // Extract program name after "for"
+      const programMatch = t.match(/for\s+([a-z][a-z\s]{1,38}?)(?:\s+(?:program|class|camp|students|kids|adults))?(?:[.,]|$)/i);
       const program = programMatch ? programMatch[1].trim() : null;
       if (program && program.length >= 2 && program.length < 40) {
         const cap = program.charAt(0).toUpperCase() + program.slice(1);
-        return `Got it. I’m creating a ${label} for ${cap} now — this takes about 10–15 seconds. I’ll save it to your Creative Library.`;
+        return `Got it — I’m creating a ${humanLabel} for ${cap} now. This takes about 10–15 seconds.`;
       }
-      return `Got it. I’m building that ${label} now — this takes about 10–15 seconds. I’ll save it to your Creative Library.`;
+      return `Got it — I’m creating that ${humanLabel} now. This takes about 10–15 seconds.`;
     };
 
     const hasImageAttachments = inputAttachments.some(

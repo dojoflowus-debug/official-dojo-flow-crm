@@ -8600,3 +8600,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Wire generateFromChat mutation in KaiCommand.tsx
 - [x] Handle uploaded images from chat → route into Creative edit mode
 - [x] Add shared image pipeline utility (detectImageIntent helper)
+
+## Size Mapping Fix (Mar 21, 2026)
+- [x] Replace parseFormatFromPrompt with parseSize() — only return valid backend enum values
+- [x] Valid values: instagram_post, instagram_story, facebook_ad, flyer, website_banner
+- [x] Map rack_card/4x9/postcard/4x6/brochure → flyer
+- [x] Update ack message: "Got it — I'm creating a rack card style flyer now."
+- [x] Preserve original user intent in prompt string passed to API
