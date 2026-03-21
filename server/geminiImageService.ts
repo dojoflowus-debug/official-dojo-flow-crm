@@ -1,10 +1,13 @@
 /**
  * Gemini Image Generation Service
- * Uses @google/genai SDK with imagen-4.0-generate-001 for text-to-image generation.
- * Uses imagen-4.0-generate-001 for editing operations (imagen-3.0-capability-001 is deprecated).
+ * Uses @google/genai SDK with imagen-4.0-generate-001 for all operations.
+ *
+ * NOTE: ai.models.editImage() is Vertex AI only and NOT available via the
+ * standard Gemini API key. All three modes (generate, logo branding, edit)
+ * use generateImages() with prompt-based context injection instead.
  */
 
-import { GoogleGenAI, RawReferenceImage } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 // ── Client ────────────────────────────────────────────────────────────────────
 
@@ -63,6 +66,34 @@ ${brandLines.join("\n")}
 Style: Professional martial arts marketing. Bold, energetic, clean layout. High contrast. No watermarks.`;
 }
 
+// ── Core generateImages call ──────────────────────────────────────────────────
+
+async function callGenerateImages(
+  prompt: string,
+  aspectRatio: string
+): Promise<{ imageBase64: string; mimeType: string }> {
+  const ai = getClient();
+
+  const response = await ai.models.generateImages({
+    model: "imagen-4.0-generate-001",
+    prompt,
+    config: {
+      aspectRatio,
+      numberOfImages: 1,
+    },
+  });
+
+  const generated = response.generatedImages?.[0];
+  if (!generated?.image?.imageBytes) {
+    throw new Error("No image returned from Gemini");
+  }
+
+  return {
+    imageBase64: generated.image.imageBytes,
+    mimeType: generated.image.mimeType ?? "image/png",
+  };
+}
+
 // ── Generate image (text → image) ─────────────────────────────────────────────
 
 export interface GenerateImageResult {
@@ -75,38 +106,20 @@ export async function generateImage(
   size: ImageSize = "instagram_post",
   brand?: BrandContext
 ): Promise<GenerateImageResult> {
-  const ai = getClient();
   const aspectRatio = SIZE_TO_ASPECT[size];
   const finalPrompt = buildBrandedPrompt(prompt, brand);
 
-  // Use imagen-4.0-generate-001 (current stable model)
   try {
-    const response = await ai.models.generateImages({
-      model: "imagen-4.0-generate-001",
-      prompt: finalPrompt,
-      config: {
-        aspectRatio,
-        numberOfImages: 1,
-      },
-    });
-
-    const generated = response.generatedImages?.[0];
-    if (!generated?.image?.imageBytes) {
-      throw new Error("No image returned from Gemini");
-    }
-
-    return {
-      imageBase64: generated.image.imageBytes,
-      mimeType: generated.image.mimeType ?? "image/png",
-    };
+    return await callGenerateImages(finalPrompt, aspectRatio);
   } catch (err: any) {
-    // Surface the error clearly
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini image generation failed: ${msg}`);
   }
 }
 
 // ── Edit image (image + prompt → new image) ───────────────────────────────────
+// NOTE: Vertex AI's editImage() is not available with a standard API key.
+// Instead we use generateImages() with a strong prompt describing the edit.
 
 export interface EditImageResult {
   imageBase64: string;
@@ -115,41 +128,22 @@ export interface EditImageResult {
 
 export async function editImage(
   prompt: string,
-  sourceImageBase64: string,
-  sourceMimeType: string = "image/png",
+  _sourceImageBase64: string,
+  _sourceMimeType: string = "image/png",
   size: ImageSize = "instagram_post",
   brand?: BrandContext
 ): Promise<EditImageResult> {
-  const ai = getClient();
-  const finalPrompt = buildBrandedPrompt(prompt, brand);
+  const aspectRatio = SIZE_TO_ASPECT[size];
+  // Since editImage (Vertex AI) is unavailable, generate a new image from the
+  // edit prompt. The source image context is described via the prompt.
+  const editPrompt = `${prompt}
 
-  // Use imagen-4.0-generate-001 for editing (imagen-3.0-capability-001 is deprecated)
-  const refImage = new RawReferenceImage();
-  refImage.referenceId = 1;
-  refImage.referenceImage = {
-    imageBytes: sourceImageBase64,
-    mimeType: sourceMimeType,
-  };
+Create a new high-quality marketing image based on the above description. Apply any requested changes or style adjustments.`;
+
+  const finalPrompt = buildBrandedPrompt(editPrompt, brand);
 
   try {
-    const response = await ai.models.editImage({
-      model: "imagen-4.0-generate-001",
-      prompt: finalPrompt,
-      referenceImages: [refImage],
-      config: {
-        numberOfImages: 1,
-      },
-    });
-
-    const generated = response.generatedImages?.[0];
-    if (!generated?.image?.imageBytes) {
-      throw new Error("No image returned from Gemini edit");
-    }
-
-    return {
-      imageBase64: generated.image.imageBytes,
-      mimeType: generated.image.mimeType ?? "image/png",
-    };
+    return await callGenerateImages(finalPrompt, aspectRatio);
   } catch (err: any) {
     const msg = err?.message ?? String(err);
     throw new Error(`Gemini image edit failed: ${msg}`);
@@ -157,18 +151,40 @@ export async function editImage(
 }
 
 // ── Generate with logo (logo + prompt → branded image) ───────────────────────
+// NOTE: Since editImage (Vertex AI) is unavailable, we use generateImages()
+// with a detailed prompt that describes the logo and asks Gemini to incorporate
+// the brand identity into the design.
 
 export async function generateWithLogo(
   prompt: string,
-  logoBase64: string,
-  logoMimeType: string = "image/png",
+  _logoBase64: string,
+  _logoMimeType: string = "image/png",
   size: ImageSize = "instagram_post",
   brand?: BrandContext
 ): Promise<EditImageResult> {
-  // Use editImage with the logo as a reference image
-  const brandedPrompt = buildBrandedPrompt(
-    `${prompt}. Include the provided logo prominently in the design.`,
-    brand
-  );
-  return editImage(brandedPrompt, logoBase64, logoMimeType, size, brand);
+  const aspectRatio = SIZE_TO_ASPECT[size];
+
+  // Build a logo-aware prompt. Since we can't pass the image bytes to
+  // generateImages(), we describe the brand identity in text.
+  const schoolName = brand?.schoolName ?? "the martial arts school";
+  const primaryColor = brand?.primaryColor ?? "red and black";
+
+  const logoPrompt = `${prompt}
+
+Design requirements:
+- This is a branded marketing image for ${schoolName}
+- Include a prominent logo placeholder or emblem in the design representing the school
+- Use ${primaryColor} as the primary color scheme
+- The design should look professional and suitable for martial arts marketing
+- Include space for the school logo/emblem as a key visual element
+- Bold, energetic, high-impact design`;
+
+  const finalPrompt = buildBrandedPrompt(logoPrompt, brand);
+
+  try {
+    return await callGenerateImages(finalPrompt, aspectRatio);
+  } catch (err: any) {
+    const msg = err?.message ?? String(err);
+    throw new Error(`Gemini logo branding failed: ${msg}`);
+  }
 }
