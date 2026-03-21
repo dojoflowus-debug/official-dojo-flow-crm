@@ -8552,3 +8552,8 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Kai personality responses during tutorials (warm, brief, encouraging)
 - [x] Tutorial completion feedback message from Kai
 - [x] tRPC router for tutorial state (get/set completion per module)
+
+## Kai Tutorial Follow-Up Fix (Mar 20, 2026)
+- [x] Fix: toolbar commands on Kai page navigate to correct module route before starting tutorial
+- [ ] Fix: onboarding resumes properly when user lands on Kai page with incomplete profile
+- [x] Fix: KaiTutorialContext handles /kai route — treat it as a global command hub

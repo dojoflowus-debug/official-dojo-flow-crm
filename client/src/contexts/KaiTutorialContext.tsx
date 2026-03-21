@@ -120,7 +120,7 @@ const KaiTutorialContext = createContext<KaiTutorialContextType | undefined>(und
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function KaiTutorialProvider({ children }: { children: ReactNode }) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
 
   // Kai state engine (spec §2)
   const [kaiMode, setKaiMode] = useState<KaiMode>("idle");
@@ -188,19 +188,34 @@ export function KaiTutorialProvider({ children }: { children: ReactNode }) {
     }
   }, [location]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Auto-launch on first visit (spec §3) ─────────────────────────────────────
+  // ── Auto-launch on first visit (spec §3) ──────────────────────────────────────────────────
 
   useEffect(() => {
     if (!activeModule) return;
     if (isRunningRef.current) return;
     if (completedModules[activeModule]) return;
-    if (!tutorialStatus.isFetched) return;
 
-    const t = setTimeout(() => {
-      startTutorial(activeModule);
-    }, 1500);
-    return () => clearTimeout(t);
-  }, [activeModule, tutorialStatus.isFetched]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Don't wait forever for the DB — if query errors or takes >3s, launch anyway.
+    // If the DB later returns "completed", the tutorial will be skipped on the next visit.
+    const isDbReady = tutorialStatus.isFetched || tutorialStatus.isError;
+
+    if (isDbReady) {
+      const t = setTimeout(() => {
+        if (!isRunningRef.current && !completedModules[activeModule]) {
+          startTutorial(activeModule);
+        }
+      }, 1500);
+      return () => clearTimeout(t);
+    } else {
+      // Fallback: launch after 4s regardless of DB state
+      const fallback = setTimeout(() => {
+        if (!isRunningRef.current && !completedModules[activeModule]) {
+          startTutorial(activeModule);
+        }
+      }, 4000);
+      return () => clearTimeout(fallback);
+    }
+  }, [activeModule, tutorialStatus.isFetched, tutorialStatus.isError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Ghost mode: 15s inactivity (spec §11) ────────────────────────────────────
 
@@ -374,9 +389,18 @@ export function KaiTutorialProvider({ children }: { children: ReactNode }) {
       setPendingKaiMessage(
         `Got it — let me show you how to ${action.replace(/_/g, " ")}.`
       );
-      setTimeout(() => renderStep(tutorial, targetIdx), 600);
+
+      // Navigate to the module route if not already there (spec §4)
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith(tutorial.routePrefix)) {
+        navigate(tutorial.routePrefix);
+        // Wait for navigation + DOM to settle before rendering step
+        setTimeout(() => renderStep(tutorial, targetIdx), 1200);
+      } else {
+        setTimeout(() => renderStep(tutorial, targetIdx), 600);
+      }
     },
-    [renderStep]
+    [renderStep, navigate]
   );
 
   // startTutorial (spec §3)
