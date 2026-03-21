@@ -1,7 +1,7 @@
 /**
  * Gemini Image Generation Service
- * Uses @google/genai SDK with gemini-2.0-flash-preview-image-generation for fast generation.
- * Falls back to imagen-3.0-generate-002 for editing operations.
+ * Uses @google/genai SDK with imagen-4.0-generate-001 for text-to-image generation.
+ * Uses imagen-4.0-generate-001 for editing operations (imagen-3.0-capability-001 is deprecated).
  */
 
 import { GoogleGenAI, RawReferenceImage } from "@google/genai";
@@ -79,10 +79,10 @@ export async function generateImage(
   const aspectRatio = SIZE_TO_ASPECT[size];
   const finalPrompt = buildBrandedPrompt(prompt, brand);
 
-  // Try gemini-2.0-flash-preview-image-generation first (fast)
+  // Use imagen-4.0-generate-001 (current stable model)
   try {
     const response = await ai.models.generateImages({
-      model: "imagen-3.0-generate-002",
+      model: "imagen-4.0-generate-001",
       prompt: finalPrompt,
       config: {
         aspectRatio,
@@ -123,7 +123,7 @@ export async function editImage(
   const ai = getClient();
   const finalPrompt = buildBrandedPrompt(prompt, brand);
 
-  // Use imagen-3.0-capability-001 for editing (supports referenceImages)
+  // Use imagen-4.0-generate-001 for editing (imagen-3.0-capability-001 is deprecated)
   const refImage = new RawReferenceImage();
   refImage.referenceId = 1;
   refImage.referenceImage = {
@@ -133,7 +133,7 @@ export async function editImage(
 
   try {
     const response = await ai.models.editImage({
-      model: "imagen-3.0-capability-001",
+      model: "imagen-4.0-generate-001",
       prompt: finalPrompt,
       referenceImages: [refImage],
       config: {
