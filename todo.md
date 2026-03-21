@@ -8571,3 +8571,23 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add route /kai-creative to appRoutes.tsx
 - [ ] TypeScript validation — zero errors in new files
 - [ ] Commit and push to GitHub
+
+## Gemini Image Generation Integration
+- [ ] Add GEMINI_API_KEY to environment secrets
+- [ ] Install @google/genai package
+- [ ] Build geminiImageService.ts — generateImage and editImage functions
+- [ ] Build gemini tRPC router with generate and edit endpoints
+- [ ] Register gemini router in routers.ts
+- [ ] Rebuild KaiCreative.tsx — text prompt, size selector, logo upload, image upload for edits
+- [ ] Wire brand assets auto-injection (logo, colors, school name, phone, website)
+- [ ] Export sizes: Instagram Post (1:1), Story (9:16), Facebook Ad (4:5), Flyer (16:9), Banner (16:9)
+
+## Gemini Image Generation Integration
+- [ ] Add GEMINI_API_KEY to environment secrets
+- [ ] Install @google/genai package
+- [ ] Build geminiImageService.ts — generateImage and editImage functions
+- [ ] Build gemini tRPC router with generate and edit endpoints
+- [ ] Register gemini router in routers.ts
+- [ ] Rebuild KaiCreative.tsx — text prompt, size selector, logo upload, image upload for edits
+- [ ] Wire brand assets auto-injection (logo, colors, school name, phone, website)
+- [ ] Export sizes: Instagram Post (1:1), Story (9:16), Facebook Ad (4:5), Flyer (16:9), Banner (16:9)

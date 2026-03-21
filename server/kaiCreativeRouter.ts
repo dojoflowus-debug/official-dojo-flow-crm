@@ -1,132 +1,264 @@
+/**
+ * Kai Creative Router — Gemini-powered image generation and editing
+ *
+ * Endpoints:
+ *  generate         — text prompt → image (with optional brand injection)
+ *  generateWithLogo — logo upload + prompt → branded image
+ *  edit             — existing image + prompt → edited image
+ *  uploadAsset      — upload logo/photo to asset library
+ *  listAssets       — list saved assets
+ *  deleteAsset      — delete an asset
+ *  toggleFavorite   — favorite/unfavorite an asset
+ *  getBrandData     — get brand data for UI display
+ */
+
 import { z } from "zod";
 import { orgScopedProcedure, router } from "./_core/trpc";
-import { generateImage } from "./_core/imageGeneration";
 import { storagePut } from "./storage";
 import { getSchoolProfile } from "./schoolProfileDb";
 import { getDb } from "./db";
 import { creativeAssets } from "../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import {
-  buildBrandAwarePrompt,
-  buildFreeformPrompt,
-  CREATIVE_TEMPLATES,
-  getFollowUpSuggestions,
-  type OutputSize,
-} from "../shared/kaiCreativeTemplates";
+  generateImage,
+  editImage,
+  generateWithLogo,
+  type ImageSize,
+  type BrandContext,
+} from "./geminiImageService";
 
-// ─── Helper: get brand data for an org ───────────────────────────────────────
-async function getBrandData(orgId: number) {
+// ── Zod schemas ───────────────────────────────────────────────────────────────
+
+const imageSizeSchema = z.enum([
+  "instagram_post",
+  "instagram_story",
+  "facebook_ad",
+  "flyer",
+  "website_banner",
+]);
+
+// ── Brand data helper ─────────────────────────────────────────────────────────
+
+async function getBrandDataForOrg(orgId: number): Promise<
+  BrandContext & {
+    logoLightUrl: string | null;
+    logoDarkUrl: string | null;
+  }
+> {
   try {
     const profile = await getSchoolProfile(orgId);
     return {
       schoolName: profile?.schoolName ?? null,
-      primaryColor: profile?.brandColorPrimary ?? null,
-      secondaryColor: profile?.brandColorSecondary ?? null,
       tagline: profile?.tagline ?? null,
       phone: profile?.phone ?? null,
       website: profile?.website ?? null,
+      primaryColor: profile?.brandColorPrimary ?? null,
+      secondaryColor: profile?.brandColorSecondary ?? null,
       logoLightUrl: profile?.logoLightUrl ?? null,
       logoDarkUrl: profile?.logoDarkUrl ?? null,
     };
   } catch {
     return {
       schoolName: null,
-      primaryColor: null,
-      secondaryColor: null,
       tagline: null,
       phone: null,
       website: null,
+      primaryColor: null,
+      secondaryColor: null,
       logoLightUrl: null,
       logoDarkUrl: null,
     };
   }
 }
 
-// ─── Router ───────────────────────────────────────────────────────────────────
+// ── Helper: save generated image bytes to S3 ─────────────────────────────────
+
+async function saveImageToS3(
+  imageBase64: string,
+  mimeType: string,
+  orgId: number,
+  label: string
+): Promise<{ url: string; key: string }> {
+  const ext = mimeType.includes("jpeg") ? "jpg" : "png";
+  const key = `creative/${orgId}/${Date.now()}-${label}.${ext}`;
+  const buffer = Buffer.from(imageBase64, "base64");
+  const { url } = await storagePut(key, buffer, mimeType);
+  return { url, key };
+}
+
+// ── Router ────────────────────────────────────────────────────────────────────
+
 export const kaiCreativeRouter = router({
 
-  /**
-   * Generate a new marketing image from a prompt or template.
-   */
+  // ── Generate: text prompt → image ──────────────────────────────────────────
   generate: orgScopedProcedure
     .input(
       z.object({
         prompt: z.string().min(3).max(2000),
-        templateId: z.string().optional(),
-        outputSize: z.string().optional().default("instagram_post"),
-        referenceImageUrl: z.string().url().optional(), // for editing
+        size: imageSizeSchema.default("instagram_post"),
+        useBrandColors: z.boolean().default(true),
         assetName: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
-      const brand = await getBrandData(orgId);
+      const brand = input.useBrandColors ? await getBrandDataForOrg(orgId) : undefined;
 
-      // Build the final prompt
-      let finalPrompt: string;
-      if (input.templateId) {
-        const template = CREATIVE_TEMPLATES.find((t) => t.id === input.templateId);
-        if (template) {
-          finalPrompt = buildBrandAwarePrompt(template, brand, input.prompt !== template.promptTemplate ? input.prompt : undefined);
-        } else {
-          finalPrompt = buildFreeformPrompt(input.prompt, brand);
-        }
-      } else {
-        finalPrompt = buildFreeformPrompt(input.prompt, brand);
-      }
+      const result = await generateImage(
+        input.prompt,
+        input.size as ImageSize,
+        brand ?? undefined
+      );
 
-      // Call the image generation API
-      const result = await generateImage({
-        prompt: finalPrompt,
-        originalImages: input.referenceImageUrl
-          ? [{ url: input.referenceImageUrl }]
-          : undefined,
-      });
+      const { url, key } = await saveImageToS3(
+        result.imageBase64,
+        result.mimeType,
+        orgId,
+        "gen"
+      );
 
-      if (!result.url) {
-        throw new Error("Image generation failed — no URL returned");
-      }
-
-      // Save to creative_assets table
+      // Auto-save to asset library
       const db = await getDb();
       if (db) {
         await db.insert(creativeAssets).values({
           orgId,
           assetType: "generated",
-          name: input.assetName || `Generated — ${new Date().toLocaleDateString()}`,
-          url: result.url,
+          name: input.assetName ?? `Generated — ${new Date().toLocaleDateString()}`,
+          url,
+          storageKey: key,
           prompt: input.prompt,
-          templateId: input.templateId ?? null,
-          outputSize: input.outputSize,
-          mimeType: "image/png",
+          outputSize: input.size,
+          mimeType: result.mimeType,
           createdBy: ctx.user?.id ?? null,
         });
       }
 
-      // Build follow-up suggestions
-      const followUps = getFollowUpSuggestions(
-        input.templateId ?? null,
-        (input.outputSize as OutputSize) ?? "instagram_post",
-        !!brand.phone,
-        !!brand.website
-      );
-
       return {
-        url: result.url,
-        prompt: finalPrompt,
-        followUpSuggestions: followUps,
+        imageUrl: url,
+        imageBase64: result.imageBase64,
+        mimeType: result.mimeType,
+        prompt: input.prompt,
+        size: input.size,
       };
     }),
 
-  /**
-   * Upload a user-provided image (logo, photo, etc.) to the asset library.
-   */
+  // ── Generate with logo: logo base64 + prompt → branded image ───────────────
+  generateWithLogo: orgScopedProcedure
+    .input(
+      z.object({
+        prompt: z.string().min(3).max(2000),
+        logoBase64: z.string(),
+        logoMimeType: z.string().default("image/png"),
+        size: imageSizeSchema.default("instagram_post"),
+        useBrandColors: z.boolean().default(true),
+        assetName: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const brand = input.useBrandColors ? await getBrandDataForOrg(orgId) : undefined;
+
+      const result = await generateWithLogo(
+        input.prompt,
+        input.logoBase64,
+        input.logoMimeType,
+        input.size as ImageSize,
+        brand ?? undefined
+      );
+
+      const { url, key } = await saveImageToS3(
+        result.imageBase64,
+        result.mimeType,
+        orgId,
+        "logo-gen"
+      );
+
+      const db = await getDb();
+      if (db) {
+        await db.insert(creativeAssets).values({
+          orgId,
+          assetType: "generated",
+          name: input.assetName ?? `Logo Design — ${new Date().toLocaleDateString()}`,
+          url,
+          storageKey: key,
+          prompt: input.prompt,
+          outputSize: input.size,
+          mimeType: result.mimeType,
+          createdBy: ctx.user?.id ?? null,
+        });
+      }
+
+      return {
+        imageUrl: url,
+        imageBase64: result.imageBase64,
+        mimeType: result.mimeType,
+        prompt: input.prompt,
+        size: input.size,
+      };
+    }),
+
+  // ── Edit: existing image + prompt → edited image ───────────────────────────
+  edit: orgScopedProcedure
+    .input(
+      z.object({
+        prompt: z.string().min(3).max(2000),
+        sourceImageBase64: z.string(),
+        sourceMimeType: z.string().default("image/png"),
+        size: imageSizeSchema.default("instagram_post"),
+        useBrandColors: z.boolean().default(true),
+        assetName: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const brand = input.useBrandColors ? await getBrandDataForOrg(orgId) : undefined;
+
+      const result = await editImage(
+        input.prompt,
+        input.sourceImageBase64,
+        input.sourceMimeType,
+        input.size as ImageSize,
+        brand ?? undefined
+      );
+
+      const { url, key } = await saveImageToS3(
+        result.imageBase64,
+        result.mimeType,
+        orgId,
+        "edit"
+      );
+
+      const db = await getDb();
+      if (db) {
+        await db.insert(creativeAssets).values({
+          orgId,
+          assetType: "generated",
+          name: input.assetName ?? `Edited — ${new Date().toLocaleDateString()}`,
+          url,
+          storageKey: key,
+          prompt: input.prompt,
+          outputSize: input.size,
+          mimeType: result.mimeType,
+          createdBy: ctx.user?.id ?? null,
+        });
+      }
+
+      return {
+        imageUrl: url,
+        imageBase64: result.imageBase64,
+        mimeType: result.mimeType,
+        prompt: input.prompt,
+        size: input.size,
+      };
+    }),
+
+  // ── Upload asset (logo, photo) to library ─────────────────────────────────
   uploadAsset: orgScopedProcedure
     .input(
       z.object({
         name: z.string().min(1).max(255),
         assetType: z.enum(["uploaded_logo", "uploaded_photo", "uploaded_other"]),
-        base64Data: z.string(), // base64-encoded image data
+        base64Data: z.string(),
         mimeType: z.string().default("image/png"),
         tags: z.array(z.string()).optional(),
       })
@@ -134,13 +266,11 @@ export const kaiCreativeRouter = router({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
 
-      // Decode and upload to S3
       const buffer = Buffer.from(input.base64Data, "base64");
-      const ext = input.mimeType.split("/")[1] || "png";
+      const ext = input.mimeType.split("/")[1] ?? "png";
       const key = `creative/${orgId}/${input.assetType}/${Date.now()}.${ext}`;
       const { url } = await storagePut(key, buffer, input.mimeType);
 
-      // Save to creative_assets table
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -159,13 +289,13 @@ export const kaiCreativeRouter = router({
       return { url, key };
     }),
 
-  /**
-   * List all creative assets for the org, optionally filtered by type.
-   */
+  // ── List assets ────────────────────────────────────────────────────────────
   listAssets: orgScopedProcedure
     .input(
       z.object({
-        assetType: z.enum(["generated", "uploaded_logo", "uploaded_photo", "uploaded_other", "all"]).default("all"),
+        assetType: z
+          .enum(["generated", "uploaded_logo", "uploaded_photo", "uploaded_other", "all"])
+          .default("all"),
         limit: z.number().min(1).max(100).default(50),
         offset: z.number().min(0).default(0),
       })
@@ -173,7 +303,7 @@ export const kaiCreativeRouter = router({
     .query(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
       const db = await getDb();
-      if (!db) return { assets: [], total: 0 };
+      if (!db) return { assets: [] };
 
       const conditions =
         input.assetType === "all"
@@ -189,13 +319,12 @@ export const kaiCreativeRouter = router({
         .offset(input.offset);
 
       return {
-        assets: assets.map((a) => ({
+        assets: assets.map((a: typeof creativeAssets.$inferSelect) => ({
           id: a.id,
           assetType: a.assetType,
           name: a.name,
           url: a.url,
           prompt: a.prompt,
-          templateId: a.templateId,
           outputSize: a.outputSize,
           mimeType: a.mimeType,
           isFavorited: a.isFavorited === 1,
@@ -205,9 +334,7 @@ export const kaiCreativeRouter = router({
       };
     }),
 
-  /**
-   * Delete a creative asset.
-   */
+  // ── Delete asset ───────────────────────────────────────────────────────────
   deleteAsset: orgScopedProcedure
     .input(z.object({ assetId: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -222,9 +349,7 @@ export const kaiCreativeRouter = router({
       return { success: true };
     }),
 
-  /**
-   * Toggle favorite on a creative asset.
-   */
+  // ── Toggle favorite ────────────────────────────────────────────────────────
   toggleFavorite: orgScopedProcedure
     .input(z.object({ assetId: z.number(), isFavorited: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
@@ -240,17 +365,8 @@ export const kaiCreativeRouter = router({
       return { success: true };
     }),
 
-  /**
-   * Get the brand data for the current org (used by the frontend to show brand preview).
-   */
+  // ── Get brand data for UI ──────────────────────────────────────────────────
   getBrandData: orgScopedProcedure.query(async ({ ctx }) => {
-    return getBrandData(ctx.currentOrganizationId as number);
-  }),
-
-  /**
-   * Get all available templates.
-   */
-  getTemplates: orgScopedProcedure.query(() => {
-    return { templates: CREATIVE_TEMPLATES };
+    return getBrandDataForOrg(ctx.currentOrganizationId as number);
   }),
 });
