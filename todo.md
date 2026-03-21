@@ -8613,3 +8613,9 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Never write base64 data URL into url column
 - [x] Wrap DB insert in try/catch to prevent crash from propagating
 - [x] savedToLibrary now reflects actual DB save success
+
+## Creative Image in Third Panel (Mar 21, 2026)
+- [x] Add selectedCreativeImage state to KaiCommand
+- [x] Wire click on chat CreativePreviewCard to open third panel
+- [x] Render full CreativePreviewCard in third panel with Download/Edit/Retry/Open in Creative
+- [x] Third panel shows image full-size with action buttons

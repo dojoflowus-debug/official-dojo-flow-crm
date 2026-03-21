@@ -438,8 +438,8 @@ export default function KaiCommand() {
       if (parsed.blocks.length > 0) {
         return renderParsedMessage(
           parsed,
-          (studentId) => setResultsPanelData({ type: "student", studentId }),
-          (leadId) => setResultsPanelData({ type: "lead", leadId }),
+          (studentId) => setResultsPanelData({ type: "student_card", studentId }),
+          (leadId) => setResultsPanelData({ type: "lead_card", leadId }),
           (studentIds) => setResultsPanelData({ type: "student_list", studentIds }),
           (leadIds) => setResultsPanelData({ type: "lead_list", leadIds }),
           isDark,
@@ -3997,15 +3997,30 @@ export default function KaiCommand() {
 
                             {/* Render Creative Image Card */}
                             {message.creativeImage && (
-                              <div className="mt-3">
+                              <div
+                                className="mt-3 cursor-pointer"
+                                onClick={() => {
+                                  const img = message.creativeImage!;
+                                  setResultsPanelData({
+                                    type: 'creative_image',
+                                    image: {
+                                      imageUrl: img.imageUrl,
+                                      imageBase64: img.imageBase64,
+                                      mimeType: img.mimeType,
+                                      prompt: img.prompt,
+                                      size: img.size,
+                                      assetId: img.assetId,
+                                      savedToLibrary: img.savedToLibrary,
+                                    },
+                                  });
+                                }}
+                              >
                                 <CreativePreviewCard
                                   data={message.creativeImage}
                                   onRetry={() => {
-                                    // Re-trigger generation with same prompt
                                     handleSendMessage(message.creativeImage!.prompt, 'retry');
                                   }}
-                                  onEdit={(data) => {
-                                    // Navigate to Creative with edit pre-loaded
+                                  onEdit={(_data) => {
                                     navigate('/kai/creative');
                                   }}
                                 />
