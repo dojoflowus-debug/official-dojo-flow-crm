@@ -2146,20 +2146,87 @@ export default function KaiCommand() {
     }
     // --- END TUTORIAL COMMAND INTERCEPT ---
 
-    // --- KAI CREATIVE IMAGE INTENT INTERCEPT ---
-    // Detect image-generation prompts and route them to Kai Creative pipeline
-    const imageKeywords = [
-      /\b(create|generate|make|design|draw|build|produce)\b.*\b(image|photo|picture|flyer|poster|banner|graphic|ad|advertisement|logo|visual|artwork|illustration)\b/i,
-      /\b(image|photo|picture|flyer|poster|banner|graphic|ad|advertisement|visual|artwork|illustration)\b.*\b(create|generate|make|design|draw|build|produce|for|of|about)\b/i,
-      /\b(instagram|facebook|social media)\b.*\b(post|story|ad|banner|image|graphic)\b/i,
-      /\b(marketing|promotional|promo)\b.*\b(image|flyer|poster|banner|graphic|ad)\b/i,
-    ];
-    const isImageRequest = inputText.trim().length > 5 && imageKeywords.some(rx => rx.test(inputText.trim()));
+    // ─── KAI CREATIVE INTENT CLASSIFIER ────────────────────────────────────────
+    // Replaces the old regex approach. Classifies every message before routing.
+    const detectIntent = (
+      text: string,
+      hasAttachment = false
+    ): 'creative_generation' | 'creative_edit' | 'data_query' | 'tutorial_help' | 'greeting' | 'unknown' => {
+      const t = text.toLowerCase();
+      // Creative generation keywords — any single match triggers the pipeline
+      const creativeKeywords = [
+        'create', 'design', 'make', 'generate',
+        'flyer', 'poster', 'ad', 'graphic', 'banner',
+        'rack card', 'postcard', 'brochure',
+        'instagram post', 'instagram story', 'facebook ad',
+        'social media', 'promo image', 'promotional image',
+        'marketing image', 'marketing flyer', 'marketing graphic',
+        'image', 'photo', 'picture', 'visual', 'artwork', 'illustration',
+        'advertisement', 'logo',
+      ];
+      const editKeywords = [
+        'edit', 'change', 'remove background', 'add logo',
+        'resize', 'improve', 'make this premium', 'put my logo',
+        'add my logo', 'fix this', 'update this', 'enhance',
+      ];
+      if (creativeKeywords.some(k => t.includes(k))) return 'creative_generation';
+      if (hasAttachment || editKeywords.some(k => t.includes(k))) return 'creative_edit';
+      if (t.includes('how many') || t.includes('count') || t.includes('show me') || t.includes('list')) return 'data_query';
+      if (t.includes('how do i') || t.includes('show me how') || t.includes('tutorial')) return 'tutorial_help';
+      if (t.includes('hello') || t.includes('hi') || t.includes('hey')) return 'greeting';
+      return 'unknown';
+    };
 
-    // --- UPLOADED IMAGE → CREATIVE EDIT ROUTE ---
-    // If user uploaded an image and provided a text prompt, route to Creative edit pipeline
-    const imageAttachments = inputAttachments.filter(att => att.fileType?.startsWith('image/') && att.url && !att.uploading && !att.error);
-    if (imageAttachments.length > 0 && inputText.trim().length > 2) {
+    // Parse format/size from the prompt — maps natural language to Creative export presets
+    const parseFormatFromPrompt = (text: string): string => {
+      const t = text.toLowerCase();
+      if (t.includes('4x9') || t.includes('rack card')) return 'rack_card_4x9';
+      if (t.includes('4x6') || t.includes('postcard')) return 'postcard_4x6';
+      if (t.includes('instagram story') || t.includes('story')) return 'instagram_story';
+      if (t.includes('instagram post') || t.includes('instagram')) return 'instagram_post';
+      if (t.includes('facebook ad') || t.includes('facebook')) return 'facebook_ad';
+      if (t.includes('website banner') || t.includes('web banner')) return 'website_banner';
+      if (t.includes('flyer') || t.includes('poster')) return 'flyer';
+      if (t.includes('banner')) return 'banner';
+      if (t.includes('brochure')) return 'brochure';
+      return 'instagram_post'; // sensible default
+    };
+
+    // Build a contextual ack message: "Got it. I'm creating a 4x9 rack card for Little Ninjas now."
+    const buildCreativeAck = (text: string): string => {
+      const formatLabels: Record<string, string> = {
+        rack_card_4x9: '4x9 rack card',
+        postcard_4x6: '4x6 postcard',
+        instagram_story: 'Instagram Story',
+        instagram_post: 'Instagram Post',
+        facebook_ad: 'Facebook Ad',
+        website_banner: 'website banner',
+        flyer: 'flyer',
+        banner: 'banner',
+        brochure: 'brochure',
+      };
+      const fmt = parseFormatFromPrompt(text);
+      const label = formatLabels[fmt] ?? 'image';
+      const t = text.toLowerCase();
+      const programMatch = t.match(/for\s+([a-z][a-z\s]{1,38}?)(?:\s+(?:program|class|camp|students|kids|adults|class))?(?:[.,]|$)/i);
+      const program = programMatch ? programMatch[1].trim() : null;
+      if (program && program.length >= 2 && program.length < 40) {
+        const cap = program.charAt(0).toUpperCase() + program.slice(1);
+        return `Got it. I’m creating a ${label} for ${cap} now — this takes about 10–15 seconds. I’ll save it to your Creative Library.`;
+      }
+      return `Got it. I’m building that ${label} now — this takes about 10–15 seconds. I’ll save it to your Creative Library.`;
+    };
+
+    const hasImageAttachments = inputAttachments.some(
+      att => att.fileType?.startsWith('image/') && att.url && !att.uploading && !att.error
+    );
+    const chatIntent = detectIntent(inputText.trim(), hasImageAttachments);
+
+    // ─── CREATIVE EDIT ROUTE (uploaded image + edit prompt) ─────────────────────
+    const imageAttachments = inputAttachments.filter(
+      att => att.fileType?.startsWith('image/') && att.url && !att.uploading && !att.error
+    );
+    if ((imageAttachments.length > 0 && inputText.trim().length > 2) || chatIntent === 'creative_edit') {
       const firstImage = imageAttachments[0];
       // Convert image URL to base64 for the API
       const fetchBase64 = async (url: string): Promise<string> => {
@@ -2240,8 +2307,9 @@ export default function KaiCommand() {
     }
     // --- END UPLOADED IMAGE ROUTE ---
 
-    if (isImageRequest && inputAttachments.length === 0) {
-      // Add user message to chat immediately
+    // ─── CREATIVE GENERATION ROUTE ──────────────────────────────────────────
+    // Fires when detectIntent() returns 'creative_generation' (no image attachment)
+    if (chatIntent === 'creative_generation') {
       const userMsg: Message = {
         id: (messageIdCounterRef.current++).toString(),
         role: 'user',
@@ -2253,19 +2321,20 @@ export default function KaiCommand() {
       setAttachments([]);
       setIsLoading(true);
 
-      // Add Kai acknowledgment message
+      // Contextual ack: "Got it. I'm creating a 4x9 rack card for Little Ninjas now."
       const ackMsg: Message = {
         id: (messageIdCounterRef.current++).toString(),
         role: 'assistant',
-        content: `On it! Creating your image now — this takes about 10–15 seconds. I'll auto-save it to your Creative Library.`,
+        content: buildCreativeAck(inputText.trim()),
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, ackMsg]);
 
+      const detectedSize = parseFormatFromPrompt(inputText.trim());
       try {
         const result = await generateFromChatMutation.mutateAsync({
           prompt: inputText.trim(),
-          size: 'instagram_post',
+          size: detectedSize,
         });
 
         const cardData: CreativePreviewCardData = {
@@ -2278,12 +2347,13 @@ export default function KaiCommand() {
           savedToLibrary: result.savedToLibrary,
         };
 
+        const fmtLabel = detectedSize.replace(/_/g, ' ');
         const creativeMsg: Message = {
           id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',
           content: result.savedToLibrary
-            ? `Here's your image! It's been saved to your Creative Library.`
-            : `Here's your image! Tap Download to save it.`,
+            ? `Done. I saved this in Kai Creative — you can find it in your Creative Library.`
+            : `Your ${fmtLabel} is ready. Tap Download to save it.`,
           timestamp: new Date(),
           creativeImage: cardData,
         };
@@ -2292,7 +2362,7 @@ export default function KaiCommand() {
         const errMsg: Message = {
           id: (messageIdCounterRef.current++).toString(),
           role: 'assistant',
-          content: `Sorry, I couldn't generate that image: ${err?.message ?? 'Unknown error'}. Try rephrasing or visit Kai Creative directly.`,
+          content: `Sorry, I couldn’t generate that image: ${err?.message ?? 'Unknown error'}. Try rephrasing or visit Kai Creative directly.`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, errMsg]);
@@ -2301,7 +2371,7 @@ export default function KaiCommand() {
       }
       return;
     }
-    // --- END IMAGE INTENT INTERCEPT ---
+    // ─── END CREATIVE INTENT INTERCEPT ──────────────────────────────────────────
 
     // CRITICAL: Prevent duplicate sends with in-flight lock
     if (sendingRef.current) {
