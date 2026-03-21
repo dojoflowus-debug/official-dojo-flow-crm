@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import LeadActivityTimeline from './LeadActivityTimeline';
+import KaiSalesCoach from './KaiSalesCoach';
 
 interface Lead {
   id: number;
@@ -56,7 +57,7 @@ const sourceIcons: Record<string, React.ElementType> = {
   'Instagram': Megaphone,
 };
 
-type TabType = 'details' | 'activity';
+type TabType = 'details' | 'activity' | 'kai_coach';
 
 export default function LeadDrawer({ 
   lead, 
@@ -206,6 +207,17 @@ export default function LeadDrawer({
           >
             <History className="w-4 h-4" />
             Activity
+          </button>
+          <button
+            onClick={() => setActiveTab('kai_coach')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'kai_coach'
+                ? 'border-[#E53935] text-[#E53935]'
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            Kai Coach
           </button>
         </div>
 
@@ -373,9 +385,16 @@ export default function LeadDrawer({
                 Delete Lead
               </Button>
             </>
-          ) : (
+          ) : activeTab === 'activity' ? (
             /* Activity Tab */
             <LeadActivityTimeline leadId={lead.id} leadName={fullName} />
+          ) : (
+            /* Kai Coach Tab */
+            <KaiSalesCoach
+              leadFirstName={lead.first_name}
+              leadLastName={lead.last_name}
+              currentStage={currentStage}
+            />
           )}
         </div>
       </div>

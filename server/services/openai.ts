@@ -1,4 +1,5 @@
 import { invokeLLM } from '../_core/llm';
+import { getSalesKnowledgeSection } from '../kaiSalesKnowledge';
 
 // Define CRM function tools for the LLM
 const crmTools = [
@@ -274,7 +275,9 @@ Rules:
 - Avoid filler words, repetition, or excessive enthusiasm
 - Be concise, reassuring, and purposeful
 
-Remember: You're a trusted operations companion helping build a thriving dojo.`;
+Remember: You're a trusted operations companion helping build a thriving dojo.
+
+${getSalesKnowledgeSection()}`;
 
     // Build messages array
     const messages = [
