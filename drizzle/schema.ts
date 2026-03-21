@@ -1908,3 +1908,28 @@ export const leadSources = mysqlTable("lead_sources", {
 (table) => [
   index("idx_lead_sources_org").on(table.orgId),
 ]);
+
+// ─── Kai Creative — AI Marketing Image Studio ─────────────────────────────────
+export const creativeAssets = mysqlTable("creative_assets", {
+  id: int().autoincrement().notNull().primaryKey(),
+  orgId: int("org_id").notNull(),
+  assetType: varchar("asset_type", { length: 50 }).notNull(), // "generated" | "uploaded_logo" | "uploaded_photo" | "uploaded_other"
+  name: varchar({ length: 255 }).notNull(),
+  url: text().notNull(),
+  storageKey: varchar("storage_key", { length: 500 }),
+  prompt: text(),
+  templateId: varchar("template_id", { length: 100 }),
+  outputSize: varchar("output_size", { length: 50 }),
+  mimeType: varchar("mime_type", { length: 100 }).default("image/png"),
+  fileSizeBytes: int("file_size_bytes"),
+  isFavorited: int("is_favorited").default(0).notNull(),
+  tags: text(),
+  createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().onUpdateNow().notNull(),
+  createdBy: int("created_by"),
+},
+(table) => [
+  index("idx_creative_assets_org").on(table.orgId),
+  index("idx_creative_assets_type").on(table.orgId, table.assetType),
+  index("idx_creative_assets_created").on(table.orgId, table.createdAt),
+]);

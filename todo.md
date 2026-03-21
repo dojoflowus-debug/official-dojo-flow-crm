@@ -8557,3 +8557,17 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Fix: toolbar commands on Kai page navigate to correct module route before starting tutorial
 - [ ] Fix: onboarding resumes properly when user lands on Kai page with incomplete profile
 - [x] Fix: KaiTutorialContext handles /kai route — treat it as a global command hub
+
+## Kai Creative — AI Marketing Image Studio
+- [ ] Add creative_assets table to drizzle schema (org-scoped, stores generated + uploaded images)
+- [ ] Run db:push to migrate schema
+- [ ] Build kaiCreativeRouter.ts — generate, upload, list, delete assets
+- [ ] Build brand-aware prompt builder (injects school name, colors, logo, programs)
+- [ ] Build KaiCreative.tsx page — prompt box, template library, size selector, results area
+- [ ] Build KaiCreativeAssetLibrary.tsx — uploaded logos, photos, past generations
+- [ ] Build KaiCreativeTemplates.ts — 10 martial arts marketing templates
+- [ ] Add Kai follow-up suggestions after image generation
+- [ ] Add Kai Creative to NAVIGATION array in AppShell
+- [ ] Add route /kai-creative to appRoutes.tsx
+- [ ] TypeScript validation — zero errors in new files
+- [ ] Commit and push to GitHub

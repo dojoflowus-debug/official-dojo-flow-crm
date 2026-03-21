@@ -13,7 +13,8 @@ import {
   Eye,
   EyeOff,
   Package,
-  Grid3x3
+  Grid3x3,
+  Wand2
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useFocusMode } from '@/contexts/FocusModeContext'
@@ -43,6 +44,7 @@ const NAVIGATION = [
   { id: 'staff', name: 'Staff', href: '/staff', icon: UserCog },
   { id: 'programs', name: 'Programs', href: '/programs', icon: BookOpen },
   { id: 'reports', name: 'Reports', href: '/reports', icon: BarChart3 },
+  { id: 'kai-creative', name: 'Creative', href: '/kai/creative', icon: Wand2 },
 ]
 
 interface AppShellProps {

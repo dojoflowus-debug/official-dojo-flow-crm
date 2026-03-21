@@ -420,6 +420,31 @@ export const SMART_COMMANDS: Array<{
     module: "billing",
     label: "View invoices",
   },
+  // Creative / Marketing
+  {
+    patterns: ["make a flyer", "create flyer", "design flyer", "make flyer"],
+    action: "create_creative",
+    module: "kiosk",
+    label: "Create a marketing flyer",
+  },
+  {
+    patterns: ["make a poster", "create poster", "design poster"],
+    action: "create_creative",
+    module: "kiosk",
+    label: "Create a marketing poster",
+  },
+  {
+    patterns: ["create ad", "make an ad", "facebook ad", "instagram ad", "social media post", "make a post", "marketing graphic"],
+    action: "create_creative",
+    module: "kiosk",
+    label: "Create a social media ad",
+  },
+  {
+    patterns: ["kai creative", "marketing studio", "create image", "generate image", "make image", "design graphic", "open creative"],
+    action: "create_creative",
+    module: "kiosk",
+    label: "Open Kai Creative Studio",
+  },
   // Kiosk
   {
     patterns: ["enable kiosk", "set up kiosk", "kiosk check-in", "enable checkin"],

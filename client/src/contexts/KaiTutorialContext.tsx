@@ -375,6 +375,14 @@ export function KaiTutorialProvider({ children }: { children: ReactNode }) {
   // Action engine (spec §5)
   const executeAction = useCallback(
     (action: string, module: TutorialModule) => {
+      // Special case: creative commands navigate to /kai/creative
+      if (action === "create_creative") {
+        setPendingKaiMessage(
+          "Opening Kai Creative Studio — let's make something that gets attention. 🎨"
+        );
+        navigate("/kai/creative");
+        return;
+      }
       const tutorial = TUTORIAL_REGISTRY[module];
       if (!tutorial) return;
       const stepIdx = tutorial.steps.findIndex((s) => s.action === action);
