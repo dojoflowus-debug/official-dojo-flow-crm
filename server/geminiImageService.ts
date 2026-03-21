@@ -87,7 +87,6 @@ export async function generateImage(
       config: {
         aspectRatio,
         numberOfImages: 1,
-        negativePrompt: "watermark, text overlay errors, blurry, low quality, amateur",
       },
     });
 
@@ -139,7 +138,6 @@ export async function editImage(
       referenceImages: [refImage],
       config: {
         numberOfImages: 1,
-        negativePrompt: "watermark, text overlay errors, blurry, low quality",
       },
     });
 
