@@ -3,8 +3,8 @@
  *
  * Three modes:
  *  1. Create Image  — text prompt → image (brand colors auto-injected)
- *  2. Logo Branding — upload logo + prompt → branded image
- *  3. Edit Image    — upload existing image + prompt → edited image
+ *  2. Logo Branding — upload logo + prompt → branded image with logo overlaid via Canvas
+ *  3. Edit Image    — upload existing image + prompt → new image
  *
  * Plus an Asset Library tab for saved images.
  */
@@ -63,6 +63,68 @@ const PROMPT_SUGGESTIONS = [
   "Grand opening announcement — exciting, community-focused",
 ];
 
+// ── Canvas logo overlay utility ───────────────────────────────────────────────
+// Loads the generated image and the logo, then composites the logo
+// into the bottom-left corner of the generated image using Canvas API.
+
+async function overlayLogoOnImage(
+  generatedImageUrl: string,
+  logoDataUrl: string,
+  position: "bottom-left" | "bottom-right" | "top-left" | "top-right" = "bottom-left"
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { reject(new Error("Canvas not supported")); return; }
+
+    const bgImg = new Image();
+    bgImg.crossOrigin = "anonymous";
+
+    bgImg.onload = () => {
+      canvas.width = bgImg.naturalWidth;
+      canvas.height = bgImg.naturalHeight;
+      ctx.drawImage(bgImg, 0, 0);
+
+      const logoImg = new Image();
+      logoImg.onload = () => {
+        // Logo size: 18% of the shorter dimension, max 220px
+        const shorter = Math.min(canvas.width, canvas.height);
+        const logoSize = Math.min(Math.round(shorter * 0.18), 220);
+        const margin = Math.round(shorter * 0.04);
+
+        // Aspect-correct logo dimensions
+        const ratio = logoImg.naturalWidth / logoImg.naturalHeight;
+        const logoW = ratio >= 1 ? logoSize : Math.round(logoSize * ratio);
+        const logoH = ratio >= 1 ? Math.round(logoSize / ratio) : logoSize;
+
+        // Position
+        let x = margin;
+        let y = canvas.height - logoH - margin;
+        if (position === "bottom-right") { x = canvas.width - logoW - margin; }
+        if (position === "top-left")     { y = margin; }
+        if (position === "top-right")    { x = canvas.width - logoW - margin; y = margin; }
+
+        // Subtle shadow so logo pops on any background
+        ctx.shadowColor = "rgba(0,0,0,0.45)";
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+
+        ctx.drawImage(logoImg, x, y, logoW, logoH);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      logoImg.onerror = () => {
+        // If logo fails to load, return original image unchanged
+        resolve(generatedImageUrl);
+      };
+      logoImg.src = logoDataUrl;
+    };
+
+    bgImg.onerror = () => reject(new Error("Failed to load generated image"));
+    bgImg.src = generatedImageUrl;
+  });
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function KaiCreative() {
@@ -93,6 +155,7 @@ export default function KaiCreative() {
   // Results
   const [result, setResult] = useState<GeneratedResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isOverlaying, setIsOverlaying] = useState(false);
 
   // Tabs
   const [activeTab, setActiveTab] = useState<"studio" | "library">("studio");
@@ -105,7 +168,34 @@ export default function KaiCreative() {
   });
 
   const generateWithLogoMutation = trpc.kaiCreative.generateWithLogo.useMutation({
-    onSuccess: (data) => { setResult(data as GeneratedResult); setError(null); },
+    onSuccess: async (data) => {
+      setError(null);
+      // If we have a logo, overlay it client-side using Canvas
+      if (logoPreview) {
+        setIsOverlaying(true);
+        try {
+          const composited = await overlayLogoOnImage(
+            data.imageUrl,
+            logoPreview,
+            "bottom-left"
+          );
+          setResult({
+            ...(data as GeneratedResult),
+            imageUrl: composited,
+            // Update base64 from the composited data URL
+            imageBase64: composited.split(",")[1] ?? data.imageBase64,
+            mimeType: "image/png",
+          });
+        } catch {
+          // Overlay failed — show original
+          setResult(data as GeneratedResult);
+        } finally {
+          setIsOverlaying(false);
+        }
+      } else {
+        setResult(data as GeneratedResult);
+      }
+    },
     onError: (err) => setError(err.message),
   });
 
@@ -174,7 +264,7 @@ export default function KaiCreative() {
   }, [mode, prompt, size, useBrandColors, logoBase64, logoMimeType, sourceBase64, sourceMimeType,
       generateMutation, generateWithLogoMutation, editMutation]);
 
-  const isLoading = generateMutation.isPending || generateWithLogoMutation.isPending || editMutation.isPending;
+  const isLoading = generateMutation.isPending || generateWithLogoMutation.isPending || editMutation.isPending || isOverlaying;
 
   // ── Download ────────────────────────────────────────────────────────────────
 
@@ -251,7 +341,9 @@ export default function KaiCreative() {
               <button
                 key={id}
                 onClick={() => setMode(id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${mode === id ? tabActive : tabInactive}`}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                  mode === id ? tabActive : tabInactive
+                }`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 {label}
@@ -285,70 +377,78 @@ export default function KaiCreative() {
 
           {/* Logo upload (logo mode) */}
           {mode === "logo" && (
-            <div
-              onClick={() => logoInputRef.current?.click()}
-              className={`rounded-xl border-2 border-dashed cursor-pointer transition-colors p-4 flex items-center gap-3 ${
-                logoPreview
-                  ? isDark ? "border-green-500/40 bg-green-500/5" : "border-green-400/40 bg-green-50"
-                  : isDark ? "border-white/15 hover:border-red-500/40 bg-white/3" : "border-slate-200 hover:border-red-400/40"
-              }`}
-            >
-              <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-              {logoPreview ? (
-                <>
-                  <img src={logoPreview} alt="Logo" className="w-12 h-12 object-contain rounded-lg" />
-                  <div>
-                    <p className={`text-sm font-medium ${text}`}>Logo uploaded</p>
-                    <p className={`text-xs ${muted}`}>Click to change</p>
-                  </div>
-                  <Check className="w-4 h-4 text-green-400 ml-auto" />
-                </>
-              ) : (
-                <>
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isDark ? "bg-white/8" : "bg-slate-100"}`}>
-                    <Upload className={`w-5 h-5 ${muted}`} />
-                  </div>
-                  <div>
-                    <p className={`text-sm font-medium ${text}`}>Upload your logo</p>
-                    <p className={`text-xs ${muted}`}>PNG, JPG, SVG — Kai incorporates it into the design</p>
-                  </div>
-                </>
-              )}
-            </div>
+            <>
+              <div
+                onClick={() => logoInputRef.current?.click()}
+                className={`rounded-xl border-2 border-dashed cursor-pointer transition-colors p-4 flex items-center gap-3 ${
+                  logoPreview
+                    ? isDark ? "border-green-500/40 bg-green-500/5" : "border-green-400/40 bg-green-50"
+                    : isDark ? "border-white/15 hover:border-red-500/40 bg-white/3" : "border-slate-200 hover:border-red-400/40"
+                }`}
+              >
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                {logoPreview ? (
+                  <>
+                    <img src={logoPreview} alt="Logo" className="w-12 h-12 object-contain rounded-lg" />
+                    <div>
+                      <p className={`text-sm font-medium ${text}`}>Logo uploaded</p>
+                      <p className={`text-xs ${muted}`}>Click to change</p>
+                    </div>
+                    <Check className="w-4 h-4 text-green-400 ml-auto" />
+                  </>
+                ) : (
+                  <>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isDark ? "bg-white/8" : "bg-slate-100"}`}>
+                      <Upload className={`w-5 h-5 ${muted}`} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${text}`}>Upload your logo</p>
+                      <p className={`text-xs ${muted}`}>PNG, JPG, SVG — overlaid on the generated image</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              {/* Info note about logo overlay */}
+              <p className={`text-xs ${muted} -mt-2 px-1`}>
+                Kai generates a branded design, then your logo is composited onto the bottom-left corner.
+              </p>
+            </>
           )}
 
           {/* Source image upload (edit mode) */}
           {mode === "edit" && (
-            <div
-              onClick={() => sourceInputRef.current?.click()}
-              className={`rounded-xl border-2 border-dashed cursor-pointer transition-colors p-4 flex items-center gap-3 ${
-                sourcePreview
-                  ? isDark ? "border-green-500/40 bg-green-500/5" : "border-green-400/40 bg-green-50"
-                  : isDark ? "border-white/15 hover:border-red-500/40 bg-white/3" : "border-slate-200 hover:border-red-400/40"
-              }`}
-            >
-              <input ref={sourceInputRef} type="file" accept="image/*" className="hidden" onChange={handleSourceUpload} />
-              {sourcePreview ? (
-                <>
-                  <img src={sourcePreview} alt="Source" className="w-12 h-12 object-cover rounded-lg" />
-                  <div>
-                    <p className={`text-sm font-medium ${text}`}>Image uploaded</p>
-                    <p className={`text-xs ${muted}`}>Click to change</p>
-                  </div>
-                  <Check className="w-4 h-4 text-green-400 ml-auto" />
-                </>
-              ) : (
-                <>
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isDark ? "bg-white/8" : "bg-slate-100"}`}>
-                    <ImageIcon className={`w-5 h-5 ${muted}`} />
-                  </div>
-                  <div>
-                    <p className={`text-sm font-medium ${text}`}>Upload image to edit</p>
-                    <p className={`text-xs ${muted}`}>Upload an existing flyer — Kai will modify it</p>
-                  </div>
-                </>
-              )}
-            </div>
+            <>
+              <div
+                onClick={() => sourceInputRef.current?.click()}
+                className={`rounded-xl border-2 border-dashed cursor-pointer transition-colors p-4 flex items-center gap-3 ${
+                  sourcePreview
+                    ? isDark ? "border-green-500/40 bg-green-500/5" : "border-green-400/40 bg-green-50"
+                    : isDark ? "border-white/15 hover:border-red-500/40 bg-white/3" : "border-slate-200 hover:border-red-400/40"
+                }`}
+              >
+                <input ref={sourceInputRef} type="file" accept="image/*" className="hidden" onChange={handleSourceUpload} />
+                {sourcePreview ? (
+                  <>
+                    <img src={sourcePreview} alt="Source" className="w-12 h-12 object-cover rounded-lg" />
+                    <div>
+                      <p className={`text-sm font-medium ${text}`}>Image uploaded</p>
+                      <p className={`text-xs ${muted}`}>Click to change</p>
+                    </div>
+                    <Check className="w-4 h-4 text-green-400 ml-auto" />
+                  </>
+                ) : (
+                  <>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isDark ? "bg-white/8" : "bg-slate-100"}`}>
+                      <ImageIcon className={`w-5 h-5 ${muted}`} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${text}`}>Upload image to edit</p>
+                      <p className={`text-xs ${muted}`}>Describe changes — Kai generates a new version</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
           )}
 
           {/* Prompt input */}
@@ -442,7 +542,7 @@ export default function KaiCreative() {
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                Generating with Gemini…
+                {isOverlaying ? "Compositing logo…" : "Generating with Gemini…"}
               </span>
             ) : (
               <span className="flex items-center gap-2">
@@ -468,7 +568,9 @@ export default function KaiCreative() {
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
                   <Wand2 className="w-5 h-5 text-white" />
                 </div>
-                <p className={`text-sm ${muted}`}>Kai is generating your image…</p>
+                <p className={`text-sm ${muted}`}>
+                  {isOverlaying ? "Placing your logo…" : "Kai is generating your image…"}
+                </p>
                 <p className={`text-xs ${muted} opacity-60`}>Powered by Gemini · 10–30 seconds</p>
               </div>
             </div>
@@ -483,7 +585,7 @@ export default function KaiCreative() {
                   alt={result.prompt}
                   className="w-full object-contain max-h-[520px]"
                 />
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-2 left-2">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm ${isDark ? "bg-black/60 text-white/80" : "bg-white/80 text-slate-700"}`}>
                     {SIZES.find((s) => s.id === result.size)?.label ?? result.size}
                   </span>
