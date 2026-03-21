@@ -65,6 +65,7 @@ async function getBrandDataForOrg(orgId: number): Promise<
       website: profile?.website ?? null,
       primaryColor: profile?.brandColorPrimary ?? null,
       secondaryColor: profile?.brandColorSecondary ?? null,
+      logoUrl: profile?.logoLightUrl ?? profile?.logoDarkUrl ?? null,
       logoLightUrl: profile?.logoLightUrl ?? null,
       logoDarkUrl: profile?.logoDarkUrl ?? null,
     };
@@ -76,6 +77,7 @@ async function getBrandDataForOrg(orgId: number): Promise<
       website: null,
       primaryColor: null,
       secondaryColor: null,
+      logoUrl: null,
       logoLightUrl: null,
       logoDarkUrl: null,
     };

@@ -12,6 +12,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
+import ImageLightbox from "@/components/ImageLightbox";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   Wand2,
@@ -29,6 +30,7 @@ import {
   StarOff,
   Edit3,
   Sparkles,
+  ZoomIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -161,6 +163,8 @@ export default function KaiCreative() {
 
   // Tabs
   const [activeTab, setActiveTab] = useState<"studio" | "library">("studio");
+  // Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // Router state — pre-load image from Kai chat "Open in Creative" / "Edit"
   const location = useLocation();
@@ -647,12 +651,17 @@ export default function KaiCreative() {
           {/* Result */}
           {result && !isLoading && (
             <div className={`rounded-2xl border overflow-hidden ${card}`}>
-              <div className="relative bg-black/10">
+              <div className="relative bg-black/10 cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
                 <img
                   src={result.imageUrl}
                   alt={result.prompt}
                   className="w-full object-contain max-h-[520px]"
                 />
+                {/* Zoom hint */}
+                <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white/70 text-xs px-2 py-1 rounded-full pointer-events-none">
+                  <ZoomIn className="w-3 h-3" />
+                  Click to inspect
+                </div>
                 <div className="absolute top-2 left-2">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm ${isDark ? "bg-black/60 text-white/80" : "bg-white/80 text-slate-700"}`}>
                     {SIZES.find((s) => s.id === result.size)?.label ?? result.size}
@@ -783,6 +792,27 @@ export default function KaiCreative() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* ── Lightbox ─────────────────────────────────────────────────────── */}
+      {lightboxOpen && result && (
+        <ImageLightbox
+          imageUrl={result.imageUrl}
+          imageBase64={result.imageBase64}
+          mimeType={result.mimeType}
+          prompt={result.prompt}
+          size={SIZES.find((s) => s.id === result.size)?.label ?? result.size}
+          onClose={() => setLightboxOpen(false)}
+          onDownload={handleDownload}
+          onEdit={() => {
+            setLightboxOpen(false);
+            setMode("edit");
+            setSourceBase64(result.imageBase64);
+            setSourceMimeType(result.mimeType);
+            setSourcePreview(result.imageUrl);
+            setPrompt("");
+          }}
+        />
       )}
     </div>
   );

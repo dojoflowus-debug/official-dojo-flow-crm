@@ -23,8 +23,10 @@ export type StylePreset =
 
 export interface BrandContext {
   schoolName?: string;
+  logoUrl?: string;       // URL or base64 data URL of the school logo
   primaryColor?: string;
   secondaryColor?: string;
+  accentColor?: string;
   phone?: string;
   website?: string;
   address?: string;
@@ -248,17 +250,26 @@ export function enhancePrompt(options: PromptEngineOptions): string {
   const program = detectProgram(userPrompt);
   const formatLabel = size ? SIZE_FORMAT_LABELS[size] ?? size : "marketing design";
 
-  // Brand block
+  // Brand block — always injected when brand data is available
   const brandBlock = brand
     ? `
-BRAND IDENTITY:
-- School name: ${brand.schoolName ?? "the martial arts school"}
-- Primary color: ${brand.primaryColor ?? "red"}
-- Secondary color: ${brand.secondaryColor ?? "black"}
-${brand.phone ? `- Phone: ${brand.phone}` : ""}
-${brand.website ? `- Website: ${brand.website}` : ""}
-${brand.tagline ? `- Tagline: "${brand.tagline}"` : ""}
-- Include the school name prominently in the design`
+BRAND IDENTITY (AUTO-APPLIED — do not skip any of these):
+- School name: "${brand.schoolName ?? "the martial arts school"}" — display prominently in the design
+- Primary brand color: ${brand.primaryColor ?? "red"} — use as the dominant color throughout
+- Secondary brand color: ${brand.secondaryColor ?? "black"} — use for backgrounds, contrast areas
+${brand.accentColor ? `- Accent color: ${brand.accentColor} — use sparingly for highlights` : ""}
+${brand.phone ? `- Phone number: ${brand.phone} — include in the design (bottom section)` : ""}
+${brand.website ? `- Website: ${brand.website} — include in the design (bottom section)` : ""}
+${brand.address ? `- Address: ${brand.address} — include if space allows` : ""}
+${brand.tagline ? `- Tagline: "${brand.tagline}" — include as subheadline or footer text` : ""}
+
+LOGO PLACEMENT RULES (CRITICAL):
+- Place the school name/logo in the TOP CENTER or TOP LEFT of the design
+- Logo area must have clear padding — never stretch or distort the logo
+- Logo must be clearly visible against the background (use contrast or a subtle backing)
+- Logo size: approximately 15–20% of the total design width
+- Never overlap the logo with busy imagery
+- The school name "${brand.schoolName ?? "the school"}" must be readable at a glance`
     : "";
 
   // Program context block

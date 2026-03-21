@@ -8635,3 +8635,15 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Integrate prompt engine into kaiCreativeRouter all generation paths
 - [ ] Add style preset selector UI to KaiCreative.tsx Studio tab
 - [ ] Add style preset detection to generateFromChat (parsed from user message)
+
+## Lightbox + Auto-Brand (Mar 21, 2026)
+- [ ] Build ImageLightbox component — fullscreen modal, dark bg, center image
+- [ ] Zoom: scroll wheel, +/- buttons, pinch (mobile), fit/actual/fill modes
+- [ ] Pan: click+drag to move around image
+- [ ] Double-click to zoom in/out toggle
+- [ ] Controls overlay: Close, Download, Open in Creative, Edit (top-right)
+- [ ] Wire lightbox into KaiCreative result card (click image to open)
+- [ ] Wire lightbox into CreativePreviewCard (click image to open)
+- [ ] Upgrade kaiPromptEngine auto-brand: inject logo URL, colors, phone, website
+- [ ] Smart logo placement rules: top-center or top-left, never stretched, proper spacing
+- [ ] Auto-brand toggle default ON in KaiCreative UI
