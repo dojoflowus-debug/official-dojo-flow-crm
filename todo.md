@@ -8637,13 +8637,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add style preset detection to generateFromChat (parsed from user message)
 
 ## Lightbox + Auto-Brand (Mar 21, 2026)
-- [ ] Build ImageLightbox component — fullscreen modal, dark bg, center image
-- [ ] Zoom: scroll wheel, +/- buttons, pinch (mobile), fit/actual/fill modes
-- [ ] Pan: click+drag to move around image
-- [ ] Double-click to zoom in/out toggle
-- [ ] Controls overlay: Close, Download, Open in Creative, Edit (top-right)
-- [ ] Wire lightbox into KaiCreative result card (click image to open)
-- [ ] Wire lightbox into CreativePreviewCard (click image to open)
-- [ ] Upgrade kaiPromptEngine auto-brand: inject logo URL, colors, phone, website
-- [ ] Smart logo placement rules: top-center or top-left, never stretched, proper spacing
-- [ ] Auto-brand toggle default ON in KaiCreative UI
+- [x] Build ImageLightbox component — fullscreen modal, dark bg, center image
+- [x] Zoom: scroll wheel, +/- buttons, pinch (mobile), fit/actual/fill modes
+- [x] Pan: click+drag to move around image
+- [x] Double-click to zoom in/out toggle
+- [x] Controls overlay: Close, Download, Open in Creative, Edit (top-right)
+- [x] Wire lightbox into KaiCreative result card (click image to open)
+- [x] Wire lightbox into CreativePreviewCard (click image to open)
+- [x] Upgrade kaiPromptEngine auto-brand: inject logo URL, colors, phone, website
+- [x] Smart logo placement rules: top-center or top-left, never stretched, proper spacing
+- [x] Auto-brand toggle default ON in KaiCreative UI
