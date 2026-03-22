@@ -1,0 +1,28 @@
+{
+  "query": "SELECT * FROM organization_users LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT * FROM organization_users LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "userId": "1",
+      "organizationId": "1",
+      "role": "owner",
+      "isPrimary": "0",
+      "createdAt": "2026-03-22 03:17:40",
+      "updatedAt": "2026-03-22 03:17:40"
+    },
+    {
+      "id": "3",
+      "userId": "2",
+      "organizationId": "1",
+      "role": "owner",
+      "isPrimary": "0",
+      "createdAt": "2026-03-22 03:17:51",
+      "updatedAt": "2026-03-22 03:17:51"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\torganizationId\trole\tisPrimary\tcreatedAt\tupdatedAt\n1\t1\t1\towner\t0\t2026-03-22 03:17:40\t2026-03-22 03:17:40\n3\t2\t1\towner\t0\t2026-03-22 03:17:51\t2026-03-22 03:17:51\n",
+  "stderr": "",
+  "execution_time_ms": 102
+}
