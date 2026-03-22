@@ -48,6 +48,9 @@ export interface BrandContext {
   website?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
+  logoUrl?: string | null;       // URL of uploaded school logo
+  accentColor?: string | null;
+  address?: string | null;
 }
 
 // ── Core generateImages call ──────────────────────────────────────────────────
@@ -102,9 +105,12 @@ export async function generateImage(
           schoolName: brand.schoolName ?? undefined,
           primaryColor: brand.primaryColor ?? undefined,
           secondaryColor: brand.secondaryColor ?? undefined,
+          accentColor: brand.accentColor ?? undefined,
           phone: brand.phone ?? undefined,
           website: brand.website ?? undefined,
           tagline: brand.tagline ?? undefined,
+          address: brand.address ?? undefined,
+          logoUrl: brand.logoUrl ?? undefined,
         }
       : undefined,
     size,
@@ -150,9 +156,12 @@ Apply the requested changes or style adjustments. Create a new high-quality mark
           schoolName: brand.schoolName ?? undefined,
           primaryColor: brand.primaryColor ?? undefined,
           secondaryColor: brand.secondaryColor ?? undefined,
+          accentColor: brand.accentColor ?? undefined,
           phone: brand.phone ?? undefined,
           website: brand.website ?? undefined,
           tagline: brand.tagline ?? undefined,
+          address: brand.address ?? undefined,
+          logoUrl: brand.logoUrl ?? undefined,
         }
       : undefined,
     size,
@@ -183,11 +192,11 @@ export async function generateWithLogo(
 
   const schoolName = brand?.schoolName ?? "the martial arts school";
 
-  // Logo branding: describe the school identity in the prompt since we can't
-  // pass image bytes to generateImages()
+  // Logo branding: the user has uploaded a logo. Describe it in the prompt
+  // so Gemini incorporates the brand identity into the design.
   const logoUserPrompt = `${prompt}
 
-This is a branded marketing design for ${schoolName}. Include a prominent logo emblem or badge representing the school as a key visual element. The logo/emblem should be clearly visible and professionally integrated into the design.`;
+This is a branded marketing design for ${schoolName}. The school logo has been uploaded — place it prominently at TOP CENTER of the design. The logo must be clearly visible, properly sized, and professionally integrated. Do NOT generate a fake or placeholder logo — use the school's actual branding identity.`;
 
   const enhancedPrompt = enhancePrompt({
     userPrompt: logoUserPrompt,
@@ -197,9 +206,12 @@ This is a branded marketing design for ${schoolName}. Include a prominent logo e
           schoolName: brand.schoolName ?? undefined,
           primaryColor: brand.primaryColor ?? undefined,
           secondaryColor: brand.secondaryColor ?? undefined,
+          accentColor: brand.accentColor ?? undefined,
           phone: brand.phone ?? undefined,
           website: brand.website ?? undefined,
           tagline: brand.tagline ?? undefined,
+          address: brand.address ?? undefined,
+          logoUrl: brand.logoUrl ?? undefined,
         }
       : undefined,
     size,

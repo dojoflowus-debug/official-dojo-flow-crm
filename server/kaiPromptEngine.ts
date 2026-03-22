@@ -1,16 +1,21 @@
 /**
- * Kai Creative — Marketing Structure Engine
+ * Kai Creative — Premium Marketing Prompt Engine v2
  *
- * Transforms raw user input into high-converting marketing prompts.
+ * Transforms raw user input into high-converting, brand-accurate marketing prompts.
  *
  * Pipeline:
- *  1. sanitizePrompt()      — strip banned phrases, replace with urgency copy
- *  2. injectCTA()           — auto-inject CTA if user didn't provide one
- *  3. detectProgram()       — inject program-specific context (Little Ninjas, etc.)
- *  4. detectStylePreset()   — infer or accept explicit style preset
- *  5. buildMarketingPrompt() — full hierarchy: headline → visual → CTA → contact
+ *  1. extractUserValues()    — lock in user-specified ages, names, phones (NO hallucination)
+ *  2. sanitizePrompt()       — strip banned phrases, replace with urgency copy
+ *  3. injectCTA()            — auto-inject CTA if user didn't provide one
+ *  4. detectProgram()        — inject program-specific context (Little Ninjas, etc.)
+ *  5. detectStylePreset()    — infer or accept explicit style preset
+ *  6. buildMarketingPrompt() — full hierarchy: logo → headline → visual → CTA → contact
  *
- * This is the "designer + marketer + copywriter" layer.
+ * STRICT RULES:
+ *  - NEVER change user-specified age ranges, program names, or phone numbers
+ *  - ALWAYS inject logo/brand assets when available
+ *  - ALWAYS use premium design language — cinematic, bold, high-contrast
+ *  - NEVER produce generic stock-template outputs
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -42,6 +47,50 @@ export interface PromptEngineOptions {
   size?: string; // e.g. "instagram_post", "flyer"
 }
 
+// ── User Value Extraction (anti-hallucination) ────────────────────────────────
+
+interface ExtractedUserValues {
+  ageRange: string | null;
+  programName: string | null;
+  phone: string | null;
+  headline: string | null;
+  colors: string[];
+}
+
+/**
+ * Extract explicit values the user specified — these must NEVER be changed.
+ * Age ranges, program names, phone numbers, and headline text are locked.
+ */
+export function extractUserValues(userPrompt: string): ExtractedUserValues {
+  const text = userPrompt;
+
+  // Age range patterns: "ages 3-5", "ages 3–5", "3 to 5 year", "3-5 year olds"
+  const ageMatch = text.match(/ages?\s*(\d+\s*[-–to]+\s*\d+)/i)
+    ?? text.match(/(\d+\s*[-–to]+\s*\d+)\s*year/i)
+    ?? text.match(/(\d+\s*[-–to]+\s*\d+)\s*yr/i);
+  const ageRange = ageMatch ? ageMatch[1].replace(/\s+/g, "").replace("to", "–") : null;
+
+  // Phone number: various formats
+  const phoneMatch = text.match(/(?:phone|call|tel|#)?\s*(\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4})/i);
+  const phone = phoneMatch ? phoneMatch[1] : null;
+
+  // Headline: text in ALL CAPS or quoted
+  const headlineMatch = text.match(/headline[:\s]+"([^"]+)"/i)
+    ?? text.match(/headline[:\s]+([A-Z][A-Z\s]{4,})/);
+  const headline = headlineMatch ? headlineMatch[1].trim() : null;
+
+  // Program name: quoted or after "program:"
+  const programMatch = text.match(/program[:\s]+"([^"]+)"/i)
+    ?? text.match(/program[:\s]+([A-Za-z\s]+?)(?:\n|ages|,)/i);
+  const programName = programMatch ? programMatch[1].trim() : null;
+
+  // Color mentions
+  const colorPatterns = ["red", "black", "white", "gold", "blue", "green", "purple", "orange"];
+  const colors = colorPatterns.filter(c => text.toLowerCase().includes(c));
+
+  return { ageRange, programName, phone, headline, colors };
+}
+
 // ── Banned Phrases → Urgency Replacements ────────────────────────────────────
 
 const BANNED_PHRASES: Array<{ pattern: RegExp; replacement: string }> = [
@@ -60,152 +109,157 @@ const BANNED_PHRASES: Array<{ pattern: RegExp; replacement: string }> = [
 // ── CTA Patterns (detect if user already provided a CTA) ─────────────────────
 
 const CTA_PATTERNS = [
-  /register/i,
-  /enroll/i,
-  /sign up/i,
-  /join/i,
-  /call now/i,
-  /book/i,
-  /reserve/i,
-  /limited spots/i,
-  /don't miss/i,
-  /act now/i,
-  /get started/i,
-  /claim/i,
-  /free trial/i,
-  /try now/i,
+  /register/i, /enroll/i, /sign up/i, /join/i, /call now/i, /book/i,
+  /reserve/i, /limited spots/i, /don't miss/i, /act now/i, /get started/i,
+  /claim/i, /free trial/i, /try now/i,
 ];
 
 // ── Style Preset Definitions ──────────────────────────────────────────────────
 
 const STYLE_DEFINITIONS: Record<Exclude<StylePreset, "auto">, string> = {
   energetic: `
-    Visual style: bold, high-energy, dynamic
-    - Vibrant colors with strong contrast
-    - Action-oriented imagery (movement, power, motion blur)
-    - Large impactful typography with strong weight
-    - Diagonal design elements and energetic composition
-    - Conveys excitement, strength, and motivation`,
+VISUAL STYLE: Bold, cinematic, high-energy martial arts brand
+- Deep black background with explosive red accents
+- Dynamic action photography or illustrated figures in motion
+- Typography: ultra-bold, condensed, military/sport style (like Bebas Neue or Impact)
+- Diagonal composition lines creating forward momentum
+- Dramatic lighting: rim light on subjects, dark vignette edges
+- Red/black/white color scheme — high contrast, zero ambiguity
+- Feels like a premium martial arts brand, NOT a stock template`,
 
   premium: `
-    Visual style: clean, professional, modern
-    - Sophisticated color palette with intentional white space
-    - Strong typographic hierarchy with elegant fonts
-    - Balanced composition with clear focal point
-    - Subtle gradients and refined shadows
-    - Conveys trust, quality, and expertise`,
+VISUAL STYLE: Clean, professional, modern martial arts brand
+- Dark background with sophisticated red and white accents
+- Strong typographic hierarchy with intentional white space
+- Balanced composition with clear focal point
+- Subtle gradients and refined shadows
+- Conveys trust, quality, and mastery
+- Feels like a $500 agency design`,
 
   luxury: `
-    Visual style: elegant, exclusive, refined
-    - Dark backgrounds with gold or platinum accents
-    - Minimal text, maximum visual impact
-    - Premium materials and textures (marble, metal, leather)
-    - Generous white space and breathing room
-    - Conveys prestige, exclusivity, and high value`,
+VISUAL STYLE: Elegant, exclusive, premium martial arts school
+- Near-black backgrounds with gold or crimson accents
+- Minimal text, maximum visual impact
+- Premium textures (brushed metal, leather, aged paper)
+- Generous breathing room and refined spacing
+- Conveys prestige, exclusivity, and mastery`,
 
   kids_playful: `
-    Visual style: fun, colorful, approachable
-    - Bright, cheerful colors (primary palette)
-    - Rounded shapes and friendly typography
-    - Playful illustrations or cartoon-style elements
-    - High energy but safe and welcoming
-    - Appeals to both children AND parents
-    - Conveys fun, safety, and growth`,
+VISUAL STYLE: Fun, energetic, kid-friendly martial arts — but PREMIUM quality
+- Bold, vibrant colors: red, black, white with bright accents
+- Cartoon-style martial arts kids in gi uniforms — confident poses
+- Rounded, friendly typography that's still bold and readable
+- Playful but structured — NOT childish or cheap-looking
+- Parents see: safe, professional, confidence-building
+- Kids see: exciting, fun, I want to do that!
+- Think: high-end children's brand, NOT clip-art
+- Cartoon characters: 2–3 kids in white karate gi, black belts, big smiles
+- Characters doing kicks, punches, or bow stance — full of energy`,
 
   high_converting_ad: `
-    Visual style: direct-response marketing optimized
-    - Attention-grabbing headline dominates top third
-    - Clear value proposition in subheadline
-    - Social proof element (numbers, testimonials, badges)
-    - Urgency or scarcity element (limited spots, deadline)
-    - Single dominant CTA button/text — large and contrasting
-    - Minimal distractions, maximum conversion focus`,
+VISUAL STYLE: Direct-response marketing — maximum conversion
+- Attention-grabbing headline dominates top third
+- Clear value proposition in subheadline
+- Social proof element (numbers, testimonials, badges)
+- Urgency or scarcity element (limited spots, deadline)
+- Single dominant CTA button/text — large and contrasting
+- Minimal distractions, maximum conversion focus
+- Red CTA button on dark background — impossible to miss`,
 };
 
 // ── Program Awareness ─────────────────────────────────────────────────────────
 
 interface ProgramContext {
   name: string;
-  ageRange: string;
+  defaultAgeRange: string;
   benefits: string[];
   tone: string;
   targetAudience: string;
   keywords: string[];
   defaultCTA: string;
+  visualStyle: string;
 }
 
 const PROGRAM_CONTEXTS: ProgramContext[] = [
   {
     name: "Little Ninjas",
-    ageRange: "ages 4–7",
-    benefits: ["focus", "confidence", "discipline", "coordination", "listening skills"],
+    defaultAgeRange: "ages 3–5",  // default only — user value takes precedence
+    benefits: ["Focus", "Confidence", "Discipline", "Coordination", "Listening Skills"],
     tone: "fun, energetic, parent-focused, safe and nurturing",
-    targetAudience: "parents of young children ages 4–7",
+    targetAudience: "parents of young children",
     keywords: ["little ninjas", "little ninja", "tiny ninjas"],
-    defaultCTA: "Enroll Today – Limited Spots for Ages 4–7!",
+    defaultCTA: "Enroll Today – Limited Spots!",
+    visualStyle: "Cartoon kids in white karate gi, big smiles, energetic poses. Playful but structured. Red/black/white palette.",
   },
   {
     name: "Kids Karate",
-    ageRange: "ages 6–12",
-    benefits: ["self-defense", "discipline", "confidence", "fitness", "anti-bullying"],
+    defaultAgeRange: "ages 6–12",
+    benefits: ["Self-Defense", "Discipline", "Confidence", "Fitness", "Anti-Bullying"],
     tone: "energetic, empowering, parent-reassuring",
     targetAudience: "parents of school-age children",
     keywords: ["kids karate", "children karate", "youth karate", "kids martial arts", "children martial arts"],
     defaultCTA: "Register Now – Limited Spots Available!",
+    visualStyle: "Dynamic kids in martial arts action. Bold, high-energy. Red and black.",
   },
   {
     name: "Teen Karate",
-    ageRange: "ages 13–17",
-    benefits: ["self-defense", "leadership", "focus", "stress relief", "confidence"],
+    defaultAgeRange: "ages 13–17",
+    benefits: ["Self-Defense", "Leadership", "Focus", "Stress Relief", "Confidence"],
     tone: "cool, empowering, achievement-focused",
     targetAudience: "teens and their parents",
     keywords: ["teen karate", "teenage karate", "teen martial arts", "youth program"],
     defaultCTA: "Join Today – Build Confidence & Leadership",
+    visualStyle: "Teen martial artist in powerful stance. Dark, cinematic. Red accent lighting.",
   },
   {
     name: "Adult Karate",
-    ageRange: "adults 18+",
-    benefits: ["self-defense", "fitness", "stress relief", "mental clarity", "community"],
+    defaultAgeRange: "adults 18+",
+    benefits: ["Self-Defense", "Fitness", "Stress Relief", "Mental Clarity", "Community"],
     tone: "strong, professional, results-focused",
     targetAudience: "working adults seeking fitness and self-defense",
     keywords: ["adult karate", "adult martial arts", "adult class", "adults"],
     defaultCTA: "Start Your Free Trial – Limited Spots Available",
+    visualStyle: "Adult martial artist in powerful stance. Professional, cinematic. Dark background.",
   },
   {
     name: "Self Defense",
-    ageRange: "all ages",
-    benefits: ["personal safety", "confidence", "situational awareness", "practical skills"],
+    defaultAgeRange: "all ages",
+    benefits: ["Personal Safety", "Confidence", "Situational Awareness", "Practical Skills"],
     tone: "empowering, practical, urgent, safety-focused",
     targetAudience: "adults concerned about personal safety",
     keywords: ["self defense", "self-defense", "personal safety", "women's self defense"],
     defaultCTA: "Register Now – Protect Yourself & Your Family",
+    visualStyle: "Empowering stance, confident subject. Bold typography. Dark, serious tone.",
   },
   {
     name: "Belt Test",
-    ageRange: "all students",
-    benefits: ["achievement", "recognition", "advancement", "milestone"],
+    defaultAgeRange: "all students",
+    benefits: ["Achievement", "Recognition", "Advancement", "Milestone"],
     tone: "celebratory, prestigious, achievement-focused",
     targetAudience: "current students and their families",
     keywords: ["belt test", "belt promotion", "belt ceremony", "rank promotion", "testing"],
     defaultCTA: "Register for Your Belt Test – Spots Are Limited!",
+    visualStyle: "Student holding belt, triumphant pose. Gold and black accents. Prestigious.",
   },
   {
     name: "Summer Camp",
-    ageRange: "ages 6–14",
-    benefits: ["fun", "fitness", "friends", "skills", "daily structure"],
+    defaultAgeRange: "ages 6–14",
+    benefits: ["Fun", "Fitness", "Friends", "Skills", "Daily Structure"],
     tone: "exciting, fun, summer energy, parent-convenient",
     targetAudience: "parents looking for summer activities",
     keywords: ["summer camp", "summer program", "camp", "summer"],
     defaultCTA: "Reserve Your Spot – Summer Fills Fast!",
+    visualStyle: "Kids in action, bright summer energy. Bold colors. Fun but structured.",
   },
   {
     name: "Grand Opening",
-    ageRange: "all ages",
-    benefits: ["community", "new beginning", "special offers", "introductory pricing"],
+    defaultAgeRange: "all ages",
+    benefits: ["Community", "New Beginning", "Special Offers", "Introductory Pricing"],
     tone: "exciting, welcoming, community-focused, celebratory",
     targetAudience: "local community, all ages",
     keywords: ["grand opening", "opening", "new location", "now open"],
     defaultCTA: "Join Us – Grand Opening Special Offer Inside!",
+    visualStyle: "Celebratory, bold. Red ribbon cutting or school exterior. Community energy.",
   },
 ];
 
@@ -215,15 +269,12 @@ const SIZE_FORMAT_LABELS: Record<string, string> = {
   instagram_post: "square Instagram post (1:1 ratio)",
   instagram_story: "vertical Instagram story (9:16 ratio, mobile-first)",
   facebook_ad: "Facebook ad (4:5 ratio)",
-  flyer: "portrait flyer (3:4 ratio, print-ready)",
+  flyer: "landscape flyer (4:3 ratio, 11×8.5 inches, print-ready)",
   website_banner: "wide website banner (16:9 ratio, landscape)",
 };
 
 // ── Core Functions ────────────────────────────────────────────────────────────
 
-/**
- * Strip banned phrases from user input and replace with urgency copy.
- */
 export function sanitizePrompt(userPrompt: string): string {
   let cleaned = userPrompt;
   for (const { pattern, replacement } of BANNED_PHRASES) {
@@ -232,26 +283,16 @@ export function sanitizePrompt(userPrompt: string): string {
   return cleaned;
 }
 
-/**
- * Detect if the user's prompt already contains a CTA.
- */
 export function hasCTA(userPrompt: string): boolean {
   return CTA_PATTERNS.some((pattern) => pattern.test(userPrompt));
 }
 
-/**
- * Auto-inject a CTA if the user didn't provide one.
- * Uses program-specific CTA if a program is detected, otherwise uses default.
- */
 export function injectCTA(userPrompt: string, program?: ProgramContext | null): string {
   if (hasCTA(userPrompt)) return userPrompt;
   const cta = program?.defaultCTA ?? "Register Now – Limited Spots Available!";
   return `${userPrompt}\n\nCall to action: "${cta}"`;
 }
 
-/**
- * Detect which program the user is referring to based on keywords in their prompt.
- */
 export function detectProgram(userPrompt: string): ProgramContext | null {
   const lower = userPrompt.toLowerCase();
   for (const program of PROGRAM_CONTEXTS) {
@@ -262,10 +303,6 @@ export function detectProgram(userPrompt: string): ProgramContext | null {
   return null;
 }
 
-/**
- * Detect or infer the best style preset from the user's prompt.
- * If an explicit preset is provided, use it. Otherwise infer from content.
- */
 export function detectStylePreset(
   userPrompt: string,
   explicitPreset?: StylePreset
@@ -274,184 +311,190 @@ export function detectStylePreset(
 
   const lower = userPrompt.toLowerCase();
 
-  // Kids content → playful
-  if (
-    lower.includes("little ninja") ||
-    lower.includes("kids") ||
-    lower.includes("children") ||
-    lower.includes("youth") ||
-    lower.includes("camp")
-  ) {
+  if (lower.includes("little ninja") || lower.includes("kids") || lower.includes("children") || lower.includes("youth") || lower.includes("camp")) {
     return "kids_playful";
   }
-
-  // Luxury / high-end signals
-  if (
-    lower.includes("luxury") ||
-    lower.includes("elite") ||
-    lower.includes("exclusive") ||
-    lower.includes("premium")
-  ) {
+  if (lower.includes("luxury") || lower.includes("elite") || lower.includes("exclusive") || lower.includes("premium")) {
     return "luxury";
   }
-
-  // Ad / conversion signals
-  if (
-    lower.includes("ad") ||
-    lower.includes("offer") ||
-    lower.includes("free trial") ||
-    lower.includes("limited") ||
-    lower.includes("enroll") ||
-    lower.includes("sign up") ||
-    lower.includes("call to action")
-  ) {
+  if (lower.includes("offer") || lower.includes("free trial") || lower.includes("limited") || lower.includes("enroll") || lower.includes("sign up")) {
     return "high_converting_ad";
   }
+  if (lower.includes("professional") || lower.includes("clean") || lower.includes("modern")) {
+    return "premium";
+  }
 
-  // Default: energetic for martial arts content
   return "energetic";
 }
 
 /**
- * Build the full marketing-optimized prompt.
- * This is the main entry point — replaces the old enhancePrompt().
+ * Build the full premium marketing prompt.
+ * STRICT: user-specified values (age, phone, name) are NEVER overridden.
  */
 export function buildMarketingPrompt(options: PromptEngineOptions): string {
   const { style, brand, size } = options;
 
-  // Step 1: Sanitize — remove banned phrases
+  // Step 1: Extract user-specified values (these are LOCKED — never change)
+  const userValues = extractUserValues(options.userPrompt);
+
+  // Step 2: Sanitize
   const sanitized = sanitizePrompt(options.userPrompt);
 
-  // Step 2: Detect program context
+  // Step 3: Detect program context
   const program = detectProgram(sanitized);
 
-  // Step 3: Inject CTA if missing
+  // Step 4: Inject CTA if missing
   const withCTA = injectCTA(sanitized, program);
 
-  // Step 4: Detect style
+  // Step 5: Detect style
   const resolvedStyle = detectStylePreset(withCTA, style);
   const styleDefinition = STYLE_DEFINITIONS[resolvedStyle];
 
-  // Step 5: Format label
-  const formatLabel = size ? SIZE_FORMAT_LABELS[size] ?? size : "marketing design";
+  // Step 6: Format label
+  const formatLabel = size ? SIZE_FORMAT_LABELS[size] ?? size : "marketing flyer";
+
+  // ── Strict Value Lock Block (anti-hallucination) ─────────────────────────────
+  const strictValueBlock = `
+⚠️ STRICT DATA ACCURACY — DO NOT CHANGE THESE VALUES:
+${userValues.ageRange ? `- Age range: "${userValues.ageRange}" — display EXACTLY as written, do not change to any other age range` : ""}
+${userValues.phone ? `- Phone number: "${userValues.phone}" — display EXACTLY as written` : ""}
+${userValues.headline ? `- Headline text: "${userValues.headline}" — use EXACTLY as written` : ""}
+${userValues.programName ? `- Program name: "${userValues.programName}" — use EXACTLY as written` : ""}
+${userValues.colors.length > 0 ? `- Color scheme: ${userValues.colors.join(", ")} — use these colors throughout` : ""}
+RULE: Never invent, approximate, or change any of the above. If a value is specified by the user, it is final.`;
 
   // ── Brand Block ──────────────────────────────────────────────────────────────
+  const hasLogo = brand?.logoUrl;
   const brandBlock = brand
     ? `
-BRAND IDENTITY (AUTO-APPLIED — inject ALL of these into the design):
+BRAND IDENTITY — AUTO-APPLIED (inject ALL into the design):
 - School name: "${brand.schoolName ?? "the martial arts school"}" — display prominently
 - Primary color: ${brand.primaryColor ?? "red"} — dominant color throughout
 - Secondary color: ${brand.secondaryColor ?? "black"} — backgrounds and contrast areas
 ${brand.accentColor ? `- Accent color: ${brand.accentColor} — use sparingly for highlights` : ""}
-${brand.phone ? `- Phone: ${brand.phone} — bottom section, large and readable` : ""}
+${brand.phone && !userValues.phone ? `- Phone: ${brand.phone} — bottom section, large and readable` : ""}
 ${brand.website ? `- Website: ${brand.website} — bottom section` : ""}
 ${brand.address ? `- Address: ${brand.address} — include if space allows` : ""}
 ${brand.tagline ? `- Tagline: "${brand.tagline}" — subheadline or footer` : ""}
 
-LOGO PLACEMENT (CRITICAL):
-- Place school name/logo at TOP CENTER or TOP LEFT
-- Clear padding around logo — never stretch or distort
-- Logo must be visible against background (use contrast backing if needed)
-- Logo size: 15–20% of design width
-- Never overlap logo with busy imagery
-- School name "${brand.schoolName ?? "the school"}" must be instantly readable`
-    : "";
+LOGO PLACEMENT — CRITICAL REQUIREMENT:
+${hasLogo
+  ? `- The school logo has been provided — place it prominently at TOP CENTER of the design
+- Logo must be clearly visible, properly sized (15–20% of design width)
+- Clear padding around logo — never stretch, distort, or overlap with busy imagery
+- Logo must be readable against background — use contrast backing if needed
+- DO NOT generate a fake or placeholder logo — use the provided school logo only`
+  : `- No logo uploaded — use the school name "${brand.schoolName ?? "the school"}" as a bold text logo at top center
+- Style the school name as a premium wordmark — bold, clean, professional
+- DO NOT generate a generic placeholder logo or clip-art emblem`}`
+    : `
+LOGO: No brand data available. Use a bold martial arts emblem at top center.`;
 
   // ── Program Block ────────────────────────────────────────────────────────────
+  // Use user-specified age range if provided, otherwise use program default
+  const effectiveAgeRange = userValues.ageRange ?? program?.defaultAgeRange ?? null;
   const programBlock = program
     ? `
-PROGRAM CONTEXT — ${program.name.toUpperCase()}:
+PROGRAM: ${program.name.toUpperCase()}
 - Target audience: ${program.targetAudience}
-- Age range: ${program.ageRange}
+- Age range: ${effectiveAgeRange ?? program.defaultAgeRange} — USE EXACTLY THIS, do not change
 - Benefits to highlight: ${program.benefits.join(", ")}
 - Tone: ${program.tone}
-- Suggested CTA: "${program.defaultCTA}"`
+- Visual style: ${program.visualStyle}
+- CTA: "${program.defaultCTA}"`
+    : effectiveAgeRange
+    ? `\nAGE RANGE: ${effectiveAgeRange} — display EXACTLY as specified`
     : "";
 
-  // ── Marketing Structure Rules ────────────────────────────────────────────────
-  const marketingStructure = `
-MARKETING DESIGN STRUCTURE (follow this hierarchy exactly):
-1. HEADLINE (top third) — Bold, large, dominant. Maximum 6 words. High impact.
-   Examples: "SUMMER KARATE CAMP", "BUILD CONFIDENCE & DISCIPLINE", "TRAIN LIKE A CHAMPION"
-   NEVER use: "Key Details", "Information", "Details"
+  // ── Premium Composition Rules ────────────────────────────────────────────────
+  const compositionRules = `
+PREMIUM COMPOSITION RULES — follow this layout hierarchy exactly:
 
-2. SUBHEADLINE — Supporting statement. Benefit-driven, not descriptive.
-   Examples: "Ages 6–12 • July 8–12 • 9AM–12PM"
-   NEVER use generic labels
+1. LOGO / SCHOOL NAME (top center, ~15% height)
+   - Logo or bold school name wordmark
+   - Clean white space below logo
 
-3. VISUAL CENTER — Dynamic, engaging imagery. People in action. Energy and movement.
+2. HEADLINE (bold, large, dominant — 30–40% of visual space)
+   - Maximum 4–6 words
+   - Ultra-bold, condensed typeface
+   - High contrast against background
+   - Examples: "LITTLE NINJAS", "TRAIN LIKE A CHAMPION", "BUILD CONFIDENCE"
 
-4. KEY BENEFITS (if applicable) — 2–3 short punchy lines. Use icons or bullets.
-   Examples: "✓ Build Confidence", "✓ Learn Self-Defense", "✓ Make Friends"
+3. SUBHEADLINE (supporting, benefit-driven)
+   - Age range, dates, or key benefit
+   - Smaller than headline but still prominent
 
-5. CALL TO ACTION (bottom third) — LARGE, HIGH CONTRAST, IMPOSSIBLE TO MISS.
-   Must use urgency language: "Register Now", "Limited Spots", "Enroll Today", "Don't Miss Out"
-   NEVER use: "Learn More", "Find Out More", "See Details"
+4. VISUAL CENTER (dynamic, engaging imagery)
+   - ${program?.visualStyle ?? "Martial artist in powerful action pose"}
+   - Characters centered, full of energy
+   - Professional illustration or cinematic photography style
 
-6. CONTACT INFO (bottom) — Phone number and website. Clean, readable.`;
+5. BENEFITS (clean icon layout, 3–4 items)
+   - Short, punchy: "✓ Discipline  ✓ Confidence  ✓ Coordination"
+   - Icon + text format, horizontally arranged
 
-  // ── Copywriting Rules ────────────────────────────────────────────────────────
-  const copywritingRules = `
-COPYWRITING RULES (psychology + persuasion):
-- Use URGENCY: "Limited Spots Available", "Spots Filling Fast", "Register Before [Date]"
-- Use ACTION verbs: "Register", "Enroll", "Join", "Train", "Start", "Claim"
-- Use BENEFIT language: what they GET, not what it IS
-- NEVER use passive or generic phrases
-- Make it PERSUASIVE, not informational
-- Every word must earn its place — no filler text`;
+6. CTA SECTION (bottom third — IMPOSSIBLE TO MISS)
+   - Large red button or bold text block
+   - Urgency language: "Register Now", "Limited Spots", "Enroll Today"
+   - Phone number large and readable
 
-  // ── Layout Rules ─────────────────────────────────────────────────────────────
-  const layoutRules = `
-LAYOUT RULES (always enforce):
-- Strong visual hierarchy — one dominant element at a time
-- Clean breathing room — never cluttered
-- All text readable from 10 feet away
-- High contrast — text must pop against background
-- Format: ${formatLabel}`;
+7. CONTACT INFO (bottom strip)
+   - Phone, website, address — clean, readable`;
 
-  // ── Quality Directives ───────────────────────────────────────────────────────
-  const qualityDirectives = `
-OUTPUT QUALITY:
-- Professional agency quality — looks like a $500 design
-- Print-ready sharpness
-- No watermarks, no placeholder text, no lorem ipsum
-- Photorealistic imagery where applicable
-- This should make someone stop scrolling and take action`;
+  // ── Premium Design Directives ────────────────────────────────────────────────
+  const premiumDesignDirectives = `
+PREMIUM DESIGN STANDARDS:
+- This must look like a $500+ professional agency design
+- Cinematic quality — not a stock template, not clip-art
+- High contrast: text pops, hierarchy is instantly clear
+- Bold typography: condensed, impactful, modern
+- Color discipline: ${userValues.colors.length > 0 ? userValues.colors.join("/") : "red/black/white"} — use intentionally
+- Every element earns its place — no clutter, no filler
+- Print-ready quality: sharp edges, no blur, no artifacts
+- Format: ${formatLabel}
+
+WHAT TO AVOID:
+- Generic stock photo backgrounds
+- Clip-art or low-quality illustrations
+- Overcrowded layouts
+- Weak typography (thin fonts, poor contrast)
+- Placeholder text or lorem ipsum
+- Fake or invented logos
+- Changing user-specified values (ages, names, phone numbers)`;
 
   // ── Assemble Full Prompt ─────────────────────────────────────────────────────
-  return `Create a HIGH-CONVERTING marketing design for a martial arts school.
+  return `Create a PREMIUM, PRINT-READY marketing design for a martial arts school.
 
 DESIGN REQUEST:
 ${withCTA}
+${strictValueBlock}
 ${programBlock}
 ${brandBlock}
 
 STYLE DIRECTION:
 ${styleDefinition}
-${marketingStructure}
-${copywritingRules}
-${layoutRules}
-${qualityDirectives}
+${compositionRules}
+${premiumDesignDirectives}
 
-FINAL INSTRUCTION: This must look like it was designed by a professional marketing agency. Bold. Persuasive. Impossible to ignore. Make someone want to register immediately.`;
+FINAL DIRECTIVE: This must be visually stunning — the kind of flyer that stops someone in their tracks. Bold. Cinematic. Brand-accurate. A professional martial arts brand that commands respect. Make it "wow" level, not generic. Every value the user specified must appear EXACTLY as written.`;
 }
 
 /**
- * Alias for backward compatibility — routes to buildMarketingPrompt.
+ * Alias for backward compatibility.
  */
 export function enhancePrompt(options: PromptEngineOptions): string {
   return buildMarketingPrompt(options);
 }
 
 /**
- * Parse style preset from a natural language string (for chat-based generation).
+ * Parse style preset from natural language.
  */
 export function parseStyleFromText(text: string): StylePreset {
   const lower = text.toLowerCase();
   if (lower.includes("luxury") || lower.includes("elegant") || lower.includes("upscale")) return "luxury";
   if (lower.includes("premium") || lower.includes("professional") || lower.includes("clean")) return "premium";
-  if (lower.includes("playful") || lower.includes("fun") || lower.includes("colorful")) return "kids_playful";
+  if (lower.includes("playful") || lower.includes("fun") || lower.includes("colorful") || lower.includes("kids") || lower.includes("children")) return "kids_playful";
   if (lower.includes("ad") || lower.includes("convert") || lower.includes("offer") || lower.includes("enroll")) return "high_converting_ad";
-  if (lower.includes("energetic") || lower.includes("bold") || lower.includes("powerful")) return "energetic";
+  if (lower.includes("energetic") || lower.includes("bold") || lower.includes("powerful") || lower.includes("cinematic")) return "energetic";
   return "auto";
 }

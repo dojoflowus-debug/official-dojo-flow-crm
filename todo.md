@@ -8674,3 +8674,12 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] PWA manifest: add shortcuts for Kai, Students, Creative
 - [ ] Global: prevent double-tap zoom on buttons, touch-action CSS
 - [ ] Add mobile-specific CSS variables for safe area insets
+
+## Kai Creative Upgrades (2026-03-22)
+- [x] Premium Prompt Engine v2 — strict brand enforcement, anti-hallucination, composition rules
+- [x] Logo auto-injection from school profile (logoUrl, accentColor, address fields)
+- [x] getBrandDataForOrg updated to include address and accentColor
+- [x] ImageLightbox rewrite — single image, no duplicate stacking, no blur overlay, correct aspect ratio
+- [x] Public routes fix — homepage and marketing pages no longer force redirect to login
+- [x] Demo accounts seeded (demo@dojoflow.com / demo123)
+- [x] DB schema migrations applied (94 tables)

@@ -1,13 +1,15 @@
 /**
  * ImageLightbox — fullscreen image viewer with zoom, pan, and controls overlay
  *
- * Features:
- *  - Fullscreen dark modal
+ * Fixed:
+ *  - Single image rendered (no duplicate stacking)
+ *  - Proper centering with correct aspect ratio
+ *  - No blurred overlay on the image itself (backdrop-blur only on controls)
+ *  - Image never cropped — always object-contain
  *  - Scroll wheel zoom + pinch zoom (mobile)
  *  - Click + drag to pan
  *  - Double-click to zoom in/out toggle
  *  - +/- buttons, Fit / 100% / Fill mode buttons
- *  - Controls overlay: Close, Download, Open in Creative, Edit
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -48,7 +50,7 @@ const DOUBLE_CLICK_ZOOM = 2.5;
 
 export default function ImageLightbox({
   imageUrl,
-  imageBase64,
+  imageBase64: _imageBase64,
   mimeType = "image/png",
   prompt,
   size,
@@ -84,10 +86,8 @@ export default function ImageLightbox({
     if (mode === "actual") {
       setScale(1);
     } else if (mode === "fit") {
-      // CSS handles fit — reset scale to 1 which maps to object-fit:contain
       setScale(1);
     } else {
-      // fill — zoom to fill viewport
       setScale(1.5);
     }
   }, []);
@@ -154,11 +154,9 @@ export default function ImageLightbox({
       const cx = e.clientX - rect.left - rect.width / 2;
       const cy = e.clientY - rect.top - rect.height / 2;
       if (scale < DOUBLE_CLICK_ZOOM - 0.1) {
-        // Zoom in to DOUBLE_CLICK_ZOOM
         const delta = (DOUBLE_CLICK_ZOOM - scale) / scale;
         zoomAt(delta, cx, cy);
       } else {
-        // Zoom back to 1 (fit)
         setScale(1);
         setOffset({ x: 0, y: 0 });
       }
@@ -225,6 +223,12 @@ export default function ImageLightbox({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  // Prevent body scroll when lightbox is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   // ── Download ──────────────────────────────────────────────────────────────
 
   const handleDownload = useCallback(() => {
@@ -250,16 +254,17 @@ export default function ImageLightbox({
   const cursor = isDragging.current ? "grabbing" : scale > 1 ? "grab" : "zoom-in";
 
   return (
+    // Portal-style fullscreen overlay — pure black, no blur on the image itself
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-[9999] bg-black"
+      style={{ isolation: "isolate" }}
     >
       {/* ── Controls overlay (top bar) ────────────────────────────────────── */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
         {/* Left: prompt / size info */}
         <div className="pointer-events-none">
           {size && (
-            <span className="text-xs text-white/50 font-mono bg-white/10 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-white/60 font-mono bg-white/10 px-2 py-0.5 rounded-full">
               {size.replace("_", " ")}
             </span>
           )}
@@ -302,10 +307,16 @@ export default function ImageLightbox({
         </div>
       </div>
 
-      {/* ── Image canvas ──────────────────────────────────────────────────── */}
+      {/* ── Click-outside-to-close backdrop ──────────────────────────────── */}
+      <div
+        className="absolute inset-0 z-0"
+        onClick={onClose}
+      />
+
+      {/* ── Image canvas — single image, properly centered ────────────────── */}
       <div
         ref={containerRef}
-        className="relative w-full h-full flex items-center justify-center overflow-hidden select-none"
+        className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden select-none"
         style={{ cursor }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
@@ -316,25 +327,38 @@ export default function ImageLightbox({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onClick={(e) => {
+          // Only close if clicking the canvas background, not the image
+          if (e.target === containerRef.current) onClose();
+        }}
       >
+        {/* Single image — no duplicate, no blur overlay, correct aspect ratio */}
         <img
           ref={imgRef}
           src={imageUrl}
           alt={prompt ?? "Generated image"}
           draggable={false}
-          className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
           style={{
             transform,
             transformOrigin: "center center",
             transition: isDragging.current ? "none" : "transform 0.1s ease-out",
             userSelect: "none",
             WebkitUserSelect: "none",
+            // Ensure image is never cropped and maintains aspect ratio
+            maxWidth: "90vw",
+            maxHeight: "85vh",
+            width: "auto",
+            height: "auto",
+            objectFit: "contain",
+            display: "block",
+            borderRadius: "8px",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.8)",
           }}
         />
       </div>
 
       {/* ── Bottom controls bar ───────────────────────────────────────────── */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-black/70 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/10">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-black/70 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/10">
         {/* Zoom out */}
         <button
           onClick={() => setScale((s) => clampScale(s - ZOOM_STEP))}

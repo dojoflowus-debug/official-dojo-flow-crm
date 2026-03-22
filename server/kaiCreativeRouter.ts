@@ -58,6 +58,14 @@ async function getBrandDataForOrg(orgId: number): Promise<
 > {
   try {
     const profile = await getSchoolProfile(orgId);
+    // Build address string from components
+    const addressParts = [
+      profile?.addressStreet,
+      profile?.addressCity,
+      profile?.addressState,
+      profile?.addressPostal,
+    ].filter(Boolean);
+    const address = addressParts.length > 0 ? addressParts.join(", ") : null;
     return {
       schoolName: profile?.schoolName ?? null,
       tagline: profile?.tagline ?? null,
@@ -65,6 +73,8 @@ async function getBrandDataForOrg(orgId: number): Promise<
       website: profile?.website ?? null,
       primaryColor: profile?.brandColorPrimary ?? null,
       secondaryColor: profile?.brandColorSecondary ?? null,
+      accentColor: profile?.brandColorTertiary ?? null,
+      address,
       logoUrl: profile?.logoLightUrl ?? profile?.logoDarkUrl ?? null,
       logoLightUrl: profile?.logoLightUrl ?? null,
       logoDarkUrl: profile?.logoDarkUrl ?? null,
@@ -77,6 +87,8 @@ async function getBrandDataForOrg(orgId: number): Promise<
       website: null,
       primaryColor: null,
       secondaryColor: null,
+      accentColor: null,
+      address: null,
       logoUrl: null,
       logoLightUrl: null,
       logoDarkUrl: null,
