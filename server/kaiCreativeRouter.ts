@@ -28,6 +28,7 @@ import {
   type BrandContext,
 } from "./geminiImageService";
 import { parseStyleFromText, type StylePreset } from "./kaiPromptEngine";
+import { runContextInjection, getProgramSuggestions } from "./contextInjectionEngine";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
@@ -147,6 +148,38 @@ async function saveImageToS3(
 
 export const kaiCreativeRouter = router({
 
+  // ── Check context: returns business context + clarification + warnings ───────
+  checkContext: orgScopedProcedure
+    .input(
+      z.object({
+        prompt: z.string().min(1).max(2000),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const result = await runContextInjection(input.prompt, orgId);
+      return {
+        clarification: result.clarification,
+        warnings: result.warnings,
+        contextSummary: result.contextSummary,
+        hasLogo: !!result.context.logoUrl,
+        hasPhone: !!result.context.phone,
+        hasSchoolName: !!result.context.schoolName,
+        programs: result.context.programs.slice(0, 8).map((p) => ({
+          name: p.name,
+          ageRange: p.ageRange,
+          label: p.ageRange ? `${p.name} (${p.ageRange})` : p.name,
+        })),
+      };
+    }),
+
+  // ── Get program suggestions for clarification UI ───────────────────────────
+  getProgramSuggestions: orgScopedProcedure
+    .query(async ({ ctx }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      return getProgramSuggestions(orgId);
+    }),
+
   // ── Generate: text prompt → image ──────────────────────────────────────────
   generate: orgScopedProcedure
     .input(
@@ -160,12 +193,15 @@ export const kaiCreativeRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
-      const brand = input.useBrandColors ? await getBrandDataForOrg(orgId) : undefined;
+      // ALWAYS load brand — context injection enriches the prompt with real business data
+      const brand = await getBrandDataForOrg(orgId);
+      // Run context injection to enrich prompt with school name, phone, logo, programs
+      const { enrichedPrompt } = await runContextInjection(input.prompt, orgId, true);
 
       const result = await generateImage(
-        input.prompt,
+        enrichedPrompt,
         input.size as ImageSize,
-        brand ?? undefined,
+        brand,
         input.style as StylePreset
       );
 
@@ -224,14 +260,15 @@ export const kaiCreativeRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
-      const brand = input.useBrandColors ? await getBrandDataForOrg(orgId) : undefined;
+      const brand = await getBrandDataForOrg(orgId);
+      const { enrichedPrompt: enrichedLogoPrompt } = await runContextInjection(input.prompt, orgId, true);
 
       const result = await generateWithLogo(
-        input.prompt,
+        enrichedLogoPrompt,
         input.logoBase64,
         input.logoMimeType,
         input.size as ImageSize,
-        brand ?? undefined,
+        brand,
         input.style as StylePreset
       );
 
@@ -289,14 +326,15 @@ export const kaiCreativeRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
-      const brand = input.useBrandColors ? await getBrandDataForOrg(orgId) : undefined;
+      const brand = await getBrandDataForOrg(orgId);
+      const { enrichedPrompt: enrichedEditPrompt } = await runContextInjection(input.prompt, orgId, true);
 
       const result = await editImage(
-        input.prompt,
+        enrichedEditPrompt,
         input.sourceImageBase64,
         input.sourceMimeType,
         input.size as ImageSize,
-        brand ?? undefined,
+        brand,
         input.style as StylePreset
       );
 
@@ -481,6 +519,7 @@ export const kaiCreativeRouter = router({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
       const brand = await getBrandDataForOrg(orgId);
+      const { enrichedPrompt: enrichedVarPrompt } = await runContextInjection(input.prompt, orgId, true);
 
       // Resolve auto styles
       const resolvedA = (input.styleA === "auto" || !input.styleA)
@@ -492,8 +531,8 @@ export const kaiCreativeRouter = router({
 
       // Run both generations in parallel
       const [resultA, resultB] = await Promise.all([
-        generateImage(input.prompt, input.size as ImageSize, brand, resolvedA),
-        generateImage(input.prompt, input.size as ImageSize, brand, resolvedB),
+        generateImage(enrichedVarPrompt, input.size as ImageSize, brand, resolvedA),
+        generateImage(enrichedVarPrompt, input.size as ImageSize, brand, resolvedB),
       ]);
 
       // Save both to S3 (best-effort) and DB in parallel
@@ -582,6 +621,7 @@ export const kaiCreativeRouter = router({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.currentOrganizationId as number;
       const brand = await getBrandDataForOrg(orgId);
+      const { enrichedPrompt: enrichedChatPrompt } = await runContextInjection(input.prompt, orgId, true);
 
       // Auto-detect style from prompt if not explicitly set
       const resolvedStyle = (input.style === "auto" || !input.style)
@@ -593,7 +633,7 @@ export const kaiCreativeRouter = router({
       if (input.sourceImageBase64) {
         // Edit mode — source image was uploaded in chat
         result = await editImage(
-          input.prompt,
+          enrichedChatPrompt,
           input.sourceImageBase64,
           input.sourceMimeType ?? "image/png",
           input.size as ImageSize,
@@ -603,7 +643,7 @@ export const kaiCreativeRouter = router({
       } else {
         // Generate mode — text prompt only
         result = await generateImage(
-          input.prompt,
+          enrichedChatPrompt,
           input.size as ImageSize,
           brand,
           resolvedStyle

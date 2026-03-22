@@ -176,6 +176,10 @@ export default function KaiCreative() {
   } | null>(null);
   const [abLightbox, setAbLightbox] = useState<{ url: string; base64: string; mimeType: string; prompt: string } | null>(null);
 
+  // Context injection state
+  const [contextCheckEnabled, setContextCheckEnabled] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+  const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([]);
   // Router state — pre-load image from Kai chat "Open in Creative" / "Edit"
   const location = useLocation();
   useEffect(() => {
@@ -274,6 +278,16 @@ export default function KaiCreative() {
   // ── tRPC queries ────────────────────────────────────────────────────────────
 
   const brandQuery = trpc.kaiCreative.getBrandData.useQuery();
+  // Context injection: check prompt for clarification needs (debounced — only fires when prompt >= 5 chars)
+  const contextQuery = trpc.kaiCreative.checkContext.useQuery(
+    { prompt: prompt.trim() || "create a flyer" },
+    { enabled: contextCheckEnabled && prompt.trim().length >= 5, staleTime: 10000 }
+  );
+  // Enable context check after first keystroke
+  const handlePromptChange = useCallback((val: string) => {
+    setPrompt(val);
+    if (!contextCheckEnabled && val.length >= 5) setContextCheckEnabled(true);
+  }, [contextCheckEnabled]);
   const assetsQuery = trpc.kaiCreative.listAssets.useQuery(
     { assetType: "all", limit: 50 },
     { enabled: activeTab === "library" }
@@ -531,7 +545,7 @@ export default function KaiCreative() {
             </label>
             <textarea
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={(e) => handlePromptChange(e.target.value)}
               placeholder={
                 mode === "create"
                   ? "e.g. Summer camp flyer for kids karate — bold, red and black, energetic"
@@ -559,6 +573,63 @@ export default function KaiCreative() {
                     {s.length > 45 ? s.slice(0, 45) + "…" : s}
                   </button>
                 ))}
+              </div>
+            )}
+            {/* ── Context Injection: Clarification + Warnings ── */}
+            {contextQuery.data && (
+              <div className="space-y-2 mt-1">
+                {/* Missing data warnings */}
+                {contextQuery.data.warnings.filter(w => !dismissedWarnings.includes(w)).map((warning) => (
+                  <div key={warning} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-lg border ${
+                    isDark ? "bg-amber-500/10 border-amber-500/20 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"
+                  }`}>
+                    <span className="mt-0.5">⚠</span>
+                    <span className="flex-1">{warning}</span>
+                    <button onClick={() => setDismissedWarnings(prev => [...prev, warning])} className="opacity-50 hover:opacity-100 ml-1">✕</button>
+                  </div>
+                ))}
+                {/* Clarification question */}
+                {contextQuery.data.clarification && (
+                  <div className={`text-xs px-3 py-2 rounded-lg border ${
+                    isDark ? "bg-blue-500/10 border-blue-500/20 text-blue-300" : "bg-blue-50 border-blue-200 text-blue-700"
+                  }`}>
+                    <div className="flex items-center gap-1.5 mb-1.5 font-medium">
+                      <span>✦</span> {contextQuery.data.clarification}
+                    </div>
+                    {/* Program suggestion chips */}
+                    {contextQuery.data.programs.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {contextQuery.data.programs.map((p) => (
+                          <button
+                            key={p.name}
+                            onClick={() => {
+                              setSelectedProgram(p.name);
+                              const addition = p.ageRange ? ` for ${p.name} (${p.ageRange})` : ` for ${p.name}`;
+                              if (!prompt.toLowerCase().includes(p.name.toLowerCase())) {
+                                setPrompt(prev => prev.trim() ? prev.trim() + addition : `Create a flyer${addition}`);
+                              }
+                            }}
+                            className={`px-2.5 py-1 rounded-full border text-xs font-medium transition-colors ${
+                              selectedProgram === p.name
+                                ? isDark ? "bg-red-600 border-red-500 text-white" : "bg-red-600 border-red-600 text-white"
+                                : isDark ? "border-white/20 text-white/70 hover:border-red-500/50 hover:text-white" : "border-slate-300 text-slate-600 hover:border-red-400 hover:text-red-700"
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Context summary — what Kai will use */}
+                {contextQuery.data.contextSummary && prompt.length >= 5 && (
+                  <div className={`text-xs px-3 py-1.5 rounded-lg ${
+                    isDark ? "bg-white/5 text-white/40" : "bg-slate-50 text-slate-400"
+                  }`}>
+                    <span className="font-medium">Kai will use: </span>{contextQuery.data.contextSummary}
+                  </div>
+                )}
               </div>
             )}
           </div>

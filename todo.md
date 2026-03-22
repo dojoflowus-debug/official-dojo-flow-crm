@@ -8696,3 +8696,13 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Implement Creative Memory — track user preferences, selected designs, style choices
 - [ ] Create kaiCreativeMemoryRouter for storing/retrieving creative preferences
 - [ ] Add Creative Memory UI — show learned preferences in Brand DNA panel
+
+## Context Injection Engine (2026-03-22)
+- [ ] Server: buildContextInjectedPrompt() — auto-loads school name, logo, phone, email, programs, colors
+- [ ] Server: detectVaguePrompt() — identifies prompts missing program/audience context
+- [ ] Server: buildClarificationQuestion() — suggests programs from stored data
+- [ ] Server: validateRequiredData() — warns if logo/phone/name missing before generating
+- [ ] Client: SmartPromptBar — shows missing data warnings inline
+- [ ] Client: ProgramSuggestionChips — one-tap program selection from stored programs
+- [ ] Client: ClarificationModal — asks which program when prompt is vague
+- [ ] Client: ContextPreviewBadge — shows what data will be injected before generating
