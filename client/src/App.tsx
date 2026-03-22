@@ -21,7 +21,15 @@ import { SplashLoader } from "./components/SplashLoader";
 import { trpc } from "@/lib/trpc";
 
 // Public routes where auth errors are expected and should not be logged
-const PUBLIC_ROUTES = ['/owner', '/staff/login', '/student-login', '/login', '/kiosk-home', '/kiosk-live', '/lead-capture', '/lead-capture-location', '/locations', '/public', '/forgot-password', '/reset-password'];
+const PUBLIC_ROUTES = [
+  '/',
+  '/public', '/public-old', '/schools', '/fitness', '/studios', '/kai-onboarding', '/welcome',
+  '/owner', '/staff/login', '/student-login', '/login', '/forgot-password', '/reset-password', '/select-organization',
+  '/onboarding', '/owner/onboarding', '/onboarding/setup',
+  '/kiosk', '/kiosk-home', '/kiosk-live', '/checkin',
+  '/lead-capture', '/lead-capture-location', '/locations',
+  '/student', '/enrollment', '/waiver', '/payment', '/new-visitor', '/events', '/shop', '/referral', '/feedback',
+];
 
 // ─── Splash-aware root component ─────────────────────────────────────────────
 // Sits inside the tRPC provider so it can call trpc.auth.me directly.

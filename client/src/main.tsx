@@ -24,18 +24,48 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   // Don't redirect on public pages
   const publicRoutes = [
-    '/lead-capture',
-    '/lead-capture-location',
-    '/locations',
+    // Root and marketing pages
+    '/',
     '/public',
-    '/kiosk-home',
-    '/kiosk-live',
+    '/public-old',
+    '/schools',
+    '/fitness',
+    '/studios',
+    '/kai-onboarding',
+    '/welcome',
+    // Auth pages
     '/owner',
     '/staff/login',
     '/student-login',
     '/login',
     '/forgot-password',
     '/reset-password',
+    '/select-organization',
+    // Onboarding
+    '/onboarding',
+    '/owner/onboarding',
+    '/onboarding/setup',
+    // Kiosk & public-facing
+    '/kiosk',
+    '/kiosk-home',
+    '/kiosk-live',
+    '/checkin',
+    // Lead capture & locations
+    '/lead-capture',
+    '/lead-capture-location',
+    '/locations',
+    // Student portal
+    '/student-login',
+    '/student',
+    // Enrollment
+    '/enrollment',
+    '/waiver',
+    '/payment',
+    '/new-visitor',
+    '/events',
+    '/shop',
+    '/referral',
+    '/feedback',
   ];
   
   const currentPath = window.location.pathname;
@@ -59,7 +89,7 @@ queryClient.getQueryCache().subscribe(event => {
     // Suppress UNAUTHORIZED errors on public/login routes — they are expected
     const isUnauthedError = error instanceof TRPCClientError && error.message === UNAUTHED_ERR_MSG;
     const currentPath = window.location.pathname;
-    const isPublicPath = ['/owner', '/staff/login', '/student-login', '/login', '/kiosk-home', '/kiosk-live', '/lead-capture', '/public', '/forgot-password', '/reset-password'].some(
+    const isPublicPath = ['/', '/public', '/public-old', '/schools', '/fitness', '/studios', '/kai-onboarding', '/welcome', '/owner', '/staff/login', '/student-login', '/login', '/forgot-password', '/reset-password', '/select-organization', '/onboarding', '/kiosk', '/kiosk-home', '/kiosk-live', '/checkin', '/lead-capture', '/lead-capture-location', '/locations', '/student', '/enrollment', '/waiver', '/payment', '/new-visitor', '/events', '/shop', '/referral', '/feedback'].some(
       r => currentPath === r || currentPath.startsWith(r + '/')
     );
     if (!(isUnauthedError && isPublicPath)) {
