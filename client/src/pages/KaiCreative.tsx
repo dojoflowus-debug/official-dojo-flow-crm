@@ -14,6 +14,7 @@ import { useLocation } from "react-router-dom";
 import { trpc } from "@/lib/trpc";
 import ImageLightbox from "@/components/ImageLightbox";
 import { BrandDnaPanel } from "@/components/BrandDnaPanel";
+import { CreativeBriefPanel } from "@/components/CreativeBriefPanel";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   Wand2,
@@ -180,6 +181,11 @@ export default function KaiCreative() {
   const [contextCheckEnabled, setContextCheckEnabled] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([]);
+  // Creative Brief Engine state
+  const [fastMode, setFastMode] = useState(false);
+  const [briefActive, setBriefActive] = useState(false);
+  const [briefAnswers, setBriefAnswers] = useState<Record<string, string>>({});
+  const [enrichedBriefPrompt, setEnrichedBriefPrompt] = useState<string | null>(null);
   // Router state — pre-load image from Kai chat "Open in Creative" / "Edit"
   const location = useLocation();
   useEffect(() => {
@@ -323,8 +329,33 @@ export default function KaiCreative() {
 
   // ── Generate handler ────────────────────────────────────────────────────────
 
+  // Brief complete → auto-generate with enriched prompt
+  const handleBriefComplete = useCallback((enriched: string, answers: Record<string, string>) => {
+    setBriefAnswers(answers);
+    setEnrichedBriefPrompt(enriched);
+    setBriefActive(false);
+    setResult(null);
+    setError(null);
+    if (mode === "create") {
+      generateMutation.mutate({ prompt: enriched, size, useBrandColors, style: stylePreset });
+    } else if (mode === "logo") {
+      if (!logoBase64) { setError("Please upload a logo first."); return; }
+      generateWithLogoMutation.mutate({ prompt: enriched, logoBase64, logoMimeType, size, useBrandColors, style: stylePreset });
+    } else {
+      if (!sourceBase64) { setError("Please upload an image to edit first."); return; }
+      editMutation.mutate({ prompt: enriched, sourceImageBase64: sourceBase64, sourceMimeType, size, useBrandColors, style: stylePreset });
+    }
+  }, [mode, size, useBrandColors, stylePreset, logoBase64, logoMimeType, sourceBase64, sourceMimeType,
+      generateMutation, generateWithLogoMutation, editMutation]);
+
   const handleGenerate = useCallback(() => {
     if (!prompt.trim()) return;
+    // In Guided Mode (not fast mode), show the brief panel first
+    if (!fastMode && mode === "create") {
+      setBriefActive(true);
+      setEnrichedBriefPrompt(null);
+      return;
+    }
     setResult(null);
     setError(null);
 
@@ -573,6 +604,27 @@ export default function KaiCreative() {
                     {s.length > 45 ? s.slice(0, 45) + "…" : s}
                   </button>
                 ))}
+              </div>
+            )}
+            {/* ── Creative Brief Panel (Guided Mode) ── */}
+            {briefActive && mode === "create" && (
+              <div className="mt-2">
+                <CreativeBriefPanel
+                  prompt={prompt}
+                  fastMode={fastMode}
+                  onFastModeToggle={(v) => {
+                    setFastMode(v);
+                    if (v) setBriefActive(false);
+                  }}
+                  onBriefComplete={handleBriefComplete}
+                  onSkip={() => {
+                    setBriefActive(false);
+                    setResult(null);
+                    setError(null);
+                    generateMutation.mutate({ prompt: prompt.trim(), size, useBrandColors, style: stylePreset });
+                  }}
+                  isDark={isDark}
+                />
               </div>
             )}
             {/* ── Context Injection: Clarification + Warnings ── */}

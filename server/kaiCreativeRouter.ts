@@ -28,7 +28,8 @@ import {
   type BrandContext,
 } from "./geminiImageService";
 import { parseStyleFromText, type StylePreset } from "./kaiPromptEngine";
-import { runContextInjection, getProgramSuggestions } from "./contextInjectionEngine";
+import { runContextInjection, getProgramSuggestions, loadBusinessContext } from "./contextInjectionEngine";
+import { analyzeBrief } from "./creativeBriefEngine";
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
@@ -171,6 +172,27 @@ export const kaiCreativeRouter = router({
           label: p.ageRange ? `${p.name} (${p.ageRange})` : p.name,
         })),
       };
+    }),
+
+  // ── Analyze brief: score prompt completeness and return questions ──────────
+  analyzeBrief: orgScopedProcedure
+    .input(
+      z.object({
+        prompt: z.string().min(0).max(2000),
+        answers: z.record(z.string()).default({}),
+        fastMode: z.boolean().default(false),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const context = await loadBusinessContext(orgId);
+      const analysis = analyzeBrief(
+        input.prompt,
+        context,
+        input.answers,
+        input.fastMode
+      );
+      return analysis;
     }),
 
   // ── Get program suggestions for clarification UI ───────────────────────────
