@@ -104,8 +104,9 @@ function scorePrompt(
   const hasAudience = AUDIENCE_KEYWORDS.some((k) => lower.includes(k));
 
   // Check for key content (phone, CTA, offer)
-  const hasContent = CONTENT_KEYWORDS.some((k) => lower.includes(k)) ||
-    !!context.phone; // if phone is in context, we'll inject it anyway
+  // NOTE: context.phone does NOT count toward hasContent scoring — it's injected automatically
+  // but the user still needs to specify a program. Phone presence should not inflate score.
+  const hasContent = CONTENT_KEYWORDS.some((k) => lower.includes(k));
 
   // Check for tone/style
   const hasTone = TONE_KEYWORDS.some((k) => lower.includes(k));
@@ -272,10 +273,18 @@ export function analyzeBrief(
   ].filter(Boolean).join(" ");
 
   const scoring = scorePrompt(mergedPrompt, context);
-  const isComplete = fastMode || scoring.score >= 60 || Object.keys(answers).length >= 2;
+  // Hard gate: program is ALWAYS required — cannot be bypassed by score or answer count alone.
+  // Fast Mode only skips optional questions (audience, tone), not the required program question.
+  const programConfirmed = scoring.hasProgram || !!answers.program;
+  // isComplete requires:
+  //   1. Program MUST be confirmed (hard gate — cannot be bypassed)
+  //   2. Fast Mode: skip optional questions once program is known
+  //   3. Guided Mode: score >= 60 OR all required questions answered
+  // Object.keys(answers).length >= 1 is NOT sufficient alone — program must be one of those answers.
+  const isComplete = programConfirmed && (fastMode || scoring.score >= 60);
 
   const missingFields: string[] = [];
-  if (!scoring.hasProgram && !answers.program) missingFields.push("program");
+  if (!programConfirmed) missingFields.push("program");
   if (!scoring.hasAudience && !answers.audience) missingFields.push("audience");
   if (!scoring.hasContent && !context.phone && !answers.content) missingFields.push("key content");
 

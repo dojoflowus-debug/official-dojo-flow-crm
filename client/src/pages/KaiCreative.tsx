@@ -350,8 +350,11 @@ export default function KaiCreative() {
 
   const handleGenerate = useCallback(() => {
     if (!prompt.trim()) return;
-    // In Guided Mode (not fast mode), show the brief panel first
-    if (!fastMode && mode === "create") {
+    // ALWAYS route "create" mode through the brief panel.
+    // The panel checks isComplete server-side and either fires immediately
+    // (if program is already in the prompt) or asks clarifying questions.
+    // This enforces the program gate on every generation attempt.
+    if (mode === "create") {
       setBriefActive(true);
       setEnrichedBriefPrompt(null);
       return;
@@ -359,9 +362,7 @@ export default function KaiCreative() {
     setResult(null);
     setError(null);
 
-    if (mode === "create") {
-      generateMutation.mutate({ prompt: prompt.trim(), size, useBrandColors, style: stylePreset });
-    } else if (mode === "logo") {
+    if (mode === "logo") {
       if (!logoBase64) { setError("Please upload a logo first."); return; }
       generateWithLogoMutation.mutate({ prompt: prompt.trim(), logoBase64, logoMimeType, size, useBrandColors, style: stylePreset });
     } else {

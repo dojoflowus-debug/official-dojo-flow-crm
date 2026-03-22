@@ -136,34 +136,45 @@ export function CreativeBriefPanel({
         <div className="flex items-center gap-2">
           <span className="text-red-500 text-sm">✦</span>
           <span className="text-sm font-semibold">Creative Brief</span>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-white/50" : "bg-slate-100 text-slate-500"}`}>
-            Guided Mode
-          </span>
+          {!analysis?.detectedProgram ? (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20">
+              Program required
+            </span>
+          ) : (
+            <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-white/50" : "bg-slate-100 text-slate-500"}`}>
+              Guided Mode
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
-          {/* Fast Mode toggle */}
-          <button
-            onClick={() => onFastModeToggle(!fastMode)}
-            className={`flex items-center gap-1.5 text-xs transition-colors ${
-              fastMode ? "text-red-500" : muted
-            } hover:text-red-500`}
-            title="Fast Mode: skip questions and generate immediately"
-          >
-            <span className={`w-7 h-4 rounded-full flex items-center transition-colors ${
-              fastMode ? "bg-red-600" : isDark ? "bg-white/10" : "bg-slate-200"
-            }`}>
-              <span className={`w-3 h-3 rounded-full bg-white shadow transition-transform mx-0.5 ${
-                fastMode ? "translate-x-3" : "translate-x-0"
-              }`} />
-            </span>
-            Fast Mode
-          </button>
-          <button
-            onClick={onSkip}
-            className={`text-xs ${muted} hover:text-red-500 transition-colors`}
-          >
-            Skip →
-          </button>
+          {/* Fast Mode toggle — only shown when program is already confirmed */}
+          {analysis?.detectedProgram && (
+            <button
+              onClick={() => onFastModeToggle(!fastMode)}
+              className={`flex items-center gap-1.5 text-xs transition-colors ${
+                fastMode ? "text-red-500" : muted
+              } hover:text-red-500`}
+              title="Fast Mode: skip optional questions and generate immediately"
+            >
+              <span className={`w-7 h-4 rounded-full flex items-center transition-colors ${
+                fastMode ? "bg-red-600" : isDark ? "bg-white/10" : "bg-slate-200"
+              }`}>
+                <span className={`w-3 h-3 rounded-full bg-white shadow transition-transform mx-0.5 ${
+                  fastMode ? "translate-x-3" : "translate-x-0"
+                }`} />
+              </span>
+              Fast Mode
+            </button>
+          )}
+          {/* Skip button — only shown when program is already confirmed in the prompt */}
+          {analysis?.detectedProgram && (
+            <button
+              onClick={onSkip}
+              className={`text-xs ${muted} hover:text-red-500 transition-colors`}
+            >
+              Skip →
+            </button>
+          )}
         </div>
       </div>
 
