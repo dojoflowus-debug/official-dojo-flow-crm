@@ -8742,3 +8742,14 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Remove onSkip bypass in CreativeBriefPanel
 - [x] Add server-side hard gate in kaiCreativeRouter.generate (throws BAD_REQUEST if gate not passed)
 - [x] Add vitest tests for hard gate logic (15 tests, all passing)
+
+## Ad Intelligence Engine Upgrade
+- [x] Expand BANNED_PHRASES with template artifact blocklist (Once Provide Prints, Sample Text, etc.)
+- [x] Add headline rewriter (rewriteHeadline) - weak program names to benefit-driven headlines
+- [x] Add Conversion Mode block to buildMarketingPrompt (6-element mandatory ad structure)
+- [x] Upgrade WHAT TO AVOID with hard bans for template artifacts
+- [x] Wire conversionMode into final prompt assembly
+- [x] Upgrade generateMarketingCopy system prompt to direct-response advertising
+- [x] Add quality validation gate - reject weak headlines, enforce benefit-driven copy
+- [x] Upgrade fallback copy to use benefit-driven headlines
+- [x] Enforce phone number in CTA output

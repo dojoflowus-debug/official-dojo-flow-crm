@@ -94,6 +94,18 @@ export function extractUserValues(userPrompt: string): ExtractedUserValues {
 // ── Banned Phrases → Urgency Replacements ────────────────────────────────────
 
 const BANNED_PHRASES: Array<{ pattern: RegExp; replacement: string }> = [
+  // -- Template artifacts -- must NEVER appear in a real ad --
+  { pattern: /\bonce provide prints\b/gi, replacement: "" },
+  { pattern: /\bprovide prints\b/gi, replacement: "" },
+  { pattern: /\bonce provide\b/gi, replacement: "" },
+  { pattern: /\bsample text\b/gi, replacement: "" },
+  { pattern: /\byour text here\b/gi, replacement: "" },
+  { pattern: /\binsert text\b/gi, replacement: "" },
+  { pattern: /\bclick to edit\b/gi, replacement: "" },
+  { pattern: /\btext goes here\b/gi, replacement: "" },
+  { pattern: /\blorem ipsum\b/gi, replacement: "" },
+  { pattern: /\bstock photo\b/gi, replacement: "" },
+  // -- Weak CTA replacements --
   { pattern: /\bkey details\b/gi, replacement: "Register Now" },
   { pattern: /\bkey detail\b/gi, replacement: "Register Now" },
   { pattern: /\bdetails\b/gi, replacement: "Limited Spots Available" },
@@ -273,6 +285,37 @@ const SIZE_FORMAT_LABELS: Record<string, string> = {
   website_banner: "wide website banner (16:9 ratio, landscape)",
 };
 
+// -- Headline Rewriter -- weak program names to benefit-driven headlines --
+/**
+ * Rewrites weak program-name-only headlines into benefit-driven ad headlines.
+ * "Dragon Kids Program" -> "DRAGON KIDS -- Build Confidence & Discipline"
+ */
+const HEADLINE_UPGRADES: Array<{ pattern: RegExp; upgrade: string }> = [
+  { pattern: /^little ninjas?\s*program?$/i,           upgrade: "LITTLE NINJAS -- Confidence Starts Here" },
+  { pattern: /^kids?\s*karate\s*program?$/i,           upgrade: "KIDS KARATE -- Discipline, Focus & Fun" },
+  { pattern: /^adult\s*karate\s*program?$/i,           upgrade: "ADULT KARATE -- Train. Focus. Dominate." },
+  { pattern: /^adult\s*martial\s*arts?\s*program?$/i, upgrade: "ADULT MARTIAL ARTS -- Stronger Every Day" },
+  { pattern: /^dragon\s*kids?\s*program?$/i,           upgrade: "DRAGON KIDS -- Build Confidence & Discipline" },
+  { pattern: /^teen\s*karate\s*program?$/i,            upgrade: "TEEN KARATE -- Strength, Respect & Confidence" },
+  { pattern: /^self[\s-]?defense\s*program?$/i,        upgrade: "SELF DEFENSE -- Protect Yourself & Your Family" },
+  { pattern: /^summer\s*camp\s*program?$/i,            upgrade: "SUMMER MARTIAL ARTS CAMP -- Skills for Life" },
+  { pattern: /^belt\s*test\s*program?$/i,              upgrade: "BELT TEST -- Earn Your Next Rank" },
+  { pattern: /^grand\s*opening\s*program?$/i,          upgrade: "GRAND OPENING -- Join Our Martial Arts Family" },
+];
+
+export function rewriteHeadline(rawHeadline: string): string {
+  const trimmed = rawHeadline.trim();
+  for (const { pattern, upgrade } of HEADLINE_UPGRADES) {
+    if (pattern.test(trimmed)) return upgrade;
+  }
+  // If it is just a program name with no benefit (no dash, colon, or exclamation), append a benefit
+  const isWeakHeadline = !/[-|:!]/.test(trimmed) && trimmed.split(" ").length <= 3;
+  if (isWeakHeadline) {
+    return trimmed.toUpperCase() + " -- Build Confidence & Discipline";
+  }
+  return trimmed;
+}
+
 // ── Core Functions ────────────────────────────────────────────────────────────
 
 export function sanitizePrompt(userPrompt: string): string {
@@ -358,7 +401,7 @@ export function buildMarketingPrompt(options: PromptEngineOptions): string {
 ⚠️ STRICT DATA ACCURACY — DO NOT CHANGE THESE VALUES:
 ${userValues.ageRange ? `- Age range: "${userValues.ageRange}" — display EXACTLY as written, do not change to any other age range` : ""}
 ${userValues.phone ? `- Phone number: "${userValues.phone}" — display EXACTLY as written` : ""}
-${userValues.headline ? `- Headline text: "${userValues.headline}" — use EXACTLY as written` : ""}
+${userValues.headline ? `- Headline text: "${rewriteHeadline(userValues.headline)}" — use EXACTLY as written` : ""}
 ${userValues.programName ? `- Program name: "${userValues.programName}" — use EXACTLY as written` : ""}
 ${userValues.colors.length > 0 ? `- Color scheme: ${userValues.colors.join(", ")} — use these colors throughout` : ""}
 RULE: Never invent, approximate, or change any of the above. If a value is specified by the user, it is final.`;
@@ -405,6 +448,47 @@ PROGRAM: ${program.name.toUpperCase()}
     : effectiveAgeRange
     ? `\nAGE RANGE: ${effectiveAgeRange} — display EXACTLY as specified`
     : "";
+
+  // -- Conversion Mode -- enforces 6-element ad structure --
+  const ctaPhone = userValues.phone ?? brand?.phone ?? null;
+  const conversionMode = `
+CONVERSION MODE -- THIS IS A DIRECT-RESPONSE AD, NOT A FLYER:
+Every element must serve one goal: get a parent or adult to TAKE ACTION.
+
+MANDATORY AD ELEMENTS (all 6 must appear -- no exceptions):
+1. HEADLINE -- Attention-grabbing, benefit-driven, 3-6 words in ALL CAPS
+   STRONG: "LITTLE NINJAS -- Confidence Starts Here"
+   STRONG: "BUILD DISCIPLINE. BUILD CHAMPIONS."
+   BANNED: "Dragon Kids Program" (just a name, no benefit)
+   BANNED: "Martial Arts Classes" (generic, no emotion)
+
+2. EMOTIONAL HOOK -- One line that speaks to the parent's desire
+   STRONG: "Watch your child grow in confidence, focus, and discipline."
+   WEAK: "We offer martial arts classes for kids."
+
+3. TARGET AUDIENCE -- Clearly stated age group
+   STRONG: "Ages 3-5" / "Ages 6-12" / "Adults 18+"
+   WEAK: "All ages" (too vague)
+
+4. BENEFITS -- 3-4 short, punchy benefit statements
+   STRONG: "Confidence  Discipline  Focus  Self-Defense"
+   WEAK: "We teach karate"
+
+5. CALL TO ACTION -- Urgent, specific, impossible to miss
+   STRONG: "CALL NOW -- Limited Spots Available!"
+   STRONG: "FREE TRIAL CLASS -- Register Today!"
+   WEAK: "Contact us" / "Learn more"
+   ${ctaPhone ? "Phone: " + ctaPhone + " -- display LARGE in the CTA section" : "Include a phone number or registration link in the CTA"}
+
+6. URGENCY -- Scarcity or time pressure element
+   STRONG: "Limited Spots Available" / "This Month Only" / "Free Trial Ends Soon"
+   WEAK: No urgency = no action
+
+QUALITY TEST -- Before finalizing, ask:
+- Does this look like a REAL AD a parent would stop and read?
+- Is the headline bold enough to grab attention in 1 second?
+- Would a parent pick up the phone after seeing this?
+If NO to any of these -- redesign with stronger copy and bolder hierarchy.`;
 
   // ── Premium Composition Rules ────────────────────────────────────────────────
   const compositionRules = `
@@ -453,17 +537,23 @@ PREMIUM DESIGN STANDARDS:
 - Print-ready quality: sharp edges, no blur, no artifacts
 - Format: ${formatLabel}
 
-WHAT TO AVOID:
+WHAT TO AVOID -- HARD BANS (any of these = failed output):
 - Generic stock photo backgrounds
 - Clip-art or low-quality illustrations
 - Overcrowded layouts
 - Weak typography (thin fonts, poor contrast)
-- Placeholder text or lorem ipsum
+- Placeholder text, lorem ipsum, or ANY template artifact
 - Fake or invented logos
-- Changing user-specified values (ages, names, phone numbers)`;
+- Changing user-specified values (ages, names, phone numbers)
+- Stock template labels: "Once Provide Prints", "Sample Text", "Your Text Here", "Insert Text"
+- Generic filler: "Key Details", "More Information", "Contact Us for Details"
+- Weak headlines that are just program names with no benefit or emotion
+- Any text that looks like it came from a Canva or stock template`;
 
   // ── Assemble Full Prompt ─────────────────────────────────────────────────────
-  return `Create a PREMIUM, PRINT-READY marketing design for a martial arts school.
+  return `Create a HIGH-CONVERTING MARTIAL ARTS AD -- not a generic flyer, not a template.
+This is a DIRECT-RESPONSE ADVERTISEMENT designed to make parents take action immediately.
+
 
 DESIGN REQUEST:
 ${withCTA}
@@ -473,10 +563,11 @@ ${brandBlock}
 
 STYLE DIRECTION:
 ${styleDefinition}
+${conversionMode}
 ${compositionRules}
 ${premiumDesignDirectives}
 
-FINAL DIRECTIVE: This must be visually stunning — the kind of flyer that stops someone in their tracks. Bold. Cinematic. Brand-accurate. A professional martial arts brand that commands respect. Make it "wow" level, not generic. Every value the user specified must appear EXACTLY as written.`;
+FINAL DIRECTIVE: This must be the kind of ad that stops a parent scrolling and makes them say "I need to call this school." Bold. Cinematic. Conversion-focused. Every value the user specified must appear EXACTLY as written. NO placeholder text. NO template artifacts. NO weak headlines.`;
 }
 
 /**

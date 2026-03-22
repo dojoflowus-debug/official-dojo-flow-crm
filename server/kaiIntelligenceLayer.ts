@@ -348,30 +348,51 @@ export async function generateMarketingCopy(
     programName?: string;
   }
 ): Promise<MarketingCopy> {
-  const systemPrompt = `You are an elite martial arts marketing copywriter.
-Write compelling, high-energy copy for ${brandContext.schoolName || "a martial arts school"}.
+  const programDisplay = lockedValues.programName || program;
+  const audienceDisplay = lockedValues.ageRange || audience;
+  const phoneDisplay = lockedValues.phoneNumber || brandContext.phone || null;
 
-STRICT RULES — these override everything:
-1. Program name MUST be exactly: "${lockedValues.programName || program}" — do NOT change it
-2. Age range MUST be exactly: "${lockedValues.ageRange || audience}" — do NOT change it
-3. Phone MUST be exactly: "${lockedValues.phoneNumber || brandContext.phone || "[PHONE]"}" — do NOT change it
-4. Never use placeholder text
-5. Copy must be punchy, confident, and action-oriented
-6. Tone: ${tone || "bold and energetic"}`;
+  const systemPrompt = `You are an elite martial arts DIRECT-RESPONSE advertising copywriter.
+Your job is to write HIGH-CONVERTING AD COPY that makes parents take action immediately.
+Write for ${brandContext.schoolName || "a martial arts school"}.
 
-  const userMessage = `Create marketing copy for:
-- Program: ${lockedValues.programName || program}
-- Audience: ${lockedValues.ageRange || audience}
+CONVERSION RULES (non-negotiable):
+1. Program name MUST be exactly: "${programDisplay}" — do NOT change it
+2. Age range MUST be exactly: "${audienceDisplay}" — do NOT change it
+3. Phone MUST be exactly: "${phoneDisplay || "[PHONE]"}" — do NOT change it
+4. NEVER use placeholder text, template artifacts, or lorem ipsum
+5. Headlines MUST be benefit-driven — NEVER just a program name
+   BANNED: "Dragon Kids Program" (just a name)
+   REQUIRED: "DRAGON KIDS — Build Confidence & Discipline" (name + benefit)
+6. Every piece of copy must include urgency ("Limited Spots", "Register Now", "Free Trial")
+7. Tone: ${tone || "bold, energetic, and conversion-focused"}
+
+QUALITY TEST before responding:
+- Would a parent stop scrolling and call after reading this headline?
+- Is there a clear emotional benefit (not just a program name)?
+- Is there urgency that drives action?
+If NO to any — rewrite until YES.`;
+
+  const userMessage = `Create HIGH-CONVERTING AD COPY for:
+- Program: ${programDisplay}
+- Audience: ${audienceDisplay}
 - School: ${brandContext.schoolName || "our school"}
+${phoneDisplay ? `- Phone: ${phoneDisplay}` : ""}
+
+HEADLINE RULES:
+- Must be benefit-driven, NOT just the program name
+- Format: "PROGRAM NAME — Emotional Benefit" or "ACTION VERB. RESULT."
+- Examples: "LITTLE NINJAS — Confidence Starts Here" / "BUILD DISCIPLINE. BUILD CHAMPIONS."
+- BANNED: "${programDisplay} Program" or just "${programDisplay}" alone
 
 Respond with JSON:
 {
-  "headline": "POWERFUL HEADLINE IN CAPS (3-5 words)",
-  "subheadline": "Supporting line (5-8 words)",
-  "tagline": "Short memorable tagline",
-  "benefits": ["benefit 1", "benefit 2", "benefit 3", "benefit 4"],
-  "cta": "Call to action text",
-  "bodyText": "2-3 sentence description"
+  "headline": "BENEFIT-DRIVEN HEADLINE IN CAPS (4-7 words)",
+  "subheadline": "Emotional hook that speaks to parent's desire (8-12 words)",
+  "tagline": "Short urgency tagline with limited spots or free trial",
+  "benefits": ["Confidence", "Discipline", "Focus", "Self-Defense"],
+  "cta": "URGENT call to action with phone or registration",
+  "bodyText": "2-3 sentences: what the child gains, why this school, why act now"
 }`;
 
   try {
@@ -383,20 +404,56 @@ Respond with JSON:
       { jsonMode: true, maxTokens: 400, temperature: 0.6 }
     );
     const parsed = JSON.parse(raw) as MarketingCopy;
-    // Validate and enforce locked values
-    if (lockedValues.programName) {
-      parsed.headline = parsed.headline.replace(/little ninja[s]?/gi, lockedValues.programName);
+
+    // Quality validation: reject weak headlines that are just program names
+    const headlineLower = parsed.headline.toLowerCase().trim();
+    const programLower = programDisplay.toLowerCase();
+    const isWeakHeadline = headlineLower === programLower ||
+      headlineLower === programLower + " program" ||
+      headlineLower === programLower + " class" ||
+      headlineLower === programLower + " classes" ||
+      (!parsed.headline.includes("-") && !parsed.headline.includes("!") && !parsed.headline.includes(".") && parsed.headline.split(" ").length <= 3);
+
+    if (isWeakHeadline) {
+      // Rewrite weak headline with benefit
+      const benefitMap: Record<string, string> = {
+        "little ninjas": "LITTLE NINJAS — Confidence Starts Here",
+        "kids karate": "KIDS KARATE — Discipline, Focus & Fun",
+        "adult karate": "ADULT KARATE — Train. Focus. Dominate.",
+        "teen karate": "TEEN KARATE — Strength, Respect & Confidence",
+        "self defense": "SELF DEFENSE — Protect Yourself & Your Family",
+        "summer camp": "SUMMER CAMP — Skills for Life",
+        "belt test": "BELT TEST — Earn Your Next Rank",
+      };
+      parsed.headline = benefitMap[programLower] ?? `${programDisplay.toUpperCase()} — Build Confidence & Discipline`;
     }
+
+    // Enforce phone in CTA if available
+    if (phoneDisplay && !parsed.cta.includes(phoneDisplay)) {
+      parsed.cta = `${parsed.cta} — Call ${phoneDisplay}`;
+    }
+
     return parsed;
   } catch (e) {
     console.warn("[KaiIntelligence] Copywriting failed:", e);
+    const fallbackBenefitMap: Record<string, string> = {
+      "little ninjas": "LITTLE NINJAS — Confidence Starts Here",
+      "kids karate": "KIDS KARATE — Discipline, Focus & Fun",
+      "adult karate": "ADULT KARATE — Train. Focus. Dominate.",
+      "teen karate": "TEEN KARATE — Strength, Respect & Confidence",
+      "self defense": "SELF DEFENSE — Protect Yourself & Your Family",
+      "summer camp": "SUMMER CAMP — Skills for Life",
+      "belt test": "BELT TEST — Earn Your Next Rank",
+    };
+    const fallbackHeadline = fallbackBenefitMap[programDisplay.toLowerCase()] ??
+      `${programDisplay.toUpperCase()} — Build Confidence & Discipline`;
     return {
-      headline: (lockedValues.programName || program).toUpperCase(),
-      subheadline: `For ${lockedValues.ageRange || audience}`,
-      tagline: "Train. Grow. Succeed.",
-      benefits: ["Discipline", "Confidence", "Coordination", "Focus"],
-      cta: `Call ${lockedValues.phoneNumber || brandContext.phone || "us today"}`,
-      bodyText: `Join ${brandContext.schoolName || "our school"} and discover the power of martial arts.`,
+      headline: fallbackHeadline,
+      subheadline: `For ${audienceDisplay} — Watch your child grow in confidence and discipline.`,
+      tagline: "Limited Spots Available — Register Today!",
+      benefits: ["Discipline", "Confidence", "Focus", "Self-Defense"],
+      cta: `CALL NOW — Limited Spots! ${phoneDisplay ? phoneDisplay : ""}`.trim(),
+      bodyText: `Join ${brandContext.schoolName || "our school"} and give your child the skills to succeed on and off the mat. Enroll today — spots fill fast!`,
     };
   }
 }
