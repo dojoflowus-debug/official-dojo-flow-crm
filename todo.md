@@ -8647,3 +8647,11 @@ Transform kiosk from admin dashboard to premium location experience
 - [x] Upgrade kaiPromptEngine auto-brand: inject logo URL, colors, phone, website
 - [x] Smart logo placement rules: top-center or top-left, never stretched, proper spacing
 - [x] Auto-brand toggle default ON in KaiCreative UI
+
+## Marketing Structure Engine (Mar 21, 2026)
+- [ ] Rewrite buildMarketingPrompt with full hierarchy: headline, subheadline, visual, CTA, contact
+- [ ] Add CTA auto-injection: if no CTA in prompt, inject "Register Now – Limited Spots Available"
+- [ ] Ban phrases: "Key Details", "Information", "Details" — replace with urgency copy
+- [ ] Add copywriting rules: urgency, action phrases, persuasive not informational
+- [ ] Add psychology layer: hierarchy, contrast, readable from distance
+- [ ] Wire updated engine into all generation paths

@@ -1,14 +1,16 @@
 /**
- * Kai Creative Prompt Engine
+ * Kai Creative — Marketing Structure Engine
  *
- * Transforms raw user input into structured, high-quality Gemini prompts.
+ * Transforms raw user input into high-converting marketing prompts.
  *
  * Pipeline:
- *  1. detectStylePreset()   — infer or accept explicit style preset
- *  2. detectProgram()       — inject program-specific context (Little Ninjas, etc.)
- *  3. enhancePrompt()       — wrap with layout rules, brand context, quality directives
+ *  1. sanitizePrompt()      — strip banned phrases, replace with urgency copy
+ *  2. injectCTA()           — auto-inject CTA if user didn't provide one
+ *  3. detectProgram()       — inject program-specific context (Little Ninjas, etc.)
+ *  4. detectStylePreset()   — infer or accept explicit style preset
+ *  5. buildMarketingPrompt() — full hierarchy: headline → visual → CTA → contact
  *
- * This is the "photographer + lighting + editing + direction" layer.
+ * This is the "designer + marketer + copywriter" layer.
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -39,6 +41,40 @@ export interface PromptEngineOptions {
   brand?: BrandContext;
   size?: string; // e.g. "instagram_post", "flyer"
 }
+
+// ── Banned Phrases → Urgency Replacements ────────────────────────────────────
+
+const BANNED_PHRASES: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\bkey details\b/gi, replacement: "Register Now" },
+  { pattern: /\bkey detail\b/gi, replacement: "Register Now" },
+  { pattern: /\bdetails\b/gi, replacement: "Limited Spots Available" },
+  { pattern: /\binformation\b/gi, replacement: "Join Today" },
+  { pattern: /\binfo\b/gi, replacement: "Act Now" },
+  { pattern: /\blearn more\b/gi, replacement: "Register Now" },
+  { pattern: /\bcontact us\b/gi, replacement: "Call Now – Limited Spots" },
+  { pattern: /\bsee details\b/gi, replacement: "Enroll Today" },
+  { pattern: /\bfind out more\b/gi, replacement: "Don't Miss Out" },
+  { pattern: /\bmore information\b/gi, replacement: "Join Today" },
+];
+
+// ── CTA Patterns (detect if user already provided a CTA) ─────────────────────
+
+const CTA_PATTERNS = [
+  /register/i,
+  /enroll/i,
+  /sign up/i,
+  /join/i,
+  /call now/i,
+  /book/i,
+  /reserve/i,
+  /limited spots/i,
+  /don't miss/i,
+  /act now/i,
+  /get started/i,
+  /claim/i,
+  /free trial/i,
+  /try now/i,
+];
 
 // ── Style Preset Definitions ──────────────────────────────────────────────────
 
@@ -95,6 +131,7 @@ interface ProgramContext {
   tone: string;
   targetAudience: string;
   keywords: string[];
+  defaultCTA: string;
 }
 
 const PROGRAM_CONTEXTS: ProgramContext[] = [
@@ -105,6 +142,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "fun, energetic, parent-focused, safe and nurturing",
     targetAudience: "parents of young children ages 4–7",
     keywords: ["little ninjas", "little ninja", "tiny ninjas"],
+    defaultCTA: "Enroll Today – Limited Spots for Ages 4–7!",
   },
   {
     name: "Kids Karate",
@@ -113,6 +151,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "energetic, empowering, parent-reassuring",
     targetAudience: "parents of school-age children",
     keywords: ["kids karate", "children karate", "youth karate", "kids martial arts", "children martial arts"],
+    defaultCTA: "Register Now – Limited Spots Available!",
   },
   {
     name: "Teen Karate",
@@ -121,6 +160,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "cool, empowering, achievement-focused",
     targetAudience: "teens and their parents",
     keywords: ["teen karate", "teenage karate", "teen martial arts", "youth program"],
+    defaultCTA: "Join Today – Build Confidence & Leadership",
   },
   {
     name: "Adult Karate",
@@ -129,6 +169,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "strong, professional, results-focused",
     targetAudience: "working adults seeking fitness and self-defense",
     keywords: ["adult karate", "adult martial arts", "adult class", "adults"],
+    defaultCTA: "Start Your Free Trial – Limited Spots Available",
   },
   {
     name: "Self Defense",
@@ -137,6 +178,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "empowering, practical, urgent, safety-focused",
     targetAudience: "adults concerned about personal safety",
     keywords: ["self defense", "self-defense", "personal safety", "women's self defense"],
+    defaultCTA: "Register Now – Protect Yourself & Your Family",
   },
   {
     name: "Belt Test",
@@ -145,6 +187,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "celebratory, prestigious, achievement-focused",
     targetAudience: "current students and their families",
     keywords: ["belt test", "belt promotion", "belt ceremony", "rank promotion", "testing"],
+    defaultCTA: "Register for Your Belt Test – Spots Are Limited!",
   },
   {
     name: "Summer Camp",
@@ -153,6 +196,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "exciting, fun, summer energy, parent-convenient",
     targetAudience: "parents looking for summer activities",
     keywords: ["summer camp", "summer program", "camp", "summer"],
+    defaultCTA: "Reserve Your Spot – Summer Fills Fast!",
   },
   {
     name: "Grand Opening",
@@ -161,6 +205,7 @@ const PROGRAM_CONTEXTS: ProgramContext[] = [
     tone: "exciting, welcoming, community-focused, celebratory",
     targetAudience: "local community, all ages",
     keywords: ["grand opening", "opening", "new location", "now open"],
+    defaultCTA: "Join Us – Grand Opening Special Offer Inside!",
   },
 ];
 
@@ -175,6 +220,34 @@ const SIZE_FORMAT_LABELS: Record<string, string> = {
 };
 
 // ── Core Functions ────────────────────────────────────────────────────────────
+
+/**
+ * Strip banned phrases from user input and replace with urgency copy.
+ */
+export function sanitizePrompt(userPrompt: string): string {
+  let cleaned = userPrompt;
+  for (const { pattern, replacement } of BANNED_PHRASES) {
+    cleaned = cleaned.replace(pattern, replacement);
+  }
+  return cleaned;
+}
+
+/**
+ * Detect if the user's prompt already contains a CTA.
+ */
+export function hasCTA(userPrompt: string): boolean {
+  return CTA_PATTERNS.some((pattern) => pattern.test(userPrompt));
+}
+
+/**
+ * Auto-inject a CTA if the user didn't provide one.
+ * Uses program-specific CTA if a program is detected, otherwise uses default.
+ */
+export function injectCTA(userPrompt: string, program?: ProgramContext | null): string {
+  if (hasCTA(userPrompt)) return userPrompt;
+  const cta = program?.defaultCTA ?? "Register Now – Limited Spots Available!";
+  return `${userPrompt}\n\nCall to action: "${cta}"`;
+}
 
 /**
  * Detect which program the user is referring to based on keywords in their prompt.
@@ -240,84 +313,134 @@ export function detectStylePreset(
 }
 
 /**
- * Build the full enhanced prompt from user input + brand + style + program context.
+ * Build the full marketing-optimized prompt.
+ * This is the main entry point — replaces the old enhancePrompt().
  */
-export function enhancePrompt(options: PromptEngineOptions): string {
-  const { userPrompt, style, brand, size } = options;
+export function buildMarketingPrompt(options: PromptEngineOptions): string {
+  const { style, brand, size } = options;
 
-  const resolvedStyle = detectStylePreset(userPrompt, style);
+  // Step 1: Sanitize — remove banned phrases
+  const sanitized = sanitizePrompt(options.userPrompt);
+
+  // Step 2: Detect program context
+  const program = detectProgram(sanitized);
+
+  // Step 3: Inject CTA if missing
+  const withCTA = injectCTA(sanitized, program);
+
+  // Step 4: Detect style
+  const resolvedStyle = detectStylePreset(withCTA, style);
   const styleDefinition = STYLE_DEFINITIONS[resolvedStyle];
-  const program = detectProgram(userPrompt);
+
+  // Step 5: Format label
   const formatLabel = size ? SIZE_FORMAT_LABELS[size] ?? size : "marketing design";
 
-  // Brand block — always injected when brand data is available
+  // ── Brand Block ──────────────────────────────────────────────────────────────
   const brandBlock = brand
     ? `
-BRAND IDENTITY (AUTO-APPLIED — do not skip any of these):
-- School name: "${brand.schoolName ?? "the martial arts school"}" — display prominently in the design
-- Primary brand color: ${brand.primaryColor ?? "red"} — use as the dominant color throughout
-- Secondary brand color: ${brand.secondaryColor ?? "black"} — use for backgrounds, contrast areas
+BRAND IDENTITY (AUTO-APPLIED — inject ALL of these into the design):
+- School name: "${brand.schoolName ?? "the martial arts school"}" — display prominently
+- Primary color: ${brand.primaryColor ?? "red"} — dominant color throughout
+- Secondary color: ${brand.secondaryColor ?? "black"} — backgrounds and contrast areas
 ${brand.accentColor ? `- Accent color: ${brand.accentColor} — use sparingly for highlights` : ""}
-${brand.phone ? `- Phone number: ${brand.phone} — include in the design (bottom section)` : ""}
-${brand.website ? `- Website: ${brand.website} — include in the design (bottom section)` : ""}
+${brand.phone ? `- Phone: ${brand.phone} — bottom section, large and readable` : ""}
+${brand.website ? `- Website: ${brand.website} — bottom section` : ""}
 ${brand.address ? `- Address: ${brand.address} — include if space allows` : ""}
-${brand.tagline ? `- Tagline: "${brand.tagline}" — include as subheadline or footer text` : ""}
+${brand.tagline ? `- Tagline: "${brand.tagline}" — subheadline or footer` : ""}
 
-LOGO PLACEMENT RULES (CRITICAL):
-- Place the school name/logo in the TOP CENTER or TOP LEFT of the design
-- Logo area must have clear padding — never stretch or distort the logo
-- Logo must be clearly visible against the background (use contrast or a subtle backing)
-- Logo size: approximately 15–20% of the total design width
-- Never overlap the logo with busy imagery
-- The school name "${brand.schoolName ?? "the school"}" must be readable at a glance`
+LOGO PLACEMENT (CRITICAL):
+- Place school name/logo at TOP CENTER or TOP LEFT
+- Clear padding around logo — never stretch or distort
+- Logo must be visible against background (use contrast backing if needed)
+- Logo size: 15–20% of design width
+- Never overlap logo with busy imagery
+- School name "${brand.schoolName ?? "the school"}" must be instantly readable`
     : "";
 
-  // Program context block
+  // ── Program Block ────────────────────────────────────────────────────────────
   const programBlock = program
     ? `
 PROGRAM CONTEXT — ${program.name.toUpperCase()}:
 - Target audience: ${program.targetAudience}
 - Age range: ${program.ageRange}
-- Key benefits to highlight: ${program.benefits.join(", ")}
-- Tone: ${program.tone}`
+- Benefits to highlight: ${program.benefits.join(", ")}
+- Tone: ${program.tone}
+- Suggested CTA: "${program.defaultCTA}"`
     : "";
 
-  // Layout rules (always enforced)
+  // ── Marketing Structure Rules ────────────────────────────────────────────────
+  const marketingStructure = `
+MARKETING DESIGN STRUCTURE (follow this hierarchy exactly):
+1. HEADLINE (top third) — Bold, large, dominant. Maximum 6 words. High impact.
+   Examples: "SUMMER KARATE CAMP", "BUILD CONFIDENCE & DISCIPLINE", "TRAIN LIKE A CHAMPION"
+   NEVER use: "Key Details", "Information", "Details"
+
+2. SUBHEADLINE — Supporting statement. Benefit-driven, not descriptive.
+   Examples: "Ages 6–12 • July 8–12 • 9AM–12PM"
+   NEVER use generic labels
+
+3. VISUAL CENTER — Dynamic, engaging imagery. People in action. Energy and movement.
+
+4. KEY BENEFITS (if applicable) — 2–3 short punchy lines. Use icons or bullets.
+   Examples: "✓ Build Confidence", "✓ Learn Self-Defense", "✓ Make Friends"
+
+5. CALL TO ACTION (bottom third) — LARGE, HIGH CONTRAST, IMPOSSIBLE TO MISS.
+   Must use urgency language: "Register Now", "Limited Spots", "Enroll Today", "Don't Miss Out"
+   NEVER use: "Learn More", "Find Out More", "See Details"
+
+6. CONTACT INFO (bottom) — Phone number and website. Clean, readable.`;
+
+  // ── Copywriting Rules ────────────────────────────────────────────────────────
+  const copywritingRules = `
+COPYWRITING RULES (psychology + persuasion):
+- Use URGENCY: "Limited Spots Available", "Spots Filling Fast", "Register Before [Date]"
+- Use ACTION verbs: "Register", "Enroll", "Join", "Train", "Start", "Claim"
+- Use BENEFIT language: what they GET, not what it IS
+- NEVER use passive or generic phrases
+- Make it PERSUASIVE, not informational
+- Every word must earn its place — no filler text`;
+
+  // ── Layout Rules ─────────────────────────────────────────────────────────────
   const layoutRules = `
-LAYOUT RULES (CRITICAL — always enforce):
-- HEADLINE: Large, bold, dominant — occupies top third of design
-- SUBHEADLINE: Supporting text below headline, readable at a glance
-- VISUAL FOCUS: Engaging central imagery (people, action, energy)
-- CALL TO ACTION: Clear, high-contrast CTA at the bottom — make it impossible to miss
-- SPACING: Clean breathing room between elements — never cluttered
-- READABILITY: All text must be readable from 10 feet away
-- HIERARCHY: One dominant element, one secondary, one accent — no competing elements
-- CONTRAST: Text must have strong contrast against background`;
+LAYOUT RULES (always enforce):
+- Strong visual hierarchy — one dominant element at a time
+- Clean breathing room — never cluttered
+- All text readable from 10 feet away
+- High contrast — text must pop against background
+- Format: ${formatLabel}`;
 
-  // Quality directives
+  // ── Quality Directives ───────────────────────────────────────────────────────
   const qualityDirectives = `
-OUTPUT QUALITY REQUIREMENTS:
-- Premium marketing quality — looks like it was designed by a professional agency
-- Print-ready sharpness and clarity
-- No watermarks, no lorem ipsum, no placeholder text
-- Photorealistic where applicable
-- Format: ${formatLabel}
-- Do NOT include any text that says "placeholder" or generic stock photo feel`;
+OUTPUT QUALITY:
+- Professional agency quality — looks like a $500 design
+- Print-ready sharpness
+- No watermarks, no placeholder text, no lorem ipsum
+- Photorealistic imagery where applicable
+- This should make someone stop scrolling and take action`;
 
-  // Assemble the full enhanced prompt
-  return `Create a high-converting marketing design for a martial arts school.
+  // ── Assemble Full Prompt ─────────────────────────────────────────────────────
+  return `Create a HIGH-CONVERTING marketing design for a martial arts school.
 
 DESIGN REQUEST:
-${userPrompt}
+${withCTA}
 ${programBlock}
 ${brandBlock}
 
 STYLE DIRECTION:
 ${styleDefinition}
+${marketingStructure}
+${copywritingRules}
 ${layoutRules}
 ${qualityDirectives}
 
-FINAL INSTRUCTION: This should look like a $500 professional marketing design. Make it stunning, bold, and immediately compelling.`;
+FINAL INSTRUCTION: This must look like it was designed by a professional marketing agency. Bold. Persuasive. Impossible to ignore. Make someone want to register immediately.`;
+}
+
+/**
+ * Alias for backward compatibility — routes to buildMarketingPrompt.
+ */
+export function enhancePrompt(options: PromptEngineOptions): string {
+  return buildMarketingPrompt(options);
 }
 
 /**
