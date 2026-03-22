@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, email, role, authProvider, emailVerified, createdAt FROM users ORDER BY createdAt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT id, email, role, authProvider, emailVerified, createdAt FROM users ORDER BY createdAt DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "2",
+      "email": "sensei30002003@gmail.com",
+      "role": "owner",
+      "authProvider": "password",
+      "emailVerified": "1",
+      "createdAt": "2026-03-22 03:17:51"
+    },
+    {
+      "id": "1",
+      "email": "demo@dojoflow.com",
+      "role": "owner",
+      "authProvider": "password",
+      "emailVerified": "1",
+      "createdAt": "2026-03-22 03:17:40"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\trole\tauthProvider\temailVerified\tcreatedAt\n2\tsensei30002003@gmail.com\towner\tpassword\t1\t2026-03-22 03:17:51\n1\tdemo@dojoflow.com\towner\tpassword\t1\t2026-03-22 03:17:40\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

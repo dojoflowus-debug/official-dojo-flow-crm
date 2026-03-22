@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import session from "express-session";
 import passport from "./auth/passport";
 import socialAuthRouter from "./auth/socialAuthRouter.js";
+import localAuthRouter from "./auth/localAuthRouter.js";
 import uploadRouter from "./uploadRouter.js";
 import storageProxyRouter from "./storageProxyRouter.js";
 import customBackgroundsRouter from "./api.cinematic-backgrounds.js";
@@ -149,8 +150,10 @@ async function startServer() {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Mount social auth routes
+  // Mount social auth routes (Google OAuth + logout + /me)
   app.use("/api/auth", socialAuthRouter);
+  // Mount local auth routes (email/password login + register)
+  app.use("/api/auth", localAuthRouter);
   
   // Mount custom backgrounds routes
   console.log('[Server] Mounting custom backgrounds router at /api/custom-backgrounds');

@@ -1,0 +1,41 @@
+{
+  "query": "SELECT * FROM organizations LIMIT 1; SELECT * FROM users LIMIT 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute SELECT * FROM organizations LIMIT 1; SELECT * FROM users LIMIT 2;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Demo Dojo",
+      "address": "NULL",
+      "city": "NULL",
+      "state": "NULL",
+      "zipCode": "NULL",
+      "timezone": "America/New_York",
+      "programs": "NULL",
+      "estimatedStudents": "NULL",
+      "launchDate": "NULL",
+      "logoUrl": "NULL",
+      "planId": "NULL",
+      "subscriptionStatus": "trial",
+      "trialEndsAt": "NULL",
+      "createdAt": "2026-03-22 03:17:40",
+      "updatedAt": "2026-03-22 03:17:40",
+      "lastActivity": "NULL",
+      "settings": "NULL",
+      "onboardingStatus": "not_started",
+      "onboardingStep": "1",
+      "bagsOnHand": "0",
+      "onboarding_profile": "NULL",
+      "brandColor": "#EF4444",
+      "onboarding_status": "NULL",
+      "onboarding_step": "1"
+    }
+  ],
+  "messages": [
+    "id\tname\temail\tloginMethod\trole\tcreatedAt\tupdatedAt\tlastSignedIn\tgoogleSub\tauthProvider\temailVerified\twelcomeMessageSeen\tprovider\tproviderId\tpassword\tresetToken\tresetTokenExpiry\tglobalRole\tdisplayName\tpreferredName\tphone\tbio\tphotoUrl\tphotoUrlSmall\tstaffId\tlocationIds\topenId\tactiveOrgId",
+    "1\tDemo Sensei\tdemo@dojoflow.com\tpassword\towner\t2026-03-22 03:17:40\t2026-03-22 03:19:05\t2026-03-22 03:19:05\tNULL\tpassword\t1\t0\tNULL\tNULL\t$2b$10$kO6u1vTAFWilfbfIUBhyFOKrmQxomVYNtrHiKyZDPGRQ8E9XbH1Bm\tNULL\tNULL\tnone\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tlocal_demo_1774149460775\tNULL",
+    "2\tSensei Demo\tsensei30002003@gmail.com\tpassword\towner\t2026-03-22 03:17:51\t2026-03-22 03:18:06\t2026-03-22 03:18:06\tNULL\tpassword\t1\t0\tNULL\tNULL\t$2b$10$5VdNyo5M2qBMKn0MWWDLluyZNRiY9VRL73OP/oDyPTnf368rsVyva\tNULL\tNULL\tnone\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tlocal_sensei_1774149471865\tNULL"
+  ],
+  "stdout": "id\tname\taddress\tcity\tstate\tzipCode\ttimezone\tprograms\testimatedStudents\tlaunchDate\tlogoUrl\tplanId\tsubscriptionStatus\ttrialEndsAt\tcreatedAt\tupdatedAt\tlastActivity\tsettings\tonboardingStatus\tonboardingStep\tbagsOnHand\tonboarding_profile\tbrandColor\tonboarding_status\tonboarding_step\n1\tDemo Dojo\tNULL\tNULL\tNULL\tNULL\tAmerica/New_York\tNULL\tNULL\tNULL\tNULL\tNULL\ttrial\tNULL\t2026-03-22 03:17:40\t2026-03-22 03:17:40\tNULL\tNULL\tnot_started\t1\t0\tNULL\t#EF4444\tNULL\t1\nid\tname\temail\tloginMethod\trole\tcreatedAt\tupdatedAt\tlastSignedIn\tgoogleSub\tauthProvider\temailVerified\twelcomeMessageSeen\tprovider\tproviderId\tpassword\tresetToken\tresetTokenExpiry\tglobalRole\tdisplayName\tpreferredName\tphone\tbio\tphotoUrl\tphotoUrlSmall\tstaffId\tlocationIds\topenId\tactiveOrgId\n1\tDemo Sensei\tdemo@dojoflow.com\tpassword\towner\t2026-03-22 03:17:40\t2026-03-22 03:19:05\t2026-03-22 03:19:05\tNULL\tpassword\t1\t0\tNULL\tNULL\t$2b$10$kO6u1vTAFWilfbfIUBhyFOKrmQxomVYNtrHiKyZDPGRQ8E9XbH1Bm\tNULL\tNULL\tnone\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tlocal_demo_1774149460775\tNULL\n2\tSensei Demo\tsensei30002003@gmail.com\tpassword\towner\t2026-03-22 03:17:51\t2026-03-22 03:18:06\t2026-03-22 03:18:06\tNULL\tpassword\t1\t0\tNULL\tNULL\t$2b$10$5VdNyo5M2qBMKn0MWWDLluyZNRiY9VRL73OP/oDyPTnf368rsVyva\tNULL\tNULL\tnone\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tlocal_sensei_1774149471865\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

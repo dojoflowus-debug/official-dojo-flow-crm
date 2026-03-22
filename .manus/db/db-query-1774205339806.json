@@ -1,0 +1,38 @@
+{
+  "query": "\nSELECT 'organizations' as tbl, COUNT(*) as cnt FROM organizations\nUNION ALL SELECT 'students', COUNT(*) FROM students\nUNION ALL SELECT 'leads', COUNT(*) FROM leads\nUNION ALL SELECT 'users', COUNT(*) FROM users\nUNION ALL SELECT 'classes', COUNT(*) FROM classes\nUNION ALL SELECT 'programs', COUNT(*) FROM programs\nUNION ALL SELECT 'conversations', COUNT(*) FROM conversations;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.a3a971695c00 --database CaitGcU2dUvj49bXGJVNcB --execute \nSELECT 'organizations' as tbl, COUNT(*) as cnt FROM organizations\nUNION ALL SELECT 'students', COUNT(*) FROM students\nUNION ALL SELECT 'leads', COUNT(*) FROM leads\nUNION ALL SELECT 'users', COUNT(*) FROM users\nUNION ALL SELECT 'classes', COUNT(*) FROM classes\nUNION ALL SELECT 'programs', COUNT(*) FROM programs\nUNION ALL SELECT 'conversations', COUNT(*) FROM conversations;\n",
+  "rows": [
+    {
+      "tbl": "classes",
+      "cnt": "0"
+    },
+    {
+      "tbl": "leads",
+      "cnt": "0"
+    },
+    {
+      "tbl": "conversations",
+      "cnt": "0"
+    },
+    {
+      "tbl": "users",
+      "cnt": "2"
+    },
+    {
+      "tbl": "programs",
+      "cnt": "0"
+    },
+    {
+      "tbl": "organizations",
+      "cnt": "1"
+    },
+    {
+      "tbl": "students",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nclasses\t0\nleads\t0\nconversations\t0\nusers\t2\nprograms\t0\norganizations\t1\nstudents\t0\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}
