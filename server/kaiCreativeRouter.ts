@@ -430,6 +430,102 @@ export const kaiCreativeRouter = router({
     return getBrandDataForOrg(ctx.currentOrganizationId as number);
   }),
 
+  // ── generateVariations: A/B — two parallel generations with different styles ─
+  generateVariations: orgScopedProcedure
+    .input(
+      z.object({
+        prompt: z.string().min(3).max(2000),
+        size: imageSizeSchema.default("instagram_post"),
+        // The two style presets to compare. Defaults to energetic vs premium.
+        styleA: stylePresetSchema.default("energetic"),
+        styleB: stylePresetSchema.default("premium"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.currentOrganizationId as number;
+      const brand = await getBrandDataForOrg(orgId);
+
+      // Resolve auto styles
+      const resolvedA = (input.styleA === "auto" || !input.styleA)
+        ? parseStyleFromText(input.prompt)
+        : input.styleA as StylePreset;
+      const resolvedB = (input.styleB === "auto" || !input.styleB)
+        ? "premium" as StylePreset
+        : input.styleB as StylePreset;
+
+      // Run both generations in parallel
+      const [resultA, resultB] = await Promise.all([
+        generateImage(input.prompt, input.size as ImageSize, brand, resolvedA),
+        generateImage(input.prompt, input.size as ImageSize, brand, resolvedB),
+      ]);
+
+      // Save both to S3 (best-effort) and DB in parallel
+      const [saveA, saveB] = await Promise.all([
+        saveImageToS3(resultA.imageBase64, resultA.mimeType, orgId, "variation-a"),
+        saveImageToS3(resultB.imageBase64, resultB.mimeType, orgId, "variation-b"),
+      ]);
+
+      const imageUrlA = saveA.url ?? `data:${resultA.mimeType};base64,${resultA.imageBase64}`;
+      const imageUrlB = saveB.url ?? `data:${resultB.mimeType};base64,${resultB.imageBase64}`;
+
+      const dbConn = await getDb();
+      let assetIdA: number | null = null;
+      let assetIdB: number | null = null;
+
+      if (dbConn) {
+        try {
+          const [insA, insB] = await Promise.all([
+            dbConn.insert(creativeAssets).values({
+              orgId,
+              assetType: "generated",
+              name: `Variation A (${resolvedA}) — ${input.prompt.slice(0, 50)}`,
+              url: imageUrlA,
+              storageKey: saveA.key ?? null,
+              prompt: input.prompt,
+              outputSize: input.size,
+              mimeType: resultA.mimeType,
+              createdBy: ctx.user?.id ?? null,
+            }).$returningId(),
+            dbConn.insert(creativeAssets).values({
+              orgId,
+              assetType: "generated",
+              name: `Variation B (${resolvedB}) — ${input.prompt.slice(0, 50)}`,
+              url: imageUrlB,
+              storageKey: saveB.key ?? null,
+              prompt: input.prompt,
+              outputSize: input.size,
+              mimeType: resultB.mimeType,
+              createdBy: ctx.user?.id ?? null,
+            }).$returningId(),
+          ]);
+          assetIdA = (insA as any)?.[0]?.id ?? null;
+          assetIdB = (insB as any)?.[0]?.id ?? null;
+        } catch (dbErr: any) {
+          console.warn("[KaiCreative] generateVariations DB insert failed:", dbErr?.message ?? dbErr);
+        }
+      }
+
+      return {
+        variantA: {
+          imageUrl: imageUrlA,
+          imageBase64: resultA.imageBase64,
+          mimeType: resultA.mimeType,
+          style: resolvedA,
+          assetId: assetIdA,
+        },
+        variantB: {
+          imageUrl: imageUrlB,
+          imageBase64: resultB.imageBase64,
+          mimeType: resultB.mimeType,
+          style: resolvedB,
+          assetId: assetIdB,
+        },
+        prompt: input.prompt,
+        size: input.size,
+        savedToLibrary: !!(assetIdA || assetIdB),
+      };
+    }),
+
   // ── generateFromChat: unified pipeline called from Kai chat ───────────────
   // Accepts a text prompt (and optional uploaded source image for edit mode),
   // generates via Gemini, auto-saves to Creative Library, and returns a

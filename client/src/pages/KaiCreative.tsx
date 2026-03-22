@@ -165,6 +165,15 @@ export default function KaiCreative() {
   const [activeTab, setActiveTab] = useState<"studio" | "library">("studio");
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  // A/B Variations
+  type VariantResult = { imageUrl: string; imageBase64: string; mimeType: string; style: string; assetId: number | null };
+  const [abVariations, setAbVariations] = useState<{
+    variantA: VariantResult;
+    variantB: VariantResult;
+    prompt: string;
+    size: string;
+  } | null>(null);
+  const [abLightbox, setAbLightbox] = useState<{ url: string; base64: string; mimeType: string; prompt: string } | null>(null);
 
   // Router state — pre-load image from Kai chat "Open in Creative" / "Edit"
   const location = useLocation();
@@ -247,6 +256,14 @@ export default function KaiCreative() {
     onError: (err) => setError(err.message),
   });
 
+  const variationsMutation = trpc.kaiCreative.generateVariations.useMutation({
+    onSuccess: (data) => {
+      setAbVariations(data as any);
+      setError(null);
+    },
+    onError: (err) => setError(err.message),
+  });
+
   const toggleFavoriteMutation = trpc.kaiCreative.toggleFavorite.useMutation();
   const deleteAssetMutation = trpc.kaiCreative.deleteAsset.useMutation({
     onSuccess: () => assetsQuery.refetch(),
@@ -308,6 +325,7 @@ export default function KaiCreative() {
       generateMutation, generateWithLogoMutation, editMutation]);
 
   const isLoading = generateMutation.isPending || generateWithLogoMutation.isPending || editMutation.isPending || isOverlaying;
+  const isLoadingVariations = variationsMutation.isPending;
 
   // ── Download ────────────────────────────────────────────────────────────────
 
@@ -605,11 +623,12 @@ export default function KaiCreative() {
             </div>
           </div>
 
-          {/* Generate button */}
+          {/* Generate buttons row */}
+          <div className="flex gap-2">
           <Button
             onClick={handleGenerate}
-            disabled={isLoading || !prompt.trim()}
-            className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-900/20 transition-all disabled:opacity-50"
+            disabled={isLoading || isLoadingVariations || !prompt.trim()}
+            className="flex-1 h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-900/20 transition-all disabled:opacity-50"
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
@@ -624,6 +643,42 @@ export default function KaiCreative() {
               </span>
             )}
           </Button>
+          {/* Generate 2 Versions button — only shown in Create mode */}
+          {mode === "create" && (
+            <Button
+              onClick={() => {
+                if (!prompt.trim()) return;
+                setAbVariations(null);
+                setError(null);
+                variationsMutation.mutate({
+                  prompt: prompt.trim(),
+                  size,
+                  styleA: "energetic",
+                  styleB: "premium",
+                });
+              }}
+              disabled={isLoading || isLoadingVariations || !prompt.trim()}
+              variant="outline"
+              className={`h-12 px-4 rounded-xl border font-medium text-sm transition-all disabled:opacity-50 ${
+                isDark ? "border-white/15 text-white/70 hover:bg-white/5 hover:border-white/25" : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}
+              title="Generate 2 versions with different styles (Energetic vs Premium)"
+            >
+              {isLoadingVariations ? (
+                <span className="flex items-center gap-1.5">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span className="hidden sm:inline">Generating…</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">2 Versions</span>
+                  <span className="sm:hidden">A/B</span>
+                </span>
+              )}
+            </Button>
+          )}
+          </div>
 
           {/* Error */}
           {error && (
@@ -792,6 +847,108 @@ export default function KaiCreative() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* ── A/B Variations Result ──────────────────────────────────────── */}
+      {abVariations && !isLoadingVariations && activeTab === "studio" && (
+        <div className="px-4 pb-6 max-w-2xl mx-auto space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className={`text-sm font-semibold ${text}`}>A/B Versions</h3>
+            <button
+              onClick={() => setAbVariations(null)}
+              className={`text-xs ${muted} hover:opacity-80 flex items-center gap-1`}
+            >
+              <X className="w-3 h-3" /> Clear
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {(["variantA", "variantB"] as const).map((key, idx) => {
+              const v = abVariations[key];
+              const label = idx === 0 ? "A — Energetic" : "B — Premium";
+              return (
+                <div key={key} className={`rounded-2xl border overflow-hidden ${card}`}>
+                  <div
+                    className="relative cursor-zoom-in"
+                    onClick={() => setAbLightbox({ url: v.imageUrl, base64: v.imageBase64, mimeType: v.mimeType, prompt: abVariations.prompt })}
+                  >
+                    <img src={v.imageUrl} alt={label} className="w-full object-cover aspect-square" />
+                    <div className="absolute top-2 left-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium backdrop-blur-sm ${
+                        idx === 0 ? "bg-orange-500/80 text-white" : "bg-purple-600/80 text-white"
+                      }`}>
+                        {label}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white/70 text-xs px-1.5 py-0.5 rounded-full pointer-events-none">
+                      <ZoomIn className="w-2.5 h-2.5" />
+                    </div>
+                  </div>
+                  <div className="p-2 flex gap-1.5">
+                    <Button
+                      size="sm"
+                      className="flex-1 h-8 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs"
+                      onClick={() => {
+                        setResult({
+                          imageUrl: v.imageUrl,
+                          imageBase64: v.imageBase64,
+                          mimeType: v.mimeType,
+                          prompt: abVariations.prompt,
+                          size: abVariations.size as ImageSize,
+                        });
+                        setAbVariations(null);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    >
+                      Pick This
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`h-8 px-2 rounded-lg ${isDark ? "border-white/10 text-white/60 hover:bg-white/5" : "border-slate-200 text-slate-500"}`}
+                      onClick={() => {
+                        const a = document.createElement("a");
+                        a.href = v.imageUrl;
+                        a.download = `kai-${key}-${Date.now()}.png`;
+                        a.target = "_blank";
+                        a.click();
+                      }}
+                    >
+                      <Download className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className={`text-xs ${muted} text-center`}>Both versions saved to Creative Library</p>
+        </div>
+      )}
+
+      {/* A/B Lightbox */}
+      {abLightbox && (
+        <ImageLightbox
+          imageUrl={abLightbox.url}
+          imageBase64={abLightbox.base64}
+          mimeType={abLightbox.mimeType}
+          prompt={abLightbox.prompt}
+          size=""
+          onClose={() => setAbLightbox(null)}
+          onDownload={() => {
+            const a = document.createElement("a");
+            a.href = abLightbox.url;
+            a.download = `kai-variation-${Date.now()}.png`;
+            a.target = "_blank";
+            a.click();
+          }}
+          onEdit={() => {
+            setAbLightbox(null);
+            setMode("edit");
+            setSourceBase64(abLightbox.base64);
+            setSourceMimeType(abLightbox.mimeType);
+            setSourcePreview(abLightbox.url);
+            setPrompt("");
+          }}
+        />
       )}
 
       {/* ── Lightbox ─────────────────────────────────────────────────────── */}

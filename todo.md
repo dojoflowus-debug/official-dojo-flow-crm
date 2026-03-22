@@ -8655,3 +8655,10 @@ Transform kiosk from admin dashboard to premium location experience
 - [ ] Add copywriting rules: urgency, action phrases, persuasive not informational
 - [ ] Add psychology layer: hierarchy, contrast, readable from distance
 - [ ] Wire updated engine into all generation paths
+
+## A/B Generate 2 Versions (Mar 22, 2026)
+- [ ] Add generateVariations endpoint to kaiCreativeRouter — two parallel generations with different style presets
+- [ ] Add "Generate 2 Versions" button to KaiCreative Studio Create Image tab
+- [ ] Show both results side-by-side with style label badges (e.g. "Energetic" vs "Premium")
+- [ ] Add "Pick This" button on each result — promotes to main result and saves to library
+- [ ] Add lightbox support on both A/B result images
