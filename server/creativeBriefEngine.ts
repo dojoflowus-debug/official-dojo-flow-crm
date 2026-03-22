@@ -174,8 +174,8 @@ function buildQuestions(
 
     questions.push({
       id: "program",
-      question: "What program or event are we promoting?",
-      hint: "e.g. Little Ninjas, Kickboxing, Summer Camp",
+      question: "Got it — what are we promoting?",
+      hint: "Pick a program or type something custom",
       chips: programChips,
       required: true,
     });
@@ -187,7 +187,7 @@ function buildQuestions(
     questions.push({
       id: "audience",
       question: "Who is this for?",
-      hint: "e.g. Ages 3–5, Adults, Families",
+      hint: "Pick an age group or describe your audience",
       chips: audienceChips,
       required: false,
     });
@@ -197,9 +197,9 @@ function buildQuestions(
   if (!scoring.hasContent && !context.phone) {
     questions.push({
       id: "content",
-      question: "Anything specific to include? (phone number, offer, schedule)",
-      hint: "e.g. Call 555-1234, Free Trial Class, Mon/Wed 6pm",
-      chips: ["Include phone number", "Add free trial offer", "Include class schedule", "Skip — use my profile data"],
+      question: "Anything specific you want included?",
+      hint: "e.g. phone number, free trial offer, class schedule",
+      chips: ["Include phone number", "Add free trial offer", "Include class schedule", "Use my profile data"],
       required: false,
     });
   }
@@ -208,8 +208,8 @@ function buildQuestions(
   if (!scoring.hasTone && prompt.trim().split(" ").length < 8 && questions.length < 3) {
     questions.push({
       id: "tone",
-      question: "What vibe should this have?",
-      hint: "e.g. Bold & energetic, Fun & playful, Clean & professional",
+      question: "What's the vibe?",
+      hint: "Choose a style or describe it your way",
       chips: ["Bold & Cinematic", "Fun & Playful", "Clean & Professional", "High Energy", "Premium & Modern"],
       required: false,
     });

@@ -251,7 +251,7 @@ export const kaiCreativeRouter = router({
       if (!briefCheck.canGenerate) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `Cannot generate: missing required fields — ${briefCheck.missingFields.join(", ")}. Please answer the clarifying questions first.`,
+          message: `Let's build this together — I just need a couple more details before I can create this for you. Please answer the quick questions in the brief panel.`,
         });
       }
       // ── END GATE ────────────────────────────────────────────────────────────
@@ -713,7 +713,7 @@ export const kaiCreativeRouter = router({
       if (!chatBriefCheck.canGenerate) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `Cannot generate: missing required fields — ${chatBriefCheck.missingFields.join(", ")}. Please answer the clarifying questions first.`,
+          message: `Let's build this together — I just need a couple more details before I can create this for you. Please answer the quick questions in the brief panel.`,
         });
       }
       // ── END GATE ────────────────────────────────────────────────────────────
